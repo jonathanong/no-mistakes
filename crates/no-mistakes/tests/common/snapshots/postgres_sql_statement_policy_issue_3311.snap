@@ -1,0 +1,280 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_with_settings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/policy.sql",
+          "line": 8,
+          "message": "sql/policy.sql:8: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '1s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 9,
+          "message": "sql/policy.sql:9: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT set_config('statement_timeout', '1s', false);",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 10,
+          "message": "src/policy.test.ts:10: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 11,
+          "message": "src/policy.test.ts:11: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SELECT set_config('statement_timeout', '1s', false)\");",
+          "target": "setting:statement_timeout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_create_view": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/policy.sql",
+          "line": 4,
+          "message": "sql/policy.sql:4: SQL files matching this rule must not use CREATE VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE VIEW default_view AS SELECT id FROM default_table;",
+          "target": "CREATE VIEW"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 8,
+          "message": "sql/policy.sql:8: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '1s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 9,
+          "message": "sql/policy.sql:9: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT set_config('statement_timeout', '1s', false);",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 10,
+          "message": "src/policy.test.ts:10: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 11,
+          "message": "src/policy.test.ts:11: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SELECT set_config('statement_timeout', '1s', false)\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 6,
+          "message": "src/policy.test.ts:6: executed SQL must not use CREATE VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('CREATE VIEW embedded_view AS SELECT id FROM embedded_table');",
+          "target": "CREATE VIEW"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "omitted_defaults": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/policy.sql",
+          "line": 1,
+          "message": "sql/policy.sql:1: SQL files matching this rule must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE TEMP TABLE default_table (id integer);",
+          "target": "CREATE TABLE"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 2,
+          "message": "sql/policy.sql:2: SQL files matching this rule must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ALTER TABLE default_table ADD COLUMN name text;",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 3,
+          "message": "sql/policy.sql:3: SQL files matching this rule must not use CREATE INDEX",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE INDEX default_table_idx ON default_table (id);",
+          "target": "CREATE INDEX"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 4,
+          "message": "sql/policy.sql:4: SQL files matching this rule must not use CREATE VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE VIEW default_view AS SELECT id FROM default_table;",
+          "target": "CREATE VIEW"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 5,
+          "message": "sql/policy.sql:5: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE default_table;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 6,
+          "message": "sql/policy.sql:6: SQL files matching this rule must not use DROP INDEX",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP INDEX default_table_idx;",
+          "target": "DROP INDEX"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 7,
+          "message": "sql/policy.sql:7: SQL files matching this rule must not use DROP VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "DROP VIEW default_view;",
+          "target": "DROP VIEW"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 8,
+          "message": "sql/policy.sql:8: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SET statement_timeout = '1s';",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "sql/policy.sql",
+          "line": 9,
+          "message": "sql/policy.sql:9: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SELECT set_config('statement_timeout', '1s', false);",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 10,
+          "message": "src/policy.test.ts:10: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SET statement_timeout = '1s'\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 11,
+          "message": "src/policy.test.ts:11: SQL matching this rule must not change PostgreSQL setting `statement_timeout`",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query(\"SELECT set_config('statement_timeout', '1s', false)\");",
+          "target": "setting:statement_timeout"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 3,
+          "message": "src/policy.test.ts:3: executed SQL must not use CREATE TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('CREATE TEMP TABLE embedded_table (id integer)');",
+          "target": "CREATE TABLE"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 4,
+          "message": "src/policy.test.ts:4: executed SQL must not use ALTER TABLE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('ALTER TABLE embedded_table ADD COLUMN name text');",
+          "target": "ALTER TABLE"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 5,
+          "message": "src/policy.test.ts:5: executed SQL must not use CREATE INDEX",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('CREATE INDEX embedded_table_idx ON embedded_table (id)');",
+          "target": "CREATE INDEX"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 6,
+          "message": "src/policy.test.ts:6: executed SQL must not use CREATE VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('CREATE VIEW embedded_view AS SELECT id FROM embedded_table');",
+          "target": "CREATE VIEW"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 7,
+          "message": "src/policy.test.ts:7: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('TRUNCATE embedded_table');",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 8,
+          "message": "src/policy.test.ts:8: executed SQL must not use DROP INDEX",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('DROP INDEX embedded_table_idx');",
+          "target": "DROP INDEX"
+        },
+        {
+          "file": "src/policy.test.ts",
+          "line": 9,
+          "message": "src/policy.test.ts:9: executed SQL must not use DROP VIEW",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "query('DROP VIEW embedded_view');",
+          "target": "DROP VIEW"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

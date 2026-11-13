@@ -37,6 +37,40 @@ fn option_defaults_use_schema_sql_include_and_supported_kinds() {
     for kind in DEFAULT_BANNED {
         assert!(compiled.banned.contains(*kind), "{kind}");
     }
+    assert_eq!(compiled.banned.len(), DEFAULT_BANNED.len());
+}
+
+#[test]
+fn omitted_statement_bans_preserve_exactly_the_default_set() {
+    let options: Options = serde_yaml::from_str(include_str!(
+        "../../../../../../test-cases/rules/postgres-sql-statement-policy/fixture/option-defaults/omitted.yaml"
+    ))
+    .unwrap();
+    let compiled = compile_options(&options).unwrap();
+    assert_eq!(compiled.banned.len(), DEFAULT_BANNED.len());
+    for kind in DEFAULT_BANNED {
+        assert!(compiled.banned.contains(*kind), "{kind}");
+    }
+}
+
+#[test]
+fn empty_statement_bans_preserve_setting_bans() {
+    let options: Options = serde_yaml::from_str(include_str!(
+        "../../../../../../test-cases/rules/postgres-sql-statement-policy/fixture/option-defaults/empty.yaml"
+    ))
+    .unwrap();
+    let compiled = compile_options(&options).unwrap();
+    assert!(compiled.banned.is_empty(), "{:?}", compiled.banned);
+    assert_eq!(compiled.settings.len(), 1);
+    assert!(compiled.settings.contains("session_replication_role"));
+}
+
+#[test]
+fn null_statement_bans_remain_invalid() {
+    assert!(serde_yaml::from_str::<Options>(include_str!(
+        "../../../../../../test-cases/rules/postgres-sql-statement-policy/fixture/option-defaults/null.yaml"
+    ))
+    .is_err());
 }
 
 #[test]

@@ -1,0 +1,2 @@
+bannedStatements: []
+bannedSettings: [session_replication_role]

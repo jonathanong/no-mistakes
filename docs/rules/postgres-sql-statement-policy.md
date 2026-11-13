@@ -63,18 +63,36 @@ rules:
         - DROP VIEW
 ```
 
-`sqlInclude` defaults to `**/*.sql`. `bannedStatements` defaults to the list
-above. Embedded SQL is opt-in through `importSpecifier` or explicit
-`executorNames`. With `importSpecifier`, executor names default to `query`,
+`sqlInclude` defaults to `**/*.sql`. Omitting `bannedStatements` selects the
+seven default kinds above; setting `bannedStatements: []` explicitly disables
+statement-kind findings. This distinction lets a rule check settings alone.
+For example, this policy flags `statement_timeout` changes but permits every
+statement kind:
+
+```yaml
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      importSpecifier: '@scope/psql'
+      bannedStatements: []
+      bannedSettings: [statement_timeout]
+      unanalyzableSql: ignore
+```
+
+`bannedSettings` is independent: it continues to apply when statement kinds
+are disabled, and `bannedSettings: []` disables setting checks. Embedded SQL
+is opt-in through `importSpecifier` or explicit `executorNames`. With
+`importSpecifier`, executor names default to `query`,
 `read`, and `write`. `executorFactoryNames` enables local handles returned by
 configured named factory imports, and `executorTypeNames` enables parameters
 annotated with configured imported executor types. `trustedSqlTags` accepts
 `{ module, name }` entries, as in `postgres-sql-shape-policy`.
 
-`bannedStatements` defaults to the original seven kinds shown above,
-preserving existing behavior. The case-insensitive `ddl` group expands to all
-23 kinds listed above. Kind names ignore case and repeated whitespace. An
-unknown kind or group is a configuration error.
+When supplied, `bannedStatements` accepts any recognized statement kind or the
+case-insensitive `ddl` group, which expands to all 29 kinds listed above. An
+explicit empty list disables all statement-kind checks. Kind names ignore case
+and repeated whitespace. An unknown kind or group is a configuration error.
 
 `include` and `exclude` may be set on the rule entry or under `options`.
 Both placements narrow SQL files and JavaScript/TypeScript executor sources.
@@ -188,7 +206,8 @@ inside supported PL/pgSQL bodies and static `EXECUTE` strings.
 TABLE`, `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
 and `DROP VIEW`; `CREATE UNIQUE INDEX` and materialized views map to those
 categories.
-`ddl` expands to all 23 recognized kinds. `bannedSettings` defaults to `[]`
+`ddl` expands to all 29 recognized kinds. `bannedStatements: []` disables
+statement-kind checks; `bannedSettings` defaults to `[]`
 and matches literal setting names in `SET`, `SET LOCAL`, `SET SESSION`,
 supported `set_config()` calls, and database/system `SET` statements. Kind and
 group names are case-insensitive and ignore repeated whitespace; unknown kinds

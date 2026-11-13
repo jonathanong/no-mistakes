@@ -38,6 +38,7 @@ require("./postgres-detached-executors-api.test.js");
 require("./postgres-executor-obligations-api.test.js");
 require("./postgres-lock-written-rows-api.test.js");
 require("./materialized-view-shape-api.test.js");
+require("./postgres-statement-policy-options-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");
