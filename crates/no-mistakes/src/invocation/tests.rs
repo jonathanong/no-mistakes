@@ -15,13 +15,13 @@ use std::time::Instant;
 #[cfg(unix)]
 use wait_timeout::ChildExt;
 
-#[path = "tests/shared_budget.rs"]
-mod shared_budget;
 #[path = "tests/napi_options.rs"]
 mod napi_options;
 #[cfg(unix)]
 #[path = "tests/progress.rs"]
 mod progress;
+#[path = "tests/shared_budget.rs"]
+mod shared_budget;
 #[cfg(unix)]
 include!("tests/signal_forwarding.rs");
 fn fixture_path(name: &str) -> std::path::PathBuf {
