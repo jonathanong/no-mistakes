@@ -125,3 +125,6 @@ pub(super) fn run(
         _ => return None,
     })
 }
+
+#[cfg(test)]
+mod tests;

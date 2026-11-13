@@ -162,3 +162,52 @@ fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
 
     assert_eq!(actual, expected);
 }
+
+#[test]
+fn supplied_workflow_policy_requires_the_prepared_topology() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-local-action-checkout/fixture/unit");
+    let files = [root.join(".github/workflows/order.yml")];
+    let config: crate::config::v2::NoMistakesConfig =
+        serde_yaml::from_str("rules:\n  - rule: workflow-topology-policy\n    scope: repository\n")
+            .unwrap();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    let error = run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        &config,
+        &files,
+        PreparedFilesystemRuleInputs {
+            session: None,
+            snapshot: &snapshot,
+            next_config_resolver: None,
+            vitest_catalog: None,
+            sources: snapshot.source_store_for(&root),
+            workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
+            config_path: None,
+        },
+    )
+    .unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("prepared workflow documents are required for workflow-topology-policy"),
+        "{error:#}"
+    );
+}
+
+#[test]
+fn supplied_config_rejects_malformed_discovery_roots_before_source_analysis() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/empty");
+    let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(
+        "rules:\n  - rule: rust-max-lines-per-file\n    scope: repository\n    options:\n      roots: 42\n",
+    ).unwrap();
+    let error = run_filesystem_rules_with_config(&root, &config, &[root.join(".no-mistakes.yml")])
+        .unwrap_err();
+    assert!(
+        error.to_string().contains("rust-max-lines-per-file"),
+        "{error:#}"
+    );
+    assert!(error.to_string().contains("sequence"), "{error:#}");
+}
