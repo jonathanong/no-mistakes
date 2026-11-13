@@ -114,20 +114,28 @@ and functions with at least 80% structural similarity. CI runs the same jscpd
 check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)
 for its scope and how to fix findings.
 
-Native CI builds and platform tests omit Rust debug metadata to keep compilation
-within their ten-minute step deadlines. Development and test profiles use the same
-setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
-Linux still runs the full suite and enforces the coverage gates. These defaults
-live in the workspace Cargo profiles, including release validation. For local
-debugging, use `CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
+CI and release builds use workspace profiles with Rust debug metadata disabled;
+debug assertions stay enabled. Native Rust and real-addon tests run on Windows
+and macOS, while instrumented Rust coverage runs in six Linux shards and
+standalone library tests run in four. These profiles are not a promise that a
+job meets a particular runtime. For local debugging, use
+`CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
 
-CI and release validation share `.github/scripts/rust-validation.sh`: `build` and
-`test` select the locked workspace, all features, libraries, binaries, and integration
-tests; `doc` runs documentation tests separately. Coverage instrumentation stays scoped to
-the coverage build and test steps. Run the shared script locally with Bash to
-reproduce either validation scope. Release resumes use validation tooling from
-the running workflow while retaining the tagged Rust source; see the
-[CI build guide](docs/development/ci-builds.md).
+Release validation uses `.github/scripts/rust-validation.sh` for locked
+workspace build, test, and documentation-test commands. The pull-request
+workflow uses it for documentation tests; instrumented test targets are built
+and archived once, then distributed to coverage shards. Release resumes use
+validation tooling from the running workflow while retaining the tagged Rust
+source; see the [CI build guide](docs/development/ci-builds.md).
+
+CI keeps the full validation scope while running independent compiler profiles,
+JavaScript policies, and test shards in parallel. Test binaries and the Linux
+CLI/N-API runtime are built by producer jobs and passed to consumers as
+artifacts; report jobs merge sharded coverage before applying the existing
+floors. See the [parallel CI layout and measured baseline](docs/development/ci-builds.md#parallel-ci-layout-and-measured-baseline)
+for the job graph, the historical completed-run timings, and the current status
+of the 10-minute PR-wall target. The historical run predates this layout and
+does not establish its runtime.
 
 The coverage test step shares nine raw profiles per instrumented binary through
 LLVM's online merge pool. This preserves concurrent subprocess counts without a
@@ -202,20 +210,21 @@ Other release targets and local builds retain full LTO and one code generation
 unit. Compile-time and runtime differences require measurements on the same
 platform; Linux benchmarks do not establish the macOS tradeoff.
 
-Native API tests run serially on Windows and macOS. Their CI step allows seven
-minutes on Windows and five on macOS; individual test deadlines and duration
-warnings remain in force. The native job retains its thirty-minute limit.
-Saved timing records distinguish historical censored progress from current
-completed setup and Rust work; neither observation guarantees tail duration.
+Real-addon API tests and platform Rust tests each run in six Windows shards
+and two macOS shards. The per-test timing checks and diagnostic reports
+remain in force. The prior serial-test and aggregate timeout measurements are
+historical; the [CI build guide](docs/development/ci-builds.md#parallel-ci-layout-and-measured-baseline)
+records the earlier baseline, completed parallel measurements, and the cache
+and runner-capacity limits that still prevent the ten-minute target.
 
-Pull requests that change only Markdown run `Docs tests` (the `suite_contracts`
-docs checks) instead of the full test jobs. Quality and AST analysis still run,
-and pushes to `main` run everything. Markdown under `crates/`, `packages/`,
+Pull requests run the validation jobs for Markdown changes as well as code
+changes. Documentation contract tests are part of the Rust coverage build and
+the required `Docs tests` check runs documentation tests independently. The
+docs-only path detector
+does not skip the current test matrix. Markdown under `crates/`, `packages/`,
 `plugins/`, `fixtures/`, `test-cases/`, `tests/`, `evals/`, `.ast-grep/`, and
-`docs/eslint-rules/`, plus the pages that unit and package tests read, is test
-input and runs the full suite. `.github/scripts/docs-only-scope.cjs` owns the
-list, and `tests/js/docs-only-scope.test.js` fails when a test reads a page
-missing from it.
+`docs/eslint-rules/`, plus pages read by unit and package tests, remains test
+input; update the docs-only detector tests when adding new test-read pages.
 
 ## Shared machines and memory
 

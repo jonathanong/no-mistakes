@@ -132,6 +132,10 @@ function main() {
     detached: process.platform !== "win32",
   });
   const finishLog = captureBuildOutput(child, directory);
+  const artifacts =
+    process.argv[2] === "--archive-tests"
+      ? require("./native-test-artifacts.cjs").collectArtifacts(child.stdout)
+      : null;
   diagnostic(sample);
   const interval = setInterval(() => diagnostic(sample), 30000);
   let cancelledSignal;
@@ -173,6 +177,10 @@ function main() {
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", terminate);
     diagnostic(sample);
+    if (artifacts)
+      diagnostic(() =>
+        fs.writeFileSync(path.join(directory, "artifacts.json"), `${JSON.stringify(artifacts)}\n`),
+      );
     diagnostic(() =>
       fs.writeFileSync(
         path.join(directory, "result.json"),

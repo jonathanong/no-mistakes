@@ -12,7 +12,7 @@ const diagnostics = "target/native-build-diagnostics";
 
 test("native workflow retains failure artifacts, literal deadlines and shared build outputs", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const native = workflow.split("\n  native-build:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   const upload = native
     .split("- name: Upload native build diagnostics\n")[1]
     .split("\n      - name:")[0];
@@ -22,7 +22,7 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
   assert.match(upload, /target\/native-build-diagnostics/);
   assert.match(
     native,
-    /NATIVE_RUST_CACHE_HIT: \$\{\{ steps.native-rust-cache.outputs.cache-hit \}\}/,
+    /NATIVE_RUST_CACHE_HIT: \$\{\{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' \|\| 'false' \}\}/,
   );
   assert.match(native, /node \.github\/scripts\/build-native.cjs/);
   assert.match(native, /crate-type = \["rlib", "cdylib"\]/);
@@ -222,3 +222,5 @@ for (const logFailure of ["open", "midwrite"]) {
 }
 
 require("./native-rust-tests.test.cjs");
+require("./native-test-artifacts.test.cjs");
+require("./native-api-shards.test.cjs");

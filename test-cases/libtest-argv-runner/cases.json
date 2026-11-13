@@ -1,0 +1,112 @@
+[
+  {
+    "name": "real process argument regression",
+    "args": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--exact",
+      "--nocapture",
+      "--test-threads=1",
+      "--include-ignored"
+    ],
+    "expected": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--test-threads=1",
+      "--include-ignored"
+    ]
+  },
+  {
+    "name": "ordinary testcase",
+    "args": [
+      "fetches::tests::ordinary",
+      "--exact",
+      "--nocapture"
+    ],
+    "expected": [
+      "fetches::tests::ordinary",
+      "--exact",
+      "--nocapture"
+    ]
+  },
+  {
+    "name": "similarly named testcase",
+    "args": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence_other",
+      "--exact",
+      "--nocapture"
+    ],
+    "expected": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence_other",
+      "--exact",
+      "--nocapture"
+    ]
+  },
+  {
+    "name": "test listing",
+    "args": [
+      "--list",
+      "--format",
+      "terse"
+    ],
+    "expected": [
+      "--list",
+      "--format",
+      "terse"
+    ]
+  },
+  {
+    "name": "special name outside testcase position",
+    "args": [
+      "--list",
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--exact",
+      "--nocapture"
+    ],
+    "expected": [
+      "--list",
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--exact",
+      "--nocapture"
+    ]
+  },
+  {
+    "name": "all other flag spellings",
+    "args": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--exact=true",
+      "--nocapture=false",
+      "--color",
+      "never"
+    ],
+    "expected": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--exact=true",
+      "--nocapture=false",
+      "--color",
+      "never"
+    ]
+  },
+  {
+    "name": "flags before the real argument testcase",
+    "args": [
+      "--exact",
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--nocapture",
+      "--test-threads=1"
+    ],
+    "expected": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--test-threads=1"
+    ]
+  },
+  {
+    "name": "nextest 0.9.151 actual test command",
+    "args": [
+      "--exact",
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence",
+      "--nocapture"
+    ],
+    "expected": [
+      "fetches::tests::run_args_tests::test_run_without_test_argv_uses_real_cli_args_from_absence"
+    ]
+  }
+]

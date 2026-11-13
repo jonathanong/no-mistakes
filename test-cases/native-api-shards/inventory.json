@@ -1,0 +1,12 @@
+[
+  {"file":"real-napi-api.test.js","name":"plain test"},
+  {"file":"real-napi-api.test.js","name":"suite > nested test"},
+  {"file":"other-api.test.js","name":"suite nested test"},
+  {"file":"real-napi-api.test.js","name":"special (a+b) [x]? ^ $ | \\ . *"},
+  {"file":"real-napi-api.test.js","name":"test 1"},
+  {"file":"real-napi-api.test.js","name":"test 10"},
+  {"file":"real-napi-api.test.js","name":"literal > greater > test"},
+  {"file":"real-napi-api.test.js","name":"literal greater > test"},
+  {"file":"real-napi-api.test.js","name":"literal greater test"},
+  {"file":"other-api.test.js","name":"plain test"}
+]

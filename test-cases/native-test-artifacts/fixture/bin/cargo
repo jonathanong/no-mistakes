@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+const fs = require("node:fs");
+const path = require("node:path");
+if (process.argv.includes("--version")) process.exit(0);
+const args = process.argv.slice(2);
+const kind = args.includes("--test") ? "test" : "bin";
+const name = args[args.indexOf(`--${kind}`) + 1];
+const file = path.resolve(`target/debug/deps/${name}-fixture`);
+fs.mkdirSync(path.dirname(file), { recursive: true });
+fs.copyFileSync("harness.cjs", file);
+fs.chmodSync(file, 0o755);
+console.log(JSON.stringify({ reason: "compiler-artifact", executable: file, target: { name, kind: [kind] }, profile: { test: true } }));
+fs.appendFileSync("compile.jsonl", `${JSON.stringify(args)}\n`);
+const cli = path.resolve("target/debug/no-mistakes");
+fs.copyFileSync("harness.cjs", cli);
+console.log(JSON.stringify({ reason: "compiler-artifact", executable: cli, target: { name: "no-mistakes", kind: ["bin"] }, profile: { test: false } }));
+process.exit(Number(process.env.NATIVE_TEST_FIXTURE_EXIT || 0));

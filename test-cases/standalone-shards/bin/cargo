@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if printenv 'CARGO_BIN_EXE_no-mistakes' >/dev/null; then
+  echo 'CLI binary environment leaked into standalone validation' >&2
+  exit 91
+fi
+mode="$2"
+shift 2
+archive=''
+extract=''
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --archive-file) archive="$2"; shift 2 ;;
+    --extract-to) extract="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+if [[ "$mode" == archive ]]; then
+  if [[ -n "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" ]]; then
+    echo 'argv wrapper must not affect archive builds' >&2
+    exit 93
+  fi
+  fixture_dir="$(cd -- "$(dirname -- "$0")/.." && pwd)"
+  cp "$fixture_dir/archive.fixture" "$archive"
+elif [[ "$mode" == run ]]; then
+  if [[ "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" != "$STANDALONE_FIXTURE_RUNNER" ]]; then
+    echo 'standalone nextest argv wrapper is missing or incorrect' >&2
+    exit 94
+  fi
+  if [[ ! -d "$extract" ]]; then
+    echo 'nextest extraction directory does not exist' >&2
+    exit 96
+  fi
+  test -f "$archive"
+  echo "extraction-ready=$extract"
+else
+  exit 92
+fi
+exit "${STANDALONE_FIXTURE_STATUS:-0}"

@@ -1,0 +1,48 @@
+{
+  "macos_invocation": [
+    "invocation::tests::alpha",
+    "invocation::tests::beta",
+    "invocation::tests::gamma"
+  ],
+  "no-mistakes": [
+    "invocation::tests::blocked_check::alpha",
+    "invocation::tests::blocked_check::beta",
+    "invocation::tests::blocked_check::gamma",
+    "unselected::control"
+  ],
+  "windows_job_object": [
+    "command_output_resumes_child_after_job_assignment",
+    "deadline_console::alpha",
+    "deadline_console::beta"
+  ],
+  "suite_cli_postgres": [
+    "cli_postgres_snapshot_alpha",
+    "cli_postgres_snapshot_beta",
+    "cli_postgres_snapshot_gamma",
+    "cli_mrf_snapshot_alpha",
+    "cli_mrf_snapshot_beta",
+    "cli_mrf_snapshot_gamma",
+    "unselected::control",
+    "cli_postgres_snapshot_delta",
+    "cli_postgres_snapshot_epsilon",
+    "cli_postgres_snapshot_zeta",
+    "cli_mrf_snapshot_delta",
+    "cli_mrf_snapshot_epsilon",
+    "cli_mrf_snapshot_zeta"
+  ],
+  "suite_cli_package_config": [
+    "cli_pkgcfg_snapshot_alpha",
+    "cli_pkgcfg_snapshot_beta",
+    "cli_pkgcfg_snapshot_gamma",
+    "cli_rrb_snapshot_alpha",
+    "cli_rrb_snapshot_beta",
+    "cli_rrb_snapshot_gamma",
+    "unselected::control",
+    "cli_pkgcfg_snapshot_delta",
+    "cli_pkgcfg_snapshot_epsilon",
+    "cli_pkgcfg_snapshot_zeta",
+    "cli_rrb_snapshot_delta",
+    "cli_rrb_snapshot_epsilon",
+    "cli_rrb_snapshot_zeta"
+  ]
+}

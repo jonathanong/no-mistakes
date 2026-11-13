@@ -36,7 +36,7 @@ jobs:
       benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
       timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
-      # Docs-only pull requests run docs-tests instead of the full test jobs; main runs everything.
+      # Retained as path metadata; every PR runs all test families.
       docs-only: ${{ github.event_name == 'pull_request' && steps.docs-only-paths.outputs.docs-only == 'true' }}
 
     steps:
@@ -120,18 +120,27 @@ jobs:
 
           git diff --no-renames --name-status -z "$BASE_SHA" "$HEAD_SHA" |
             node .github/scripts/docs-only-scope.cjs >> "$GITHUB_OUTPUT"
-
-  quality:
-    name: Lint and source checks
+  quality-source:
+    name: Source policy and tooling tests
     runs-on: ubuntu-latest
-    # Compilation checks and cleanup retain their existing aggregate budget.
-    timeout-minutes: 30
-
+    timeout-minutes: 8
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate Codecov config
+        timeout-minutes: 2
+        run: curl --data-binary @codecov.yml https://codecov.io/validate
       - name: Check committed binary files
         timeout-minutes: 2
         shell: bash
@@ -181,7 +190,111 @@ jobs:
             fail=1
           done < "$matches"
           exit "$fail"
-
+      - name: Check Rust validation parity
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
+      - name: Test PostgreSQL setup policy
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
+      - name: Test Rust disk diagnostics
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-disk-usage.test.cjs .github/scripts/drop-rust-test-executables.test.cjs
+      - name: Test resource sampling wrapper
+        timeout-minutes: 2
+        run: node --test .github/scripts/with-resource-samples.test.cjs
+      - name: Test frontend memory accounting
+        timeout-minutes: 2
+        run: |
+          python3 -m venv "$RUNNER_TEMP/frontend-memory-accounting-venv"
+          "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/pip" install --disable-pip-version-check --only-binary=:all: --no-deps --retries 0 --timeout 20 -r .github/scripts/frontend-memory-accounting/requirements.txt
+          PYTHONDONTWRITEBYTECODE=1 "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/python" .github/scripts/frontend-memory-accounting/test_accounting.py
+      - name: Test benchmark handoff guards
+        timeout-minutes: 2
+        run: node --test .github/scripts/benchmark-handoff.test.cjs
+      - name: Test parallel CI contracts
+        timeout-minutes: 2
+        run: node --test .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
+  quality-rust:
+    name: Rust quality (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: all-feature Clippy
+            cache: all-clippy
+            command: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+            flags: -D warnings
+          - name: default-feature Clippy
+            cache: default-clippy
+            command: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
+            flags: -D warnings
+          - name: release warnings
+            cache: release-check
+            command: cargo check --locked --workspace --release --lib --bins --benches --no-default-features --features test-instrumentation
+            flags: -D warnings
+          - name: no-default test check
+            cache: no-default-check
+            command: cargo check --locked --tests --no-default-features -p no-mistakes
+            flags: -D warnings
+          - name: PostgreSQL source identities
+            cache: postgres-identities
+            command: "cargo test --locked -p no-mistakes --lib --no-default-features --features test-instrumentation codebase::postgres::source::"
+            flags: -D warnings
+          - name: coverage warnings
+            cache: coverage-check
+            command: cargo check --locked --workspace --lib --tests --all-features
+            flags: -D warnings --cfg coverage
+          - name: formatting
+            cache: rust-format
+            command: cargo fmt --all -- --check
+            flags: -D warnings
+    env:
+      RUSTFLAGS: ${{ matrix.flags }}
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - name: Cache Rust quality artifacts
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: rust-quality-${{ matrix.cache }}-v1
+          cache-workspace-crates: true
+      - name: Run isolated Rust quality check
+        timeout-minutes: 8
+        run: ${{ matrix.command }}
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() || cancelled() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
+  quality-js:
+    name: JavaScript policy (${{ matrix.name }})
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: formatting
+            command: pnpm run fmt:js:check
+          - name: lint
+            command: pnpm run lint:js
+          - name: duplication
+            command: pnpm run lint:duplicates
+          - name: spelling
+            command: pnpm run lint:spell
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
@@ -189,116 +302,20 @@ jobs:
           runtime: node@24
           cache: true
           install: false
-
-      - name: Install Rust
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
-
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
-        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
-
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Validate Codecov config
-        timeout-minutes: 2
-        run: curl --data-binary @codecov.yml https://codecov.io/validate
-
-      - name: Check Rust validation parity
-        timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
-
-      - name: Test PostgreSQL setup policy
-        timeout-minutes: 2
-        run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
-
-      - name: Check formatting
+      - name: Run isolated JavaScript policy check
         timeout-minutes: 5
-        run: cargo fmt --all -- --check
-
-      - name: Check JavaScript formatting
-        timeout-minutes: 2
-        run: pnpm run fmt:js:check
-
-      - name: Test Rust disk diagnostics
-        timeout-minutes: 2
-        run: node --test .github/scripts/rust-disk-usage.test.cjs .github/scripts/drop-rust-test-executables.test.cjs
-
-      - name: Test resource sampling wrapper
-        timeout-minutes: 2
-        run: node --test .github/scripts/with-resource-samples.test.cjs
-
-      - name: Test frontend memory accounting
-        timeout-minutes: 2
-        run: |
-          python3 -m venv "$RUNNER_TEMP/frontend-memory-accounting-venv"
-          "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/pip" install --disable-pip-version-check --only-binary=:all: --no-deps --retries 0 --timeout 20 -r .github/scripts/frontend-memory-accounting/requirements.txt
-          PYTHONDONTWRITEBYTECODE=1 "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/python" .github/scripts/frontend-memory-accounting/test_accounting.py
-
-      - name: Test benchmark handoff guards
-        timeout-minutes: 2
-        run: node --test .github/scripts/benchmark-handoff.test.cjs
-
-      - name: Record Rust disk usage before Clippy
-        timeout-minutes: 1
-        run: bash .github/scripts/rust-disk-usage.sh "before Clippy"
-
-      - name: Run Clippy
-        timeout-minutes: 10
-        run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
-
-      # Every other lib-test build enables test-instrumentation, so this is the
-      # only check that instrumentation-only fields stay feature-gated (#2089).
-      - name: Run Clippy with default features
-        timeout-minutes: 10
-        run: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
-
-      - name: Record Rust disk usage after Clippy
-        timeout-minutes: 1
-        run: bash .github/scripts/rust-disk-usage.sh "after Clippy"
-
-      - name: Deny rustc warnings in release
-        timeout-minutes: 10
-        run: >
-          cargo check --locked --workspace --release
-          --lib --bins --benches
-          --no-default-features
-          --features test-instrumentation
-
-      - name: Check test targets without default features
-        timeout-minutes: 10
-        run: cargo check --locked --tests --no-default-features -p no-mistakes
-
-      - name: Test PostgreSQL source identities without default features
-        timeout-minutes: 10
-        run: >
-          cargo test --locked -p no-mistakes --lib
-          --no-default-features --features test-instrumentation
-          codebase::postgres::source::
-
-      - name: Deny rustc warnings in coverage test builds
-        timeout-minutes: 10
-        env:
-          RUSTFLAGS: "-D warnings --cfg coverage"
-        run: cargo check --locked --workspace --lib --tests --all-features
-
-      - name: Run Oxlint
-        timeout-minutes: 2
-        run: pnpm run lint:js
-
-      - name: Check code duplication
-        timeout-minutes: 3
-        run: pnpm run lint:duplicates
-
-      - name: Run CSpell
+        run: ${{ matrix.command }}
+  quality-links:
+    name: Documentation links
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
         timeout-minutes: 5
-        run: pnpm run lint:spell
-
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Run Lychee
         timeout-minutes: 5
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
@@ -314,16 +331,22 @@ jobs:
             crates/*/README.md
             AGENTS.md
           fail: true
-
-      - name: Diagnose Rust disk usage after failure
-        if: ${{ failure() || cancelled() }}
-        timeout-minutes: 2
-        run: bash .github/scripts/rust-disk-usage.sh "quality job failure"
-
+  quality:
+    name: Lint and source checks
+    needs: [quality-source, quality-rust, quality-js, quality-links]
+    if: ${{ always() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 3
+    steps:
+      - name: Require all component jobs
+        timeout-minutes: 1
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
   packages:
     name: Package checks
     needs: changes
-    if: ${{ needs.changes.outputs.docs-only != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -370,23 +393,88 @@ jobs:
         if: ${{ failure() || cancelled() }}
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "package job failure"
-
-  javascript-tests:
-    name: JavaScript tests
-    needs: changes
-    if: ${{ needs.changes.outputs.docs-only != 'true' }}
+  linux-runtime:
+    name: Build Linux runtime (${{ matrix.role }})
     runs-on: ubuntu-latest
-    # Native build, both test phases, reporting and cache cleanup share this budget.
-    timeout-minutes: 16
-    permissions:
-      contents: read
-      id-token: write
-
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - role: cli
+            binary: target/debug/no-mistakes
+          - role: addon
+            binary: target/debug/no-mistakes.node
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
+      - name: Install Rust
+        id: linux-rust-toolchain
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+      - name: Cache Linux runtime artifacts
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: linux-runtime-v1
+          cache-workspace-crates: false
+          cache-on-failure: false
+          workspaces: . -> target
+      - name: Cache Linux workspace artifacts by source
+        id: linux-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: linux-runtime-workspace-v1-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            linux-runtime-workspace-v1-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            linux-runtime-workspace-v1-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/linux-cargo-inputs
+      - name: Restore verified Linux compiler input timestamps
+        timeout-minutes: 2
+        shell: bash
+        run: node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/linux-cargo-inputs"
+      - name: Build Linux CLI
+        if: ${{ matrix.role == 'cli' }}
+        timeout-minutes: 10
+        run: cargo build --locked -p no-mistakes --bin no-mistakes
+      - name: Build Linux N-API addon
+        if: ${{ matrix.role == 'addon' }}
+        timeout-minutes: 10
+        run: |
+          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
+          cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
+      - name: Record verified Linux compiler inputs
+        timeout-minutes: 2
+        shell: bash
+        run: node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/linux-cargo-inputs"
+      - name: Upload Linux runtime
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: linux-runtime-${{ matrix.role }}
+          path: ${{ matrix.binary }}
+          compression-level: 1
+          if-no-files-found: error
+          retention-days: 1
+  javascript-shards:
+    name: JavaScript shard (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
@@ -394,37 +482,106 @@ jobs:
           runtime: node@24
           cache: true
           install: false
-
-      - name: Install Rust
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
-          toolchain: stable
-
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
-        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
-
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-
       - name: Build JavaScript packages
         timeout-minutes: 2
         run: pnpm run build:js
-
-      - name: Build native CLI and N-API addon
-        timeout-minutes: 10
-        run: |
-          cargo build --locked -p no-mistakes --bin no-mistakes
-          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
-          cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
-
       - name: Run JavaScript tests
+        timeout-minutes: 4
+        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
+      - name: Upload JavaScript shard report
+        timeout-minutes: 3
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: javascript-shard-${{ matrix.shard }}
+          path: .vitest/blob
+          include-hidden-files: true
+          compression-level: 1
+          if-no-files-found: error
+          retention-days: 1
+  javascript-coverage:
+    name: Merge JavaScript coverage
+    needs: javascript-shards
+    if: ${{ always() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
         timeout-minutes: 5
-        run: pnpm run test:ci
-
-      # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Download JavaScript shard reports
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: javascript-shard-*
+          path: .vitest/blob
+          merge-multiple: true
+      - name: Enforce merged JavaScript coverage
+        timeout-minutes: 5
+        run: pnpm exec vitest --merge-reports --coverage --reporter=default --reporter=github-actions
+      - name: Require all JavaScript shards
+        timeout-minutes: 3
+        if: ${{ always() }}
+        env:
+          SHARDS: ${{ needs.javascript-shards.result }}
+        run: test "$SHARDS" = success
+      - name: Upload JavaScript coverage to Codecov
+        timeout-minutes: 5
+        continue-on-error: true
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          use_oidc: true
+          files: coverage/lcov.info
+          flags: javascript
+          fail_ci_if_error: true
+  linux-api-tests:
+    name: Linux N-API tests
+    needs: linux-runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
+      - name: Download Linux runtime
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: linux-runtime-*
+          merge-multiple: true
+          path: target/debug
+      - name: Restore CLI executable mode
+        timeout-minutes: 3
+        run: chmod +x target/debug/no-mistakes
       - name: Run real N-API API test
         timeout-minutes: 4
         id: real-napi
@@ -457,12 +614,10 @@ jobs:
           packages/no-mistakes/scripts/local-action-checkout-api.test.js
           --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json
           --coverage=false
-
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
         run: node .github/scripts/report-native-api-tests.cjs target/native-api-tests.json target
-
       - name: Upload real N-API test durations
         if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}
         continue-on-error: true
@@ -478,20 +633,22 @@ jobs:
             target/native-api-tests-summary.md
 
       # Codecov is reporting only; an outage must not block merges.
-      - name: Upload JavaScript coverage to Codecov
-        timeout-minutes: 5
-        continue-on-error: true
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          use_oidc: true
-          files: coverage/lcov.info
-          flags: javascript
-          fail_ci_if_error: true
-
+  javascript-tests:
+    name: JavaScript tests
+    needs: [javascript-coverage, linux-api-tests]
+    if: ${{ always() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 3
+    steps:
+      - name: Require all component jobs
+        timeout-minutes: 1
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
   timeout-policy-browser-tests:
     name: ${{ matrix.name }}
     needs: changes
-    if: ${{ needs.changes.outputs.timeout-policy-browser == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -548,19 +705,15 @@ jobs:
           path: ${{ runner.temp }}/timeout-policy-browser
           if-no-files-found: warn
           retention-days: 7
-
-  native-tests:
-    name: Native tests (${{ matrix.name }})
+  native-build:
+    name: Native build (${{ matrix.name }})
     needs: changes
-    if: ${{ needs.changes.outputs.docs-only != 'true' }}
     runs-on: ${{ matrix.os }}
-    # Native builds, snapshot replay, API tests and cleanup share this budget.
-    timeout-minutes: 50
+    timeout-minutes: 25
     env:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
-      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -570,6 +723,143 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary: ./target/debug/no-mistakes.exe
             addon: target/debug/no_mistakes.dll
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install Rust
+        id: native-rust-toolchain
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Cache Rust build artifacts
+        id: native-rust-cache
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: native-runtime-v2-${{ matrix.target }}
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: false
+          workspaces: . -> target
+
+      - name: Cache native workspace artifacts by source
+        id: native-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
+
+      - name: Test native build diagnostics
+        if: ${{ runner.os == 'macOS' }}
+        timeout-minutes: 2
+        run: node --test .github/scripts/build-native.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
+
+      # Linux `tests` owns the full suite. Native jobs only compile/run the
+      # OS-specific invocation tests (Job Objects, process groups, signals).
+      # Both native platforms use focused integration tests so cargo does not
+      # typecheck the unrelated lib unit tests for platform regressions.
+      #
+      # Rewrite crate-type in this job only so one rustc emits the CLI rlib
+      # and Node cdylib. Do not commit that crate-type: Linux coverage should
+      # not also link a cdylib.
+      # Hosted macOS runs exceeded the former build and Rust step deadlines.
+      - name: Build native CLI and N-API addon
+        timeout-minutes: 20
+        shell: bash
+        env:
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          rm -rf target/native-build-diagnostics target/native-test-build-diagnostics
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("crates/no-mistakes/Cargo.toml")
+          text = path.read_text()
+          old = 'crate-type = ["rlib"]'
+          new = 'crate-type = ["rlib", "cdylib"]'
+          if old not in text:
+              raise SystemExit(f"expected {old!r} in {path}")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          node .github/scripts/build-native.cjs
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          cp "${{ matrix.addon }}" target/debug/no-mistakes.node
+
+      - name: Upload native-runtime
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-runtime-${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+          path: |
+            ${{ matrix.binary }}
+            target/debug/no-mistakes.node
+
+      - name: Upload native build diagnostics
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-build-diagnostics-${{ matrix.target }}
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 1
+          path: |
+            target/native-build-diagnostics
+
+  native-build-macos:
+    name: Native build (${{ matrix.name }})
+    needs: changes
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - name: macOS ARM64
             os: macos-15
             target: aarch64-apple-darwin
@@ -615,35 +905,33 @@ jobs:
 
       - name: Cache Rust build artifacts
         id: native-rust-cache
-        timeout-minutes: 5
+        timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          key: native-${{ matrix.target }}
+          shared-key: native-runtime-v2-${{ matrix.target }}
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: false
+          workspaces: . -> target
 
-      - name: Restore native test artifacts
-        id: native-test-cache
-        timeout-minutes: 5
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Cache native workspace artifacts by source
+        id: native-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
+          key: native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/debug
             target/.rustc_info.json
-          key: native-test-artifacts-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'crates/**/Cargo.toml', 'rust-toolchain.toml', '.github/workflows/ci.yml', '.github/scripts/build-native.cjs', '.github/scripts/native-rust-tests.cjs') }}-${{ github.sha }}
-          restore-keys: |
-            native-test-artifacts-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'crates/**/Cargo.toml', 'rust-toolchain.toml', '.github/workflows/ci.yml', '.github/scripts/build-native.cjs', '.github/scripts/native-rust-tests.cjs') }}-
-
-      - name: Install pnpm dependencies
-        timeout-minutes: 5
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
+            ${{ runner.temp }}/nm-cargo-inputs
 
       - name: Test native build diagnostics
         if: ${{ runner.os == 'macOS' }}
         timeout-minutes: 2
-        run: node --test .github/scripts/build-native.test.cjs
+        run: node --test .github/scripts/build-native.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
@@ -658,8 +946,7 @@ jobs:
         timeout-minutes: 20
         shell: bash
         env:
-          NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
-          NATIVE_TEST_CACHE_HIT: ${{ steps.native-test-cache.outputs.cache-hit }}
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
         run: |
           set -euo pipefail
           rm -rf target/native-build-diagnostics target/native-test-build-diagnostics
@@ -673,51 +960,522 @@ jobs:
               raise SystemExit(f"expected {old!r} in {path}")
           path.write_text(text.replace(old, new, 1))
           PY
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           node .github/scripts/build-native.cjs
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
-      - name: Precompile native Rust test targets
-        timeout-minutes: 20
-        shell: bash
-        env:
-          NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
-          NATIVE_TEST_CACHE_HIT: ${{ steps.native-test-cache.outputs.cache-hit }}
-          NO_MISTAKES_BUILD_NAPI: "1"
-        run: |
-          set -euo pipefail
-          node .github/scripts/native-rust-tests.cjs build
-
-      - name: Cache native test artifacts
-        if: ${{ steps.native-test-cache.outputs.cache-hit != 'true' }}
-        timeout-minutes: 5
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Upload native-runtime
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
+          name: native-runtime-${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
           path: |
-            target/debug
-            target/.rustc_info.json
-          key: ${{ steps.native-test-cache.outputs.cache-primary-key }}
+            ${{ matrix.binary }}
+            target/debug/no-mistakes.node
 
       - name: Upload native build diagnostics
         if: ${{ always() }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: native-build-diagnostics-${{ runner.os }}
+          name: native-build-diagnostics-${{ matrix.target }}
           if-no-files-found: warn
           retention-days: 7
+          compression-level: 1
           path: |
             target/native-build-diagnostics
+
+  native-test-build:
+    name: Native Rust compile (${{ matrix.name }})
+    needs: changes
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-2025
+            target: x86_64-pc-windows-msvc
+            binary: ./target/debug/no-mistakes.exe
+            addon: target/debug/no_mistakes.dll
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install Rust
+        id: native-rust-toolchain
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Cache Rust build artifacts
+        id: native-rust-cache
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: native-test-harness-v2-${{ matrix.target }}
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: false
+          workspaces: . -> target
+
+      - name: Cache native workspace artifacts by source
+        id: native-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
+
+      - name: Precompile native Rust test targets
+        timeout-minutes: 15
+        shell: bash
+        env:
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          node .github/scripts/native-test-archive.cjs build
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+
+      - name: Upload native-rust-archive
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-rust-archive-${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+          path: |
+            target/native-test-artifacts
+
+      - name: Upload native-test-build-diagnostics
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-test-build-diagnostics-${{ matrix.target }}
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 1
+          path: |
             target/native-test-build-diagnostics
+
+  native-test-build-macos:
+    name: Native Rust compile (${{ matrix.name }})
+    needs: changes
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS ARM64
+            os: macos-15
+            target: aarch64-apple-darwin
+            binary: ./target/debug/no-mistakes
+            addon: target/debug/libno_mistakes.dylib
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install Rust
+        id: native-rust-toolchain
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Cache Rust build artifacts
+        id: native-rust-cache
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: native-test-harness-v2-${{ matrix.target }}
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: false
+          workspaces: . -> target
+
+      - name: Cache native workspace artifacts by source
+        id: native-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
+
+      - name: Precompile native Rust test targets
+        timeout-minutes: 15
+        shell: bash
+        env:
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          node .github/scripts/native-test-archive.cjs build
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+
+      - name: Upload native-rust-archive
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-rust-archive-${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+          path: |
+            target/native-test-artifacts
+
+      - name: Upload native-test-build-diagnostics
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-test-build-diagnostics-${{ matrix.target }}
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 1
+          path: |
+            target/native-test-build-diagnostics
+
+  native-rust-tests:
+    name: Native Rust tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
+    needs: [changes, native-test-build]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 1
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 2
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 3
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 4
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 5
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 6
+            total: 6
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Download native-rust-archive
+        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: native-rust-archive-${{ matrix.target }}
+          path: target/native-test-artifacts
 
       - name: Run platform-specific Rust tests
         timeout-minutes: 9
         shell: bash
-        run: node .github/scripts/native-rust-tests.cjs run
+        run: node .github/scripts/native-test-archive.cjs run ${{ matrix.shard }} ${{ matrix.total }}
+      - name: Retain native Rust case execution inventory
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-rust-cases-${{ matrix.target }}-${{ matrix.shard }}
+          path: |
+            target/native-rust-shard.json
+            target/native-rust-results.jsonl
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+
+  native-rust-tests-macos:
+    name: Native Rust tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
+    needs: [changes, native-test-build-macos]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            target: aarch64-apple-darwin
+            shard: 1
+            total: 2
+          - os: macos-15
+            target: aarch64-apple-darwin
+            shard: 2
+            total: 2
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Download native-rust-archive
+        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: native-rust-archive-${{ matrix.target }}
+          path: target/native-test-artifacts
+
+      - name: Run platform-specific Rust tests
+        timeout-minutes: 9
+        shell: bash
+        run: node .github/scripts/native-test-archive.cjs run ${{ matrix.shard }} ${{ matrix.total }}
+      - name: Retain native Rust case execution inventory
+        if: ${{ always() }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-rust-cases-${{ matrix.target }}-${{ matrix.shard }}
+          path: |
+            target/native-rust-shard.json
+            target/native-rust-results.jsonl
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+
+  native-api-tests:
+    name: Native API tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
+    needs: [changes, native-build]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 1
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 2
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 3
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 4
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 5
+            total: 6
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            shard: 6
+            total: 6
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Download native-runtime
+        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: native-runtime-${{ matrix.target }}
+          path: target/debug
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
 
       - name: Run native CLI smoke test
         timeout-minutes: 2
         shell: bash
-        run: '"${{ matrix.binary }}" --version'
+        run: |
+          chmod +x target/debug/no-mistakes* || true
+          ./target/debug/no-mistakes${{ runner.os == 'Windows' && '.exe' || '' }} --version
 
       - name: Run real N-API API test
         timeout-minutes: 10
@@ -726,7 +1484,7 @@ jobs:
         run: |
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
-          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/unused-disable-directives-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js packages/no-mistakes/scripts/guarded-array-receiver-api.test.js packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json --coverage=false
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" node .github/scripts/native-api-shards.cjs ${{ matrix.shard }} ${{ matrix.total }}
 
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
@@ -741,141 +1499,444 @@ jobs:
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: native-api-tests-${{ runner.os }}
+          name: native-api-tests-${{ runner.os }}-${{ matrix.shard }}
           if-no-files-found: error
           retention-days: 7
           path: |
             target/native-api-tests.json
+            target/native-api-inventory.json
+            target/native-api-shard.json
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 
-      - name: Report native job timing
-        if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-        continue-on-error: true
-        timeout-minutes: 2
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          JOB_NAME: Native tests (${{ matrix.name }})
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          HEAD_SHA: ${{ github.sha }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-        run: node .github/scripts/report-native-job-timing.cjs
-
-  tests-standalone-lib:
-    name: Standalone library tests
-    needs: changes
-    if: ${{ needs.changes.outputs.docs-only != 'true' }}
-    runs-on: ubuntu-latest
+  native-api-tests-macos:
+    name: Native API tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
+    needs: [changes, native-build-macos]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
-      CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib
+      NO_MISTAKES_BUILD_NAPI: "1"
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            target: aarch64-apple-darwin
+            shard: 1
+            total: 2
+          - os: macos-15
+            target: aarch64-apple-darwin
+            shard: 2
+            total: 2
+
+    steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Download native-runtime
+        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: native-runtime-${{ matrix.target }}
+          path: target/debug
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
+
+      - name: Run native CLI smoke test
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          chmod +x target/debug/no-mistakes* || true
+          ./target/debug/no-mistakes${{ runner.os == 'Windows' && '.exe' || '' }} --version
+
+      - name: Run real N-API API test
+        timeout-minutes: 10
+        id: real-napi
+        shell: bash
+        run: |
+          set -euo pipefail
+          addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" node .github/scripts/native-api-shards.cjs ${{ matrix.shard }} ${{ matrix.total }}
+
+      - name: Report real N-API test durations
+        if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
+        timeout-minutes: 2
+        shell: bash
+        # Hosted Windows wall time is noisy; retain warnings and all artifacts.
+        run: node .github/scripts/report-native-api-tests.cjs target/native-api-tests.json target ${{ runner.os == 'Windows' && '--report-only' || '' }}
+
+      - name: Upload real N-API test durations
+        if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-api-tests-${{ runner.os }}-${{ matrix.shard }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            target/native-api-tests.json
+            target/native-api-inventory.json
+            target/native-api-shard.json
+            target/native-api-tests-durations.csv
+            target/native-api-tests-summary.md
+
+  native-tests:
+    name: Native tests
+    needs:
+      [
+        native-build,
+        native-build-macos,
+        native-test-build,
+        native-test-build-macos,
+        native-rust-tests,
+        native-rust-tests-macos,
+        native-api-tests,
+        native-api-tests-macos,
+      ]
+    if: ${{ always() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 3
+    steps:
+      - name: Require all component jobs
+        timeout-minutes: 1
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+  standalone-build:
+    name: Build standalone library tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
       - name: Install Rust
+        id: standalone-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
-
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
+      - name: Cache standalone library artifacts
+        timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: standalone-lib
-
-      - name: Start isolated PostgreSQL for catalog fixtures
-        timeout-minutes: 5
-        uses: ./.github/actions/start-test-postgres
-
-      - name: Test standalone Rust library without a CLI build
-        timeout-minutes: 12
+          shared-key: standalone-lib-v2
+          workspaces: . -> target/standalone-lib/target
+          cache-workspace-crates: false
+          cache-on-failure: false
+      - name: Cache standalone-lib workspace artifacts by source
+        id: standalone-lib-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: standalone-lib-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            standalone-lib-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            standalone-lib-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/standalone-lib/target/debug
+            target/standalone-lib/target/.rustc_info.json
+            ${{ runner.temp }}/nm-standalone-lib-cargo-inputs
+      - name: Install nextest
+        timeout-minutes: 3
+        uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
+        with:
+          tool: cargo-nextest@0.9.151
+      - name: Build standalone library without a CLI
+        timeout-minutes: 8
+        shell: bash
         run: |
-          env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib
-          test ! -e "$CARGO_TARGET_DIR/debug/no-mistakes"
+          set -euo pipefail
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          node .github/scripts/standalone-shards.cjs build target/standalone-bundle
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+      - name: Upload standalone library archive
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: standalone-library
+          path: target/standalone-bundle
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
 
-  tests:
-    name: Rust tests and coverage
-    needs: changes
-    if: ${{ needs.changes.outputs.docs-only != 'true' }}
+  standalone-shards:
+    name: Standalone library shard (${{ matrix.shard }}/4)
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
+      CARGO_INCREMENTAL: "0"
+    needs: standalone-build
     runs-on: ubuntu-latest
-    # Include coverage exports, uploads and post-job cache cleanup after tests.
-    timeout-minutes: 40
-    permissions:
-      id-token: write
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install nextest
+        timeout-minutes: 3
+        uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
+        with:
+          tool: cargo-nextest@0.9.151
+      - name: Download standalone library archive
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: standalone-library
+          path: target/standalone-bundle
+      - name: Start isolated PostgreSQL for catalog fixtures
+        timeout-minutes: 5
+        uses: ./.github/actions/start-test-postgres
+      - name: Test standalone Rust library without a CLI build
+        timeout-minutes: 6
+        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 4
+  tests-standalone-lib:
+    name: Standalone library tests
+    needs: [standalone-build, standalone-shards]
+    if: ${{ always() }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 3
+    steps:
+      - name: Require all component jobs
+        timeout-minutes: 1
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+  rust-coverage-build:
+    name: Build instrumented Rust tests
+    needs: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+      CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        id: coverage-rust-toolchain
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+          components: llvm-tools-preview
+      - name: Cache instrumented Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: coverage-nextest-v1
+          workspaces: . -> target/coverage/target
+          cache-workspace-crates: false
+          cache-on-failure: false
+      - name: Cache coverage workspace artifacts by source
+        id: coverage-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: coverage-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            coverage-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            coverage-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+          path: |
+            target/coverage/target/debug
+            target/coverage/target/.rustc_info.json
+            ${{ runner.temp }}/nm-coverage-cargo-inputs
+      - name: Install Rust coverage tools
+        timeout-minutes: 5
+        uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
+        with:
+          tool: cargo-llvm-cov@0.9.0,cargo-nextest@0.9.151
+      - name: Test Rust coverage sharding
+        timeout-minutes: 2
+        run: node --test .github/scripts/rust-coverage-shards.test.cjs .github/scripts/rust-profile-pooling.test.cjs
+      - name: Build and archive instrumented Rust tests
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-coverage-cargo-inputs"
+          node .github/scripts/rust-coverage-shards.cjs archive target/coverage-bundle
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-coverage-cargo-inputs"
+      - name: Upload instrumented Rust tests
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: rust-coverage-build
+          path: target/coverage-bundle
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "Rust coverage build failure" target
 
+  rust-coverage-shards:
+    name: Rust coverage shard (${{ matrix.shard }}/6)
+    needs: rust-coverage-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+      CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install nextest
+        timeout-minutes: 5
+        uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
+        with:
+          tool: cargo-nextest@0.9.151
+      - name: Download instrumented Rust tests
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: rust-coverage-build
+          path: target/coverage-bundle
+      - name: Start isolated PostgreSQL for catalog fixtures
+        timeout-minutes: 5
+        uses: ./.github/actions/start-test-postgres
+      - name: Run Rust tests for coverage
+        timeout-minutes: 8
+        env:
+          SHARD_INDEX: ${{ matrix.shard }}
+          LLVM_PROFILE_FILE_NAME: no-mistakes-%9m.profraw
+        run: node .github/scripts/rust-coverage-shards.cjs shard target/coverage-bundle "$RUNNER_TEMP/rust-coverage-shard" "$SHARD_INDEX" 6
+      - name: Retain profiles and execution diagnostics
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: rust-coverage-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/rust-coverage-shard
+          if-no-files-found: error
+          compression-level: 1
+          retention-days: 7
+
+  # Keep the existing required check name on this fan-in job.
+  tests:
+    name: Rust tests and coverage
+    needs: [changes, rust-coverage-build, rust-coverage-shards]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+      CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
           components: llvm-tools-preview
-
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
-        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
-
-      - name: Install cargo-llvm-cov
+      - name: Install coverage tools
         timeout-minutes: 5
         uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
         with:
-          # The profile-reuse helper depends on the 0.9.0 report glob and reuse behavior.
-          tool: cargo-llvm-cov@0.9.0
-
-      - name: Test Rust profile pooling
-        timeout-minutes: 2
-        run: node --test .github/scripts/rust-profile-pooling.test.cjs
-
-      - name: Start isolated PostgreSQL for catalog fixtures
+          tool: cargo-llvm-cov@0.9.0,cargo-nextest@0.9.151,cargo-crap
+      - name: Download instrumented Rust tests
         timeout-minutes: 5
-        uses: ./.github/actions/start-test-postgres
-
-      - name: Clean Rust coverage artifacts
-        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: rust-coverage-build
+          path: target/coverage-bundle
+      - name: Restore report binaries without rebuilding
+        timeout-minutes: 3
         run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov clean --workspace
-
-      - name: Record Rust disk usage before test build
-        timeout-minutes: 1
-        run: bash .github/scripts/rust-disk-usage.sh "before Rust test build" target
-
-      - name: Build Rust tests for coverage
-        timeout-minutes: 15
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          bash .github/scripts/rust-validation.sh build
-
-      - name: Record Rust disk usage after test build
-        timeout-minutes: 1
-        run: bash .github/scripts/rust-disk-usage.sh "after Rust test build" target
-
-      - name: Run Rust tests for coverage
-        timeout-minutes: 22
-        env:
-          LLVM_PROFILE_FILE_NAME: no-mistakes-%9m.profraw
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          bash .github/scripts/rust-validation.sh test
-
-      - name: Run Rust doctests
+          node .github/scripts/rust-coverage-shards.cjs verify target/coverage-bundle
+          mkdir -p "$(dirname "$CARGO_LLVM_COV_TARGET_DIR")"
+          cargo nextest list --archive-file target/coverage-bundle/rust-tests.tar.zst \
+            --extract-to "$(dirname "$CARGO_LLVM_COV_TARGET_DIR")" \
+            --workspace-remap "$GITHUB_WORKSPACE" --list-type binaries-only --message-format json \
+            > target/coverage-bundle/binaries.json
+          node .github/scripts/rust-coverage-shards.cjs report-objects target/coverage-bundle target/coverage-bundle/binaries.json >> "$GITHUB_ENV"
+      - name: Download every shard profile and execution inventory
+        if: ${{ !cancelled() }}
         timeout-minutes: 5
-        run: bash .github/scripts/rust-validation.sh doc
-
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: rust-coverage-shard-*
+          path: target/coverage-shards
+      - name: Merge shard profiles and require complete successful execution
+        id: rust-shard-collection
+        if: ${{ !cancelled() }}
+        timeout-minutes: 2
+        run: node .github/scripts/rust-coverage-shards.cjs collect target/coverage-bundle target/coverage-shards 6
+      - name: Require every Rust snapshot to be referenced
+        if: ${{ !cancelled() && steps.rust-shard-collection.outcome == 'success' }}
+        timeout-minutes: 2
+        run: node .github/scripts/rust-snapshot-references.cjs target/coverage-shards/references.txt
+      # Append existing report, CRAP 30, cyclomatic complexity 30, 98% line/function/region
+      # gates, profile preservation, uncovered-region details, quality uploads and Codecov steps.
+      # Give report/diagnostic steps !cancelled() guards so failed shards still render coverage.
+      # Finish with this step even if collection/reporting failed; no partial run can pass.
       - name: Write Rust coverage report
         id: rust-coverage
+        if: ${{ !cancelled() && hashFiles('target/coverage/target/*.profraw') != '' }}
         timeout-minutes: 5
         run: |
           mkdir -p target/llvm-cov
@@ -918,6 +1979,8 @@ jobs:
           path: |
             target/llvm-cov/crap-report.txt
             target/llvm-cov/lcov.info
+            target/llvm-cov/nextest-objects.json
+            target/llvm-cov/nextest-objects.rsp
 
       - name: Summarize failing Rust CRAP rows
         if: ${{ failure() && steps.rust-crap.outcome == 'failure' }}
@@ -1012,113 +2075,75 @@ jobs:
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "Rust tests job failure" target
 
+      - name: Require successful Rust producer and all test shards
+        if: ${{ !cancelled() }}
+        timeout-minutes: 1
+        env:
+          BUILD_RESULT: ${{ needs.rust-coverage-build.result }}
+          SHARD_RESULT: ${{ needs.rust-coverage-shards.result }}
+        run: test "$BUILD_RESULT" = success && test "$SHARD_RESULT" = success
   docs-tests:
     name: Docs tests
-    needs: changes
-    if: ${{ needs.changes.outputs.docs-only == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    timeout-minutes: 10
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/doctests
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
+        with:
+          persist-credentials: false
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
-
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
+      - name: Cache Rust doctest artifacts
+        timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          key: docs-tests
-
-      - name: Run docs contract tests
-        timeout-minutes: 15
-        run: cargo test --locked -p no-mistakes --all-features --test suite_contracts
+          shared-key: rust-doctests-v1
+          workspaces: . -> target/doctests
+          cache-workspace-crates: true
+      - name: Start isolated PostgreSQL for catalog fixtures
+        timeout-minutes: 5
+        uses: ./.github/actions/start-test-postgres
+      - name: Run Rust doctests
+        timeout-minutes: 8
+        run: bash .github/scripts/rust-validation.sh doc
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "Rust doctest job failure" target/doctests
 
   tests-gate:
     name: Tests with coverage
     needs:
-      - changes
-      - quality
-      - docs-tests
-      - packages
-      - javascript-tests
-      - timeout-policy-browser-tests
-      - native-tests
-      - tests
-      - tests-standalone-lib
+      [
+        changes,
+        quality,
+        docs-tests,
+        packages,
+        javascript-tests,
+        timeout-policy-browser-tests,
+        native-tests,
+        tests,
+        tests-standalone-lib,
+      ]
     if: ${{ always() }}
     runs-on: ubuntu-slim
-    timeout-minutes: 5
-
+    timeout-minutes: 3
     steps:
       - name: Check test and quality results
         timeout-minutes: 1
         env:
-          QUALITY_RESULT: ${{ needs.quality.result }}
-          PACKAGES_RESULT: ${{ needs.packages.result }}
-          JAVASCRIPT_RESULT: ${{ needs.javascript-tests.result }}
-          NATIVE_RESULT: ${{ needs.native-tests.result }}
-          RUST_RESULT: ${{ needs.tests.result }}
-          STANDALONE_RESULT: ${{ needs.tests-standalone-lib.result }}
-          CHANGE_RESULT: ${{ needs.changes.result }}
-          BROWSER_CHANGED: ${{ needs.changes.outputs.timeout-policy-browser }}
-          BROWSER_RESULT: ${{ needs.timeout-policy-browser-tests.result }}
-          DOCS_ONLY: ${{ needs.changes.outputs.docs-only }}
-          DOCS_RESULT: ${{ needs.docs-tests.result }}
+          RESULTS: ${{ toJSON(needs) }}
         run: |
-          if [[ "$CHANGE_RESULT" != "success" ]]; then
-            echo "Path-filter detection failed." >&2
-            exit 1
-          fi
-
-          if [[ "$QUALITY_RESULT" != "success" ]]; then
-            echo "Quality checks failed." >&2
-            exit 1
-          fi
-
-          if [[ "$DOCS_ONLY" == "true" ]]; then
-            if [[ "$DOCS_RESULT" != "success" ]]; then
-              echo "Docs tests failed." >&2
-              exit 1
-            fi
-            for result in "$PACKAGES_RESULT" "$JAVASCRIPT_RESULT" "$NATIVE_RESULT" "$RUST_RESULT" "$STANDALONE_RESULT" "$BROWSER_RESULT"; do
-              if [[ "$result" != "skipped" ]]; then
-                echo "Docs-only change, but a test job did not skip cleanly ($result)." >&2
-                exit 1
-              fi
-            done
-            echo "Docs-only change: docs tests passed and the full test jobs skipped."
-            exit 0
-          fi
-
-          if [[ "$DOCS_RESULT" != "skipped" ]]; then
-            echo "Docs tests ran for a change that is not docs-only ($DOCS_RESULT)." >&2
-            exit 1
-          fi
-
-          if [[ "$PACKAGES_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" || "$STANDALONE_RESULT" != "success" ]]; then
-            echo "Package checks, JavaScript tests, native tests, standalone library tests, or Rust coverage failed." >&2
-            exit 1
-          fi
-
-          if [[ "$BROWSER_CHANGED" == "true" ]]; then
-            if [[ "$BROWSER_RESULT" != "success" ]]; then
-              echo "Timeout-policy browser tests failed." >&2
-              exit 1
-            fi
-          elif [[ "$BROWSER_RESULT" != "skipped" && "$BROWSER_RESULT" != "success" ]]; then
-            echo "Timeout-policy browser tests did not skip cleanly." >&2
-            exit 1
-          fi
-
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
   ast-analysis:
     name: AST analysis
+    needs: linux-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -1127,22 +2152,15 @@ jobs:
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install Rust
-        timeout-minutes: 5
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+      - name: Download Linux runtime
+        timeout-minutes: 3
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          toolchain: stable
-
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
-        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
-        with:
-          key: ast-analysis
-
-      - name: Build no-mistakes check CLI
-        timeout-minutes: 10
-        run: cargo build -p no-mistakes
-
+          name: linux-runtime-cli
+          path: target/debug
+      - name: Restore CLI executable mode
+        timeout-minutes: 3
+        run: chmod +x target/debug/no-mistakes
       - name: Run no-mistakes check
         timeout-minutes: 2
         run: target/debug/no-mistakes check
@@ -1178,7 +2196,6 @@ jobs:
           fi
           ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
           python3 .ast-grep/check-inline-fixture-writes.py --base "${base}"
-
   bench:
     name: Build benchmarks
     needs: changes
@@ -1313,7 +2330,6 @@ jobs:
           CACHE_HIT: ${{ steps.cache-probe.outputs.cache-hit }}
           ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
         run: bash .github/scripts/benchmark-handoff.sh available
-
   benchmark-shards:
     name: Benchmark (${{ matrix.name }})
     needs:
@@ -1523,7 +2539,6 @@ jobs:
           runner-version: "5.4.0"
           instruments-cache-dir: ~/.cache/codspeed-action/libc6-${{ steps.libc.outputs.version }}
           config: .github/frontend-lifecycle.yml
-
   frontend-lifecycle-smoke:
     name: Frontend lifecycle memory smoke
     needs: [changes, bench]
@@ -1623,7 +2638,6 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           compression-level: 1
-
   benchmark-gate:
     name: Benchmarks
     needs:
