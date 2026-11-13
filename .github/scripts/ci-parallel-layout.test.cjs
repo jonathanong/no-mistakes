@@ -79,6 +79,8 @@ test("JavaScript shards merge coverage under the normal unchanged threshold conf
   );
   assert.match(job("javascript-shards"), /reporter=blob/);
   assert.match(job("javascript-shards"), /include-hidden-files: true/);
+  assert.match(job("javascript-shards"), /path: \.vitest\/blob/);
+  assert.match(job("javascript-coverage"), /path: \.vitest\/blob/);
   assert.match(job("javascript-coverage"), /vitest --merge-reports --coverage/);
   assert.doesNotMatch(job("javascript-coverage"), /vitest-shard.config/);
   assert.match(job("javascript-coverage"), /needs.javascript-shards.result/);
