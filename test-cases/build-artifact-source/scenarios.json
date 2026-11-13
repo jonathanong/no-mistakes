@@ -13,14 +13,93 @@
     "event": "workflow_dispatch",
     "path": ".github/workflows/ci.yml",
     "head_sha": "abcfd14ae220859d31aa5e0e76fbf74acc4b022f",
-    "head_repository": { "full_name": "jonathanong/no-mistakes" }
+    "head_repository": {
+      "full_name": "jonathanong/no-mistakes"
+    }
   },
   "warmEnvironment": {
     "GITHUB_EVENT_NAME": "push",
     "GITHUB_REF": "refs/heads/ci/warm-build-43404256731",
     "REUSE_BUILD_RUN_ID": ""
   },
-  "coldRun": { "event": "push", "head_branch": "ci/cold-build" },
+  "coldRun": {
+    "event": "push",
+    "head_branch": "ci/cold-build"
+  },
+  "artifactInventory": {
+    "total_count": 8,
+    "artifacts": [
+      {
+        "name": "linux-runtime-cli",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "linux-runtime-addon",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "native-runtime-x86_64-pc-windows-msvc",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "native-runtime-aarch64-apple-darwin",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "native-rust-archive-x86_64-pc-windows-msvc",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "native-rust-archive-aarch64-apple-darwin",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "standalone-library",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      },
+      {
+        "name": "rust-coverage-build",
+        "expired": false,
+        "expires_at": "2099-01-01T00:00:00Z"
+      }
+    ]
+  },
+  "invalidInventories": [
+    null,
+    {},
+    {
+      "total_count": 0,
+      "artifacts": []
+    },
+    {
+      "total_count": 101,
+      "artifacts": []
+    },
+    {
+      "total_count": 8,
+      "artifacts": null
+    },
+    {
+      "total_count": 8,
+      "artifacts": []
+    },
+    {
+      "total_count": "8",
+      "artifacts": []
+    }
+  ],
+  "unrelatedArtifact": {
+    "name": "native-build-diagnostics-aarch64-apple-darwin",
+    "expired": false,
+    "expires_at": "2099-01-01T00:00:00Z"
+  },
   "invalidWarmRefs": [
     "refs/heads/ci/warm-build-",
     "refs/heads/ci/warm-build-nope",
@@ -36,14 +115,32 @@
     "refs/heads/ci/cold-build"
   ],
   "invalidRuns": [
-    { "status": "in_progress" },
-    { "conclusion": "failure" },
-    { "conclusion": "cancelled" },
-    { "event": "pull_request" },
-    { "path": ".github/workflows/release.yml" },
-    { "head_sha": "0000000000000000000000000000000000000000" },
-    { "head_repository": { "full_name": "other/no-mistakes" } },
-    { "head_repository": null }
+    {
+      "status": "in_progress"
+    },
+    {
+      "conclusion": "failure"
+    },
+    {
+      "conclusion": "cancelled"
+    },
+    {
+      "event": "pull_request"
+    },
+    {
+      "path": ".github/workflows/release.yml"
+    },
+    {
+      "head_sha": "0000000000000000000000000000000000000000"
+    },
+    {
+      "head_repository": {
+        "full_name": "other/no-mistakes"
+      }
+    },
+    {
+      "head_repository": null
+    }
   ],
   "invalidIds": [
     "0",
@@ -58,12 +155,46 @@
     "123/../456"
   ],
   "invalidEnvironments": [
-    { "GITHUB_EVENT_NAME": "pull_request" },
-    { "GITHUB_EVENT_NAME": "push" },
-    { "COLD_BUILD": "true" },
-    { "COLD_BUILD": "maybe" },
-    { "GITHUB_TOKEN": "" },
-    { "GITHUB_SHA": "" },
-    { "GITHUB_REPOSITORY": "owner/repo/actions/runs/123" }
+    {
+      "GITHUB_EVENT_NAME": "pull_request"
+    },
+    {
+      "GITHUB_EVENT_NAME": "push"
+    },
+    {
+      "COLD_BUILD": "true"
+    },
+    {
+      "COLD_BUILD": "maybe"
+    },
+    {
+      "GITHUB_TOKEN": ""
+    },
+    {
+      "GITHUB_SHA": ""
+    },
+    {
+      "GITHUB_REPOSITORY": "owner/repo/actions/runs/123"
+    }
+  ],
+  "invalidArchiveMetadata": [
+    {
+      "expired": true
+    },
+    {
+      "expired": null
+    },
+    {
+      "expires_at": "2000-01-01T00:00:00Z"
+    },
+    {
+      "expires_at": null
+    },
+    {
+      "expires_at": "not-a-date"
+    },
+    {
+      "expires_at": 2099
+    }
   ]
 }

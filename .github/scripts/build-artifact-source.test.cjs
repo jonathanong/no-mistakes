@@ -32,31 +32,124 @@ test("warm dispatch validates the fixed API source and exact commit", async () =
     calls++;
     assert.equal(
       url,
-      "https://api.github.com/repos/jonathanong/no-mistakes/actions/runs/43404256731",
+      `https://api.github.com/repos/jonathanong/no-mistakes/actions/runs/43404256731${calls === 1 ? "" : "/artifacts?per_page=100"}`,
     );
     assert.equal(options.headers.Authorization, `Bearer ${saved.environment.GITHUB_TOKEN}`);
     assert.equal(options.redirect, "error");
     assert.ok(options.signal instanceof AbortSignal);
-    return { ok: true, json: async () => saved.run };
+    return { ok: true, json: async () => (calls === 1 ? saved.run : saved.artifactInventory) };
   });
   assert.deepEqual(source, { run_id: saved.environment.REUSE_BUILD_RUN_ID, reuse: true });
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 
 test("invalid reuse provenance fails closed", async () => {
   for (const changes of saved.invalidRuns) {
+    let calls = 0;
     await assert.rejects(
-      resolveSource(saved.environment, async () => ({
-        ok: true,
-        json: async () => ({ ...saved.run, ...changes }),
-      })),
+      resolveSource(saved.environment, async () => {
+        calls++;
+        return {
+          ok: true,
+          json: async () => ({ ...saved.run, ...changes }),
+        };
+      }),
       /successful completed CI measurement/,
     );
+    assert.equal(calls, 1);
   }
   await assert.rejects(
     resolveSource(saved.environment, async () => ({ ok: true, json: async () => null })),
     /successful completed CI measurement/,
   );
+});
+
+function artifactFetch(inventory) {
+  return async (url) => ({
+    ok: true,
+    json: async () => (url.endsWith("/artifacts?per_page=100") ? inventory : saved.run),
+  });
+}
+
+test("artifact inventory requires every producer archive, including short-retention Linux builds", async () => {
+  for (const [index] of saved.artifactInventory.artifacts.entries()) {
+    const missing = saved.artifactInventory.artifacts.map((artifact, position) =>
+      position === index ? saved.unrelatedArtifact : artifact,
+    );
+    await assert.rejects(
+      resolveSource(
+        saved.environment,
+        artifactFetch({ total_count: missing.length, artifacts: missing }),
+      ),
+      /all eight unexpired build archives/,
+    );
+    for (const changes of saved.invalidArchiveMetadata) {
+      const expired = saved.artifactInventory.artifacts.map((artifact, position) =>
+        position === index ? { ...artifact, ...changes } : artifact,
+      );
+      await assert.rejects(
+        resolveSource(
+          saved.environment,
+          artifactFetch({ total_count: expired.length, artifacts: expired }),
+        ),
+        /all eight unexpired build archives/,
+      );
+    }
+  }
+});
+
+test("source inventory is complete, bounded at 100 records, and unambiguous", async () => {
+  for (const inventory of saved.invalidInventories) {
+    await assert.rejects(
+      resolveSource(saved.environment, artifactFetch(inventory)),
+      /complete inventory/,
+    );
+  }
+  const full = [...saved.artifactInventory.artifacts, ...Array(92).fill(saved.unrelatedArtifact)];
+  assert.equal(
+    (await resolveSource(saved.environment, artifactFetch({ total_count: 100, artifacts: full })))
+      .reuse,
+    true,
+  );
+  for (const inventory of [
+    { total_count: 101, artifacts: [...full, saved.unrelatedArtifact] },
+    { total_count: 9, artifacts: saved.artifactInventory.artifacts },
+    { total_count: 8, artifacts: [...saved.artifactInventory.artifacts, saved.unrelatedArtifact] },
+    {
+      total_count: 9,
+      artifacts: [...saved.artifactInventory.artifacts, saved.artifactInventory.artifacts[0]],
+    },
+    { total_count: 9, artifacts: [...saved.artifactInventory.artifacts, null] },
+  ])
+    await assert.rejects(
+      resolveSource(saved.environment, artifactFetch(inventory)),
+      /complete inventory/,
+    );
+});
+
+test("artifact API errors fail closed without exposing secrets", async () => {
+  for (const failure of [
+    async () => ({ ok: false }),
+    async () => {
+      throw new Error(saved.environment.GITHUB_TOKEN);
+    },
+    async () => ({
+      ok: true,
+      json: async () => {
+        throw new Error(saved.environment.GITHUB_TOKEN);
+      },
+    }),
+  ]) {
+    let calls = 0;
+    await assert.rejects(
+      resolveSource(saved.environment, async (url, options) => {
+        calls++;
+        return calls === 1 ? { ok: true, json: async () => saved.run } : failure(url, options);
+      }),
+      { message: "Unable to read the build source artifact inventory" },
+    );
+    assert.equal(calls, 2);
+  }
 });
 
 test("warm push infers the run ID and accepts only exact cold-push or dispatch provenance", async () => {
@@ -65,8 +158,13 @@ test("warm push infers the run ID and accepts only exact cold-push or dispatch p
     for (const explicit of ["", saved.environment.REUSE_BUILD_RUN_ID]) {
       assert.deepEqual(
         await resolveSource({ ...env, REUSE_BUILD_RUN_ID: explicit }, async (url) => {
-          assert.ok(url.endsWith(`/actions/runs/${saved.environment.REUSE_BUILD_RUN_ID}`));
-          return { ok: true, json: async () => ({ ...saved.run, ...changes }) };
+          const endpoint = `https://api.github.com/repos/${env.GITHUB_REPOSITORY}/actions/runs/${saved.environment.REUSE_BUILD_RUN_ID}`;
+          assert.ok(url === endpoint || url === `${endpoint}/artifacts?per_page=100`);
+          return {
+            ok: true,
+            json: async () =>
+              url === endpoint ? { ...saved.run, ...changes } : saved.artifactInventory,
+          };
         }),
         { run_id: saved.environment.REUSE_BUILD_RUN_ID, reuse: true },
       );

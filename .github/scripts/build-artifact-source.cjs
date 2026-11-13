@@ -6,6 +6,24 @@ function runId(value) {
   return value;
 }
 
+async function readSource(url, token, fetchRun, kind) {
+  try {
+    const response = await fetchRun(url, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      signal: AbortSignal.timeout(15000),
+      redirect: "error",
+    });
+    if (!response.ok) throw new Error("Unsuccessful response");
+    return await response.json();
+  } catch {
+    throw new Error(`Unable to read the build source ${kind}`);
+  }
+}
+
 async function resolveSource(env, fetchRun = fetch) {
   const cold = env.COLD_BUILD || "false";
   if (!["true", "false"].includes(cold)) throw new Error("COLD_BUILD must be true or false");
@@ -28,22 +46,8 @@ async function resolveSource(env, fetchRun = fetch) {
     throw new Error("Invalid GitHub repository");
   if (!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA || "")) throw new Error("Invalid GitHub commit SHA");
   if (!env.GITHUB_TOKEN) throw new Error("Build artifact reuse requires a read token");
-  let source;
-  try {
-    const response = await fetchRun(`https://api.github.com/repos/${repo}/actions/runs/${id}`, {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      signal: AbortSignal.timeout(15000),
-      redirect: "error",
-    });
-    if (!response.ok) throw new Error("Unsuccessful response");
-    source = await response.json();
-  } catch {
-    throw new Error("Unable to read the build source workflow run");
-  }
+  const url = `https://api.github.com/repos/${repo}/actions/runs/${id}`;
+  const source = await readSource(url, env.GITHUB_TOKEN, fetchRun, "workflow run");
   const measurement =
     source?.event === "workflow_dispatch" ||
     (source?.event === "push" && source.head_branch === "ci/cold-build");
@@ -57,6 +61,45 @@ async function resolveSource(env, fetchRun = fetch) {
   )
     throw new Error(
       "Build source must be a successful completed CI measurement for this repository and exact commit",
+    );
+  const inventory = await readSource(
+    `${url}/artifacts?per_page=100`,
+    env.GITHUB_TOKEN,
+    fetchRun,
+    "artifact inventory",
+  );
+  const required = [
+    "linux-runtime-cli",
+    "linux-runtime-addon",
+    "native-runtime-x86_64-pc-windows-msvc",
+    "native-runtime-aarch64-apple-darwin",
+    "native-rust-archive-x86_64-pc-windows-msvc",
+    "native-rust-archive-aarch64-apple-darwin",
+    "standalone-library",
+    "rust-coverage-build",
+  ];
+  if (
+    !Number.isInteger(inventory?.total_count) ||
+    inventory.total_count < required.length ||
+    inventory.total_count > 100 ||
+    !Array.isArray(inventory.artifacts) ||
+    inventory.artifacts.length !== inventory.total_count ||
+    inventory.artifacts.some(
+      (artifact) =>
+        !artifact || typeof artifact.name !== "string" || typeof artifact.expired !== "boolean",
+    ) ||
+    required.some((name) => {
+      const matches = inventory.artifacts.filter((artifact) => artifact?.name === name);
+      return (
+        matches.length !== 1 ||
+        matches[0].expired !== false ||
+        typeof matches[0].expires_at !== "string" ||
+        !(Date.parse(matches[0].expires_at) > Date.now())
+      );
+    })
+  )
+    throw new Error(
+      "Build source must contain a complete inventory of at most 100 artifacts and all eight unexpired build archives",
     );
   return { run_id: id, reuse: true };
 }

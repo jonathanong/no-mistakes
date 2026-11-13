@@ -126,7 +126,8 @@ by `ci/warm-build-<cold run ID>`. These explicit measurement refs run the full
 validation graph without optional benchmarks. Ordinary PR behavior is unchanged.
 
 The warm path validates the completed source run's repository, workflow, event,
-and exact commit before downloading its build archives. It reuses compiled
+and exact commit, then requires all eight unexpired build archives before
+downloading them. It reuses compiled
 binaries, not test results: every test runs again, and coverage profiles are
 collected and merged anew under the unchanged floors and CRAP gate. A normal
 PR cannot request cross-run reuse. Report warm artifact reuse separately from

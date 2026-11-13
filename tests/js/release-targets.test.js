@@ -239,10 +239,10 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     nativeCommands,
-    /cargo test --locked -p no-mistakes --test macos_invocation/,
+    /cargo test(?: --config \S+)* --locked -p no-mistakes --test macos_invocation/,
     "macOS native jobs must run the focused invocation test target",
   );
-  assert.doesNotMatch(nativeCommands, /cargo test --locked -p no-mistakes --lib/);
+  assert.doesNotMatch(nativeCommands, /cargo test\b[^\r\n]*--lib\b/);
   assert.doesNotMatch(
     unfoldedNativeJob,
     /cargo test\b[^\r\n]*--all-features\b/,
