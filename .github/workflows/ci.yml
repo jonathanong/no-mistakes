@@ -227,7 +227,7 @@ jobs:
 
       - name: Test Rust disk diagnostics
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-disk-usage.test.cjs
+        run: node --test .github/scripts/rust-disk-usage.test.cjs .github/scripts/drop-rust-test-executables.test.cjs
 
       - name: Test resource sampling wrapper
         timeout-minutes: 2
@@ -465,6 +465,7 @@ jobs:
 
       - name: Upload real N-API test durations
         if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}
+        continue-on-error: true
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -736,6 +737,7 @@ jobs:
 
       - name: Upload real N-API test durations
         if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}
+        continue-on-error: true
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
