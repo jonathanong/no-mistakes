@@ -57,8 +57,8 @@ fn resolve_closure_catalog_and_package_edges() {
             .map(|hit| hit.specifier.as_str()),
         Some("18.0.0")
     );
-    assert!(slots.catalogs.named.get("default").is_none());
-    assert!(slots.catalogs.named.get("a.b").is_none());
+    assert!(!slots.catalogs.named.contains_key("default"));
+    assert!(!slots.catalogs.named.contains_key("a.b"));
 
     let missing_slot = resolve(
         "include:\n  ./pnpm/claim.yaml: [catalogs.react]\n",

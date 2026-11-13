@@ -233,7 +233,7 @@ fn swift_package_choice_and_unscoped_files_use_declared_boundaries() {
         crate::test_support::materialize_saved_fixture(&edges_root("swift-unscoped"));
     let root = swift_fixture.path();
     let discovered = super::discover_from_projects(
-        &root,
+        root,
         &NoMistakesConfig::default(),
         TestRunner::Swift,
         vec![project("src/App.swift", "")],
