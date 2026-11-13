@@ -133,3 +133,26 @@ fn derived_dependency_requests_validate_ids_before_collecting_closures() {
         assert!(error.to_string().contains(expected), "{error:#}");
     }
 }
+
+#[test]
+fn preparing_reports_rejects_invalid_roots_and_ambiguous_automatic_configs() {
+    let invalid = options(json!([{"type":"symbols", "root":false, "files":["a.mts"]}]));
+    let error = AnalyzeProjectContext::prepare(&invalid)
+        .err()
+        .expect("invalid root rejected");
+    assert_eq!(error.to_string(), "root must be a string");
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/scan-config/multiple-no-mistakes/fixture");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let ambiguous: AnalyzeProjectOptions = serde_json::from_value(json!({
+        "root":fixture.path(), "reports":[{"type":"symbols", "files":["a.mts"]}]
+    }))
+    .unwrap();
+    let error = AnalyzeProjectContext::prepare(&ambiguous)
+        .err()
+        .expect("ambiguous config rejected");
+    assert!(
+        error.to_string().contains("multiple config files found"),
+        "{error:#}"
+    );
+}

@@ -23,6 +23,20 @@ fn p6_call_sites_requires_a_prepared_projection() {
 }
 
 #[test]
+fn p6_call_sites_requires_symbols_not_requested_by_import_usage_analysis() {
+    let (_fixture, root) = p6_analysis_fixture("simple");
+    let (_, prepared) = options(&root, json!({"type":"importUsages"}));
+    let context = AnalyzeProjectContext::prepare(&prepared).unwrap();
+    let scope = context.scopes.values().next().unwrap();
+    let (request, _) = options(
+        &root,
+        json!({"type":"callSites", "file":"a.mts", "exportName":"a"}),
+    );
+    let error = scope.call_sites_report(&request, &prepared).unwrap_err();
+    assert_eq!(error.to_string(), format!("missing symbols for {}", PathBuf::from(root).join("a.mts").display()));
+}
+
+#[test]
 fn p6_call_sites_rejects_a_fatal_target_even_without_a_projection() {
     let (_fixture, root) = p6_analysis_fixture("forbidden-dependencies-parse-error");
     let (_, prepared) = options(
