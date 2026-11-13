@@ -213,9 +213,11 @@ test("only Windows native timing breaches are report-only", () => {
 
 test("native CI jobs run only platform-specific Rust tests", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
-  const nativeJob = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m);
+  const nativeJob = workflow.match(
+    /^ {2}native-(?:build|test-build|rust-tests|api-tests):[\s\S]*?(?=^ {2}[a-z])/gm,
+  );
   assert.ok(nativeJob, "ci.yml must define native-tests");
-  const body = nativeJob[0];
+  const body = nativeJob.join("\n");
 
   // Bash `\` continuations are one argv to cargo; a newline-limited regex
   // would miss `--all-features` on the next physical line.
@@ -227,7 +229,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
       ),
     )
     .join("\n");
-  assert.match(body, /node \.github\/scripts\/native-rust-tests.cjs run/);
+  assert.match(body, /node \.github\/scripts\/native-test-archive.cjs run/);
   const unfoldedNativeJob = `${body.replace(/\\\r?\n[ \t]*/g, " ")}\n${nativeCommands}`;
   assert.doesNotMatch(
     unfoldedNativeJob,
@@ -287,7 +289,11 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   assert.match(defender, /'\.cargo'/);
   assert.match(defender, /'\.rustup'/);
   assert.match(body, /Run native CLI smoke test/);
-  assert.match(body, /real-napi-api\.test\.js/);
+  assert.ok(
+    require("../../.github/scripts/native-api-shards.cjs").files.includes(
+      "packages/no-mistakes/scripts/real-napi-api.test.js",
+    ),
+  );
   assert.match(
     body,
     /crate-type = \["rlib", "cdylib"\]/,
@@ -300,8 +306,8 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     workflow,
-    /bash \.github\/scripts\/rust-validation\.sh test/,
-    "Linux coverage keeps the shared full-suite validation command",
+    /node \.github\/scripts\/rust-coverage-shards\.cjs shard/,
+    "Linux coverage executes the compiled full-suite archive through shard validation",
   );
 });
 
@@ -309,7 +315,9 @@ test("native CI jobs run only platform-specific Rust tests", () => {
 // reuse the preceding library build for integration tests.
 test("native CI omits debug metadata without weakening runtime checks", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
-  const body = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
+  const body = workflow
+    .match(/^ {2}native-(?:build|test-build|rust-tests|api-tests):[\s\S]*?(?=^ {2}[a-z])/gm)
+    ?.join("\n");
   assert.ok(body, "ci.yml must define native-tests");
   const manifest = readFileSync(join(repoRoot, "Cargo.toml"), "utf8");
   for (const profile of ["dev", "test"]) {
@@ -324,7 +332,7 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
   }
   for (const [name, minutes] of [
     ["Build native CLI and N-API addon", 20],
-    ["Precompile native Rust test targets", 20],
+    ["Precompile native Rust test targets", 15],
     ["Run platform-specific Rust tests", 9],
     ["Run real N-API API test", 10],
   ]) {

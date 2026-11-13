@@ -1,0 +1,4 @@
+{"reason":"compiler-message","message":{"rendered":"test diagnostic"}}
+{"reason":"compiler-artifact","executable":null,"target":{"name":"dep","kind":["lib"]},"profile":{"test":false}}
+{"reason":"compiler-artifact","executable":"/repo/target/debug/deps/macos_invocation-123","target":{"name":"macos_invocation","kind":["test"]},"profile":{"test":true}}
+{"reason":"compiler-artifact","executable":"/repo/target/debug/no-mistakes","target":{"name":"no-mistakes","kind":["bin"]},"profile":{"test":false}}

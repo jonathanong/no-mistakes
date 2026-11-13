@@ -1,5 +1,66 @@
 # Debug metadata in CI builds
 
+## Parallel CI layout and measured baseline
+
+The pull-request workflow splits compilation-heavy checks into producer and
+consumer jobs, with matrix shards for independent test work. This section
+describes the current layout; the timings below are from the earlier serial
+job layout and are historical measurements, not measurements of the current
+workflow.
+
+The current validation graph is organized as follows:
+
+- Source policy/tooling tests, Rust quality checks, JavaScript policy checks,
+  and documentation link checks run independently. Rust quality uses separate
+  matrix entries for each compiler/feature profile; JavaScript formatting,
+  lint, duplication, and spelling checks also run separately.
+- A Linux CLI and N-API producer uploads its binaries for the AST check and
+  Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
+  a merge job combines the blob reports and coverage before enforcing the
+  configured floors. Real-addon behavior remains in its own job.
+- Rust coverage builds instrumented test binaries once, runs doctests in the
+  producer, then runs six test shards. A collector merges profiles and checks
+  complete execution before producing LCOV and applying the existing coverage
+  and complexity gates.
+- Standalone library tests build without the CLI, then run as four shards from
+  the archived test binaries. Native platform jobs build runtime and Rust test
+  artifacts separately; six Rust test shards and six real-addon API shards run
+  per platform. The platform-specific invocation tests and API checks remain
+  required.
+- Fan-in jobs preserve the existing required-check names and fail if a
+  producer or shard fails. Artifact transfer and per-job setup remain part of
+  elapsed PR wall time.
+
+The baseline is completed workflow run
+[`43349743109`](https://github.com/jonathanong/no-mistakes/actions/runs/43349743109),
+collected before this parallel layout. Its reported end-to-end PR wall time was
+28m15s. The completed job intervals in that run show the longest jobs and the
+work that dominated them:
+
+| Baseline job | Wall time | Dominant measured steps |
+| --- | ---: | --- |
+| Native tests (macOS ARM64) | 26m57s | CLI/addon build 10m09s; Rust test precompile 7m31s; platform Rust tests 3m35s; API tests 3m17s |
+| Native tests (Windows x64) | 26m19s | CLI/addon build 4m31s; Rust test precompile 4m53s; platform Rust tests 7m08s; API tests 5m49s |
+| Rust tests and coverage | 18m43s | Instrumented test build 5m28s; test execution 12m01s |
+| Lint and source checks | 12m48s | Clippy runs 1m39s and 1m34s; release check 1m26s; no-default test check 1m29s; PostgreSQL source identity tests 3m36s |
+| JavaScript tests | 11m00s | Native build 4m26s; ordinary tests 3m09s; real-addon API tests 2m22s |
+| Standalone library tests | 9m58s | Library test command 9m10s, including compilation and test execution |
+
+These were one completed run, not a tail estimate. The macOS native Rust-cache
+restore missed, and its separately keyed native test-artifact cache also
+missed. The run therefore records a cold native build path; it does not prove
+that every future run will be cold or warm. The timings include runner setup
+and, for each job, its own cleanup. The 10-minute PR-wall target has not yet
+been demonstrated by a completed run of the parallel workflow. In particular,
+the earlier macOS native path alone exceeded that target; sharding and artifact
+reuse are intended to reduce its critical path, but their end-to-end effect
+must be measured on a completed run.
+
+Do not reinterpret the old job timings as current job budgets or runtime
+guarantees. Preserve their source run and raw logs when comparing a completed
+parallel run; report both end-to-end elapsed time and the longest required job,
+including producer, download, setup, fan-in, and post-job cleanup time.
+
 Workspace development and test profiles set `debug = 0`, so local builds, CI,
 and release validation omit debugger metadata. This reduces compilation work and
 temporary artifact size, at the cost of file/line and inline-frame detail in
@@ -14,9 +75,10 @@ function names; reproduce them with a local build that sets
 For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 `CARGO_PROFILE_TEST_DEBUG=2` when invoking Cargo to restore debugger symbols.
 
-CI and release validation share `.github/scripts/rust-validation.sh`. Coverage
-instrumentation is applied only to the coverage build and test steps; documentation tests
-run separately in both workflows. Resumed releases may use historical source
+Release validation uses `.github/scripts/rust-validation.sh` for its build,
+test, and documentation-test commands. The current pull-request workflow uses
+that helper for documentation tests; instrumented Rust tests are built once,
+archived, and run in parallel shards. Resumed releases may use historical source
 tags without the shared helpers or profile defaults. Release validation checks
 out the running workflow's revision (`github.workflow_sha`) separately into
 `validation-tools`, then moves that checkout to the runner's temporary directory
@@ -25,6 +87,14 @@ source. Cargo runs against the extracted release source in the workspace root.
 Release job environment overrides enforce the same symbol-free
 profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
 working directory.
+
+## Historical CI layouts and bounds
+
+The material below retains earlier workflow descriptions and measurements for
+context. Job names, dependencies, and time limits here describe the historical
+layouts unless a paragraph explicitly says otherwise; use the current layout
+and baseline section above for today's pull-request workflow. Historical
+timeouts are collection limits, not current targets or runtime guarantees.
 
 CI runs lint/source checks and package verification in separate jobs. Lint/source
 checks retain their 30-minute aggregate budget; package verification has 15 minutes.

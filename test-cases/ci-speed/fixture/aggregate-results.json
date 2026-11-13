@@ -1,0 +1,6 @@
+[
+  {"result":"success","exit":0},
+  {"result":"failure","exit":1},
+  {"result":"cancelled","exit":1},
+  {"result":"skipped","exit":1}
+]

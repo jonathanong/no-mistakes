@@ -106,6 +106,7 @@ test("docs that tests outside the docs suite read always run every test job", ()
 
 test("docs-only pull requests still run the docs contract suite", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
-  assert.match(workflow, /--test suite_contracts/);
+  assert.match(workflow, /rust-coverage-shards\.cjs archive/);
+  assert.match(workflow, /docs-tests:[\s\S]*?needs: \[tests\]/);
   assert.match(workflow, /docs-only: \$\{\{ github\.event_name == 'pull_request' &&/);
 });

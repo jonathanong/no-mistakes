@@ -209,50 +209,19 @@ test("test:ci excludes Chromium browser-mode files that release still runs", () 
   );
 });
 
-test("CI installs Chromium only on the path-filtered browser job", () => {
+test("CI installs Chromium only on browser jobs and runs them on every PR", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
-  const jsJob = workflow.match(/^ {2}javascript-tests:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   const browserJob = workflow.match(
     /^ {2}timeout-policy-browser-tests:[\s\S]*?(?=^ {2}[a-z])/m,
   )?.[0];
+  const jsJob = workflow.match(/^ {2}javascript-shards:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   const gate = workflow.match(/^ {2}tests-gate:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
-  assert.ok(jsJob && browserJob && gate);
+  assert.ok(browserJob && jsJob && gate);
   assert.doesNotMatch(jsJob, /playwright install/);
   assert.match(browserJob, /playwright install chromium/);
   assert.doesNotMatch(browserJob, /playwright install --with-deps/);
-  assert.match(
-    browserJob,
-    /The runner image already ships Chromium's shared libraries; --with-deps/,
-  );
-  assert.match(browserJob, /needs: changes/);
-  assert.match(browserJob, /needs\.changes\.outputs\.timeout-policy-browser == 'true'/);
+  assert.doesNotMatch(browserJob, /needs\.changes\.outputs\.timeout-policy-browser == 'true'/);
   assert.match(gate, /timeout-policy-browser-tests/);
-  const script = gate
-    .split("run: |\n")[1]
-    ?.trim()
-    .replace(/^ {10}/gm, "");
-  assert.ok(script);
-  const run = (browser) =>
-    spawnSync("bash", ["-e", "-c", script], {
-      env: {
-        ...process.env,
-        QUALITY_RESULT: "success",
-        PACKAGES_RESULT: "success",
-        JAVASCRIPT_RESULT: "success",
-        NATIVE_RESULT: "success",
-        RUST_RESULT: "success",
-        STANDALONE_RESULT: "success",
-        CHANGE_RESULT: "success",
-        DOCS_ONLY: "false",
-        DOCS_RESULT: "skipped",
-        BROWSER_CHANGED: browser.changed,
-        BROWSER_RESULT: browser.result,
-      },
-    });
-  assert.equal(run({ changed: "false", result: "skipped" }).status, 0);
-  assert.equal(run({ changed: "true", result: "success" }).status, 0);
-  assert.notEqual(run({ changed: "true", result: "failure" }).status, 0);
-  assert.notEqual(run({ changed: "false", result: "failure" }).status, 0);
 });
 
 test("browser qualification retains lifecycle artifacts after failures within existing deadlines", () => {

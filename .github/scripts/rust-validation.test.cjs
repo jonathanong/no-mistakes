@@ -132,107 +132,26 @@ test("development and test profiles omit debugger symbols by default", () => {
     assert.match(block ?? "", /^debug = 0$/m);
   }
 });
-test("CI and release both use the shared test and doctest scopes", () => {
-  for (const [file, job] of [
-    ["ci.yml", "tests"],
-    ["release.yml", "validate-rust"],
-  ]) {
-    const workflow = readFileSync(path.join(root, ".github/workflows", file), "utf8");
-    const body = workflow.split(`\n  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
-    assert.ok(body, `${file} must retain ${job}`);
-    const prefix = job === "validate-rust" ? '"$RUNNER_TEMP/validation-tools/' : "";
-    const quote = job === "validate-rust" ? '"' : "";
-    for (const mode of ["build", "test", "doc"]) {
-      assert.ok(
-        body.includes(`bash ${prefix}.github/scripts/rust-validation.sh${quote} ${mode}\n`),
-        `${file} must use the shared ${mode} scope`,
-      );
-    }
+test("release retains the shared all-feature test and doctest scopes", () => {
+  const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
+  const body = workflow.split("\n  validate-rust:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  for (const mode of ["build", "test", "doc"])
     assert.ok(
-      workflow.includes(`node --test ${prefix}.github/scripts/rust-validation.test.cjs${quote}`),
+      body.includes(
+        `bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" ${mode}\n`,
+      ),
     );
-    const overrides = [...workflow.matchAll(/CARGO_PROFILE_(?:DEV|TEST)_DEBUG: (.+)/g)];
-    for (const [, value] of overrides) assert.equal(value, '"0"');
-    if (job === "tests") assert.equal(overrides.length, 0);
-  }
-});
-
-test("CI, release, and pre-push Clippy validate the locked all-feature workspace", () => {
-  for (const file of ["ci.yml", "release.yml"]) {
-    const workflow = readFileSync(path.join(root, ".github/workflows", file), "utf8");
-    assert.match(
-      workflow,
-      /run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
-    );
-  }
-});
-
-test("CI Clippy also builds default-feature test targets", () => {
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
+  assert.ok(
+    workflow.includes(
+      'node --test "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.test.cjs"',
+    ),
+  );
   assert.match(
     workflow,
-    /run: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings\n/,
+    /run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
   );
-});
-
-test("CI checks every test target without default features", () => {
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  assert.match(
-    workflow,
-    /run: cargo check --locked --tests --no-default-features -p no-mistakes\n/,
-  );
-});
-
-test("packaging has its own bounded job and remains in the required aggregate", () => {
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const body = (job) => workflow.split(`\n  ${job}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
-  const packages = body("packages");
-  assert.ok(packages, "package verification must not share the lint job budget");
-  assert.match(packages, /timeout-minutes: 15/);
-  assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes\n/);
-  assert.match(packages, /run: pnpm run pack:check\n/);
-  assert.doesNotMatch(body("quality"), /cargo publish|pnpm run pack:check/);
-  const gate = body("tests-gate");
-  assert.match(gate, /name: Tests with coverage/);
-  assert.match(gate, /\n      - packages\n/);
-  assert.match(gate, /PACKAGES_RESULT: \$\{\{ needs\.packages\.result \}\}/);
-});
-
-test("the actual required aggregate rejects every unsuccessful package result", () => {
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const gate = workflow.split("\n  tests-gate:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
-  const script = gate.split("        run: |\n")[1].replace(/^          /gm, "");
-  const successful = {
-    QUALITY_RESULT: "success",
-    PACKAGES_RESULT: "success",
-    JAVASCRIPT_RESULT: "success",
-    NATIVE_RESULT: "success",
-    RUST_RESULT: "success",
-    STANDALONE_RESULT: "success",
-    CHANGE_RESULT: "success",
-    BROWSER_CHANGED: "false",
-    BROWSER_RESULT: "skipped",
-    DOCS_ONLY: "false",
-    DOCS_RESULT: "skipped",
-  };
-  const run = (env) =>
-    spawnSync("bash", ["-eu", "-c", script], {
-      encoding: "utf8",
-      env: { ...process.env, ...successful, ...env },
-    });
-  for (const result of ["success", "failure", "cancelled", "skipped"]) {
-    const output = run({ PACKAGES_RESULT: result });
-    assert.equal(output.status, result === "success" ? 0 : 1, output.stderr);
-  }
-  assert.equal(run({ DOCS_RESULT: "success" }).status, 1);
-  const docsOnly = { DOCS_ONLY: "true", DOCS_RESULT: "success" };
-  for (const job of ["PACKAGES", "JAVASCRIPT", "NATIVE", "RUST", "STANDALONE"])
-    docsOnly[`${job}_RESULT`] = "skipped";
-  assert.equal(run(docsOnly).status, 0, run(docsOnly).stderr);
-  for (const result of ["failure", "cancelled", "skipped"])
-    assert.equal(run({ ...docsOnly, DOCS_RESULT: result }).status, 1);
-  assert.equal(run({ ...docsOnly, RUST_RESULT: "success" }).status, 1);
-  assert.equal(run({ ...docsOnly, QUALITY_RESULT: "failure" }).status, 1);
+  for (const [, value] of workflow.matchAll(/CARGO_PROFILE_(?:DEV|TEST)_DEBUG: (.+)/g))
+    assert.equal(value, '"0"');
 });
 
 test("pre-push Clippy uses the workflow scope", () => {
@@ -300,202 +219,6 @@ test("pre-push enforces the same documentation spelling scope as CI", () => {
   assert.match(hook, /wait "\$pid_cspell" \|\| fail=1/);
 });
 
-test("native API timeout leaves startup and teardown room after the observed Windows suite", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/windows-native-api-timing.json"),
-      "utf8",
-    ),
-  );
-  const duration = Number(observed.observedLogLines.join("\n").match(/Duration\s+(\d+\.\d+)s/)[1]);
-  assert.match(observed.observedLogLines.join("\n"), /252 passed.*2 skipped/);
-  assert.equal(observed.step.conclusion, "failure");
-  const required = duration + observed.startupTeardownReserveSeconds;
-  assert.ok(required > 120, "the observed suite cannot safely fit the former two-minute step");
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
-  const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
-  assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
-  assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 50\n/);
-  const linux = workflow.split("\n  native-tests:\n")[0];
-  assert.match(linux, /name: Run real N-API API test\n\s+timeout-minutes: 4\n/);
-});
-
-const workflowJob = (name) => {
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const job = workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
-  assert.ok(job, `workflow must retain the ${name} job`);
-  return job;
-};
-const jobBudgetSeconds = (job) => Number(job.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
-function stepBudgetSeconds(job, name, platform = "Windows") {
-  const step = job.split(`      - name: ${name}\n`)[1]?.split(/\n      - /)[0];
-  assert.ok(step, `job must retain ${name}`);
-  const value = step.match(/^\s+timeout-minutes: (.+)$/m)?.[1]?.trim();
-  if (/^\d+$/.test(value)) return Number(value) * 60;
-  const conditional = value?.match(/^\$\{\{ runner\.os == '([^']+)' && (\d+) \|\| (\d+) \}\}$/);
-  assert.ok(conditional, `${name} must have a bounded literal or platform timeout`);
-  return Number(platform === conditional[1] ? conditional[2] : conditional[3]) * 60;
-}
-
-test("split quality and package jobs retain observed check and verification budgets", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/quality-job-timing.json"),
-      "utf8",
-    ),
-  );
-  const job = workflowJob("quality");
-  const packages = workflowJob("packages");
-  const elapsed =
-    (Date.parse(observed.cargoPublishStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
-  const publish = stepBudgetSeconds(packages, "Check Cargo packages");
-  const npm = stepBudgetSeconds(packages, "Check npm packages");
-  const diagnostics = stepBudgetSeconds(job, "Diagnose Rust disk usage after failure");
-  assert.equal(observed.conclusion, "cancelled");
-  assert.deepEqual([publish, npm, diagnostics], [600, 120, 120]);
-  assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes/);
-  assert.match(packages, /run: pnpm run pack:check/);
-  assert.ok(
-    jobBudgetSeconds(job) >= elapsed + diagnostics,
-    "quality must retain room for the observed checks and bounded diagnostics",
-  );
-  assert.equal(jobBudgetSeconds(job), 1800, "retain the existing thirty-minute quality budget");
-  assert.equal(stepBudgetSeconds(packages, "Diagnose Rust disk usage after failure"), diagnostics);
-  assert.ok(jobBudgetSeconds(packages) >= publish + npm + diagnostics);
-  assert.equal(jobBudgetSeconds(packages), 900, "retain the separate bounded package job");
-});
-
-test("coverage job reserves bounded post-cache time after completed tests and gates", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/rust-coverage-job-timing.json"),
-      "utf8",
-    ),
-  );
-  const job = workflowJob("tests");
-  const elapsed =
-    (Date.parse(observed.postCacheStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
-  assert.equal(observed.conclusion, "cancelled");
-  assert.equal(observed.completedRustTests, 14669);
-  assert.ok(
-    jobBudgetSeconds(job) >= elapsed + observed.postCacheReserveSeconds,
-    "job budget must include cache cleanup after tests, reports and uploads finish",
-  );
-  assert.ok(jobBudgetSeconds(job) <= 2400, "retain a job deadline of at most forty minutes");
-  assert.equal(stepBudgetSeconds(job, "Enforce Rust coverage floors"), 300);
-  assert.match(job, /cargo llvm-cov report --json --summary-only/);
-  assert.match(job, /node \.github\/scripts\/rust-coverage-floors\.cjs/);
-  const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  for (const dimension of ["LINES", "FUNCTIONS", "REGIONS"]) {
-    assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
-  }
-});
-
-test("coverage test step reserves time beyond a passing suite cancelled at its deadline", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/rust-coverage-step-timing.json"),
-      "utf8",
-    ),
-  );
-  const job = workflowJob("tests");
-  const setup = (Date.parse(observed.stepStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
-  const tests =
-    (Date.parse(observed.lastTestBinaryFinishedAt) - Date.parse(observed.stepStartedAt)) / 1000;
-  const step = stepBudgetSeconds(job, "Run Rust tests for coverage");
-  assert.equal(observed.stepConclusion, "failure");
-  assert.equal(observed.failedRustTests, 0);
-  assert.ok(step >= tests + observed.stepReserveSeconds, "step must outlast the passing suite");
-  assert.ok(jobBudgetSeconds(job) >= setup + step, "job must cover setup and the full step");
-});
-
-test("standalone library deadline reserves cold-cache time beyond the censored passing suite", () => {
-  const data = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/standalone-lib-budget-observations.json"),
-      "utf8",
-    ),
-  );
-  const stepName = "Test standalone Rust library without a CLI build";
-  const elapsed = (start, end) => (Date.parse(end) - Date.parse(start)) / 1000;
-  const stepOf = (entry) => entry.steps.find((item) => item.name === stepName);
-  const logs = (entry) => entry.observedLogLines.join("\n");
-  const cargoSeconds = (text) => {
-    const match = text.match(
-      /Finished `test` profile \[unoptimized\] target\(s\) in (?:(\d+)m )?(\d+)s/,
-    );
-    assert.ok(match, "log must include the cargo finished line");
-    return Number(match[1] || 0) * 60 + Number(match[2]);
-  };
-  const suite = (text) => {
-    const match = text.match(
-      /test result: ok\. (\d+) passed; 0 failed; (\d+) ignored;[\s\S]*finished in (\d+\.\d+)s/,
-    );
-    assert.ok(match, "log must include the library suite result");
-    return { passed: Number(match[1]), ignored: Number(match[2]), seconds: Number(match[3]) };
-  };
-
-  assert.equal(data.coldCacheObservations.length, 3);
-  const passedCounts = [];
-  const coldDurations = data.coldCacheObservations.map((entry) => {
-    assert.equal(entry.cacheFullMatch, false);
-    assert.equal(entry.jobConclusion, "success");
-    assert.equal(stepOf(entry).conclusion, "success");
-    assert.match(logs(entry), /full match: false/);
-    const result = suite(logs(entry));
-    assert.equal(result.ignored, 3);
-    passedCounts.push(result.passed);
-    const wall = elapsed(stepOf(entry).startedAt, stepOf(entry).completedAt);
-    const work = cargoSeconds(logs(entry)) + result.seconds;
-    assert.ok(Math.abs(wall - work) <= 3, `${entry.runUrl} wall ${wall} work ${work}`);
-    return wall;
-  });
-  assert.deepEqual(passedCounts, [13311, 13319, 13311]);
-  assert.equal(Math.max(...coldDurations), 562);
-  const coldRequired = Math.max(...coldDurations) + data.coldCacheReserveSeconds;
-  assert.equal(coldRequired, 682);
-
-  const censored = data.censoredObservation;
-  assert.equal(censored.cacheFullMatch, true);
-  assert.equal(censored.jobConclusion, "failure");
-  assert.equal(stepOf(censored).conclusion, "failure");
-  assert.match(logs(censored), /full match: true/);
-  assert.match(logs(censored), /timed out after 10 minutes/);
-  const censoredSuite = suite(logs(censored));
-  assert.equal(censoredSuite.passed, 13319);
-  assert.equal(censoredSuite.ignored, 3);
-  assert.equal(cargoSeconds(logs(censored)), 301);
-  assert.equal(censoredSuite.seconds, 298.63);
-  const censoredWork = cargoSeconds(logs(censored)) + censoredSuite.seconds;
-  assert.ok(censoredWork > 590);
-  assert.ok(censoredWork < elapsed(stepOf(censored).startedAt, stepOf(censored).completedAt));
-  const censoredRequired = censoredWork + data.coldCacheReserveSeconds;
-  assert.ok(censoredRequired > 600, "the former ten-minute step cannot hold the reserve");
-
-  const job = workflowJob("tests-standalone-lib");
-  const stepBudget = stepBudgetSeconds(job, stepName);
-  assert.ok(stepBudget >= coldRequired, "step must clear the longest completed cold-cache run");
-  assert.ok(stepBudget >= censoredRequired, "step must clear the censored compile and suite");
-  assert.equal(stepBudget, 720, "keep the library step bounded to twelve minutes");
-  const beforeStep = [...data.coldCacheObservations, censored].map((entry) =>
-    elapsed(entry.startedAt, stepOf(entry).startedAt),
-  );
-  assert.equal(Math.max(...beforeStep), 42);
-  const requiredJob = Math.max(...beforeStep) + stepBudget + data.postJobReserveSeconds;
-  assert.equal(requiredJob, 882);
-  assert.ok(jobBudgetSeconds(job) >= requiredJob);
-  assert.equal(jobBudgetSeconds(job), 1200, "retain the existing twenty-minute standalone job");
-  const budgets = [...job.matchAll(/^        timeout-minutes: (\d+)$/gm)].map(
-    (match) => Number(match[1]) * 60,
-  );
-  assert.ok(budgets.length >= 2);
-  assert.ok(Math.max(...budgets) <= jobBudgetSeconds(job));
-  assert.ok(jobBudgetSeconds(job) < budgets.reduce((sum, value) => sum + value, 0));
-  assert.match(job, /env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib/);
-  assert.match(job, /test ! -e "\$CARGO_TARGET_DIR\/debug\/no-mistakes"/);
-});
-
+require("./ci-parallel-validation.test.cjs");
 require("./ci-budget-calibration.test.cjs");
 require("./native-platform-budget.test.cjs");

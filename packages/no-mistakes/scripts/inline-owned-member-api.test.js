@@ -139,14 +139,23 @@ test("CI registers inline acquisitions and mutable receiver cases exactly once",
   const bridge = readFileSync(join(__dirname, "real-napi-api.test.js"), "utf8");
   assert.ok(bridge.includes('require("./inline-owned-member-api.test.js");'));
   assert.equal(steps.length, 2, "Linux and native platform addon steps");
+  const nativeFiles = require("../../../.github/scripts/native-api-shards.cjs").files;
   for (const step of steps) {
     assert.match(step, /NO_MISTAKES_TEST_NAPI_ADDON_PATH=/u);
-    assert.match(step, /pnpm exec vitest run/u);
-    assert.ok(step.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+    assert.match(step, /pnpm exec vitest run|node \.github\/scripts\/native-api-shards\.cjs/u);
+    assert.ok(
+      step.includes("packages/no-mistakes/scripts/real-napi-api.test.js") ||
+        (step.includes("native-api-shards.cjs") &&
+          nativeFiles.includes("packages/no-mistakes/scripts/real-napi-api.test.js")),
+    );
   }
 
   const entries = steps.map((step) =>
-    [...step.matchAll(/(?:packages|tests)\/[\w./-]+\.test\.(?:js|mjs)/gu)].map(([entry]) => entry),
+    step.includes("native-api-shards.cjs")
+      ? nativeFiles
+      : [...step.matchAll(/(?:packages|tests)\/[\w./-]+\.test\.(?:js|mjs)/gu)].map(
+          ([entry]) => entry,
+        ),
   );
   const mutable = "packages/no-mistakes/scripts/mutable-receiver-api.test.js";
   const child = spawnSync(

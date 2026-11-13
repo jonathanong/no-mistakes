@@ -112,126 +112,73 @@ for (const platform of ["Windows", "macOS"]) {
   );
 }
 
-test("native workflow restores and saves complete test artifacts before dependency pruning", () => {
+test("native workflow compiles independent archives and consumers never build Rust", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
-  assert.match(native, /env:\n\s+NO_MISTAKES_BUILD_NAPI: "1"/);
-  const dependency = native.indexOf("- name: Cache Rust build artifacts");
-  const restore = native.indexOf("- name: Restore native test artifacts");
-  const compile = native.indexOf("- name: Build native CLI and N-API addon");
-  const precompile = native.indexOf("- name: Precompile native Rust test targets");
-  const save = native.indexOf("- name: Cache native test artifacts");
-  const execute = native.indexOf("- name: Run platform-specific Rust tests");
-  assert.ok(
-    dependency < restore &&
-      restore < compile &&
-      compile < precompile &&
-      precompile < save &&
-      save < execute,
-  );
-  const restoreStep = native
-    .split("- name: Restore native test artifacts\n")[1]
-    .split("\n      - name:")[0];
-  const saveStep = native
-    .split("- name: Cache native test artifacts\n")[1]
-    .split("\n      - name:")[0];
-  assert.match(restoreStep, /path: \|\n\s+target\/debug\n\s+target\/\.rustc_info\.json/);
-  assert.match(saveStep, /path: \|\n\s+target\/debug\n\s+target\/\.rustc_info\.json/);
-  assert.doesNotMatch(
-    restoreStep + saveStep,
-    /native-api-tests|native-build-diagnostics|native-test-build-diagnostics|cargo-timings/,
-  );
-  assert.match(
-    restoreStep,
-    /key: native-test-artifacts-v1-.*matrix.target.*native-rust-toolchain.outputs.cachekey.*hashFiles.*github.sha/,
-  );
-  for (const file of [
-    "Cargo.toml",
-    "Cargo.lock",
-    "crates/**/Cargo.toml",
-    "rust-toolchain.toml",
-    ".github/workflows/ci.yml",
-    ".github/scripts/build-native.cjs",
-    ".github/scripts/native-rust-tests.cjs",
-  ])
-    assert.ok(restoreStep.includes(`'${file}'`));
-  assert.match(saveStep, /key: \$\{\{ steps.native-test-cache.outputs.cache-primary-key \}\}/);
-  assert.doesNotMatch(saveStep, /hashFiles/);
-  assert.match(native, /steps.native-test-cache.outputs.cache-hit != 'true'/);
-  const buildStep = native
-    .split("- name: Build native CLI and N-API addon\n")[1]
-    .split("\n      - name:")[0];
-  const precompileStep = native
-    .split("- name: Precompile native Rust test targets\n")[1]
-    .split("\n      - name:")[0];
-  assert.doesNotMatch(buildStep, /native-rust-tests\.cjs build/);
-  assert.match(buildStep, /timeout-minutes: 20/);
-  assert.match(buildStep, /node \.github\/scripts\/build-native\.cjs/);
-  assert.match(precompileStep, /timeout-minutes: 20/);
-  assert.match(precompileStep, /NO_MISTAKES_BUILD_NAPI: "1"/);
-  assert.match(precompileStep, /node \.github\/scripts\/native-rust-tests\.cjs build/);
-  assert.match(precompileStep, /NATIVE_RUST_CACHE_HIT:/);
-  assert.match(precompileStep, /NATIVE_TEST_CACHE_HIT:/);
-  assert.match(native, /node \.github\/scripts\/native-rust-tests.cjs run/);
-  assert.match(native, /target\/native-test-build-diagnostics/);
-  const timingReporter = fs.readFileSync(
-    path.join(__dirname, "report-native-job-timing.cjs"),
-    "utf8",
-  );
-  assert.match(timingReporter, /name === "Precompile native Rust test targets"/);
-  assert.match(timingReporter, /"Precompile native Rust test targets"/);
+  const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const runtime = job("native-build");
+  const archive = job("native-test-build");
+  assert.match(runtime, /node \.github\/scripts\/build-native.cjs/);
+  assert.match(runtime, /crate-type = \["rlib", "cdylib"\]/);
+  assert.match(runtime, /name: native-runtime-\$\{\{ matrix.target \}\}/);
+  assert.match(archive, /node \.github\/scripts\/native-test-archive.cjs build/);
+  assert.doesNotMatch(archive, /crate-type = \["rlib", "cdylib"\]/);
+  for (const producer of [runtime, archive]) {
+    assert.match(producer, /NO_MISTAKES_BUILD_NAPI: "1"/);
+    assert.match(producer, /shared-key: native-/);
+    assert.match(producer, /cache-workspace-crates: true/);
+    assert.doesNotMatch(producer, /hashFiles|github.sha.*cache|native-test-artifacts-v1/);
+  }
+  const rust = job("native-rust-tests");
+  const api = job("native-api-tests");
+  assert.match(rust, /needs: \[changes, native-test-build\]/);
+  assert.match(rust, /native-test-archive.cjs run \$\{\{ matrix.shard \}\} 6/);
+  assert.match(rust, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  assert.match(api, /needs: \[changes, native-build\]/);
+  assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} 6/);
+  const apiFiles = [
+    "real-napi-api",
+    "unused-disable-directives-api",
+    "sql-verdicts-api",
+    "postgres-procedural-occurrence-api",
+    "postgres-procedural-loop-coverage-api",
+    "guarded-array-receiver-api",
+    "forbidden-dependencies-globs-api",
+  ];
+  const apiSource = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
+  for (const file of apiFiles) assert.ok(apiSource.includes(`"${file}"`));
+  for (const consumer of [rust, api]) {
+    assert.match(consumer, /actions\/download-artifact@[a-f0-9]{40}/);
+    assert.doesNotMatch(
+      consumer,
+      /cargo (build|test)|native-test-archive.cjs build|build-native.cjs/,
+    );
+  }
 });
 
-test("split native build deadlines reflect the completed build and censored test compile", () => {
-  const evidence = require(
-    "../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json",
-  );
+test("split native compile deadlines retain historical cold-build evidence", () => {
+  const evidence = require("../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json");
+  const baseline = require("../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json");
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const native = workflow.split("\n  native-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
-  const jobSeconds = Number(native.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
-  const stepSeconds = (name) =>
+  const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const deadline = (text, step) =>
     Number(
-      native
-        .split(`- name: ${name}\n`)[1]
+      text
+        .split(`- name: ${step}\n`)[1]
         .split("\n      - name:")[0]
         .match(/timeout-minutes: (\d+)/)[1],
     ) * 60;
-  const baseline = require(
-    "../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json",
-  );
-  const maxHistoricalFirstCompile = Math.max(
-    ...baseline.historicalFirstHarnessCompiles.map(
-      (run) => run.firstTestHarnessCargoReportedSeconds,
-    ),
-  );
-  const aggregate = evidence.aggregateObservedEvidenceSeconds;
-  assert.equal(evidence.failedRun.combinedStep.elapsedSeconds, 1514);
-  assert.equal(evidence.failedRun.nativeBuild.exitCode, 0);
-  assert.equal(evidence.failedRun.testPrecompile.firstTargetFinished, false);
-  assert.equal(evidence.failedRun.testPrecompile.observedElapsedSeconds, 573);
-  assert.equal(stepSeconds("Build native CLI and N-API addon"), 1200);
-  assert.equal(stepSeconds("Precompile native Rust test targets"), 1200);
+  const runtime = deadline(job("native-build"), "Build native CLI and N-API addon");
+  const tests = deadline(job("native-test-build"), "Precompile native Rust test targets");
+  assert.ok(runtime >= evidence.failedRun.nativeBuild.elapsedSeconds);
   assert.ok(
-    stepSeconds("Build native CLI and N-API addon") >=
-      evidence.failedRun.nativeBuild.elapsedSeconds +
-        evidence.proposedBoundsSeconds.nativeBuildReserveBeyondLatestCompletedBuild,
+    tests >=
+      Math.max(
+        ...baseline.historicalFirstHarnessCompiles.map(
+          (run) => run.firstTestHarnessCargoReportedSeconds,
+        ),
+      ),
   );
-  assert.ok(stepSeconds("Precompile native Rust test targets") >= maxHistoricalFirstCompile);
-  assert.equal(jobSeconds, 3000);
-  assert.equal(
-    aggregate.censoredCombinedBuildStep +
-      aggregate.maximumCompletedPlatformRustStep +
-      aggregate.maximumCompletedApiStep +
-      aggregate.maximumMeasuredNonWorkOverhead +
-      aggregate.postJobReserve,
-    aggregate.required,
-  );
-  assert.ok(jobSeconds >= aggregate.required);
-  assert.equal(jobSeconds - aggregate.required, aggregate.jobHeadroom);
-  assert.equal(evidence.failedRun.runner.rustc, evidence.priorSuccessfulRun.rustc);
-  assert.equal(evidence.priorSuccessfulRun.jobId, 131507309652);
-  assert.equal(evidence.priorSuccessfulRun.headSha, "2b60f86c9cb3de278eb4e593e8ee1a49e4b29bcf");
-  assert.equal(evidence.priorSuccessfulRun.workflowSha, "6025c476242bd335a6ccabf2b2d3b13bdb8c506f");
+  assert.equal(evidence.failedRun.testPrecompile.firstTargetFinished, false);
 });
 
 test("native job timing reports the split compile phases and rejects incomplete baselines", () => {

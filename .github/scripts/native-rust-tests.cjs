@@ -31,12 +31,13 @@ function targets(platform) {
 function commands(mode, platform) {
   const selected = targets(platform);
   const base = ["test", "--locked", "-p", "no-mistakes"];
-  if (mode === "build")
+  if (mode === "build" || mode === "archive-build")
     return selected.map(({ selector }) => [
       ...base,
       "--no-run",
       "--timings",
       "--verbose",
+      ...(mode === "archive-build" ? ["--message-format=json-render-diagnostics"] : []),
       ...selector,
     ]);
   if (mode === "run")
@@ -47,9 +48,10 @@ function commands(mode, platform) {
 }
 
 function buildInvocation(argv = process.argv, env = process.env) {
-  const testBuild = argv[2] === "--tests";
+  const archive = argv[2] === "--archive-tests";
+  const testBuild = argv[2] === "--tests" || archive;
   const args = testBuild
-    ? commands("build", env.RUNNER_OS)[Number(argv[3])]
+    ? commands(archive ? "archive-build" : "build", env.RUNNER_OS)[Number(argv[3])]
     : ["build", "--locked", "-p", "no-mistakes", "--timings", "--verbose"];
   if (!args) throw new Error("expected a native test target index");
   if (testBuild && env.NO_MISTAKES_BUILD_NAPI !== "1")
@@ -92,4 +94,4 @@ if (require.main === module) {
     process.exitCode = 1;
   }
 }
-module.exports = { commands, buildInvocation };
+module.exports = { targets, commands, buildInvocation };

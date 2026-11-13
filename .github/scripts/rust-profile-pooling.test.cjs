@@ -18,9 +18,11 @@ const step = workflow.split("- name: Run Rust tests for coverage")[1].split("- n
 const pattern = step.match(/LLVM_PROFILE_FILE_NAME: (\S+)/)?.[1];
 test("coverage subprocesses share a bounded binary-signature pool", () => {
   assert.match(pattern, /^no-mistakes-%[1-9]m\.profraw$/);
-  const job = workflow.split("\n  tests:")[1].split(/^  [\w-]+:/m)[0];
+  const job = (
+    workflow.split("\n  rust-coverage-build:")[1] || workflow.split("\n  tests:")[1]
+  ).split(/^  [\w-]+:/m)[0];
   assert.match(job, /components: llvm-tools-preview/);
-  assert.match(job, /run: node --test \.github\/scripts\/rust-profile-pooling\.test\.cjs/);
+  assert.match(job, /run: node --test [^\n]*\.github\/scripts\/rust-profile-pooling\.test\.cjs/);
 });
 
 const rustc = (...args) => spawnSync("rustc", args, { encoding: "utf8" });
