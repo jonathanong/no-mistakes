@@ -16,6 +16,11 @@ test("shared compilation profiling is an explicit cold experiment, without cache
     /if: \$\{\{ github.event_name == 'workflow_dispatch' && inputs.profile_native_compile \}\}/,
   );
   assert.match(job, /runs-on: macos-15/);
+  assert.match(job, /timeout-minutes: 30/);
+  assert.match(
+    job,
+    /name: Measure separate Cargo invocations with shared target artifacts\n        timeout-minutes: 25/,
+  );
   assert.match(job, /NO_MISTAKES_BUILD_NAPI: "1"/);
   assert.match(job, /CARGO_BUILD_JOBS: "3"/);
   assert.match(job, /node \.github\/scripts\/native-compile-profile.cjs/);

@@ -1374,7 +1374,7 @@ jobs:
     name: Profile cold macOS Cargo unit reuse
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.profile_native_compile }}
     runs-on: macos-15
-    timeout-minutes: 50
+    timeout-minutes: 30
     permissions:
       contents: read
     env:
@@ -1398,7 +1398,7 @@ jobs:
         run: node --test .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs
 
       - name: Measure separate Cargo invocations with shared target artifacts
-        timeout-minutes: 35
+        timeout-minutes: 25
         run: node .github/scripts/native-compile-profile.cjs
 
       - name: Upload cold compilation profile

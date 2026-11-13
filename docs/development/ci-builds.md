@@ -183,8 +183,8 @@ builds the original runtime configuration first, restores the original
 library-only manifest bytes, then builds the unchanged selected test archive in
 the same target directory. It never copies fingerprints or forces Cargo to
 accept an artifact. Original manifest restoration and partial diagnostic reports
-also cover failing runtime/test commands. The experiment has a 35-minute step
-and 50-minute job bound for both sequential build phases and report upload;
+also cover failing runtime/test commands. The experiment has a 25-minute step
+and 30-minute job bound for both sequential build phases and report upload;
 normal producer deadlines remain unchanged.
 
 The artifact `native-compile-profile-aarch64-apple-darwin` contains phase wall
