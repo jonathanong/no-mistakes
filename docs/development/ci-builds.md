@@ -5,7 +5,7 @@
 The pull-request workflow splits compilation-heavy checks into producer and
 consumer jobs, with matrix shards for independent test work. This section
 describes the current layout and labels the measured baseline and intermediate
-heads explicitly. The latest PR-head timings are recorded in
+heads explicitly. The original parallelization timings are recorded in
 [PR #3322](https://github.com/jonathanong/no-mistakes/pull/3322).
 
 The current validation graph is organized as follows:
@@ -119,6 +119,72 @@ that every future run will be cold or warm. The timings include runner setup
 and, for each job, its own cleanup. The earlier macOS native path alone exceeded
 the ten-minute target. The following completed parallel measurements distinguish
 cache states and include scheduling overhead.
+
+### Balancing the remaining macOS snapshot work
+
+The completed baseline for the follow-up is run
+[`43395217611`](https://github.com/jonathanong/no-mistakes/actions/runs/43395217611),
+at `b8d96eb76`: 11m42s overall, with macOS Rust shard 1 taking 8m13s. Its
+PostgreSQL batch contained 91 selected Rust cases and took 318 seconds; shard 2
+had 90 PostgreSQL cases and took 177 seconds in that batch. The preceding run
+[`43393167734`](https://github.com/jonathanong/no-mistakes/actions/runs/43393167734)
+had the same 91/90 split but batch durations of 218/184 seconds. Counting cases
+therefore did not balance the known slow work, and runner variance remains
+visible even with compilation reused.
+
+Timestamped libtest notices identify five outliers, several present in both
+runs. A notice that a
+test has run for more than 60 seconds, followed by its completion timestamp,
+provides a lower bound rather than an exact duration. In the slower run those
+bounds were over 174.9 seconds for bounded-statement snapshots, 96.1 for
+query-annotation snapshots, 78.3 for the additional bounded-statement snapshots,
+73.6 for transformed-UUID snapshots, and 71.5 for unanalyzable-schema snapshots.
+The old modulo plan placed four of these five cases together in shard 1.
+
+macOS's two Rust shards now assign the longest known outliers first to the
+least-loaded shard. The [cost policy](../../.github/scripts/native-rust-costs.json)
+records the source notices and completion timestamps. It uses floored
+lower-bound weights, stable harness
+names and full test names; ties use stable test identity and shard index.
+Unmeasured and new cases receive a default weight of one and remain included.
+Those weights are scheduling units, not predicted seconds. The archived
+373-case inventory produces 185/188 selected cases with equal 430-unit loads,
+separating bounded-statement and query-annotation work. Each selected case
+still runs exactly once, with the original filters, batching and flags.
+Windows retains its existing six-shard assignments.
+
+The existing harness batching already avoids spawning a process per case.
+Adding runners would repeat checkout, runtime setup and artifact downloads
+(roughly 50–85 seconds per shard in the measured runs), and earlier runs showed
+macOS queues. The first change therefore balances work across two shards rather than
+increasing that overhead. Actual batch and end-to-end durations remain the
+acceptance evidence; estimated loads do not establish a ten-minute result.
+
+The first completed follow-up run,
+[`43403560928`](https://github.com/jonathanong/no-mistakes/actions/runs/43403560928),
+at `e3d89a6f0`, passed with the weighted plan. Its macOS PostgreSQL batches took
+153/223 seconds, compared with 318/177 seconds in the baseline. The two native
+Rust jobs took 4m22s/5m42s; the slowest job improved from 8m13s to 5m42s. The
+production inventory had grown to 374 cases, distributed 186/188 with 431/430
+weight units. Artifact comparison verified their union matched the complete
+inventory with no duplicates; the new case remained included automatically.
+
+That run still took **13m19s overall**. No job started for the first 1m16s.
+Both Windows workspace caches missed all compatible fallbacks: its runtime
+Cargo build took 6m21s, and its first test-target compile took 3m27s. Including
+setup and artifact handling, those producers took 8m42s and 6m07s. The Windows
+Rust producer finished at +7m44s, its slowest shard ran from +7m45s to +13m00s,
+and fan-in finished at +13m19s. That became the critical path; meeting ten
+minutes in that sample requires removing at least 3m19s from it. The macOS Rust
+branch finished at +11m22s, including initial scheduling and a 44-second queue
+for its producer. Its test execution no longer set the final completion time.
+
+Coverage remained at 98.0340% regions, 98.9991% lines, and 99.3110% functions,
+with the original floors and CRAP gate passing. Every previous CI job remained
+present. These before/after samples establish the changed assignment and
+observed durations, but different cache and scheduling states prevent treating
+the overall wall times as a controlled speedup estimate. Final PR-head timings
+are recorded in [PR #3329](https://github.com/jonathanong/no-mistakes/pull/3329).
 
 ### Completed parallel validation
 

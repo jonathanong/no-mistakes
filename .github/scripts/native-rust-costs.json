@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "platform": "macOS",
+  "shards": 2,
+  "defaultWeight": 1,
+  "noticeThresholdSeconds": 60,
+  "interpretation": "Heuristic scheduling weight units derived from conservative whole-second lower bounds, not exact per-case durations or wall-time forecasts. Unmeasured cases use an equal placeholder weight of 1.",
+  "provenance": "Completed green PR #3322 runs. Rust test harness notices after 60 seconds and later completion log timestamps establish the recorded lower bounds; no exact per-case start times are available.",
+  "runs": [
+    {
+      "id": 43393167734,
+      "headSha": "b17e05d2df6f0c85a57a68cfac5f9d1f5a26a407",
+      "conclusion": "success",
+      "url": "https://github.com/jonathanong/no-mistakes/actions/runs/43393167734"
+    },
+    {
+      "id": 43395217611,
+      "headSha": "b8d96eb76179dee71d4820bfd35a0ea10717e58e",
+      "conclusion": "success",
+      "url": "https://github.com/jonathanong/no-mistakes/actions/runs/43395217611"
+    }
+  ],
+  "cases": [
+    {
+      "harness": "suite_cli_postgres",
+      "name": "cli_postgres_snapshot_bounded_statements::postgres_bounded_statements_check_json_snapshot",
+      "weight": 174,
+      "observations": [
+        {
+          "runId": 43393167734,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:33:50.183748Z",
+          "completedAt": "2026-11-13T08:34:44.505690Z"
+        },
+        {
+          "runId": 43395217611,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:49:03.588187Z",
+          "completedAt": "2026-11-13T08:50:58.479449Z"
+        }
+      ]
+    },
+    {
+      "harness": "suite_cli_postgres",
+      "name": "cli_postgres_snapshot_bounded_statements_more::postgres_bounded_statements_more_check_json_snapshot",
+      "weight": 78,
+      "observations": [
+        {
+          "runId": 43395217611,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:49:05.201260Z",
+          "completedAt": "2026-11-13T08:49:23.466831Z"
+        }
+      ]
+    },
+    {
+      "harness": "suite_cli_postgres",
+      "name": "cli_postgres_snapshot_require_query_annotation::postgres_require_query_annotation_check_json_snapshot",
+      "weight": 96,
+      "observations": [
+        {
+          "runId": 43393167734,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:35:46.111049Z",
+          "completedAt": "2026-11-13T08:36:01.891094Z"
+        },
+        {
+          "runId": 43395217611,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:52:03.835684Z",
+          "completedAt": "2026-11-13T08:52:39.971082Z"
+        }
+      ]
+    },
+    {
+      "harness": "suite_cli_postgres",
+      "name": "cli_postgres_snapshot_unanalyzable_schema::postgres_unanalyzable_schema_check_json_snapshot",
+      "weight": 71,
+      "observations": [
+        {
+          "runId": 43393167734,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:36:11.417465Z",
+          "completedAt": "2026-11-13T08:36:19.396917Z"
+        },
+        {
+          "runId": 43395217611,
+          "shard": 1,
+          "noticeAt": "2026-11-13T08:52:50.201964Z",
+          "completedAt": "2026-11-13T08:53:01.714822Z"
+        }
+      ]
+    },
+    {
+      "harness": "suite_cli_postgres",
+      "name": "cli_postgres_snapshot_transformed_uuid_predicates::postgres_no_transformed_uuid_predicates_check_json_snapshot",
+      "weight": 73,
+      "observations": [
+        {
+          "runId": 43393167734,
+          "shard": 2,
+          "noticeAt": "2026-11-13T08:34:52.491073Z",
+          "completedAt": "2026-11-13T08:35:05.940008Z"
+        },
+        {
+          "runId": 43395217611,
+          "shard": 2,
+          "noticeAt": "2026-11-13T08:51:16.171930Z",
+          "completedAt": "2026-11-13T08:51:29.765424Z"
+        }
+      ]
+    }
+  ]
+}
