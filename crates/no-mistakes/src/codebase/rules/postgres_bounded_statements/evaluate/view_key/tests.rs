@@ -72,3 +72,42 @@ fn view_keys_reject_lost_columns_and_unproven_join_cardinality() {
         assert_eq!(super::visible_key(&catalog, view), None, "{view}");
     }
 }
+
+#[test]
+fn region_parsed_view_definitions_reject_aliased_stars_and_global_joins() {
+    use sqlparser::ast::{SelectItem, SetExpr};
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
+        .join("view-key-regions/schema.json");
+    let found = SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let star = found.view_query("star_alias").expect("star alias parses");
+    let SetExpr::Select(star_select) = star.body.as_ref() else {
+        panic!("star alias is not a select");
+    };
+    let SelectItem::Wildcard(options) = &star_select.projection[0] else {
+        panic!("star alias projection is {:?}", star_select.projection[0]);
+    };
+    assert!(options.opt_alias.is_some());
+    assert!(super::visible_key(&found, "star_alias").is_none());
+
+    let qualified = found
+        .view_query("qualified_star_alias")
+        .expect("qualified star alias parses");
+    let SetExpr::Select(qualified_select) = qualified.body.as_ref() else {
+        panic!("qualified star alias is not a select");
+    };
+    let SelectItem::QualifiedWildcard(_, options) = &qualified_select.projection[0] else {
+        panic!(
+            "qualified star projection is {:?}",
+            qualified_select.projection[0]
+        );
+    };
+    assert!(options.opt_alias.is_some());
+    assert!(super::visible_key(&found, "qualified_star_alias").is_none());
+
+    let joined = found.view_query("global_join").expect("global join parses");
+    let SetExpr::Select(joined_select) = joined.body.as_ref() else {
+        panic!("global join is not a select");
+    };
+    assert!(joined_select.from[0].joins[0].global);
+    assert!(super::visible_key(&found, "global_join").is_none());
+}
