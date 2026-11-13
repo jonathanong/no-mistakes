@@ -1,0 +1,2 @@
+include:
+  ./pnpm/slots.yaml: [catalogs., catalogs.default, catalogs.a.b, catalogs.react]
