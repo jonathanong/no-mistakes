@@ -1,0 +1,462 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "many_origins": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 101,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 105,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 109,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 113,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 117,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 121,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 29,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 33,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 37,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 41,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 45,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 49,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 53,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 57,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 61,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 65,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 69,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 73,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 77,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 81,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 85,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 89,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 93,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.check",
+          "line": 97,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.check` reaches `postgres` via cleanup → check → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.check(query, id);",
+          "target": "postgres: cleanup → check → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 100,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 104,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 108,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 112,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 116,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 120,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 28,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 32,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 36,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 40,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 44,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 48,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 52,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 56,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 60,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 64,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 68,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 72,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 76,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 80,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 84,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 88,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 92,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        },
+        {
+          "file": "src/caller.mts",
+          "import": "stage.run",
+          "line": 96,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for-of `stage.run` reaches `postgres` via cleanup → run → query (transaction client only; merge statements instead of parallelizing)",
+          "rule": "query-reached-per-item",
+          "sourceLine": "await stage.run(query, id, n);",
+          "target": "postgres: cleanup → run → query"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_consumers": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

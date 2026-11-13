@@ -1,0 +1,10 @@
+effects:
+  postgres:
+    typedExecutors:
+      - { module: './database.mts', export: TransactionQuery }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    include: ['src/**/*.mts']
+    options:
+      effects: [postgres]
