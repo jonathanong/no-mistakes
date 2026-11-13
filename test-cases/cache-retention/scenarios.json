@@ -185,5 +185,20 @@
       "100": "completed",
       "101": "unknown"
     }
+  ],
+  "sourceRunFailures": [
+    {
+      "status": 404,
+      "message": "source run deleted",
+      "removals": [31]
+    },
+    {
+      "status": 403,
+      "message": "source run forbidden"
+    },
+    {
+      "status": 500,
+      "message": "source run server failure"
+    }
   ]
 }

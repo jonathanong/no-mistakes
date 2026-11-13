@@ -181,9 +181,14 @@ async function retain(request, apply = false) {
     throw new Error("Handoff inventory exceeds 100 source-run lookups; budget unknown");
   const sourceRunStates = {};
   for (const run of runs) {
-    const result = await request("GET", `/actions/runs/${run}`);
-    sourceRunStates[run] =
-      String(result.id) === run && result.status === "completed" ? "completed" : "unknown";
+    try {
+      const result = await request("GET", `/actions/runs/${run}`);
+      sourceRunStates[run] =
+        String(result.id) === run && result.status === "completed" ? "completed" : "unknown";
+    } catch (error) {
+      if (error.status !== 404) throw error;
+      sourceRunStates[run] = "unknown";
+    }
   }
   const result = plan(caches, states, BUDGET, sourceRunStates);
   if (apply)
@@ -218,8 +223,11 @@ async function main(env = process.env) {
     });
     if (method === "DELETE" && [204, 404].includes(response.status)) return {};
     if (!response.ok)
-      throw new Error(
-        `GitHub cache API ${method} failed with HTTP ${response.status}; retention incomplete, budget unknown`,
+      throw Object.assign(
+        new Error(
+          `GitHub cache API ${method} failed with HTTP ${response.status}; retention incomplete, budget unknown`,
+        ),
+        { status: response.status },
       );
     return response.json();
   };

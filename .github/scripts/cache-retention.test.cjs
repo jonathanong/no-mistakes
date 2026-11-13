@@ -354,3 +354,40 @@ test("handoff source metadata is read once before any deletion and API failure f
   );
   assert.equal(failed.includes("DELETE"), false);
 });
+
+test("deleted source runs preserve their handoffs without blocking unrelated cleanup", async () => {
+  for (const failure of fixture.sourceRunFailures) {
+    const deleted = [];
+    const request = async (method, route) => {
+      if (route.startsWith("/actions/caches?"))
+        return { total_count: fixture.benchmarks.length, actions_caches: fixture.benchmarks };
+      if (route === "/pulls/3328") return { state: "open" };
+      if (route === "/actions/runs/100")
+        throw Object.assign(new Error(failure.message), { status: failure.status });
+      if (route === "/actions/runs/101") return fixture.sourceRuns[101];
+      if (method === "DELETE") deleted.push(Number(route.split("/").at(-1)));
+      return {};
+    };
+    if (failure.removals) {
+      const result = await retain(request, true);
+      assert.deepEqual(deleted, failure.removals);
+      assert.equal(
+        result.remove.some((cache) => cache.id === 21),
+        false,
+      );
+    } else {
+      await assert.rejects(retain(request, true), {
+        message: failure.message,
+        status: failure.status,
+      });
+      assert.deepEqual(deleted, []);
+    }
+  }
+  const missing = fixture.sourceRunFailures[0];
+  await assert.rejects(
+    retain(async () => {
+      throw Object.assign(new Error(missing.message), { status: missing.status });
+    }, true),
+    { status: 404 },
+  );
+});
