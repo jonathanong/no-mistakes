@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "context": {
+    "cargo": {
+      "stdout": "cargo fixture"
+    },
+    "command": [
+      "cargo",
+      "test",
+      "--no-run",
+      "--test",
+      "suite_cli_package_config"
+    ],
+    "environment": {
+      "CARGO_INCREMENTAL": "0",
+      "NO_MISTAKES_BUILD_NAPI": "1",
+      "RUSTFLAGS": "fixture"
+    },
+    "profiles": [
+      "[profile.dev]",
+      "debug = 0"
+    ],
+    "rustc": {
+      "stdout": "rustc fixture"
+    }
+  },
+  "counts": {
+    "fresh": 3,
+    "compiled": 1
+  },
+  "units": [
+    {
+      "package_id": "path+file:///workspace/crates/no-mistakes#no-mistakes@0.1.0",
+      "target": {
+        "name": "no_mistakes",
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ]
+      },
+      "features": [
+        "default",
+        "mermaid"
+      ],
+      "profile": {
+        "debug_assertions": true,
+        "debuginfo": 0,
+        "opt_level": "0",
+        "overflow_checks": true,
+        "test": false
+      },
+      "fresh": true,
+      "filenames": [
+        "target/debug/deps/libno_mistakes.rlib"
+      ]
+    },
+    {
+      "package_id": "registry+https://github.com/rust-lang/crates.io-index#bstr@1.0.0",
+      "target": {
+        "name": "bstr",
+        "kind": [
+          "lib"
+        ],
+        "crate_types": [
+          "lib"
+        ]
+      },
+      "features": [
+        "std",
+        "unicode"
+      ],
+      "profile": {
+        "debug_assertions": true,
+        "debuginfo": 0,
+        "opt_level": "0",
+        "overflow_checks": true,
+        "test": false
+      },
+      "fresh": true,
+      "filenames": [
+        "target/debug/deps/libbstr-same.rlib"
+      ]
+    },
+    {
+      "package_id": "path+file:///workspace/crates/no-mistakes#no-mistakes@0.1.0",
+      "target": {
+        "name": "no-mistakes",
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ]
+      },
+      "features": [
+        "default",
+        "mermaid"
+      ],
+      "profile": {
+        "debug_assertions": true,
+        "debuginfo": 0,
+        "opt_level": "0",
+        "overflow_checks": true,
+        "test": false
+      },
+      "fresh": true,
+      "filenames": [
+        "target/debug/no-mistakes"
+      ]
+    },
+    {
+      "package_id": "path+file:///workspace/crates/no-mistakes#no-mistakes@0.1.0",
+      "target": {
+        "name": "suite_cli_package_config",
+        "kind": [
+          "test"
+        ],
+        "crate_types": [
+          "bin"
+        ]
+      },
+      "features": [
+        "default",
+        "mermaid"
+      ],
+      "profile": {
+        "debug_assertions": true,
+        "debuginfo": 0,
+        "opt_level": "0",
+        "overflow_checks": true,
+        "test": true
+      },
+      "fresh": false,
+      "filenames": [
+        "target/debug/deps/suite_cli_package_config-harness"
+      ]
+    }
+  ]
+}

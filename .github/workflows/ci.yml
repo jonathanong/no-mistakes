@@ -11,6 +11,10 @@ on:
         description: Successful same-commit dispatch whose build artifacts should be reused
         type: string
         default: ""
+      profile_native_compile:
+        description: Measure cold macOS runtime then test compilation in one target directory
+        type: boolean
+        default: false
   pull_request:
   push:
     branches:
@@ -230,7 +234,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs
   quality-rust:
     name: Rust quality (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -1364,6 +1368,51 @@ jobs:
           retention-days: 7
           compression-level: 1
           path: |
+            target/native-test-build-diagnostics
+
+  native-compile-profile:
+    name: Profile cold macOS Cargo unit reuse
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.profile_native_compile }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      NO_MISTAKES_BUILD_NAPI: "1"
+      CARGO_BUILD_JOBS: "3"
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Test Cargo profiling reports and experiment driver
+        timeout-minutes: 2
+        run: node --test .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs
+
+      - name: Measure separate Cargo invocations with shared target artifacts
+        timeout-minutes: 25
+        run: node .github/scripts/native-compile-profile.cjs
+
+      - name: Upload cold compilation profile
+        if: ${{ always() }}
+        timeout-minutes: 3
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-compile-profile-aarch64-apple-darwin
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 1
+          path: |
+            target/native-compile-profile
+            target/native-build-diagnostics
             target/native-test-build-diagnostics
 
   native-rust-tests:

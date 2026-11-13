@@ -1,0 +1,6 @@
+Compiling packages
+{diagnostic text}
+{"reason": "compiler-artifact", "package_id": "path+file:///workspace/crates/no-mistakes#no-mistakes@0.1.0", "target": {"kind": ["rlib", "cdylib"], "crate_types": ["cdylib", "rlib"], "name": "no_mistakes"}, "features": ["mermaid", "default"], "profile": {"opt_level": "0", "debuginfo": 0, "debug_assertions": true, "overflow_checks": true, "test": false}, "fresh": false, "filenames": ["/workspace/target/debug/deps/libno_mistakes.rlib"]}
+{"reason": "compiler-artifact", "package_id": "registry+https://github.com/rust-lang/crates.io-index#bstr@1.0.0", "target": {"kind": ["lib"], "crate_types": ["lib"], "name": "bstr"}, "features": ["std"], "profile": {"opt_level": "0", "debuginfo": 0, "debug_assertions": true, "overflow_checks": true, "test": false}, "fresh": false, "filenames": ["/workspace/target/debug/deps/libbstr-same.rlib"]}
+{"reason": "compiler-message", "message": {"rendered": "warning: fixture"}}
+{"reason": "build-finished", "success": true}

@@ -11,7 +11,7 @@ const profile = process.env.RUNNER_OS === "macOS" ? [
   "--config", "profile.test.package.no-mistakes.codegen-units=64",
 ] : [];
 if (JSON.stringify(process.argv.slice(2)) !== JSON.stringify([
-  "build", ...profile, "--locked", "-p", "no-mistakes", "--timings", "--verbose",
+  "build", ...profile, "--locked", "-p", "no-mistakes", "--timings", "--verbose", "--message-format=json-render-diagnostics",
 ])) {
   console.error("unexpected cargo arguments");
   process.exit(99);
@@ -30,6 +30,15 @@ if (process.env.NATIVE_BUILD_FIXTURE === "prolific-cancel") {
 } else if (process.env.NATIVE_BUILD_FIXTURE === "cancel") {
   console.log("fixture-ready");
   setInterval(() => {}, 1000);
+} else if (process.env.NATIVE_BUILD_FIXTURE === "interleaved") {
+  const artifact = fs.readFileSync("compiler-artifact.json", "utf8").trim();
+  const middle = Math.floor(artifact.length / 2);
+  process.stdout.write(artifact.slice(0, middle), () => {
+    setTimeout(() => process.stderr.write("fixture interleaved compiler stderr\n", () => {
+      setTimeout(() => process.stdout.write(`${artifact.slice(middle)}\n`, () => process.exit(0)), 10);
+    }), 10);
+  });
 } else {
+  console.log(fs.readFileSync("compiler-artifact.json", "utf8").trim());
   process.exit(process.env.NATIVE_BUILD_FIXTURE === "failure" ? 17 : 0);
 }

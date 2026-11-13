@@ -8,6 +8,7 @@ function captureBuildOutput(child, directory, options = {}) {
   let cancelled = false;
   let abandonPending = false;
   let finished = false;
+  let finishedLog;
   function detach(target) {
     if (!target.attached) return;
     target.attached = false;
@@ -53,9 +54,16 @@ function captureBuildOutput(child, directory, options = {}) {
     logError(error);
   }
   function finish() {
-    if (finished) return;
+    if (finished) return finishedLog;
     finished = true;
-    if (log && !logFailed && !log.destroyed) log.end();
+    finishedLog = new Promise((resolve) => {
+      if (!log || logFailed || log.destroyed) return resolve();
+      log.once("finish", resolve);
+      log.once("close", resolve);
+      log.once("error", resolve);
+      log.end();
+    });
+    return finishedLog;
   }
   function releasePending() {
     if (!abandonPending) return;

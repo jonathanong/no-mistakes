@@ -58,8 +58,10 @@ test("signal diagnostics distinguish raw termination from macOS normalization", 
   assertSignalTermination(report("normalized-sigkill"), "darwin");
 });
 
-function fixture(scenario, logFailure) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-build-test-"));
+function fixture(scenario, logFailure, temporaryParent = os.tmpdir()) {
+  const directory = fs.realpathSync(
+    fs.mkdtempSync(path.join(temporaryParent, "native-build-test-")),
+  );
   fs.cpSync(saved, directory, { recursive: true });
   if (scenario === "prolific-cancel")
     fs.cpSync(path.join(saved, "../backpressure"), path.join(directory, "backpressure"), {
@@ -104,29 +106,69 @@ function fixture(scenario, logFailure) {
 }
 
 test(
-  "native runtime wrapper passes the macOS package-only profile to Cargo",
+  "native wrapper normalizes units when its temporary parent has a symlink alias",
   { skip: process.platform === "win32" },
   () => {
-    const input = fixture("success");
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-build-path-alias-"));
+    fs.cpSync(path.join(saved, "../path-alias"), directory, {
+      recursive: true,
+      verbatimSymlinks: true,
+    });
+    const input = fixture("success", undefined, path.join(directory, "alias"));
     input.options.env.RUNNER_OS = "macOS";
     try {
       const result = spawnSync(process.execPath, [wrapper], input.options);
       assert.equal(result.status, 0, result.stderr);
-      assert.deepEqual(JSON.parse(input.read("metadata.json")).command, [
-        "cargo",
-        "build",
-        ...require("../../test-cases/native-build-diagnostics/reports/macos-profile.json"),
-        "--locked",
-        "-p",
-        "no-mistakes",
-        "--timings",
-        "--verbose",
+      const units = JSON.parse(input.read("cargo-units.json"));
+      assert.deepEqual(units.counts, { fresh: 0, compiled: 1 });
+      assert.deepEqual(units.units[0].filenames, [
+        "target/debug/libno_mistakes.rlib",
+        "target/debug/libno_mistakes.so",
       ]);
+      assert.equal(input.directory, fs.realpathSync(input.directory));
     } finally {
       input.cleanup();
+      fs.rmSync(directory, { recursive: true, force: true });
     }
   },
 );
+
+for (const scenario of ["success", "interleaved"])
+  test(
+    `native runtime wrapper retains macOS profiles and complete Cargo units with ${scenario} output`,
+    { skip: process.platform === "win32" },
+    () => {
+      const input = fixture(scenario);
+      input.options.env.RUNNER_OS = "macOS";
+      try {
+        const result = spawnSync(process.execPath, [wrapper], input.options);
+        assert.equal(result.status, 0, result.stderr);
+        assert.deepEqual(JSON.parse(input.read("metadata.json")).command, [
+          "cargo",
+          "build",
+          ...require("../../test-cases/native-build-diagnostics/reports/macos-profile.json"),
+          "--locked",
+          "-p",
+          "no-mistakes",
+          "--timings",
+          "--verbose",
+          "--message-format=json-render-diagnostics",
+        ]);
+        const units = JSON.parse(input.read("cargo-units.json"));
+        assert.deepEqual(units.counts, { fresh: 0, compiled: 1 });
+        assert.deepEqual(units.units[0].target.crate_types, ["cdylib", "rlib"]);
+        assert.deepEqual(units.units[0].filenames, [
+          "target/debug/libno_mistakes.rlib",
+          "target/debug/libno_mistakes.so",
+        ]);
+        assert.deepEqual(units.context.command, JSON.parse(input.read("metadata.json")).command);
+        if (scenario === "interleaved")
+          assert.match(input.read("cargo.log"), /fixture interleaved compiler stderr/);
+      } finally {
+        input.cleanup();
+      }
+    },
+  );
 
 for (const [scenario, status] of [
   ["success", 0],
