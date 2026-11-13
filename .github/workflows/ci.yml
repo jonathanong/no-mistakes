@@ -213,7 +213,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs
+        run: node --test .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs
   quality-rust:
     name: Rust quality (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -1229,13 +1229,6 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
-      # This preserves the existing uninstrumented doctest command and feature scope.
-      - name: Start isolated PostgreSQL for catalog fixtures
-        timeout-minutes: 5
-        uses: ./.github/actions/start-test-postgres
-      - name: Run Rust doctests
-        timeout-minutes: 5
-        run: env -u CARGO_TARGET_DIR -u CARGO_LLVM_COV_TARGET_DIR bash .github/scripts/rust-validation.sh doc
       - name: Diagnose Rust disk usage after failure
         if: ${{ failure() }}
         timeout-minutes: 2
@@ -1504,17 +1497,39 @@ jobs:
         run: test "$BUILD_RESULT" = success && test "$SHARD_RESULT" = success
   docs-tests:
     name: Docs tests
-    needs: [tests]
-    if: ${{ always() }}
-    runs-on: ubuntu-slim
-    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target/doctests
     steps:
-      - name: Require all component jobs
-        timeout-minutes: 1
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+      - name: Cache Rust doctest artifacts
+        timeout-minutes: 3
+        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        with:
+          shared-key: rust-doctests-v1
+          workspaces: . -> target/doctests
+          cache-workspace-crates: true
+      - name: Start isolated PostgreSQL for catalog fixtures
+        timeout-minutes: 5
+        uses: ./.github/actions/start-test-postgres
+      - name: Run Rust doctests
+        timeout-minutes: 8
+        run: bash .github/scripts/rust-validation.sh doc
+      - name: Diagnose Rust disk usage after failure
+        if: ${{ failure() }}
+        timeout-minutes: 2
+        run: bash .github/scripts/rust-disk-usage.sh "Rust doctest job failure" target/doctests
+
   tests-gate:
     name: Tests with coverage
     needs: [changes, quality, docs-tests, packages, javascript-tests, timeout-policy-browser-tests, native-tests, tests, tests-standalone-lib]

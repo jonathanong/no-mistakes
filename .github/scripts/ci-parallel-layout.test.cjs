@@ -15,7 +15,6 @@ for (const name of [
   "native-tests",
   "javascript-tests",
   "tests-standalone-lib",
-  "docs-tests",
   "tests-gate",
 ]) {
   test(`${name} cannot pass when a dependency fails, cancels, or skips`, () => {
@@ -85,4 +84,12 @@ test("JavaScript shards merge coverage under the normal unchanged threshold conf
   assert.match(job("javascript-coverage"), /vitest --merge-reports --coverage/);
   assert.doesNotMatch(job("javascript-coverage"), /vitest-shard.config/);
   assert.match(job("javascript-coverage"), /needs.javascript-shards.result/);
+});
+
+test("documentation tests cannot delay coverage archive consumers", () => {
+  assert.match(job("docs-tests"), /bash \.github\/scripts\/rust-validation\.sh doc/);
+  assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
+  assert.doesNotMatch(job("rust-coverage-build"), /rust-validation\.sh doc/);
+  assert.doesNotMatch(job("rust-coverage-shards"), /needs:.*docs-tests/);
+  assert.match(job("tests-gate"), /docs-tests/);
 });

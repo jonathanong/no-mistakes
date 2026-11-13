@@ -42,6 +42,7 @@ function run(mode, bundle, index, total, env = process.env) {
     if (manifest.sha !== env.GITHUB_SHA || manifest.workspace !== process.cwd())
       throw new Error("standalone archive source or workspace differs");
     mkdirSync(path.resolve("target/standalone-lib"), { recursive: true });
+    childEnv.CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER = `bash ${path.join(__dirname, "libtest-argv-runner.sh")}`;
   }
   for (const args of commands(mode, directory, Number(index), Number(total))) {
     const child = spawnSync("cargo", args, { env: childEnv, stdio: "inherit" });

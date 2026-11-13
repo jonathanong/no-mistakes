@@ -107,6 +107,11 @@ test("docs that tests outside the docs suite read always run every test job", ()
 test("docs-only pull requests still run the docs contract suite", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   assert.match(workflow, /rust-coverage-shards\.cjs archive/);
-  assert.match(workflow, /docs-tests:[\s\S]*?needs: \[tests\]/);
+  const docs = workflow.split("\n  docs-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  assert.match(docs, /run: bash \.github\/scripts\/rust-validation\.sh doc/);
+  assert.match(docs, /shared-key: rust-doctests-v1/);
+  assert.doesNotMatch(docs, /needs:|\n    if:/);
+  const coverage = workflow.split("\n  rust-coverage-build:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  assert.doesNotMatch(coverage, /rust-validation\.sh doc/);
   assert.match(workflow, /docs-only: \$\{\{ github\.event_name == 'pull_request' &&/);
 });

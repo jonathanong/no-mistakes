@@ -219,7 +219,8 @@ the current parallel layout.
 
 Pull requests run the validation jobs for Markdown changes as well as code
 changes. Documentation contract tests are part of the Rust coverage build and
-the required `Docs tests` check fans in that result. The docs-only path detector
+the required `Docs tests` check runs documentation tests independently. The
+docs-only path detector
 does not skip the current test matrix. Markdown under `crates/`, `packages/`,
 `plugins/`, `fixtures/`, `test-cases/`, `tests/`, `evals/`, `.ast-grep/`, and
 `docs/eslint-rules/`, plus pages read by unit and package tests, remains test

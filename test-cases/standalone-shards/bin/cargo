@@ -16,9 +16,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 if [[ "$mode" == archive ]]; then
+  if [[ -n "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" ]]; then
+    echo 'argv wrapper must not affect archive builds' >&2
+    exit 93
+  fi
   fixture_dir="$(cd -- "$(dirname -- "$0")/.." && pwd)"
   cp "$fixture_dir/archive.fixture" "$archive"
 elif [[ "$mode" == run ]]; then
+  if [[ "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" != "$STANDALONE_FIXTURE_RUNNER" ]]; then
+    echo 'standalone nextest argv wrapper is missing or incorrect' >&2
+    exit 94
+  fi
   if [[ ! -d "$extract" ]]; then
     echo 'nextest extraction directory does not exist' >&2
     exit 96

@@ -100,6 +100,11 @@ test("shards execute disjoint nextest partitions with fresh snapshot and pooled 
         "0",
         "--ignore-default-filter",
       ]);
+      assert.equal(
+        call.env.CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER,
+        `bash ${join(__dirname, "libtest-argv-runner.sh")}`,
+      );
+      assert.equal(calls[0].env.CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER, undefined);
       assert.match(call.env.LLVM_PROFILE_FILE, /no-mistakes-%9m\.profraw$/);
       assert.equal(
         call.env.INSTA_SNAPSHOT_REFERENCES_FILE,

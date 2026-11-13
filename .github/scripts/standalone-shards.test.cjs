@@ -76,6 +76,7 @@ function scenario(callback) {
         ...process.env,
         PATH: `${path.join(fixture, "bin")}${path.delimiter}${process.env.PATH}`,
         GITHUB_SHA: "fixture-source",
+        STANDALONE_FIXTURE_RUNNER: `bash ${path.join(__dirname, "libtest-argv-runner.sh")}`,
         CARGO_TARGET_DIR: target,
         "CARGO_BIN_EXE_no-mistakes": "must-not-reach-cargo",
         ...extra,
@@ -96,7 +97,7 @@ function scenario(callback) {
   }
 }
 
-test("fresh consumers create the extraction directory before nextest starts and clear CLI environment", () =>
+test("fresh consumers prepare extraction and argv wrapper while clearing CLI environment", () =>
   scenario(({ workspace, bundle, invoke, build }) => {
     build();
     const extraction = path.join(workspace, "target/standalone-lib");

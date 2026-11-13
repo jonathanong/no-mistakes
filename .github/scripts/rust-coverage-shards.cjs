@@ -135,6 +135,7 @@ function shard(directory, output, index, total, env = process.env, run = command
       ],
       {
         ...env,
+        CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: `bash ${join(__dirname, "libtest-argv-runner.sh")}`,
         INSTA_SNAPSHOT_REFERENCES_FILE: references,
         LLVM_PROFILE_FILE: join(resolve(output), "profiles", "no-mistakes-%9m.profraw"),
       },

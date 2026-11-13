@@ -233,14 +233,21 @@ test("CI archive and release validation preserve the locked full-workspace test 
   const build = workflowJob("rust-coverage-build");
   assert.match(build, /source <\(cargo llvm-cov show-env --sh\)/);
   assert.match(build, /node \.github\/scripts\/rust-coverage-shards\.cjs archive/);
-  assert.match(build, /bash \.github\/scripts\/rust-validation\.sh doc/);
-  assert.match(build, /uses: \.\/\.github\/actions\/start-test-postgres/);
+  assert.doesNotMatch(build, /rust-validation\.sh doc|start-test-postgres/);
   const helper = readFileSync(path.join(root, ".github/scripts/rust-coverage-shards.cjs"), "utf8");
   for (const flag of ["--locked", "--workspace", "--all-features", "--lib", "--bins", "--tests"])
     assert.ok(helper.includes(JSON.stringify(flag)), `archive must include ${flag}`);
   const docs = workflowJob("docs-tests");
-  assert.match(docs, /needs: \[tests\]/);
-  assert.equal(jobBudgetSeconds(docs), 180);
+  assert.doesNotMatch(docs, /needs:|\n    if:|CARGO_LLVM_COV_TARGET_DIR|show-env/);
+  assert.equal(jobBudgetSeconds(docs), 600);
+  assert.match(docs, /runs-on: ubuntu-latest/);
+  assert.match(docs, /CARGO_TARGET_DIR: \$\{\{ github\.workspace \}\}\/target\/doctests/);
+  assert.match(docs, /shared-key: rust-doctests-v1/);
+  assert.match(docs, /workspaces: \. -> target\/doctests/);
+  assert.match(docs, /cache-workspace-crates: true/);
+  assert.match(docs, /uses: \.\/\.github\/actions\/start-test-postgres/);
+  assert.match(docs, /run: bash \.github\/scripts\/rust-validation\.sh doc/);
+  assert.equal(stepBudgetSeconds(docs, "Run Rust doctests"), 480);
   const manifest = readFileSync(path.join(root, "crates/no-mistakes/Cargo.toml"), "utf8");
   assert.match(manifest, /name = "suite_contracts"/);
   assert.doesNotMatch(
@@ -276,7 +283,6 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     "javascript-tests",
     "native-tests",
     "tests-standalone-lib",
-    "docs-tests",
     "tests-gate",
   ]) {
     const body = workflowJob(name);

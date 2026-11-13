@@ -23,8 +23,10 @@ The current validation graph is organized as follows:
   Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the
   configured floors. Real-addon behavior remains in its own job.
-- Rust coverage builds instrumented test binaries once, runs documentation tests in the
-  producer, then runs six test shards. A collector merges profiles and checks
+- Rust coverage builds instrumented test binaries once, then runs six test
+  shards. Documentation tests run independently with their own ordinary Cargo
+  cache, so they cannot rebuild an uninstrumented library on the coverage
+  producer before shards start. A collector merges profiles and checks
   complete execution before producing LCOV and applying the existing coverage
   and complexity gates.
 - Standalone library tests build without the CLI, then run as four shards from
@@ -38,6 +40,14 @@ The current validation graph is organized as follows:
 - Fan-in jobs preserve the existing required-check names and fail if a
   producer or shard fails. Artifact transfer and per-job setup remain part of
   elapsed PR wall time.
+
+The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
+fetch CLI test. That one exact case receives its ordinary Cargo filter arguments
+without the additional exact-match and output-capture flags; every other case
+and argument is
+passed through. The test stays in its partition, shares the same coverage
+profile environment, and retains its exit status and signals. This avoids both
+skipping the case and adding a Node process before every Rust test.
 
 The baseline is completed workflow run
 [`43349743109`](https://github.com/jonathanong/no-mistakes/actions/runs/43349743109),
