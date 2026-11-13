@@ -20,7 +20,7 @@ type Owner = (std::path::PathBuf, CallableId);
 struct State {
     entries: FxHashMap<ParameterKey, Entry>,
     factory_agreement: FxHashMap<Owner, bool>,
-    waiting: FxHashMap<ThreadId, ThreadId>,
+    waiting: FxHashMap<ThreadId, ParameterKey>,
     computations: usize,
     reverse_dependencies: FxHashMap<Owner, FxHashSet<Owner>>,
 }
@@ -34,4 +34,22 @@ impl ParameterCache {
             ..Default::default()
         }
     }
+}
+
+fn waits_for(state: &State, mut owner: ThreadId, thread: ThreadId) -> bool {
+    let mut visited = fx_set();
+    while visited.insert(owner) {
+        if owner == thread {
+            return true;
+        }
+        let Some(key) = state.waiting.get(&owner) else {
+            return false;
+        };
+        // A notified waiter can remain registered after its parameter becomes Ready.
+        let Some(Entry::Computing(next)) = state.entries.get(key) else {
+            return false;
+        };
+        owner = *next;
+    }
+    false
 }

@@ -1,7 +1,10 @@
 use super::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{mpsc, Barrier};
+use std::sync::{Barrier, mpsc};
 use std::time::Duration;
+
+#[path = "parameter_cache_wait_tests.rs"]
+mod waits;
 
 #[test]
 fn independent_type_origins_resolve_without_holding_map_shards() {

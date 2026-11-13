@@ -85,8 +85,10 @@ pub(in super::super::super) fn refine_value_calls_with_incoming(
         // This projection belongs to one immutable incoming-call generation.
         let module_writer_phases = execution_phases::ModuleWriterPhases::default();
         let selected = selected_sites(&mut pass.sites, &batch, &admitted);
+        let selected = selected.into_par_iter();
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        let selected = selected.with_max_len(parameter_cache::scheduling::max_task_len(inputs.root));
         let results: Vec<_> = selected
-            .into_par_iter()
             .map(|(index, site)| {
                 let enabled = visits[&index] <= base.len() + 1;
                 let previous = reset_resolution(site, &base[index]);

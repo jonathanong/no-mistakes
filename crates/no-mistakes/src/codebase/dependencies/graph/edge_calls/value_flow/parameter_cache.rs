@@ -20,6 +20,8 @@ pub(in super::super) struct ParameterCache {
     pub(super) admission_probe: admission_probe::AdmissionProbe,
     state: Mutex<State>,
     ready: Condvar,
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    scheduling: OnceLock<scheduling::Hook>,
     type_origins: OnceLock<TypeOrigins>,
     #[cfg(feature = "test-instrumentation")]
     origin_nodes: std::sync::atomic::AtomicUsize,
@@ -63,6 +65,8 @@ impl ParameterCache {
         Arc::new(OriginNode::new(kind, height))
     }
     pub(super) fn acquire(&self, key: ParameterKey) -> CacheAccess<'_> {
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        scheduling::configure(self, &key);
         let thread = std::thread::current().id();
         let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
         loop {
@@ -70,19 +74,39 @@ impl ParameterCache {
                 Some(Entry::Ready(value)) => return CacheAccess::Ready(Arc::clone(value)),
                 Some(Entry::Computing(owner)) => {
                     let owner = *owner;
-                    if owner == thread || waits_for(&state.waiting, owner, thread) {
+                    if owner == thread || waits_for(&state, owner, thread) {
+                        #[cfg(all(test, feature = "test-instrumentation"))]
+                        if let Some(hook) = self.scheduling.get() {
+                            drop(state);
+                            hook(scheduling::Event::Cycle, &key);
+                        }
                         return CacheAccess::Cycle;
                     }
-                    state.waiting.insert(thread, owner);
+                    state.waiting.insert(thread, key.clone());
+                    #[cfg(all(test, feature = "test-instrumentation"))]
+                    if let Some(hook) = self.scheduling.get() {
+                        hook(scheduling::Event::Waiting, &key);
+                    }
                     state = self
                         .ready
                         .wait(state)
                         .unwrap_or_else(|error| error.into_inner());
+                    #[cfg(all(test, feature = "test-instrumentation"))]
+                    if let Some(hook) = self.scheduling.get() {
+                        drop(state);
+                        hook(scheduling::Event::Resuming, &key);
+                        state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+                    }
                     state.waiting.remove(&thread);
                 }
                 None => {
                     state.entries.insert(key.clone(), Entry::Computing(thread));
                     state.computations += 1;
+                    #[cfg(all(test, feature = "test-instrumentation"))]
+                    if let Some(hook) = self.scheduling.get() {
+                        drop(state);
+                        hook(scheduling::Event::Computing, &key);
+                    }
                     return CacheAccess::Compute(Lease {
                         cache: self,
                         key: Some(key),
@@ -122,23 +146,6 @@ impl ParameterCache {
         drop(state);
         self.ready.notify_all();
     }
-}
-fn waits_for(
-    waiting: &FxHashMap<ThreadId, ThreadId>,
-    mut owner: ThreadId,
-    thread: ThreadId,
-) -> bool {
-    let mut visited = fx_set();
-    while visited.insert(owner) {
-        if owner == thread {
-            return true;
-        }
-        let Some(next) = waiting.get(&owner) else {
-            return false;
-        };
-        owner = *next;
-    }
-    false
 }
 impl Lease<'_> {
     pub(super) fn publish(
@@ -180,3 +187,7 @@ mod tests;
 
 #[path = "parameter_cache_metrics.rs"]
 mod metrics;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "parameter_cache_scheduling_tests.rs"]
+pub(super) mod scheduling;

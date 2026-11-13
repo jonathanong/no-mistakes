@@ -154,6 +154,11 @@ by position, so its `query(...)` call is selected even when other callers pass a
 untyped value. Aliases with type parameters, imported or non-literal property
 types, computed keys, defaulted parameters, and functions that are not literal
 properties do not contribute a type.
+Each imported stage invocation keeps its own caller location and callee in the
+report, including when several stages share the same executor annotation.
+Worker count does not change which invocations report. The saved
+`stage-import-index-workload` fixture locks all 48 `stage.run` and `stage.check`
+locations, their callback targets, and their configured executor provenance.
 Static indexed property types, including `NonNullable<Options['query']>`, preserve
 the selected callable origin. Statically invoked async callbacks preserve returned
 executor metadata. A nullish choice between a typed executor and a configured
