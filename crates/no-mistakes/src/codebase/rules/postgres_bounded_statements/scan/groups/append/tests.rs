@@ -135,26 +135,17 @@ fn append_boundaries_ignore_helper_order_and_empty_openings() {
 }
 
 #[test]
-fn region_span_requires_an_origin_site() {
-    let file = SqlStatementFileFacts {
-        path: "query.ts".into(),
-        variant_locations: Some(SqlVariantLocations::default()),
-        ..Default::default()
-    };
-    assert!(span(&file, 0).is_none());
-}
-
-#[test]
-fn region_unset_call_line_uses_the_file_origin() {
-    let mut locations = SqlVariantLocations::default();
-    locations.insert(SqlFactSite::Origin, 4, 1);
-    let file = SqlStatementFileFacts {
-        path: "query.ts".into(),
-        origin_line: 7,
-        variant_locations: Some(locations),
-        ..Default::default()
-    };
+fn region_physical_sql_without_a_call_line_uses_the_file_origin() {
+    let path =
+        crate::test_support::rule_fixture_root("postgres-bounded-statements").join("sql/valid.sql");
+    let sql = std::fs::read_to_string(&path).unwrap();
+    let mut file =
+        crate::codebase::postgres::statements::extract_sql_variant_statement_facts(&sql, true, &[]);
+    file.path = path;
+    let locations = file.variant_locations.as_ref().expect("locations");
+    assert_eq!(locations.original_call_line, 0);
+    assert!(locations.position(SqlFactSite::Origin).is_some());
     let found = span(&file, 0).unwrap();
-    assert_eq!(found.call_line, 7);
-    assert!(fragment_line(&[found], "query.ts:invoices").is_none());
+    assert_eq!(found.call_line, file.origin_line);
+    assert!(fragment_line(&[found], "sql/valid.sql:not_a_relation").is_none());
 }
