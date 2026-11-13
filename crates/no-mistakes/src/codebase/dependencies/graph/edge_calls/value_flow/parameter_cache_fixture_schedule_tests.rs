@@ -1,7 +1,7 @@
 use super::*;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 static CONFIGURED: Mutex<Option<(PathBuf, Hook)>> = Mutex::new(None);
 static EXCLUSIVE: Mutex<()> = Mutex::new(());
@@ -64,15 +64,13 @@ fn hook(shared: &Arc<(Mutex<Schedule>, Condvar)>, event: Event, key: &ParameterK
         && state.owned.contains_key(&current)
     {
         state.caller_owner = Some(current);
-        let deadline = Instant::now() + Duration::from_secs(10);
-        while state.waiter.is_none() {
-            let remaining = deadline.saturating_duration_since(Instant::now());
-            if remaining.is_zero() {
-                state.timed_out = true;
-                break;
-            }
-            state = changed.wait_timeout(state, remaining).unwrap().0;
-        }
+        let (resumed, timeout) = changed
+            .wait_timeout_while(state, Duration::from_secs(10), |state| {
+                state.waiter.is_none()
+            })
+            .unwrap();
+        state = resumed;
+        state.timed_out |= timeout.timed_out();
     } else if file == "caller.mts"
         && event == Event::Waiting
         && state.caller_owner.is_some_and(|owner| owner != current)
@@ -85,15 +83,11 @@ fn hook(shared: &Arc<(Mutex<Schedule>, Condvar)>, event: Event, key: &ParameterK
         }
     } else if file == "caller.mts" && event == Event::Resuming && state.waiter == Some(current) {
         state.resumed = true;
-        let deadline = Instant::now() + Duration::from_secs(10);
-        while !state.released {
-            let remaining = deadline.saturating_duration_since(Instant::now());
-            if remaining.is_zero() {
-                state.timed_out = true;
-                break;
-            }
-            state = changed.wait_timeout(state, remaining).unwrap().0;
-        }
+        let (resumed, timeout) = changed
+            .wait_timeout_while(state, Duration::from_secs(10), |state| !state.released)
+            .unwrap();
+        state = resumed;
+        state.timed_out |= timeout.timed_out();
     } else if matches!(event, Event::Waiting | Event::Cycle)
         && state.caller_owner == Some(current)
         && state.blocked.as_ref() == Some(key)
