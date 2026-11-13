@@ -324,7 +324,7 @@ fn coverage_gap_splice_abstains_on_bad_origins_and_too_many_alternatives() {
 #[test]
 fn coverage_gap_each_rows_and_parameter_appends() {
     let (_, facts) = extract("coverage-gap-each.ts");
-    let published: BTreeSet<_> = facts.calls.iter().flat_map(|call| sqls(call)).collect();
+    let published: BTreeSet<_> = facts.calls.iter().flat_map(sqls).collect();
     assert!(
         published.contains("SELECT orders") && published.contains("SELECT accounts"),
         "finite rows publish both mapped statements: {published:?}"
