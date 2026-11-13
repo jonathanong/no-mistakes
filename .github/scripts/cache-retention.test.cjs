@@ -391,3 +391,63 @@ test("deleted source runs preserve their handoffs without blocking unrelated cle
     { status: 404 },
   );
 });
+
+test("pnpm keeps the largest compatible main snapshot with deterministic date and ID ties", () => {
+  const versions = JSON.parse(
+    readFileSync(path.join(root, "test-cases/cache-retention/pnpm-versions.json"), "utf8"),
+  );
+  const result = plan([...versions, ...fixture.versions], fixture.states);
+  assert.deepEqual(
+    result.remove.map((cache) => cache.id),
+    [1, 4, 51, 52, 53, 54, 59],
+  );
+  assert.ok(result.kept.some((cache) => cache.id === 55));
+  assert.ok(result.kept.some((cache) => cache.id === 56));
+  for (const id of [57, 58, 60])
+    assert.equal(
+      result.remove.some((cache) => cache.id === id),
+      false,
+    );
+  assert.deepEqual(
+    plan([...versions].reverse(), fixture.states).remove.map((cache) => cache.id),
+    [51, 52, 53, 54, 59],
+  );
+});
+
+test("only least-recently-accessed main v2 workspaces are expendable above the budget", () => {
+  const versions = JSON.parse(
+    readFileSync(path.join(root, "test-cases/cache-retention/workspace-budget.json"), "utf8"),
+  );
+  const below = plan(versions.slice(0, 3), fixture.states);
+  assert.deepEqual(below.remove, []);
+  assert.deepEqual(plan(versions.slice(0, 3), fixture.states, below.after).remove, []);
+  const result = plan(versions, fixture.states);
+  assert.deepEqual(
+    result.remove.map((cache) => [cache.id, cache.reason]),
+    [
+      [71, "budget-workspace"],
+      [72, "budget-workspace"],
+    ],
+  );
+  assert.equal(result.after, 7 * 1024 ** 3);
+  assert.equal(result.withinBudget, true);
+  assert.equal(
+    result.kept.some((cache) => [71, 72].includes(cache.id)),
+    false,
+  );
+  assert.deepEqual(plan([...versions].reverse(), fixture.states).remove, result.remove);
+  const excess = plan(versions, fixture.states, 4 * 1024 ** 3);
+  assert.deepEqual(
+    excess.remove.map((cache) => cache.id),
+    [71, 72, 73],
+  );
+  assert.equal(excess.after, 5 * 1024 ** 3);
+  assert.equal(excess.withinBudget, false);
+  assert.match(summary(excess), /Budget remains exceeded/);
+  assert.match(summary(excess), /3 budget-workspace evictions/);
+  const active = plan([...versions, ...fixture.benchmarks], fixture.states, 0);
+  assert.equal(
+    active.remove.some((cache) => [21, 22, 23].includes(cache.id)),
+    false,
+  );
+});

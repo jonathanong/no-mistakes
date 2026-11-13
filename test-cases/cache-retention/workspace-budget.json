@@ -1,0 +1,50 @@
+[
+  {
+    "id": 71,
+    "key": "coverage-workspace-v2-Linux-X64-current",
+    "size_in_bytes": 2147483648,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-10T00:00:00Z"
+  },
+  {
+    "id": 72,
+    "key": "standalone-lib-workspace-v2-Linux-X64-current",
+    "size_in_bytes": 2147483648,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-11T00:00:00Z"
+  },
+  {
+    "id": 73,
+    "key": "native-runtime-workspace-v2-aarch64-apple-darwin-current",
+    "size_in_bytes": 2147483648,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-12T00:00:00Z"
+  },
+  {
+    "id": 74,
+    "key": "unrecognized-private-cache",
+    "size_in_bytes": 3221225472,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-09T00:00:00Z"
+  },
+  {
+    "id": 75,
+    "key": "coverage-workspace-v2-Linux-X64-pr",
+    "size_in_bytes": 1073741824,
+    "ref": "refs/pull/3328/merge",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-08T00:00:00Z"
+  },
+  {
+    "id": 76,
+    "key": "v0-rust-rust-quality-release-check-v1-Linux-x64-11111111-22222222",
+    "size_in_bytes": 1073741824,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-07T00:00:00Z"
+  }
+]

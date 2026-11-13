@@ -7,28 +7,28 @@
     {
       "id": 1,
       "ref": "refs/heads/main",
-      "key": "coverage-workspace-v1-Linux-X64-old",
+      "key": "coverage-workspace-v2-Linux-X64-old",
       "size_in_bytes": 100,
       "created_at": "2026-11-10T00:00:00Z"
     },
     {
       "id": 2,
       "ref": "refs/heads/main",
-      "key": "coverage-workspace-v1-Linux-X64-current",
+      "key": "coverage-workspace-v2-Linux-X64-current",
       "size_in_bytes": 100,
       "created_at": "2026-11-13T00:00:00Z"
     },
     {
       "id": 3,
       "ref": "refs/pull/3328/merge",
-      "key": "coverage-workspace-v1-Linux-X64-pr",
+      "key": "coverage-workspace-v2-Linux-X64-pr",
       "size_in_bytes": 100,
       "created_at": "2026-11-12T00:00:00Z"
     },
     {
       "id": 4,
       "ref": "refs/pull/3329/merge",
-      "key": "coverage-workspace-v1-Linux-X64-closed",
+      "key": "coverage-workspace-v2-Linux-X64-closed",
       "size_in_bytes": 100,
       "created_at": "2026-11-12T00:00:00Z"
     },

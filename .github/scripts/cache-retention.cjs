@@ -13,7 +13,18 @@ function handoff(key) {
     /^codspeed-handoff-v1-(Linux|macOS|Windows)-(X64|ARM64)-([1-9]\d*)-[1-9]\d*-[a-f0-9]{40}-[a-f0-9]{64}$/,
   );
 }
+function workspace(key, version) {
+  return key.match(
+    new RegExp(
+      `^(linux-runtime-workspace-v${version}-(?:cli|addon)|native-(?:runtime|test-harness)-workspace-v${version}-(?:x86_64-pc-windows-msvc|aarch64-apple-darwin)|(?:standalone-lib|coverage)-workspace-v${version}-Linux-X64)-`,
+    ),
+  );
+}
 function family(key, common = new Set()) {
+  const pnpm = key.match(
+    /^(pnpm-cache-(?:Linux|macOS|Windows)-(?:x64|arm64)-[a-f0-9]{64}-[a-f0-9]{64}-[a-f0-9]{64})-[1-9]\d*-[1-9]\d*-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+  );
+  if (pnpm) return { name: pnpm[1], preferred: 1, largest: true };
   const transport = handoff(key);
   if (transport) return { name: `benchmark-handoff:${transport[1]}:${transport[2]}`, preferred: 1 };
   const registry = key.match(
@@ -25,9 +36,7 @@ function family(key, common = new Set()) {
   );
   if (benchmark)
     return { name: `dependencies:${benchmark[1]}:${benchmark[2]}:${benchmark[3]}`, preferred: 1 };
-  let match = key.match(
-    /^(linux-runtime-workspace-v1-(?:cli|addon)|native-(?:runtime|test-harness)-workspace-v1-(?:x86_64-pc-windows-msvc|aarch64-apple-darwin)|(?:standalone-lib|coverage)-workspace-v1-Linux-X64)-/,
-  );
+  let match = workspace(key, 2);
   if (match) return { name: match[1], preferred: 1 };
   match = sharedIdentity(key);
   if (match) {
@@ -78,8 +87,8 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
       continue;
     }
     if (cache.ref !== "refs/heads/main") continue;
-    if (obsoleteDependency(cache.key)) {
-      remove.push({ ...cache, reason: "retired duplicate producer dependencies" });
+    if (obsoleteDependency(cache.key) || workspace(cache.key, 1)) {
+      remove.push({ ...cache, reason: "retired producer cache generation" });
       continue;
     }
     const transport = handoff(cache.key);
@@ -93,14 +102,48 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
   }
   const kept = [];
   for (const [name, versions] of groups) {
-    versions.sort((a, b) => b.preferred - a.preferred || b.created - a.created || b.id - a.id);
+    versions.sort(
+      (a, b) =>
+        b.preferred - a.preferred ||
+        (a.largest ? b.size_in_bytes - a.size_in_bytes : 0) ||
+        b.created - a.created ||
+        b.id - a.id,
+    );
     kept.push({ family: name, id: versions[0].id, key: versions[0].key });
     for (const cache of versions.slice(1)) remove.push({ ...cache, reason: `superseded ${name}` });
   }
   remove.sort((a, b) => a.id - b.id);
   if (!Number.isSafeInteger(before)) throw new Error("Cache size exceeds safe integer range");
-  const after = before - remove.reduce((sum, cache) => sum + cache.size_in_bytes, 0);
-  return { before, after, budget, withinBudget: after <= budget, remove, kept };
+  let after = before - remove.reduce((sum, cache) => sum + cache.size_in_bytes, 0);
+  const removed = new Set(remove.map((cache) => cache.id));
+  const expendable = caches.filter(
+    (cache) =>
+      cache.ref === "refs/heads/main" &&
+      workspace(cache.key, 2) &&
+      !removed.has(cache.id) &&
+      Number.isFinite(Date.parse(cache.last_accessed_at)),
+  );
+  expendable.sort(
+    (a, b) =>
+      Date.parse(a.last_accessed_at) - Date.parse(b.last_accessed_at) ||
+      Date.parse(a.created_at) - Date.parse(b.created_at) ||
+      a.id - b.id,
+  );
+  for (const cache of expendable) {
+    if (after <= budget) break;
+    remove.push({ ...cache, reason: "budget-workspace" });
+    removed.add(cache.id);
+    after -= cache.size_in_bytes;
+  }
+  remove.sort((a, b) => a.id - b.id);
+  return {
+    before,
+    after,
+    budget,
+    withinBudget: after <= budget,
+    remove,
+    kept: kept.filter((cache) => !removed.has(cache.id)),
+  };
 }
 function trustedEvent(name, event, repository, ref) {
   if (name === "push")
@@ -197,7 +240,7 @@ async function retain(request, apply = false) {
 }
 function summary(result) {
   const gib = (bytes) => (bytes / 1024 ** 3).toFixed(3);
-  return `## Cache retention\n\nSnapshot: ${gib(result.before)} GiB. Projected after ${result.applied ? "deletions" : "planned deletions"}: ${gib(result.after)} GiB; budget ${gib(result.budget)} GiB.\n\n${result.remove.length} obsolete records; ${result.kept.length} current main families retained. Open pull request records are preserved.\n\n${result.withinBudget ? "Within snapshot budget." : "Budget remains exceeded; current families, open pull requests and unrecognized records are protected."} New saves after the listing are not included.\n`;
+  return `## Cache retention\n\nSnapshot: ${gib(result.before)} GiB. Projected after ${result.applied ? "deletions" : "planned deletions"}: ${gib(result.after)} GiB; budget ${gib(result.budget)} GiB.\n\n${result.remove.length} obsolete records (${result.remove.filter((cache) => cache.reason === "budget-workspace").length} budget-workspace evictions); ${result.kept.length} current main families retained. Open pull request records are preserved.\n\n${result.withinBudget ? "Within snapshot budget." : "Budget remains exceeded; remaining families, open pull requests and unrecognized records are protected."} New saves after the listing are not included.\n`;
 }
 async function main(env = process.env) {
   if (process.argv.slice(2).some((arg) => arg !== "--apply"))

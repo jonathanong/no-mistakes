@@ -41,7 +41,7 @@ test("all large workspace snapshots restore on PRs but save only successful main
   assert.doesNotMatch(workflow, /uses: actions\/cache@[a-f0-9]{40}/);
 });
 
-test("macOS compiler snapshots distinguish CGU64 while retaining a compiler-only fallback", () => {
+test("macOS compiler snapshots retain CGU64 in the sole Cargo configuration fallback", () => {
   for (const name of ["native-build-macos", "native-test-build-macos"]) {
     const restore = steps(job(name)).find((step) => /uses: actions\/cache\/restore@/.test(step));
     assert.match(restore, /key: [^\n]+-cgu64-\$\{\{ hashFiles\('crates\/\*\*\/\*\.rs'\) \}\}/);
@@ -50,7 +50,8 @@ test("macOS compiler snapshots distinguish CGU64 while retaining a compiler-only
       .trim()
       .split("\n");
     assert.match(fallback[0], /-cgu64-$/);
-    assert.doesNotMatch(fallback[1], /cgu64|hashFiles/);
+    assert.equal(fallback.length, 1);
+    assert.match(fallback[0], /hashFiles\('Cargo.toml'/);
   }
 });
 

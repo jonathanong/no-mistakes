@@ -411,7 +411,7 @@ test("coverage and standalone producers retain content-verified workspace caches
   }
 });
 
-test("every workspace producer prefers exact Cargo configuration before compiler-only fallback", () => {
+test("v2 workspace producers restore only the same Cargo configuration and profile", () => {
   const producers = [
     "linux-runtime",
     "native-build",
@@ -432,20 +432,25 @@ test("every workspace producer prefers exact Cargo configuration before compiler
       .trim()
       .split("\n")
       .map((line) => line.trim());
-    assert.equal(fallbacks.length, 2, name);
+    assert.equal(fallbacks.length, 1, name);
     assert.equal(primary, `${fallbacks[0]}${"${{ hashFiles('crates/**/*.rs') }}"}`, name);
     assert.ok(fallbacks[0].includes("hashFiles('Cargo.toml'"), name);
-    assert.ok(fallbacks[0].startsWith(fallbacks[1]), name);
-    assert.ok(primary.startsWith(fallbacks[1]), name);
-    assert.match(fallbacks[1], /steps\.[a-z-]+\.outputs\.cachekey/);
-    assert.ok(fallbacks[1].endsWith("${{ env.RUSTFLAGS }}-"), name);
-    assert.doesNotMatch(fallbacks[1], /hashFiles/);
+    assert.match(fallbacks[0], /workspace-v2-/);
+    assert.match(fallbacks[0], /steps\.[a-z-]+\.outputs\.cachekey/);
+    assert.ok(fallbacks[0].includes("${{ env.RUSTFLAGS }}-"), name);
+    assert.ok(
+      fallbacks[0].includes(
+        "'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml'",
+      ),
+      name,
+    );
+    assert.equal(fallbacks[0].includes("-cgu64-"), name.endsWith("-macos"), name);
     assert.match(body, /cargo-cache-inputs\.cjs restore/);
     assert.match(body, /cargo-cache-inputs\.cjs capture/);
   }
   assert.match(
     workflowJob("linux-runtime"),
-    /key: linux-runtime-workspace-v1-\$\{\{ matrix\.role \}\}/,
+    /key: linux-runtime-workspace-v2-\$\{\{ matrix\.role \}\}/,
   );
   for (const name of [
     "native-build",

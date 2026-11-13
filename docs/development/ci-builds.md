@@ -68,12 +68,12 @@ runtime crate types, a helper restores old timestamps only for unchanged input
 bytes and keeps changed or new files fresh. Cargo still checks compiler,
 configuration, feature, and dependency fingerprints normally. The manifest is
 captured only after a successful build and saved with that build's artifacts;
-never restore it independently. Workspace restores first try the same compiler,
-Rust flags, and Cargo configuration, then the same compiler and Rust flags across
-Cargo configuration changes. Both fallbacks retain their platform and producer
-family. The content check keeps changed inputs fresh, and Cargo decides which
-dependency, feature, and profile fingerprints remain compatible. A release-only
-profile edit can therefore reuse compatible development artifacts. This makes
+never restore it independently. Workspace restores require the same compiler, Rust flags, and Cargo
+configuration; only tracked Rust source bytes may differ between a primary key
+and its fallback. A manifest, dependency, profile, or package-version change
+starts a new workspace instead of carrying obsolete hashed outputs into the
+next snapshot. The v2 namespace resets the accumulated v1 payloads. Cargo
+still checks dependency, feature, and profile fingerprints normally. This makes
 unchanged native and archived Rust test artifacts reusable across fresh checkouts
 without hiding source changes. Dependency caches remain reusable when Rust source
 changes. A cold or changed native library still requires compilation. All Rust target cache saves run on main only; pull requests restore those
@@ -104,15 +104,27 @@ dependency-only caches. PRs never save target caches; each producer uploads its 
 once for its test consumers. pnpm store snapshots also save on main only; the
 action may still write its separate small lockfile-verification records.
 
-The cache-retention workflow removes closed-PR caches and superseded main
-snapshots of known families. It runs after successful main producers, after main
-CI, and on PR closure. Its soft budget is 8 GiB, leaving quota headroom; open PRs,
-unknown families, and distinct compiler environments are protected even when
-that means reporting an unmet budget. The original audit projects to 5.913 GiB;
-a later inventory projects to 6.937 GiB with protected entries, before new
-source-only registry snapshots. These are planner results, not claims that the
-live inventory already reached those sizes. Active benchmark source runs retain
-their exact handoffs until their consumers finish.
+The cache-retention workflow removes closed-PR caches, retired workspace
+versions, and superseded main snapshots of known families. Exact-compatible
+pnpm snapshots share all three content hashes; retention keeps the largest
+complete store, then the newest creation time and ID, rather than a newer
+partial store. Different lockfiles, platforms, architectures, and unknown key
+formats remain separate.
+
+Cleanup runs after successful main producers, after main CI, and on PR closure.
+After deduplication it evicts least-recently-accessed main workspace snapshots
+until the inventory fits an 8 GiB budget. These build caches can be recreated;
+open PRs, unknown families, release dependencies, and active benchmark handoffs
+remain protected. If protected entries alone exceed the budget, cleanup reports
+the remaining excess rather than deleting them. Individual uploads can briefly
+precede their cleanup jobs; the policy does not reserve quota atomically.
+
+A later main release repopulated the inventory to 10.480 GiB. Retiring its nine
+accumulated v1 workspaces and ten duplicate pnpm snapshots projects to 2.704 GiB
+before fresh v2 workspaces and source-only registry caches. This is a transition
+projection, not a steady-state size claim: the 8 GiB retention limit bounds
+subsequent workspace growth. Active benchmark source runs retain their exact
+handoffs until their consumers finish.
 Pagination and PR lookups are bounded; incomplete inventories fail rather than
 claiming headroom. Cleanup uses trusted workflow code and metadata only, never
 PR code with write permissions.
@@ -167,11 +179,19 @@ remove the root-library cost.
 
 The merged cold report covered 338,683/342,109 lines (99.00%),
 39,060/39,331 functions (99.31%), and 344,756/351,672 regions (98.03%). All 98%
-floors, CRAP, and complexity gates passed. The paired warm measurement reuses
-this exact commit's build archives while rerunning every test and collecting
-new profiles; its result is recorded in the PR alongside per-job timing tables.
-The later pnpm store-save guard changes cache publication, not these compiler
-commands. Real-addon provenance cases register effects/export parity, checks,
+floors, CRAP, and complexity gates passed.
+
+The final paired measurements at `060a9edb9` both passed every gate. Rust-cache-cold
+run [`43435782830`](https://github.com/jonathanong/no-mistakes/actions/runs/43435782830)
+took 24m10s including macOS scheduling delays. Its test precompile and runtime
+build steps took 10m46s and 9m10s. The macOS Rust producer finished at +14m37s;
+its second shard waited until +20m11s and finished at +23m52s. Warm artifact-reuse
+run [`43439705900`](https://github.com/jonathanong/no-mistakes/actions/runs/43439705900)
+took 6m50s, rerunning every test with fresh coverage profiles. This demonstrates
+successful cold completion and a warm path under ten minutes; the cold target
+still needs compilation and scheduling reductions. The final cache-generation
+and retention changes affect cache publication/restoration, not these compiler
+or test commands. Real-addon provenance cases register effects/export parity, checks,
 and mixed-demand unions separately. Each union still recomputes all standalone
 reports and compares the complete CJS/ESM prepared results; negative entries
 remain covered. The unchanged 5,000 ms per-test gate measures each behavior
