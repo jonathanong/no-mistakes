@@ -1,6 +1,6 @@
 use super::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Barrier, mpsc};
+use std::sync::{mpsc, Barrier};
 use std::time::Duration;
 
 #[test]

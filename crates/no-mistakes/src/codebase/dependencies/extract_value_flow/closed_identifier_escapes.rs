@@ -70,12 +70,10 @@ impl super::super::super::ImportCollector {
 
     pub(in super::super::super) fn mark_for_of_registry(&mut self, right: &Expression<'_>) {
         if self.collect_value_flow {
-            if self.collect_call_eligibility {
-                if let Expression::Identifier(identifier) = right.get_inner_expression() {
-                    self.receiver_escapes
-                        .for_of_reads
-                        .insert(identifier.span.start);
-                }
+            if let Expression::Identifier(identifier) = right.get_inner_expression() {
+                self.receiver_escapes
+                    .for_of_reads
+                    .insert(identifier.span.start);
             }
             mark_read(self, right);
         }
@@ -141,7 +139,13 @@ impl super::super::super::ImportCollector {
         if !self.collect_value_flow {
             return;
         }
-        self.record_for_of_escape(name);
+        let scope = self.callee_binding_scope(name).unwrap_or(0);
+        self.value_flow
+            .for_of
+            .exported
+            .entry(scope)
+            .or_default()
+            .insert(name.to_string());
         self.record_registry_mutation(name);
     }
 }

@@ -94,6 +94,9 @@ pub(crate) type ForOfEscapes = FxHashMap<usize, FxHashMap<String, FxHashSet<Opti
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct ForOfFacts {
+    pub(crate) guarded_calls: FxHashSet<u32>,
+    pub(crate) receiver_callables: FxHashSet<CallableId>,
+    pub(crate) exported: FxHashMap<usize, FxHashSet<String>>,
     pub(crate) calls: Vec<(u32, ValueBinding)>,
     pub(crate) escaped: Option<std::sync::Arc<ForOfEscapes>>,
 }

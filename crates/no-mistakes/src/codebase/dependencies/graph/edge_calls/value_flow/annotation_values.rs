@@ -31,7 +31,13 @@ impl ValueFlowResolution<'_, '_> {
         visited: &mut FxHashSet<(std::path::PathBuf, String)>,
     ) -> FlowValue {
         match shape {
-            ValueType::Unknown | ValueType::Number | ValueType::Element(_) => FlowValue::Unknown,
+            ValueType::Unknown
+            | ValueType::Number
+            | ValueType::Element(_)
+            | ValueType::Signature(_) => FlowValue::Unknown,
+            ValueType::Param(callback, index) => {
+                self.contextual_parameter(path, callback, *index, visited)
+            }
             ValueType::Object(properties) => FlowValue::TypedObject {
                 executor: Box::new(FlowValue::Unknown),
                 properties: properties
@@ -85,6 +91,7 @@ impl ValueFlowResolution<'_, '_> {
             let Some(export) = type_export(binding, member) else {
                 return FlowValue::Unknown;
             };
+            let imported_origin = (binding.specifier.clone(), export.clone());
             let origin = self
                 .cache
                 .type_origin((path.to_path_buf(), reference.to_owned()), || {
@@ -109,7 +116,11 @@ impl ValueFlowResolution<'_, '_> {
                 });
             return FlowValue::Provenance {
                 executor: Box::new(inner),
-                typed: vec![origin],
+                typed: if imported_origin == origin {
+                    vec![origin]
+                } else {
+                    vec![origin, imported_origin]
+                },
                 members: Vec::new(),
                 receiver_factories: Vec::new(),
             };

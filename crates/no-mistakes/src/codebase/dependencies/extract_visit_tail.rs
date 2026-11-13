@@ -1,5 +1,14 @@
 macro_rules! visit_import_collector_tail {
     () => {
+        fn visit_this_expression(&mut self, _: &oxc_ast::ast::ThisExpression) {
+            if self.collect_value_flow {
+                self.value_flow
+                    .for_of
+                    .receiver_callables
+                    .extend(self.function_id_stack.iter().map(|(id, _)| *id));
+            }
+        }
+
         fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
             visit_identifier_reference_with_namespaces(self, identifier);
         }

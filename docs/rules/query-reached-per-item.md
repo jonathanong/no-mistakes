@@ -25,6 +25,57 @@ A finding identifies the construct, callee, effect kind, and deterministic
 shortest resolved call path to its sink. Transaction sinks are marked separately
 and recommend merging statements rather than parallelizing one client.
 Unresolved dynamic targets cannot prove sink reachability and are not reported.
+The shared graph follows visible function-valued methods on `const` object
+literals and closed `const` arrays of literal stage objects, including named
+imports of exported arrays. Rows may contain several literal function properties.
+Calls assigned to `const` results, such as `const result = await stage.run(...)`,
+retain the same reachability. Read-only result guards followed by an early
+return also preserve the calls before and after the guard, including a checkpoint
+helper receiving ordinary identifier or literal arguments before that return.
+Conditions that call or mutate values, branches that fall through, stage/source
+arguments, and return expressions with calls or mutations prevent this proof. For example,
+`for (const stage of STAGES) await stage.run(query, id, size)` reaches queries
+inside the literal `run` functions, including calls through their executor
+parameters. Stage calls accept identifier, primitive literal, member-access
+(`candidate.id`), and template-literal arguments built from them, but not object
+literals or calls;
+passing the stage or its source array elsewhere, mutating or escaping the
+array in its exporter or any analyzed importer, using `this` in any row method,
+or mixing unresolved methods prevents
+this proof. Rewrite dynamic registries as closed literal stages with explicit
+executor arguments.
+
+Arrow and function arguments also retain reachability when the resolved helper
+invokes the corresponding parameter, such as
+`both(() => query(sqlA), () => query(sqlB))` where `both(a, b)` calls `a()` and
+`b()`. Merely passing, retaining, or storing a callback does not execute it.
+Unknown or conflicting callback arguments remain unresolved. Keep callback
+invocation statically visible, or call the query helper directly in the loop.
+
+With a configured `query` sink, both loop calls below report:
+
+```ts
+const stages = [{ run: () => query('SELECT a') }];
+for (const stage of stages) await stage.run();
+
+async function both(a: () => Promise<unknown>, b: () => Promise<unknown>) {
+  await a();
+  await b();
+}
+for (const id of ids) await both(() => query('SELECT a'), () => query('SELECT b'));
+```
+
+This callback is only stored, so the loop call does not report:
+
+```ts
+const callbacks: (() => Promise<unknown>)[] = [];
+function store(callback: () => Promise<unknown>) { callbacks.push(callback); }
+for (const id of ids) store(() => query('SELECT a'));
+```
+
+Batch the queries behind the invoked stage or helper before applying it to the
+complete input, or use the rule's justified suppression for intentional calls.
+
 Imported receiver mutations remain visible through later object literals,
 identifier parameters, and destructured helper arguments or defaults. Replacing
 an imported method makes that method unresolved through those receivers; a
@@ -87,6 +138,16 @@ per invocation; its internal batch size does not exempt an outer loop.
 resolves to the configured imported type export. Explicit named and local type
 barrels preserve namespace members such as `Namespace.Query`, including renamed
 imports; unrelated local types and different module names remain unselected.
+Workspace package type barrels retain both their public module/export selector
+and the underlying type origin, so configured package aliases remain selectable.
+An unannotated parameter of a function written directly as a property of an
+annotated `const` array or object literal inherits the parameter type from the
+same-file alias's function-typed property (`const STAGES: readonly Stage[] = [{
+run: (query) => query(sql) }]` with `type Stage = { run: (query: Query) => ... }`),
+by position, so its `query(...)` call is selected even when other callers pass an
+untyped value. Aliases with type parameters, imported or non-literal property
+types, computed keys, defaulted parameters, and functions that are not literal
+properties do not contribute a type.
 Static indexed property types, including `NonNullable<Options['query']>`, preserve
 the selected callable origin. Statically invoked async callbacks preserve returned
 executor metadata. A nullish choice between a typed executor and a configured

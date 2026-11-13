@@ -1,8 +1,18 @@
 use super::*;
+#[path = "for_of_call_expressions.rs"]
+mod expressions;
+#[path = "for_of_guards.rs"]
+mod guards;
 
-pub(super) fn collect(body: &Statement<'_>, name: &str, source: Option<&str>) -> Option<Vec<u32>> {
+pub(super) fn collect(
+    body: &Statement<'_>,
+    name: &str,
+    source: Option<&str>,
+) -> Option<(Vec<u32>, bool)> {
     let mut calls = Vec::new();
-    statements(body, name, source, true, &mut 128, &mut calls).then_some(calls)
+    let mut guarded = false;
+    statements(body, name, source, true, &mut 128, &mut calls, &mut guarded)
+        .then_some((calls, guarded))
 }
 
 fn statements(
@@ -12,6 +22,7 @@ fn statements(
     project: bool,
     budget: &mut usize,
     calls: &mut Vec<u32>,
+    guarded: &mut bool,
 ) -> bool {
     if *budget == 0 {
         return false;
@@ -21,76 +32,37 @@ fn statements(
         Statement::BlockStatement(block) => block
             .body
             .iter()
-            .all(|statement| statements(statement, name, source, project, budget, calls)),
+            .all(|statement| statements(statement, name, source, project, budget, calls, guarded)),
         Statement::ExpressionStatement(statement) => {
-            let expression = statement.expression.get_inner_expression();
-            let expression = match expression {
-                Expression::AwaitExpression(value) => value.argument.get_inner_expression(),
-                value => value,
-            };
-            let Expression::CallExpression(call) = expression else {
-                return false;
-            };
-            let Expression::StaticMemberExpression(member) = &call.callee else {
-                return false;
-            };
-            let Expression::Identifier(receiver) = &member.object else {
-                return false;
-            };
-            if !project && matches!(member.property.name.as_str(), "exit" | "abort") {
-                return false;
-            }
-            if Some(receiver.name.as_str()) == source {
-                return false;
-            }
-            if receiver.name == name {
-                if !call.arguments.is_empty() {
-                    return false;
-                }
-                if project {
-                    calls.push(call.span.start);
-                }
-                true
-            } else {
-                if project {
-                    return false;
-                }
-                call.arguments.iter().all(|argument| {
-                    match argument
-                        .as_expression()
-                        .map(Expression::get_inner_expression)
-                    {
-                        Some(Expression::Identifier(value)) => {
-                            value.name != name && Some(value.name.as_str()) != source
-                        }
-                        Some(
-                            Expression::StringLiteral(_)
-                            | Expression::NumericLiteral(_)
-                            | Expression::BooleanLiteral(_)
-                            | Expression::NullLiteral(_),
-                        ) => true,
-                        _ => false,
-                    }
+            expressions::expression(&statement.expression, name, source, project, calls)
+        }
+        Statement::VariableDeclaration(declaration) => {
+            declaration.kind == VariableDeclarationKind::Const
+                && declaration.declarations.iter().all(|declarator| {
+                    matches!(&declarator.id, BindingPattern::BindingIdentifier(identifier)
+                    if identifier.name != name && Some(identifier.name.as_str()) != source)
+                        && declarator.init.as_ref().is_some_and(|expression| {
+                            expressions::expression(expression, name, source, project, calls)
+                        })
                 })
-            }
+        }
+        Statement::IfStatement(statement) => {
+            *guarded = true;
+            guards::returning_guard(statement, name, source)
         }
         Statement::TryStatement(statement) => {
             statement.finalizer.is_none()
-                && statement
-                    .block
-                    .body
-                    .iter()
-                    .all(|statement| statements(statement, name, source, project, budget, calls))
+                && statement.block.body.iter().all(|statement| {
+                    statements(statement, name, source, project, budget, calls, guarded)
+                })
                 && statement.handler.as_ref().is_none_or(|handler| {
                     handler.param.as_ref().is_none_or(|parameter| {
                         !binding_names(&parameter.pattern)
                             .iter()
                             .any(|bound| bound == name || Some(bound.as_str()) == source)
-                    }) && handler
-                        .body
-                        .body
-                        .iter()
-                        .all(|statement| statements(statement, name, source, false, budget, calls))
+                    }) && handler.body.body.iter().all(|statement| {
+                        statements(statement, name, source, false, budget, calls, guarded)
+                    })
                 })
         }
         _ => false,
@@ -113,10 +85,14 @@ impl ImportCollector {
         self.record_for_of_escape(identifier.name.as_str());
     }
     pub(in super::super::super) fn record_for_of_escape(&mut self, name: &str) {
-        if !self.collect_call_eligibility || !self.collect_value_flow {
+        if !self.collect_value_flow {
             return;
         }
-        if let Some(scope) = self.callee_binding_scope(name) {
+        if let Some(scope) = self.callee_binding_scope(name).or_else(|| {
+            self.predeclared_imported_bindings
+                .contains(name)
+                .then_some(0)
+        }) {
             let owner = self.current_function_id();
             self.receiver_escapes
                 .for_of_escapes
@@ -128,7 +104,7 @@ impl ImportCollector {
         }
     }
     pub(in super::super::super) fn for_of_source_closed(&self, source: &Expression<'_>) -> bool {
-        if !self.collect_call_eligibility {
+        if !self.collect_value_flow {
             return false;
         }
         let Expression::Identifier(identifier) = source.get_inner_expression() else {
@@ -138,6 +114,11 @@ impl ImportCollector {
             );
         };
         self.callee_binding_scope(identifier.name.as_str())
+            .or_else(|| {
+                self.predeclared_imported_bindings
+                    .contains(identifier.name.as_str())
+                    .then_some(0)
+            })
             .is_none_or(|scope| {
                 !self
                     .receiver_escapes
@@ -167,6 +148,36 @@ impl ImportCollector {
                     .entry(*scope)
                     .or_default()
                     .entry(name.clone())
+                    .or_insert_with(|| contexts.clone());
+            }
+        }
+        for binding in self.value_flow.bindings.iter().filter(|binding| {
+            binding.immutable && matches!(binding.value, ValueExpression::Array(_))
+        }) {
+            if let Some(contexts) = self
+                .receiver_escapes
+                .for_of_escapes
+                .get(&binding.scope)
+                .and_then(|names| names.get(&binding.name))
+            {
+                escaped
+                    .entry(binding.scope)
+                    .or_default()
+                    .entry(binding.name.clone())
+                    .or_insert_with(|| contexts.clone());
+            }
+        }
+        for binding in &self.call_import_bindings {
+            if let Some(contexts) = self
+                .receiver_escapes
+                .for_of_escapes
+                .get(&0)
+                .and_then(|names| names.get(&binding.local))
+            {
+                escaped
+                    .entry(0)
+                    .or_default()
+                    .entry(binding.local.clone())
                     .or_insert_with(|| contexts.clone());
             }
         }

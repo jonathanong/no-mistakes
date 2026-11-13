@@ -44,6 +44,60 @@ fn query_reached_per_item_json_matches_snapshot() {
 }
 
 #[test]
+fn query_reached_per_item_call_reachability_json_matches_snapshot() {
+    assert_saved_fixture(
+        "query_reached_per_item_call_reachability",
+        &[
+            rule(
+                "call_reachability",
+                "query-reached-per-item/call-reachability-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "imported_stages",
+                "query-reached-per-item/imported-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "namespace_member",
+                "query-reached-per-item/namespace-member-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "namespace_cycle",
+                "query-reached-per-item/namespace-cycle-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "namespace_unknown",
+                "query-reached-per-item/namespace-unknown-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "guarded_workspace",
+                "query-reached-per-item/guarded-workspace-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "guarded_workspace_typed",
+                "query-reached-per-item/guarded-workspace-stages-fixture",
+                "typed.yml",
+            ),
+            rule(
+                "guard_shapes",
+                "query-reached-per-item/guard-shapes-fixture",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "contextual_stages",
+                "query-reached-per-item/typed-contextual-stages-fixture",
+                ".no-mistakes.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
 fn required_companion_imports_json_matches_snapshot() {
     assert_saved_fixture(
         "required_companion_imports",

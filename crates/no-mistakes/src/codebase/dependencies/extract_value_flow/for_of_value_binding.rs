@@ -37,9 +37,15 @@ impl ImportCollector {
                             ValueExpression::Named { name, .. } => Some(name.as_str()),
                             _ => None,
                         };
-                        if let Some(calls) =
+                        if let Some((calls, guarded)) =
                             super::for_of_calls::collect(body, &binding.name, source_name)
                         {
+                            if guarded {
+                                self.value_flow
+                                    .for_of
+                                    .guarded_calls
+                                    .extend(calls.iter().copied());
+                            }
                             self.value_flow
                                 .for_of
                                 .calls
