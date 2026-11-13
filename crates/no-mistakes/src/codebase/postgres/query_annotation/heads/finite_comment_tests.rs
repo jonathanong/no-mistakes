@@ -30,3 +30,6 @@ fn finite_helper_name_calls_require_closed_stable_literal_provenance() {
 
 #[path = "finite_comment_index_tests.rs"]
 mod finite_comment_index_tests;
+
+#[path = "cov_p2_domain_tests.rs"]
+mod cov_p2_tests;

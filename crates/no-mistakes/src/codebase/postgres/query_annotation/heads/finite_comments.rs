@@ -82,3 +82,7 @@ pub(super) fn declarations(syntax: &super::syntax::Syntax) -> FxHashSet<Span> {
         )
         .collect()
 }
+
+#[cfg(test)]
+#[path = "finite_comments/cov_p2_tests.rs"]
+mod cov_p2_tests;
