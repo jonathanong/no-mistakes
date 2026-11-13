@@ -130,6 +130,29 @@ fn saved_cross_file_catalog_types_require_a_unique_literal_export() {
     }
 }
 
+#[test]
+fn closed_types_reject_missing_facts_unresolved_aliases_and_uncatalogued_elements() {
+    let absent = PathBuf::from("absent.ts");
+    let present = PathBuf::from("query.ts");
+    let mut facts = CheckFactMap::default();
+    facts.files.push(present.clone());
+    facts.ts.insert(
+        present.clone(),
+        CheckFileFacts {
+            ts: Arc::new(TsFileFacts::default()),
+            ..Default::default()
+        }
+        .into(),
+    );
+    let bindings = Bindings::new(&facts);
+    let reference = parameter("alias", Some(ValueType::Reference("Row".into())));
+    let element = parameter("item", Some(ValueType::Element("TABLES".into())));
+    assert!(!bindings.closed_type(&absent, &reference));
+    assert!(!bindings.closed_type(&absent, &element));
+    assert!(!bindings.closed_type(&present, &reference));
+    assert!(!bindings.closed_type(&present, &element));
+}
+
 fn binding(name: &str, scope: usize, value: ValueExpression) -> ValueBinding {
     ValueBinding {
         immutable: true,

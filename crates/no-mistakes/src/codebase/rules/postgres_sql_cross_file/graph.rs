@@ -71,5 +71,17 @@ mod tests;
 mod value_import_demand_tests;
 
 #[cfg(test)]
+#[path = "graph/coverage_harness.rs"]
+mod coverage_harness;
+#[cfg(test)]
+#[path = "graph/coverage_resolve_tests.rs"]
+mod coverage_resolve_tests;
+#[cfg(test)]
+#[path = "graph/coverage_routes_tests.rs"]
+mod coverage_routes_tests;
+#[cfg(test)]
+#[path = "graph/coverage_targets_tests.rs"]
+mod coverage_targets_tests;
+#[cfg(test)]
 #[path = "graph/routes_fixture_tests.rs"]
 mod routes_fixture_tests;
