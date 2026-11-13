@@ -63,7 +63,43 @@ pub(super) fn bench_stage_imports(c: &mut Criterion) {
     assert_eq!(report["warnings"], serde_json::json!([]));
     assert_eq!(report["advisories"], serde_json::json!([]));
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 48);
+    let actual = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap().to_string(),
+                finding["line"].as_u64().unwrap(),
+                finding["import"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    let expected = (0..24)
+        .flat_map(|stage| {
+            [
+                (
+                    "src/caller.mts".to_string(),
+                    28 + stage * 4,
+                    "stage.run".to_string(),
+                ),
+                (
+                    "src/caller.mts".to_string(),
+                    29 + stage * 4,
+                    "stage.check".to_string(),
+                ),
+            ]
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(
+        findings.len(),
+        48,
+        "missing={:?}; unexpected={:?}; report={report}",
+        expected.difference(&actual).collect::<Vec<_>>(),
+        actual.difference(&expected).collect::<Vec<_>>()
+    );
+    assert_eq!(
+        actual, expected,
+        "stage import finding locations must match"
+    );
     assert!(findings
         .iter()
         .all(|finding| finding["rule"] == "query-reached-per-item"));
