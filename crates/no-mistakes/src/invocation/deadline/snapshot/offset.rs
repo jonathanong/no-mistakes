@@ -1,3 +1,8 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "The snapshot epoch owns deadline control time independently of optional analysis timings."
+)]
+
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 

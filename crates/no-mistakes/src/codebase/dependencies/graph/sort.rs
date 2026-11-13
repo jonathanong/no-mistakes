@@ -10,7 +10,10 @@ fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
 }
 
 /// Historical formatted sort key. Test oracle for `cached_node_sort_key`.
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Test oracle for cached sort keys.")
+)]
 fn node_sort_key(n: &NodeId) -> String {
     match n {
         NodeId::File(p) => p.to_string_lossy().into_owned(),

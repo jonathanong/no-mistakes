@@ -107,7 +107,10 @@ pub(crate) struct ImportUsagesOptions {
 
 include!("options_entrypoint.rs");
 
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Tests exercise string options parsing.")
+)]
 pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) -> napi::Result<T> {
     serde_json::from_str(options_json)
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))

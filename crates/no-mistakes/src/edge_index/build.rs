@@ -14,7 +14,6 @@ where
     Node: Clone + Eq + Hash + Ord,
     Kind: Clone + Eq + Hash + Ord,
 {
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn from_edges(edges: impl IntoIterator<Item = CanonicalEdge<Node, Kind>>) -> Self {
         Self::from_edges_and_nodes(edges, std::iter::empty())
     }

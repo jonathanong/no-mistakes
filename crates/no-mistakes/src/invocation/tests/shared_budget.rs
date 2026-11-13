@@ -92,10 +92,12 @@ fn term_resistant_registered_child_subprocess_helper() {
     let Some(path) = std::env::var_os("NO_MISTAKES_SHARED_BUDGET_SOCKET") else {
         return;
     };
+    // SAFETY: SIG_IGN is a valid signal disposition; it is installed only in this helper child.
     unsafe {
         nix::libc::signal(nix::libc::SIGTERM, nix::libc::SIG_IGN);
     }
     let mut stream = UnixStream::connect(path).unwrap();
+    // SAFETY: getppid takes no arguments and accesses no Rust memory.
     writeln!(stream, "{}:{}", std::process::id(), unsafe {
         nix::libc::getppid()
     })

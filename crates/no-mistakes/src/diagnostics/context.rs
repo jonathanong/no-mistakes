@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "The InvocationObserver measurement gateway invokes its clock only when enabled."
+)]
 use super::progress::ActiveSpanGuard;
 use super::{InvocationObserver, TimingKind};
 use std::cell::RefCell;

@@ -20,6 +20,7 @@ fn command_error_subprocess_helper() {
     };
     if mode == "closed" {
         // Closing stderr is confined to the child, before its writer is installed.
+        // SAFETY: this isolated child closes only its stderr before installing any diagnostic writer.
         unsafe { nix::libc::close(2) };
     } else {
         use std::io::Write;
@@ -68,6 +69,7 @@ fn command_error_survives_unavailable_writer_and_occupied_progress_queue() {
         if mode == "occupied" {
             use std::os::unix::process::CommandExt;
             // Only this subprocess's stderr pipe is resized before exec.
+            // SAFETY: the post-fork closure only resizes its inherited pipe via fcntl and reads errno.
             unsafe {
                 command.pre_exec(|| {
                     if nix::libc::fcntl(2, nix::libc::F_SETPIPE_SZ, 4096) == -1 {

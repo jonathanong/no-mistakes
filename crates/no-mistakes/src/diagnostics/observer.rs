@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "InvocationObserver owns the enabled instrumentation clock."
+)]
 mod render;
 mod snapshot;
 #[cfg(test)]

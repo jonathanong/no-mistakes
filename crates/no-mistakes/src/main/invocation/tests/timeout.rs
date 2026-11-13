@@ -116,6 +116,7 @@ fn verbose_timeout_without_progress_preserves_partial_counters_and_stays_bounded
         #[cfg(target_os = "linux")]
         if mode.ends_with("blocked") {
             use std::os::unix::process::CommandExt;
+            // SAFETY: the post-fork closure only calls fcntl on an inherited pipe and reads errno.
             unsafe {
                 command.pre_exec(move || {
                     if nix::libc::fcntl(
@@ -202,6 +203,7 @@ fn fill_stdout_pipe() {
     std::io::stdout().flush().unwrap();
     // Fill the inherited pipe without blocking before the boundary can claim.
     // Restore its original status flags before testing the blocking JSON write.
+    // SAFETY: this isolated child owns stdout; bytes stays live for writes and flags are restored.
     unsafe {
         let flags = nix::libc::fcntl(1, nix::libc::F_GETFL);
         assert!(flags >= 0);

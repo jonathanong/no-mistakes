@@ -3,7 +3,10 @@ use super::super::BindingState;
 
 // Keep the exact pre-proof field list: a scalar proof must not silently grow
 // every SQL binding or add a heap allocation.
-#[allow(dead_code)]
+#[expect(
+    dead_code,
+    reason = "The legacy field layout is retained solely for the BindingState size regression assertion."
+)]
 struct LegacyBindingState {
     builder_identity: Option<u32>,
     builder_effect_revision: u64,

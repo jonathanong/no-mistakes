@@ -3,7 +3,10 @@ use super::*;
 /// Merge lockfile-seeded candidates into `selected_map` and `group_results`, or return
 /// a full-suite fallback plan when `global_config_fallback` is set and there are
 /// genuinely untraceable tooling deps.
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Lockfile seeds update shared selection, deduplication, and group state under the same plan limits."
+)]
 pub(in crate::tests::configured_plan) fn apply_lockfile_seeds(
     root: &Path,
     seed_result: LockfileSeedResult,

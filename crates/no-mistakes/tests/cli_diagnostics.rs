@@ -419,6 +419,7 @@ fn progress_command_error_reaches_normal_stderr_when_the_progress_queue_is_occup
     // Fill only this child's pipe before exec. The returned command error must
     // survive blocked snapshots and a full progress queue, then reach stderr
     // when the parent starts draining it.
+    // SAFETY: the post-fork closure only calls fcntl/write on stderr with a live stack buffer and reads errno.
     unsafe {
         command.pre_exec(|| {
             if nix::libc::fcntl(2, nix::libc::F_SETPIPE_SZ, 4096) == -1 {

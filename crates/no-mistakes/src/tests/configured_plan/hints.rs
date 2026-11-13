@@ -33,7 +33,6 @@ struct SelectorSettings {
 /// playwright selector, route, queue, and HTTP-call domains; returns an
 /// empty `CoverageHints` for non-playwright frameworks or when no removed
 /// identifier was detected across any of those domains.
-#[allow(clippy::too_many_arguments)]
 pub(super) fn build_coverage_hints_from_prepared(
     prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
     config: &NoMistakesConfig,

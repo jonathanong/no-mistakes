@@ -21,7 +21,10 @@ use dotnet::{
 mod path;
 use path::normalize_config_path;
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Native traceability combines prepared graph reachability with framework discovery and coverage hints."
+)]
 pub(super) fn native_traceable_changed_files(
     framework: TestFramework,
     root: &Path,
@@ -56,7 +59,10 @@ pub(super) fn native_traceable_changed_files(
     .collect()
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Fallback selection shares changed/deleted inputs, prior selections, discovery scope, and explicit limits."
+)]
 pub(super) fn native_fallback_selection(
     framework: TestFramework,
     root: &Path,
@@ -166,7 +172,10 @@ pub(super) fn untraced_native_changes(
     triggers.into_iter().collect()
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Framework-specific fallback keeps the selected catalog and explicit full-suite opt-in together."
+)]
 pub(super) fn native_fallback_tests(
     framework: TestFramework,
     root: &Path,

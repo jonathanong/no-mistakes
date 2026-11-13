@@ -2,11 +2,15 @@
 name = "no-mistakes"
 version = "0.109.46"
 edition = "2021"
+rust-version = "1.97"
 # Explicit suites avoid statically linking the analyzer once per test source.
 autotests = false
 license = "MIT"
 description = "Static analysis tools for codebase dependency and symbol queries"
 repository = "https://github.com/jonathanong/no-mistakes"
+
+[lints]
+workspace = true
 
 [lib]
 crate-type = ["rlib"]

@@ -1,4 +1,11 @@
-#![cfg_attr(all(coverage, not(test)), allow(dead_code, unused_imports))]
+#![cfg_attr(
+    all(coverage, not(test)),
+    expect(
+        dead_code,
+        unused_imports,
+        reason = "Coverage omits native registration while retaining the Rust API implementations."
+    )
+)]
 
 #[cfg(not(coverage))]
 use napi::bindgen_prelude::AsyncTask;

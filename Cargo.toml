@@ -4,6 +4,15 @@ members = [
 ]
 resolver = "2"
 
+[workspace.lints.cargo]
+unused_dependencies = "warn"
+
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "warn"
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+disallowed_methods = "warn"
+
 # Keep local, CI, and release validation artifacts small. Debug assertions remain enabled.
 # Use CARGO_PROFILE_DEV_DEBUG=2 / CARGO_PROFILE_TEST_DEBUG=2 for debugger symbols.
 [profile.dev]

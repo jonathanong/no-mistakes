@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Annotation timing reads its supplied clock only when InvocationObserver is enabled."
+)]
 //! Opt-in locations for long-running annotation evaluation.
 use crate::diagnostics::{InvocationObserver, TimingKind};
 use std::path::Path;

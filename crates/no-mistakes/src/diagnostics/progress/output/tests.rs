@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
 use super::*;
 #[test]
 fn blocked_writer_and_full_queue_never_block_emission_or_cleanup() {
@@ -122,6 +126,7 @@ fn closed_stderr_subprocess_helper() {
         return;
     }
     // Closing stderr is confined to a child; the parent harness keeps its fd.
+    // SAFETY: this isolated child closes only its stderr before constructing the progress output.
     unsafe {
         nix::libc::close(2);
     }

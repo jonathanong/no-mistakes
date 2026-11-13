@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
 use super::{ClassifiedPath, FileClassification, FileId, FileInventory};
 use std::path::PathBuf;
 use std::time::Instant;

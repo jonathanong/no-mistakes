@@ -1,4 +1,10 @@
-#![cfg_attr(not(target_os = "linux"), allow(unused_imports))]
+#![cfg_attr(
+    not(target_os = "linux"),
+    expect(
+        unused_imports,
+        reason = "The millennium Instant regression runs only on Linux."
+    )
+)]
 use super::{active_deadline, DeadlineGuard};
 
 // Linux Instant documentation explicitly demonstrates this representable millennium.

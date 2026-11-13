@@ -79,10 +79,13 @@ fn console_roundtrip() -> io::Result<()> {
     let data = fixture();
     let expected: Vec<u16> = serde_json::from_value(data["consoleUtf16"].clone())?;
     // This runs only in a child: the test runner's own console stays untouched.
+    // SAFETY: FreeConsole takes no pointers and detaches only this helper child's console.
     unsafe { FreeConsole() };
+    // SAFETY: both calls affect only this helper's console and 437 is a valid code page.
     if unsafe { AllocConsole() } == 0 || unsafe { SetConsoleOutputCP(437) } == 0 {
         return Err(io::Error::last_os_error());
     }
+    // SAFETY: the flags describe a text buffer with default security and no reserved pointer.
     let handle = unsafe {
         CreateConsoleScreenBuffer(
             GENERIC_READ | GENERIC_WRITE,
@@ -95,10 +98,12 @@ fn console_roundtrip() -> io::Result<()> {
     if handle == INVALID_HANDLE_VALUE {
         return Err(io::Error::last_os_error());
     }
+    // SAFETY: handle is newly owned and valid; File becomes its sole owner and closes it once.
     let mut file = unsafe { File::from_raw_handle(handle) };
     console::write(&mut file, data["consoleText"].as_str().unwrap())?;
     let mut actual = vec![0; expected.len()];
     let mut read = 0;
+    // SAFETY: file owns the console buffer; actual and read are writable for the specified length.
     let result = unsafe {
         ReadConsoleOutputCharacterW(
             file.as_raw_handle(),

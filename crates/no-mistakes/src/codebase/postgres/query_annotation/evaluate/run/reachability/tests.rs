@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
 mod all_exported;
 mod reference;
 use super::*;

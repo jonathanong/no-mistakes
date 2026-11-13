@@ -6,7 +6,10 @@ use no_mistakes::playwright::matcher;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Removed identifiers join their dependent tests against the shared selection scope and output map."
+)]
 pub(super) fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
     root: &Path,
     all_test_set: &HashSet<PathBuf>,
@@ -51,7 +54,6 @@ pub(super) fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
 /// entry point so the call sites under the dependents/queue branches read
 /// the same as the route/HTTP variants without inlining `EdgeKind` choices
 /// at each call site.
-#[allow(clippy::too_many_arguments)]
 pub(super) fn append_queue_hint_candidates(
     root: &Path,
     all_test_set: &HashSet<PathBuf>,

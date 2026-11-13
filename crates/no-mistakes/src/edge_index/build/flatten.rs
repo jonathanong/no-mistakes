@@ -16,7 +16,13 @@ where
     /// kind)`, but avoids materializing and sorting one repository-wide edge
     /// vector. Empty forward nodes and reverse-only targets remain in their
     /// respective maps unchanged.
-    #[cfg_attr(not(any(test, feature = "test-instrumentation")), allow(dead_code))]
+    #[cfg_attr(
+        not(any(test, feature = "test-instrumentation")),
+        expect(
+            dead_code,
+            reason = "Tests compare comparator and cached-key flattening."
+        )
+    )]
     pub(crate) fn from_normalized_adjacency_maps_by_source(
         forward: FxHashMap<Node, Vec<(Node, Kind)>>,
         reverse: FxHashMap<Node, Vec<(Node, Kind)>>,

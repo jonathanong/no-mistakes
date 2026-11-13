@@ -60,12 +60,14 @@ impl ProcessTree {
             JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
         };
 
+        // SAFETY: null security attributes and name request an unnamed job with default security.
         let job = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
         if job.is_null() {
             return Err(std::io::Error::last_os_error());
         }
         let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
         limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        // SAFETY: job is live; limits and its exact byte size describe initialized job-limit storage.
         if unsafe {
             SetInformationJobObject(
                 job,
@@ -76,17 +78,21 @@ impl ProcessTree {
         } == 0
         {
             let error = std::io::Error::last_os_error();
+            // SAFETY: this error path owns the live job handle and closes it exactly once.
             unsafe { windows_sys::Win32::Foundation::CloseHandle(job) };
             return Err(error);
         }
+        // SAFETY: the job and child process handles remain live throughout assignment.
         if unsafe { AssignProcessToJobObject(job, child.as_raw_handle()) } == 0 {
             let error = std::io::Error::last_os_error();
+            // SAFETY: this error path owns the live job handle and closes it exactly once.
             unsafe { windows_sys::Win32::Foundation::CloseHandle(job) };
             return Err(error);
         }
         if let Err(error) = resume_initial_thread(child.id()) {
             // Closing a kill-on-close job also cleans up the still-suspended
             // child before the caller performs its best-effort cleanup.
+            // SAFETY: this error path owns the live job handle and closes it exactly once.
             unsafe { windows_sys::Win32::Foundation::CloseHandle(job) };
             return Err(error);
         }
@@ -110,6 +116,7 @@ impl ProcessTree {
         #[cfg(windows)]
         {
             let _ = child;
+            // SAFETY: self owns a live job handle until Drop closes it.
             if unsafe { windows_sys::Win32::System::JobObjects::TerminateJobObject(self.job, 1) }
                 == 0
             {
@@ -161,6 +168,7 @@ impl Drop for ProcessTree {
 #[cfg(windows)]
 impl Drop for ProcessTree {
     fn drop(&mut self) {
+        // SAFETY: self owns this job handle and closes it exactly once during Drop.
         unsafe { windows_sys::Win32::Foundation::CloseHandle(self.job) };
     }
 }

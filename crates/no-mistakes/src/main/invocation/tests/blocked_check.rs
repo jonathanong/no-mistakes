@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
 use super::*;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Read, Write};

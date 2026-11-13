@@ -44,6 +44,17 @@ test("invalid modes and additional arguments fail before invoking cargo", () => 
   }
 });
 test("cargo failures propagate", () => assert.equal(run(["test"], "17").status, 17));
+
+test("clock policy enforces aliases and documented exemptions", () => {
+  const result = spawnSync("bash", [".github/scripts/rust-lint-policy.sh"], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 90_000,
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /cargo-lint-policy-fixture/);
+});
 test("orphan snapshot audit failures propagate after successful tests", () => {
   const result = spawnSync("bash", [".github/scripts/rust-validation.sh", "test"], {
     cwd: root,

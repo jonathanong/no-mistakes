@@ -1,0 +1,10 @@
+[package]
+name = "cargo-lint-policy-fixture"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[lints.clippy]
+disallowed_methods = "warn"

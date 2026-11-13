@@ -9,7 +9,6 @@ where
 {
     /// Traverse edges in level order, preserving their canonical input ordinal
     /// within each level. Reverse walks return edges in traversal orientation.
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn traverse(
         &self,
         roots: &[Node],

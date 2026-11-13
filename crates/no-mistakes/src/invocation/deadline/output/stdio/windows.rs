@@ -7,11 +7,13 @@ pub(super) fn write(file: &mut File, text: &str) -> io::Result<()> {
     let handle = file.as_raw_handle();
     let mut mode = 0;
     // A console needs Unicode console I/O; redirected files/pipes need UTF-8.
+    // SAFETY: file keeps handle live and mode is writable output storage.
     if unsafe { GetConsoleMode(handle, &mut mode) } == 0 {
         return file.write_all(text.as_bytes());
     }
     super::wide::write_all(text, |units| {
         let mut written = 0;
+        // SAFETY: handle is a console; units and written remain valid for this synchronous write.
         let result = unsafe {
             WriteConsoleW(
                 handle,

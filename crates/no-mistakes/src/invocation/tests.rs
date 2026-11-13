@@ -1,3 +1,7 @@
+#![expect(
+    clippy::disallowed_methods,
+    reason = "Deadline and instrumentation tests require a real monotonic clock."
+)]
 #[cfg(unix)]
 use super::child::process_tree::signals;
 use super::deadline::{active_deadline, Deadline};
@@ -11,17 +15,15 @@ use std::time::Instant;
 #[cfg(unix)]
 use wait_timeout::ChildExt;
 
-#[path = "tests/shared_budget.rs"]
-mod shared_budget;
-
 #[path = "tests/napi_options.rs"]
 mod napi_options;
 #[cfg(unix)]
 #[path = "tests/progress.rs"]
 mod progress;
+#[path = "tests/shared_budget.rs"]
+mod shared_budget;
 #[cfg(unix)]
 include!("tests/signal_forwarding.rs");
-
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/invocation")
@@ -383,6 +385,7 @@ fn signal_listener_forwards_before_terminating_parent() {
         sender.send(signal).unwrap()
     });
 
+    // SAFETY: SIGUSR1 is valid and the signal-hook listener is installed before raising it.
     unsafe {
         nix::libc::raise(signal_hook::consts::SIGUSR1);
     }
@@ -422,6 +425,7 @@ fn signal_forwarder_subprocess_helper() {
     let mut child = command.spawn().unwrap();
     let _forwarder = super::child::ParentSignalForwardingGuard::install(true).unwrap();
     let _process_tree = super::child::ProcessTree::attach(&child);
+    // SAFETY: SIGTERM is valid and this isolated child has installed the forwarding handler.
     unsafe {
         nix::libc::raise(signal_hook::consts::SIGTERM);
     }

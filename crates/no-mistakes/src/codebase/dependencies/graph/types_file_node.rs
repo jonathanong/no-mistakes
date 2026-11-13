@@ -36,7 +36,10 @@ impl FileNode {
         }
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "Tests compare interned Arc identities.")
+    )]
     pub(crate) fn as_arc(&self) -> &Arc<Path> {
         &self.path
     }
@@ -107,7 +110,10 @@ impl InternedStr {
         }
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "Tests compare interned Arc identities.")
+    )]
     pub(crate) fn as_arc(&self) -> &Arc<str> {
         &self.value
     }

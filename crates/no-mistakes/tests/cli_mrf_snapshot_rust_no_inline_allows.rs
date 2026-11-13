@@ -6,6 +6,7 @@ const RULE: &str = "rust-no-inline-allows";
 fn rust_no_inline_allows_json_matches_snapshot() {
     let mut cases = [
         ("clean", "unit", "clean.yml"),
+        ("expectations", "unit", "expect.yml"),
         ("inline_allow", "unit", "inline-allow.yml"),
         ("indented_allow", "unit", "indented-allow.yml"),
         ("path_allow", "unit", "path-allow.yml"),

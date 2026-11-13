@@ -68,7 +68,10 @@ pub(crate) fn symbol_aware_start_nodes(
 
 /// Custom BFS path finder in the reverse (dependents) direction.
 /// Returns reachable test nodes, and a map of node -> (parent, edge_kind) for shortest paths.
-#[allow(clippy::type_complexity)]
+#[expect(
+    clippy::type_complexity,
+    reason = "The traversal returns both reachable paths and predecessor edges for shortest-path rendering."
+)]
 pub(crate) fn bfs_path_find(
     graph: &DepGraph,
     start: &NodeId,
