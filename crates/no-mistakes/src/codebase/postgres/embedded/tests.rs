@@ -52,6 +52,8 @@ fn first_init<'a>(program: &'a oxc_ast::ast::Program<'a>) -> &'a Expression<'a> 
 }
 
 mod builder_text;
+#[path = "tests/coverage_gap.rs"]
+mod coverage_gap;
 mod direct_builder_text;
 mod iife_fail_closed;
 mod part1;
