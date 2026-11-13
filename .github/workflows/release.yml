@@ -307,7 +307,7 @@ jobs:
 
       - name: Test Rust disk diagnostics
         timeout-minutes: 2
-        run: node --test "$RUNNER_TEMP/validation-tools/.github/scripts/rust-disk-usage.test.cjs"
+        run: node --test "$RUNNER_TEMP/validation-tools/.github/scripts/rust-disk-usage.test.cjs" "$RUNNER_TEMP/validation-tools/.github/scripts/drop-rust-test-executables.test.cjs"
 
       - name: Record Rust disk usage before Clippy
         timeout-minutes: 1
@@ -357,7 +357,7 @@ jobs:
         timeout-minutes: 2
         run: |
           df -h /
-          find target/debug/deps -maxdepth 1 -type f -perm -u+x ! -name '*.*' -delete
+          bash "$RUNNER_TEMP/validation-tools/.github/scripts/drop-rust-test-executables.sh" target
           df -h /
 
       - name: Check Cargo packages

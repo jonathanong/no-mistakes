@@ -227,7 +227,7 @@ jobs:
 
       - name: Test Rust disk diagnostics
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-disk-usage.test.cjs
+        run: node --test .github/scripts/rust-disk-usage.test.cjs .github/scripts/drop-rust-test-executables.test.cjs
 
       - name: Test resource sampling wrapper
         timeout-minutes: 2
