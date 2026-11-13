@@ -56,6 +56,10 @@ fn unrepresentable_invocation_deadline_is_rejected_before_resolving_a_lock() {
 }
 
 #[test]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "Deadline classification tests require a real monotonic clock."
+)]
 fn lock_classifier_preserves_existing_command_errors_under_shared_deadlines() {
     for expired in [false, true] {
         for invocation_limited in [false, true] {
