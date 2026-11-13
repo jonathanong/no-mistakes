@@ -17,7 +17,6 @@ use wait_timeout::ChildExt;
 
 #[path = "tests/shared_budget.rs"]
 mod shared_budget;
-
 #[path = "tests/napi_options.rs"]
 mod napi_options;
 #[cfg(unix)]
@@ -25,7 +24,6 @@ mod napi_options;
 mod progress;
 #[cfg(unix)]
 include!("tests/signal_forwarding.rs");
-
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/invocation")
