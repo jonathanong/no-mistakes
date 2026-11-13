@@ -772,6 +772,11 @@ A spread before the callback's root argument leaves its parameter position
 unproven. Pass that argument explicitly; spreads after the root do not shift its
 position.
 
+Callback ownership also remains unproven when reference analysis exhausts its
+budget or callback aliases form a cycle or exceed the analysis depth bound.
+Pass the fresh temporary root directly to the callback to keep the ownership
+flow statically traceable.
+
 ```ts
 function withTempDirectory(run: (root: string) => void) {
   const root = mkdtempSync(join(tmpdir(), "scan-"));
