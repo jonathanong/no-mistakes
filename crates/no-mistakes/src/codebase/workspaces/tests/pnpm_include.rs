@@ -5,7 +5,7 @@ use super::super::{
 use std::path::Path;
 use std::sync::Arc;
 
-fn resolve(yaml: &str, files: &[(&str, &str)]) -> PnpmInclude {
+fn resolve_with(yaml: &str, files: &[(&str, &str)]) -> anyhow::Result<PnpmInclude> {
     resolve_pnpm_include(Path::new("/repo"), yaml, |path| {
         let text = path.to_string_lossy();
         files
@@ -13,7 +13,10 @@ fn resolve(yaml: &str, files: &[(&str, &str)]) -> PnpmInclude {
             .find(|(name, _)| text.ends_with(name))
             .map(|(_, body)| Arc::<str>::from(*body))
     })
-    .unwrap()
+}
+
+fn resolve(yaml: &str, files: &[(&str, &str)]) -> PnpmInclude {
+    resolve_with(yaml, files).unwrap()
 }
 
 fn list(include: &PnpmInclude) -> &[String] {
@@ -355,6 +358,8 @@ fn catalog_slots_claimed_twice_are_not_walked() {
         .any(|setting| setting == "catalogs"));
     assert!(include.catalogs.get("legacy", "@acme/legacy").is_none());
 }
+
+mod coverage_edges;
 
 #[test]
 fn missing_root_file_yields_no_include() {

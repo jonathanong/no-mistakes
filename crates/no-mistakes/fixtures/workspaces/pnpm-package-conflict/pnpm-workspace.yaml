@@ -1,0 +1,4 @@
+packages:
+  - apps/*
+include:
+  ./pnpm/a.yaml: [packages]

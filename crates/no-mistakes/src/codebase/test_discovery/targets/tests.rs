@@ -111,6 +111,14 @@ fn swift_target_uses_file_parent_as_filter_without_project() {
 }
 
 #[test]
+fn dart_file_arg_coverage_edges() {
+    assert_eq!(
+        test_file_arg(TestRunner::Dart, "test/app_test.dart"),
+        "test/app_test.dart"
+    );
+}
+
+#[test]
 fn swift_test_file_arg_keeps_literal_path_for_private_fallback() {
     assert_eq!(
         test_file_arg(TestRunner::Swift, "Tests/AppTests.swift"),

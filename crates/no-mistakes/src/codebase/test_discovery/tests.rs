@@ -471,3 +471,5 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
 
 #[path = "api_coverage_tests.rs"]
 mod api_coverage_tests;
+
+mod coverage_edges;
