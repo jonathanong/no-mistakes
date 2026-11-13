@@ -42,7 +42,7 @@ fn assert_catalog_postgres_setup(setup: &str) {
 #[test]
 fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() {
     let workflow = ci_workflow();
-    let job = &workflow["jobs"]["tests-standalone-lib"];
+    let job = &workflow["jobs"]["standalone-shards"];
     assert_eq!(job["runs-on"].as_str(), Some("ubuntu-latest"));
     let steps = job["steps"].as_sequence().unwrap();
     let names = step_names(steps);
@@ -71,22 +71,27 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
 
     let test_step = &steps[tests];
     let run = test_step["run"].as_str().unwrap();
-    assert!(
-        run.contains("env -u CARGO_BIN_EXE_no-mistakes cargo test --locked -p no-mistakes --lib"),
-        "standalone job must keep cargo test --lib without a CLI binary env"
+    assert_eq!(
+        run,
+        "node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 4"
     );
-    assert!(
-        run.contains("test ! -e \"$CARGO_TARGET_DIR/debug/no-mistakes\""),
-        "standalone job must keep the no-CLI-binary check"
+    assert_eq!(job["needs"].as_str(), Some("standalone-build"));
+    let producer = &workflow["jobs"]["standalone-build"];
+    let build = step_named(
+        producer["steps"].as_sequence().unwrap(),
+        "Build standalone library without a CLI",
     );
-    assert!(
-        !run.contains("trap "),
-        "standalone artifacts stay in workspace target so rust-cache can reuse them"
+    assert_eq!(
+        build["run"].as_str(),
+        Some("node .github/scripts/standalone-shards.cjs build target/standalone-bundle")
     );
+    let helper = include_str!("../../../.github/scripts/standalone-shards.cjs");
+    assert!(helper.contains("delete childEnv[\"CARGO_BIN_EXE_no-mistakes\"]"));
+    assert!(helper.contains("standalone library validation must not build the CLI"));
     assert_eq!(job["env"]["CARGO_INCREMENTAL"].as_str(), Some("0"));
     assert_eq!(
         job["env"]["CARGO_TARGET_DIR"].as_str(),
-        Some("${{ github.workspace }}/target/standalone-lib")
+        Some("${{ github.workspace }}/target/standalone-lib/target")
     );
 }
 
@@ -103,7 +108,9 @@ fn tests_gate_requires_standalone_lib_and_coverage_keeps_catalog_postgres() {
         "Tests with coverage must still require the standalone --lib job"
     );
 
-    let coverage_steps = workflow["jobs"]["tests"]["steps"].as_sequence().unwrap();
+    let coverage_steps = workflow["jobs"]["rust-coverage-shards"]["steps"]
+        .as_sequence()
+        .unwrap();
     let coverage_postgres = step_named(
         coverage_steps,
         "Start isolated PostgreSQL for catalog fixtures",
@@ -113,7 +120,9 @@ fn tests_gate_requires_standalone_lib_and_coverage_keeps_catalog_postgres() {
         Some("./.github/actions/start-test-postgres")
     );
     assert_eq!(coverage_postgres["timeout-minutes"].as_u64(), Some(5));
-    let quality_steps = workflow["jobs"]["quality"]["steps"].as_sequence().unwrap();
+    let quality_steps = workflow["jobs"]["quality-source"]["steps"]
+        .as_sequence()
+        .unwrap();
     let policy = step_named(quality_steps, "Test PostgreSQL setup policy");
     assert_eq!(policy["timeout-minutes"].as_u64(), Some(2));
     assert_eq!(

@@ -41,6 +41,7 @@ function run(mode, bundle, index, total, env = process.env) {
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
     if (manifest.sha !== env.GITHUB_SHA || manifest.workspace !== process.cwd())
       throw new Error("standalone archive source or workspace differs");
+    mkdirSync(path.resolve("target/standalone-lib"), { recursive: true });
   }
   for (const args of commands(mode, directory, Number(index), Number(total))) {
     const child = spawnSync("cargo", args, { env: childEnv, stdio: "inherit" });

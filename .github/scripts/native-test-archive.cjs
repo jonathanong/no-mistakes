@@ -2,7 +2,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { targets } = require("./native-rust-tests.cjs");
-const { relativeExecutable, digest, executionPlan } = require("./native-test-artifacts.cjs");
+const {
+  relativeExecutable,
+  digest,
+  executionPlan,
+  parseListing,
+  casePlan,
+} = require("./native-test-artifacts.cjs");
 const bundle = "target/native-test-artifacts";
 
 function completed(result) {
@@ -54,7 +60,21 @@ function build() {
       executable: relativeExecutable(process.cwd(), matches[0].executable),
     };
   });
-  executionPlan(process.env.RUNNER_OS, entries);
+  const inventory = executionPlan(process.env.RUNNER_OS, entries).map((group) => {
+    const result = spawnSync(
+      path.resolve(group.executable),
+      [...group.args, "--list", "--format", "terse"],
+      {
+        cwd: path.resolve("crates/no-mistakes"),
+        encoding: "utf8",
+        maxBuffer: 16 * 1024 * 1024,
+      },
+    );
+    completed(result);
+    return { ...group, tests: parseListing(result.stdout) };
+  });
+  casePlan(process.env.RUNNER_OS, entries, inventory, 1, 1);
+  fs.writeFileSync(path.join(bundle, "inventory.json"), `${JSON.stringify(inventory, null, 2)}\n`);
   if (!cli) throw new Error("native archive is missing the CLI used by integration tests");
   fs.writeFileSync(
     path.join(bundle, "manifest.json"),
@@ -64,6 +84,7 @@ function build() {
         platform: process.env.RUNNER_OS,
         sha: process.env.GITHUB_SHA,
         cli,
+        inventorySha256: digest(path.join(bundle, "inventory.json")),
         entries,
         files: [...files.values()],
       },
@@ -95,16 +116,35 @@ function restore(manifest, directory = bundle) {
 
 function run(index, count) {
   const manifest = JSON.parse(fs.readFileSync(path.join(bundle, "manifest.json"), "utf8"));
-  const plan = executionPlan(process.env.RUNNER_OS, manifest.entries, index, count);
   restore(manifest);
+  const inventoryPath = path.join(bundle, "inventory.json");
+  if (digest(inventoryPath) !== manifest.inventorySha256)
+    throw new Error("native archive inventory checksum mismatch");
+  const inventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
+  const plan = casePlan(process.env.RUNNER_OS, manifest.entries, inventory, index, count);
+  fs.writeFileSync(
+    "target/native-rust-shard.json",
+    `${JSON.stringify({ index, count, inventory, plan }, null, 2)}\n`,
+  );
+  fs.writeFileSync("target/native-rust-results.jsonl", "");
   for (const entry of plan) {
     console.log(`${entry.executable} ${entry.args.join(" ")}`);
-    completed(
-      spawnSync(path.resolve(entry.executable), entry.args, {
-        stdio: "inherit",
-        cwd: path.resolve("crates/no-mistakes"),
-      }),
+    const started = Date.now();
+    const result = spawnSync(path.resolve(entry.executable), entry.args, {
+      stdio: "inherit",
+      cwd: path.resolve("crates/no-mistakes"),
+    });
+    fs.appendFileSync(
+      "target/native-rust-results.jsonl",
+      `${JSON.stringify({
+        ...entry,
+        elapsedSeconds: (Date.now() - started) / 1000,
+        exitCode: result.status,
+        signal: result.signal,
+        error: result.error?.message,
+      })}\n`,
     );
+    completed(result);
   }
 }
 

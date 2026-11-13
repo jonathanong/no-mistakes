@@ -1,0 +1,2 @@
+module::alpha: test
+3 tests, 0 benchmarks

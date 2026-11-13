@@ -9,6 +9,8 @@ const {
   collectArtifacts,
   relativeExecutable,
   executionPlan,
+  parseListing,
+  casePlan,
 } = require("./native-test-artifacts.cjs");
 const { targets } = require("./native-rust-tests.cjs");
 const expected = require("../../test-cases/native-rust-tests/expected.json");
@@ -40,11 +42,91 @@ for (const platform of ["macOS", "Windows"]) {
         args: args.slice(2).filter((arg) => arg !== "--"),
       })),
     );
+    const cases = require("../../test-cases/native-test-artifacts/fixture/cases.json");
+    const inventory = all.map((group) => ({
+      ...group,
+      tests: cases[group.executable].filter(
+        (name) => !group.args[0] || group.args[0].startsWith("--") || name.includes(group.args[0]),
+      ),
+    }));
+    const full = casePlan(platform, entries, inventory, 1, 1);
     const shards = Array.from({ length: 6 }, (_, index) =>
-      executionPlan(platform, entries, index + 1, 6),
+      casePlan(platform, entries, inventory, index + 1, 6),
     ).flat();
-    assert.deepEqual(shards, all);
-    assert.throws(() => executionPlan(platform, entries, 0, 6), /shard/);
+    const identities = (rows) => rows.map((row) => `${row.executable}:${row.name}`).sort();
+    assert.deepEqual(identities(shards), identities(full));
+    assert.equal(new Set(identities(shards)).size, full.length);
+    assert.ok(full.every((entry) => !entry.name.startsWith("unselected")));
+    assert.ok(
+      full.every((entry) => entry.args[0] === entry.name && entry.args.includes("--exact")),
+    );
+    if (platform === "Windows")
+      assert.ok(
+        full
+          .filter((entry) => entry.executable === "windows_job_object")
+          .every((entry) => entry.args.includes("--test-threads=1")),
+      );
+    assert.throws(() => casePlan(platform, entries, inventory, 0, 6), /shard/);
+    assert.throws(() => casePlan(platform, entries, [], 1, 6), /incomplete/);
+    assert.throws(
+      () =>
+        casePlan(
+          platform,
+          entries,
+          inventory.map((group) => ({ ...group, tests: [] })),
+          1,
+          6,
+        ),
+      /no tests/,
+    );
+    assert.throws(
+      () =>
+        casePlan(
+          platform,
+          entries,
+          inventory.map((group) => ({ ...group, tests: [group.tests[0], group.tests[0]] })),
+          1,
+          6,
+        ),
+      /more than once/,
+    );
+    assert.throws(
+      () =>
+        casePlan(
+          platform,
+          entries,
+          inventory.map((group) => ({ ...group, tests: [null] })),
+          1,
+          6,
+        ),
+      /malformed/,
+    );
+    assert.throws(
+      () =>
+        casePlan(
+          platform,
+          entries,
+          inventory.map((group) =>
+            group.args.some((arg) => !arg.startsWith("--"))
+              ? { ...group, tests: ["unselected"] }
+              : group,
+          ),
+          1,
+          6,
+        ),
+      /outside its original filter/,
+    );
+    assert.throws(
+      () =>
+        casePlan(
+          platform,
+          entries,
+          inventory.map((group) => ({ ...group, args: [] })),
+          1,
+          6,
+        ),
+      /differs from the original filters/,
+    );
     assert.throws(() => executionPlan(platform, entries.slice(1)), /incomplete/);
     assert.throws(() => executionPlan(platform, [...entries].reverse()), /target mismatch/);
   });
@@ -75,6 +157,7 @@ for (const platform of ["macOS", "Windows"]) {
           NO_MISTAKES_BUILD_NAPI: "1",
           GITHUB_SHA: "fixture-sha",
           NATIVE_FIXTURE_EXECUTIONS: path.join(directory, "executions.jsonl"),
+          NATIVE_FIXTURE_CASES: path.join(directory, "cases.json"),
           PATH: `${path.join(directory, "bin")}${path.delimiter}${process.env.PATH}`,
         },
       };
@@ -93,6 +176,15 @@ for (const platform of ["macOS", "Windows"]) {
           fs.existsSync(path.join(directory, "target/native-test-artifacts/manifest.json")),
           false,
         );
+        const malformed = invoke(["build"], {
+          NATIVE_FIXTURE_LISTING: path.join(saved, "listings/malformed.txt"),
+        });
+        assert.equal(malformed.status, 1, malformed.stderr);
+        assert.match(malformed.stderr, /malformed native test listing/);
+        assert.equal(
+          fs.existsSync(path.join(directory, "target/native-test-artifacts/manifest.json")),
+          false,
+        );
         const built = invoke(["build"]);
         assert.equal(built.status, 0, built.stderr);
         const manifest = JSON.parse(
@@ -101,29 +193,70 @@ for (const platform of ["macOS", "Windows"]) {
         assert.equal(manifest.entries.length, targets(platform).length);
         fs.rmSync(path.join(directory, "target/debug"), { recursive: true });
         fs.rmSync(path.join(directory, "bin/cargo"));
+        const results = [];
         for (let index = 1; index <= 6; index++) {
           const run = invoke(["run", String(index), "6"]);
           assert.equal(run.status, 0, run.stderr);
+          const report = JSON.parse(
+            fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
+          );
+          assert.equal(report.index, index);
+          results.push(
+            ...fs
+              .readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8")
+              .trim()
+              .split("\n")
+              .filter(Boolean)
+              .map(JSON.parse),
+          );
         }
         const rows = fs
           .readFileSync(path.join(directory, "executions.jsonl"), "utf8")
           .trim()
           .split("\n")
           .map(JSON.parse);
-        assert.deepEqual(
-          rows.map((row) => row.args),
-          expected[platform].map((args) => args.slice(2).filter((arg) => arg !== "--")),
+        const inventory = JSON.parse(
+          fs.readFileSync(
+            path.join(directory, "target/native-test-artifacts/inventory.json"),
+            "utf8",
+          ),
         );
+        const selectedNames = inventory.flatMap((group) => group.tests).sort();
+        assert.deepEqual(rows.flatMap((row) => row.tests).sort(), selectedNames);
+        assert.equal(
+          rows.length,
+          new Set(rows.map((row) => `${row.executable}:${row.tests[0]}`)).size,
+        );
+        assert.deepEqual(results.map((row) => row.name).sort(), selectedNames);
+        assert.ok(results.every((row) => row.exitCode === 0 && row.elapsedSeconds >= 0));
+        if (platform === "Windows")
+          assert.ok(
+            rows
+              .filter((row) => row.executable.includes("windows_job_object"))
+              .every((row) => row.args.includes("--test-threads=1")),
+          );
         assert.ok(rows.every((row) => row.cwd === path.join(directory, "crates/no-mistakes")));
         assert.equal(
           fs.readFileSync(path.join(directory, "compile.jsonl"), "utf8").trim().split("\n").length,
-          targets(platform).length + 1,
+          targets(platform).length * 2 + 1,
         );
         const failed = invoke(["run", "1", "6"], { NATIVE_TEST_FIXTURE_EXIT: "17" });
         assert.equal(failed.status, 17, failed.stderr);
+        const failure = JSON.parse(
+          fs.readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8").trim(),
+        );
+        assert.equal(failure.exitCode, 17);
         const wrongSource = invoke(["run", "1", "6"], { GITHUB_SHA: "different" });
         assert.equal(wrongSource.status, 1);
         assert.match(wrongSource.stderr, /source SHA mismatch/);
+        const inventoryPath = path.join(directory, "target/native-test-artifacts/inventory.json");
+        const backup = path.join(directory, "inventory-backup.json");
+        fs.copyFileSync(inventoryPath, backup);
+        fs.copyFileSync(path.join(saved, "messages.jsonl"), inventoryPath);
+        const corruptInventory = invoke(["run", "1", "6"]);
+        assert.equal(corruptInventory.status, 1);
+        assert.match(corruptInventory.stderr, /inventory checksum mismatch/);
+        fs.copyFileSync(backup, inventoryPath);
         const file = manifest.files[0].path;
         fs.copyFileSync(
           path.join(saved, "messages.jsonl"),
@@ -138,3 +271,18 @@ for (const platform of ["macOS", "Windows"]) {
     },
   );
 }
+
+test("libtest listings reject missing, malformed, duplicate and miscounted cases", () => {
+  const listing = (name) => fs.readFileSync(path.join(saved, "listings", `${name}.txt`), "utf8");
+  assert.deepEqual(parseListing(listing("valid")), [
+    "module::alpha",
+    "module::beta",
+    "module::gamma",
+  ]);
+  assert.deepEqual(
+    parseListing(listing("valid").replaceAll("\n", "\r\n")),
+    parseListing(listing("valid")),
+  );
+  for (const name of ["empty", "malformed", "duplicate", "wrong-count"])
+    assert.throws(() => parseListing(listing(name)), /native test/);
+});

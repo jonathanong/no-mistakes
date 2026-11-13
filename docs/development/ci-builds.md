@@ -14,6 +14,11 @@ The current validation graph is organized as follows:
   and documentation link checks run independently. Rust quality uses separate
   matrix entries for each compiler/feature profile; JavaScript formatting,
   lint, duplication, and spelling checks also run separately.
+- JavaScript test shards use `ubuntu-latest`: the Oxlint plugin allocator
+  aborts on `ubuntu-slim` in this suite, matching the
+  [upstream allocator issue](https://github.com/oxc-project/oxc/issues/20331).
+  Lightweight policy, report, and aggregate jobs use the slim image where their
+  tooling supports it.
 - A Linux CLI and N-API producer uploads its binaries for the AST check and
   Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the
@@ -25,7 +30,10 @@ The current validation graph is organized as follows:
 - Standalone library tests build without the CLI, then run as four shards from
   the archived test binaries. Native platform jobs build runtime and Rust test
   artifacts separately; six Rust test shards and six real-addon API shards run
-  per platform. The platform-specific invocation tests and API checks remain
+  per platform. Native producers enumerate the original filtered Rust harnesses;
+  consumers partition exact case names and retain each execution result. This
+  divides the snapshot suites across runners rather than assigning a whole
+  multi-minute filter to one shard. The platform-specific invocation tests and API checks remain
   required.
 - Fan-in jobs preserve the existing required-check names and fail if a
   producer or shard fails. Artifact transfer and per-job setup remain part of

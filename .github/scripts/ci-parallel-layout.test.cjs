@@ -78,6 +78,7 @@ test("JavaScript shards merge coverage under the normal unchanged threshold conf
     /--config \.github\/scripts\/vitest-shard.config.cjs --shard=/,
   );
   assert.match(job("javascript-shards"), /reporter=blob/);
+  assert.match(job("javascript-shards"), /runs-on: ubuntu-latest/);
   assert.match(job("javascript-shards"), /include-hidden-files: true/);
   assert.match(job("javascript-shards"), /path: \.vitest\/blob/);
   assert.match(job("javascript-coverage"), /path: \.vitest\/blob/);
