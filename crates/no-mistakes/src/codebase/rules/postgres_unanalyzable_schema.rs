@@ -81,14 +81,17 @@ fn diagnostics_for_ids(
             }
             let options: ScopeOptions = rule.try_rule_options()?;
             let mut selected = selected_rule_files(root, config, rule, files)?;
-            if *rule_id == "postgres-idempotent-insert" {
+            if matches!(
+                *rule_id,
+                "postgres-idempotent-insert" | "postgres-sql-statement-policy"
+            ) {
                 let include = super::path_filter::GlobMatcher::new(
                     &options.include,
-                    "postgres-idempotent-insert include",
+                    &format!("{rule_id} include"),
                 )?;
                 let exclude = super::path_filter::GlobMatcher::new(
                     &options.exclude,
-                    "postgres-idempotent-insert exclude",
+                    &format!("{rule_id} exclude"),
                 )?;
                 selected.retain(|path| {
                     let rel = relative_slash_path(root, path);
