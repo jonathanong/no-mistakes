@@ -160,6 +160,32 @@ macOS queues. The first change therefore balances work across two shards rather 
 increasing that overhead. Actual batch and end-to-end durations remain the
 acceptance evidence; estimated loads do not establish a ten-minute result.
 
+The first completed follow-up run,
+[`43403560928`](https://github.com/jonathanong/no-mistakes/actions/runs/43403560928),
+at `e3d89a6f0`, passed with the weighted plan. Its macOS PostgreSQL batches took
+153/223 seconds, compared with 318/177 seconds in the baseline. The two native
+Rust jobs took 4m22s/5m42s; the slowest job improved from 8m13s to 5m42s. The
+production inventory had grown to 374 cases, distributed 186/188 with 431/430
+weight units. Artifact comparison verified their union matched the complete
+inventory with no duplicates; the new case remained included automatically.
+
+That run still took **13m19s overall**. No job started for the first 1m16s.
+Both Windows workspace caches missed all compatible fallbacks: its runtime
+Cargo build took 6m21s, and its first test-target compile took 3m27s. Including
+setup and artifact handling, those producers took 8m42s and 6m07s. The Windows
+Rust producer finished at +7m44s, its slowest shard ran from +7m45s to +13m00s,
+and fan-in finished at +13m19s. That became the critical path; meeting ten
+minutes in that sample requires removing at least 3m19s from it. The macOS Rust
+branch finished at +11m22s, including initial scheduling and a 44-second queue
+for its producer. Its test execution no longer set the final completion time.
+
+Coverage remained at 98.0340% regions, 98.9991% lines, and 99.3110% functions,
+with the original floors and CRAP gate passing. Every previous CI job remained
+present. These before/after samples establish the changed assignment and
+observed durations, but different cache and scheduling states prevent treating
+the overall wall times as a controlled speedup estimate. Final PR-head timings
+are recorded in [PR #3329](https://github.com/jonathanong/no-mistakes/pull/3329).
+
 ### Completed parallel validation
 
 Parallel validation run
