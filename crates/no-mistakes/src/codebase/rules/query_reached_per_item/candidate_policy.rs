@@ -12,7 +12,7 @@ pub(super) struct CandidatePolicy<'a> {
 
 impl CandidatePolicy<'_> {
     pub(super) fn includes(&self, site: &ResolvedCallSite, position: &PerItemCall) -> bool {
-        if (self.options.exempt_capped_cursor_page_reads && position.capped_cursor_page_read)
+        !((self.options.exempt_capped_cursor_page_reads && position.capped_cursor_page_read)
             || (position.keyset_page_read && self.sinks.match_site(site).is_some())
             || !self.filter.is_match(&site.file)
             || exempt(self.effect, &site.source_callee)
@@ -22,10 +22,6 @@ impl CandidatePolicy<'_> {
                     candidate
                         .node
                         .is_some_and(|node| self.excluded.binary_search(node).is_ok())
-                }))
-        {
-            return false;
-        }
-        true
+                })))
     }
 }

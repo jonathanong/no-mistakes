@@ -33,6 +33,7 @@ pub(crate) fn collect_prepared(
     });
     let executor_calls = executor_calls.confirmed;
     if include_all_calls {
+        super::factory_roots::register(&mut syntax, program, ts.module_bindings.as_deref());
         syntax.confirmed_builder_reads = helper_records::confirmed_reads(&syntax, &executor_calls);
     }
     let bindings = bindings::Bindings::new(
@@ -62,17 +63,7 @@ pub(crate) fn collect_prepared(
         trusted_append::proofs(&syntax, &bindings, &calls, candidates, low_candidates);
     let mut import_gated_finite = Vec::new();
     if include_all_calls {
-        for (span, proof) in super::string_prefix::proofs(&syntax, &bindings, &executor_calls) {
-            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
-                calls.insert(span, proof);
-            }
-        }
-        for (span, proof) in super::branch_assignments::proofs(&syntax, &bindings, &executor_calls)
-        {
-            if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
-                calls.insert(span, proof);
-            }
-        }
+        super::low_proofs::apply(&syntax, &bindings, ts, &executor_calls, &mut calls);
         for (span, proof) in trusted_prefix_calls {
             calls.insert(span, proof);
         }
@@ -182,6 +173,7 @@ pub(crate) fn collect_prepared(
         } else {
             Default::default()
         },
+        effect_summaries: bindings.effects().summaries.clone(),
         pending_effects: if include_all_calls {
             bindings.effects().pending.clone()
         } else {

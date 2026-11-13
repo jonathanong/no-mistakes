@@ -12,6 +12,7 @@ pub(in super::super) fn project(
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<(PathBuf, super::Span, FailedSqlSources)> {
     let mut completed = Vec::new();
+    let mut effect_resolver = super::super::effects::Resolver::new(files, resolve);
     let mut failed = Vec::new();
     for (path, file) in files.iter() {
         let Some(heads) = file.query_annotation_heads.as_deref() else {
@@ -34,18 +35,9 @@ pub(in super::super) fn project(
             };
             let mut effect_failures = FailedSqlSources::new();
             let proven = summary.required.iter().all(|effect| {
-                let Some(effect_path) = resolve(&effect.specifier, &target) else {
-                    return false;
-                };
-                if source_failed(files, &effect_path) {
-                    effect_failures.insert(effect_path);
-                    return false;
-                }
-                files
-                    .get(&effect_path)
-                    .and_then(|file| file.query_annotation_heads.as_deref())
-                    .and_then(|heads| heads.exported_effects.get(&effect.imported))
-                    .is_some_and(|signature| signature.accepts(effect.shape))
+                let (proven, failed) = effect_resolver.project(&target, effect);
+                effect_failures.extend(failed);
+                proven
             });
             if !effect_failures.is_empty() {
                 failed.push((path.clone(), pending.span, effect_failures));
@@ -55,6 +47,7 @@ pub(in super::super) fn project(
             }
         }
     }
+    drop(effect_resolver);
     for (path, span, proof) in completed {
         let Some(heads) = files
             .get_mut(&path)

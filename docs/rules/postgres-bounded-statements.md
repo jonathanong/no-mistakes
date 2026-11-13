@@ -181,6 +181,9 @@ every other view stays unknown.
   `viewBounds: unbounded` stays an unsized relation even when a key could be
   derived. A read that renames columns, as in `FROM v AS x(a, b)`, has no view
   key because aliases rename positionally, so it is judged as an unsized view.
+  For a composite view key `(tenant, id)`, pin both columns in every `OR` arm.
+  `WHERE tenant = $1 AND id = $2` is a key lookup; `WHERE id = $2` leaves the
+  view unbounded because the tenant column is still open.
 - Any other catalog view stays an `unknown-relation` advisory and is not a
   finding. That includes aggregates, projections that omit the primary key,
   `DISTINCT`, `GROUP BY`, `UNION`, limits inside the view, and joins that can

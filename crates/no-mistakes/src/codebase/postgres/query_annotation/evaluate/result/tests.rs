@@ -12,18 +12,23 @@ fn outputs(scenario: &str) -> Vec<(String, Value)> {
 }
 
 fn outputs_file(scenario: &str, name: &str) -> Vec<(String, Value)> {
+    outputs_mode(scenario, name, false)
+}
+
+fn outputs_mode(scenario: &str, name: &str, precise: bool) -> Vec<(String, Value)> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/{scenario}/src/{name}",
     ));
     let source = std::fs::read_to_string(&path).unwrap();
     let options = EmbeddedSqlOptions::configured("@app/db", &[]);
-    let (facts, embedded) = crate::ast::with_program(&path, &source, |program, _| {
+    let (mut facts, embedded) = crate::ast::with_program(&path, &source, |program, _| {
         (
             query_annotation::collect(program, &source, &options),
             extract_embedded_sql_from_program(&path, program, &source, &options),
         )
     })
     .unwrap();
+    facts.precise_records = precise;
     let ts = TsFileFacts::default();
     let files = FxHashMap::from_iter([(
         path.clone(),
@@ -324,3 +329,9 @@ fn scalar_and_object_reference_containers_survive_callback_frames_and_slot_joins
         1
     );
 }
+
+#[path = "tests/evaluator_behavior.rs"]
+mod evaluator_behavior;
+
+#[path = "tests/legacy_tag_behavior.rs"]
+mod legacy_tag_behavior;

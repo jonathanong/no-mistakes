@@ -8,3 +8,5 @@
 ^https://github\.com/jonathanong/no-mistakes/actions/runs/38338859408$
 ^https://github\.com/jonathanong/no-mistakes/actions/runs/39090131971/job/117566867392$
 ^https://github\.com/jonathanong/no-mistakes/runs/116245579477$
+# Vercel challenge returns 429 for HEAD and GET on this README project profile (verified 2026-11-12).
+^https://app[.]codspeed[.]io/jonathanong/no-mistakes[?]utm_source=badge$

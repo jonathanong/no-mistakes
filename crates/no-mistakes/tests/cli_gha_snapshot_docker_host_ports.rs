@@ -8,6 +8,11 @@ fn github_actions_docker_host_ports_json_matches_snapshot() {
         "github_actions_docker_host_ports",
         &[
             (
+                "wrappers-variables",
+                rules_path(RULE, "fixture", "3304-wrappers"),
+                rules_path(RULE, "fixture/3304-wrappers", ".no-mistakes.yml"),
+            ),
+            (
                 "pass",
                 rules_path(RULE, "fixture", "pass"),
                 rules_path(RULE, "configs", "pass.yml"),

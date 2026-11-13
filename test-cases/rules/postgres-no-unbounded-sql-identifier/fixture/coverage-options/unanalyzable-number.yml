@@ -1,0 +1,4 @@
+importSpecifier: "@example/db"
+include: ["src/**/*.ts"]
+exclude: ["src/excluded.ts"]
+unanalyzable: 1

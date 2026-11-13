@@ -13,7 +13,9 @@ pub(super) fn plain_parameter(
         return false;
     }
     match pattern {
-        BindingPattern::BindingIdentifier(_) => initializer.is_none_or(literal_default),
+        BindingPattern::BindingIdentifier(_) => {
+            initializer.is_none_or(|value| literal_default(value) || empty_object(value))
+        }
         BindingPattern::ObjectPattern(object) if index > 0 && object.rest.is_none() => {
             if initializer.is_some_and(|value| !empty_object(value)) {
                 return false;

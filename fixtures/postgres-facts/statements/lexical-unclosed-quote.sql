@@ -1,0 +1,2 @@
+SELECT ' SELECT
+INSERT INTO ignored

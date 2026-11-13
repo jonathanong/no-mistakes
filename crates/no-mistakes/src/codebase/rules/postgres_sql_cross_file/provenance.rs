@@ -73,4 +73,7 @@ mod helpers;
 use helpers::{contains, named_provenance, value_call_at};
 
 #[cfg(test)]
+#[path = "provenance/coverage_boundary_tests.rs"]
+mod coverage_boundary_tests;
+#[cfg(test)]
 mod tests;

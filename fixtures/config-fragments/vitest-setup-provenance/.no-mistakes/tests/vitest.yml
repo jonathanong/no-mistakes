@@ -1,0 +1,8 @@
+vitest:
+  projects:
+    app:
+      include:
+        - src/**/*.test.ts
+      setup_files:
+        - src/setup.ts
+        - src/setup-env.ts

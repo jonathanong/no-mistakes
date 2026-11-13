@@ -192,3 +192,6 @@ mod graph_source_prerequisites;
 
 #[cfg(test)]
 mod postgres_executor_options_tests;
+#[cfg(test)]
+#[path = "prepared_facts/tests.rs"]
+mod prepared_facts_tests;

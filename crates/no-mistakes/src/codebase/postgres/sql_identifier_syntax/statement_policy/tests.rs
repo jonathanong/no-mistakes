@@ -425,3 +425,5 @@ fn opaque_helper_and_unknown_carrier_keep_residual_uncertainty() {
 }
 
 mod shared_direct;
+
+mod cov_p2;

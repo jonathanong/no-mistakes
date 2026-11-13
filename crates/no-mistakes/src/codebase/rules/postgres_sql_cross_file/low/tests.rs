@@ -48,3 +48,41 @@ fn identifier_proof_ignores_dialect_function_object_names() {
     assert!(relations.pre_visit_relation(&name).is_continue());
     assert!(relations.names.is_empty());
 }
+
+#[test]
+fn low_check_rejects_option_glob_and_policy_failures_before_files() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule_id = "postgres-no-unbounded-sql-identifier";
+    let base = config.rule_applications(rule_id)[0].clone();
+    let facts = CheckFactMap::default();
+    for (name, expected) in [
+        ("include-number.yml", "invalid options"),
+        ("exclude-bad-glob.yml", "exclude"),
+        ("unanalyzable-number.yml", "unanalyzable"),
+    ] {
+        let mut application = base.clone();
+        application.resolved_analysis = None;
+        application.options = saved_options(name);
+        let error = check(&root, &config, &application, 0, &facts, rule_id)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{error}");
+    }
+    let mut application = base;
+    application.include = vec!["[".into()];
+    let error = check(&root, &config, &application, 0, &facts, rule_id)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("include"), "{error}");
+}
+
+fn saved_options(name: &str) -> serde_yaml::Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join(
+            "../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/coverage-options",
+        )
+        .join(name);
+    serde_yaml::from_reader(std::fs::File::open(path).unwrap()).unwrap()
+}

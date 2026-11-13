@@ -130,6 +130,38 @@ fn non_string_fragment_keys_preserve_typed_errors() {
 }
 
 #[test]
+fn vitest_setup_declaration_paths_keep_fragment_provenance() {
+    let root = fixture("vitest-setup-provenance");
+    let visible = [
+        PathBuf::from(".no-mistakes.yml"),
+        PathBuf::from(".no-mistakes/tests/vitest.yml"),
+    ];
+    let (config, _) = load_v2_config_with_path_from_visible(&root, None, &visible).unwrap();
+    let policy = &config.tests.vitest.projects["app"];
+    let fragment =
+        crate::codebase::ts_resolver::normalize_path(&root.join(".no-mistakes/tests/vitest.yml"));
+    assert_eq!(
+        policy.setup_declaration_paths,
+        vec![fragment.clone(), fragment.clone()]
+    );
+    assert_eq!(policy.declaration_path.as_deref(), Some(fragment.as_path()));
+}
+
+#[test]
+fn invalid_project_enum_reports_its_fragment_line() {
+    let root = fixture("invalid-project-enum");
+    let path = root.join(".no-mistakes/projects/app.yml");
+    let error = load_v2_config_with_path_from_visible(&root, None, &[path])
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains(".no-mistakes/projects/app.yml:2:"),
+        "{error}"
+    );
+    assert!(error.contains("unknown variant `impossible`"), "{error}");
+}
+
+#[test]
 fn historical_documents_reject_mismatched_section_metadata() {
     let root = fixture("valid");
     let path = root.join(".no-mistakes/rules/nested/extra.yml");

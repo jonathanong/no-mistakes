@@ -1,0 +1,26 @@
+[
+  {
+    "root": "test-cases/codebase-analysis/simple/fixture",
+    "batch": {"filters": ["unrelated/**"], "reports": [{"type": "symbols", "id": "symbols", "files": ["a.mts"]}]},
+    "standalone": {"files": ["a.mts"]},
+    "evidence": "a.mts"
+  },
+  {
+    "root": "test-cases/codebase-analysis/tests-impact-symbol/fixture",
+    "batch": {"filters": ["unrelated/**"], "reports": [{"type": "flow", "id": "flow", "target": "utils.mts#parseDate", "direction": "both", "depth": 1, "relationships": ["import"]}]},
+    "standalone": {"target": "utils.mts#parseDate", "direction": "both", "depth": 1, "relationships": ["import"]},
+    "evidence": "utils.mts"
+  },
+  {
+    "root": "test-cases/queue-ast-hop/basic/fixture",
+    "batch": {"filters": ["**"], "reports": [{"type": "queues", "id": "queues", "filters": []}]},
+    "standalone": {"filters": []},
+    "evidence": "enqueue.ts"
+  },
+  {
+    "root": "fixtures/parser-count/playwright",
+    "batch": {"filters": ["unrelated/**"], "reports": [{"type": "playwrightCheck", "id": "playwright"}]},
+    "standalone": {},
+    "evidence": "page.tsx"
+  }
+]

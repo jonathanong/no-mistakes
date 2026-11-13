@@ -146,3 +146,6 @@ mod transaction_tests;
 
 #[cfg(test)]
 mod exact_origins_tests;
+
+#[cfg(test)]
+mod template_recovery_fixture_tests;

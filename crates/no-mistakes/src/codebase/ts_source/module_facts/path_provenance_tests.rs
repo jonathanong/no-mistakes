@@ -172,3 +172,9 @@ mod getter_import_kinds;
 
 mod callback_roots;
 mod env_diagnostic;
+
+mod rest_and_guards;
+
+mod local_env_boundaries;
+
+mod callback_flow_boundaries;

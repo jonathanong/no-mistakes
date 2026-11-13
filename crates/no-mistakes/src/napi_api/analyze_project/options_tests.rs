@@ -207,3 +207,6 @@ fn resolve_helpers_handle_defaults_and_explicit_paths() {
         crate::codebase::ts_resolver::normalize_path(&ts_root)
     );
 }
+
+#[path = "typed_options_parity_tests.rs"]
+mod typed_options_parity_tests;

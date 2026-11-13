@@ -12,8 +12,10 @@ mod collect;
 mod conditional;
 mod diagnostics;
 mod effects;
+mod factory_roots;
 mod finite_comments;
 mod finite_returns;
+mod fresh_builders;
 mod helper_heads;
 mod helper_records;
 mod import_gate;
@@ -24,6 +26,7 @@ mod literal_tables;
 mod lookup;
 mod loop_carried;
 mod loop_word;
+mod low_proofs;
 mod namespace_heads;
 mod primitive_results;
 mod returned_params;
@@ -60,6 +63,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) pending_imports: Vec<helper_heads::Pending>,
     pub(crate) pending_namespaces: Vec<namespace_heads::Pending>,
     pub(crate) exported_effects: BTreeMap<String, effects::Signature>,
+    pub(crate) effect_summaries: BTreeMap<String, effects::Summary>,
     pub(crate) pending_effects: Vec<effects::Pending>,
     pub(crate) exported_callbacks: BTreeMap<String, callback_heads::Summary>,
     pub(crate) pending_callbacks: Vec<callback_heads::Pending>,

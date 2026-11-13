@@ -22,7 +22,7 @@ pub(super) fn diagnostics(
             .variants
             .iter()
             .any(|variant| !variant.append_sites.is_empty());
-        for variant_index in 0..call.variants.len() {
+        for (variant_index, variant) in call.variants.iter().enumerate() {
             if append_composed
                 && statements
                     .get(&(call_index, variant_index))
@@ -30,9 +30,7 @@ pub(super) fn diagnostics(
             {
                 // The recovered text is complete even when SQL parsing fails.
                 // Skip SQL-semantic analysis, but keep a definite missing head.
-                if !crate::codebase::postgres::sql_requires_query_annotation(
-                    &call.variants[variant_index].sql_text,
-                ) {
+                if !crate::codebase::postgres::sql_requires_query_annotation(&variant.sql_text) {
                     invalid.insert((call_index, variant_index));
                 }
                 skipped += 1;

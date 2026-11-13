@@ -63,8 +63,8 @@ pub(super) fn valid(cursor: &mut Cursor<'_>) -> bool {
 
 fn closing(cursor: &Cursor<'_>) -> Option<usize> {
     let mut depth = 1;
-    for index in cursor.at..cursor.tokens.len() {
-        match cursor.tokens[index] {
+    for (index, token) in cursor.tokens.iter().enumerate().skip(cursor.at) {
+        match token {
             Token::LParen => depth += 1,
             Token::RParen => {
                 depth -= 1;

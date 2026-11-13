@@ -147,3 +147,27 @@ fn null_metadata_comments_are_complete_without_inventing_values() {
     let facts = crate::codebase::postgres::migration::extract_migration_facts(sql);
     assert!(facts.unanalyzable_statements.is_empty());
 }
+
+#[test]
+fn incomplete_metadata_clauses_remain_parse_failures_with_original_heads() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-compat/metadata-invalid.sql"
+    ));
+    for source in sql.lines() {
+        assert!(parse_postgres_sql(source).is_err(), "accepted {source}");
+        let located = parse_postgres_sql_with_function_sources(source);
+        let failure = located
+            .iter()
+            .find_map(|statement| statement.recovery_failure.as_ref())
+            .unwrap_or_else(|| panic!("missing failure: {source}"));
+        assert_eq!((failure.line, failure.column), (1, 1), "{source}");
+        assert!(
+            failure
+                .head
+                .starts_with(source.split_whitespace().next().unwrap()),
+            "{source}: {}",
+            failure.head
+        );
+    }
+}

@@ -210,3 +210,7 @@ mod external_star_exports;
 mod refinement_visit_cap;
 
 mod for_of_ownership;
+
+mod resolution_alias_boundaries;
+
+mod namespace_import_boundaries;

@@ -1,0 +1,11 @@
+ON
+ON DELETE
+ON DELETE SET
+ON DELETE SET NULL
+ON DELETE SET NULL (
+DROP
+DROP INDEX
+chr
+chr (
+chr (92
+chr (column)

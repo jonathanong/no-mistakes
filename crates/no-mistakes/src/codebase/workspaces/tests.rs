@@ -287,3 +287,8 @@ fn resolve_specifier_rejects_unprefixed_subpath_without_exports() {
 }
 
 // ── entry resolution order ────────────────────────────────────────────
+
+mod coverage_edges;
+mod pnpm_reader_matrix;
+
+mod pnpm_catalog_matrix;

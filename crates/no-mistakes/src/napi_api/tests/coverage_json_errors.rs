@@ -1,6 +1,9 @@
 use super::super::*;
 use serde_json::json;
 
+#[path = "api_failure_contracts.rs"]
+mod api_failure_contracts;
+
 #[test]
 fn project_json_helpers_report_invalid_options_and_optional_file_filters() {
     let cases = [

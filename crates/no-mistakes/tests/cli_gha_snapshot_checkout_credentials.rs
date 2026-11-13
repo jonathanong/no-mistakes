@@ -18,6 +18,11 @@ fn github_actions_checkout_credentials_json_matches_snapshot() {
                 rules_path(RULE, "configs", "default.yml"),
             ),
             (
+                "uses-classification",
+                rules_path(RULE, "fixture", "3304-uses"),
+                rules_path(RULE, "configs", "default.yml"),
+            ),
+            (
                 "flow",
                 rules_path(RULE, "fixture", "flow"),
                 rules_path(RULE, "configs", "default.yml"),

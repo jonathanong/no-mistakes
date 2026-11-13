@@ -107,3 +107,6 @@ fn mark(
     failures.dedup();
     session.set_check_prerequisite(&key, Prerequisite::Failed(failures));
 }
+
+#[cfg(test)]
+mod tests;

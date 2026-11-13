@@ -1,0 +1,139 @@
+[
+  {
+    "name": "length",
+    "files": [
+      "catalog.ts",
+      "length.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": true
+  },
+  {
+    "name": "includes",
+    "files": [
+      "catalog.ts",
+      "includes.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": true
+  },
+  {
+    "name": "set-has",
+    "files": [
+      "set.ts",
+      "set-has.ts"
+    ],
+    "producer": "set.ts",
+    "expected": true
+  },
+  {
+    "name": "namespace-length",
+    "files": [
+      "catalog.ts",
+      "namespace-length.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": true
+  },
+  {
+    "name": "namespace-escape",
+    "files": [
+      "catalog.ts",
+      "namespace-escape.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "namespace-export",
+    "files": [
+      "catalog.ts",
+      "namespace-export.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "named-export",
+    "files": [
+      "catalog.ts",
+      "named-export.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "named-escape",
+    "files": [
+      "catalog.ts",
+      "named-escape.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "mapped",
+    "files": [
+      "catalog.ts",
+      "mapped.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "named-mutation",
+    "files": [
+      "catalog.ts",
+      "named-mutation.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "namespace-mutation",
+    "files": [
+      "catalog.ts",
+      "namespace-mutation.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "producer-mutation",
+    "files": [
+      "mutated-producer.ts"
+    ],
+    "producer": "mutated-producer.ts",
+    "expected": false
+  },
+  {
+    "name": "broken-reachable",
+    "files": [
+      "catalog.ts",
+      "broken-related.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": false
+  },
+  {
+    "name": "broken-unrelated",
+    "files": [
+      "catalog.ts",
+      "length.ts",
+      "broken-unrelated.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": true
+  },
+  {
+    "name": "other-producer-escape",
+    "files": [
+      "catalog.ts",
+      "length.ts",
+      "other.ts",
+      "other-escape.ts"
+    ],
+    "producer": "catalog.ts",
+    "expected": true
+  }
+]

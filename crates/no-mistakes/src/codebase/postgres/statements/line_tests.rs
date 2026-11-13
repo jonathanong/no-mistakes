@@ -89,3 +89,84 @@ fn multiline_select_locations_keep_the_own_from_relation_anchor() {
         .unwrap();
     assert_eq!((relation.sql_line, relation.sql_column), (5, 6));
 }
+
+#[test]
+fn lexical_positions_ignore_nested_comments_multiline_quotes_and_dollar_bodies() {
+    let sql = fixture("lexical-keyword-locations.sql");
+    assert_eq!(
+        super::lines::last_word_position(&sql, "select", sql.len()),
+        Some((16, 3))
+    );
+    assert_eq!(
+        super::lines::last_word_position(&sql, "insert", sql.len()),
+        Some((14, 5))
+    );
+    assert_eq!(
+        super::lines::last_word_position(&sql, "missing", sql.len()),
+        None
+    );
+    assert_eq!(
+        super::lines::last_word_position(&sql, "select", sql.len() + 1),
+        None
+    );
+}
+
+#[test]
+fn lexical_recovery_does_not_reinterpret_unterminated_text_as_statements() {
+    for name in [
+        "lexical-unclosed-block.sql",
+        "lexical-unclosed-dollar.sql",
+        "lexical-unclosed-quote.sql",
+    ] {
+        let sql = fixture(name);
+        assert_eq!(
+            super::lines::last_word_position(&sql, "select", sql.len()),
+            Some((1, 1)),
+            "{name}"
+        );
+        assert_eq!(
+            super::lines::last_word_position(&sql, "insert", sql.len()),
+            None,
+            "{name}"
+        );
+    }
+    let sql = fixture("lexical-dollar-bind.sql");
+    assert_eq!(
+        super::lines::last_word_position(&sql, "select", sql.len()),
+        Some((2, 3))
+    );
+    let unicode = sql.find('é').unwrap() + 1;
+    assert_eq!(
+        super::lines::last_word_position(&sql, "select", unicode),
+        None
+    );
+}
+
+#[test]
+fn fallback_insert_sources_match_only_real_heads_and_keep_columns() {
+    let sql = fixture("lexical-keyword-locations.sql");
+    let sources = super::lines::InsertSources::new(&sql);
+    let parsed = super::super::parse::parse_postgres_sql(&fixture("own-insert-lines.sql")).unwrap();
+    let insert = parsed
+        .iter()
+        .find_map(|statement| match statement {
+            sqlparser::ast::Statement::Insert(insert) => Some(insert),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(
+        (sources.line(insert, 1), sources.column(insert, 1)),
+        (13, 3)
+    );
+    assert_eq!(
+        (sources.line(insert, 2), sources.column(insert, 2)),
+        (14, 5)
+    );
+    assert_eq!((sources.line(insert, 9), sources.column(insert, 9)), (1, 1));
+    assert!(sources
+        .for_insert(insert, 1)
+        .starts_with("INSERT /* separator */ INTO real_table"));
+    assert!(sources
+        .source(2)
+        .starts_with("INSERT INTO real_table VALUES (2)"));
+}

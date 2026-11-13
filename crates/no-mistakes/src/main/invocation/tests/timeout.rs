@@ -54,7 +54,10 @@ fn partial_timeout_subprocess_helper() {
     if mode.contains("boundary") {
         let error =
             std::io::Error::new(std::io::ErrorKind::TimedOut, "boundary deadline elapsed").into();
-        report_error(&error, &output);
+        assert_eq!(
+            report_error(&error, &output),
+            std::process::ExitCode::from(no_mistakes::invocation::EXIT_TIMEOUT)
+        );
     }
     std::thread::sleep(Duration::from_secs(10));
     panic!("watchdog failed to enforce its deadline");

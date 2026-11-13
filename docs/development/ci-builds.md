@@ -29,6 +29,15 @@ requires both jobs to succeed, including rejecting cancelled or skipped package
 validation. This keeps packaging independent of the several Rust validation
 profiles that previously consumed the same lint-job budget.
 
+Lychee checks the README CodSpeed badge image and the rest of the repository's
+links. The exact project-dashboard target
+`https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge` is ignored
+because Vercel returned HTTP 429 with `x-vercel-mitigated: challenge` for both
+HEAD and GET requests on 2026-11-12. The badge destination remains unchanged;
+other CodSpeed profiles, paths, query variants, and the badge endpoint remain
+checked. The narrow exception is locked by
+[`lychee-codspeed-challenge.json`](../../test-cases/rust-validation/fixture/lychee-codspeed-challenge.json).
+
 <!-- cspell:ignore citext -->
 
 Linux catalog tests and release validation share the PostgreSQL setup action.
@@ -114,10 +123,10 @@ the `cli_rrb_snapshot_` subset in the package-config suite, so
 those jobs do not also compile `suite_cli_rules` inside the bounded native step.
 Linux runs the same cases in the full Rust coverage suite.
 
-Native macOS and Windows jobs have a 50-minute aggregate deadline, a 25-minute
-build and precompile step, nine minutes for platform Rust execution, and ten
-minutes for the real-addon API step. Linux JavaScript keeps its 16-minute job and
-four-minute real-addon step.
+Native macOS and Windows jobs have a 50-minute aggregate deadline, separate
+20-minute native CLI/addon build and exact-target test-precompile steps, nine
+minutes for platform Rust execution, and ten minutes for the real-addon API
+step. Linux JavaScript keeps its 16-minute job and four-minute real-addon step.
 
 [Saved before and after observations](../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json)
 record about 415 seconds of test-profile compilation within the earlier
@@ -135,21 +144,51 @@ not establish a total-work speedup. The first Windows run spent 548 seconds in
 build/precompile, 420 seconds executing Rust tests, and 338 seconds in the API
 step. Both execution logs had no `Compiling` lines; their Cargo `Finished`
 durations remained at or below 0.61 seconds on macOS and 0.47 seconds on Windows.
-The build cap leaves 466 seconds beyond the completed 1,034-second observation.
-A historical same-run build plus partial test-compilation projection reached
-about 1,263 seconds before the last harness was observed; the cap leaves another
-237 seconds beyond that partial workload, without treating it as a completed runtime.
-The execution cap reserves 120 seconds beyond Windows' 420-second observation.
-The full phase budgets total 2,640 seconds. Adding the largest measured
-non-workload overhead, 148 seconds, and another 120 seconds requires 2,908 seconds,
-within the 3,000-second job bound. This adds bounds and reserves, rather than
-summing unrelated observed phase maxima as a runtime prediction. One completed
-sample per platform does not establish a duration tail guarantee. The initial
-30/8/10-minute phase and 60-minute aggregate collection caps remain in the saved
-evidence as historical settings.
+The latest macOS timeout is recorded in
+[the split-step evidence](../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json).
+Its combined build step reached 1,514 seconds and was censored. The native CLI
+and addon Cargo build finished in 938.762 seconds, with 3.25 GB maximum RSS and
+no swaps. The following `macos_invocation` test-profile compile had run for at
+least 573 seconds when the step ended; its first target had not finished. Rust
+1.100.0 was also used by the previous completed run, so the logs do not identify
+a compiler-version regression. During the native build, samples reached a
+one-minute load average of 56.20 and free memory of 53,755,904 bytes. During
+test precompilation, the sampled load peaked at 23.89 and free memory reached
+67,420,160 bytes. These samples do not establish that contention caused either
+duration.
 
-The native build step first builds the CLI and addon, then precompiles precisely
-its platform test targets with `cargo test --no-run`, one target at a time.
+The build and precompile now have independent deadlines so a slow addon build
+does not consume the test-compilation allowance and a failure names the phase
+that stopped. The 20-minute native build deadline gives 261 seconds beyond the
+latest completed Cargo build. The precompile deadline exceeds both the 573-second
+censored compile and the historical 778-second first-harness maximum. Those
+observations do not show that the latest test compile finished within 20 minutes.
+Test targets and execution filters remain the same. The compiled-artifact cache
+is saved only after both steps succeed; diagnostics upload after failures.
+
+The first completed run with separate compile phases is recorded in the
+[saved split-step evidence](../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json). On macOS ARM64 run `43325677764`, the native build took 346 seconds,
+test-target precompilation took 398 seconds, platform Rust execution took 204
+seconds, and the API step took 178 seconds (637 passed, two skipped). The full
+job took 1,256 seconds. This confirms the split completed within the configured
+20-minute per-compile-step, nine-minute Rust, ten-minute API, and 50-minute job
+limits on that runner; one successful sample does not establish a tail-time
+guarantee.
+
+The 50-minute job still bounds the full workload. The latest censored combined
+step had already consumed 1,514 seconds. Adding the largest completed Rust and
+API steps (420 and 338 seconds), 148 seconds of measured non-work overhead, and
+the 120-second post-job reserve totals 2,540 seconds, leaving 460 seconds in the
+job cap. Because the current compile was censored, this is a measured lower
+bound, not proof that its remaining compilation fits. The independent step caps
+are ceilings, not an aggregate runtime prediction; the aggregate timeout remains
+the final bound. These observations are censored outcomes, not duration-tail
+guarantees. The initial 30/8/10-minute phase and 60-minute aggregate collection
+caps remain in the saved evidence as historical settings.
+
+The native build step builds the CLI and addon. The following precompile step
+compiles precisely the platform test targets with `cargo test --no-run`, one
+target at a time.
 [The shared target list](../../.github/scripts/native-rust-tests.cjs) supplies both
 compilation selectors and every existing execution filter. All phases keep the
 same default features, manifest rewrite, flags, target directory, and
@@ -310,6 +349,20 @@ unrounded percentages with the existing line, function, and region floors.
 Missing or malformed totals fail the check. This avoids the extra table and
 full JSON passes performed by native `--fail-under-*` flags; LCOV generation
 for CRAP and Codecov retains its existing settings.
+
+The `rust-coverage-summary` artifact retains `target/llvm-cov/summary.json` for
+seven days whenever the export exists and the job was not cancelled. Once LCOV
+generation succeeds, the summary export and floor checks run even after another
+quality gate fails, including CRAP. Both that failure and a coverage-floor failure
+remain job failures. Its per-file counts support diagnosis of uncovered
+regions without repeating the instrumented test run.
+
+When a floor fails, a separate five-minute export retains full region locations
+in the `rust-coverage-regions` artifact for seven days. This additional export
+reads existing CI profiles; it does not rerun tests. The passing path keeps the
+summary-only export. Use the per-file summary to rank gaps, then the full region
+locations to choose behavior fixtures for missed branches. Coverage floors stay
+at 98% when compiler changes alter region accounting.
 
 The lint/source job retains its 30-minute aggregate deadline and existing step
 deadlines. Before package verification moved to its own job, an observed combined

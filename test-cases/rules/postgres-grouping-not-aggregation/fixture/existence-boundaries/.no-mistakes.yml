@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: ["*.sql"]
+      sqlInclude: ["*.sql"]
+      executorNames: []

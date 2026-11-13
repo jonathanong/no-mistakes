@@ -1,0 +1,5 @@
+catalogs:
+  react:
+    react: 18.0.0
+include:
+  ./missing.yaml: [catalogs]
