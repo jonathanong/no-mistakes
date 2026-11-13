@@ -31,8 +31,13 @@ The current validation graph is organized as follows:
   and complexity gates.
 - Standalone library tests build without the CLI, then run as four shards from
   the archived test binaries. Native platform jobs build runtime and Rust test
-  artifacts separately; six Rust test shards and six real-addon API shards run
-  per platform. Native producers enumerate the original filtered Rust harnesses;
+  artifacts separately. Windows runs six Rust shards and six real-addon API
+  shards; macOS runs two of each, with every selected case still executed once.
+  The [completed seed run](https://github.com/jonathanong/no-mistakes/actions/runs/43378356388)
+  showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
+  queue waits of 8–12 minutes with roughly two jobs running concurrently.
+  Fewer macOS jobs reduce repeated setup and runner contention. Native producers
+  enumerate the original filtered Rust harnesses;
   consumers partition exact case names and batch them by harness with the
   original flags. This preserves normal test concurrency, including the Windows
   Job Object serial setting, while avoiding repeated harness initialization.
@@ -58,12 +63,17 @@ runtime crate types, a helper restores old timestamps only for unchanged input
 bytes and keeps changed or new files fresh. Cargo still checks compiler,
 configuration, feature, and dependency fingerprints normally. The manifest is
 captured only after a successful build and saved with that build's artifacts;
-never restore it independently. Workspace fallback keys retain the same compiler
-and Cargo configuration; the content check still invalidates changed files.
-This makes unchanged native and archived Rust test artifacts reusable across
-fresh checkouts without
-hiding source changes. Dependency caches remain reusable when Rust source
-changes. A cold or changed native library still requires compilation.
+never restore it independently. Workspace restores first try the same compiler,
+Rust flags, and Cargo configuration, then the same compiler and Rust flags across
+Cargo configuration changes. Both fallbacks retain their platform and producer
+family. The content check keeps changed inputs fresh, and Cargo decides which
+dependency, feature, and profile fingerprints remain compatible. A release-only
+profile edit can therefore reuse compatible development artifacts. This makes
+unchanged native and archived Rust test artifacts reusable across fresh checkouts
+without hiding source changes. Dependency caches remain reusable when Rust source
+changes. A cold or changed native library still requires compilation. Native dependency
+cache saves run on main only; pull requests can restore those dependencies and
+publish their complete workspace snapshot without a duplicate dependency save.
 
 The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
 fetch CLI test. That one exact case receives its ordinary Cargo filter arguments
@@ -79,14 +89,14 @@ collected before this parallel layout. Its reported end-to-end PR wall time was
 28m15s. The completed job intervals in that run show the longest jobs and the
 work that dominated them:
 
-| Baseline job | Wall time | Dominant measured steps |
-| --- | ---: | --- |
-| Native tests (macOS ARM64) | 26m57s | CLI/addon build 10m09s; Rust test precompile 7m31s; platform Rust tests 3m35s; API tests 3m17s |
-| Native tests (Windows x64) | 26m19s | CLI/addon build 4m31s; Rust test precompile 4m53s; platform Rust tests 7m08s; API tests 5m49s |
-| Rust tests and coverage | 18m43s | Instrumented test build 5m28s; test execution 12m01s |
-| Lint and source checks | 12m48s | Compiler lint runs 1m39s and 1m34s; release check 1m26s; no-default test check 1m29s; PostgreSQL source identity tests 3m36s |
-| JavaScript tests | 11m00s | Native build 4m26s; ordinary tests 3m09s; real-addon API tests 2m22s |
-| Standalone library tests | 9m58s | Library test command 9m10s, including compilation and test execution |
+| Baseline job               | Wall time | Dominant measured steps                                                                                                      |
+| -------------------------- | --------: | ---------------------------------------------------------------------------------------------------------------------------- |
+| Native tests (macOS ARM64) |    26m57s | CLI/addon build 10m09s; Rust test precompile 7m31s; platform Rust tests 3m35s; API tests 3m17s                               |
+| Native tests (Windows x64) |    26m19s | CLI/addon build 4m31s; Rust test precompile 4m53s; platform Rust tests 7m08s; API tests 5m49s                                |
+| Rust tests and coverage    |    18m43s | Instrumented test build 5m28s; test execution 12m01s                                                                         |
+| Lint and source checks     |    12m48s | Compiler lint runs 1m39s and 1m34s; release check 1m26s; no-default test check 1m29s; PostgreSQL source identity tests 3m36s |
+| JavaScript tests           |    11m00s | Native build 4m26s; ordinary tests 3m09s; real-addon API tests 2m22s                                                         |
+| Standalone library tests   |     9m58s | Library test command 9m10s, including compilation and test execution                                                         |
 
 The macOS runtime build's library unit took 472.9 seconds; the first test
 precompile command rebuilt that unit in 372.2 seconds. The root features,
@@ -108,6 +118,49 @@ been demonstrated by a completed run of the parallel workflow. In particular,
 the earlier macOS native path alone exceeded that target; sharding and artifact
 reuse are intended to reduce its critical path, but their end-to-end effect
 must be measured on a completed run.
+
+### Completed parallel validation
+
+Parallel validation run
+[`43385163008`](https://github.com/jonathanong/no-mistakes/actions/runs/43385163008)
+completed successfully at `1bf45eee1`, before the macOS shard-count adjustment.
+It took **26m58s** from workflow creation to the last completed job. Selected
+job intervals include setup, artifact transfer, and cleanup:
+
+| Parallel job                                | Execution time |
+| ------------------------------------------- | -------------: |
+| Linux CLI / addon producers                 |  4m20s / 3m23s |
+| AST analysis                                |            28s |
+| Linux real-addon tests                      |          2m25s |
+| Instrumented Rust producer                  |          8m34s |
+| Slowest Rust coverage shard                 |          3m58s |
+| Merged Rust coverage and gates              |          1m40s |
+| Standalone library producer / slowest shard |  5m20s / 1m38s |
+| Native runtime producer, macOS / Windows    |  7m49s / 9m00s |
+| Native Rust producer, macOS / Windows       | 16m10s / 9m54s |
+| Slowest native Rust shard, macOS / Windows  |  4m20s / 4m28s |
+| Slowest native API shard, macOS / Windows   |  1m55s / 2m25s |
+
+Merged Rust coverage was 98.0325% regions (344691/351609), 98.9977% lines
+(338596/342024), and 99.3110% functions (39059/39330); the unchanged CRAP gate
+passed. Every required check passed. This is one completed sample, not a tail
+estimate or evidence that the ten-minute target has been reached.
+
+The macOS Rust producer missed a compatible workspace-cache prefix and compiled
+its first target in 12m19s. Its previous snapshot had been saved successfully in
+run `43378356388`, but was absent from the repository cache inventory before
+this run finished. The inventory contained roughly 12.7 GB of active caches at
+inspection. A cache key cannot guarantee retention under repository-wide cache
+pressure. Subsequent macOS Rust shards waited as long as 7m57s before starting;
+in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
+macOS matrices use two shards per family to reduce repeated setup and runner
+contention, while Windows retains six.
+
+Cold compilation on the current macOS runner already exceeds ten minutes
+before test execution. Reaching ten minutes reliably also requires retained
+compatible build artifacts and sufficient macOS runner availability, or a
+faster build runner. Sharding execution cannot remove that compilation bound.
+The cache and queue constraints must be included in any end-to-end claim.
 
 Do not reinterpret the old job timings as current job budgets or runtime
 guarantees. Preserve their source run and raw logs when comparing a completed
@@ -261,11 +314,11 @@ record about 415 seconds of test-profile compilation within the earlier
 635-second macOS Rust step. The first completed precompile run separated that
 work from execution on both platforms:
 
-| macOS phase | Before (`43130895963`) | After (`43136071692`) |
-| --- | ---: | ---: |
-| CLI/addon build, then precompile after the change | 406 s | 1,034 s |
-| Platform Rust step | 635 s, including compilation | 194 s, execution |
-| Real-addon API step | 191 s | 174 s |
+| macOS phase                                       |       Before (`43130895963`) | After (`43136071692`) |
+| ------------------------------------------------- | ---------------------------: | --------------------: |
+| CLI/addon build, then precompile after the change |                        406 s |               1,034 s |
+| Platform Rust step                                | 635 s, including compilation |      194 s, execution |
+| Real-addon API step                               |                        191 s |                 174 s |
 
 Compilation moved into the build step; these two hosted observations do
 not establish a total-work speedup. The first Windows run spent 548 seconds in
@@ -548,14 +601,14 @@ fresh Cargo target directory per profile, default features, and `-D warnings`.
 The orders were debug 2 then 0, and debug 0 then 2. Dependencies in the Cargo
 registry could be warm for the second build; reversing order checks that bias.
 
-| Workload | Runner A: debug 2 / 0 | Runner B: debug 2 / 0 |
-| --- | --- | --- |
-| Clean CLI wall time | 203.31 / 155.24 s | 188.08 / 147.51 s |
-| CLI user + system CPU | 532.74 / 392.94 s | 494.74 / 369.29 s |
-| CLI peak RSS | 8,280,396 / 5,297,704 KiB | 8,056,056 / 5,316,976 KiB |
-| Addon wall time after CLI build | 108.84 / 73.13 s | 104.67 / 69.44 s |
-| Addon user + system CPU | 223.39 / 138.56 s | 216.31 / 127.43 s |
-| Addon peak RSS | 7,582,760 / 5,475,844 KiB | 7,514,576 / 5,562,584 KiB |
+| Workload                        | Runner A: debug 2 / 0     | Runner B: debug 2 / 0     |
+| ------------------------------- | ------------------------- | ------------------------- |
+| Clean CLI wall time             | 203.31 / 155.24 s         | 188.08 / 147.51 s         |
+| CLI user + system CPU           | 532.74 / 392.94 s         | 494.74 / 369.29 s         |
+| CLI peak RSS                    | 8,280,396 / 5,297,704 KiB | 8,056,056 / 5,316,976 KiB |
+| Addon wall time after CLI build | 108.84 / 73.13 s          | 104.67 / 69.44 s          |
+| Addon user + system CPU         | 223.39 / 138.56 s         | 216.31 / 127.43 s         |
+| Addon peak RSS                  | 7,582,760 / 5,475,844 KiB | 7,514,576 / 5,562,584 KiB |
 
 CLI size fell from 1,022,593,496 to 241,485,928 bytes; addon size from
 972,375,904 to 222,004,936 bytes. Complete target-directory size fell from
@@ -568,7 +621,6 @@ rebuilds the library with N-API enabled after the CLI build, so its timing does
 not represent a clean standalone JavaScript job. These results use the previous pinned compiler. The same comparison was
 repeated on Rust 1.99 after the latest-stable policy changed, as recorded below.
 
-
 ## Rust 1.99 confirmation
 
 Run `38333716822`
@@ -576,14 +628,14 @@ used the same production source and reversed-order design, changing only the
 measurement workflow to install Rust 1.99.0 (LLVM 23.1.1). Its measurement commit
 was `09492537c61143aa3e893d8c1d8fc4d9e8bfb486`.
 
-| Workload | Runner A: debug 2 / 0 | Runner B: debug 2 / 0 |
-| --- | --- | --- |
-| Clean CLI wall time | 153.74 / 115.20 s | 174.58 / 140.54 s |
-| CLI user + system CPU | 373.56 / 272.60 s | 455.58 / 355.56 s |
-| CLI peak RSS | 8,142,892 / 5,214,376 KiB | 7,720,372 / 5,447,676 KiB |
-| Addon wall time after CLI build | 90.53 / 58.43 s | 97.93 / 65.33 s |
-| Addon user + system CPU | 162.49 / 98.18 s | 189.58 / 121.46 s |
-| Addon peak RSS | 7,839,504 / 5,540,288 KiB | 7,992,332 / 5,614,572 KiB |
+| Workload                        | Runner A: debug 2 / 0     | Runner B: debug 2 / 0     |
+| ------------------------------- | ------------------------- | ------------------------- |
+| Clean CLI wall time             | 153.74 / 115.20 s         | 174.58 / 140.54 s         |
+| CLI user + system CPU           | 373.56 / 272.60 s         | 455.58 / 355.56 s         |
+| CLI peak RSS                    | 8,142,892 / 5,214,376 KiB | 7,720,372 / 5,447,676 KiB |
+| Addon wall time after CLI build | 90.53 / 58.43 s           | 97.93 / 65.33 s           |
+| Addon user + system CPU         | 162.49 / 98.18 s          | 189.58 / 121.46 s         |
+| Addon peak RSS                  | 7,839,504 / 5,540,288 KiB | 7,992,332 / 5,614,572 KiB |
 
 CLI size fell from 1,219,707,480 to 308,865,720 bytes; addon size from
 1,163,613,904 to 288,184,704 bytes. Complete target-directory size fell from
@@ -603,15 +655,15 @@ compile/link command when it was cancelled. Existing symbol-free development and
 test profiles remain unchanged. The evidence does not establish a memory or
 linker root cause, and no automatic retries are added.
 
-| Run | Build step | Platform Rust step | API step | Outcome |
-| --- | ---: | ---: | ---: | --- |
-| `43119502783` | 437 s | 792 s | 171 s | Green main |
-| `43122608216` | 539 s | 712 s | 169 s | Green main |
-| `43115102036` | 570 s | 777 s | 260 s | Passed tests; timing gate failed |
-| `43119297972` | 586 s | 1,093 s | Skipped | Rust timeout |
-| `43122601344` | 416 s | 1,093 s | Skipped | Rust timeout |
-| `43121821452` | 337 s | 554 s | 433 s | API timeout |
-| `43123720380` | 913 s | Skipped | Skipped | Build timeout |
+| Run           | Build step | Platform Rust step | API step | Outcome                          |
+| ------------- | ---------: | -----------------: | -------: | -------------------------------- |
+| `43119502783` |      437 s |              792 s |    171 s | Green main                       |
+| `43122608216` |      539 s |              712 s |    169 s | Green main                       |
+| `43115102036` |      570 s |              777 s |    260 s | Passed tests; timing gate failed |
+| `43119297972` |      586 s |            1,093 s |  Skipped | Rust timeout                     |
+| `43122601344` |      416 s |            1,093 s |  Skipped | Rust timeout                     |
+| `43121821452` |      337 s |              554 s |    433 s | API timeout                      |
+| `43123720380` |      913 s |            Skipped |  Skipped | Build timeout                    |
 
 These are step wall times, including cancellation grace for timed-out steps.
 The first Rust test compilation took 465 and 527 seconds in the two green runs,

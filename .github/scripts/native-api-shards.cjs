@@ -20,7 +20,7 @@ function escape(name) {
   return name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function partition(inventory, index, count) {
+function partition(inventory, index, count, platform = process.platform) {
   if (!Number.isInteger(index) || !Number.isInteger(count) || index < 1 || count < index)
     throw new Error("native API shard must satisfy 1 <= shard <= count");
   if (
@@ -38,10 +38,10 @@ function partition(inventory, index, count) {
   ];
   if (!names.length) throw new Error("native API shard has no collected tests");
   const pattern = `^(?:${names.map((name) => name.split(" > ").map(escape).join("(?: > | )")).join("|")})$`;
-  if (pattern.length > 24000)
-    throw new Error(
-      "native API shard pattern exceeds Windows command budget; increase shard count",
-    );
+  const argumentBudget = platform === "win32" ? 24000 : 120000;
+  const argumentSize = platform === "win32" ? pattern.length : Buffer.byteLength(pattern);
+  if (argumentSize > argumentBudget)
+    throw new Error("native API shard pattern exceeds argument budget; increase shard count");
   return { pattern, names, total: inventory.length };
 }
 

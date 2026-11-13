@@ -22,7 +22,26 @@ test("native API timeout leaves startup and teardown room after the observed Win
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
   assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
   assert.match(native, /\n    timeout-minutes: 20\n/);
-  assert.match(native, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  const entries = [
+    ...native.matchAll(
+      /- os: (windows-2025|macos-15)\n\s+target: [^\n]+\n\s+shard: (\d+)\n\s+total: (\d+)/g,
+    ),
+  ];
+  assert.deepEqual(
+    entries
+      .filter((entry) => entry[1] === "windows-2025")
+      .map((entry) => [Number(entry[2]), Number(entry[3])]),
+    Array.from({ length: 6 }, (_, index) => [index + 1, 6]),
+  );
+  assert.deepEqual(
+    entries
+      .filter((entry) => entry[1] === "macos-15")
+      .map((entry) => [Number(entry[2]), Number(entry[3])]),
+    [
+      [1, 2],
+      [2, 2],
+    ],
+  );
   assert.match(
     workflowJob("linux-api-tests"),
     /name: Run real N-API API test\n\s+timeout-minutes: 4\n/,
@@ -280,7 +299,7 @@ test("package verification remains independent and required", () => {
   assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes\n/);
   assert.match(packages, /run: pnpm run pack:check\n/);
   assert.doesNotMatch(workflowJob("quality"), /cargo publish|pnpm run pack:check/);
-  assert.match(workflowJob("tests-gate"), /needs: \[[^\n]*packages/);
+  assert.match(workflowJob("tests-gate"), /needs:\s*\[[^\]]*packages/);
 });
 
 test("every required aggregate rejects failed, cancelled and skipped dependencies", () => {
@@ -295,7 +314,11 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     assert.equal(jobBudgetSeconds(body), 180);
     assert.match(body, /if: \$\{\{ always\(\) \}\}/);
     assert.match(body, /RESULTS: \$\{\{ toJSON\(needs\) \}\}/);
-    const needs = body.match(/needs: \[([^\]]+)\]/)[1].split(/,\s*/);
+    const needs = body
+      .match(/needs:\s*\[([^\]]+)\]/)[1]
+      .split(/,\s*/)
+      .map((value) => value.trim())
+      .filter(Boolean);
     const successful = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
     const script = body.split("        run: |\n")[1].replace(/^          /gm, "");
     const runGate = (results) =>
@@ -387,5 +410,54 @@ test("coverage and standalone producers retain content-verified workspace caches
     );
     if (name === "rust-coverage-build")
       assert.ok(body.indexOf("source <(cargo llvm-cov show-env --sh)") < restore);
+  }
+});
+
+test("every workspace producer prefers exact Cargo configuration before compiler-only fallback", () => {
+  const producers = [
+    "linux-runtime",
+    "native-build",
+    "native-test-build",
+    "standalone-build",
+    "rust-coverage-build",
+  ];
+  for (const name of producers) {
+    const body = workflowJob(name);
+    const cache = body
+      .split(/uses: actions\/cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split("\n      - name:")[0];
+    const primary = cache.match(/^          key: ([^\n]+)/m)[1];
+    const fallbacks = cache
+      .match(/restore-keys: \|\n([\s\S]*?)\n          path: \|/)[1]
+      .trim()
+      .split("\n")
+      .map((line) => line.trim());
+    assert.equal(fallbacks.length, 2, name);
+    assert.equal(primary, `${fallbacks[0]}${"${{ hashFiles('crates/**/*.rs') }}"}`, name);
+    assert.ok(fallbacks[0].includes("hashFiles('Cargo.toml'"), name);
+    assert.ok(fallbacks[0].startsWith(fallbacks[1]), name);
+    assert.ok(primary.startsWith(fallbacks[1]), name);
+    assert.match(fallbacks[1], /steps\.[a-z-]+\.outputs\.cachekey/);
+    assert.ok(fallbacks[1].endsWith("${{ env.RUSTFLAGS }}-"), name);
+    assert.doesNotMatch(fallbacks[1], /hashFiles/);
+    assert.match(body, /cargo-cache-inputs\.cjs restore/);
+    assert.match(body, /cargo-cache-inputs\.cjs capture/);
+  }
+  assert.match(
+    workflowJob("linux-runtime"),
+    /key: linux-runtime-workspace-v1-\$\{\{ matrix\.role \}\}/,
+  );
+  for (const name of ["native-build", "native-test-build"]) {
+    const body = workflowJob(name);
+    assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
+    const dependencies = body
+      .split(/uses: Swatinem\/rust-cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split("\n      - name:")[0];
+    assert.match(dependencies, /save-if: \$\{\{ github\.ref == 'refs\/heads\/main' \}\}/);
+    assert.doesNotMatch(dependencies, /\n        if:/);
+    const workspace = body
+      .split(/uses: actions\/cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split("\n      - name:")[0];
+    assert.doesNotMatch(workspace, /save-if:|\n        if:/);
   }
 });

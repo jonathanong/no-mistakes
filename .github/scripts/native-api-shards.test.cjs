@@ -15,7 +15,7 @@ test("native API shards collect every legacy file including the large real addon
 });
 
 test("case shards partition all collected names exactly once with regex escaping", () => {
-  for (const count of [1, 2, 3]) {
+  for (const count of [1, 2, 3, 6]) {
     const plans = Array.from({ length: count }, (_, index) =>
       partition(inventory, index + 1, count),
     );
@@ -36,8 +36,19 @@ test("API case partition rejects empty, invalid and oversized inventories", () =
   assert.throws(() => partition(inventory, 2, 1), /shard/);
   assert.throws(() => partition(inventory, 1, 0), /shard/);
   assert.throws(
-    () => partition([{ file: "file", name: "x".repeat(25000) }], 1, 1),
-    /Windows command budget/,
+    () => partition([{ file: "file", name: "x".repeat(25000) }], 1, 1, "win32"),
+    /argument budget/,
+  );
+  assert.ok(
+    partition([{ file: "file", name: "x".repeat(25000) }], 1, 1, "darwin").pattern.length > 24000,
+  );
+  assert.throws(
+    () => partition([{ file: "file", name: "x".repeat(120000) }], 1, 1, "darwin"),
+    /argument budget/,
+  );
+  assert.throws(
+    () => partition([{ file: "file", name: "é".repeat(61000) }], 1, 1, "darwin"),
+    /argument budget/,
   );
 });
 

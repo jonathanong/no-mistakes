@@ -51,12 +51,21 @@ for (const platform of ["macOS", "Windows"]) {
       ),
     }));
     const full = casePlan(platform, entries, inventory, 1, 1);
-    const shards = Array.from({ length: 6 }, (_, index) =>
-      casePlan(platform, entries, inventory, index + 1, 6),
-    ).flat();
     const identities = (rows) => rows.map((row) => `${row.executable}:${row.name}`).sort();
-    assert.deepEqual(identities(shards), identities(full));
-    assert.equal(new Set(identities(shards)).size, full.length);
+    for (const count of [2, 6]) {
+      const shards = Array.from({ length: count }, (_, index) =>
+        casePlan(platform, entries, inventory, index + 1, count),
+      ).flat();
+      assert.deepEqual(identities(shards), identities(full));
+      assert.equal(new Set(identities(shards)).size, full.length);
+      const batched = Array.from({ length: count }, (_, index) =>
+        batchPlan(casePlan(platform, entries, inventory, index + 1, count)),
+      ).flat();
+      assert.deepEqual(
+        batched.flatMap((batch) => batch.names.map((name) => `${batch.executable}:${name}`)).sort(),
+        identities(full),
+      );
+    }
     assert.ok(full.every((entry) => !entry.name.startsWith("unselected")));
     assert.ok(
       full.every((entry) => entry.args[0] === entry.name && entry.args.includes("--exact")),

@@ -134,10 +134,30 @@ test("native workflow compiles independent archives and consumers never build Ru
   const rust = job("native-rust-tests");
   const api = job("native-api-tests");
   assert.match(rust, /needs: \[changes, native-test-build\]/);
-  assert.match(rust, /native-test-archive.cjs run \$\{\{ matrix.shard \}\} 6/);
-  assert.match(rust, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  assert.match(
+    rust,
+    /native-test-archive.cjs run \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/,
+  );
   assert.match(api, /needs: \[changes, native-build\]/);
-  assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} 6/);
+  assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
+  for (const consumer of [rust, api]) {
+    const rows = [
+      ...consumer.matchAll(/- os:\s+(\S+)\s+target:\s+(\S+)\s+shard:\s+(\d+)\s+total:\s+(\d+)/g),
+    ];
+    assert.equal(rows.length, 8);
+    for (const [os, target, count] of [
+      ["windows-2025", "x86_64-pc-windows-msvc", 6],
+      ["macos-15", "aarch64-apple-darwin", 2],
+    ]) {
+      const selected = rows.filter((row) => row[1] === os);
+      assert.deepEqual(
+        selected.map((row) => Number(row[3])),
+        Array.from({ length: count }, (_, index) => index + 1),
+      );
+      assert.ok(selected.every((row) => row[2] === target && Number(row[4]) === count));
+    }
+    assert.match(consumer, /matrix.shard \}\}\/\$\{\{ matrix.total/);
+  }
   const apiFiles = [
     "real-napi-api",
     "unused-disable-directives-api",

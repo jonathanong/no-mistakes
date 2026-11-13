@@ -210,12 +210,12 @@ Other release targets and local builds retain full LTO and one code generation
 unit. Compile-time and runtime differences require measurements on the same
 platform; Linux benchmarks do not establish the macOS tradeoff.
 
-Real-addon API tests run in six shards on each of Windows and macOS, alongside
-six platform Rust test shards. The per-test timing checks and diagnostic reports
+Real-addon API tests and platform Rust tests each run in six Windows shards
+and two macOS shards. The per-test timing checks and diagnostic reports
 remain in force. The prior serial-test and aggregate timeout measurements are
 historical; the [CI build guide](docs/development/ci-builds.md#parallel-ci-layout-and-measured-baseline)
-records the earlier completed baseline and states what remains unmeasured for
-the current parallel layout.
+records the earlier baseline, completed parallel measurements, and the cache
+and runner-capacity limits that still prevent the ten-minute target.
 
 Pull requests run the validation jobs for Markdown changes as well as code
 changes. Documentation contract tests are part of the Rust coverage build and

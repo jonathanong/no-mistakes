@@ -22,9 +22,10 @@ for (const name of [
     assert.ok(body);
     assert.match(body, /if: \$\{\{ always\(\) \}\}/);
     const needs = body
-      .match(/needs: \[([^\]]+)\]/)[1]
+      .match(/needs:\s*\[([^\]]+)\]/)[1]
       .split(",")
-      .map((value) => value.trim());
+      .map((value) => value.trim())
+      .filter(Boolean);
     const script = body.split("        run: |\n")[1].replace(/^          /gm, "");
     for (const dependency of needs) {
       for (const fixture of results) {
