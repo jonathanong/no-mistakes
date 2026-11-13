@@ -122,7 +122,7 @@ jobs:
             node .github/scripts/docs-only-scope.cjs >> "$GITHUB_OUTPUT"
   quality-source:
     name: Source policy and tooling tests
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
       - name: Checkout
@@ -1205,6 +1205,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           node .github/scripts/rust-coverage-shards.cjs archive target/coverage-bundle
       - name: Upload instrumented Rust tests

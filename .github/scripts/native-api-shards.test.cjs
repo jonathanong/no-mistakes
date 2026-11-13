@@ -10,8 +10,8 @@ test("native API shards collect every legacy file including the large real addon
   assert.equal(new Set(files).size, 7);
   assert.ok(files.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
   const source = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
-  assert.match(source, /"list", \.\.\.files, "--no-static-parse"/);
-  assert.match(source, /"run", \.\.\.files, `--testNamePattern=/);
+  assert.match(source, /"list",\s*\.\.\.files,\s*"--no-static-parse"/);
+  assert.match(source, /"run",\s*\.\.\.files,\s*`--testNamePattern=/);
 });
 
 test("case shards partition all collected names exactly once with regex escaping", () => {

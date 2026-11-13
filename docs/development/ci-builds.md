@@ -18,7 +18,7 @@ The current validation graph is organized as follows:
   Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the
   configured floors. Real-addon behavior remains in its own job.
-- Rust coverage builds instrumented test binaries once, runs doctests in the
+- Rust coverage builds instrumented test binaries once, runs documentation tests in the
   producer, then runs six test shards. A collector merges profiles and checks
   complete execution before producing LCOV and applying the existing coverage
   and complexity gates.
@@ -42,7 +42,7 @@ work that dominated them:
 | Native tests (macOS ARM64) | 26m57s | CLI/addon build 10m09s; Rust test precompile 7m31s; platform Rust tests 3m35s; API tests 3m17s |
 | Native tests (Windows x64) | 26m19s | CLI/addon build 4m31s; Rust test precompile 4m53s; platform Rust tests 7m08s; API tests 5m49s |
 | Rust tests and coverage | 18m43s | Instrumented test build 5m28s; test execution 12m01s |
-| Lint and source checks | 12m48s | Clippy runs 1m39s and 1m34s; release check 1m26s; no-default test check 1m29s; PostgreSQL source identity tests 3m36s |
+| Lint and source checks | 12m48s | Compiler lint runs 1m39s and 1m34s; release check 1m26s; no-default test check 1m29s; PostgreSQL source identity tests 3m36s |
 | JavaScript tests | 11m00s | Native build 4m26s; ordinary tests 3m09s; real-addon API tests 2m22s |
 | Standalone library tests | 9m58s | Library test command 9m10s, including compilation and test execution |
 
