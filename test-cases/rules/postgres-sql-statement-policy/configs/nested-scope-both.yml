@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      importSpecifier: '@scope/psql'
+      bannedSettings: [statement_timeout]
+      unanalyzableSql: ignore
+      include: ['backend/**']
+      exclude: ['**/__tests__/**']

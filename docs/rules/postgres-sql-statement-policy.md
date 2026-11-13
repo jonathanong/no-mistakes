@@ -76,10 +76,30 @@ preserving existing behavior. The case-insensitive `ddl` group expands to all
 23 kinds listed above. Kind names ignore case and repeated whitespace. An
 unknown kind or group is a configuration error.
 
-Rule application `include`/`exclude` limits both sources; `sqlInclude` continues
-to select only SQL files. `unanalyzableSql` defaults to `fail`; `ignore` skips unanalyzable calls, and `fail` reports
-dynamic executor arguments without complete alternatives and unparseable recovered SQL. No executor module
-or factory is inferred from project conventions.
+`include` and `exclude` may be set on the rule entry or under `options`.
+Both placements narrow SQL files and JavaScript/TypeScript executor sources.
+When both are present, the scopes intersect: a file must pass both include
+filters and neither exclude filter. Empty include lists leave that layer
+unrestricted. `sqlInclude` additionally selects only SQL files.
+
+For example, these nested globs select backend sources while excluding tests:
+
+```yaml
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      include: ['backend/**']
+      exclude: ['**/__tests__/**']
+      bannedSettings: [statement_timeout]
+      unanalyzableSql: ignore
+```
+
+`unanalyzableSql` defaults to `fail`; `ignore` skips unanalyzable calls, and
+`fail` reports dynamic executor arguments without complete alternatives and
+unparseable recovered SQL. No executor module or factory is inferred from
+project conventions.
 
 `bannedSettings` is an optional list of PostgreSQL configuration parameter
 names and defaults to empty. Names match case-insensitively in `SET`, `SET

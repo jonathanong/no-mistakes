@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      include: ["backend/**"]
+      sqlInclude: ["**/*.sql"]
+      unanalyzableSql: fail

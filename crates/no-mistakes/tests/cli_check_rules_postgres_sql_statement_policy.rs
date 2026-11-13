@@ -355,3 +355,25 @@ fn valid_schema_utility_compatibility_is_shared_by_both_rules() {
         .iter()
         .all(|finding| !finding["message"].as_str().unwrap().contains("1. .")));
 }
+
+#[test]
+fn nested_options_include_skips_unparseable_sql_outside_scope() {
+    let root = fixture("nested-unparseable-outside");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let body = report.to_string();
+    assert!(
+        !body.contains("outside/broken.sql"),
+        "unparseable SQL outside options.include must not be diagnosed: {report}"
+    );
+    assert!(output.status.success(), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    assert_eq!(report["advisories"], serde_json::json!([]), "{report}");
+}
