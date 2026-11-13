@@ -10,7 +10,7 @@ pub(in super::super) struct ParameterCache {
     pub(super) ownership_callbacks: bool,
     pub(super) stage_indexes: OnceLock<CallableResolutionIndexes>,
     pub(super) stage_import_origins: OnceLock<super::for_of_sources::StageImportOrigins>,
-    #[cfg(test)]
+    #[cfg(feature = "test-instrumentation")]
     pub(super) stage_import_origin_builds: std::sync::atomic::AtomicUsize,
     #[cfg(all(test, feature = "test-instrumentation"))]
     pub(super) opaque_entry_mode: opaque_entry_mode::Mode,

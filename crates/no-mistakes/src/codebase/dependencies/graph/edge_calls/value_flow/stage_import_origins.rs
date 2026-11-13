@@ -30,7 +30,7 @@ impl ValueFlowResolution<'_, '_> {
         &self,
         indexes: &CallableResolutionIndexes,
     ) -> StageImportOrigins {
-        #[cfg(test)]
+        #[cfg(feature = "test-instrumentation")]
         self.cache
             .stage_import_origin_builds
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -97,6 +97,6 @@ impl ValueFlowResolution<'_, '_> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "stage_import_origins_tests.rs"]
 mod tests;
