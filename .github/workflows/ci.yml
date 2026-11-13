@@ -150,6 +150,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -312,6 +313,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -374,6 +376,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
@@ -520,6 +523,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -560,6 +564,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -604,6 +609,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -716,6 +722,7 @@ jobs:
         with:
           runtime: ${{ matrix.runtime }}
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install pnpm dependencies
@@ -803,6 +810,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
@@ -970,6 +978,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
@@ -1137,6 +1146,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
@@ -1277,6 +1287,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
@@ -1427,6 +1438,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-rust-archive
@@ -1506,6 +1518,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-rust-archive
@@ -1601,6 +1614,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-runtime
@@ -1710,6 +1724,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-runtime
@@ -1952,7 +1967,6 @@ jobs:
         run: node .github/scripts/build-artifact-source.cjs
 
       - name: Install Rust
-        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: coverage-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09

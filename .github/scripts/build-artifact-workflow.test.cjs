@@ -79,3 +79,13 @@ test("test consumers download validated build sources while coverage profiles st
   assert.match(workflowJob(source, "tests-gate"), /name: Tests with coverage/);
   assert.match(workflowJob(source, "ast-analysis"), /name: AST analysis/);
 });
+
+test("warm validation installs LLVM tools before retaining the profile pooling test", () => {
+  const body = workflowJob(source, "rust-coverage-build");
+  const install = steps(body).find((step) => step.startsWith("Install Rust\n"));
+  assert.ok(install);
+  assert.doesNotMatch(install, /^\s*if:/m);
+  assert.match(install, /components: llvm-tools-preview/);
+  assert.ok(body.indexOf("name: Install Rust") < body.indexOf("rust-profile-pooling.test.cjs"));
+  assert.match(body, /node --test[^\n]*rust-profile-pooling.test.cjs/);
+});

@@ -96,3 +96,13 @@ test("benchmark PRs use artifact transport while main may save and probe the han
   assert.match(body, /name: Upload benchmark executables/);
   assert.match(body, /name: Require an available benchmark transport/);
 });
+
+test("pnpm stores restore on PRs but save only on main", () => {
+  const setups = steps(workflow).filter((step) => /uses: pnpm\/setup@/.test(step));
+  assert.equal(setups.length, 15);
+  for (const step of setups) {
+    assert.match(step, /cache: true/);
+    assert.match(step, /save-cache: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
+    assert.doesNotMatch(step, /if:.*github.ref/);
+  }
+});

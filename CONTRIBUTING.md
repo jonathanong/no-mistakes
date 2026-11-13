@@ -137,7 +137,8 @@ for the job graph, the historical completed-run timings, and the current status
 of the 10-minute PR-wall target. The historical run predates this layout and
 does not establish its runtime.
 
-Rust target caches are published only by successful main producers. Compatible
+Rust target caches are published only by successful main producers. pnpm store
+snapshots also save on main only. Compatible
 Linux jobs share dependency keys; native, coverage, and standalone producers
 share source-only registry caches instead of duplicating compiled dependencies.
 Test shards download producer artifacts rather than saving private target

@@ -101,7 +101,8 @@ timestamps needed to avoid unnecessary build-script recompilation. Registry
 contents are independent of compiler flags; compiled artifacts remain isolated
 in their workspace families. Workspace crates are excluded from the remaining
 dependency-only caches. PRs never save target caches; each producer uploads its build archive
-once for its test consumers.
+once for its test consumers. pnpm store snapshots also save on main only; the
+action may still write its separate small lockfile-verification records.
 
 The cache-retention workflow removes closed-PR caches and superseded main
 snapshots of known families. It runs after successful main producers, after main
@@ -134,7 +135,9 @@ the default branch, push that commit to `ci/cold-build`, followed after success
 by `ci/warm-build-<cold run ID>`. These explicit measurement refs run the full
 validation graph without optional benchmarks. Ordinary PR behavior is unchanged.
 
-The warm path validates the completed source run's repository, workflow, event,
+Warm validation retains Rust and LLVM tool installation for the profile-pooling
+self-test, even when compilation is skipped. The warm path validates the
+completed source run's repository, workflow, event,
 and exact commit, then requires all eight unexpired build archives before
 downloading them. It reuses compiled
 binaries, not test results: every test runs again, and coverage profiles are
@@ -143,6 +146,32 @@ PR cannot request cross-run reuse. Report warm artifact reuse separately from
 ordinary target-cache restoration, and include queue, setup, transfer, and
 aggregate time in end-to-end measurements. Never rerun jobs to obtain a better
 sample.
+
+### Controlled Rust-cache-cold measurement
+
+Run [`43422140537`](https://github.com/jonathanong/no-mistakes/actions/runs/43422140537)
+at `fae9ed847` disabled every Rust target and registry restore. Both native
+macOS Cargo reports recorded zero fresh units, so dependencies were rebuilt too.
+The test precompile step completed in 8m30s and the CLI/N-API build in 11m18s,
+within their unchanged 15-minute bounds. The root library dominated each build:
+334.4 seconds in the test producer and 537 seconds in the runtime producer.
+These are one controlled cold observation, not a tail-latency guarantee.
+
+The complete run took **17m01s**. The macOS test producer finished at +10m11s;
+its longest Rust shard took 6m29s and finished at +16m44s. Independently, the
+coverage producer finished at +7m45s, its longest shard at +12m13s, and the
+collector at +13m57s. The cold ten-minute target remains unmet even with the
+cache-capacity correction: compilation and subsequent test execution still
+exceed that budget. Splitting the small native harness compilation alone cannot
+remove the root-library cost.
+
+The merged cold report covered 338,683/342,109 lines (99.00%),
+39,060/39,331 functions (99.31%), and 344,756/351,672 regions (98.03%). All 98%
+floors, CRAP, and complexity gates passed. The paired warm measurement reuses
+this exact commit's build archives while rerunning every test and collecting
+new profiles; its result is recorded in the PR alongside per-job timing tables.
+The later pnpm store-save guard changes cache publication, not these compiler
+or test commands.
 
 The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
 fetch CLI test. That one exact case receives its ordinary Cargo filter arguments
