@@ -1,6 +1,6 @@
 [package]
 name = "no-mistakes"
-version = "0.109.46"
+version = "0.109.47"
 edition = "2021"
 rust-version = "1.97"
 # Explicit suites avoid statically linking the analyzer once per test source.
