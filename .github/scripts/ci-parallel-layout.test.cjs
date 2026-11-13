@@ -93,3 +93,31 @@ test("documentation tests cannot delay coverage archive consumers", () => {
   assert.doesNotMatch(job("rust-coverage-shards"), /needs:.*docs-tests/);
   assert.match(job("tests-gate"), /docs-tests/);
 });
+
+test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
+  for (const id of ["native-build", "native-test-build"]) {
+    const body = job(id);
+    assert.ok(body.indexOf("id: native-rust-cache") < body.indexOf("id: native-workspace-cache"));
+    assert.match(body, /cache-workspace-crates: false/);
+    assert.match(body, /cache-on-failure: false/);
+    assert.match(body, /uses: actions\/cache@[a-f0-9]{40}/);
+    assert.match(body, /crates\/\*\*\/\*\.rs/);
+    assert.match(body, /target\/debug/);
+    assert.match(body, /runner\.temp \}\}\/nm-cargo-inputs/);
+    const key = body.match(/^          key: ([^\n]+)/m)[1];
+    const fallback = body.match(/restore-keys: \|\n            ([^\n]+)/)[1];
+    assert.equal(key, fallback + "${{ hashFiles('crates/**/*.rs') }}");
+    assert.ok(fallback.includes("steps.native-rust-toolchain.outputs.cachekey"));
+    assert.ok(fallback.includes("env.RUSTFLAGS"));
+    assert.ok(fallback.includes("hashFiles('Cargo.toml'"));
+    const restore = body.indexOf("cargo-cache-inputs.cjs restore");
+    const compile = body.indexOf(
+      id === "native-build"
+        ? "node .github/scripts/build-native.cjs"
+        : "node .github/scripts/native-test-archive.cjs build",
+    );
+    const capture = body.indexOf("cargo-cache-inputs.cjs capture");
+    assert.ok(restore > 0 && restore < compile && compile < capture);
+    assert.match(body, /steps\.native-workspace-cache\.outputs\.cache-hit/);
+  }
+});

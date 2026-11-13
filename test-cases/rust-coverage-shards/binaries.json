@@ -1,0 +1,27 @@
+{
+  "rust-build-meta": {
+    "target-directory": "<target>",
+    "base-output-directories": ["debug"],
+    "non-test-binaries": {
+      "path+file:///workspace/crates/no-mistakes#0.1.0": [
+        { "name": "no-mistakes", "kind": "bin-exe", "path": "debug/no-mistakes", "build-platform": "target" }
+      ]
+    }
+  },
+  "rust-binaries": {
+    "no-mistakes": {
+      "binary-id": "no-mistakes",
+      "binary-name": "no_mistakes",
+      "kind": "lib",
+      "binary-path": "<target>/debug/build/no-mistakes/2968aee25fb06b80/out/no_mistakes-2968aee25fb06b80",
+      "build-platform": "target"
+    },
+    "no-mistakes::suite_contracts": {
+      "binary-id": "no-mistakes::suite_contracts",
+      "binary-name": "suite_contracts",
+      "kind": "test",
+      "binary-path": "<target>/debug/build/no-mistakes/b884ca0fa9728829/out/suite_contracts-b884ca0fa9728829",
+      "build-platform": "target"
+    }
+  }
+}

@@ -213,7 +213,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs
+        run: node --test .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
   quality-rust:
     name: Rust quality (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -737,13 +737,27 @@ jobs:
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           shared-key: native-runtime-v2-${{ matrix.target }}
-          cache-workspace-crates: true
+          cache-workspace-crates: false
+          cache-on-failure: false
           workspaces: . -> target
+
+      - name: Cache native workspace artifacts by source
+        id: native-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
 
       - name: Test native build diagnostics
         if: ${{ runner.os == 'macOS' }}
         timeout-minutes: 2
-        run: node --test .github/scripts/build-native.test.cjs
+        run: node --test .github/scripts/build-native.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
@@ -758,7 +772,7 @@ jobs:
         timeout-minutes: 20
         shell: bash
         env:
-          NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
         run: |
           set -euo pipefail
           rm -rf target/native-build-diagnostics target/native-test-build-diagnostics
@@ -772,7 +786,9 @@ jobs:
               raise SystemExit(f"expected {old!r} in {path}")
           path.write_text(text.replace(old, new, 1))
           PY
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           node .github/scripts/build-native.cjs
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
       - name: Upload native-runtime
@@ -866,15 +882,33 @@ jobs:
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           shared-key: native-test-harness-v2-${{ matrix.target }}
-          cache-workspace-crates: true
+          cache-workspace-crates: false
+          cache-on-failure: false
           workspaces: . -> target
+
+      - name: Cache native workspace artifacts by source
+        id: native-workspace-cache
+        timeout-minutes: 3
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          restore-keys: |
+            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
 
       - name: Precompile native Rust test targets
         timeout-minutes: 15
         shell: bash
         env:
-          NATIVE_RUST_CACHE_HIT: ${{ steps.native-rust-cache.outputs.cache-hit }}
-        run: node .github/scripts/native-test-archive.cjs build
+          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
+          node .github/scripts/native-test-archive.cjs build
+          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
 
       - name: Upload native-rust-archive
         timeout-minutes: 2
@@ -1328,6 +1362,7 @@ jobs:
             --extract-to "$(dirname "$CARGO_LLVM_COV_TARGET_DIR")" \
             --workspace-remap "$GITHUB_WORKSPACE" --list-type binaries-only --message-format json \
             > target/coverage-bundle/binaries.json
+          node .github/scripts/rust-coverage-shards.cjs report-objects target/coverage-bundle target/coverage-bundle/binaries.json >> "$GITHUB_ENV"
       - name: Download every shard profile and execution inventory
         if: ${{ !cancelled() }}
         timeout-minutes: 5
@@ -1393,6 +1428,8 @@ jobs:
           path: |
             target/llvm-cov/crap-report.txt
             target/llvm-cov/lcov.info
+            target/llvm-cov/nextest-objects.json
+            target/llvm-cov/nextest-objects.rsp
 
       - name: Summarize failing Rust CRAP rows
         if: ${{ failure() && steps.rust-crap.outcome == 'failure' }}

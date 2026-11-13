@@ -13,7 +13,14 @@ const {
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
 const { test } = require("node:test");
-const { archive, verify, shard, collect, partition } = require("./rust-coverage-shards.cjs");
+const {
+  archive,
+  verify,
+  shard,
+  collect,
+  partition,
+  reportObjects,
+} = require("./rust-coverage-shards.cjs");
 
 const fixtures = join(__dirname, "../../test-cases/rust-coverage-shards");
 function scenario(fn) {
@@ -237,3 +244,89 @@ test("fan-in rejects profile data inherited from a stale archive or runner", () 
       assert.deepEqual(readdirSync(env.CARGO_LLVM_COV_TARGET_DIR), [name]);
     });
 });
+
+function binaryMetadata(env) {
+  const metadata = JSON.parse(
+    readFileSync(join(fixtures, "binaries.json"), "utf8").replaceAll(
+      "<target>",
+      env.CARGO_LLVM_COV_TARGET_DIR,
+    ),
+  );
+  for (const binary of Object.values(metadata["rust-binaries"])) {
+    const file = binary["binary-path"];
+    mkdirSync(require("node:path").dirname(file), { recursive: true });
+    copyFileSync(join(fixtures, "archive.fixture"), file);
+  }
+  return metadata;
+}
+
+test("report object response file includes every archived Cargo v2 test harness without fingerprints", () =>
+  scenario(({ bundle, env, run }) => {
+    archive(bundle, env, run);
+    const metadata = binaryMetadata(env);
+    const line = reportObjects(bundle, metadata, env);
+    assert.equal(line, "LLVM_COV_FLAGS=@target/llvm-cov/nextest-objects.rsp");
+    const response = readFileSync(
+      join(env.GITHUB_WORKSPACE, "target/llvm-cov/nextest-objects.rsp"),
+      "utf8",
+    );
+    assert.deepEqual(
+      response.trim().split("\n").map(JSON.parse),
+      Object.values(metadata["rust-binaries"])
+        .map((binary) => `-object=${binary["binary-path"]}`)
+        .sort(),
+    );
+    assert.deepEqual(
+      JSON.parse(
+        readFileSync(join(env.GITHUB_WORKSPACE, "target/llvm-cov/nextest-objects.json"), "utf8"),
+      ).objects,
+      Object.values(metadata["rust-binaries"])
+        .map((binary) => binary["binary-path"])
+        .sort(),
+    );
+  }));
+
+test("report object paths retain spaces and quotes through LLVM response-file quoting", () =>
+  scenario(({ bundle, env, run, root }) => {
+    archive(bundle, env, run);
+    const metadata = binaryMetadata(env);
+    const binary = Object.values(metadata["rust-binaries"])[0];
+    const quoted = join(env.CARGO_LLVM_COV_TARGET_DIR, 'unit \"quoted\" binary');
+    copyFileSync(binary["binary-path"], quoted);
+    binary["binary-path"] = quoted;
+    const line = reportObjects(bundle, metadata, { ...env, LLVM_COV_FLAGS: "-use-color=0" });
+    assert.equal(line, "LLVM_COV_FLAGS=-use-color=0 @target/llvm-cov/nextest-objects.rsp");
+    const arguments = readFileSync(join(root, "target/llvm-cov/nextest-objects.rsp"), "utf8")
+      .trim()
+      .split("\n")
+      .map(JSON.parse);
+    assert.ok(arguments.includes(`-object=${quoted}`));
+  }));
+
+test("report object preparation rejects stale metadata, outside objects and conflicting LLVM flags", () =>
+  scenario(({ bundle, env, run, root }) => {
+    archive(bundle, env, run);
+    const metadata = binaryMetadata(env);
+    for (const flags of [
+      "-object=other",
+      "--object other",
+      "-instr-profile=other",
+      "@other.rsp",
+      "bad\nFLAGS=value",
+    ])
+      assert.throws(
+        () => reportObjects(bundle, metadata, { ...env, LLVM_COV_FLAGS: flags }),
+        /Conflicting LLVM_COV_FLAGS/,
+      );
+    const stale = { ...metadata, "rust-build-meta": { "target-directory": "/other/target" } };
+    assert.throws(() => reportObjects(bundle, stale, env), /metadata target differs/);
+    assert.throws(
+      () => reportObjects(bundle, { ...metadata, "rust-binaries": {} }, env),
+      /no test binary objects/,
+    );
+    const binary = Object.values(metadata["rust-binaries"])[0];
+    binary["binary-path"] = join(root, "outside-object");
+    copyFileSync(join(fixtures, "archive.fixture"), binary["binary-path"]);
+    assert.throws(() => reportObjects(bundle, metadata, env), /outside the target/);
+    assert.equal(existsSync(join(root, "target/llvm-cov/nextest-objects.rsp")), false);
+  }));

@@ -97,6 +97,12 @@ test("coverage report fan-in preserves every floor after sharded test execution"
   assert.equal(stepBudgetSeconds(job, "Enforce Rust coverage floors"), 300);
   assert.match(job, /cargo llvm-cov report --json --summary-only/);
   assert.match(job, /node \.github\/scripts\/rust-coverage-floors\.cjs/);
+  assert.match(
+    job,
+    /rust-coverage-shards\.cjs report-objects target\/coverage-bundle target\/coverage-bundle\/binaries\.json >> "\$GITHUB_ENV"/,
+  );
+  assert.ok(job.indexOf(" report-objects ") < job.indexOf("- name: Write Rust coverage report"));
+  assert.match(job, /target\/llvm-cov\/nextest-objects\.rsp/);
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   for (const dimension of ["LINES", "FUNCTIONS", "REGIONS"])
     assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));

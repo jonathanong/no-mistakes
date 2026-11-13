@@ -125,8 +125,11 @@ test("native workflow compiles independent archives and consumers never build Ru
   for (const producer of [runtime, archive]) {
     assert.match(producer, /NO_MISTAKES_BUILD_NAPI: "1"/);
     assert.match(producer, /shared-key: native-/);
-    assert.match(producer, /cache-workspace-crates: true/);
-    assert.doesNotMatch(producer, /hashFiles|github.sha.*cache|native-test-artifacts-v1/);
+    assert.match(producer, /cache-workspace-crates: false/);
+    assert.doesNotMatch(
+      producer,
+      /hashFiles\([^)]*\.github\/workflows|github.sha.*cache|native-test-artifacts-v1/,
+    );
   }
   const rust = job("native-rust-tests");
   const api = job("native-api-tests");

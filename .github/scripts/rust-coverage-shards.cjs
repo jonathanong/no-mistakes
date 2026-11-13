@@ -8,12 +8,13 @@ const {
   mkdirSync,
   openSync,
   readFileSync,
+  realpathSync,
   readdirSync,
   readSync,
   writeFileSync,
   unlinkSync,
 } = require("node:fs");
-const { basename, dirname, join, resolve } = require("node:path");
+const { basename, dirname, isAbsolute, join, relative, resolve, sep } = require("node:path");
 
 const archiveName = "rust-tests.tar.zst";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
@@ -151,6 +152,47 @@ function shard(directory, output, index, total, env = process.env, run = command
   }
   return status;
 }
+function reportObjects(directory, metadata, env = process.env) {
+  const build = verify(directory, env);
+  const previous = env.LLVM_COV_FLAGS || "";
+  if (/[\r\n\0]/.test(previous) || /(^|\s)(@|--?(object|instr-profile)(=|\s|$))/.test(previous))
+    throw new Error(
+      "Conflicting LLVM_COV_FLAGS: object/profile overrides and response files are unsupported",
+    );
+  if (metadata["rust-build-meta"]?.["target-directory"] !== build.target)
+    throw new Error("Coverage binary metadata target differs from the archive");
+  const binaries = Object.values(metadata["rust-binaries"] || {});
+  if (!binaries.length) throw new Error("Coverage archive has no test binary objects");
+  const canonicalTarget = realpathSync(build.target);
+  const objects = [
+    ...new Set(
+      binaries.map((binary) => {
+        const file = binary["binary-path"];
+        if (typeof file !== "string" || !isAbsolute(file) || /[\x00-\x1f\x7f]/.test(file))
+          throw new Error("Coverage test binary must have an absolute regular path");
+        const inside = relative(canonicalTarget, realpathSync(file));
+        if (
+          !inside ||
+          inside === ".." ||
+          inside.startsWith(`..${sep}`) ||
+          isAbsolute(inside) ||
+          !lstatSync(file).isFile()
+        )
+          throw new Error(`Coverage test binary is outside the target or is not regular: ${file}`);
+        return file;
+      }),
+    ),
+  ].sort();
+  const responseName = "target/llvm-cov/nextest-objects.rsp";
+  const response = join(build.workspace, responseName);
+  mkdirSync(dirname(response), { recursive: true });
+  writeFileSync(
+    response,
+    `${objects.map((file) => JSON.stringify(`-object=${file}`)).join("\n")}\n`,
+  );
+  writeJson(join(dirname(response), "nextest-objects.json"), { objects, response: responseName });
+  return `LLVM_COV_FLAGS=${[previous, `@${responseName}`].filter(Boolean).join(" ")}`;
+}
 function collect(directory, input, total, env = process.env) {
   partition(1, total);
   const build = verify(directory, env);
@@ -196,16 +238,20 @@ function collect(directory, input, total, env = process.env) {
 if (require.main === module) {
   try {
     const [mode, ...args] = process.argv.slice(2);
-    const arity = { archive: 1, verify: 1, shard: 4, collect: 3 };
+    const arity = { archive: 1, verify: 1, shard: 4, collect: 3, "report-objects": 2 };
     if (args.length !== arity[mode])
       throw new Error(
-        "Usage: rust-coverage-shards.cjs archive <bundle> | verify <bundle> | shard <bundle> <output> <index> <total> | collect <bundle> <input> <total>",
+        "Usage: rust-coverage-shards.cjs archive <bundle> | verify <bundle> | shard <bundle> <output> <index> <total> | collect <bundle> <input> <total> | report-objects <bundle> <binaries-json>",
       );
-    const result = { archive, verify, shard, collect }[mode](...args);
+    const result =
+      mode === "report-objects"
+        ? reportObjects(args[0], readJson(args[1]))
+        : { archive, verify, shard, collect }[mode](...args);
+    if (typeof result === "string") console.log(result);
     if (typeof result === "number") process.exitCode = result;
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;
   }
 }
-module.exports = { archive, verify, shard, collect, partition };
+module.exports = { archive, verify, shard, collect, partition, reportObjects };

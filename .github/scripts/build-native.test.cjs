@@ -22,7 +22,7 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
   assert.match(upload, /target\/native-build-diagnostics/);
   assert.match(
     native,
-    /NATIVE_RUST_CACHE_HIT: \$\{\{ steps.native-rust-cache.outputs.cache-hit \}\}/,
+    /NATIVE_RUST_CACHE_HIT: \$\{\{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' \|\| 'false' \}\}/,
   );
   assert.match(native, /node \.github\/scripts\/build-native.cjs/);
   assert.match(native, /crate-type = \["rlib", "cdylib"\]/);

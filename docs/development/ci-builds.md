@@ -41,6 +41,27 @@ The current validation graph is organized as follows:
   producer or shard fails. Artifact transfer and per-job setup remain part of
   elapsed PR wall time.
 
+Coverage reports pass every archived test executable explicitly to LLVM. Cargo's
+new output layout uses metadata markers to distinguish test binaries from build
+script outputs; the archive omits those markers. An implicit directory scan can
+therefore report only the CLI and lose valid unit-test mappings. The explicit
+object inventory is retained with the report diagnostics and applies to LCOV,
+summary totals, and missing-region details. The coverage floors and complexity
+gates remain unchanged.
+
+Native producers restore dependency caches first, then a separate compiler and
+Rust-source-keyed workspace cache. The workspace cache contains both Cargo
+artifacts and a manifest of tracked input content hashes. After preparing the
+runtime crate types, a helper restores old timestamps only for unchanged input
+bytes and keeps changed or new files fresh. Cargo still checks compiler,
+configuration, feature, and dependency fingerprints normally. The manifest is
+captured only after a successful build and saved with that build's artifacts;
+never restore it independently. Workspace fallback keys retain the same compiler
+and Cargo configuration; the content check still invalidates changed files.
+This makes an unchanged native library reusable across fresh checkouts without
+hiding source changes. Dependency caches remain reusable when Rust source
+changes. A cold or changed native library still requires compilation.
+
 The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
 fetch CLI test. That one exact case receives its ordinary Cargo filter arguments
 without the additional exact-match and output-capture flags; every other case
