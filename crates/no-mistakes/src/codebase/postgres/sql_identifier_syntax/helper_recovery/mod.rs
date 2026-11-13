@@ -172,3 +172,5 @@ mod real_catalog_fixture_tests;
 mod cov_p2_budget_tests;
 #[cfg(test)]
 mod cov_p2_catalog_tests;
+#[cfg(test)]
+mod cov_p2_callback_tests;

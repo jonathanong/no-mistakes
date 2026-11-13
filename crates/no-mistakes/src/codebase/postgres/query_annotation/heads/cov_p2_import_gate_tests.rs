@@ -27,6 +27,10 @@ fn prepared() -> (FileIdMap<CheckFileFacts>, std::path::PathBuf) {
         "flags",
         "producer",
         "records",
+        "callbacks",
+        "callback-matrix",
+        "namespace-matrix",
+        "returned-matrix",
     ]
     .into_iter()
     .map(|name| {
@@ -142,3 +146,6 @@ fn cov_p2_destructuring_requires_plain_record_source_not_builder() {
         .collect::<Vec<_>>();
     assert_eq!(accepted, [true, false]);
 }
+
+#[path = "cov_p2_projection_tests.rs"]
+mod projection_tests;

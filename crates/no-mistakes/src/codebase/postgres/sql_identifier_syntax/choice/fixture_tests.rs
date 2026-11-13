@@ -110,3 +110,6 @@ fn typed_forwarding_keeps_other_profile_executor_obligations() {
         }
     }
 }
+
+#[path = "cov_p2_fixture_tests.rs"]
+mod cov_p2;
