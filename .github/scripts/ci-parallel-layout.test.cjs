@@ -121,3 +121,66 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     assert.match(body, /steps\.native-workspace-cache\.outputs\.cache-hit/);
   }
 });
+
+test("Linux CLI and addon producers preserve their commands and publish separate artifacts", () => {
+  const body = job("linux-runtime");
+  assert.match(body, /fail-fast: false/);
+  assert.match(body, /role: cli\s+binary: target\/debug\/no-mistakes\s/);
+  assert.match(body, /role: addon\s+binary: target\/debug\/no-mistakes\.node\s/);
+  const step = (name) => body.split(`- name: ${name}\n`)[1]?.split(/\n      - name:/)[0];
+  const cli = step("Build Linux CLI");
+  const addon = step("Build Linux N-API addon");
+  assert.match(cli, /if: \$\{\{ matrix.role == 'cli' \}\}/);
+  assert.match(cli, /run: cargo build --locked -p no-mistakes --bin no-mistakes\s*$/);
+  assert.match(addon, /if: \$\{\{ matrix.role == 'addon' \}\}/);
+  assert.match(
+    addon,
+    /NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib\s+cp target\/debug\/libno_mistakes\.so target\/debug\/no-mistakes\.node/,
+  );
+  assert.equal([...body.matchAll(/NO_MISTAKES_BUILD_NAPI/g)].length, 1);
+  assert.doesNotMatch(body, /--all-features|--no-default-features|--release|crate-type =/);
+  assert.match(body, /name: linux-runtime-\$\{\{ matrix.role \}\}/);
+  assert.match(body, /path: \$\{\{ matrix.binary \}\}/);
+  assert.equal([...body.matchAll(/uses: actions\/upload-artifact@/g)].length, 1);
+  assert.match(job("linux-api-tests"), /needs: linux-runtime/);
+  assert.match(job("linux-api-tests"), /pattern: linux-runtime-\*/);
+  assert.match(job("linux-api-tests"), /merge-multiple: true/);
+  assert.match(job("ast-analysis"), /name: linux-runtime-cli/);
+  assert.doesNotMatch(job("ast-analysis"), /pattern: linux-runtime|name: linux-runtime-addon/);
+});
+
+test("Linux role caches restore content sidecars after shared dependencies and before compilation", () => {
+  const body = job("linux-runtime");
+  const dependency = body.indexOf("shared-key: linux-runtime-v1");
+  const workspace = body.indexOf("id: linux-workspace-cache");
+  const restore = body.indexOf("cargo-cache-inputs.cjs restore");
+  const cli = body.indexOf("- name: Build Linux CLI");
+  const addon = body.indexOf("- name: Build Linux N-API addon");
+  const capture = body.indexOf("cargo-cache-inputs.cjs capture");
+  assert.ok(
+    dependency < workspace &&
+      workspace < restore &&
+      restore < cli &&
+      cli < addon &&
+      addon < capture,
+  );
+  assert.match(body, /cache-workspace-crates: false/);
+  assert.match(body, /cache-on-failure: false/);
+  assert.match(body, /workspaces: \. -> target/);
+  assert.match(
+    body,
+    /target\/debug\s+target\/\.rustc_info\.json\s+\$\{\{ runner.temp \}\}\/linux-cargo-inputs/,
+  );
+  const key = body.match(/^          key: ([^\n]+)/m)[1];
+  const fallback = body.match(/restore-keys: \|\n            ([^\n]+)/)[1];
+  assert.equal(key, fallback + "${{ hashFiles('crates/**/*.rs') }}");
+  for (const part of [
+    "matrix.role",
+    "steps.linux-rust-toolchain.outputs.cachekey",
+    "env.RUSTFLAGS",
+    "'Cargo.toml'",
+    "'Cargo.lock'",
+    "'crates/**/Cargo.toml'",
+  ])
+    assert.ok(fallback.includes(part), `Linux cache prefix must retain ${part}`);
+});

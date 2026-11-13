@@ -119,6 +119,50 @@ function casePlan(platform, entries, inventory, index, count) {
   return cases.filter((_, offset) => offset % count === index - 1);
 }
 
+function batchPlan(plan, limit = 24000) {
+  if (!Number.isInteger(limit) || limit < 1)
+    throw new Error("invalid native batch argument budget");
+  const groups = new Map();
+  const seen = new Set();
+  for (const entry of plan) {
+    if (entry.args[0] !== entry.name || !entry.args.includes("--exact"))
+      throw new Error("native batches require exact selected case names");
+    const identity = `${entry.executable}\0${entry.name}`;
+    if (seen.has(identity))
+      throw new Error(`native batch case selected more than once: ${entry.name}`);
+    seen.add(identity);
+    const flags = entry.args.slice(1);
+    const key = JSON.stringify([entry.executable, flags]);
+    if (!groups.has(key)) groups.set(key, { executable: entry.executable, flags, names: [] });
+    groups.get(key).names.push(entry.name);
+  }
+  const batches = [];
+  for (const { executable, flags, names } of groups.values()) {
+    const argumentSize = (value) => 2 * value.length + 3;
+    const baseSize = [path.resolve(executable), ...flags].reduce(
+      (size, arg) => size + argumentSize(arg),
+      1,
+    );
+    let selected = [];
+    let size = baseSize;
+    for (const name of names) {
+      const nextSize = argumentSize(name);
+      if (baseSize + nextSize > limit)
+        throw new Error(`native testcase exceeds Windows argument budget: ${name}`);
+      if (selected.length && size + nextSize > limit) {
+        batches.push({ executable, names: selected, args: [...selected, ...flags] });
+        selected = [];
+        size = baseSize;
+      }
+      selected.push(name);
+      size += nextSize;
+    }
+    if (selected.length)
+      batches.push({ executable, names: selected, args: [...selected, ...flags] });
+  }
+  return batches;
+}
+
 module.exports = {
   collectArtifacts,
   relativeExecutable,
@@ -126,4 +170,5 @@ module.exports = {
   executionPlan,
   parseListing,
   casePlan,
+  batchPlan,
 };

@@ -11,6 +11,7 @@ const {
   executionPlan,
   parseListing,
   casePlan,
+  batchPlan,
 } = require("./native-test-artifacts.cjs");
 const { targets } = require("./native-rust-tests.cjs");
 const expected = require("../../test-cases/native-rust-tests/expected.json");
@@ -201,6 +202,14 @@ for (const platform of ["macOS", "Windows"]) {
             fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
           );
           assert.equal(report.index, index);
+          assert.deepEqual(
+            report.batches.flatMap((batch) => batch.names).sort(),
+            report.plan.map((entry) => entry.name).sort(),
+          );
+          assert.ok(
+            report.batches.length < report.plan.length,
+            "same-harness cases should share a process",
+          );
           results.push(
             ...fs
               .readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8")
@@ -224,10 +233,14 @@ for (const platform of ["macOS", "Windows"]) {
         const selectedNames = inventory.flatMap((group) => group.tests).sort();
         assert.deepEqual(rows.flatMap((row) => row.tests).sort(), selectedNames);
         assert.equal(
-          rows.length,
-          new Set(rows.map((row) => `${row.executable}:${row.tests[0]}`)).size,
+          rows.flatMap((row) => row.tests).length,
+          new Set(rows.flatMap((row) => row.tests.map((name) => `${row.executable}:${name}`))).size,
         );
-        assert.deepEqual(results.map((row) => row.name).sort(), selectedNames);
+        assert.deepEqual(results.flatMap((row) => row.names).sort(), selectedNames);
+        assert.ok(
+          results.some((row) => row.names.length > 1),
+          "archive replay must batch testcase execution",
+        );
         assert.ok(results.every((row) => row.exitCode === 0 && row.elapsedSeconds >= 0));
         if (platform === "Windows")
           assert.ok(
@@ -252,6 +265,15 @@ for (const platform of ["macOS", "Windows"]) {
           fs.readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8").trim(),
         );
         assert.equal(failure.exitCode, 17);
+        assert.ok(failure.names.length > 0);
+        const signalled = invoke(["run", "1", "6"], { NATIVE_TEST_FIXTURE_SIGNAL: "SIGTERM" });
+        assert.equal(signalled.status, 1, signalled.stderr);
+        const termination = JSON.parse(
+          fs.readFileSync(path.join(directory, "target/native-rust-results.jsonl"), "utf8").trim(),
+        );
+        assert.equal(termination.exitCode, null);
+        assert.equal(termination.signal, "SIGTERM");
+        assert.deepEqual(termination.names, failure.names);
         const wrongSource = invoke(["run", "1", "6"], { GITHUB_SHA: "different" });
         assert.equal(wrongSource.status, 1);
         assert.match(wrongSource.stderr, /source SHA mismatch/);
@@ -291,4 +313,49 @@ test("libtest listings reject missing, malformed, duplicate and miscounted cases
   );
   for (const name of ["empty", "malformed", "duplicate", "wrong-count"])
     assert.throws(() => parseListing(listing(name)), /native test/);
+});
+
+test("native batches group only the same harness and original exact flags", () => {
+  const plan = require("../../test-cases/native-test-artifacts/batches.json");
+  const batches = batchPlan(plan);
+  assert.equal(batches.length, 3);
+  assert.deepEqual(batches[0].names, ["module::alpha", "module::beta"]);
+  assert.deepEqual(batches[0].args, [
+    "module::alpha",
+    "module::beta",
+    "--exact",
+    "--test-threads=1",
+  ]);
+  assert.deepEqual(batches[2].args, ["module::gamma", "--exact", "--test-threads=2"]);
+  assert.deepEqual(
+    batches.flatMap((batch) => batch.names).sort(),
+    plan.map((entry) => entry.name).sort(),
+  );
+  assert.throws(() => batchPlan([plan[0], plan[0]]), /more than once/);
+  assert.throws(() => batchPlan([{ ...plan[0], args: [plan[0].name] }]), /exact selected/);
+});
+
+test("native batching splits before the conservative Windows argument budget", () => {
+  const plan = require("../../test-cases/native-test-artifacts/batches.json");
+  const selected = [plan[0], plan[2]].map((entry) => ({
+    ...entry,
+    name: entry.name.repeat(20),
+    args: [entry.name.repeat(20), ...entry.args.slice(1)],
+  }));
+  const batches = batchPlan(selected, 1000);
+  assert.equal(batches.length, 2);
+  assert.deepEqual(
+    batches.flatMap((batch) => batch.names),
+    selected.map((entry) => entry.name),
+  );
+  for (const batch of batches) {
+    const actualUnquotedLength = [path.resolve(batch.executable), ...batch.args].join(" ").length;
+    assert.ok(actualUnquotedLength < 1000);
+  }
+  const huge = plan[0].name.repeat(2000);
+  assert.throws(
+    () => batchPlan([{ ...plan[0], name: huge, args: [huge, "--exact"] }]),
+    /Windows argument budget/,
+  );
+  assert.throws(() => batchPlan(plan, 0), /argument budget/);
 });

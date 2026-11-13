@@ -8,6 +8,7 @@ const {
   executionPlan,
   parseListing,
   casePlan,
+  batchPlan,
 } = require("./native-test-artifacts.cjs");
 const bundle = "target/native-test-artifacts";
 
@@ -122,12 +123,13 @@ function run(index, count) {
     throw new Error("native archive inventory checksum mismatch");
   const inventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
   const plan = casePlan(process.env.RUNNER_OS, manifest.entries, inventory, index, count);
+  const batches = batchPlan(plan);
   fs.writeFileSync(
     "target/native-rust-shard.json",
-    `${JSON.stringify({ index, count, inventory, plan }, null, 2)}\n`,
+    `${JSON.stringify({ index, count, inventory, plan, batches }, null, 2)}\n`,
   );
   fs.writeFileSync("target/native-rust-results.jsonl", "");
-  for (const entry of plan) {
+  for (const entry of batches) {
     console.log(`${entry.executable} ${entry.args.join(" ")}`);
     const started = Date.now();
     const result = spawnSync(path.resolve(entry.executable), entry.args, {

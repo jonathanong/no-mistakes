@@ -19,7 +19,7 @@ The current validation graph is organized as follows:
   [upstream allocator issue](https://github.com/oxc-project/oxc/issues/20331).
   Lightweight policy, report, and aggregate jobs use the slim image where their
   tooling supports it.
-- A Linux CLI and N-API producer uploads its binaries for the AST check and
+- Independent Linux CLI and N-API producers upload their binaries for the AST check and
   Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the
   configured floors. Real-addon behavior remains in its own job.
@@ -33,9 +33,11 @@ The current validation graph is organized as follows:
   the archived test binaries. Native platform jobs build runtime and Rust test
   artifacts separately; six Rust test shards and six real-addon API shards run
   per platform. Native producers enumerate the original filtered Rust harnesses;
-  consumers partition exact case names and retain each execution result. This
-  divides the snapshot suites across runners rather than assigning a whole
-  multi-minute filter to one shard. The platform-specific invocation tests and API checks remain
+  consumers partition exact case names and batch them by harness with the
+  original flags. This preserves normal test concurrency, including the Windows
+  Job Object serial setting, while avoiding repeated harness initialization.
+  Case plans and batch results remain available as artifacts. This divides the
+  snapshot suites across runners. The platform-specific invocation tests and API checks remain
   required.
 - Fan-in jobs preserve the existing required-check names and fail if a
   producer or shard fails. Artifact transfer and per-job setup remain part of
@@ -49,7 +51,7 @@ object inventory is retained with the report diagnostics and applies to LCOV,
 summary totals, and missing-region details. The coverage floors and complexity
 gates remain unchanged.
 
-Native producers restore dependency caches first, then a separate compiler and
+Build producers restore dependency caches first, then a separate compiler and
 Rust-source-keyed workspace cache. The workspace cache contains both Cargo
 artifacts and a manifest of tracked input content hashes. After preparing the
 runtime crate types, a helper restores old timestamps only for unchanged input
@@ -58,7 +60,8 @@ configuration, feature, and dependency fingerprints normally. The manifest is
 captured only after a successful build and saved with that build's artifacts;
 never restore it independently. Workspace fallback keys retain the same compiler
 and Cargo configuration; the content check still invalidates changed files.
-This makes an unchanged native library reusable across fresh checkouts without
+This makes unchanged native and archived Rust test artifacts reusable across
+fresh checkouts without
 hiding source changes. Dependency caches remain reusable when Rust source
 changes. A cold or changed native library still requires compilation.
 

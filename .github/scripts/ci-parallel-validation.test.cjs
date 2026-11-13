@@ -327,3 +327,65 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   assert.doesNotMatch(workflow, /needs\.changes\.outputs\.docs-only/);
 });
+
+test("coverage and standalone producers retain content-verified workspace caches without raw profiles", () => {
+  for (const [name, profile, target, toolchain, compile] of [
+    [
+      "rust-coverage-build",
+      "coverage",
+      "target/coverage/target",
+      "coverage-rust-toolchain",
+      "node .github/scripts/rust-coverage-shards.cjs archive",
+    ],
+    [
+      "standalone-build",
+      "standalone-lib",
+      "target/standalone-lib/target",
+      "standalone-rust-toolchain",
+      "node .github/scripts/standalone-shards.cjs build",
+    ],
+  ]) {
+    const body = workflowJob(name);
+    assert.match(body, /cache-workspace-crates: false/);
+    assert.match(body, /cache-on-failure: false/);
+    assert.ok(body.includes(`id: ${toolchain}`));
+    assert.ok(body.indexOf("uses: Swatinem/rust-cache@") < body.indexOf("uses: actions/cache@"));
+    const overlay = body
+      .split(`      - name: Cache ${profile} workspace artifacts by source\n`)[1]
+      .split("\n      - name:")[0];
+    assert.match(overlay, /uses: actions\/cache@[a-f0-9]{40}/);
+    const key = overlay.match(/^          key: ([^\n]+)/m)[1];
+    const fallback = overlay.match(/restore-keys: \|\n            ([^\n]+)/)[1];
+    assert.equal(key, `${fallback}${"${{ hashFiles('crates/**/*.rs') }}"}`);
+    assert.ok(fallback.includes(`steps.${toolchain}.outputs.cachekey`));
+    assert.ok(fallback.includes("env.RUSTFLAGS"));
+    assert.ok(
+      fallback.includes(
+        "hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml')",
+      ),
+    );
+    const cached = overlay
+      .split("          path: |\n")[1]
+      .trim()
+      .split("\n")
+      .map((line) => line.trim());
+    assert.deepEqual(cached, [
+      `${target}/debug`,
+      `${target}/.rustc_info.json`,
+      `${"${{ runner.temp }}"}/nm-${profile}-cargo-inputs`,
+    ]);
+    assert.doesNotMatch(cached.join("\n"), /profraw|profdata/);
+    const restore = body.indexOf("cargo-cache-inputs.cjs restore");
+    const archive = body.indexOf(compile);
+    const capture = body.indexOf("cargo-cache-inputs.cjs capture");
+    assert.ok(restore > 0 && restore < archive && archive < capture);
+    assert.ok(
+      body.includes(`restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-${profile}-cargo-inputs"`),
+    );
+    assert.ok(
+      body.includes(`capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-${profile}-cargo-inputs"`),
+    );
+    if (name === "rust-coverage-build")
+      assert.ok(body.indexOf("source <(cargo llvm-cov show-env --sh)") < restore);
+  }
+});

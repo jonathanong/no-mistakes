@@ -81,10 +81,9 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
         producer["steps"].as_sequence().unwrap(),
         "Build standalone library without a CLI",
     );
-    assert_eq!(
-        build["run"].as_str(),
-        Some("node .github/scripts/standalone-shards.cjs build target/standalone-bundle")
-    );
+    assert!(build["run"].as_str().unwrap().lines().any(|line| {
+        line.trim() == "node .github/scripts/standalone-shards.cjs build target/standalone-bundle"
+    }));
     let helper = include_str!("../../../.github/scripts/standalone-shards.cjs");
     assert!(helper.contains("delete childEnv[\"CARGO_BIN_EXE_no-mistakes\"]"));
     assert!(helper.contains("standalone library validation must not build the CLI"));

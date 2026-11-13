@@ -1,0 +1,6 @@
+[
+  {"executable":"target/debug/deps/first harness","name":"module::alpha","args":["module::alpha","--exact","--test-threads=1"]},
+  {"executable":"target/debug/deps/second","name":"module::delta","args":["module::delta","--exact"]},
+  {"executable":"target/debug/deps/first harness","name":"module::beta","args":["module::beta","--exact","--test-threads=1"]},
+  {"executable":"target/debug/deps/first harness","name":"module::gamma","args":["module::gamma","--exact","--test-threads=2"]}
+]
