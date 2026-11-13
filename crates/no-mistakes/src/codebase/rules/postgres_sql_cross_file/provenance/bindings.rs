@@ -140,3 +140,7 @@ mod assignment_initializers_tests;
 #[cfg(test)]
 #[path = "bindings/assignment_boundary_fixture_tests.rs"]
 mod assignment_boundary_fixture_tests;
+
+#[cfg(test)]
+#[path = "bindings/coverage_boundary_tests.rs"]
+mod coverage_boundary_tests;
