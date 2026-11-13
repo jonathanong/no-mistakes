@@ -151,11 +151,9 @@ fn lock_open_io_errors_keep_their_cause_and_clear_early_cli_deadlines() {
             .err()
             .expect("a directory cannot be opened as an invocation lock file");
             assert!(error.to_string().contains("opening invocation lock"));
-            assert!(
-                error
-                    .to_string()
-                    .contains(&fixture.path().display().to_string())
-            );
+            assert!(error
+                .to_string()
+                .contains(&fixture.path().display().to_string()));
             assert!(error.downcast_ref::<std::io::Error>().is_some());
             assert!(error.downcast_ref::<InvocationError>().is_none());
             assert_eq!(exit_code(&error), 2);
