@@ -9,10 +9,16 @@ for (const [fixture, selected] of [
   ["superseded-2065-import-order-fixture", 3],
 ]) {
   const root = join(__dirname, "../../../test-cases/rules/query-reached-per-item", fixture);
-  const expected = JSON.parse(readFileSync(join(root, "expected-lines.json"), "utf8"));
-  for (const [entry, lines] of Object.entries(expected)) {
+  const expected = Object.entries(
+    JSON.parse(readFileSync(join(root, "expected-lines.json"), "utf8")),
+  );
+  const reports = [
+    ...expected.map(([entry]) => ({ type: "effects", kind: "postgres", entry })),
+    { type: "check" },
+  ];
+  for (const [index, [entry, lines]] of expected.entries()) {
     test(
-      `compiled preserved provenance effects: ${fixture}: ${entry}`,
+      `compiled preserved provenance entry: ${fixture}/${entry}`,
       { skip: !compiled },
       async () => {
         const cjs = require("../index.js");
@@ -26,15 +32,16 @@ for (const [fixture, selected] of [
           lines.map((line) => [entry, line]),
         );
         assert.deepEqual(await esm.effects(options), result);
+        const prepared = await cjs.analyzeProject({ root, reports });
+        assert.deepEqual(prepared.reports[index].result, result);
       },
     );
   }
-  test(`compiled preserved provenance check: ${fixture}`, { skip: !compiled }, async () => {
+
+  test(`compiled preserved provenance root parity: ${fixture}`, { skip: !compiled }, async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
-    const wanted = Object.entries(expected).flatMap(([file, lines]) =>
-      lines.map((line) => [file, line]),
-    );
+    const wanted = expected.flatMap(([file, lines]) => lines.map((line) => [file, line]));
     assert.equal(wanted.length, selected);
     const check = await cjs.check({ root });
     assert.deepEqual(
@@ -42,6 +49,10 @@ for (const [fixture, selected] of [
       wanted,
     );
     assert.deepEqual(await esm.check({ root }), check);
+    const prepared = await cjs.analyzeProject({ root, reports });
+    assert.equal(prepared.reports.length, reports.length);
+    assert.deepEqual(prepared.reports[expected.length].result, check);
+    assert.deepEqual(await esm.analyzeProject({ root, reports }), prepared);
   });
   test(
     `compiled preserved provenance mixed-demand union: ${fixture}`,
@@ -51,7 +62,7 @@ for (const [fixture, selected] of [
       const esm = await import("../index.mjs");
       const reports = [];
       const results = [];
-      for (const entry of Object.keys(expected)) {
+      for (const [entry] of expected) {
         reports.push({ type: "effects", kind: "postgres", entry });
         results.push(await cjs.effects({ root, kind: "postgres", entry }));
       }
