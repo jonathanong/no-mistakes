@@ -45,8 +45,10 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT ship a job that locks contended rows without retrying deadlocks with jittered backoff.
 - MUST NOT keep using a transaction after a statement fails unless it ran in a savepoint you rolled back to; every later statement fails with `25P02`.
 - MUST NOT run logging or metrics code that queries the database on the transaction's connection; its failure aborts the transaction.
+- MUST NOT rely on `SERIALIZABLE` to stop a racing writer unless each transaction reads rows the other writes. A guard (hold, ban, cancel) must read the rows the writer would change; otherwise SSI orders the writer first with no `40001`.
 - SHOULD NOT add `FOR UPDATE` to a subquery or pre-select whose rows the same `UPDATE` or `DELETE` already locks and whose values you do not read; it only adds a second lock order. A `SKIP LOCKED` claim subquery is fine.
 - SHOULD NOT wait unboundedly on a row lock in a request path; use `NOWAIT` or `lock_timeout` and return 409.
+- SHOULD NOT add generation, revision, claim, or counter columns, or claim tables, to coordinate concurrent writers. Make the write idempotent, or run the rare conflicting transactions at `SERIALIZABLE` and surface `40001` as 409 or leave the work to the next scheduled run. Lease tokens for leased work are not coordination columns.
 
 ## Schema and migrations
 
@@ -56,6 +58,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT exceed 63-byte identifiers; PostgreSQL truncates them silently.
 - MUST NOT put `now()` or `timestamptz + interval` in generated or index expressions; they are not immutable.
 - MUST NOT run DDL or session settings from runtime or seed SQL; keep them in migrations.
+- MUST NOT raise `statement_timeout` or idle timeouts to make slow work fit; split, reorder, or shrink the work. Exception: a migration step that cannot be split, such as an index build on a large table, may raise it for that step only (`SET LOCAL` in a transaction, or `SET` then `RESET` around a `CONCURRENTLY` build) with its reason stated beside it.
 - MUST NOT hand-sync a status column beside lifecycle timestamps; derive one from the other.
 - MUST NOT update or delete append-only history rows; reject it with a trigger.
 - MUST NOT add a `NOT NULL`, unique, or check constraint without first querying for rows that already violate it.
@@ -67,6 +70,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT use natural text keys as primary or foreign keys.
 - SHOULD NOT add an index that is a prefix of another, or copy near-identical trigger functions.
 - SHOULD NOT write `updated_at` from application code; maintain it with a trigger.
+- SHOULD NOT add `updated_at` or its trigger to rows that are only inserted and deleted.
+- SHOULD NOT repeat a column's value inside a JSON column on the same row.
 - SHOULD NOT keep durable rows without a retention window (user content excepted).
 
 ## Partitioning and UUIDv7
