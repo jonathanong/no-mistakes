@@ -204,11 +204,12 @@ test("only Windows native timing breaches are report-only", () => {
       / {6}- name: Report real N-API test durations\n[\s\S]*?(?=\n {6}- name:)/g,
     ),
   ];
-  assert.equal(reports.length, 2);
+  assert.equal(reports.length, 3);
   assert.doesNotMatch(reports[0][0], /--report-only|continue-on-error/);
-  assert.match(reports[1][0], /runner\.os == 'Windows' && '--report-only' \|\| ''/);
-  // Keep malformed reports and test failures fatal; only timing breaches warn.
-  assert.doesNotMatch(reports[1][0], /continue-on-error/);
+  for (const report of reports.slice(1)) {
+    assert.match(report[0], /runner\.os == 'Windows' && '--report-only' \|\| ''/);
+    assert.doesNotMatch(report[0], /continue-on-error/);
+  }
 });
 
 test("native CI jobs run only platform-specific Rust tests", () => {

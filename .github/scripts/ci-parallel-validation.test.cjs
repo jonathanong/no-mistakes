@@ -1,3 +1,4 @@
+const { workflowJob: readWorkflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const { readFileSync } = require("node:fs");
@@ -17,7 +18,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const required = duration + observed.startupTeardownReserveSeconds;
   assert.ok(required > 120, "the observed suite cannot safely fit the former two-minute step");
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const native = workflow.split("\n  native-api-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const native = `${readWorkflowJob(workflow, "native-api-tests")}\n${readWorkflowJob(workflow, "native-api-tests-macos")}`;
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
   assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
@@ -50,9 +51,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
 
 const workflowJob = (name) => {
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const job = workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
-  assert.ok(job, `workflow must retain the ${name} job`);
-  return job;
+  return readWorkflowJob(workflow, name);
 };
 const jobBudgetSeconds = (job) => Number(job.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
 function stepBudgetSeconds(job, name, platform = "Windows") {
@@ -417,7 +416,9 @@ test("every workspace producer prefers exact Cargo configuration before compiler
   const producers = [
     "linux-runtime",
     "native-build",
+    "native-build-macos",
     "native-test-build",
+    "native-test-build-macos",
     "standalone-build",
     "rust-coverage-build",
   ];
@@ -447,7 +448,12 @@ test("every workspace producer prefers exact Cargo configuration before compiler
     workflowJob("linux-runtime"),
     /key: linux-runtime-workspace-v1-\$\{\{ matrix\.role \}\}/,
   );
-  for (const name of ["native-build", "native-test-build"]) {
+  for (const name of [
+    "native-build",
+    "native-build-macos",
+    "native-test-build",
+    "native-test-build-macos",
+  ]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
     const dependencies = body

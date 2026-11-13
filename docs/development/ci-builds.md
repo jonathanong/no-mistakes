@@ -31,8 +31,11 @@ The current validation graph is organized as follows:
   and complexity gates.
 - Standalone library tests build without the CLI, then run as four shards from
   the archived test binaries. Native platform jobs build runtime and Rust test
-  artifacts separately. Windows runs six Rust shards and six real-addon API
-  shards; macOS runs two of each, with every selected case still executed once.
+  artifacts separately. Each platform has its own producer and consumer jobs,
+  so its tests start when its artifacts are ready without waiting for the other
+  platform. Contract tests keep their build and test commands aligned.
+  Windows runs six Rust shards and six real-addon API shards; macOS runs two of
+  each, with every selected case still executed once.
   The [completed seed run](https://github.com/jonathanong/no-mistakes/actions/runs/43378356388)
   showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
   queue waits of 8–12 minutes with roughly two jobs running concurrently.
@@ -155,6 +158,24 @@ pressure. Subsequent macOS Rust shards waited as long as 7m57s before starting;
 in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
 macOS matrices use two shards per family to reduce repeated setup and runner
 contention, while Windows retains six.
+
+A later completed run,
+[`43389713210`](https://github.com/jonathanong/no-mistakes/actions/runs/43389713210)
+at `56c7d9064`, passed in **19m49s** with 70 passing checks. Its macOS Rust
+producer restored a compatible workspace snapshot: all four Cargo commands
+reused their targets, taking 5.59 seconds combined, and the producer completed
+in 3m08s including setup and artifact handling. Linux CLI/addon producers took
+56/60 seconds. The macOS runtime producer missed every workspace fallback and
+compiled for 11m52s, taking 14m49s overall. Coverage and standalone producers
+also missed workspace caches and took 8m42s and 7m22s overall.
+
+That run exposed a separate matrix dependency delay: macOS Rust consumers
+waited 6m17s for the Windows producer, while Windows API consumers waited
+9m00s for the macOS runtime producer. Native pipelines now use independent
+producer and consumer jobs per platform. Each platform can start its tests as
+soon as its own artifacts are ready; the aggregate still requires every job.
+The split requires a subsequent completed measurement and does not change the
+cold-compilation bound or cache retention limits.
 
 Cold compilation on the current macOS runner already exceeds ten minutes
 before test execution. Reaching ten minutes reliably also requires retained

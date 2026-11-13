@@ -1,3 +1,4 @@
+const { workflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -114,7 +115,7 @@ for (const platform of ["Windows", "macOS"]) {
 
 test("native workflow compiles independent archives and consumers never build Rust", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const job = (name) => workflowJob(workflow, name);
   const runtime = job("native-build");
   const archive = job("native-test-build");
   assert.match(runtime, /node \.github\/scripts\/build-native.cjs/);
@@ -140,7 +141,10 @@ test("native workflow compiles independent archives and consumers never build Ru
   );
   assert.match(api, /needs: \[changes, native-build\]/);
   assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
-  for (const consumer of [rust, api]) {
+  for (const consumer of [
+    `${rust}\n${job("native-rust-tests-macos")}`,
+    `${api}\n${job("native-api-tests-macos")}`,
+  ]) {
     const rows = [
       ...consumer.matchAll(/- os:\s+(\S+)\s+target:\s+(\S+)\s+shard:\s+(\d+)\s+total:\s+(\d+)/g),
     ];
@@ -182,7 +186,7 @@ test("split native compile deadlines retain historical cold-build evidence", () 
   const evidence = require("../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json");
   const baseline = require("../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json");
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const job = (name) => workflowJob(workflow, name);
   const deadline = (text, step) =>
     Number(
       text
@@ -243,3 +247,5 @@ test("native job timing reports the split compile phases and rejects incomplete 
   assert.match(markdown, /\| Precompile native Rust test targets \| n\/a \| 15m 0s \|/);
   assert.match(markdown, /base run incomplete/);
 });
+
+require("./native-platform-jobs.test.cjs");

@@ -1,3 +1,4 @@
+const { workflowJob: readWorkflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
@@ -6,9 +7,7 @@ const { test } = require("node:test");
 const root = path.resolve(__dirname, "../..");
 const workflowJob = (name) => {
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const job = workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
-  assert.ok(job, `workflow must retain the ${name} job`);
-  return job;
+  return readWorkflowJob(workflow, name);
 };
 const jobBudgetSeconds = (job) => Number(job.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
 function stepBudgetSeconds(job, name, platform = "Windows") {

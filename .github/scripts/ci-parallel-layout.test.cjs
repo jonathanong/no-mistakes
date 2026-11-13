@@ -1,3 +1,4 @@
+const { workflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const { readFileSync } = require("node:fs");
@@ -5,7 +6,7 @@ const path = require("node:path");
 const { test } = require("node:test");
 const root = path.resolve(__dirname, "../..");
 const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-const job = (name) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
+const job = (name) => workflowJob(workflow, name);
 const results = JSON.parse(
   readFileSync(path.join(root, "test-cases/ci-speed/fixture/aggregate-results.json"), "utf8"),
 );
@@ -64,9 +65,13 @@ test("required names and every full test family remain in the aggregate", () => 
     "standalone-build",
     "standalone-shards",
     "native-build",
+    "native-build-macos",
     "native-test-build",
+    "native-test-build-macos",
     "native-rust-tests",
+    "native-rust-tests-macos",
     "native-api-tests",
+    "native-api-tests-macos",
     "javascript-shards",
   ])
     assert.doesNotMatch(job(name), /docs-only.*!= 'true'/);
@@ -96,7 +101,12 @@ test("documentation tests cannot delay coverage archive consumers", () => {
 });
 
 test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
-  for (const id of ["native-build", "native-test-build"]) {
+  for (const id of [
+    "native-build",
+    "native-build-macos",
+    "native-test-build",
+    "native-test-build-macos",
+  ]) {
     const body = job(id);
     assert.ok(body.indexOf("id: native-rust-cache") < body.indexOf("id: native-workspace-cache"));
     assert.match(body, /cache-workspace-crates: false/);
@@ -113,7 +123,7 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     assert.ok(fallback.includes("hashFiles('Cargo.toml'"));
     const restore = body.indexOf("cargo-cache-inputs.cjs restore");
     const compile = body.indexOf(
-      id === "native-build"
+      id.startsWith("native-build")
         ? "node .github/scripts/build-native.cjs"
         : "node .github/scripts/native-test-archive.cjs build",
     );

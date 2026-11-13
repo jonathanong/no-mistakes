@@ -1,3 +1,4 @@
+const { workflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
@@ -10,7 +11,7 @@ const observed = (name) =>
     readFileSync(path.join(root, "test-cases/rust-validation/fixture", `${name}.json`), "utf8"),
   );
 const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+const job = (name) => workflowJob(workflow, name);
 const seconds = (value, platform) => {
   if (/^\d+$/.test(value)) return Number(value) * 60;
   const conditional = value.match(/^\$\{\{ runner\.os == '([^']+)' && (\d+) \|\| (\d+) \}\}$/);
@@ -160,9 +161,13 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
 test("component job deadlines bound their steps while gates only aggregate results", () => {
   for (const name of [
     "native-build",
+    "native-build-macos",
     "native-test-build",
+    "native-test-build-macos",
     "native-rust-tests",
+    "native-rust-tests-macos",
     "native-api-tests",
+    "native-api-tests-macos",
     "linux-runtime",
     "linux-api-tests",
     "javascript-shards",
