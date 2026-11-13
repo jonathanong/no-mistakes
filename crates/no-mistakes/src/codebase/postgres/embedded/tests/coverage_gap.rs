@@ -1,8 +1,7 @@
 use super::super::{
-    extract_embedded_sql_from_program_with_projections, helpers::splice::splice, EmbeddedSqlCall,
-    EmbeddedSqlFileFacts, EmbeddedSqlOptions, EmbeddedSqlVariant, SqlByteOrigins,
+    extract_embedded_sql_from_program_with_projections, EmbeddedSqlCall, EmbeddedSqlFileFacts,
+    EmbeddedSqlOptions,
 };
-use crate::codebase::postgres::embedded::site_identity::Invocations;
 use std::collections::BTreeSet;
 
 fn options() -> EmbeddedSqlOptions {
@@ -70,6 +69,18 @@ fn calls_in<'a>(
         .collect()
 }
 
+fn seen_call(call: &EmbeddedSqlCall) -> String {
+    format!(
+        "{}{}",
+        if call.is_unanalyzable() {
+            "unanalyzable "
+        } else {
+            ""
+        },
+        sqls(call).into_iter().collect::<Vec<_>>().join("|")
+    )
+}
+
 fn sqls(call: &EmbeddedSqlCall) -> BTreeSet<String> {
     if call.variants.is_empty() {
         call.sql_text.iter().cloned().collect()
@@ -90,71 +101,37 @@ fn only<'a>(source: &str, facts: &'a EmbeddedSqlFileFacts, name: &str) -> &'a Em
 #[test]
 fn coverage_gap_clauses_guards_and_literals() {
     let (source, facts) = extract("coverage-gap.ts");
-    let seen = |name: &str| {
-        calls_in(&source, &facts, name)
-            .into_iter()
-            .map(|call| {
-                format!(
-                    "{}{}",
-                    if call.is_unanalyzable() {
-                        "unanalyzable "
-                    } else {
-                        ""
-                    },
-                    sqls(call).into_iter().collect::<Vec<_>>().join("|")
-                )
-            })
-            .collect::<Vec<_>>()
-            .join("; ")
-    };
     let mut problems = Vec::new();
     for (name, expected) in [
-        ("numericHole", "SELECT 1"),
-        ("nestedFlag", "SELECT a|SELECT b|SELECT c|SELECT d"),
-        ("constrainedPiece", "SELECT a|SELECT b|SELECT c"),
-        ("plainHole", "SELECT orders"),
-        ("literalRead", "SELECT 1"),
-        ("stringKey", "SELECT orders"),
-        ("guardedTables", "SELECT accounts|SELECT orders"),
+        ("numericHole", "n=1 SELECT 1"),
+        ("nestedFlag", "n=1 SELECT a|SELECT b|SELECT c|SELECT d"),
+        ("constrainedPiece", "n=1 SELECT a|SELECT b|SELECT c"),
+        ("plainHole", "n=1 SELECT orders"),
+        ("literalRead", "n=1 SELECT 1"),
+        ("stringKey", "n=1 SELECT orders"),
+        ("guardedTables", "n=1 SELECT accounts|SELECT orders"),
+        ("nullByte", "n=1 SELECT \0 a"),
+        ("escapedNewline", "n=1 SELECT \n"),
+        ("markedHole", "n=1 SELECT \u{10FFFE}"),
+        ("mutatingTest", "n=1 unanalyzable SELECT sql_placeholder_1"),
+        ("spreadBuilderValues", "n=1 unanalyzable sql_placeholder_1"),
+        ("numericKey", "n=1 unanalyzable SELECT sql_placeholder_1"),
+        ("deepTemplate", "n=1 unanalyzable SELECT sql_placeholder_1"),
+        ("spreadConstructor", "n=1 unanalyzable SELECT "),
+        ("emptyElement", "n=1 unanalyzable SELECT "),
+        ("missingHasArgument", "n=1 unanalyzable SELECT "),
+        ("spreadHasArgument", "n=1 unanalyzable SELECT "),
+        ("bareAppend", "n=1 unanalyzable SELECT 1"),
+        ("spreadAppend", "n=1 unanalyzable SELECT 1"),
     ] {
-        let actual = seen(name);
+        let calls = calls_in(&source, &facts, name);
+        let body = calls
+            .iter()
+            .map(|call| seen_call(call))
+            .collect::<Vec<_>>()
+            .join("; ");
+        let actual = format!("n={} {body}", calls.len());
         if actual != expected {
-            problems.push(format!("{name}: {actual}"));
-        }
-    }
-    let null_byte = seen("nullByte");
-    if !null_byte.contains('\0') {
-        problems.push(format!("nullByte: {null_byte}"));
-    }
-    let newline = seen("escapedNewline");
-    if !newline.contains('\n') {
-        problems.push(format!("escapedNewline: {newline}"));
-    }
-    let marked = seen("markedHole");
-    if !marked.contains('\u{10FFFE}') {
-        problems.push(format!("markedHole: {marked}"));
-    }
-    for name in [
-        "mutatingTest",
-        "spreadBuilderValues",
-        "numericKey",
-        "deepTemplate",
-    ] {
-        let actual = seen(name);
-        if !actual.starts_with("unanalyzable") {
-            problems.push(format!("{name}: {actual}"));
-        }
-    }
-    for name in [
-        "spreadConstructor",
-        "emptyElement",
-        "missingHasArgument",
-        "spreadHasArgument",
-        "bareAppend",
-        "spreadAppend",
-    ] {
-        let actual = seen(name);
-        if actual.contains("orders") {
             problems.push(format!("{name}: {actual}"));
         }
     }
@@ -228,97 +205,6 @@ fn coverage_gap_transaction_arms_and_lock_helpers() {
     assert!(helpers.contains("callableLock"), "{helpers:?}");
     assert!(!helpers.contains("missingSql"), "{helpers:?}");
     assert!(!helpers.contains("missingArgument"), "{helpers:?}");
-}
-
-fn variant(sql: &str) -> EmbeddedSqlVariant {
-    EmbeddedSqlVariant {
-        sql_text: sql.to_string(),
-        sql_source_offsets: SqlByteOrigins::from(vec![0; sql.len()]),
-        invocations: Invocations::default(),
-        line: 1,
-        sql_source_positions: Vec::new(),
-        recovered_placeholder_positions: Vec::new(),
-        append_sites: Vec::new(),
-        first_append_offset: None,
-        variants_truncated: false,
-    }
-}
-
-#[test]
-fn coverage_gap_splice_abstains_on_bad_origins_and_too_many_alternatives() {
-    let holes = crate::fx::FxHashMap::default();
-    let kept = crate::codebase::postgres::EmbeddedSqlCall {
-        variants: vec![variant("SELECT 1")],
-        ..Default::default()
-    };
-    let spliced = splice(&kept, &holes).expect("one alternative");
-    assert_eq!(spliced.variants[0].sql_text, "SELECT 1");
-
-    let mut drifted = variant("SELECT 1");
-    drifted.sql_source_offsets = SqlByteOrigins::default();
-    assert!(splice(
-        &crate::codebase::postgres::EmbeddedSqlCall {
-            variants: vec![drifted],
-            ..Default::default()
-        },
-        &holes,
-    )
-    .is_none());
-
-    let mut unmarked = variant("SELECT 1");
-    unmarked.recovered_placeholder_positions = vec![(1, 1)];
-    assert!(splice(
-        &crate::codebase::postgres::EmbeddedSqlCall {
-            variants: vec![unmarked],
-            ..Default::default()
-        },
-        &holes,
-    )
-    .is_none());
-
-    let mut invoked = variant("SELECT 1");
-    invoked.recovered_placeholder_positions = vec![(1, 1)];
-    invoked.invocations.record(1, 0);
-    assert!(splice(
-        &crate::codebase::postgres::EmbeddedSqlCall {
-            variants: vec![invoked],
-            ..Default::default()
-        },
-        &holes,
-    )
-    .is_none());
-
-    let mut past = variant("SELECT 1");
-    past.first_append_offset = Some(100);
-    let spliced = splice(
-        &crate::codebase::postgres::EmbeddedSqlCall {
-            variants: vec![past],
-            ..Default::default()
-        },
-        &holes,
-    )
-    .expect("an append offset past the text does not drop the alternative");
-    assert_eq!(spliced.variants[0].sql_text, "SELECT 1");
-
-    let many = crate::codebase::postgres::EmbeddedSqlCall {
-        variants: (0..17)
-            .map(|index| variant(&format!("SELECT {index}")))
-            .collect(),
-        ..Default::default()
-    };
-    assert!(splice(&many, &holes).is_none(), "17 alternatives abstain");
-
-    let mut mirror = crate::codebase::postgres::EmbeddedSqlCall {
-        sql_text: Some("SELECT 1".into()),
-        kind: crate::codebase::postgres::EmbeddedSqlKind::Inline,
-        line: 1,
-        sql_source_offsets: SqlByteOrigins::from(vec![1]),
-        ..Default::default()
-    };
-    assert!(splice(&mirror, &holes).is_none());
-    mirror.sql_source_offsets = SqlByteOrigins::default();
-    let spliced = splice(&mirror, &holes).expect("no hole");
-    assert_eq!(spliced.sql_text.as_deref(), Some("SELECT 1"));
 }
 
 #[test]

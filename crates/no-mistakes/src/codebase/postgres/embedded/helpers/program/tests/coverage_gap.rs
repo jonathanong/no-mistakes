@@ -26,23 +26,23 @@ fn coverage_gap_lowered_programs() {
         "sql:SELECT 1"
     );
     super::fails(&programs, "openBag", &[SiteArg::Builder]);
-    for (name, args) in [
-        ("undefKey", vec![SiteArg::Bool(true)]),
-        (
+    let both = [
+        "sql:SELECT 1 AND a = 1".to_string(),
+        "sql:SELECT 1".to_string(),
+    ];
+    assert_eq!(
+        super::exec(&programs, "undefKey", &[SiteArg::Scalar]).expect("undefKey"),
+        both
+    );
+    assert_eq!(
+        super::exec(
+            &programs,
             "eqAnd",
-            vec![
-                SiteArg::Bool(true),
-                SiteArg::Bool(false),
-                SiteArg::Bool(true),
-            ],
-        ),
-    ] {
-        let rendered = super::exec(&programs, name, &args).unwrap_or_else(|| panic!("{name}"));
-        assert!(
-            rendered.iter().all(|item| item.contains("SELECT 1")),
-            "{name}: {rendered:?}"
-        );
-    }
+            &[SiteArg::Bool(true), SiteArg::Bool(false), SiteArg::Scalar,],
+        )
+        .expect("eqAnd"),
+        both
+    );
     assert_eq!(
         super::one(&programs, "defaultSql", &[super::lit("a")]),
         "str:no"

@@ -12,10 +12,33 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::anyhow;
 use std::path::{Path, PathBuf};
 
-fn rule(id: &str, options: &str) -> RuleDef {
+fn options(name: &str) -> serde_yaml::Value {
+    let source = match name {
+        "parent-catalog.yml" => {
+            include_str!(
+                "../../../../../../fixtures/postgres-facts/prepared-rules/parent-catalog.yml"
+            )
+        }
+        "low-alias.yml" => {
+            include_str!("../../../../../../fixtures/postgres-facts/prepared-rules/low-alias.yml")
+        }
+        "invalid-include.yml" => {
+            include_str!(
+                "../../../../../../fixtures/postgres-facts/prepared-rules/invalid-include.yml"
+            )
+        }
+        "empty.yml" => {
+            include_str!("../../../../../../fixtures/postgres-facts/prepared-rules/empty.yml")
+        }
+        _ => unreachable!("saved prepared-rule fixture"),
+    };
+    serde_yaml::from_str(source).unwrap_or_else(|error| panic!("{name}: {error}"))
+}
+
+fn rule(id: &str, fixture: &str) -> RuleDef {
     RuleDef {
         rule: id.to_string(),
-        options: serde_yaml::from_str(options).expect("options"),
+        options: options(fixture),
         scope: Some(RuleScope::Repository),
         ..Default::default()
     }
@@ -39,7 +62,7 @@ fn coverage_gap_prepared_rule_errors() {
     let sources = source_store_for_files(files);
     let facts = CheckFactMap::default();
 
-    let schema = configured(rule("postgres-fk-index", "schemaCatalogPath: ..\n"));
+    let schema = configured(rule("postgres-fk-index", "parent-catalog.yml"));
     let err = check_prepared_schema_rule(
         root,
         &schema,
@@ -54,10 +77,7 @@ fn coverage_gap_prepared_rule_errors() {
         "schema catalog path must fail before a scan"
     );
 
-    let low = configured(rule(
-        "postgres-no-offset",
-        "effort: low\nimportSpecifier: db\nunanalyzableSql: nope\n",
-    ));
+    let low = configured(rule("postgres-no-offset", "low-alias.yml"));
     let err = check_prepared_sql_rule(
         root,
         &low,
@@ -72,10 +92,7 @@ fn coverage_gap_prepared_rule_errors() {
         "low effort must reject an unknown unanalyzableSql alias"
     );
 
-    let insert = configured(rule(
-        "postgres-idempotent-insert",
-        "importSpecifier: db\ninclude: ['[']\n",
-    ));
+    let insert = configured(rule("postgres-idempotent-insert", "invalid-include.yml"));
     let err = check_prepared_sql_rule(
         root,
         &insert,
@@ -90,10 +107,7 @@ fn coverage_gap_prepared_rule_errors() {
         "idempotent-insert include is compiled while reporting dropped SQL"
     );
 
-    let columns = configured(rule(
-        "postgres-explicit-columns",
-        "importSpecifier: db\ninclude: ['[']\n",
-    ));
+    let columns = configured(rule("postgres-explicit-columns", "invalid-include.yml"));
     let err = check_prepared_sql_rule(
         root,
         &columns,
@@ -108,7 +122,7 @@ fn coverage_gap_prepared_rule_errors() {
         "undeclared-executor scope fails on its own include glob"
     );
 
-    let mut projects = configured(rule("postgres-fk-index", ""));
+    let mut projects = configured(rule("postgres-fk-index", "empty.yml"));
     projects.rules[0].projects = vec!["web".into()];
     projects.projects.insert(
         "web".into(),
@@ -124,7 +138,7 @@ fn coverage_gap_prepared_rule_errors() {
         "schema lookup must reject a project include before reading a catalog"
     );
 
-    let compiled = configured(rule("postgres-fk-index", ""));
+    let compiled = configured(rule("postgres-fk-index", "empty.yml"));
     let context = PreparedRuleContext::new(root, &compiled, files, &sources, &facts);
     let err = run_prepared_file_rule(
         context,
