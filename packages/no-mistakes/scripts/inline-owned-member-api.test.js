@@ -138,7 +138,7 @@ test("CI registers inline acquisitions and mutable receiver cases exactly once",
     .map((section) => section.split("\n      - name:")[0]);
   const bridge = readFileSync(join(__dirname, "real-napi-api.test.js"), "utf8");
   assert.ok(bridge.includes('require("./inline-owned-member-api.test.js");'));
-  assert.equal(steps.length, 2, "Linux and native platform addon steps");
+  assert.equal(steps.length, 3, "Linux, Windows, and macOS addon steps");
   const nativeFiles = require("../../../.github/scripts/native-api-shards.cjs").files;
   for (const step of steps) {
     assert.match(step, /NO_MISTAKES_TEST_NAPI_ADDON_PATH=/u);
