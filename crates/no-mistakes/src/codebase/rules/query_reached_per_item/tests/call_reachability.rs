@@ -295,3 +295,64 @@ fn contextually_typed_stage_arrows_reach_executor_typed_parameters() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn computed_stage_keys_and_aliased_signatures_keep_contextual_targets_conservative() {
+    use crate::codebase::dependencies::extract::ValueType;
+    use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &root().with_file_name("contextual-stage-boundaries-fixture"),
+    );
+    let file = root.join("src/cases.mts");
+    let plan = GraphBuildPlan {
+        calls: true,
+        ..Default::default()
+    };
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
+        std::slice::from_ref(&file),
+        plan.ts_fact_plan(),
+    );
+    let flow = &facts[&file].value_flow;
+    assert_eq!(flow.contextual_callbacks.len(), 1);
+    assert!(matches!(
+        flow.contextual_callbacks.values().next().unwrap(),
+        ValueType::Member(base, member)
+            if matches!(base.as_ref(), ValueType::Reference(name) if name == "Stage")
+                && member == "run"
+    ));
+    let parameter = |name: &str| {
+        flow.parameters
+            .iter()
+            .find(|parameter| parameter.name == name)
+            .unwrap()
+    };
+    for name in ["spreadQuery", "dynamicQuery", "computedQuery"] {
+        assert!(parameter(name).type_reference.is_none(), "{name}");
+    }
+    assert!(matches!(
+        &parameter("aliasQuery").type_reference,
+        Some(ValueType::Param(callback, 0))
+            if callback.as_ref() == flow.contextual_callbacks.values().next().unwrap()
+    ));
+    let config = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        ..Default::default()
+    };
+    let graph = DepGraph::build_with_plan(&root, &config, plan).unwrap();
+    let call = |callee: &str| {
+        graph
+            .resolved_call_sites()
+            .iter()
+            .find(|site| site.file == file && site.source_callee == callee)
+            .unwrap()
+    };
+    let stage = call("stage.run");
+    assert!(!stage.has_unknown_target(), "{stage:?}");
+    assert_eq!(stage.target_nodes().count(), 1, "{stage:?}");
+    for callee in ["spreadQuery", "dynamicQuery", "computedQuery", "aliasQuery"] {
+        let site = call(callee);
+        assert!(site.has_unknown_target(), "{site:?}");
+        assert_eq!(site.target_nodes().count(), 0, "{site:?}");
+    }
+}
