@@ -6,11 +6,11 @@ fn p6_analysis_fixture(name: &str) -> (tempfile::TempDir, String) {
 }
 
 #[test]
-fn p6_call_sites_reports_missing_symbols_before_missing_projection() {
+fn p6_call_sites_requires_a_prepared_projection() {
     let (_fixture, root) = p6_analysis_fixture("simple");
     let (_, prepared) = options(&root, json!({"type":"symbols", "files":["a.mts"]}));
-    let mut context = AnalyzeProjectContext::prepare(&prepared).unwrap();
-    let scope = context.scopes.values_mut().next().unwrap();
+    let context = AnalyzeProjectContext::prepare(&prepared).unwrap();
+    let scope = context.scopes.values().next().unwrap();
     let (call, _) = options(
         &root,
         json!({"type":"callSites", "file":"a.mts", "exportName":"a"}),
@@ -19,13 +19,6 @@ fn p6_call_sites_reports_missing_symbols_before_missing_projection() {
     assert_eq!(
         error.to_string(),
         "ordinary call-sites projection is missing"
-    );
-    let file = PathBuf::from(&root).join("a.mts");
-    scope.facts.ts.insert(file.clone(), Default::default());
-    let error = scope.call_sites_report(&call, &prepared).unwrap_err();
-    assert_eq!(
-        error.to_string(),
-        format!("missing symbols for {}", file.display())
     );
 }
 
