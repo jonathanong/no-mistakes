@@ -111,7 +111,7 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     assert.ok(body.indexOf("id: native-rust-cache") < body.indexOf("id: native-workspace-cache"));
     assert.match(body, /cache-workspace-crates: false/);
     assert.match(body, /cache-on-failure: false/);
-    assert.match(body, /uses: actions\/cache@[a-f0-9]{40}/);
+    assert.match(body, /uses: actions\/cache\/restore@[a-f0-9]{40}/);
     assert.match(body, /crates\/\*\*\/\*\.rs/);
     assert.match(body, /target\/debug/);
     assert.match(body, /runner\.temp \}\}\/nm-cargo-inputs/);
@@ -141,9 +141,15 @@ test("Linux CLI and addon producers preserve their commands and publish separate
   const step = (name) => body.split(`- name: ${name}\n`)[1]?.split(/\n      - name:/)[0];
   const cli = step("Build Linux CLI");
   const addon = step("Build Linux N-API addon");
-  assert.match(cli, /if: \$\{\{ matrix.role == 'cli' \}\}/);
+  assert.match(
+    cli,
+    /if: \$\{\{ \(matrix.role == 'cli'\) && steps.build-artifact-source.outputs.reuse != 'true' \}\}/,
+  );
   assert.match(cli, /run: cargo build --locked -p no-mistakes --bin no-mistakes\s*$/);
-  assert.match(addon, /if: \$\{\{ matrix.role == 'addon' \}\}/);
+  assert.match(
+    addon,
+    /if: \$\{\{ \(matrix.role == 'addon'\) && steps.build-artifact-source.outputs.reuse != 'true' \}\}/,
+  );
   assert.match(
     addon,
     /NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib\s+cp target\/debug\/libno_mistakes\.so target\/debug\/no-mistakes\.node/,

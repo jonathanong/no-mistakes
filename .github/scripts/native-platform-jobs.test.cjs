@@ -9,7 +9,14 @@ const families = ["native-build", "native-test-build", "native-rust-tests", "nat
 
 test("each platform retains identical native steps without sharing a producer barrier", () => {
   for (const name of families) {
-    assert.equal(job(name).split("    steps:\n")[1], job(`${name}-macos`).split("    steps:\n")[1]);
+    const windows = job(name).split("    steps:\n")[1];
+    const macos = job(`${name}-macos`).split("    steps:\n")[1];
+    assert.equal(
+      windows,
+      macos
+        .replaceAll("-cgu64-", "-")
+        .replaceAll("-macos.outputs.artifact-run-id", ".outputs.artifact-run-id"),
+    );
     for (const [suffix, os] of [
       ["", "windows-2025"],
       ["-macos", "macos-15"],

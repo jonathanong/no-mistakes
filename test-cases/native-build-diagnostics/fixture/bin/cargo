@@ -6,8 +6,12 @@ if (process.argv.includes("--version")) {
   console.log("cargo fixture-version");
   process.exit(0);
 }
+const profile = process.env.RUNNER_OS === "macOS" ? [
+  "--config", "profile.dev.package.no-mistakes.codegen-units=64",
+  "--config", "profile.test.package.no-mistakes.codegen-units=64",
+] : [];
 if (JSON.stringify(process.argv.slice(2)) !== JSON.stringify([
-  "build", "--locked", "-p", "no-mistakes", "--timings", "--verbose",
+  "build", ...profile, "--locked", "-p", "no-mistakes", "--timings", "--verbose",
 ])) {
   console.error("unexpected cargo arguments");
   process.exit(99);

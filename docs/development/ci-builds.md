@@ -74,9 +74,65 @@ dependency, feature, and profile fingerprints remain compatible. A release-only
 profile edit can therefore reuse compatible development artifacts. This makes
 unchanged native and archived Rust test artifacts reusable across fresh checkouts
 without hiding source changes. Dependency caches remain reusable when Rust source
-changes. A cold or changed native library still requires compilation. Native dependency
-cache saves run on main only; pull requests can restore those dependencies and
-publish their complete workspace snapshot without a duplicate dependency save.
+changes. A cold or changed native library still requires compilation. All Rust target cache saves run on main only; pull requests restore those
+dependencies and workspace snapshots, then share their newly built outputs
+through artifacts without publishing another target cache.
+
+## Cache capacity and cold-build validation
+
+The issue #3330 audit found 35 cache records totaling 10.526 GiB, above the
+repository's default 10 GB allocation. Main held 5.485 GiB and pull-request refs
+held 5.041 GiB. Full workspace targets overlapped dependency-only caches, and
+compatible quality jobs maintained separate dependency snapshots. This can evict
+an otherwise valid key: the #3329 coverage key restored at 09:45 UTC and missed
+at 10:02 UTC. The audit supports eviction as a cause; it does not establish the
+reason for every miss.
+
+Five caches from the merged #3329 were deleted (2.502 GiB). Concurrent main
+writes meant the subsequent live inventory was 34 records totaling 9.552 GiB,
+not a subtraction from the earlier snapshot. Open-PR caches were preserved.
+Compatible Linux development jobs now share a dependency family; release,
+instrumented coverage, documentation, compiler, architecture, and platform
+boundaries remain separate. Workspace crates are excluded from dependency-only
+caches. PRs never save target caches; each producer uploads its build archive
+once for its test consumers.
+
+The cache-retention workflow removes closed-PR caches and superseded main
+snapshots of known families. It runs after successful main producers, after main
+CI, and on PR closure. Its soft budget is 8 GiB, leaving quota headroom; open PRs,
+unknown families, and distinct compiler environments are protected even when
+that means reporting an unmet budget. The original audit projects to 6.903 GiB;
+a later inventory projects to 8.431 GiB with protected entries. These are planner
+results, not claims that the live inventory already reached those sizes.
+Pagination and PR lookups are bounded; incomplete inventories fail rather than
+claiming headroom. Cleanup uses trusted workflow code and metadata only, never
+PR code with write permissions.
+
+Cold macOS run `43404256731` spent at least 884.77 seconds compiling the root
+library before cancellation of its first test target. Dependency crates were
+fresh. Its symbol-free, unoptimized, build with incremental compilation disabled used the default 16
+code-generation units. CI now uses 64 units for the root package's development
+and test profiles on macOS, including runtime builds and archived tests.
+Dependencies retain their settings; features, assertions, selected targets, and
+test execution remain unchanged. This is a compile-parallelism experiment whose
+hosted timings must establish the benefit, not a timeout increase. Bounded
+Darwin memory, process, and thread probes accompany slow-build diagnostics.
+
+For controlled measurement, dispatch CI with `cold_cache=true` to bypass Rust
+target restores. After that run succeeds, dispatch the exact same commit with
+`reuse_build_run=<cold run ID>`. If the dispatch trigger is not yet available on
+the default branch, push that commit to `ci/cold-build`, followed after success
+by `ci/warm-build-<cold run ID>`. These explicit measurement refs run the full
+validation graph without optional benchmarks. Ordinary PR behavior is unchanged.
+
+The warm path validates the completed source run's repository, workflow, event,
+and exact commit before downloading its build archives. It reuses compiled
+binaries, not test results: every test runs again, and coverage profiles are
+collected and merged anew under the unchanged floors and CRAP gate. A normal
+PR cannot request cross-run reuse. Report warm artifact reuse separately from
+ordinary target-cache restoration, and include queue, setup, transfer, and
+aggregate time in end-to-end measurements. Never rerun jobs to obtain a better
+sample.
 
 The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
 fetch CLI test. That one exact case receives its ordinary Cargo filter arguments

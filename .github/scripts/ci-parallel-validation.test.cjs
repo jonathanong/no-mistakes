@@ -268,7 +268,7 @@ test("CI archive and release validation preserve the locked full-workspace test 
   assert.match(docs, /CARGO_TARGET_DIR: \$\{\{ github\.workspace \}\}\/target\/doctests/);
   assert.match(docs, /shared-key: rust-doctests-v1/);
   assert.match(docs, /workspaces: \. -> target\/doctests/);
-  assert.match(docs, /cache-workspace-crates: true/);
+  assert.match(docs, /cache-workspace-crates: false/);
   assert.match(docs, /uses: \.\/\.github\/actions\/start-test-postgres/);
   assert.match(docs, /run: bash \.github\/scripts\/rust-validation\.sh doc/);
   assert.equal(stepBudgetSeconds(docs, "Run Rust doctests"), 480);
@@ -371,11 +371,13 @@ test("coverage and standalone producers retain content-verified workspace caches
     assert.match(body, /cache-workspace-crates: false/);
     assert.match(body, /cache-on-failure: false/);
     assert.ok(body.includes(`id: ${toolchain}`));
-    assert.ok(body.indexOf("uses: Swatinem/rust-cache@") < body.indexOf("uses: actions/cache@"));
+    assert.ok(
+      body.indexOf("uses: Swatinem/rust-cache@") < body.indexOf("uses: actions/cache/restore@"),
+    );
     const overlay = body
       .split(`      - name: Cache ${profile} workspace artifacts by source\n`)[1]
       .split("\n      - name:")[0];
-    assert.match(overlay, /uses: actions\/cache@[a-f0-9]{40}/);
+    assert.match(overlay, /uses: actions\/cache\/restore@[a-f0-9]{40}/);
     const key = overlay.match(/^          key: ([^\n]+)/m)[1];
     const fallback = overlay.match(/restore-keys: \|\n            ([^\n]+)/)[1];
     assert.equal(key, `${fallback}${"${{ hashFiles('crates/**/*.rs') }}"}`);
@@ -425,7 +427,7 @@ test("every workspace producer prefers exact Cargo configuration before compiler
   for (const name of producers) {
     const body = workflowJob(name);
     const cache = body
-      .split(/uses: actions\/cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
       .split("\n      - name:")[0];
     const primary = cache.match(/^          key: ([^\n]+)/m)[1];
     const fallbacks = cache
@@ -462,7 +464,7 @@ test("every workspace producer prefers exact Cargo configuration before compiler
     assert.match(dependencies, /save-if: \$\{\{ github\.ref == 'refs\/heads\/main' \}\}/);
     assert.doesNotMatch(dependencies, /\n        if:/);
     const workspace = body
-      .split(/uses: actions\/cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
       .split("\n      - name:")[0];
     assert.doesNotMatch(workspace, /save-if:|\n        if:/);
   }

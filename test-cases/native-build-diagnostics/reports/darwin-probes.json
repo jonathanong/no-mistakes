@@ -1,0 +1,21 @@
+{
+  "commands": [
+    ["vm_stat", [], 1000],
+    ["memory_pressure", ["-Q"], 1000],
+    ["ps", ["-axo", "pid=,ppid=,pcpu=,rss=,etime=,state=,comm="], 1000],
+    ["ps", ["-M", "-axo", "pid=,ppid=,pcpu=,rss=,etime=,state=,comm="], 1000]
+  ],
+  "success": {
+    "status": 0,
+    "signal": null,
+    "stdout": "Pages occupied by compressor: 1234\n",
+    "stderr": ""
+  },
+  "failure": {
+    "status": null,
+    "signal": "SIGTERM",
+    "error": "spawnSync memory_pressure ETIMEDOUT",
+    "stdout": "",
+    "stderr": ""
+  }
+}

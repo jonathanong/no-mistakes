@@ -137,6 +137,14 @@ for the job graph, the historical completed-run timings, and the current status
 of the 10-minute PR-wall target. The historical run predates this layout and
 does not establish its runtime.
 
+Rust target caches are published only by successful main producers. Compatible
+Linux jobs share dependency keys; test shards download producer artifacts rather
+than saving private target directories. Bounded retention prunes obsolete main
+and closed-PR entries with an 8 GiB soft budget, preserving open PRs and unknown
+cache families. See [cache capacity and cold-build validation](docs/development/ci-builds.md#cache-capacity-and-cold-build-validation)
+for cold/warm measurement inputs and archive provenance checks. Warm validation
+still runs every test and collects fresh coverage profiles.
+
 The coverage test step shares nine raw profiles per instrumented binary through
 LLVM's online merge pool. This preserves concurrent subprocess counts without a
 full raw profile for every CLI invocation. LCOV, CRAP, and coverage floors still

@@ -1,0 +1,6 @@
+[
+  "--config",
+  "profile.dev.package.no-mistakes.codegen-units=64",
+  "--config",
+  "profile.test.package.no-mistakes.codegen-units=64"
+]
