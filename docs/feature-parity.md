@@ -150,6 +150,10 @@ checks share this proof without composing SQL variants.
 The same APIs share bounded append-only helper composition across prepared
 modules and named workspace re-exports. A discarded caller append chain may
 consume a helper result only when all returns preserve the exact input builder.
+Unique runtime named imports that are exported locally retain that effect proof;
+namespace, type-only, ambiguous, and unresolved bindings do not. Fresh
+conditional builders also retain their head through imported append effects
+only after every required effect resolves.
 Function-local fresh conditional builders and reassigned builders retain their
 head only when every arm and assignment has a trusted literal annotation.
 Append-only helper parameters also retain their fixed head through callbacks

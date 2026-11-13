@@ -9,6 +9,7 @@ pub(super) fn apply(
     ts: &TsFileFacts,
     executors: &FxHashSet<Span>,
     calls: &mut BTreeMap<Span, HeadProof>,
+    deferred: &mut Vec<super::effects::Conditional>,
 ) {
     for (span, proof) in super::string_prefix::proofs(syntax, bindings, executors) {
         if matches!(calls.get(&span), Some(HeadProof::Unproven)) {
@@ -22,6 +23,7 @@ pub(super) fn apply(
             bindings,
             ts.module_bindings.as_deref(),
             executors,
+            deferred,
         ))
     {
         if matches!(calls.get(&span), Some(HeadProof::Unproven)) {

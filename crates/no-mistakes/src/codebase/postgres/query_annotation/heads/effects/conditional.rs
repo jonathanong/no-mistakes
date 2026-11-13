@@ -1,7 +1,37 @@
 use super::super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
 use super::Conditional;
 use crate::fx::{FxHashMap, FxHashSet};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+
+pub(in crate::codebase::postgres::query_annotation::heads) fn merge(
+    conditions: &mut Vec<Conditional>,
+    deferred: Vec<Conditional>,
+) {
+    if deferred.is_empty() {
+        return;
+    }
+    let mut per_call = BTreeMap::<Span, BTreeSet<Span>>::new();
+    for condition in conditions.drain(..).chain(deferred) {
+        for call in condition.spans {
+            per_call
+                .entry(call)
+                .or_default()
+                .extend(condition.required.iter().copied());
+        }
+    }
+    let mut groups = BTreeMap::<Vec<Span>, Vec<Span>>::new();
+    for (call, required) in per_call {
+        groups
+            .entry(required.into_iter().collect())
+            .or_default()
+            .push(call);
+    }
+    *conditions = groups
+        .into_iter()
+        .map(|(required, spans)| Conditional { spans, required })
+        .collect();
+    conditions.sort_unstable_by_key(|condition| condition.spans[0]);
+}
 
 pub(in crate::codebase::postgres::query_annotation::heads) fn collect(
     syntax: &Syntax,
@@ -51,3 +81,6 @@ pub(in crate::codebase::postgres::query_annotation::heads) fn collect(
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

@@ -3,6 +3,25 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 const RULE: &str = "postgres-require-query-annotation";
 
 #[test]
+fn imported_effect_followup_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "imported-effect-followup");
+    let cases = [
+        "local-reexport-imported-effect-report",
+        "local-reexport-imported-effect-ignore",
+        "conditional-fresh-imported-effect-report",
+        "conditional-fresh-imported-effect-ignore",
+    ]
+    .map(|name| {
+        (
+            name,
+            root.clone(),
+            rules_path(RULE, "configs", &format!("{name}.yml")),
+        )
+    });
+    assert_saved_fixture("postgres_imported_effect_followup", &cases);
+}
+
+#[test]
 fn postgres_copy_streams_check_json_snapshot() {
     let cases = [
         "copy-streams-low-report",

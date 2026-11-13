@@ -301,9 +301,11 @@ Early bare returns are allowed when the caller discards the helper result.
 
 The helper may compose up to four exact same-file append-only calls on that
 parameter. Prepared source facts and the configured resolver also prove named
-re-exports through workspace aliases and transitive imported append-only
-helpers. This import projection uses at most sixteen active helper or re-export
-lookup levels. Cycles, ambiguous exports, and unresolved targets remain
+re-exports through workspace aliases, local exports of unique named imports
+(`import { add } from './helper'; export { add };`), and transitive imported
+append-only helpers. Type-only, namespace, ambiguous, and unresolved imports
+stay unanalyzable. This import projection uses at most sixteen active helper or
+re-export lookup levels. Cycles, ambiguous exports, and unresolved targets remain
 unanalyzable.
 The analyzer does not evaluate complete SQL to establish these prefixes.
 
@@ -339,7 +341,7 @@ the finding stays. Call the executor on the local builder instead.
 
 A function-local `let` or `const` may also start with finite conditional fresh
 builders. Every arm and every reassignment must have a literal annotation and
-use the trusted tag. Discarded appends and proven local append-only effects
+use the trusted tag. Discarded appends and proven local or imported append-only effects
 preserve that head. A missing annotation in any assignment, an alias, a store,
 an opaque call, a write to `strings[0]`, or another unsupported use prevents
 this proof across the binding's lifetime.

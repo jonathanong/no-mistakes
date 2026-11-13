@@ -11,6 +11,7 @@ mod prepare;
 mod resolve;
 mod summary;
 pub(super) use conditional::collect as collect_conditionals;
+pub(super) use conditional::merge as merge_conditionals;
 pub(crate) use prepare::Pending;
 pub(super) use prepare::{prepare, Prepared};
 pub(super) use resolve::Resolver;
