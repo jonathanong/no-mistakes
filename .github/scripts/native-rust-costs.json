@@ -5,7 +5,7 @@
   "defaultWeight": 1,
   "noticeThresholdSeconds": 60,
   "interpretation": "Heuristic scheduling weight units derived from conservative whole-second lower bounds, not exact per-case durations or wall-time forecasts. Unmeasured cases use an equal placeholder weight of 1.",
-  "provenance": "Completed green PR #3322 runs. Libtest running-over-60-seconds notices and later completion log timestamps establish the recorded lower bounds; no exact per-case start times are available.",
+  "provenance": "Completed green PR #3322 runs. Rust test harness notices after 60 seconds and later completion log timestamps establish the recorded lower bounds; no exact per-case start times are available.",
   "runs": [
     {
       "id": 43393167734,
