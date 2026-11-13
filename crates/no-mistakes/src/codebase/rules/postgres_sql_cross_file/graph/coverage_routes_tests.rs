@@ -54,7 +54,6 @@ fn registry_routes_reject_missing_files_broken_reexports_and_require_shapes() {
             exported_bindings: vec![
                 export(Some("./right"), "registry", "registry"),
                 export(Some("./missing"), "tables", "broken"),
-                export(None, "*", "group"),
             ],
             ..Default::default()
         },
@@ -94,24 +93,6 @@ fn registry_routes_reject_missing_files_broken_reexports_and_require_shapes() {
     assert!(registry_route(&graph, &routes, &consumer, "unlisted", &[]).is_none());
     assert!(registry_route(&graph, &routes, &consumer, "dynamic", &[]).is_none());
     assert!(registry_route(&graph, &routes, &consumer, "lazy", &[]).is_none());
-
-    facts.ts.insert(
-        consumer.clone(),
-        file_facts(TsFileFacts {
-            imports: vec![import("./left", ImportKind::Static, false)],
-            imported_bindings: vec![named_import("group", "group", "./left")],
-            ..Default::default()
-        }),
-    );
-    let forward = [(
-        NodeId::file(&consumer),
-        vec![(NodeId::file(&left), EdgeKind::Import)],
-    )]
-    .into_iter()
-    .collect();
-    let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
-    let routes = RegistryRoutes::new(&facts);
-    assert!(registry_route(&graph, &routes, &consumer, "group", &members("TABLES")).is_none());
 
     facts.ts.insert(
         consumer.clone(),

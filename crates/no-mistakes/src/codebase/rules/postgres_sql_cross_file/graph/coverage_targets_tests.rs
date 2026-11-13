@@ -4,7 +4,7 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::test_support::from_typed_maps;
 use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
-use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan, TsFileFacts};
 use std::path::PathBuf;
 
 #[test]
@@ -25,11 +25,30 @@ fn route_targets_skip_non_file_edges_and_reject_unresolvable_imports() {
     );
     insert(&mut facts, &catalog, TsFileFacts::default());
     insert(&mut facts, &lonely, TsFileFacts::default());
+    let computed_source =
+        crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+            .join("3304-registry-routes/src/computed-import.ts");
+    let collected = collect_ts_facts(
+        std::slice::from_ref(&computed_source),
+        TsFactPlan::imports(),
+    );
+    let collected = &collected[&computed_source];
+    assert!(
+        collected.parse_error.is_none(),
+        "{:?}",
+        collected.parse_error
+    );
+    let computed_import = collected
+        .imports
+        .iter()
+        .find(|import| import.computed)
+        .expect("dynamic import");
+    assert_ne!(computed_import.kind, ImportKind::Static);
     insert(
         &mut facts,
         &computed,
         TsFileFacts {
-            imports: vec![import("./catalog", ImportKind::Static, true)],
+            imports: collected.imports.clone(),
             ..Default::default()
         },
     );
@@ -63,7 +82,12 @@ fn route_targets_skip_non_file_edges_and_reject_unresolvable_imports() {
         .target(&graph, &lonely, "./catalog", ImportKind::Static)
         .is_none());
     assert!(routes
-        .target(&graph, &computed, "./catalog", ImportKind::Static)
+        .target(
+            &graph,
+            &computed,
+            computed_import.specifier.as_str(),
+            computed_import.kind,
+        )
         .is_none());
     assert!(routes
         .target(

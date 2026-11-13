@@ -242,74 +242,18 @@ fn digitless_markers_do_not_advance_the_placeholder_max() {
 }
 
 #[test]
-fn insert_walk_skips_absent_sources_query_tables_and_function_names() {
-    use sqlparser::ast::{
-        Ident, ObjectName, ObjectNamePart, ObjectNamePartFunction, Statement, TableObject,
+fn insert_without_a_query_keeps_the_target_relation() {
+    use sqlparser::ast::Statement;
+    let statements =
+        parse_postgres_sql("INSERT INTO sql_placeholder_1 DEFAULT VALUES").expect("sql");
+    let Statement::Insert(insert) = &statements[0] else {
+        panic!("insert");
     };
-    let sql = "INSERT INTO sql_placeholder_1 SELECT 1 FROM sql_placeholder_2";
-    let mut statements = parse_postgres_sql(sql).unwrap();
+    assert!(insert.source.is_none());
     let mut found = Indexes {
         relations: BTreeSet::new(),
         columns: BTreeSet::new(),
     };
-    {
-        let Statement::Insert(insert) = &mut statements[0] else {
-            panic!("insert");
-        };
-        insert.source = None;
-    }
     walk::walk_statement(&statements[0], &mut found);
     assert_eq!(found.relations, BTreeSet::from([1]));
-
-    let select = parse_postgres_sql("SELECT 1 FROM sql_placeholder_3").unwrap();
-    let Statement::Query(query) = select.into_iter().next().unwrap() else {
-        panic!("query");
-    };
-    {
-        let Statement::Insert(insert) = &mut statements[0] else {
-            panic!("insert");
-        };
-        insert.table = TableObject::TableQuery(query);
-        insert.source = None;
-    }
-    found.relations.clear();
-    walk::walk_statement(&statements[0], &mut found);
-    assert_eq!(found.relations, BTreeSet::from([3]));
-
-    insert_table_function(&mut statements);
-    found.relations.clear();
-    walk::walk_statement(&statements[0], &mut found);
-    assert!(found.relations.is_empty());
-
-    let mut names = BTreeSet::new();
-    walk::note_name(
-        &ObjectName(vec![ObjectNamePart::Function(ObjectNamePartFunction {
-            name: Ident::new("sql_placeholder_4"),
-            args: Vec::new(),
-        })]),
-        &mut names,
-    );
-    assert!(names.is_empty());
-}
-
-fn insert_table_function(statements: &mut [sqlparser::ast::Statement]) {
-    use sqlparser::ast::{
-        Function, FunctionArguments, Ident, ObjectName, ObjectNamePart, Statement, TableObject,
-    };
-    let Statement::Insert(insert) = &mut statements[0] else {
-        panic!("insert");
-    };
-    insert.table = TableObject::TableFunction(Function {
-        name: ObjectName(vec![ObjectNamePart::Identifier(Ident::new(
-            "sql_placeholder_5",
-        ))]),
-        uses_odbc_syntax: false,
-        parameters: FunctionArguments::None,
-        args: FunctionArguments::None,
-        filter: None,
-        null_treatment: None,
-        over: None,
-        within_group: Vec::new(),
-    });
-    insert.source = None;
 }

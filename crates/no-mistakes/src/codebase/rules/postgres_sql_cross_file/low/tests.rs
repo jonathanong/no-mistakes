@@ -57,23 +57,14 @@ fn low_check_rejects_option_glob_and_policy_failures_before_files() {
     let rule_id = "postgres-no-unbounded-sql-identifier";
     let base = config.rule_applications(rule_id)[0].clone();
     let facts = CheckFactMap::default();
-    for (options, expected) in [
-        (
-            "include: 1\nimportSpecifier: \"@example/db\"\n",
-            "invalid options",
-        ),
-        (
-            "exclude: ['[']\nimportSpecifier: \"@example/db\"\n",
-            "exclude",
-        ),
-        (
-            "importSpecifier: \"@example/db\"\ninclude: [\"src/**/*.ts\"]\nexclude: [\"src/excluded.ts\"]\nunanalyzable: 1\n",
-            "unanalyzable",
-        ),
+    for (name, expected) in [
+        ("include-number.yml", "invalid options"),
+        ("exclude-bad-glob.yml", "exclude"),
+        ("unanalyzable-number.yml", "unanalyzable"),
     ] {
         let mut application = base.clone();
         application.resolved_analysis = None;
-        application.options = serde_yaml::from_str(options).unwrap();
+        application.options = saved_options(name);
         let error = check(&root, &config, &application, 0, &facts, rule_id)
             .unwrap_err()
             .to_string();
@@ -85,4 +76,13 @@ fn low_check_rejects_option_glob_and_policy_failures_before_files() {
         .unwrap_err()
         .to_string();
     assert!(error.contains("include"), "{error}");
+}
+
+fn saved_options(name: &str) -> serde_yaml::Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join(
+            "../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/coverage-options",
+        )
+        .join(name);
+    serde_yaml::from_reader(std::fs::File::open(path).unwrap()).unwrap()
 }

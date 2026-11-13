@@ -1,12 +1,11 @@
 use super::coverage_harness::*;
 use super::*;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::extract::{
-    ImportedBinding, ImportedBindingKind, ValueFlowFacts, ValueType,
-};
+use crate::codebase::dependencies::extract::{ImportedBinding, ValueFlowFacts, ValueType};
 use crate::codebase::dependencies::graph::test_support::from_typed_maps;
 use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 use std::path::PathBuf;
 
 #[test]
@@ -76,16 +75,14 @@ fn type_and_namespace_resolution_reject_missing_ambiguous_and_unreadable_files()
     assert!(
         unique_namespace_member(&graph, &facts, &root.join("src/absent.ts"), "ns", "Row").is_none()
     );
-    facts.ts.insert(
-        importer.clone(),
-        file_facts(TsFileFacts {
-            operational_error: Some("unreadable".into()),
-            imported_bindings: vec![ImportedBinding {
-                kind: ImportedBindingKind::Namespace,
-                ..named_import("ns", "*", "./left")
-            }],
-            ..Default::default()
-        }),
-    );
+    let missing = root.join("src/unreadable.ts");
+    let failed = collect_ts_facts(std::slice::from_ref(&missing), TsFactPlan::imports());
+    let failed = failed.get(&missing).expect("missing source");
+    assert!(failed.operational_error.is_some());
+    assert!(failed.parse_error.is_some());
+    assert!(failed.imported_bindings.is_empty());
+    facts
+        .ts
+        .insert(importer.clone(), file_facts(failed.clone()));
     assert!(unique_namespace_member(&graph, &facts, &importer, "ns", "Row").is_none());
 }

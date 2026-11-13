@@ -37,16 +37,14 @@ fn check_application_rejects_bad_options_and_visit_failures() {
         anyhow::bail!("blocked visit")
     }
     let mut application = base.clone();
-    application.options =
-        serde_yaml::from_str("include: 1\nimportSpecifier: \"@example/db\"\n").unwrap();
+    application.options = saved_options("include-number.yml");
     let error =
         super::check_application(&root, &config, &application, &graph, &facts, rule_id, visit)
             .unwrap_err()
             .to_string();
     assert!(error.contains("invalid options"), "{error}");
     let mut application = base.clone();
-    application.options =
-        serde_yaml::from_str("exclude: ['[']\nimportSpecifier: \"@example/db\"\n").unwrap();
+    application.options = saved_options("exclude-bad-glob.yml");
     let error =
         super::check_application(&root, &config, &application, &graph, &facts, rule_id, visit)
             .unwrap_err()
@@ -56,4 +54,13 @@ fn check_application_rejects_bad_options_and_visit_failures() {
         .unwrap_err()
         .to_string();
     assert!(error.contains("blocked visit"), "{error}");
+}
+
+fn saved_options(name: &str) -> serde_yaml::Value {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join(
+            "../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/coverage-options",
+        )
+        .join(name);
+    serde_yaml::from_reader(std::fs::File::open(path).unwrap()).unwrap()
 }
