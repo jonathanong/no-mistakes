@@ -11,12 +11,13 @@ command arguments, compiler, and worker count for comparisons.
 
 From the repository root, build only the CLI with default features and the
 production release profile. Keep the existing allocator and Cargo profiles.
-Enable debug information for stack attribution without disabling optimization:
+Enable debug information for stack attribution without disabling optimization.
+The release profile strips symbols, so also turn stripping off:
 
 ```sh
 rustup update stable
 rustc --version
-NO_MISTAKES_BUILD_NAPI=1 CARGO_PROFILE_RELEASE_DEBUG=1 \
+NO_MISTAKES_BUILD_NAPI=1 CARGO_PROFILE_RELEASE_DEBUG=1 CARGO_PROFILE_RELEASE_STRIP=none \
   cargo build --release --locked -p no-mistakes --bin no-mistakes
 ```
 
