@@ -72,3 +72,6 @@ pub(super) fn keys_for(
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

@@ -55,3 +55,6 @@ fn exposed_name<'a>(
             .map(|(_, column)| column.as_str())
     })
 }
+
+#[cfg(test)]
+mod tests;

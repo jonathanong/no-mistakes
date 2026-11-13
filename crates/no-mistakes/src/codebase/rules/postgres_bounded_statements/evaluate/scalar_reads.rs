@@ -115,3 +115,6 @@ fn project_columns<'a>(
     }
     projected
 }
+
+#[cfg(test)]
+mod tests;

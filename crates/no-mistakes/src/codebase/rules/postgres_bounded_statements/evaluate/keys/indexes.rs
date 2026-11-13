@@ -95,3 +95,6 @@ fn implied(predicate: &Expr, item: &SqlBoundItem) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -1,4 +1,7 @@
 use super::super::super::{evaluate, ViewBounds};
+use crate::codebase::postgres::statements::{
+    SqlBoundItem, SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlPinSource,
+};
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog, SqlBoundItemKind};
 use std::path::PathBuf;
 
@@ -133,4 +136,118 @@ fn recursive_domain_defensive_paths_preserve_conservative_public_findings() {
             fact.line,
         );
     }
+}
+
+fn output(name: Option<&str>, source: Option<(usize, &str)>, recursive: bool) -> SqlBoundOutput {
+    SqlBoundOutput {
+        name: name.map(str::to_owned),
+        caller_sized: false,
+        scalar: false,
+        source_column: source.map(|(index, column)| (index, column.to_owned())),
+        array_aggregate_column: None,
+        constant_null: false,
+        recursive_domain: recursive,
+    }
+}
+
+fn query_item(outputs: Vec<SqlBoundOutput>) -> SqlBoundItem {
+    SqlBoundItem::new(
+        SqlBoundItemKind::Query(SqlBoundQuery {
+            outputs,
+            ..SqlBoundQuery::default()
+        }),
+        None,
+        (1, 1),
+    )
+}
+
+fn evaluation(finite: Vec<bool>) -> super::Evaluation {
+    super::Evaluation {
+        bounded: false,
+        items: finite.clone(),
+        finite_outputs: Some(finite),
+        offenders: Vec::new(),
+    }
+}
+
+#[test]
+fn region_duplicate_exposed_names_are_not_finite_domains() {
+    let query = SqlBoundQuery {
+        items: vec![query_item(vec![
+            output(Some("id"), None, false),
+            output(Some("id"), None, false),
+            output(Some("other"), None, false),
+        ])],
+        ..SqlBoundQuery::default()
+    };
+    let domains = super::prepare(&query, &[Some(evaluation(vec![true, true, true]))]);
+    let names = domains
+        .get(&0)
+        .map(|names| names.iter().cloned().collect::<Vec<_>>());
+    assert_eq!(names, Some(vec!["other".to_owned()]));
+}
+
+#[test]
+fn region_recursive_domain_without_an_arm_is_not_finite() {
+    let query = SqlBoundQuery {
+        items: vec![
+            query_item(vec![output(Some("id"), None, false)]),
+            query_item(vec![output(Some("id"), None, false)]),
+        ],
+        outputs: vec![
+            output(None, None, true),
+            output(None, Some((1, "id")), false),
+        ],
+        ..SqlBoundQuery::default()
+    };
+    let nested = [None, Some(evaluation(vec![true]))];
+    assert_eq!(
+        super::output_domains(&query, &nested),
+        Some(vec![false, true])
+    );
+}
+
+#[test]
+fn region_missing_domain_names_and_peer_lists_are_unproved() {
+    let query = SqlBoundQuery {
+        items: vec![query_item(vec![output(Some("id"), None, false)])],
+        outputs: vec![
+            output(None, Some((0, "missing")), false),
+            output(None, Some((0, "id")), false),
+        ],
+        ..SqlBoundQuery::default()
+    };
+    assert_eq!(
+        super::output_domains(&query, &[Some(evaluation(vec![true]))]),
+        Some(vec![false, true])
+    );
+    assert!(super::exposed_name(&SqlBoundQuery::default(), 0, &[]).is_none());
+    let unnamed = SqlBoundQuery {
+        outputs: vec![output(None, None, true)],
+        ..SqlBoundQuery::default()
+    };
+    assert!(super::exposed_name(&unnamed, 0, &[]).is_none());
+    let table = SqlBoundQuery {
+        items: vec![SqlBoundItem::new(
+            SqlBoundItemKind::Table("accounts".into()),
+            None,
+            (1, 1),
+        )],
+        outputs: vec![output(None, None, true)],
+        ..SqlBoundQuery::default()
+    };
+    assert!(super::exposed_name(&table, 0, &[]).is_none());
+    let pin = SqlBoundPin {
+        alternative: None,
+        column: "id".into(),
+        unqualified_candidate: false,
+        expression: None,
+        source: SqlPinSource::Items(vec![0, 1]),
+        null_safe: false,
+        reads: Vec::new(),
+        qualified_reads: Vec::new(),
+        peer_column: Some("id".into()),
+    };
+    let domains = super::Domains::default();
+    assert!(!super::supplies(&pin, &domains));
 }

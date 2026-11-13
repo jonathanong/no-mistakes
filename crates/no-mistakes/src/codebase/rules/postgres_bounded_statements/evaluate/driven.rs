@@ -82,3 +82,6 @@ fn recordset_carrier(query: &SqlBoundQuery) -> bool {
 fn projection_expander(item: &SqlBoundItem) -> bool {
     matches!(item.kind, SqlBoundItemKind::Opaque) && item.alias.is_none() && item.alias_explicit
 }
+
+#[cfg(test)]
+mod tests;

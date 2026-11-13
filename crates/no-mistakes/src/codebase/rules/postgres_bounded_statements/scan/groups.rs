@@ -175,3 +175,6 @@ fn merge(
     }
     report::combine(roots)
 }
+
+#[cfg(test)]
+mod coverage;

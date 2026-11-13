@@ -1,4 +1,4 @@
-use super::{only_appended, span};
+use super::{fragment_line, only_appended, span};
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::statements::SqlVariantLocations;
 use crate::codebase::postgres::SqlStatementFileFacts;
@@ -132,4 +132,29 @@ fn append_boundaries_ignore_helper_order_and_empty_openings() {
         .first_append_position
         .is_some());
     assert_eq!(only_appended(&[span(physical, 0).unwrap()]), None);
+}
+
+#[test]
+fn region_span_requires_an_origin_site() {
+    let file = SqlStatementFileFacts {
+        path: "query.ts".into(),
+        variant_locations: Some(SqlVariantLocations::default()),
+        ..Default::default()
+    };
+    assert!(span(&file, 0).is_none());
+}
+
+#[test]
+fn region_unset_call_line_uses_the_file_origin() {
+    let mut locations = SqlVariantLocations::default();
+    locations.insert(SqlFactSite::Origin, 4, 1);
+    let file = SqlStatementFileFacts {
+        path: "query.ts".into(),
+        origin_line: 7,
+        variant_locations: Some(locations),
+        ..Default::default()
+    };
+    let found = span(&file, 0).unwrap();
+    assert_eq!(found.call_line, 7);
+    assert!(fragment_line(&[found], "query.ts:invoices").is_none());
 }

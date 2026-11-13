@@ -72,3 +72,64 @@ fn view_keys_reject_lost_columns_and_unproven_join_cardinality() {
         assert_eq!(super::visible_key(&catalog, view), None, "{view}");
     }
 }
+
+fn select(sql: &str) -> sqlparser::ast::Select {
+    let statement = crate::codebase::postgres::parse_postgres_sql(sql)
+        .unwrap()
+        .remove(0);
+    let sqlparser::ast::Statement::Query(query) = statement else {
+        panic!("expected a query");
+    };
+    let sqlparser::ast::SetExpr::Select(select) = *query.body else {
+        panic!("expected a select");
+    };
+    *select
+}
+
+#[test]
+fn region_view_key_projection_rejects_shapes_the_dialect_cannot_name() {
+    use sqlparser::ast::{
+        Expr, Ident, ObjectName, ObjectNamePart, ObjectNamePartFunction, SelectItem,
+    };
+    let found = catalog();
+    assert!(super::base_key(&select("SELECT 1 AS id"), &found).is_none());
+    let function = ObjectName(vec![ObjectNamePart::Function(ObjectNamePartFunction {
+        name: Ident::new("bar"),
+        args: Vec::new(),
+    })]);
+    assert!(super::qualifiers(&function, None).is_empty());
+    let short = Expr::CompoundIdentifier(vec![Ident::new("only")]);
+    assert!(super::qualified_column(&short, &["base".into()]).is_none());
+
+    let mut star = select("SELECT * FROM base");
+    let SelectItem::Wildcard(options) = &mut star.projection[0] else {
+        panic!("expected a star");
+    };
+    options.opt_alias = Some(Ident::new("all"));
+    assert!(super::projected(&star, &["base".into()], &["id".into()], true).is_none());
+
+    let mut qualified = select("SELECT b.* FROM base b");
+    let SelectItem::QualifiedWildcard(_, options) = &mut qualified.projection[0] else {
+        panic!("expected a qualified star");
+    };
+    options.opt_alias = Some(Ident::new("all"));
+    assert!(super::projected(&qualified, &["b".into()], &["id".into()], false).is_none());
+
+    let mut aliased = select("SELECT id FROM base");
+    let SelectItem::UnnamedExpr(expr) = aliased.projection[0].clone() else {
+        panic!("expected an expression");
+    };
+    aliased.projection[0] = SelectItem::ExprWithAliases {
+        expr,
+        aliases: vec![Ident::new("a"), Ident::new("b")],
+    };
+    assert!(super::projected(&aliased, &["base".into()], &["id".into()], true).is_none());
+
+    let mut join = select("SELECT b.id FROM base b LEFT JOIN related r ON r.id = b.id");
+    join.from[0].joins[0].global = true;
+    assert!(!super::join::preserves_rows(
+        &join.from[0].joins[0],
+        &[],
+        &found
+    ));
+}

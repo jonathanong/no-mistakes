@@ -89,6 +89,9 @@ pub(super) fn relation_offender(
     })
 }
 
+#[cfg(test)]
+mod tests;
+
 fn view_offender(name: &str, line: usize, column: usize) -> Offender {
     Offender {
         table: name.to_string(),

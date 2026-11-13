@@ -118,3 +118,6 @@ fn approved(
         .any(|outer| outer.qualifier == read.qualifier && outer.scopes.starts_with(&read.scopes))
         && qualified::reads_outer(std::slice::from_ref(read), catalog)
 }
+
+#[cfg(test)]
+mod tests;
