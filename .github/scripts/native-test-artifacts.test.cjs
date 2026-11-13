@@ -235,7 +235,13 @@ for (const platform of ["macOS", "Windows"]) {
               .filter((row) => row.executable.includes("windows_job_object"))
               .every((row) => row.args.includes("--test-threads=1")),
           );
-        assert.ok(rows.every((row) => row.cwd === path.join(directory, "crates/no-mistakes")));
+        assert.ok(
+          rows.every(
+            (row) =>
+              fs.realpathSync(row.cwd) ===
+              fs.realpathSync(path.join(directory, "crates/no-mistakes")),
+          ),
+        );
         assert.equal(
           fs.readFileSync(path.join(directory, "compile.jsonl"), "utf8").trim().split("\n").length,
           targets(platform).length * 2 + 1,

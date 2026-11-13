@@ -54,6 +54,17 @@ work that dominated them:
 | JavaScript tests | 11m00s | Native build 4m26s; ordinary tests 3m09s; real-addon API tests 2m22s |
 | Standalone library tests | 9m58s | Library test command 9m10s, including compilation and test execution |
 
+The macOS runtime build's library unit took 472.9 seconds; the first test
+precompile command rebuilt that unit in 372.2 seconds. The root features,
+crate types, and stripped debug settings matched, but test dependencies changed
+the dependency feature graph: the [byte string library](https://crates.io/crates/bstr)
+added `default` and `unicode`,
+`regex-automata` added `dfa-search`, and `nix` added `time`. Those changes
+propagated through dependency fingerprints to the root library. A normal runtime
+build therefore did not eliminate test compilation. The current producers build
+and cache their respective graphs independently and run concurrently; each test
+archive is then reused by all its consumers without another Cargo build.
+
 These were one completed run, not a tail estimate. The macOS native Rust-cache
 restore missed, and its separately keyed native test-artifact cache also
 missed. The run therefore records a cold native build path; it does not prove
