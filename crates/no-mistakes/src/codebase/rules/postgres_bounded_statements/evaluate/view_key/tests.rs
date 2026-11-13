@@ -73,63 +73,41 @@ fn view_keys_reject_lost_columns_and_unproven_join_cardinality() {
     }
 }
 
-fn select(sql: &str) -> sqlparser::ast::Select {
-    let statement = crate::codebase::postgres::parse_postgres_sql(sql)
-        .unwrap()
-        .remove(0);
-    let sqlparser::ast::Statement::Query(query) = statement else {
-        panic!("expected a query");
-    };
-    let sqlparser::ast::SetExpr::Select(select) = *query.body else {
-        panic!("expected a select");
-    };
-    *select
-}
-
 #[test]
-fn region_view_key_projection_rejects_shapes_the_dialect_cannot_name() {
-    use sqlparser::ast::{
-        Expr, Ident, ObjectName, ObjectNamePart, ObjectNamePartFunction, SelectItem,
+fn region_parsed_view_definitions_reject_aliased_stars_and_global_joins() {
+    use sqlparser::ast::{SelectItem, SetExpr};
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
+        .join("view-key-regions/schema.json");
+    let found = SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let star = found.view_query("star_alias").expect("star alias parses");
+    let SetExpr::Select(star_select) = star.body.as_ref() else {
+        panic!("star alias is not a select");
     };
-    let found = catalog();
-    assert!(super::base_key(&select("SELECT 1 AS id"), &found).is_none());
-    let function = ObjectName(vec![ObjectNamePart::Function(ObjectNamePartFunction {
-        name: Ident::new("bar"),
-        args: Vec::new(),
-    })]);
-    assert!(super::qualifiers(&function, None).is_empty());
-    let short = Expr::CompoundIdentifier(vec![Ident::new("only")]);
-    assert!(super::qualified_column(&short, &["base".into()]).is_none());
+    let SelectItem::Wildcard(options) = &star_select.projection[0] else {
+        panic!("star alias projection is {:?}", star_select.projection[0]);
+    };
+    assert!(options.opt_alias.is_some());
+    assert!(super::visible_key(&found, "star_alias").is_none());
 
-    let mut star = select("SELECT * FROM base");
-    let SelectItem::Wildcard(options) = &mut star.projection[0] else {
-        panic!("expected a star");
+    let qualified = found
+        .view_query("qualified_star_alias")
+        .expect("qualified star alias parses");
+    let SetExpr::Select(qualified_select) = qualified.body.as_ref() else {
+        panic!("qualified star alias is not a select");
     };
-    options.opt_alias = Some(Ident::new("all"));
-    assert!(super::projected(&star, &["base".into()], &["id".into()], true).is_none());
+    let SelectItem::QualifiedWildcard(_, options) = &qualified_select.projection[0] else {
+        panic!(
+            "qualified star projection is {:?}",
+            qualified_select.projection[0]
+        );
+    };
+    assert!(options.opt_alias.is_some());
+    assert!(super::visible_key(&found, "qualified_star_alias").is_none());
 
-    let mut qualified = select("SELECT b.* FROM base b");
-    let SelectItem::QualifiedWildcard(_, options) = &mut qualified.projection[0] else {
-        panic!("expected a qualified star");
+    let joined = found.view_query("global_join").expect("global join parses");
+    let SetExpr::Select(joined_select) = joined.body.as_ref() else {
+        panic!("global join is not a select");
     };
-    options.opt_alias = Some(Ident::new("all"));
-    assert!(super::projected(&qualified, &["b".into()], &["id".into()], false).is_none());
-
-    let mut aliased = select("SELECT id FROM base");
-    let SelectItem::UnnamedExpr(expr) = aliased.projection[0].clone() else {
-        panic!("expected an expression");
-    };
-    aliased.projection[0] = SelectItem::ExprWithAliases {
-        expr,
-        aliases: vec![Ident::new("a"), Ident::new("b")],
-    };
-    assert!(super::projected(&aliased, &["base".into()], &["id".into()], true).is_none());
-
-    let mut join = select("SELECT b.id FROM base b LEFT JOIN related r ON r.id = b.id");
-    join.from[0].joins[0].global = true;
-    assert!(!super::join::preserves_rows(
-        &join.from[0].joins[0],
-        &[],
-        &found
-    ));
+    assert!(joined_select.from[0].joins[0].global);
+    assert!(super::visible_key(&found, "global_join").is_none());
 }

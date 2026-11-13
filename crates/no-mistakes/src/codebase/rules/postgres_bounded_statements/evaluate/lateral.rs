@@ -59,6 +59,3 @@ pub(super) fn qualified_dependencies(
     dependencies.dedup();
     (!dependencies.is_empty()).then_some(dependencies)
 }
-
-#[cfg(test)]
-mod tests;

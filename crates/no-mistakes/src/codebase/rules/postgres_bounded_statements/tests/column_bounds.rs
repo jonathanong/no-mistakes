@@ -131,8 +131,9 @@ fn correlated_declared_columns_require_a_known_lateral_driver() {
 #[test]
 fn region_column_bound_names_must_be_table_column_idents() {
     let catalog = catalog();
-    for name in ["*", "orders.count(*)", "count(*).id", " "] {
-        let yaml = format!("columnBounds: {{'{name}': {{reason: reviewed}}}}");
+    let root = fixture_root().join("column-bound-regions");
+    for name in ["star.yml", "orders-count.yml", "count-id.yml", "blank.yml"] {
+        let yaml = std::fs::read_to_string(root.join(name)).unwrap();
         let options: Options = serde_yaml::from_str(&yaml).unwrap();
         let error = ColumnBounds::compile(&options.column_bounds, &catalog)
             .err()
@@ -146,8 +147,8 @@ fn region_column_bound_names_must_be_table_column_idents() {
 fn region_scan_rejects_a_column_bound_that_is_not_table_column() {
     let root = fixture_root();
     let files = [root.join("schema.json"), root.join("sql/valid.sql")];
-    let yaml = "schemaCatalogPath: schema.json\nsqlInclude: ['sql/valid.sql']\nexclude: ['src/**']\ncolumnBounds: {orders: {reason: reviewed}}";
-    let error = super::check_with_files(&root, &super::config(yaml), &files).unwrap_err();
+    let yaml = std::fs::read_to_string(root.join("column-bound-regions/scan-orders.yml")).unwrap();
+    let error = super::check_with_files(&root, &super::config(&yaml), &files).unwrap_err();
     assert!(
         error.to_string().contains("must name table.column"),
         "{error}"

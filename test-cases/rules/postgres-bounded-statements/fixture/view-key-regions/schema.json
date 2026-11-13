@@ -1,0 +1,46 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "base": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {}
+    },
+    "related": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {}
+    }
+  },
+  "views": {
+    "star_alias": {
+      "materialized": false,
+      "definition": "SELECT * AS all_rows FROM base"
+    },
+    "qualified_star_alias": {
+      "materialized": false,
+      "definition": "SELECT b.* AS all_rows FROM base b"
+    },
+    "global_join": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b GLOBAL LEFT JOIN related r ON r.id = b.id"
+    }
+  }
+}
