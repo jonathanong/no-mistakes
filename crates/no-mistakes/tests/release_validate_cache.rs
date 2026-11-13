@@ -108,13 +108,12 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         "test executables must be dropped after Rust tests and before cargo publish"
     );
     let step = &validate[cleanup_heading..publish];
-    // Only extensionless executables in deps/: keep .rlib/.rmeta/.so/.d so the
-    // verification build and rust-cache still see the dependency artifacts.
+    // drop-rust-test-executables.test.cjs pins which files the script keeps.
     assert!(
         step.contains(
-            "find target/debug/deps -maxdepth 1 -type f -perm -u+x ! -name '*.*' -delete"
+            "bash \"$RUNNER_TEMP/validation-tools/.github/scripts/drop-rust-test-executables.sh\" target"
         ),
-        "cleanup must delete only extensionless executables directly under target/debug/deps"
+        "cleanup must use the tested drop script for both Cargo artifact layouts"
     );
     assert!(
         !step.contains("rm -rf target"),
