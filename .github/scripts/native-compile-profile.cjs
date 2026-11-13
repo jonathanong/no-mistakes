@@ -4,6 +4,37 @@ const { spawnSync } = require("node:child_process");
 const { compareCargoUnits } = require("./native-cargo-units.cjs");
 const { targets } = require("./native-rust-tests.cjs");
 
+function validateBuild(build, selector) {
+  const units = build.units?.units;
+  if (!Array.isArray(units) || !units.length)
+    throw new Error("Cargo unit report is empty; no compilation evidence was captured");
+  const expected = selector ? ["rlib"] : ["cdylib", "rlib"];
+  if (
+    !units.some(
+      (unit) =>
+        unit.target.name === "no_mistakes" &&
+        !unit.profile.test &&
+        JSON.stringify([...unit.target.crate_types].sort()) === JSON.stringify(expected),
+    )
+  )
+    throw new Error(`Cargo unit report is missing the normal root library (${expected.join("+")})`);
+  const name = selector?.[1] || "no-mistakes";
+  const kind = selector ? selector[0].slice(2) : "bin";
+  if (
+    !units.some(
+      (unit) =>
+        unit.target.name === name &&
+        unit.target.kind.includes(kind) &&
+        unit.profile.test === Boolean(selector),
+    )
+  )
+    throw new Error(
+      `Cargo unit report is missing ${selector ? "selected harness" : "runtime CLI"}: ${name}`,
+    );
+  if (build.result.exitCode !== 0 || build.result.signal)
+    throw new Error("Cargo unit report describes an incomplete build");
+}
+
 function runProfile({
   root = process.cwd(),
   platform = process.platform,
@@ -100,6 +131,7 @@ function runProfile({
     report.exitCode = runtimeStatus;
     try {
       report.runtime = readReport("target/native-build-diagnostics");
+      if (!runtimeStatus) validateBuild(report.runtime);
     } catch (error) {
       if (!runtimeStatus) throw error;
       report.diagnosticError = error.message;
@@ -112,13 +144,15 @@ function runProfile({
       if (!fs.existsSync(path.join(root, directory))) continue;
       try {
         const build = readReport(directory);
-        report.testBuilds.push({
+        const entry = {
           index,
           selector: target.selector,
           ...build,
-          runtimeComparison: compareCargoUnits(report.runtime.units, build.units),
-          previousComparison: compareCargoUnits(previous, build.units),
-        });
+        };
+        report.testBuilds.push(entry);
+        validateBuild(build, target.selector);
+        entry.runtimeComparison = compareCargoUnits(report.runtime.units, build.units);
+        entry.previousComparison = compareCargoUnits(previous, build.units);
         previous = build.units;
       } catch (error) {
         report.diagnosticError = error.message;

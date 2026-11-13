@@ -22,7 +22,14 @@ function fixture(kind = "root") {
 
 function runner(
   root,
-  { runtimeStatus = 0, archiveStatus = 0, throwRuntime = false, omitTarget = false } = {},
+  {
+    runtimeStatus = 0,
+    archiveStatus = 0,
+    throwRuntime = false,
+    omitTarget = false,
+    runtimeEvidence,
+    archiveEvidence,
+  } = {},
 ) {
   const calls = [];
   const original = fs.readFileSync(path.join(root, manifest));
@@ -45,6 +52,11 @@ function runner(
       if (throwRuntime) throw new Error("fixture runtime spawn failed");
       const destination = path.join(root, "target/native-build-diagnostics");
       fs.cpSync(path.join(saved, "diagnostics/runtime"), destination, { recursive: true });
+      if (runtimeEvidence)
+        fs.copyFileSync(
+          path.join(saved, `evidence/${runtimeEvidence}.json`),
+          path.join(destination, "cargo-units.json"),
+        );
       if (runtimeStatus)
         fs.copyFileSync(
           path.join(saved, "failure-result.json"),
@@ -60,6 +72,11 @@ function runner(
       path.join(root, "target/native-test-build-diagnostics"),
       { recursive: true },
     );
+    if (archiveEvidence)
+      fs.copyFileSync(
+        path.join(saved, `evidence/${archiveEvidence}.json`),
+        path.join(root, "target/native-test-build-diagnostics/0/cargo-units.json"),
+      );
     if (archiveStatus || omitTarget)
       fs.rmSync(path.join(root, "target/native-test-build-diagnostics/3"), { recursive: true });
     return { status: archiveStatus };
@@ -94,19 +111,84 @@ test("runtime precedes the unchanged test archive in one target with Cargo reuse
     assert.equal(report.testBuilds.length, 4);
     assert.deepEqual(report.testBuilds[0].runtimeComparison.rootCounts.after, {
       fresh: 0,
-      compiled: 2,
+      compiled: 3,
     });
     assert.deepEqual(report.testBuilds[1].previousComparison.rootCounts.after, {
       fresh: 2,
+      compiled: 1,
+    });
+    assert.deepEqual(report.testBuilds[0].runtimeComparison.rootLibraryCounts.after, {
+      fresh: 0,
+      compiled: 1,
+    });
+    assert.deepEqual(report.testBuilds[1].previousComparison.rootLibraryCounts.after, {
+      fresh: 1,
       compiled: 0,
     });
-    assert.equal(report.testBuilds[0].runtimeComparison.rootComparison.matching.length, 0);
+    assert.equal(report.testBuilds[0].runtimeComparison.rootComparison.matching.length, 1);
     assert.equal(report.runtime.metadata.rustc.stdout, "rustc fixture");
     assert.match(report.evidence, /signatures alone cannot prove reuse/);
     const persisted = JSON.parse(
       fs.readFileSync(path.join(input.root, "target/native-compile-profile/report.json"), "utf8"),
     );
     assert.deepEqual(persisted, report);
+  } finally {
+    input.cleanup();
+  }
+});
+
+for (const [options, message] of [
+  [{ runtimeEvidence: "empty" }, /empty/],
+  [{ runtimeEvidence: "missing-runtime-cli" }, /missing runtime CLI/],
+  [{ runtimeEvidence: "missing-runtime-library" }, /missing the normal root library/],
+  [{ archiveEvidence: "empty" }, /empty/],
+  [{ archiveEvidence: "missing-selected-harness" }, /missing selected harness/],
+  [{ archiveEvidence: "missing-archive-library" }, /missing the normal root library/],
+]) {
+  test(`successful phases require expected Cargo evidence: ${JSON.stringify(options)}`, () => {
+    const input = fixture();
+    const fake = runner(input.root, options);
+    try {
+      const report = runProfile({ ...input, platform: "darwin", env, run: fake.run });
+      assert.equal(report.exitCode, 1);
+      assert.match(report.error || report.diagnosticError, message);
+      assert.equal(report.manifestRestored, true);
+      assert.deepEqual(fs.readFileSync(path.join(input.root, manifest)), fake.original);
+      if (options.runtimeEvidence) assert.equal(fake.calls.length, 1);
+      else {
+        assert.equal(report.testBuilds.length, 4);
+        assert.equal(report.testBuilds[0].runtimeComparison, undefined);
+      }
+    } finally {
+      input.cleanup();
+    }
+  });
+}
+
+test("an actual failed runtime keeps empty partial evidence and its original failure", () => {
+  const input = fixture();
+  const fake = runner(input.root, { runtimeStatus: 17, runtimeEvidence: "empty" });
+  try {
+    const report = runProfile({ ...input, platform: "darwin", env, run: fake.run });
+    assert.equal(report.exitCode, 17);
+    assert.deepEqual(report.runtime.units.units, []);
+    assert.equal(report.manifestRestored, true);
+    assert.equal(report.testBuilds.length, 0);
+  } finally {
+    input.cleanup();
+  }
+});
+
+test("an actual failed archive keeps empty partial evidence without comparisons", () => {
+  const input = fixture();
+  const fake = runner(input.root, { archiveStatus: 17, archiveEvidence: "empty" });
+  try {
+    const report = runProfile({ ...input, platform: "darwin", env, run: fake.run });
+    assert.equal(report.exitCode, 17);
+    assert.deepEqual(report.testBuilds[0].units.units, []);
+    assert.equal(report.testBuilds[0].runtimeComparison, undefined);
+    assert.equal(report.manifestRestored, true);
+    assert.equal(report.testBuilds.length, 3);
   } finally {
     input.cleanup();
   }

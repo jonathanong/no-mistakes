@@ -133,12 +133,21 @@ function compareUnits(previous, next) {
 function compareCargoUnits(before, after, options = {}) {
   const previous = rootUnits(before, options);
   const next = rootUnits(after, options);
+  const library = (unit) =>
+    !unit.profile.test &&
+    unit.target.kind.some((kind) =>
+      ["lib", "rlib", "cdylib", "dylib", "staticlib", "proc-macro"].includes(kind),
+    );
   return {
     schemaVersion: 1,
     evidence:
       "Matching reported unit signatures do not establish reuse. Cargo fresh=true is the reuse evidence for that invocation; filenames are not unit identities.",
     context: { before: before.context, after: after.context },
     rootCounts: { before: counts(previous), after: counts(next) },
+    rootLibraryCounts: {
+      before: counts(previous.filter(library)),
+      after: counts(next.filter(library)),
+    },
     ...compareUnits(before.units, after.units),
     rootComparison: compareUnits(previous, next),
   };

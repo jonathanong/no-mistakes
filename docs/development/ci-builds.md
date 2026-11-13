@@ -169,6 +169,10 @@ runner metadata. Cargo JSON is collected from stdout independently of verbose
 stderr, and the diagnostic log is flushed before final report capture. Matching
 filenames or reported unit descriptors do not establish fingerprint compatibility;
 `fresh=true` is Cargo's evidence that a unit was reused in that invocation.
+Comparisons report the normal root library separately from package-wide counts,
+which also include the build script, CLI, and test harnesses. The experiment
+requires the expected runtime library/CLI and each selected test harness before
+accepting a successful phase as evidence; empty or incomplete reports fail.
 
 For a controlled shared-target experiment, dispatch the existing workflow with
 `profile_native_compile=true` and `cold_cache=true`:
@@ -202,6 +206,24 @@ showed a runtime root rebuild after those dependency differences. Do not publish
 a test-produced runtime as equivalent or merge the producers merely because
 some dependencies are fresh. The hosted evidence and decision are recorded in
 the PR for #3333.
+
+The preliminary Linux experiment used Rust 1.100.0, six Cargo jobs, 64 root
+code-generation units, no incremental compilation, and the original N-API and
+warning settings. Its selected test-first build compiled 325 units in 99.84s
+(root library 72.39s). The following runtime build reused 278 units but compiled
+nine in 78.17s, including the root library again for 74.10s. These are different
+commands on Linux, not a macOS speedup comparison. The observed dependency
+feature differences were:
+
+| Dependency       | Runtime features               | Additional test graph features |
+| ---------------- | ------------------------------ | ------------------------------ |
+| `bstr`           | `alloc`, `std`                 | `default`, `unicode`           |
+| `nix`            | `default`, `process`, `signal` | `time`                         |
+| `regex-automata` | Existing runtime feature set   | `dfa-search`                   |
+
+The root library's own default features and reported profile matched, but its
+dependency closure did not. Retaining the independent production graph avoids
+substituting a wider dependency feature graph without measuring compatibility.
 
 ### Controlled Rust-cache-cold measurement
 

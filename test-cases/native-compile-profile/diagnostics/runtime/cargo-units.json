@@ -23,7 +23,7 @@
   },
   "counts": {
     "fresh": 0,
-    "compiled": 2
+    "compiled": 3
   },
   "units": [
     {
@@ -79,6 +79,33 @@
       "fresh": false,
       "filenames": [
         "target/debug/deps/libbstr-same.rlib"
+      ]
+    },
+    {
+      "package_id": "path+file:///workspace/crates/no-mistakes#no-mistakes@0.1.0",
+      "target": {
+        "name": "no-mistakes",
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ]
+      },
+      "features": [
+        "default",
+        "mermaid"
+      ],
+      "profile": {
+        "debug_assertions": true,
+        "debuginfo": 0,
+        "opt_level": "0",
+        "overflow_checks": true,
+        "test": false
+      },
+      "fresh": false,
+      "filenames": [
+        "target/debug/no-mistakes"
       ]
     }
   ]

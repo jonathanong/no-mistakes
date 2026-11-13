@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "context": {
+    "cargo": {
+      "stdout": "cargo fixture"
+    },
+    "command": [
+      "cargo",
+      "build"
+    ],
+    "environment": {
+      "CARGO_INCREMENTAL": "0",
+      "NO_MISTAKES_BUILD_NAPI": "1",
+      "RUSTFLAGS": "fixture"
+    },
+    "profiles": [
+      "[profile.dev]",
+      "debug = 0"
+    ],
+    "rustc": {
+      "stdout": "rustc fixture"
+    }
+  },
+  "counts": {
+    "fresh": 0,
+    "compiled": 0
+  },
+  "units": []
+}

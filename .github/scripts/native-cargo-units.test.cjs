@@ -44,6 +44,10 @@ test("matching roots do not conceal differing dependency features or prove reuse
     after: { fresh: 0, compiled: 2 },
   });
   assert.equal(comparison.rootComparison.matching.length, 1);
+  assert.deepEqual(comparison.rootLibraryCounts, {
+    before: { fresh: 0, compiled: 1 },
+    after: { fresh: 0, compiled: 1 },
+  });
   assert.equal(comparison.rootComparison.onlyAfter.length, 1);
   assert.equal(comparison.matching.length, 1);
   assert.deepEqual(comparison.matching[0].after, { fresh: 0, compiled: 1 });
@@ -51,6 +55,13 @@ test("matching roots do not conceal differing dependency features or prove reuse
   const dependency = comparison.onlyAfter.find((entry) => entry.signature.target.name === "bstr");
   assert.deepEqual(dependency.signature.features, ["std", "unicode"]);
   assert.match(comparison.evidence, /do not establish reuse/);
+});
+
+test("normal root library counts exclude the CLI, build script and test harness", () => {
+  const report = collect("root-kinds");
+  const comparison = compareCargoUnits(report, report);
+  assert.deepEqual(comparison.rootCounts.before, { fresh: 0, compiled: 4 });
+  assert.deepEqual(comparison.rootLibraryCounts.before, { fresh: 0, compiled: 1 });
 });
 
 test("Cargo fresh evidence is retained for the sequential prototype invocation", () => {
