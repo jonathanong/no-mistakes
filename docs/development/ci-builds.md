@@ -171,7 +171,11 @@ floors, CRAP, and complexity gates passed. The paired warm measurement reuses
 this exact commit's build archives while rerunning every test and collecting
 new profiles; its result is recorded in the PR alongside per-job timing tables.
 The later pnpm store-save guard changes cache publication, not these compiler
-or test commands.
+commands. Real-addon provenance cases register effects/export parity, checks,
+and mixed-demand unions separately. Each union still recomputes all standalone
+reports and compares the complete CJS/ESM prepared results; negative entries
+remain covered. The unchanged 5,000 ms per-test gate measures each behavior
+without bundling all export-parity queries into that same case.
 
 The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
 fetch CLI test. That one exact case receives its ordinary Cargo filter arguments
