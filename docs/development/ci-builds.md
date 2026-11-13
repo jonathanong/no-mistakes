@@ -4,9 +4,9 @@
 
 The pull-request workflow splits compilation-heavy checks into producer and
 consumer jobs, with matrix shards for independent test work. This section
-describes the current layout; the timings below are from the earlier serial
-job layout and are historical measurements, not measurements of the current
-workflow.
+describes the current layout and labels the measured baseline and intermediate
+heads explicitly. The latest PR-head timings are recorded in
+[PR #3322](https://github.com/jonathanong/no-mistakes/pull/3322).
 
 The current validation graph is organized as follows:
 
@@ -116,11 +116,9 @@ These were one completed run, not a tail estimate. The macOS native Rust-cache
 restore missed, and its separately keyed native test-artifact cache also
 missed. The run therefore records a cold native build path; it does not prove
 that every future run will be cold or warm. The timings include runner setup
-and, for each job, its own cleanup. The 10-minute PR-wall target has not yet
-been demonstrated by a completed run of the parallel workflow. In particular,
-the earlier macOS native path alone exceeded that target; sharding and artifact
-reuse are intended to reduce its critical path, but their end-to-end effect
-must be measured on a completed run.
+and, for each job, its own cleanup. The earlier macOS native path alone exceeded
+the ten-minute target. The following completed parallel measurements distinguish
+cache states and include scheduling overhead.
 
 ### Completed parallel validation
 
@@ -174,8 +172,36 @@ waited 6m17s for the Windows producer, while Windows API consumers waited
 9m00s for the macOS runtime producer. Native pipelines now use independent
 producer and consumer jobs per platform. Each platform can start its tests as
 soon as its own artifacts are ready; the aggregate still requires every job.
-The split requires a subsequent completed measurement and does not change the
-cold-compilation bound or cache retention limits.
+The split removes that dependency delay while preserving the cold-compilation
+bound and cache retention limits.
+
+The independent-platform layout completed successfully in warm-cache run
+[`43393167734`](https://github.com/jonathanong/no-mistakes/actions/runs/43393167734)
+at `b17e05d2d`, with 70 passing checks and three optional skips. End-to-end wall
+time was **10m45s**. The workflow was created at 08:25:56 UTC, but its first
+job started at 08:27:04 UTC, a **1m08s scheduling interval**. From first job
+start to the final aggregate, elapsed time was **9m37s**. That sample therefore
+exceeded the end-to-end target despite an execution path below ten minutes.
+
+| Warm-cache job                                      |        Execution time |
+| --------------------------------------------------- | --------------------: |
+| Linux CLI / addon producers                         |         1m00s / 1m07s |
+| Instrumented Rust producer / slowest shard / report | 1m26s / 3m47s / 1m44s |
+| Standalone library producer                         |                 1m06s |
+| Native runtime producer, macOS / Windows            |         2m41s / 2m30s |
+| Native Rust producer, macOS / Windows               |         2m58s / 2m13s |
+| Slowest native Rust shard, macOS / Windows          |         6m03s / 4m16s |
+| Slowest native API shard, macOS / Windows           |         3m09s / 2m17s |
+
+The macOS runtime Cargo build took 3.95 seconds; its four test-build commands
+took 5.85 seconds combined. Coverage compilation took 3.77 seconds, and
+standalone compilation took 0.18 seconds. The remaining producer time includes
+setup, cache restoration, artifact preparation, upload, and cleanup. The final
+macOS Rust shard spent 4m36s executing tests and 46 seconds downloading its
+archive, within a 6m03s job. This identifies execution and artifact handling as
+the warm-path limits after compilation reuse. Merged coverage remained at
+98.0316% regions, 98.9974% lines, and 99.3110% functions, with the same floors
+and CRAP gate. These are individual samples, not a guaranteed tail bound.
 
 Cold compilation on the current macOS runner already exceeds ten minutes
 before test execution. Reaching ten minutes reliably also requires retained
