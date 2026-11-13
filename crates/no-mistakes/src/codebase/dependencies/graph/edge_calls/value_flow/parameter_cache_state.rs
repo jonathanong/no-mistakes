@@ -37,8 +37,8 @@ impl ParameterCache {
 }
 
 fn waits_for(state: &State, mut owner: ThreadId, thread: ThreadId) -> bool {
-    let mut visited = fx_set();
-    while visited.insert(owner) {
+    // Acquire checks each new edge under the state mutex, keeping active waits acyclic.
+    loop {
         if owner == thread {
             return true;
         }
@@ -51,5 +51,4 @@ fn waits_for(state: &State, mut owner: ThreadId, thread: ThreadId) -> bool {
         };
         owner = *next;
     }
-    false
 }
