@@ -1,0 +1,12 @@
+include:
+  17: [packages]
+  '@example/policy': [packages]
+  ./bad-grant.yaml: 17
+  ./bad-items.yaml: [packages, 3]
+  ./not-yaml.txt: [overrides]
+  ./wild*.yaml: [overrides]
+  ../escape.yaml: [minimumReleaseAgeExclude]
+  ./missing.yaml: [catalog]
+  ./broken.yaml: '*'
+  ./sequence.yml: [packages]
+  ./settings/policy.yml: [packages, overrides]

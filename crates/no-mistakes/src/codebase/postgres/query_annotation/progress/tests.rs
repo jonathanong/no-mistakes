@@ -132,3 +132,6 @@ fn progress_only_records_fixed_timings_without_work_counters() {
     assert_eq!(snapshot.timings[0].label, "postgres.annotation.root");
     assert!(observer.progress_snapshot().unwrap().active.is_empty());
 }
+
+#[path = "generic_trace_matrix_tests.rs"]
+mod generic_trace_matrix_tests;

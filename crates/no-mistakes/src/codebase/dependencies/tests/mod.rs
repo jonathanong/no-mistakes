@@ -6,3 +6,5 @@ include!("execution_mixed_relationships.rs");
 mod framework_ownership;
 mod workspace_tsconfig;
 mod workspace_tsconfig_shared_diagnostics;
+
+mod symbol_projection_boundaries;

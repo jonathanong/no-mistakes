@@ -1,0 +1,5 @@
+catalogs:
+  named:
+    valid: 4.0.0
+include:
+  ./missing.yml: [catalogs]

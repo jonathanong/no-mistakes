@@ -41,8 +41,8 @@ fn blocked_check_subprocess_helper() {
         ..Default::default()
     })
     .unwrap();
-    worker.join().unwrap();
-    panic!("watchdog failed to stop blocked check");
+    let code = worker.join().unwrap();
+    panic!("watchdog failed to stop blocked check: {code:?}");
 }
 
 #[test]

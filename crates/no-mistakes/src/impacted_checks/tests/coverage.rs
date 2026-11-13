@@ -19,7 +19,7 @@ fn run_diagnoses_requested_empty_result() {
     let mut a = args(&[]);
     a.json = true;
     a.diagnose_empty = true;
-    run(a).unwrap();
+    assert_eq!(run(a).unwrap(), ExitCode::SUCCESS);
 }
 
 #[test]

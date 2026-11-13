@@ -189,3 +189,38 @@ fn selected_keeps_identifier_holes_and_drops_misaligned_templates() {
     )
     .is_none());
 }
+
+#[test]
+fn split_rejects_missing_files_empty_arguments_and_unresolved_names() {
+    let sql = EmbeddedSqlCall {
+        sql_text: Some("SELECT sql_placeholder_1 FROM sql_placeholder_2".to_string()),
+        ..EmbeddedSqlCall::default()
+    };
+    let (facts, file, _) = harness(ValueFlowFacts {
+        calls: vec![call(Vec::new())],
+        ..ValueFlowFacts::default()
+    });
+    let bindings = Bindings::new(&facts);
+    let at = |path: PathBuf| super::super::super::SqlCall {
+        file: path,
+        span: (10, 20),
+        call: &sql,
+    };
+    assert!(split(&facts, &at(PathBuf::from("absent.ts")), &bindings).is_none());
+    assert!(split(&facts, &at(file), &bindings).is_none());
+    let (facts, file, sql) = harness(ValueFlowFacts {
+        calls: vec![call(vec![named("missing")])],
+        ..ValueFlowFacts::default()
+    });
+    let bindings = Bindings::new(&facts);
+    assert!(split(
+        &facts,
+        &super::super::super::SqlCall {
+            file,
+            span: (10, 20),
+            call: &sql,
+        },
+        &bindings,
+    )
+    .is_none());
+}

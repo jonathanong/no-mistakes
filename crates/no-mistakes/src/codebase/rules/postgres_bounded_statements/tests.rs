@@ -51,6 +51,7 @@ mod table_only;
 mod table_source_association;
 mod temporary_bare_ownership;
 mod trigger_scope;
+mod view_key_evidence;
 mod wrapped_suppression;
 
 use super::check_with_files;

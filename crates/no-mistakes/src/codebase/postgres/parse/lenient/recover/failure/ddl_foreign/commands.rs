@@ -20,10 +20,7 @@ pub(super) fn create_fdw(c: &mut Cursor<'_>) -> bool {
     } else {
         c.words(&["NO", "VALIDATOR"]);
     }
-    if c.word("OPTIONS") && !c.options(false) {
-        return false;
-    }
-    true
+    !c.word("OPTIONS") || c.options(false)
 }
 
 pub(super) fn alter_fdw(c: &mut Cursor<'_>) -> bool {

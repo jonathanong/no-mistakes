@@ -161,3 +161,16 @@ mod patch_support_tests;
 mod predicate_tests;
 #[cfg(test)]
 mod switch_tests;
+
+#[cfg(test)]
+mod lowering_fixture_tests;
+
+#[cfg(test)]
+mod real_catalog_fixture_tests;
+
+#[cfg(test)]
+mod cov_p2_budget_tests;
+#[cfg(test)]
+mod cov_p2_callback_tests;
+#[cfg(test)]
+mod cov_p2_catalog_tests;

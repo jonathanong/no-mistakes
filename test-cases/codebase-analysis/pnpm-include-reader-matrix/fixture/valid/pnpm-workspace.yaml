@@ -1,0 +1,3 @@
+include:
+  ./settings/packages.yaml: [packages]
+  ./settings/security.yml: '*'

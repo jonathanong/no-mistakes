@@ -171,6 +171,8 @@ fn package_scope(root: &Path, directory: &Path) -> String {
 }
 
 #[cfg(test)]
+mod coverage_edges;
+#[cfg(test)]
 mod tests;
 
 #[cfg(test)]

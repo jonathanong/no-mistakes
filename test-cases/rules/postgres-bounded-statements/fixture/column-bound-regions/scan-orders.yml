@@ -1,0 +1,8 @@
+schemaCatalogPath: schema.json
+sqlInclude:
+  - sql/valid.sql
+exclude:
+  - src/**
+columnBounds:
+  orders:
+    reason: reviewed

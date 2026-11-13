@@ -1,0 +1,14 @@
+import {read} from '@example/db';
+import {make, token, Contract, absent} from './real-catalog-helpers.mjs';
+import {renamed} from './real-catalog-alias.mjs';
+import {hidden} from './real-catalog-types.mjs';
+import {namespace} from './real-catalog-namespace.mjs';
+import {missing} from './real-catalog-not-prepared.mjs';
+read(make());
+read(renamed());
+read(token());
+read(Contract());
+read(absent());
+read(hidden());
+read(namespace());
+read(missing());

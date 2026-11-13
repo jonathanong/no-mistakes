@@ -126,3 +126,34 @@ fn demand_validation_failure_retains_independent_filesystem_findings() {
                 .message
                 .contains("files must contain at least one non-empty glob")));
 }
+
+#[test]
+fn invalid_source_demands_fail_instead_of_becoming_complete_checks() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/check/filesystem-prerequisites"),
+    );
+    let candidates = [root.join("broken.ts")];
+    let sources = crate::codebase::rules::source_store_for_files(&candidates);
+    for (consumer, options, expected) in [
+        (FINITE_SET_CONSISTENCY, "sets: false", "sets"),
+        (
+            "postgres-no-offset",
+            "importSpecifier: '@example/db'\ninclude: ['[']",
+            "invalid glob",
+        ),
+    ] {
+        let config: NoMistakesConfig = serde_yaml::from_str(&format!(
+            "rules:\n  - rule: {consumer}\n    scope: repository\n"
+        ))
+        .unwrap();
+        let mut config = config;
+        config.rules[0].options = serde_yaml::from_str(options).unwrap();
+        let error = files(&root, &config, consumer, &candidates, None, &sources).unwrap_err();
+        assert!(
+            error.to_string().contains(expected),
+            "{consumer}: {error:#}"
+        );
+    }
+    assert_eq!(sources.physical_read_count(), 0);
+}

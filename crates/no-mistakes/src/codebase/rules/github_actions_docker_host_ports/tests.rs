@@ -56,6 +56,11 @@ fn fixture_files(scenario: &str) -> &'static [&'static str] {
             ".no-mistakes.yml",
         ],
         "flow" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
+        "3304-wrappers" => &[
+            ".github/workflows/ci.yml",
+            ".github/workflows/matrix.yml",
+            ".no-mistakes.yml",
+        ],
         "suppression" => &[
             ".github/workflows/ci.yml",
             ".github/workflows/compact.yml",
@@ -359,3 +364,5 @@ jobs:
 
 #[path = "parser_edges_tests.rs"]
 mod parser_edges_tests;
+#[path = "wrappers_fixture_tests.rs"]
+mod wrappers_fixture_tests;

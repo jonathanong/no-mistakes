@@ -145,8 +145,8 @@ fn quoted_languages_conflicting_bodies_and_conditional_wrappers_fail_closed() {
         }
     }
     assert_eq!(result.statements[3].sql, "SELECT 61;");
-    for index in 5..9 {
-        let PostgresSqlStatementKind::Wrapper { wrapper } = &result.statements[index].facts else {
+    for (index, statement) in result.statements.iter().enumerate().take(9).skip(5) {
+        let PostgresSqlStatementKind::Wrapper { wrapper } = &statement.facts else {
             panic!("wrapper expected")
         };
         assert_eq!(wrapper.complete, index < 7);

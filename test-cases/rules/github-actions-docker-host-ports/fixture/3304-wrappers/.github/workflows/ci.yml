@@ -1,0 +1,17 @@
+on: push
+jobs:
+  ports:
+    steps:
+      - run: env -C /tmp docker run -p 1:2 postgres
+      - run: env -C
+      - run: env -u PORT docker run -p 1:2 postgres
+      - run: env -u
+      - run: timeout -k 5s 30s docker run --publish 15432:5432 postgres
+      - run: 'docker run --publish "${PORT}:5432" postgres'
+      - run: 'docker run --publish "${{ vars.HOST_PORT }}:5432" postgres'
+      - run: 'docker run --publish "${UNSET:-0}:5432" postgres'
+      - run: 'docker run --publish "0-0:5432" postgres'
+      - run: 'docker run --publish "[::1]::5432" postgres'
+      - run: 'docker run --publish "bad-host:5432" postgres'
+      - run: 'docker run --publish "9:5432/udp" postgres'
+      - run: 'docker run --publish "[::1]:8:5432/tcp" postgres'

@@ -1,4 +1,4 @@
-use super::{only_appended, span};
+use super::{fragment_line, only_appended, span};
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::statements::SqlVariantLocations;
 use crate::codebase::postgres::SqlStatementFileFacts;
@@ -132,4 +132,20 @@ fn append_boundaries_ignore_helper_order_and_empty_openings() {
         .first_append_position
         .is_some());
     assert_eq!(only_appended(&[span(physical, 0).unwrap()]), None);
+}
+
+#[test]
+fn region_physical_sql_without_a_call_line_uses_the_file_origin() {
+    let path =
+        crate::test_support::rule_fixture_root("postgres-bounded-statements").join("sql/valid.sql");
+    let sql = std::fs::read_to_string(&path).unwrap();
+    let mut file =
+        crate::codebase::postgres::statements::extract_sql_variant_statement_facts(&sql, true, &[]);
+    file.path = path;
+    let locations = file.variant_locations.as_ref().expect("locations");
+    assert_eq!(locations.original_call_line, 0);
+    assert!(locations.position(SqlFactSite::Origin).is_some());
+    let found = span(&file, 0).unwrap();
+    assert_eq!(found.call_line, file.origin_line);
+    assert!(fragment_line(&[found], "sql/valid.sql:not_a_relation").is_none());
 }

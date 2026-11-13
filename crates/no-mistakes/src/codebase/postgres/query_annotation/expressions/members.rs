@@ -18,6 +18,23 @@ pub(super) fn computed(value: &ComputedMemberExpression<'_>, source: &str) -> Ex
     }
 }
 
+pub(super) fn unary(value: &oxc_ast::ast::UnaryExpression<'_>, source: &str) -> Expr {
+    use oxc_ast::ast::UnaryOperator;
+    if value.operator == UnaryOperator::Delete {
+        deleted(&value.argument, source)
+    } else if matches!(
+        value.operator,
+        UnaryOperator::UnaryPlus | UnaryOperator::UnaryNegation | UnaryOperator::BitwiseNot
+    ) {
+        // Numeric coercion can invoke user-defined conversion hooks.
+        // Preserve operand effects, but do not treat the result like
+        // a harmless discarded primitive.
+        Expr::Opaque(vec![expression(&value.argument, source)])
+    } else {
+        Expr::Discard(Box::new(expression(&value.argument, source)))
+    }
+}
+
 pub(super) fn static_index(value: &Expression<'_>) -> Option<usize> {
     const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
     let value = match unwrap_ts_wrappers(value) {

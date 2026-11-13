@@ -491,3 +491,6 @@ impl InvocationGuard {
         Self::acquire_resolving_path(options, forward_parent_signals, || Ok(path.to_path_buf()))
     }
 }
+
+#[path = "tests/acquisition_error_boundaries.rs"]
+mod acquisition_error_boundaries;

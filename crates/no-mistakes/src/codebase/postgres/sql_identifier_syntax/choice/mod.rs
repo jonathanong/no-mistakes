@@ -172,3 +172,6 @@ pub(super) fn executor_spans(
         _ => {}
     }
 }
+
+#[cfg(test)]
+mod fixture_tests;

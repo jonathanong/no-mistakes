@@ -276,7 +276,7 @@ fn renders_empty_warnings_and_fallback() {
 fn run_executes() {
     let mut a = args(&["src/foo.ts"]);
     a.json = true;
-    run(a).unwrap();
+    assert_eq!(run(a).unwrap(), ExitCode::SUCCESS);
 }
 
 #[test]

@@ -185,6 +185,11 @@ HAVING NOT EXISTS (
 ));
 ```
 
+The grouped threshold rewrite requires a physical outer relation, a direct
+`MAX(column)` input, and correlation on every grouping key. Equality may put
+the inner key on either side. Derived relations, computed grouping keys,
+uncorrelated probes, and inner `UNION` or capped queries remain unchanged.
+
 Keep the original `NOT EXISTS` disjunct, especially for nullable grouping keys.
 The threshold guard is necessary because `MAX(...) < NULL` is unknown, while
 `NOT EXISTS (... >= NULL)` is true. For a catalog-known nullable input, also require `EXISTS` for rows with a

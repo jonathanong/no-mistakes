@@ -675,5 +675,98 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [],
       "warnings": []
     }
+  },
+  "wrappers-variables": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml:16: job `ports` step 12 pins host port `9` in `9:5432/udp`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: 'docker run --publish \"9:5432/udp\" postgres'",
+          "target": "ports"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 17,
+          "message": ".github/workflows/ci.yml:17: job `ports` step 13 pins host port `8` in `[::1]:8:5432/tcp`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: 'docker run --publish \"[::1]:8:5432/tcp\" postgres'",
+          "target": "ports"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml:5: job `ports` step 1 pins host port `1` in `1:2`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: env -C /tmp docker run -p 1:2 postgres",
+          "target": "ports"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: job `ports` step 3 pins host port `1` in `1:2`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: env -u PORT docker run -p 1:2 postgres",
+          "target": "ports"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml:9: job `ports` step 5 pins host port `15432` in `15432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: timeout -k 5s 30s docker run --publish 15432:5432 postgres",
+          "target": "ports"
+        },
+        {
+          "file": ".github/workflows/matrix.yml",
+          "line": 5,
+          "message": ".github/workflows/matrix.yml:5: job `wrappers` step 1 pins host port `6001` in `6001:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: sudo --host=daemon env -i docker container create -p 6001:5432 postgres",
+          "target": "wrappers"
+        },
+        {
+          "file": ".github/workflows/matrix.yml",
+          "line": 6,
+          "message": ".github/workflows/matrix.yml:6: job `wrappers` step 2 pins host port `6002` in `6002:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: timeout --signal TERM --kill-after 2s 45s nice -n 5 docker run --publish 6002:5432 postgres",
+          "target": "wrappers"
+        },
+        {
+          "file": ".github/workflows/matrix.yml",
+          "line": 7,
+          "message": ".github/workflows/matrix.yml:7: job `wrappers` step 3 pins host port `6003` in `6003:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: echo pg | xargs --max-procs 2 --replace={} docker run -p 6003:5432 postgres",
+          "target": "wrappers"
+        },
+        {
+          "file": ".github/workflows/matrix.yml",
+          "line": 8,
+          "message": ".github/workflows/matrix.yml:8: job `wrappers` step 4 pins host port `6004` in `6004:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: bash -lc 'docker run -p 6004:5432 postgres'",
+          "target": "wrappers"
+        },
+        {
+          "file": ".github/workflows/matrix.yml",
+          "line": 9,
+          "message": ".github/workflows/matrix.yml:9: job `wrappers` step 5 pins host port `6005` in `6005:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: eval 'docker run -p 6005:5432 postgres'",
+          "target": "wrappers"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

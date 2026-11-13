@@ -1,0 +1,9 @@
+projects:
+  web:
+    type: nextjs
+tests:
+  playwright:
+    configs: []
+rules:
+  - rule: playwright-coverage
+    projects: [web]

@@ -1,0 +1,18 @@
+projects:
+  web:
+    type: nextjs
+tests:
+  playwright:
+    configs: []
+    apps:
+      web:
+        project: web
+rules:
+  - rule: forbidden-dependencies
+    projects: [web]
+    tests:
+      playwright: [web]
+    options:
+      relationships: [test, import]
+      roots: [entry.mts]
+      forbiddenFiles: [private/**]

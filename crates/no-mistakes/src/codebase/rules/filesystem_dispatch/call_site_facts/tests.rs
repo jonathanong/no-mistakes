@@ -11,6 +11,17 @@ fn invalid_fact_demands_fail_before_collection() {
     for (rule, options, expected) in [
         ("finite-set-consistency", "sets: false", "sets"),
         (
+            "production-dependency-declarations",
+            "workspaceRoots: 42",
+            "workspaceRoots",
+        ),
+        ("forbidden-lint-suppressions", "files: 42", "files"),
+        (
+            "required-companion-imports",
+            "companionGlobs: 42",
+            "companionGlobs",
+        ),
+        (
             "postgres-column-requires-trigger",
             "schemaCatalogPath: [schema.json]",
             "schemaCatalogPath",

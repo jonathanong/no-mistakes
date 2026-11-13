@@ -229,3 +229,31 @@ fn identifier_status_distinguishes_valid_bind_only_sql_from_partial_fragments() 
     }
     assert_eq!(identifier_status(&EmbeddedSqlCall::default()), None);
 }
+
+#[test]
+fn digitless_markers_do_not_advance_the_placeholder_max() {
+    let call = EmbeddedSqlCall {
+        sql_text: Some("SELECT sql_placeholder_ FROM sql_placeholder_1".into()),
+        ..Default::default()
+    };
+    let (identifiers, max) = aligned(&call).expect("aligned");
+    assert_eq!(identifiers.into_iter().collect::<Vec<_>>(), vec![1]);
+    assert_eq!(max, 1);
+}
+
+#[test]
+fn insert_without_a_query_keeps_the_target_relation() {
+    use sqlparser::ast::Statement;
+    let statements =
+        parse_postgres_sql("INSERT INTO sql_placeholder_1 DEFAULT VALUES").expect("sql");
+    let Statement::Insert(insert) = &statements[0] else {
+        panic!("insert");
+    };
+    assert!(insert.source.is_none());
+    let mut found = Indexes {
+        relations: BTreeSet::new(),
+        columns: BTreeSet::new(),
+    };
+    walk::walk_statement(&statements[0], &mut found);
+    assert_eq!(found.relations, BTreeSet::from([1]));
+}

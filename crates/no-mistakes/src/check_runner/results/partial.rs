@@ -44,3 +44,6 @@ fn retain<T: Default>(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

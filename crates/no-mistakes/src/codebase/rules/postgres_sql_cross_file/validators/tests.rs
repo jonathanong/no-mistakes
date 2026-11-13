@@ -122,3 +122,40 @@ fn imported_literal_helpers_and_parse_errors_are_classified() {
         &named("schemaOf")
     ));
 }
+
+#[test]
+fn local_named_callees_without_facts_or_with_parse_errors_are_not_finite() {
+    let file = PathBuf::from("/repo/src/query.ts");
+    let graph = from_raw_maps(
+        PathBuf::from("/repo"),
+        Default::default(),
+        Default::default(),
+    );
+    let absent = CheckFactMap::default();
+    assert!(!is_finite_validator(
+        &graph,
+        &absent,
+        &RegistryRoutes::new(&absent),
+        &file,
+        &named("schemaOf")
+    ));
+    let mut facts = CheckFactMap::default();
+    facts.ts.insert(
+        file.clone(),
+        CheckFileFacts {
+            ts: Arc::new(TsFileFacts {
+                parse_error: Some("boom".into()),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+        .into(),
+    );
+    assert!(!is_finite_validator(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &file,
+        &named("schemaOf")
+    ));
+}

@@ -45,23 +45,7 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         Expression::AwaitExpression(value) => {
             Expr::Await(Box::new(expression(&value.argument, source)))
         }
-        Expression::UnaryExpression(value) => {
-            if value.operator == oxc_ast::ast::UnaryOperator::Delete {
-                members::deleted(&value.argument, source)
-            } else if matches!(
-                value.operator,
-                oxc_ast::ast::UnaryOperator::UnaryPlus
-                    | oxc_ast::ast::UnaryOperator::UnaryNegation
-                    | oxc_ast::ast::UnaryOperator::BitwiseNot
-            ) {
-                // Numeric coercion can invoke user-defined conversion hooks.
-                // Preserve operand effects, but do not treat the result like
-                // a harmless discarded primitive.
-                Expr::Opaque(vec![expression(&value.argument, source)])
-            } else {
-                Expr::Discard(Box::new(expression(&value.argument, source)))
-            }
-        }
+        Expression::UnaryExpression(value) => members::unary(value, source),
         Expression::NumericLiteral(value)
             if value.value.fract() == 0.0 && value.value.abs() < 9_007_199_254_740_991.0 =>
         {
@@ -119,3 +103,6 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
         _ => Expr::Opaque(children::collect(expr, source)),
     }
 }
+
+#[cfg(test)]
+mod tests;

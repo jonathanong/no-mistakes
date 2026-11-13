@@ -1,0 +1,10 @@
+on: push
+jobs:
+  wrappers:
+    steps:
+      - run: sudo --host=daemon env -i docker container create -p 6001:5432 postgres
+      - run: timeout --signal TERM --kill-after 2s 45s nice -n 5 docker run --publish 6002:5432 postgres
+      - run: echo pg | xargs --max-procs 2 --replace={} docker run -p 6003:5432 postgres
+      - run: bash -lc 'docker run -p 6004:5432 postgres'
+      - run: eval 'docker run -p 6005:5432 postgres'
+      - run: eval "$COMMAND"

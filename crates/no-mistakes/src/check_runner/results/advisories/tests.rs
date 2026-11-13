@@ -37,3 +37,27 @@ fn final_advisory_collection_does_not_rescan_nextjs_configs() {
     assert!(ordinary.is_empty(), "{ordinary:?}");
     assert_eq!(deferred, ordinary);
 }
+
+#[test]
+fn advisory_option_errors_survive_both_suppression_modes() {
+    let root = Path::new("/repo");
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[])));
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: no_mistakes::codebase::rules::AGENTS_MD_MAX_SIZE.into(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("{ maxLines: invalid }").unwrap(),
+        ..Default::default()
+    });
+    for include_suppressed in [false, true] {
+        assert!(
+            collect(false, include_suppressed, root, &config, &[], &sources)
+                .unwrap()
+                .is_empty()
+        );
+        let error = collect(true, include_suppressed, root, &config, &[], &sources).unwrap_err();
+        let message = format!("{error:#}");
+        assert!(message.contains("agents-md-max-size"), "{message}");
+        assert!(message.contains("options.maxLines"), "{message}");
+    }
+}

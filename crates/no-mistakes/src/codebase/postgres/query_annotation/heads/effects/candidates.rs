@@ -142,7 +142,7 @@ fn declarations_safe(
         callable,
         parameter,
     } = input;
-    if !callable.runtime
+    !(!callable.runtime
         || callable.imported
         || !parameter.runtime
         || parameter.imported
@@ -156,11 +156,7 @@ fn declarations_safe(
             !bindings.declaration_safe(span)
                 || syntax.assignments.writes.contains_key(&span)
                 || syntax.assignments.unsupported_writes.contains(&span)
-        })
-    {
-        return false;
-    }
-    true
+        }))
 }
 
 fn requirement(

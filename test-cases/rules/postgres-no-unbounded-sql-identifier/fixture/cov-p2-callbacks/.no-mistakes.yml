@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read]
+      executorTypeNames: [QueryExecutor]
+      effort: low
+      unanalyzable: advise
+      include: ['src/**/*.mts']

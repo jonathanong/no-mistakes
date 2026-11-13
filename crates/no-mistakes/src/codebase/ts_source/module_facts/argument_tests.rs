@@ -208,3 +208,6 @@ fn literal_argument_and_static_key_identities_remain_distinct() {
         );
     }
 }
+
+#[path = "argument_tests/unknown_global_guards.rs"]
+mod unknown_global_guards;

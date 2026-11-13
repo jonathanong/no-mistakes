@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      include: [.github/workflows/ci.test.mts]
+      allow:
+        - file: .github/workflows/ci.test.mts
+          text: 'timeout-minutes: 30'
+          reason: Pinned by the workflow contract.

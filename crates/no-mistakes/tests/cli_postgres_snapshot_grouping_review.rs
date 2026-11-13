@@ -9,10 +9,17 @@ fn postgres_grouping_review_check_json_snapshot() {
     );
     assert_saved_fixture(
         "postgres_grouping_review",
-        &[(
-            "guarded_absence_and_soundness_controls",
-            root.clone(),
-            root.join("review.yml"),
-        )],
+        &[
+            (
+                "guarded_absence_and_soundness_controls",
+                root.clone(),
+                root.join("review.yml"),
+            ),
+            (
+                "existence_boundaries",
+                root.join("existence-boundaries"),
+                root.join("existence-boundaries/.no-mistakes.yml"),
+            ),
+        ],
     );
 }

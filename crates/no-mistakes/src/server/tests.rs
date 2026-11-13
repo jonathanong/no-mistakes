@@ -5,6 +5,9 @@ use no_mistakes::server_routes::{
 };
 use std::path::PathBuf;
 
+#[path = "tests/dispatch_boundaries.rs"]
+mod dispatch_boundaries;
+
 fn sample_route() -> ServerRoute {
     ServerRoute {
         file: "src/users.ts".into(),
@@ -95,4 +98,27 @@ fn run_contracts_prints_json_for_a_fixture_root() {
     })
     .expect("contracts command runs");
     assert_eq!(code, ExitCode::SUCCESS);
+}
+
+#[test]
+fn run_rejects_explicit_invalid_tsconfig_before_server_analysis() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/invalid-json");
+    let error = run(ServerArgs {
+        common: GraphCommandArgs {
+            root,
+            tsconfig: Some(PathBuf::from("tsconfig.json")),
+            filters: Vec::new(),
+            depth: None,
+            format: Format::Json,
+            json: true,
+            timings: false,
+        },
+        command: ServerCommand::Routes { files: Vec::new() },
+    })
+    .unwrap_err();
+    let detail = format!("{error:#}");
+    assert!(detail.contains("loading tsconfig"), "{detail}");
+    assert!(detail.contains("tsconfig.json"), "{detail}");
+    assert!(detail.contains("pars"), "{detail}");
 }

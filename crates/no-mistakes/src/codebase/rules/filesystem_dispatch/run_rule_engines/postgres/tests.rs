@@ -96,3 +96,6 @@ fn prepared_facts_use_the_fact_checkers() {
         .is_some());
     }
 }
+
+#[path = "behavior_tests.rs"]
+mod behavior;

@@ -27,45 +27,56 @@ test("builds a before/after job summary for the native job", () => {
     jobName: "Windows x64",
     afterSha: "abcdef123456",
     beforeSha: "1234567abcdef",
-    nowMs: Date.parse("2026-09-07T12:42:52Z"),
+    nowMs: Date.parse("2026-09-07T12:43:10Z"),
     afterJob: {
       started_at: "2026-09-07T12:33:27Z",
-      completed_at: "2026-09-07T12:42:52Z",
+      completed_at: "2026-09-07T12:43:10Z",
       steps: [
         {
-          name: "Run platform-specific Rust tests",
+          name: "Build native CLI and N-API addon",
           started_at: "2026-09-07T12:34:42Z",
           completed_at: "2026-09-07T12:38:11Z",
         },
         {
-          name: "Build native CLI and N-API addon",
+          name: "Precompile native Rust test targets",
           started_at: "2026-09-07T12:38:11Z",
           completed_at: "2026-09-07T12:42:41Z",
+        },
+        {
+          name: "Run platform-specific Rust tests",
+          started_at: "2026-09-07T12:42:41Z",
+          completed_at: "2026-09-07T12:43:00Z",
         },
       ],
     },
     beforeJob: {
       started_at: "2026-09-07T12:33:27Z",
-      completed_at: "2026-09-07T12:42:52Z",
+      completed_at: "2026-09-07T12:43:10Z",
       steps: [
         {
-          name: "Run platform-specific Rust tests",
+          name: "Build native CLI and N-API addon",
           started_at: "2026-09-07T12:34:42Z",
           completed_at: "2026-09-07T12:38:11Z",
         },
         {
-          name: "Build native CLI and N-API addon",
+          name: "Precompile native Rust test targets",
           started_at: "2026-09-07T12:38:11Z",
           completed_at: "2026-09-07T12:42:41Z",
+        },
+        {
+          name: "Run platform-specific Rust tests",
+          started_at: "2026-09-07T12:42:41Z",
+          completed_at: "2026-09-07T12:43:00Z",
         },
       ],
     },
   });
 
   assert.ok(markdown.includes(commentMarker("Windows x64")));
-  assert.match(markdown, /9m 14s/);
+  assert.match(markdown, /9m 33s/);
   assert.match(markdown, /Run platform-specific Rust tests/);
   assert.match(markdown, /Build native CLI and N-API addon/);
+  assert.match(markdown, /Precompile native Rust test targets/);
 });
 
 test("baselines ignore unsuccessful runs and jobs", () => {
@@ -91,9 +102,14 @@ test("job totals stop at the last compile step, not post-job cleanup", () => {
         started_at: "2026-09-07T12:38:11Z",
         completed_at: "2026-09-07T12:42:41Z",
       },
+      {
+        name: "Precompile native Rust test targets",
+        started_at: "2026-09-07T12:42:41Z",
+        completed_at: "2026-09-07T12:43:00Z",
+      },
     ],
   };
-  assert.equal(comparableDurationSeconds(job, nowMs), 554);
+  assert.equal(comparableDurationSeconds(job, nowMs), 573);
 });
 
 function successfulNativeJob(extraSteps = []) {
@@ -101,27 +117,33 @@ function successfulNativeJob(extraSteps = []) {
     started_at: "2026-09-07T12:33:27Z",
     steps: [
       {
-        name: "Run platform-specific Rust tests",
+        name: "Build native CLI and N-API addon",
         started_at: "2026-09-07T12:34:42Z",
         completed_at: "2026-09-07T12:38:11Z",
         conclusion: "success",
       },
       {
-        name: "Build native CLI and N-API addon",
+        name: "Precompile native Rust test targets",
         started_at: "2026-09-07T12:38:11Z",
-        completed_at: "2026-09-07T12:42:41Z",
+        completed_at: "2026-09-07T12:40:11Z",
+        conclusion: "success",
+      },
+      {
+        name: "Run platform-specific Rust tests",
+        started_at: "2026-09-07T12:40:11Z",
+        completed_at: "2026-09-07T12:43:40Z",
         conclusion: "success",
       },
       {
         name: "Run native CLI smoke test",
-        started_at: "2026-09-07T12:42:41Z",
-        completed_at: "2026-09-07T12:42:50Z",
+        started_at: "2026-09-07T12:43:40Z",
+        completed_at: "2026-09-07T12:43:49Z",
         conclusion: "success",
       },
       {
         name: "Run real N-API API test",
-        started_at: "2026-09-07T12:42:50Z",
-        completed_at: "2026-09-07T12:43:00Z",
+        started_at: "2026-09-07T12:43:49Z",
+        completed_at: "2026-09-07T12:43:59Z",
         conclusion: "success",
       },
       ...extraSteps,
@@ -138,6 +160,10 @@ test("failed compile or test steps suppress the performance delta", () => {
         started_at: "2026-09-07T12:38:11Z",
         completed_at: "2026-09-07T12:40:00Z",
         conclusion: "failure",
+      },
+      {
+        name: "Precompile native Rust test targets",
+        conclusion: "skipped",
       },
     ],
   };
@@ -165,6 +191,10 @@ test("skipped required workload steps suppress the performance delta", () => {
       },
       {
         name: "Build native CLI and N-API addon",
+        conclusion: "skipped",
+      },
+      {
+        name: "Precompile native Rust test targets",
         conclusion: "skipped",
       },
       {
@@ -203,6 +233,10 @@ test("a skipped required step on the baseline suppresses the performance delta",
         conclusion: "skipped",
       },
       {
+        name: "Precompile native Rust test targets",
+        conclusion: "skipped",
+      },
+      {
         name: "Run native CLI smoke test",
         conclusion: "skipped",
       },
@@ -217,6 +251,26 @@ test("a skipped required step on the baseline suppresses the performance delta",
     jobName: "Windows x64",
     afterJob: successfulNativeJob(),
     beforeJob: incompleteBaseline,
+    nowMs: Date.parse("2026-09-07T12:50:00Z"),
+  });
+  assert.match(markdown, /n\/a \(base run incomplete\)/);
+});
+
+test("a baseline without native test precompilation is incomplete", () => {
+  const legacyBaseline = successfulNativeJob().steps.filter(
+    (step) => step.name !== "Precompile native Rust test targets",
+  );
+  const baseline = {
+    ...successfulNativeJob(),
+    steps: legacyBaseline,
+    conclusion: "success",
+  };
+
+  assert.equal(compileWorkloadFailed(baseline), true);
+  const markdown = buildMarkdown({
+    jobName: "Windows x64",
+    afterJob: successfulNativeJob(),
+    beforeJob: baseline,
     nowMs: Date.parse("2026-09-07T12:50:00Z"),
   });
   assert.match(markdown, /n\/a \(base run incomplete\)/);

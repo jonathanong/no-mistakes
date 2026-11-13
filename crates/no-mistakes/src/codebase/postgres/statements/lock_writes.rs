@@ -147,3 +147,6 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
         ControlFlow::Continue(())
     }
 }
+
+#[cfg(test)]
+mod tests;

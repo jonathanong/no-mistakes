@@ -24,7 +24,10 @@ fn test_run_covers_paths_and_yml_formats() {
             targets: vec![],
         };
 
-        crate::fetches::cli::run(cli).unwrap();
+        assert_eq!(
+            crate::fetches::cli::run(cli).unwrap(),
+            std::process::ExitCode::SUCCESS
+        );
     }
 }
 

@@ -1,0 +1,269 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "base": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        },
+        "tenant": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "related": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "base_composite": {
+      "relationKind": "table",
+      "columns": {
+        "tenant": {
+          "dataType": "integer",
+          "nullable": false
+        },
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "tenant",
+          "id"
+        ]
+      },
+      "indexes": {
+        "pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "column": "tenant",
+              "expression": "tenant"
+            },
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "keyless": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false
+        }
+      },
+      "primaryKey": {
+        "columns": []
+      },
+      "indexes": {}
+    }
+  },
+  "views": {
+    "aliased": {
+      "materialized": false,
+      "definition": "SELECT b.id AS visible_id FROM base b"
+    },
+    "parenthesized": {
+      "materialized": false,
+      "definition": "SELECT (b.id) AS visible_id FROM base b"
+    },
+    "qualified_star": {
+      "materialized": false,
+      "definition": "SELECT b.*, 42 AS extra FROM base b"
+    },
+    "other_star": {
+      "materialized": false,
+      "definition": "SELECT r.* FROM base b LEFT JOIN related r ON r.id = b.id"
+    },
+    "composite": {
+      "materialized": false,
+      "definition": "SELECT b.tenant AS account, b.id AS item FROM base_composite b"
+    },
+    "composite_missing": {
+      "materialized": false,
+      "definition": "SELECT id FROM base_composite"
+    },
+    "computed": {
+      "materialized": false,
+      "definition": "SELECT id + 1 AS id FROM base"
+    },
+    "without_key": {
+      "materialized": false,
+      "definition": "SELECT id FROM keyless"
+    },
+    "unknown_base": {
+      "materialized": false,
+      "definition": "SELECT id FROM missing"
+    },
+    "nested_view": {
+      "materialized": false,
+      "definition": "SELECT visible_id FROM aliased"
+    },
+    "derived": {
+      "materialized": false,
+      "definition": "SELECT id FROM (SELECT id FROM base) b"
+    },
+    "column_alias": {
+      "materialized": false,
+      "definition": "SELECT renamed FROM base AS b(renamed)"
+    },
+    "cte": {
+      "materialized": false,
+      "definition": "WITH b AS (SELECT id FROM base) SELECT id FROM b"
+    },
+    "fetch": {
+      "materialized": false,
+      "definition": "SELECT id FROM base FETCH FIRST 1 ROW ONLY"
+    },
+    "empty_from": {
+      "materialized": false,
+      "definition": "SELECT 1 AS id"
+    },
+    "cross": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b, related r"
+    },
+    "having": {
+      "materialized": false,
+      "definition": "SELECT id FROM base HAVING id > 0"
+    },
+    "group_all": {
+      "materialized": false,
+      "definition": "SELECT id FROM base GROUP BY ALL"
+    },
+    "left_literal": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON r.id = 1"
+    },
+    "left_reverse": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON b.id = r.id"
+    },
+    "left_composite": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN base_composite r ON (r.tenant = 1 AND b.id = r.id) AND r.tenant > 0"
+    },
+    "left_extra_equality": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON r.id = b.id AND b.tenant = 1"
+    },
+    "left_partial": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN base_composite r ON r.id = b.id"
+    },
+    "left_null": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON r.id = NULL"
+    },
+    "left_expression": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON r.id = b.id + 1"
+    },
+    "left_or": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON r.id = b.id OR r.id = 1"
+    },
+    "left_using": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r USING (id)"
+    },
+    "left_keyless": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN keyless r ON r.id = b.id"
+    },
+    "left_missing": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN missing r ON r.id = b.id"
+    },
+    "left_view": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN aliased r ON r.visible_id = b.id"
+    },
+    "left_derived": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN (SELECT id FROM related) r ON r.id = b.id"
+    },
+    "bare_join_projection": {
+      "materialized": false,
+      "definition": "SELECT id FROM base b LEFT JOIN related r ON r.id = b.id"
+    },
+    "wrong_qualifier": {
+      "materialized": false,
+      "definition": "SELECT r.id FROM base b LEFT JOIN related r ON r.id = b.id"
+    },
+    "right_join": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b RIGHT JOIN related r ON r.id = b.id"
+    },
+    "left_true": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON true"
+    },
+    "left_other_qualifier": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT JOIN related r ON r.id = absent.id"
+    },
+    "left_outer": {
+      "materialized": false,
+      "definition": "SELECT b.id FROM base b LEFT OUTER JOIN related r ON ((r.id = b.id))"
+    }
+  }
+}

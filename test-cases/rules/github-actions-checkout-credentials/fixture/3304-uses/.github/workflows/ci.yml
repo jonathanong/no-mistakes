@@ -1,0 +1,23 @@
+name: checkout uses classification
+on: push
+permissions:
+  contents: write
+jobs:
+  case:
+    steps:
+      - uses: ACTIONS/CHECKOUT@v4
+  quoted:
+    steps:
+      - uses: " actions/checkout/@v4 "
+  comment:
+    steps:
+      - uses: actions/checkout@v4 # pin note
+  slash:
+    steps:
+      - uses: actions/checkout/
+  composite:
+    steps:
+      - uses: actions/checkout/sub-action@v4
+  lookalike:
+    steps:
+      - uses: other/actions/checkout@v4

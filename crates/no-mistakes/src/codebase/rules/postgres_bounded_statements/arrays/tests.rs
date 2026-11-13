@@ -46,3 +46,15 @@ fn builtin_scalar_type_inventory_matches_postgres_array_cardinality() {
     let names = String::from_utf8(output.stdout).unwrap();
     assert_eq!(names.lines().collect::<Vec<_>>(), BUILTIN_SCALARS);
 }
+
+#[test]
+fn region_non_postgres_array_syntax_is_not_an_indexed_scalar() {
+    let root = super::super::tests::fixture_root();
+    let catalog = crate::codebase::postgres::SchemaCatalog::from_json(
+        &std::fs::read_to_string(root.join("schema.json")).unwrap(),
+    )
+    .unwrap();
+    for raw in ["ARRAY", "ARRAY<integer>", "Array(Int)"] {
+        assert!(!super::indexed_type(raw, &catalog), "{raw}");
+    }
+}

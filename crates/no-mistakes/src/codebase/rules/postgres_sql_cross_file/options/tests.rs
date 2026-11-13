@@ -1,11 +1,20 @@
 #[test]
-fn compile_rejects_invalid_include_glob() {
+fn compile_rejects_invalid_include_and_exclude_globs() {
     let opts = super::Options {
         include: vec!["[".into()],
         import_specifier: "@example/db".into(),
         ..Default::default()
     };
     assert!(super::compile("postgres-no-mutable-sql-registry", &opts).is_err());
+    let opts = super::Options {
+        exclude: vec!["[".into()],
+        import_specifier: "@example/db".into(),
+        ..Default::default()
+    };
+    match super::compile("postgres-no-mutable-sql-registry", &opts) {
+        Err(error) => assert!(error.to_string().contains("exclude"), "{error}"),
+        Ok(_) => panic!("exclude glob should fail"),
+    }
 }
 
 #[test]

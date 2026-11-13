@@ -121,3 +121,7 @@ fn discarded<'a>(mut expression: &'a Expression<'a>) -> Option<super::super::Spa
     }
     None
 }
+
+#[cfg(test)]
+#[path = "cov_p2_tests.rs"]
+mod cov_p2_tests;

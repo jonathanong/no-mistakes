@@ -169,3 +169,6 @@ pub(super) fn build(
         fact_demand,
     })
 }
+
+#[cfg(test)]
+mod tests;

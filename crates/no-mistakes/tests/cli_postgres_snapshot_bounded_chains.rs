@@ -1,6 +1,23 @@
 use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::PathBuf;
 
+#[test]
+fn postgres_bounded_view_key_evidence_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-bounded-statements",
+        "fixture",
+        "view-key-evidence",
+    );
+    assert_saved_fixture(
+        "postgres_bounded_view_key_evidence",
+        &[(
+            "keys-and-pin-sources",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
+
 fn repo_rel(rel: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -18,6 +18,7 @@ mod edges;
 mod errors;
 mod expressions;
 mod findings;
+mod fixture_function_contracts;
 mod function_body;
 mod model;
 mod names;
