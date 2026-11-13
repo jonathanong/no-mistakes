@@ -124,9 +124,13 @@ function run(index, count) {
   const inventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
   const plan = casePlan(process.env.RUNNER_OS, manifest.entries, inventory, index, count);
   const batches = batchPlan(plan);
+  const scheduling =
+    process.env.RUNNER_OS === "macOS" && count === 2
+      ? require("./native-rust-partition.cjs").schedulingSummary(plan, manifest.entries)
+      : undefined;
   fs.writeFileSync(
     "target/native-rust-shard.json",
-    `${JSON.stringify({ index, count, inventory, plan, batches }, null, 2)}\n`,
+    `${JSON.stringify({ index, count, inventory, plan, batches, scheduling }, null, 2)}\n`,
   );
   fs.writeFileSync("target/native-rust-results.jsonl", "");
   for (const entry of batches) {

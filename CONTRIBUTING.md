@@ -211,7 +211,9 @@ unit. Compile-time and runtime differences require measurements on the same
 platform; Linux benchmarks do not establish the macOS tradeoff.
 
 Real-addon API tests and platform Rust tests each run in six Windows shards
-and two macOS shards. The per-test timing checks and diagnostic reports
+and two macOS shards. The macOS Rust plan uses observed outlier weights to
+balance cases; unknown cases remain included with a default weight. The per-test
+timing checks and diagnostic reports
 remain in force. The prior serial-test and aggregate timeout measurements are
 historical; the [CI build guide](docs/development/ci-builds.md#parallel-ci-layout-and-measured-baseline)
 records the earlier baseline, completed parallel measurements, and the cache

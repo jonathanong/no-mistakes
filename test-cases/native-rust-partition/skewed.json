@@ -1,0 +1,95 @@
+{
+  "entries": [
+    {
+      "name": "suite_cli_postgres",
+      "executable": "target/debug/deps/postgres-aaa"
+    },
+    {
+      "name": "other",
+      "executable": "target/debug/deps/other-bbb"
+    }
+  ],
+  "cases": [
+    {
+      "executable": "target/debug/deps/postgres-aaa",
+      "name": "alpha",
+      "args": [
+        "alpha",
+        "--exact"
+      ]
+    },
+    {
+      "executable": "target/debug/deps/postgres-aaa",
+      "name": "beta",
+      "args": [
+        "beta",
+        "--exact"
+      ]
+    },
+    {
+      "executable": "target/debug/deps/postgres-aaa",
+      "name": "gamma",
+      "args": [
+        "gamma",
+        "--exact"
+      ]
+    },
+    {
+      "executable": "target/debug/deps/other-bbb",
+      "name": "alpha",
+      "args": [
+        "alpha",
+        "--exact"
+      ]
+    },
+    {
+      "executable": "target/debug/deps/postgres-aaa",
+      "name": "new_case",
+      "args": [
+        "new_case",
+        "--exact"
+      ]
+    }
+  ],
+  "evidence": {
+    "defaultWeight": 1,
+    "cases": [
+      {
+        "harness": "suite_cli_postgres",
+        "name": "alpha",
+        "weight": 10
+      },
+      {
+        "harness": "suite_cli_postgres",
+        "name": "beta",
+        "weight": 8
+      },
+      {
+        "harness": "suite_cli_postgres",
+        "name": "gamma",
+        "weight": 2
+      },
+      {
+        "harness": "suite_cli_postgres",
+        "name": "deleted_case",
+        "weight": 50
+      }
+    ]
+  },
+  "expectedNames": [
+    [
+      "alpha",
+      "alpha"
+    ],
+    [
+      "beta",
+      "gamma",
+      "new_case"
+    ]
+  ],
+  "expectedWeightUnits": [
+    11,
+    11
+  ],
+  "notice": "Synthetic heuristic scheduling inputs, not observed runtimes."
+}
