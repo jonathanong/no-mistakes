@@ -38,6 +38,8 @@ test("closed PR records and older main versions are pruned while open PR and unk
     plan(
       fixture.versions.filter((cache) => !result.remove.some((item) => item.id === cache.id)),
       fixture.states,
+      undefined,
+      fixture.sourceRunStates,
     ).remove,
     [],
   );
@@ -254,7 +256,7 @@ test("API failures stay failures and publish unknown budget diagnostics for best
 });
 
 test("benchmark handoff versions and verified Swatinem benchmark keys retain newest main records", () => {
-  const result = plan(fixture.benchmarks, fixture.states);
+  const result = plan(fixture.benchmarks, fixture.states, undefined, fixture.sourceRunStates);
   assert.deepEqual(
     result.remove.map((cache) => cache.id),
     [21, 31],
@@ -271,7 +273,84 @@ test("benchmark handoff versions and verified Swatinem benchmark keys retain new
     plan(
       fixture.benchmarks.filter((cache) => !result.remove.some((item) => item.id === cache.id)),
       fixture.states,
+      undefined,
+      fixture.sourceRunStates,
     ).remove,
     [],
   );
+});
+
+test("only known retired main producer dependency copies are deleted", () => {
+  const retired = JSON.parse(
+    readFileSync(
+      path.join(root, "test-cases/cache-retention/retired-producer-dependencies.json"),
+      "utf8",
+    ),
+  );
+  const result = plan([...retired.obsolete, ...retired.protected], fixture.states);
+  assert.deepEqual(
+    result.remove.map((cache) => cache.id).sort((a, b) => a - b),
+    retired.obsolete.map((cache) => cache.id).sort((a, b) => a - b),
+  );
+  for (const cache of retired.protected)
+    assert.equal(
+      result.remove.some((item) => item.id === cache.id),
+      false,
+    );
+  assert.equal(result.remove.length, 6);
+});
+
+test("active and unknown handoff source runs are protected even beside newer completed caches", () => {
+  for (const states of fixture.handoffLifecycle) {
+    const result = plan(fixture.benchmarks, fixture.states, undefined, states);
+    assert.equal(
+      result.remove.some((cache) => [21, 22, 23].includes(cache.id)),
+      false,
+    );
+  }
+  const registry = plan(fixture.registry, {});
+  assert.deepEqual(
+    registry.remove.map((cache) => cache.id),
+    [41],
+  );
+  assert.deepEqual(
+    registry.kept.map((cache) => cache.id),
+    [42],
+  );
+});
+
+test("handoff source metadata is read once before any deletion and API failure fails closed", async () => {
+  const calls = [];
+  const request = async (method, route) => {
+    calls.push([method, route]);
+    if (route.startsWith("/actions/caches?"))
+      return { total_count: fixture.benchmarks.length, actions_caches: fixture.benchmarks };
+    if (route === "/pulls/3328") return { state: "open" };
+    if (route.startsWith("/actions/runs/")) return fixture.sourceRuns[route.split("/").at(-1)];
+    return {};
+  };
+  const result = await retain(request, true);
+  assert.deepEqual(
+    result.remove.map((cache) => cache.id),
+    [21, 31],
+  );
+  assert.deepEqual(
+    calls.filter(([method, route]) => route.startsWith("/actions/runs/")),
+    [
+      ["GET", "/actions/runs/100"],
+      ["GET", "/actions/runs/101"],
+    ],
+  );
+  const firstDelete = calls.findIndex(([method]) => method === "DELETE");
+  assert.ok(firstDelete > calls.findIndex(([, route]) => route === "/actions/runs/101"));
+  const failed = [];
+  await assert.rejects(
+    retain(async (method, route) => {
+      failed.push(method);
+      if (route.startsWith("/actions/runs/")) throw new Error("source metadata unavailable");
+      return request(method, route);
+    }, true),
+    /source metadata unavailable/,
+  );
+  assert.equal(failed.includes("DELETE"), false);
 });

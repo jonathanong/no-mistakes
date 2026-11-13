@@ -368,12 +368,9 @@ test("coverage and standalone producers retain content-verified workspace caches
     ],
   ]) {
     const body = workflowJob(name);
-    assert.match(body, /cache-workspace-crates: false/);
-    assert.match(body, /cache-on-failure: false/);
+    assert.match(body, /shared-key: cargo-registry-v1/);
+    assert.match(body, /cache-targets: false/);
     assert.ok(body.includes(`id: ${toolchain}`));
-    assert.ok(
-      body.indexOf("uses: Swatinem/rust-cache@") < body.indexOf("uses: actions/cache/restore@"),
-    );
     const overlay = body
       .split(`      - name: Cache ${profile} workspace artifacts by source\n`)[1]
       .split("\n      - name:")[0];
@@ -458,11 +455,8 @@ test("every workspace producer prefers exact Cargo configuration before compiler
   ]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
-    const dependencies = body
-      .split(/uses: Swatinem\/rust-cache@[a-f0-9]{40}[^\n]*\n/)[1]
-      .split("\n      - name:")[0];
-    assert.match(dependencies, /save-if: \$\{\{ github\.ref == 'refs\/heads\/main' \}\}/);
-    assert.doesNotMatch(dependencies, /\n        if:/);
+    assert.match(body, /shared-key: cargo-registry-v1/);
+    assert.match(body, /cache-targets: false/);
     const workspace = body
       .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
       .split("\n      - name:")[0];

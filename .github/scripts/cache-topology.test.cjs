@@ -69,18 +69,21 @@ test("dependency caches are main-only, dependency-only and shared across compati
   );
   assert.match(job("quality-rust"), /matrix.name != 'formatting'/);
   assert.match(job("quality-rust"), /flags: -D warnings --cfg coverage/);
-  assert.match(job("rust-coverage-build"), /shared-key: coverage-nextest-v1/);
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [
     "native-build",
     "native-build-macos",
     "native-test-build",
     "native-test-build-macos",
-  ])
-    assert.match(
-      job(name),
-      /shared-key: native-(?:runtime|test-harness)-v2-\$\{\{ matrix.target \}\}/,
-    );
+    "rust-coverage-build",
+    "standalone-build",
+  ]) {
+    assert.match(job(name), /shared-key: cargo-registry-v1-\$\{\{ hashFiles\('Cargo.lock'\) \}\}/);
+    assert.match(job(name), /add-rust-environment-hash-key: false/);
+    assert.match(job(name), /cache-bin: false/);
+    assert.match(job(name), /cache-targets: false/);
+  }
+  assert.match(workflow.split("\njobs:")[0], /CARGO_INCREMENTAL: "0"/);
 });
 
 test("benchmark PRs use artifact transport while main may save and probe the handoff cache", () => {

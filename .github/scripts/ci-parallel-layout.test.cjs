@@ -108,9 +108,9 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     "native-test-build-macos",
   ]) {
     const body = job(id);
-    assert.ok(body.indexOf("id: native-rust-cache") < body.indexOf("id: native-workspace-cache"));
-    assert.match(body, /cache-workspace-crates: false/);
-    assert.match(body, /cache-on-failure: false/);
+    assert.match(body, /shared-key: cargo-registry-v1/);
+    assert.match(body, /cache-targets: false/);
+    assert.ok(body.includes("id: native-workspace-cache"));
     assert.match(body, /uses: actions\/cache\/restore@[a-f0-9]{40}/);
     assert.match(body, /crates\/\*\*\/\*\.rs/);
     assert.match(body, /target\/debug/);

@@ -59,8 +59,10 @@ object inventory is retained with the report diagnostics and applies to LCOV,
 summary totals, and missing-region details. The coverage floors and complexity
 gates remain unchanged.
 
-Build producers restore dependency caches first, then a separate compiler and
-Rust-source-keyed workspace cache. The workspace cache contains both Cargo
+Build producers restore registry sources and compiler/Rust-source-keyed workspace
+caches. Compatible Linux development checks also share a dependency cache.
+Native, standalone, and coverage producers avoid a second compiled-dependency
+cache: their full workspace snapshots already contain those artifacts. The workspace cache contains both Cargo
 artifacts and a manifest of tracked input content hashes. After preparing the
 runtime crate types, a helper restores old timestamps only for unchanged input
 bytes and keeps changed or new files fresh. Cargo still checks compiler,
@@ -92,18 +94,24 @@ Five caches from the merged #3329 were deleted (2.502 GiB). Concurrent main
 writes meant the subsequent live inventory was 34 records totaling 9.552 GiB,
 not a subtraction from the earlier snapshot. Open-PR caches were preserved.
 Compatible Linux development jobs now share a dependency family; release,
-instrumented coverage, documentation, compiler, architecture, and platform
-boundaries remain separate. Workspace crates are excluded from dependency-only
-caches. PRs never save target caches; each producer uploads its build archive
+documentation, compiler, architecture, and platform boundaries remain separate.
+Six duplicate compiled-dependency layers are retired. Their producers instead
+share source-only registry caches per platform, including system-crate source
+timestamps needed to avoid unnecessary build-script recompilation. Registry
+contents are independent of compiler flags; compiled artifacts remain isolated
+in their workspace families. Workspace crates are excluded from the remaining
+dependency-only caches. PRs never save target caches; each producer uploads its build archive
 once for its test consumers.
 
 The cache-retention workflow removes closed-PR caches and superseded main
 snapshots of known families. It runs after successful main producers, after main
 CI, and on PR closure. Its soft budget is 8 GiB, leaving quota headroom; open PRs,
 unknown families, and distinct compiler environments are protected even when
-that means reporting an unmet budget. The original audit projects to 6.903 GiB;
-a later inventory projects to 8.431 GiB with protected entries. These are planner
-results, not claims that the live inventory already reached those sizes.
+that means reporting an unmet budget. The original audit projects to 5.913 GiB;
+a later inventory projects to 6.937 GiB with protected entries, before new
+source-only registry snapshots. These are planner results, not claims that the
+live inventory already reached those sizes. Active benchmark source runs retain
+their exact handoffs until their consumers finish.
 Pagination and PR lookups are bounded; incomplete inventories fail rather than
 claiming headroom. Cleanup uses trusted workflow code and metadata only, never
 PR code with write permissions.
@@ -114,7 +122,8 @@ fresh. Its symbol-free, unoptimized, build with incremental compilation disabled
 code-generation units. CI now uses 64 units for the root package's development
 and test profiles on macOS, including runtime builds and archived tests.
 Dependencies retain their settings; features, assertions, selected targets, and
-test execution remain unchanged. This is a compile-parallelism experiment whose
+test execution remain unchanged. `CARGO_INCREMENTAL=0` is explicit for both cold
+and restored builds, including jobs that bypass the cache action. This is a compile-parallelism experiment whose
 hosted timings must establish the benefit, not a timeout increase. Bounded
 Darwin memory, process, and thread probes accompany slow-build diagnostics.
 

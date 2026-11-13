@@ -138,8 +138,10 @@ of the 10-minute PR-wall target. The historical run predates this layout and
 does not establish its runtime.
 
 Rust target caches are published only by successful main producers. Compatible
-Linux jobs share dependency keys; test shards download producer artifacts rather
-than saving private target directories. Bounded retention prunes obsolete main
+Linux jobs share dependency keys; native, coverage, and standalone producers
+share source-only registry caches instead of duplicating compiled dependencies.
+Test shards download producer artifacts rather than saving private target
+directories. Cold and restored builds both disable incremental compilation. Bounded retention prunes obsolete main
 and closed-PR entries with an 8 GiB soft budget, preserving open PRs and unknown
 cache families. See [cache capacity and cold-build validation](docs/development/ci-builds.md#cache-capacity-and-cold-build-validation)
 for cold/warm measurement inputs and archive provenance checks. Warm validation

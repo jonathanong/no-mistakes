@@ -33,6 +33,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
+  CARGO_INCREMENTAL: "0"
   COLD_BUILD: ${{ (inputs.cold_cache || github.ref == 'refs/heads/ci/cold-build') && 'true' || 'false' }}
   REUSE_BUILD_RUN_ID: ${{ inputs.reuse_build_run || '' }}
   # Quote "no": a bare YAML no is a boolean. Snapshot tests must fail on drift.
@@ -812,17 +813,17 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-runtime-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
@@ -979,17 +980,17 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-runtime-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
@@ -1146,17 +1147,17 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-test-harness-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
@@ -1286,17 +1287,17 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-test-harness-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
@@ -1817,16 +1818,18 @@ jobs:
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
-      - name: Cache standalone library artifacts
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: standalone-lib-v2
-          workspaces: . -> target/standalone-lib/target
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
-          cache-on-failure: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
       - name: Cache standalone-lib workspace artifacts by source
         id: standalone-lib-workspace-cache
         if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
@@ -1956,16 +1959,18 @@ jobs:
         with:
           toolchain: stable
           components: llvm-tools-preview
-      - name: Cache instrumented Rust build artifacts
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 5
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: coverage-nextest-v1
-          workspaces: . -> target/coverage/target
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
-          cache-on-failure: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
       - name: Cache coverage workspace artifacts by source
         id: coverage-workspace-cache
         if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}

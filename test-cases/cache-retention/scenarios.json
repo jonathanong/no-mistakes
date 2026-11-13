@@ -144,5 +144,46 @@
       "size_in_bytes": 100,
       "created_at": "2026-11-11T00:00:00Z"
     }
+  ],
+  "sourceRunStates": {
+    "100": "completed",
+    "101": "completed"
+  },
+  "sourceRuns": {
+    "100": {
+      "id": 100,
+      "status": "completed"
+    },
+    "101": {
+      "id": 101,
+      "status": "completed"
+    }
+  },
+  "registry": [
+    {
+      "id": 41,
+      "ref": "refs/heads/main",
+      "key": "v0-rust-cargo-registry-v1-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-Linux-x64",
+      "size_in_bytes": 100,
+      "created_at": "2026-11-10T00:00:00Z"
+    },
+    {
+      "id": 42,
+      "ref": "refs/heads/main",
+      "key": "v0-rust-cargo-registry-v1-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-Linux-x64",
+      "size_in_bytes": 100,
+      "created_at": "2026-11-11T00:00:00Z"
+    }
+  ],
+  "handoffLifecycle": [
+    {},
+    {
+      "100": "in_progress",
+      "101": "completed"
+    },
+    {
+      "100": "completed",
+      "101": "unknown"
+    }
   ]
 }

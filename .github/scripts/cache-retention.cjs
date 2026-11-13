@@ -8,11 +8,18 @@ function sharedIdentity(key) {
     /^v\d+-rust-(linux-runtime-v1|rust-quality-[\w-]+-v1|packages-packages)-(Linux-x64)-([a-f0-9]{8,64})-[a-f0-9]{8,64}$/,
   );
 }
-function family(key, common = new Set()) {
-  const handoff = key.match(
-    /^codspeed-handoff-v1-(Linux|macOS|Windows)-(X64|ARM64)-[1-9]\d*-[1-9]\d*-[a-f0-9]{40}-[a-f0-9]{64}$/,
+function handoff(key) {
+  return key.match(
+    /^codspeed-handoff-v1-(Linux|macOS|Windows)-(X64|ARM64)-([1-9]\d*)-[1-9]\d*-[a-f0-9]{40}-[a-f0-9]{64}$/,
   );
-  if (handoff) return { name: `benchmark-handoff:${handoff[1]}:${handoff[2]}`, preferred: 1 };
+}
+function family(key, common = new Set()) {
+  const transport = handoff(key);
+  if (transport) return { name: `benchmark-handoff:${transport[1]}:${transport[2]}`, preferred: 1 };
+  const registry = key.match(
+    /^v\d+-rust-cargo-registry-v1-[a-f0-9]{64}-(Linux|Darwin|Windows_NT)-(x64|arm64)$/,
+  );
+  if (registry) return { name: `registry:${registry[1]}:${registry[2]}`, preferred: 1 };
   const benchmark = key.match(
     /^v\d+-rust-(bench-(?:ARM64|X64)-bench)-(Linux-(?:arm64|x64))-([a-f0-9]{8,64})-[a-f0-9]{8,64}$/,
   );
@@ -35,7 +42,12 @@ function family(key, common = new Set()) {
   if (match) return { name: `dependencies:${match[1]}:${match[2]}:${match[3]}`, preferred: 1 };
   return undefined;
 }
-function plan(caches, states, budget = BUDGET) {
+function obsoleteDependency(key) {
+  return /^v\d+-rust-((?:native-runtime-v2|native-test-harness-v2)-(?:aarch64-apple-darwin|x86_64-pc-windows-msvc)|coverage-nextest-v1|standalone-lib-v2)-[\w]+-[\w]+-[a-f0-9]{8,64}-[a-f0-9]{8,64}$/.test(
+    key,
+  );
+}
+function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
   const common = new Set(
     caches
       .filter((cache) => cache.ref === "refs/heads/main")
@@ -66,6 +78,12 @@ function plan(caches, states, budget = BUDGET) {
       continue;
     }
     if (cache.ref !== "refs/heads/main") continue;
+    if (obsoleteDependency(cache.key)) {
+      remove.push({ ...cache, reason: "retired duplicate producer dependencies" });
+      continue;
+    }
+    const transport = handoff(cache.key);
+    if (transport && sourceRunStates[transport[3]] !== "completed") continue;
     const identity = family(cache.key, common);
     if (!identity) continue;
     const created = Date.parse(cache.created_at);
@@ -151,7 +169,23 @@ async function retain(request, apply = false) {
       throw new Error(`Pull request ${pr} state is unknown; preserving caches`);
     states[pr] = result.state;
   }
-  const result = plan(caches, states);
+  const runs = [
+    ...new Set(
+      caches
+        .filter((cache) => cache.ref === "refs/heads/main")
+        .map((cache) => handoff(cache.key)?.[3])
+        .filter(Boolean),
+    ),
+  ];
+  if (runs.length > 100)
+    throw new Error("Handoff inventory exceeds 100 source-run lookups; budget unknown");
+  const sourceRunStates = {};
+  for (const run of runs) {
+    const result = await request("GET", `/actions/runs/${run}`);
+    sourceRunStates[run] =
+      String(result.id) === run && result.status === "completed" ? "completed" : "unknown";
+  }
+  const result = plan(caches, states, BUDGET, sourceRunStates);
   if (apply)
     for (const cache of result.remove) await request("DELETE", `/actions/caches/${cache.id}`);
   return { ...result, applied: apply };

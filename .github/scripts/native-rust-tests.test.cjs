@@ -146,8 +146,9 @@ test("native workflow compiles independent archives and consumers never build Ru
   assert.doesNotMatch(archive, /crate-type = \["rlib", "cdylib"\]/);
   for (const producer of [runtime, archive]) {
     assert.match(producer, /NO_MISTAKES_BUILD_NAPI: "1"/);
-    assert.match(producer, /shared-key: native-/);
-    assert.match(producer, /cache-workspace-crates: false/);
+    assert.match(producer, /uses: actions\/cache\/restore@/);
+    assert.match(producer, /shared-key: cargo-registry-v1/);
+    assert.match(producer, /cache-targets: false/);
     assert.doesNotMatch(
       producer,
       /hashFiles\([^)]*\.github\/workflows|github.sha.*cache|native-test-artifacts-v1/,
