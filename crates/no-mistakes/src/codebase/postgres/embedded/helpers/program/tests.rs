@@ -455,5 +455,7 @@ fn unsupported_statements_fail_only_when_reached() {
     );
 }
 
+#[path = "tests/coverage_gap.rs"]
+mod coverage_gap;
 #[path = "switch_boundary_fixture_tests.rs"]
 mod switch_boundary_fixture_tests;
