@@ -1,0 +1,2 @@
+include:
+  ./pnpm/claim.yaml: [catalogs.react]
