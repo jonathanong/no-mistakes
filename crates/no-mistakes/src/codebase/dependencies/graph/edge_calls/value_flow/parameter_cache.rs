@@ -9,8 +9,9 @@ include!("parameter_cache_state.rs");
 pub(in super::super) struct ParameterCache {
     pub(super) ownership_callbacks: bool,
     pub(super) stage_indexes: OnceLock<CallableResolutionIndexes>,
-    pub(super) stage_exports:
-        DashMap<(std::path::PathBuf, String), Arc<OnceLock<bool>>, FxBuildHasher>,
+    pub(super) stage_import_origins: OnceLock<super::for_of_sources::StageImportOrigins>,
+    #[cfg(feature = "test-instrumentation")]
+    pub(super) stage_import_origin_builds: std::sync::atomic::AtomicUsize,
     #[cfg(all(test, feature = "test-instrumentation"))]
     pub(super) opaque_entry_mode: opaque_entry_mode::Mode,
     #[cfg(all(test, feature = "test-instrumentation"))]

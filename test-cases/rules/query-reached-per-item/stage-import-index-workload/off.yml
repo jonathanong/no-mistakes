@@ -1,0 +1,5 @@
+effects:
+  postgres:
+    typedExecutors:
+      - { module: './database.mts', export: TransactionQuery }
+rules: []

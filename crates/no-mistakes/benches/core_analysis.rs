@@ -46,6 +46,8 @@ mod shard;
 mod sql_fetch;
 #[path = "core_analysis/sql_source_positions.rs"]
 mod sql_source_positions;
+#[path = "core_analysis/stage_imports.rs"]
+mod stage_imports;
 #[path = "core_analysis/workflow_artifact_values.rs"]
 mod workflow_artifact_values;
 
@@ -125,6 +127,7 @@ criterion_group!(
     bench_observer_overhead,
     bench_postgres_scopes,
     bench_relationship_projection,
+    stage_imports::bench_stage_imports,
     bench_sql_fetch_fast_path,
     bench_workflow_artifact_values,
 );

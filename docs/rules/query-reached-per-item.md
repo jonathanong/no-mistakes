@@ -45,6 +45,12 @@ or mixing unresolved methods prevents
 this proof. Rewrite dynamic registries as closed literal stages with explicit
 executor arguments.
 
+Imported stage tables share one import-escape index per analysis. Distinct
+exported tables reuse that proof, while namespace exposure, unresolved export
+stars, and escapes through any analyzed importer retain the same conservative
+reachability limits. The index is built only when an eligible imported table
+needs the proof and is discarded after the analysis.
+
 Arrow and function arguments also retain reachability when the resolved helper
 invokes the corresponding parameter, such as
 `both(() => query(sqlA), () => query(sqlB))` where `both(a, b)` calls `a()` and

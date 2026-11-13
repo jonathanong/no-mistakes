@@ -98,6 +98,18 @@ fn query_reached_per_item_call_reachability_json_matches_snapshot() {
 }
 
 #[test]
+fn query_reached_per_item_stage_import_index_check_json_snapshot() {
+    let dir = "query-reached-per-item/stage-import-index-workload";
+    assert_saved_fixture(
+        "query_reached_per_item_stage_import_index",
+        &[
+            rule("many_origins", dir, ".no-mistakes.yml"),
+            rule("no_consumers", dir, "off.yml"),
+        ],
+    );
+}
+
+#[test]
 fn required_companion_imports_json_matches_snapshot() {
     assert_saved_fixture(
         "required_companion_imports",
