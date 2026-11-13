@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
+const { PassThrough } = require("node:stream");
 const { captureBuildOutput } = require("./native-build-output.cjs");
 const {
   Capture,
@@ -28,6 +29,42 @@ function expected(prefix) {
 
 const expectedStdout = expected(payload.stdoutPrefix);
 const expectedStderr = expected(payload.stderrPrefix);
+
+for (const terminal of ["finish", "close", "error"]) {
+  test(`log completion awaits buffered output and settles after ${terminal}`, async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-output-finish-"));
+    const child = { stdout: new PassThrough(), stderr: new PassThrough() };
+    const log = new Capture({ hold: true });
+    const stdout = new Capture();
+    const stderr = new Capture();
+    const finish = captureBuildOutput(child, directory, { stdout, stderr, createLog: () => log });
+    try {
+      const tail = expectedStdout.subarray(0, 32);
+      child.stdout.end(tail);
+      child.stderr.end();
+      await waitFor(() => log.bytes.length === tail.length, "buffered log tail");
+      let completed = false;
+      const pending = finish();
+      assert.equal(finish(), pending);
+      pending.then(() => {
+        completed = true;
+      });
+      await new Promise(setImmediate);
+      assert.equal(completed, false);
+      if (terminal === "finish") log.release();
+      else if (terminal === "close") log.destroy();
+      else log.fail(new Error("fixture final write failure"));
+      await pending;
+      assert.equal(completed, true);
+      assert.deepEqual(log.bytes, tail);
+    } finally {
+      stdout.destroy();
+      stderr.destroy();
+      log.destroy();
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
+}
 
 function waitFor(predicate, label) {
   const started = Date.now();
@@ -138,10 +175,10 @@ test(
       const [code, signal] = await once(child, "close");
       assert.equal(code, 0);
       assert.equal(signal, null);
-      finish();
+      await finish();
       stdout.end();
       stderr.end();
-      await Promise.all([once(stdout, "finish"), once(stderr, "finish"), once(log, "finish")]);
+      await Promise.all([once(stdout, "finish"), once(stderr, "finish")]);
       assertExactOutput(stdout, stderr, log);
     } finally {
       await settleChild(child);
@@ -169,7 +206,7 @@ test(
       const [code, signal] = await once(child, "close");
       assert.equal(code, 0);
       assert.equal(signal, null);
-      finish();
+      await finish();
       stdout.end();
       stderr.end();
       await Promise.all([once(stdout, "finish"), once(stderr, "finish")]);

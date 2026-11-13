@@ -1,0 +1,24 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--no-run",
+    "--test",
+    "macos_invocation"
+  ],
+  "rustc": {
+    "stdout": "rustc fixture"
+  },
+  "cargo": {
+    "stdout": "cargo fixture"
+  },
+  "profiles": [
+    "[profile.dev]",
+    "debug = 0"
+  ],
+  "environment": {
+    "NO_MISTAKES_BUILD_NAPI": "1",
+    "CARGO_INCREMENTAL": "0",
+    "RUSTFLAGS": "fixture"
+  }
+}

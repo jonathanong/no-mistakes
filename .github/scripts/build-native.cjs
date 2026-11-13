@@ -123,6 +123,12 @@ function main() {
     stdio: ["inherit", "pipe", "pipe"],
     detached: process.platform !== "win32",
   });
+  const cargoUnitLines = [];
+  require("node:readline")
+    .createInterface({ input: child.stdout })
+    .on("line", (line) => {
+      if (/"reason"\s*:\s*"compiler-artifact"/.test(line)) cargoUnitLines.push(line);
+    });
   const finishLog = captureBuildOutput(child, directory);
   const artifacts =
     process.argv[2] === "--archive-tests"
@@ -164,7 +170,7 @@ function main() {
       fs.writeFileSync(path.join(directory, "spawn-error.txt"), `${error.message}\n`),
     );
   });
-  child.on("close", (code, signal) => {
+  child.on("close", async (code, signal) => {
     clearInterval(interval);
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", terminate);
@@ -200,7 +206,19 @@ function main() {
       : code >= 0
         ? code
         : 1;
-    finishLog();
+    await finishLog();
+    diagnostic(() => {
+      const { collectCargoUnits } = require("./native-cargo-units.cjs");
+      const report = collectCargoUnits(cargoUnitLines.join("\n"), {
+        root: process.cwd(),
+        targetDirectory: process.env.CARGO_TARGET_DIR || "target",
+        context: JSON.parse(fs.readFileSync(path.join(directory, "metadata.json"), "utf8")),
+      });
+      fs.writeFileSync(
+        path.join(directory, "cargo-units.json"),
+        `${JSON.stringify(report, null, 2)}\n`,
+      );
+    });
   });
 }
 

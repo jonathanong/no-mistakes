@@ -159,6 +159,50 @@ ordinary target-cache restoration, and include queue, setup, transfer, and
 aggregate time in end-to-end measurements. Never rerun jobs to obtain a better
 sample.
 
+### Cargo unit overlap profiling
+
+Native build diagnostics include `cargo-units.json` for runtime compilation and
+each selected test target. The report preserves Cargo's package ID, target and
+crate types, resolved features, complete reported profile, freshness, and
+logical output paths. Context records the command, compiler, environment, and
+runner metadata. Cargo JSON is collected from stdout independently of verbose
+stderr, and the diagnostic log is flushed before final report capture. Matching
+filenames or reported unit descriptors do not establish fingerprint compatibility;
+`fresh=true` is Cargo's evidence that a unit was reused in that invocation.
+
+For a controlled shared-target experiment, dispatch the existing workflow with
+`profile_native_compile=true` and `cold_cache=true`:
+
+```sh
+gh workflow run ci.yml --ref <branch> -f cold_cache=true -f profile_native_compile=true
+```
+
+The extra macOS job restores no cache or build artifact. Its driver rejects an
+existing Cargo debug tree or compiler-info file before mutating anything. It
+builds the original runtime configuration first, restores the original
+library-only manifest bytes, then builds the unchanged selected test archive in
+the same target directory. It never copies fingerprints or forces Cargo to
+accept an artifact. Original manifest restoration and partial diagnostic reports
+also cover failing runtime/test commands. The experiment has a 35-minute step
+and 50-minute job bound for both sequential build phases and report upload;
+normal producer deadlines remain unchanged.
+
+The artifact `native-compile-profile-aarch64-apple-darwin` contains phase wall
+times, all Cargo unit reports, runtime-versus-test comparisons, successive-target
+comparisons, and the original logs/timing reports. The ordinary producers,
+shards, required check names, coverage floors, and CRAP gate still run unchanged.
+The extra job is an explicit profiling experiment, not a replacement producer
+or an ordinary PR dependency. Compare complete runs, including queue and
+transfer time, before adopting a graph change.
+
+The runtime and test graphs differ even with the same root features and profile
+overrides. Runtime emits Rust and shared libraries; tests use a Rust library and dev-dependencies
+that enable additional dependency features. A test-first local experiment also
+showed a runtime root rebuild after those dependency differences. Do not publish
+a test-produced runtime as equivalent or merge the producers merely because
+some dependencies are fresh. The hosted evidence and decision are recorded in
+the PR for #3333.
+
 ### Controlled Rust-cache-cold measurement
 
 Run [`43422140537`](https://github.com/jonathanong/no-mistakes/actions/runs/43422140537)

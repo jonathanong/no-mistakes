@@ -24,6 +24,7 @@ for (const platform of ["Windows", "macOS"]) {
       "no-mistakes",
       "--timings",
       "--verbose",
+      "--message-format=json-render-diagnostics",
     ]);
     for (const mode of ["build", "archive-build", "run"]) {
       for (const args of commands(mode, platform)) {

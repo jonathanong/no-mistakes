@@ -150,6 +150,9 @@ keys require the same Cargo configuration to avoid accumulating obsolete
 outputs after manifest changes. See [cache capacity and cold-build validation](docs/development/ci-builds.md#cache-capacity-and-cold-build-validation)
 for cold/warm measurement inputs and archive provenance checks. Warm validation
 still runs every test and collects fresh coverage profiles.
+Native compilation diagnostics retain Cargo unit freshness, features, and
+profiles. The opt-in shared-target experiment measures runtime-first reuse while
+preserving each build graph; see [Cargo unit overlap profiling](docs/development/ci-builds.md#cargo-unit-overlap-profiling).
 
 The coverage test step shares nine raw profiles per instrumented binary through
 LLVM's online merge pool. This preserves concurrent subprocess counts without a

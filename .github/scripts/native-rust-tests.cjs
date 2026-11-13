@@ -71,6 +71,7 @@ function buildInvocation(argv = process.argv, env = process.env) {
         "no-mistakes",
         "--timings",
         "--verbose",
+        "--message-format=json-render-diagnostics",
       ];
   if (!args) throw new Error("expected a native test target index");
   if (testBuild && env.NO_MISTAKES_BUILD_NAPI !== "1")
