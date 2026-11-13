@@ -4,7 +4,12 @@ Workspace development and test profiles set `debug = 0`, so local builds, CI,
 and release validation omit debugger metadata. This reduces compilation work and
 temporary artifact size, at the cost of file/line and inline-frame detail in
 native backtraces. Debug assertions, overflow checks, features, and optimization
-levels retain their existing settings. Distributed release profiles are unchanged.
+levels retain their existing settings. The distributed release profile sets
+`strip = "symbols"`, so published CLI and N-API binaries carry no symbol table.
+That keeps the npm download small and shortens macOS's scan of a new binary on
+its first run. Release panic backtraces therefore show addresses instead of
+function names; reproduce them with a local build that sets
+`CARGO_PROFILE_RELEASE_STRIP=none`.
 
 For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 `CARGO_PROFILE_TEST_DEBUG=2` when invoking Cargo to restore debugger symbols.
