@@ -1,13 +1,26 @@
 name: Test CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      cold_cache:
+        description: Build with no restored Rust target caches
+        type: boolean
+        default: false
+      reuse_build_run:
+        description: Successful same-commit dispatch whose build artifacts should be reused
+        type: string
+        default: ""
   pull_request:
   push:
     branches:
       - main
+      - ci/cold-build
+      - "ci/warm-build-*"
 
 permissions:
   contents: read
+  actions: read
 
 # PRs share a group per PR so superseded runs are cancelled. Every main push gets
 # its own group (per SHA): GitHub replaces an older *pending* run in a shared
@@ -20,6 +33,9 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
+  CARGO_INCREMENTAL: "0"
+  COLD_BUILD: ${{ (inputs.cold_cache || github.ref == 'refs/heads/ci/cold-build') && 'true' || 'false' }}
+  REUSE_BUILD_RUN_ID: ${{ inputs.reuse_build_run || '' }}
   # Quote "no": a bare YAML no is a boolean. Snapshot tests must fail on drift.
   INSTA_UPDATE: "no"
   # Rust coverage floor percentages. Keep codecov.yml rust `target` in sync.
@@ -33,7 +49,7 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 5
     outputs:
-      benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
+      benchmarks: ${{ github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/ci/cold-build' && !startsWith(github.ref, 'refs/heads/ci/warm-build-') && steps.benchmark-paths.outputs.changed || 'false' }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
       timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
       # Retained as path metadata; every PR runs all test families.
@@ -134,6 +150,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -213,7 +230,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs
   quality-rust:
     name: Rust quality (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -223,31 +240,24 @@ jobs:
       matrix:
         include:
           - name: all-feature Clippy
-            cache: all-clippy
             command: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
             flags: -D warnings
           - name: default-feature Clippy
-            cache: default-clippy
             command: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings
             flags: -D warnings
           - name: release warnings
-            cache: release-check
             command: cargo check --locked --workspace --release --lib --bins --benches --no-default-features --features test-instrumentation
             flags: -D warnings
           - name: no-default test check
-            cache: no-default-check
             command: cargo check --locked --tests --no-default-features -p no-mistakes
             flags: -D warnings
           - name: PostgreSQL source identities
-            cache: postgres-identities
             command: "cargo test --locked -p no-mistakes --lib --no-default-features --features test-instrumentation codebase::postgres::source::"
             flags: -D warnings
           - name: coverage warnings
-            cache: coverage-check
             command: cargo check --locked --workspace --lib --tests --all-features
             flags: -D warnings --cfg coverage
           - name: formatting
-            cache: rust-format
             command: cargo fmt --all -- --check
             flags: -D warnings
     env:
@@ -263,11 +273,13 @@ jobs:
           toolchain: stable
           components: clippy, rustfmt
       - name: Cache Rust quality artifacts
+        if: ${{ matrix.name != 'formatting' && env.COLD_BUILD != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: rust-quality-${{ matrix.cache }}-v1
-          cache-workspace-crates: true
+          shared-key: ${{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Run isolated Rust quality check
         timeout-minutes: 8
         run: ${{ matrix.command }}
@@ -301,6 +313,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -363,6 +376,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
@@ -372,11 +386,13 @@ jobs:
           toolchain: stable
 
       - name: Cache Rust build artifacts
+        if: ${{ env.COLD_BUILD != 'true' }}
         timeout-minutes: 5
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          key: packages
-
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          shared-key: linux-runtime-v1
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
@@ -405,17 +421,28 @@ jobs:
             binary: target/debug/no-mistakes
           - role: addon
             binary: target/debug/no-mistakes.node
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Install Rust
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: linux-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
       - name: Cache Linux runtime artifacts
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
@@ -423,38 +450,52 @@ jobs:
           cache-workspace-crates: false
           cache-on-failure: false
           workspaces: . -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Cache Linux workspace artifacts by source
         id: linux-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: linux-runtime-workspace-v1-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: linux-runtime-workspace-v2-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            linux-runtime-workspace-v1-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            linux-runtime-workspace-v1-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            linux-runtime-workspace-v2-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
           path: |
             target/debug
             target/.rustc_info.json
             ${{ runner.temp }}/linux-cargo-inputs
       - name: Restore verified Linux compiler input timestamps
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         shell: bash
         run: node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/linux-cargo-inputs"
       - name: Build Linux CLI
-        if: ${{ matrix.role == 'cli' }}
+        if: ${{ (matrix.role == 'cli') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 10
         run: cargo build --locked -p no-mistakes --bin no-mistakes
       - name: Build Linux N-API addon
-        if: ${{ matrix.role == 'addon' }}
+        if: ${{ (matrix.role == 'addon') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 10
         run: |
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
           cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
       - name: Record verified Linux compiler inputs
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         shell: bash
         run: node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/linux-cargo-inputs"
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.linux-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.linux-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/linux-cargo-inputs
       - name: Upload Linux runtime
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -481,6 +522,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -521,6 +563,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -565,6 +608,7 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -576,6 +620,8 @@ jobs:
         timeout-minutes: 3
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.linux-runtime.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           pattern: linux-runtime-*
           merge-multiple: true
           path: target/debug
@@ -675,6 +721,7 @@ jobs:
         with:
           runtime: ${{ matrix.runtime }}
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install pnpm dependencies
@@ -714,6 +761,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -724,6 +772,8 @@ jobs:
             binary: ./target/debug/no-mistakes.exe
             addon: target/debug/no_mistakes.dll
 
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -746,41 +796,51 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-runtime-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
           path: |
             target/debug
             target/.rustc_info.json
@@ -801,6 +861,7 @@ jobs:
       # not also link a cdylib.
       # Hosted macOS runs exceeded the former build and Rust step deadlines.
       - name: Build native CLI and N-API addon
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 20
         shell: bash
         env:
@@ -823,7 +884,18 @@ jobs:
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.native-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
       - name: Upload native-runtime
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -836,7 +908,7 @@ jobs:
             target/debug/no-mistakes.node
 
       - name: Upload native build diagnostics
-        if: ${{ always() }}
+        if: ${{ (always()) && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -856,6 +928,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -866,6 +939,8 @@ jobs:
             binary: ./target/debug/no-mistakes
             addon: target/debug/libno_mistakes.dylib
 
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -888,41 +963,51 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-runtime-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            native-runtime-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
           path: |
             target/debug
             target/.rustc_info.json
@@ -943,6 +1028,7 @@ jobs:
       # not also link a cdylib.
       # Hosted macOS runs exceeded the former build and Rust step deadlines.
       - name: Build native CLI and N-API addon
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 20
         shell: bash
         env:
@@ -965,7 +1051,18 @@ jobs:
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.native-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
       - name: Upload native-runtime
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -978,7 +1075,7 @@ jobs:
             target/debug/no-mistakes.node
 
       - name: Upload native build diagnostics
-        if: ${{ always() }}
+        if: ${{ (always()) && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -998,6 +1095,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -1008,6 +1106,8 @@ jobs:
             binary: ./target/debug/no-mistakes.exe
             addon: target/debug/no_mistakes.dll
 
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -1030,47 +1130,58 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-test-harness-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
           path: |
             target/debug
             target/.rustc_info.json
             ${{ runner.temp }}/nm-cargo-inputs
 
       - name: Precompile native Rust test targets
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 15
         shell: bash
         env:
@@ -1081,7 +1192,18 @@ jobs:
           node .github/scripts/native-test-archive.cjs build
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
 
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.native-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
       - name: Upload native-rust-archive
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1093,7 +1215,7 @@ jobs:
             target/native-test-artifacts
 
       - name: Upload native-test-build-diagnostics
-        if: ${{ always() }}
+        if: ${{ (always()) && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1113,6 +1235,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -1123,6 +1246,8 @@ jobs:
             binary: ./target/debug/no-mistakes
             addon: target/debug/libno_mistakes.dylib
 
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
@@ -1145,47 +1270,58 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Set up pnpm and Node.js
         timeout-minutes: 5
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Install Rust
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
-      - name: Cache Rust build artifacts
-        id: native-rust-cache
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: native-test-harness-v2-${{ matrix.target }}
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: false
-          workspaces: . -> target
 
       - name: Cache native workspace artifacts by source
         id: native-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            native-test-harness-workspace-v1-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
           path: |
             target/debug
             target/.rustc_info.json
             ${{ runner.temp }}/nm-cargo-inputs
 
       - name: Precompile native Rust test targets
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 15
         shell: bash
         env:
@@ -1196,7 +1332,18 @@ jobs:
           node .github/scripts/native-test-archive.cjs build
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
 
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.native-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/debug
+            target/.rustc_info.json
+            ${{ runner.temp }}/nm-cargo-inputs
       - name: Upload native-rust-archive
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1208,7 +1355,7 @@ jobs:
             target/native-test-artifacts
 
       - name: Upload native-test-build-diagnostics
-        if: ${{ always() }}
+        if: ${{ (always()) && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1228,6 +1375,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -1285,12 +1433,15 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-rust-archive
         timeout-minutes: 2
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.native-test-build.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: native-rust-archive-${{ matrix.target }}
           path: target/native-test-artifacts
 
@@ -1320,6 +1471,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -1361,12 +1513,15 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-rust-archive
         timeout-minutes: 2
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.native-test-build-macos.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: native-rust-archive-${{ matrix.target }}
           path: target/native-test-artifacts
 
@@ -1396,6 +1551,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -1453,12 +1609,15 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-runtime
         timeout-minutes: 2
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.native-build.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: native-runtime-${{ matrix.target }}
           path: target/debug
 
@@ -1518,6 +1677,7 @@ jobs:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
@@ -1559,12 +1719,15 @@ jobs:
         with:
           runtime: node@24
           cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
           install: false
 
       - name: Download native-runtime
         timeout-minutes: 2
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.native-build-macos.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: native-runtime-${{ matrix.target }}
           path: target/debug
 
@@ -1645,43 +1808,59 @@ jobs:
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Install Rust
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: standalone-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
-      - name: Cache standalone library artifacts
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: standalone-lib-v2
-          workspaces: . -> target/standalone-lib/target
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
-          cache-on-failure: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
       - name: Cache standalone-lib workspace artifacts by source
         id: standalone-lib-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: standalone-lib-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            standalone-lib-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            standalone-lib-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
           path: |
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
             ${{ runner.temp }}/nm-standalone-lib-cargo-inputs
       - name: Install nextest
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
         with:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 8
         shell: bash
         run: |
@@ -1689,7 +1868,18 @@ jobs:
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
           node .github/scripts/standalone-shards.cjs build target/standalone-bundle
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.standalone-lib-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/standalone-lib/target/debug
+            target/standalone-lib/target/.rustc_info.json
+            ${{ runner.temp }}/nm-standalone-lib-cargo-inputs
       - name: Upload standalone library archive
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1724,6 +1914,8 @@ jobs:
         timeout-minutes: 3
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.standalone-build.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: standalone-library
           path: target/standalone-bundle
       - name: Start isolated PostgreSQL for catalog fixtures
@@ -1753,12 +1945,21 @@ jobs:
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
       CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
+    outputs:
+      artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Validate build artifact source
+        id: build-artifact-source
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/build-artifact-source.cjs
+
       - name: Install Rust
         id: coverage-rust-toolchain
         timeout-minutes: 5
@@ -1766,28 +1967,33 @@ jobs:
         with:
           toolchain: stable
           components: llvm-tools-preview
-      - name: Cache instrumented Rust build artifacts
-        timeout-minutes: 5
+      - name: Cache Cargo registry sources
+        if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
-          shared-key: coverage-nextest-v1
-          workspaces: . -> target/coverage/target
+          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
+          add-rust-environment-hash-key: false
+          cache-targets: false
+          cache-bin: false
           cache-workspace-crates: false
-          cache-on-failure: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
       - name: Cache coverage workspace artifacts by source
         id: coverage-workspace-cache
+        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
-          key: coverage-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: coverage-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            coverage-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            coverage-workspace-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            coverage-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
           path: |
             target/coverage/target/debug
             target/coverage/target/.rustc_info.json
             ${{ runner.temp }}/nm-coverage-cargo-inputs
       - name: Install Rust coverage tools
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 5
         uses: taiki-e/install-action@682ce6c3c696a4cd5168a05f98e51aa02b877941 # v2.89.1
         with:
@@ -1796,6 +2002,7 @@ jobs:
         timeout-minutes: 2
         run: node --test .github/scripts/rust-coverage-shards.test.cjs .github/scripts/rust-profile-pooling.test.cjs
       - name: Build and archive instrumented Rust tests
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 15
         shell: bash
         run: |
@@ -1805,7 +2012,18 @@ jobs:
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-coverage-cargo-inputs"
           node .github/scripts/rust-coverage-shards.cjs archive target/coverage-bundle
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-coverage-cargo-inputs"
+      - name: Save verified workspace artifacts
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.coverage-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        timeout-minutes: 3
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          key: ${{ steps.coverage-workspace-cache.outputs.cache-primary-key }}
+          path: |
+            target/coverage/target/debug
+            target/coverage/target/.rustc_info.json
+            ${{ runner.temp }}/nm-coverage-cargo-inputs
       - name: Upload instrumented Rust tests
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1815,7 +2033,7 @@ jobs:
           compression-level: 0
           retention-days: 1
       - name: Diagnose Rust disk usage after failure
-        if: ${{ failure() }}
+        if: ${{ (failure()) && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "Rust coverage build failure" target
 
@@ -1846,6 +2064,8 @@ jobs:
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.rust-coverage-build.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: rust-coverage-build
           path: target/coverage-bundle
       - name: Start isolated PostgreSQL for catalog fixtures
@@ -1877,6 +2097,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      actions: read
       id-token: write
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
@@ -1902,6 +2123,8 @@ jobs:
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.rust-coverage-build.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: rust-coverage-build
           path: target/coverage-bundle
       - name: Restore report binaries without rebuilding
@@ -2100,12 +2323,14 @@ jobs:
         with:
           toolchain: stable
       - name: Cache Rust doctest artifacts
+        if: ${{ env.COLD_BUILD != 'true' }}
         timeout-minutes: 3
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           shared-key: rust-doctests-v1
           workspaces: . -> target/doctests
-          cache-workspace-crates: true
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Start isolated PostgreSQL for catalog fixtures
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
@@ -2156,6 +2381,8 @@ jobs:
         timeout-minutes: 3
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
+          run-id: ${{ needs.linux-runtime.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
           name: linux-runtime-cli
           path: target/debug
       - name: Restore CLI executable mode
@@ -2232,11 +2459,14 @@ jobs:
           toolchain: stable
 
       - name: Cache Rust build artifacts
+        if: ${{ env.COLD_BUILD != 'true' }}
         timeout-minutes: 5
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
           key: bench-${{ runner.arch }}
 
+          cache-workspace-crates: false
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install cargo-codspeed
         timeout-minutes: 5
         env:
@@ -2295,6 +2525,7 @@ jobs:
           echo "cache-key=codspeed-handoff-v1-${RUNNER_OS}-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${source}-${digest}" >> "$GITHUB_OUTPUT"
 
       - name: Cache benchmark executables
+        if: ${{ github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 5
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -2303,6 +2534,7 @@ jobs:
           path: codspeed-analysis.tar
 
       - name: Confirm exact benchmark cache is available
+        if: ${{ github.ref == 'refs/heads/main' }}
         id: cache-probe
         continue-on-error: true
         timeout-minutes: 2
@@ -2671,3 +2903,87 @@ jobs:
             echo "Benchmark build or execution failed." >&2
             exit 1
           fi
+
+  retain-linux-runtime-cache:
+    name: Retain linux-runtime cache
+    needs: linux-runtime
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.linux-runtime.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-build-cache:
+    name: Retain native-build cache
+    needs: native-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-build-macos-cache:
+    name: Retain native-build-macos cache
+    needs: native-build-macos
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build-macos.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-test-build-cache:
+    name: Retain native-test-build cache
+    needs: native-test-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-native-test-build-macos-cache:
+    name: Retain native-test-build-macos cache
+    needs: native-test-build-macos
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build-macos.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-standalone-build-cache:
+    name: Retain standalone-build cache
+    needs: standalone-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.standalone-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true
+
+  retain-rust-coverage-build-cache:
+    name: Retain rust-coverage-build cache
+    needs: rust-coverage-build
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.rust-coverage-build.result == 'success' }}
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/cache-retention.yml
+    with:
+      best_effort: true

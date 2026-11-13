@@ -5,13 +5,34 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { test } = require("node:test");
-const { commands } = require("./native-rust-tests.cjs");
+const { commands, buildInvocation } = require("./native-rust-tests.cjs");
 const root = path.resolve(__dirname, "../..");
 const saved = path.join(root, "test-cases/native-rust-tests");
 const expected = require("../../test-cases/native-rust-tests/expected.json");
-const base = ["test", "--locked", "-p", "no-mistakes"];
+const profile = require("../../test-cases/native-build-diagnostics/reports/macos-profile.json");
 
 for (const platform of ["Windows", "macOS"]) {
+  const overrides = platform === "macOS" ? profile : [];
+  const base = ["test", ...overrides, "--locked", "-p", "no-mistakes"];
+  test(`native ${platform} runtime and every test command retain consistent package profiles`, () => {
+    const env = { RUNNER_OS: platform, NO_MISTAKES_BUILD_NAPI: "1" };
+    assert.deepEqual(buildInvocation(["node", "wrapper"], env).args, [
+      "build",
+      ...overrides,
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--timings",
+      "--verbose",
+    ]);
+    for (const mode of ["build", "archive-build", "run"]) {
+      for (const args of commands(mode, platform)) {
+        assert.deepEqual(args.slice(0, base.length), base);
+        assert.equal(args.filter((arg) => arg === "--config").length, overrides.length / 2);
+        assert.ok(!args.some((arg) => /opt-level|debug|assertions|features/.test(arg)));
+      }
+    }
+  });
   test(
     `native ${platform} precompilation and execution retain every selected target and case`,
     { skip: process.platform === "win32" },
@@ -125,8 +146,9 @@ test("native workflow compiles independent archives and consumers never build Ru
   assert.doesNotMatch(archive, /crate-type = \["rlib", "cdylib"\]/);
   for (const producer of [runtime, archive]) {
     assert.match(producer, /NO_MISTAKES_BUILD_NAPI: "1"/);
-    assert.match(producer, /shared-key: native-/);
-    assert.match(producer, /cache-workspace-crates: false/);
+    assert.match(producer, /uses: actions\/cache\/restore@/);
+    assert.match(producer, /shared-key: cargo-registry-v1/);
+    assert.match(producer, /cache-targets: false/);
     assert.doesNotMatch(
       producer,
       /hashFiles\([^)]*\.github\/workflows|github.sha.*cache|native-test-artifacts-v1/,

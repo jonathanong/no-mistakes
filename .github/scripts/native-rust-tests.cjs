@@ -1,5 +1,16 @@
 const { spawnSync } = require("node:child_process");
 
+function profileArgs(platform) {
+  return platform === "macOS"
+    ? [
+        "--config",
+        "profile.dev.package.no-mistakes.codegen-units=64",
+        "--config",
+        "profile.test.package.no-mistakes.codegen-units=64",
+      ]
+    : [];
+}
+
 function targets(platform) {
   const shared = [
     {
@@ -30,7 +41,7 @@ function targets(platform) {
 
 function commands(mode, platform) {
   const selected = targets(platform);
-  const base = ["test", "--locked", "-p", "no-mistakes"];
+  const base = ["test", ...profileArgs(platform), "--locked", "-p", "no-mistakes"];
   if (mode === "build" || mode === "archive-build")
     return selected.map(({ selector }) => [
       ...base,
@@ -52,7 +63,15 @@ function buildInvocation(argv = process.argv, env = process.env) {
   const testBuild = argv[2] === "--tests" || archive;
   const args = testBuild
     ? commands(archive ? "archive-build" : "build", env.RUNNER_OS)[Number(argv[3])]
-    : ["build", "--locked", "-p", "no-mistakes", "--timings", "--verbose"];
+    : [
+        "build",
+        ...profileArgs(env.RUNNER_OS),
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--timings",
+        "--verbose",
+      ];
   if (!args) throw new Error("expected a native test target index");
   if (testBuild && env.NO_MISTAKES_BUILD_NAPI !== "1")
     throw new Error("native Rust tests require NO_MISTAKES_BUILD_NAPI=1");

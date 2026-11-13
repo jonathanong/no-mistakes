@@ -268,7 +268,7 @@ test("CI archive and release validation preserve the locked full-workspace test 
   assert.match(docs, /CARGO_TARGET_DIR: \$\{\{ github\.workspace \}\}\/target\/doctests/);
   assert.match(docs, /shared-key: rust-doctests-v1/);
   assert.match(docs, /workspaces: \. -> target\/doctests/);
-  assert.match(docs, /cache-workspace-crates: true/);
+  assert.match(docs, /cache-workspace-crates: false/);
   assert.match(docs, /uses: \.\/\.github\/actions\/start-test-postgres/);
   assert.match(docs, /run: bash \.github\/scripts\/rust-validation\.sh doc/);
   assert.equal(stepBudgetSeconds(docs, "Run Rust doctests"), 480);
@@ -368,14 +368,13 @@ test("coverage and standalone producers retain content-verified workspace caches
     ],
   ]) {
     const body = workflowJob(name);
-    assert.match(body, /cache-workspace-crates: false/);
-    assert.match(body, /cache-on-failure: false/);
+    assert.match(body, /shared-key: cargo-registry-v1/);
+    assert.match(body, /cache-targets: false/);
     assert.ok(body.includes(`id: ${toolchain}`));
-    assert.ok(body.indexOf("uses: Swatinem/rust-cache@") < body.indexOf("uses: actions/cache@"));
     const overlay = body
       .split(`      - name: Cache ${profile} workspace artifacts by source\n`)[1]
       .split("\n      - name:")[0];
-    assert.match(overlay, /uses: actions\/cache@[a-f0-9]{40}/);
+    assert.match(overlay, /uses: actions\/cache\/restore@[a-f0-9]{40}/);
     const key = overlay.match(/^          key: ([^\n]+)/m)[1];
     const fallback = overlay.match(/restore-keys: \|\n            ([^\n]+)/)[1];
     assert.equal(key, `${fallback}${"${{ hashFiles('crates/**/*.rs') }}"}`);
@@ -412,7 +411,7 @@ test("coverage and standalone producers retain content-verified workspace caches
   }
 });
 
-test("every workspace producer prefers exact Cargo configuration before compiler-only fallback", () => {
+test("v2 workspace producers restore only the same Cargo configuration and profile", () => {
   const producers = [
     "linux-runtime",
     "native-build",
@@ -425,7 +424,7 @@ test("every workspace producer prefers exact Cargo configuration before compiler
   for (const name of producers) {
     const body = workflowJob(name);
     const cache = body
-      .split(/uses: actions\/cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
       .split("\n      - name:")[0];
     const primary = cache.match(/^          key: ([^\n]+)/m)[1];
     const fallbacks = cache
@@ -433,20 +432,25 @@ test("every workspace producer prefers exact Cargo configuration before compiler
       .trim()
       .split("\n")
       .map((line) => line.trim());
-    assert.equal(fallbacks.length, 2, name);
+    assert.equal(fallbacks.length, 1, name);
     assert.equal(primary, `${fallbacks[0]}${"${{ hashFiles('crates/**/*.rs') }}"}`, name);
     assert.ok(fallbacks[0].includes("hashFiles('Cargo.toml'"), name);
-    assert.ok(fallbacks[0].startsWith(fallbacks[1]), name);
-    assert.ok(primary.startsWith(fallbacks[1]), name);
-    assert.match(fallbacks[1], /steps\.[a-z-]+\.outputs\.cachekey/);
-    assert.ok(fallbacks[1].endsWith("${{ env.RUSTFLAGS }}-"), name);
-    assert.doesNotMatch(fallbacks[1], /hashFiles/);
+    assert.match(fallbacks[0], /workspace-v2-/);
+    assert.match(fallbacks[0], /steps\.[a-z-]+\.outputs\.cachekey/);
+    assert.ok(fallbacks[0].includes("${{ env.RUSTFLAGS }}-"), name);
+    assert.ok(
+      fallbacks[0].includes(
+        "'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml'",
+      ),
+      name,
+    );
+    assert.equal(fallbacks[0].includes("-cgu64-"), name.endsWith("-macos"), name);
     assert.match(body, /cargo-cache-inputs\.cjs restore/);
     assert.match(body, /cargo-cache-inputs\.cjs capture/);
   }
   assert.match(
     workflowJob("linux-runtime"),
-    /key: linux-runtime-workspace-v1-\$\{\{ matrix\.role \}\}/,
+    /key: linux-runtime-workspace-v2-\$\{\{ matrix\.role \}\}/,
   );
   for (const name of [
     "native-build",
@@ -456,13 +460,10 @@ test("every workspace producer prefers exact Cargo configuration before compiler
   ]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
-    const dependencies = body
-      .split(/uses: Swatinem\/rust-cache@[a-f0-9]{40}[^\n]*\n/)[1]
-      .split("\n      - name:")[0];
-    assert.match(dependencies, /save-if: \$\{\{ github\.ref == 'refs\/heads\/main' \}\}/);
-    assert.doesNotMatch(dependencies, /\n        if:/);
+    assert.match(body, /shared-key: cargo-registry-v1/);
+    assert.match(body, /cache-targets: false/);
     const workspace = body
-      .split(/uses: actions\/cache@[a-f0-9]{40}[^\n]*\n/)[1]
+      .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
       .split("\n      - name:")[0];
     assert.doesNotMatch(workspace, /save-if:|\n        if:/);
   }

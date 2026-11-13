@@ -3,19 +3,10 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { captureBuildOutput } = require("./native-build-output.cjs");
+const { probe, darwinDiagnostics } = require("./native-build-probes.cjs");
 
 const { buildInvocation } = require("./native-rust-tests.cjs");
 const { directory, args: cargoArgs } = buildInvocation();
-
-function probe(command, args) {
-  const result = spawnSync(command, args, { encoding: "utf8", timeout: 10000 });
-  return {
-    status: result.status,
-    error: result.error?.message,
-    stdout: result.stdout,
-    stderr: result.stderr,
-  };
-}
 
 function metadata() {
   const keys = [
@@ -92,6 +83,7 @@ function sample() {
       freeMemory: os.freemem(),
       loadAverage: os.loadavg(),
       swap: process.platform === "darwin" ? probe("sysctl", ["vm.swapusage"]) : null,
+      darwin: process.platform === "darwin" ? darwinDiagnostics() : null,
     })}\n`,
   );
 }

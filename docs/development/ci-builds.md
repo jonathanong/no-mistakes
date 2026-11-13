@@ -59,24 +59,143 @@ object inventory is retained with the report diagnostics and applies to LCOV,
 summary totals, and missing-region details. The coverage floors and complexity
 gates remain unchanged.
 
-Build producers restore dependency caches first, then a separate compiler and
-Rust-source-keyed workspace cache. The workspace cache contains both Cargo
+Build producers restore registry sources and compiler/Rust-source-keyed workspace
+caches. Compatible Linux development checks also share a dependency cache.
+Native, standalone, and coverage producers avoid a second compiled-dependency
+cache: their full workspace snapshots already contain those artifacts. The workspace cache contains both Cargo
 artifacts and a manifest of tracked input content hashes. After preparing the
 runtime crate types, a helper restores old timestamps only for unchanged input
 bytes and keeps changed or new files fresh. Cargo still checks compiler,
 configuration, feature, and dependency fingerprints normally. The manifest is
 captured only after a successful build and saved with that build's artifacts;
-never restore it independently. Workspace restores first try the same compiler,
-Rust flags, and Cargo configuration, then the same compiler and Rust flags across
-Cargo configuration changes. Both fallbacks retain their platform and producer
-family. The content check keeps changed inputs fresh, and Cargo decides which
-dependency, feature, and profile fingerprints remain compatible. A release-only
-profile edit can therefore reuse compatible development artifacts. This makes
+never restore it independently. Workspace restores require the same compiler, Rust flags, and Cargo
+configuration; only tracked Rust source bytes may differ between a primary key
+and its fallback. A manifest, dependency, profile, or package-version change
+starts a new workspace instead of carrying obsolete hashed outputs into the
+next snapshot. The v2 namespace resets the accumulated v1 payloads. Cargo
+still checks dependency, feature, and profile fingerprints normally. This makes
 unchanged native and archived Rust test artifacts reusable across fresh checkouts
 without hiding source changes. Dependency caches remain reusable when Rust source
-changes. A cold or changed native library still requires compilation. Native dependency
-cache saves run on main only; pull requests can restore those dependencies and
-publish their complete workspace snapshot without a duplicate dependency save.
+changes. A cold or changed native library still requires compilation. All Rust target cache saves run on main only; pull requests restore those
+dependencies and workspace snapshots, then share their newly built outputs
+through artifacts without publishing another target cache.
+
+## Cache capacity and cold-build validation
+
+The issue #3330 audit found 35 cache records totaling 10.526 GiB, above the
+repository's default 10 GB allocation. Main held 5.485 GiB and pull-request refs
+held 5.041 GiB. Full workspace targets overlapped dependency-only caches, and
+compatible quality jobs maintained separate dependency snapshots. This can evict
+an otherwise valid key: the #3329 coverage key restored at 09:45 UTC and missed
+at 10:02 UTC. The audit supports eviction as a cause; it does not establish the
+reason for every miss.
+
+Five caches from the merged #3329 were deleted (2.502 GiB). Concurrent main
+writes meant the subsequent live inventory was 34 records totaling 9.552 GiB,
+not a subtraction from the earlier snapshot. Open-PR caches were preserved.
+Compatible Linux development jobs now share a dependency family; release,
+documentation, compiler, architecture, and platform boundaries remain separate.
+Six duplicate compiled-dependency layers are retired. Their producers instead
+share source-only registry caches per platform, including system-crate source
+timestamps needed to avoid unnecessary build-script recompilation. Registry
+contents are independent of compiler flags; compiled artifacts remain isolated
+in their workspace families. Workspace crates are excluded from the remaining
+dependency-only caches. PRs never save target caches; each producer uploads its build archive
+once for its test consumers. pnpm store snapshots also save on main only; the
+action may still write its separate small lockfile-verification records.
+
+The cache-retention workflow removes closed-PR caches, retired workspace
+versions, and superseded main snapshots of known families. Exact-compatible
+pnpm snapshots share all three content hashes; retention keeps the largest
+complete store, then the newest creation time and ID, rather than a newer
+partial store. Different lockfiles, platforms, architectures, and unknown key
+formats remain separate.
+
+Cleanup runs after successful main producers, after main CI, and on PR closure.
+After deduplication it evicts least-recently-accessed main workspace snapshots
+until the inventory fits an 8 GiB budget. These build caches can be recreated;
+open PRs, unknown families, release dependencies, and active benchmark handoffs
+remain protected. If protected entries alone exceed the budget, cleanup reports
+the remaining excess rather than deleting them. Individual uploads can briefly
+precede their cleanup jobs; the policy does not reserve quota atomically.
+
+A later main release repopulated the inventory to 10.480 GiB. Retiring its nine
+accumulated v1 workspaces and ten duplicate pnpm snapshots projects to 2.704 GiB
+before fresh v2 workspaces and source-only registry caches. This is a transition
+projection, not a steady-state size claim: the 8 GiB retention limit bounds
+subsequent workspace growth. Active benchmark source runs retain their exact
+handoffs until their consumers finish.
+Pagination and PR lookups are bounded; incomplete inventories fail rather than
+claiming headroom. Cleanup uses trusted workflow code and metadata only, never
+PR code with write permissions.
+
+Cold macOS run `43404256731` spent at least 884.77 seconds compiling the root
+library before cancellation of its first test target. Dependency crates were
+fresh. Its symbol-free, unoptimized, build with incremental compilation disabled used the default 16
+code-generation units. CI now uses 64 units for the root package's development
+and test profiles on macOS, including runtime builds and archived tests.
+Dependencies retain their settings; features, assertions, selected targets, and
+test execution remain unchanged. `CARGO_INCREMENTAL=0` is explicit for both cold
+and restored builds, including jobs that bypass the cache action. This is a compile-parallelism experiment whose
+hosted timings must establish the benefit, not a timeout increase. Bounded
+Darwin memory, process, and thread probes accompany slow-build diagnostics.
+
+For controlled measurement, dispatch CI with `cold_cache=true` to bypass Rust
+target restores. After that run succeeds, dispatch the exact same commit with
+`reuse_build_run=<cold run ID>`. If the dispatch trigger is not yet available on
+the default branch, push that commit to `ci/cold-build`, followed after success
+by `ci/warm-build-<cold run ID>`. These explicit measurement refs run the full
+validation graph without optional benchmarks. Ordinary PR behavior is unchanged.
+
+Warm validation retains Rust and LLVM tool installation for the profile-pooling
+self-test, even when compilation is skipped. The warm path validates the
+completed source run's repository, workflow, event,
+and exact commit, then requires all eight unexpired build archives before
+downloading them. It reuses compiled
+binaries, not test results: every test runs again, and coverage profiles are
+collected and merged anew under the unchanged floors and CRAP gate. A normal
+PR cannot request cross-run reuse. Report warm artifact reuse separately from
+ordinary target-cache restoration, and include queue, setup, transfer, and
+aggregate time in end-to-end measurements. Never rerun jobs to obtain a better
+sample.
+
+### Controlled Rust-cache-cold measurement
+
+Run [`43422140537`](https://github.com/jonathanong/no-mistakes/actions/runs/43422140537)
+at `fae9ed847` disabled every Rust target and registry restore. Both native
+macOS Cargo reports recorded zero fresh units, so dependencies were rebuilt too.
+The test precompile step completed in 8m30s and the CLI/N-API build in 11m18s,
+within their unchanged 15-minute bounds. The root library dominated each build:
+334.4 seconds in the test producer and 537 seconds in the runtime producer.
+These are one controlled cold observation, not a tail-latency guarantee.
+
+The complete run took **17m01s**. The macOS test producer finished at +10m11s;
+its longest Rust shard took 6m29s and finished at +16m44s. Independently, the
+coverage producer finished at +7m45s, its longest shard at +12m13s, and the
+collector at +13m57s. The cold ten-minute target remains unmet even with the
+cache-capacity correction: compilation and subsequent test execution still
+exceed that budget. Splitting the small native harness compilation alone cannot
+remove the root-library cost.
+
+The merged cold report covered 338,683/342,109 lines (99.00%),
+39,060/39,331 functions (99.31%), and 344,756/351,672 regions (98.03%). All 98%
+floors, CRAP, and complexity gates passed.
+
+The final paired measurements at `060a9edb9` both passed every gate. Rust-cache-cold
+run [`43435782830`](https://github.com/jonathanong/no-mistakes/actions/runs/43435782830)
+took 24m10s including macOS scheduling delays. Its test precompile and runtime
+build steps took 10m46s and 9m10s. The macOS Rust producer finished at +14m37s;
+its second shard waited until +20m11s and finished at +23m52s. Warm artifact-reuse
+run [`43439705900`](https://github.com/jonathanong/no-mistakes/actions/runs/43439705900)
+took 6m50s, rerunning every test with fresh coverage profiles. This demonstrates
+successful cold completion and a warm path under ten minutes; the cold target
+still needs compilation and scheduling reductions. The final cache-generation
+and retention changes affect cache publication/restoration, not these compiler
+or test commands. Real-addon provenance cases register effects/export parity, checks,
+and mixed-demand unions separately. Each union still recomputes all standalone
+reports and compares the complete CJS/ESM prepared results; negative entries
+remain covered. The unchanged 5,000 ms per-test gate measures each behavior
+without bundling all export-parity queries into that same case.
 
 The partitioned Rust suite uses an `exec` runner to preserve the existing argument-sensitive
 fetch CLI test. That one exact case receives its ordinary Cargo filter arguments

@@ -16,7 +16,10 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
   const upload = native
     .split("- name: Upload native build diagnostics\n")[1]
     .split("\n      - name:")[0];
-  assert.match(upload, /if: \$\{\{ always\(\) \}\}/);
+  assert.match(
+    upload,
+    /if: \$\{\{ \(always\(\)\) && steps.build-artifact-source.outputs.reuse != 'true' \}\}/,
+  );
   assert.match(upload, /timeout-minutes: 2/);
   assert.match(upload, /uses: actions\/upload-artifact@[a-f0-9]{40} # v\d/);
   assert.match(upload, /target\/native-build-diagnostics/);
@@ -99,6 +102,31 @@ function fixture(scenario, logFailure) {
     },
   };
 }
+
+test(
+  "native runtime wrapper passes the macOS package-only profile to Cargo",
+  { skip: process.platform === "win32" },
+  () => {
+    const input = fixture("success");
+    input.options.env.RUNNER_OS = "macOS";
+    try {
+      const result = spawnSync(process.execPath, [wrapper], input.options);
+      assert.equal(result.status, 0, result.stderr);
+      assert.deepEqual(JSON.parse(input.read("metadata.json")).command, [
+        "cargo",
+        "build",
+        ...require("../../test-cases/native-build-diagnostics/reports/macos-profile.json"),
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--timings",
+        "--verbose",
+      ]);
+    } finally {
+      input.cleanup();
+    }
+  },
+);
 
 for (const [scenario, status] of [
   ["success", 0],
@@ -189,6 +217,7 @@ for (const logFailure of [undefined, "open", "midwrite", "stalled"]) {
 
 require("./native-build-output.test.cjs");
 require("./native-build-output-edge.test.cjs");
+require("./native-build-probes.test.cjs");
 
 for (const logFailure of ["open", "midwrite"]) {
   for (const [scenario, status] of [
@@ -225,3 +254,6 @@ require("./native-rust-tests.test.cjs");
 require("./native-test-artifacts.test.cjs");
 require("./native-api-shards.test.cjs");
 require("./native-rust-partition.test.cjs");
+require("./build-artifact-source.test.cjs");
+
+require("./build-artifact-workflow.test.cjs");

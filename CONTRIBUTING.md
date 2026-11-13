@@ -137,6 +137,20 @@ for the job graph, the historical completed-run timings, and the current status
 of the 10-minute PR-wall target. The historical run predates this layout and
 does not establish its runtime.
 
+Rust target caches are published only by successful main producers. pnpm store
+snapshots also save on main only. Compatible
+Linux jobs share dependency keys; native, coverage, and standalone producers
+share source-only registry caches instead of duplicating compiled dependencies.
+Test shards download producer artifacts rather than saving private target
+directories. Cold and restored builds both disable incremental compilation. Bounded retention prunes obsolete main
+and closed-PR entries, deduplicates compatible pnpm stores, then evicts the
+oldest-accessed main workspace snapshots to fit 8 GiB. Open PRs and unknown
+cache families remain protected; their excess is reported. Workspace fallback
+keys require the same Cargo configuration to avoid accumulating obsolete
+outputs after manifest changes. See [cache capacity and cold-build validation](docs/development/ci-builds.md#cache-capacity-and-cold-build-validation)
+for cold/warm measurement inputs and archive provenance checks. Warm validation
+still runs every test and collects fresh coverage profiles.
+
 The coverage test step shares nine raw profiles per instrumented binary through
 LLVM's online merge pool. This preserves concurrent subprocess counts without a
 full raw profile for every CLI invocation. LCOV, CRAP, and coverage floors still
