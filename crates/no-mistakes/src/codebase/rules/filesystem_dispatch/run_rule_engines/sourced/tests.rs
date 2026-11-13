@@ -1,72 +1,53 @@
 use super::*;
 
 #[test]
-fn sourced_dispatch_reports_config_paths_and_workflow_policies() {
-    for (rule, scenario, configuration, names, expected) in [
+fn sourced_dispatch_reports_structured_config_pins_and_empty_files() {
+    for (rule, scenario, configuration, name, lines) in [
         (
-            CONFIG_PATH_REFERENCES,
+            STRUCTURED_CONFIG_POLICY,
             "",
-            "missing-literal",
-            vec!["config/app.yml"],
-            "config/app.yml",
+            "../configs/invalid-yaml.yml",
+            "invalid.yml",
+            vec![1],
         ),
         (
-            GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES,
-            "boundary",
-            "three",
-            vec![
-                ".github/workflows/scripts.yml",
-                ".github/actions/prepare/action.yaml",
-            ],
-            ".github/workflows/scripts.yml",
+            GITHUB_ACTIONS_PINNED_HASH,
+            "fail",
+            ".no-mistakes.yml",
+            ".github/workflows/ci.yml",
+            vec![7, 9, 11, 13],
         ),
         (
-            GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT,
-            "unit",
-            "",
-            vec![".github/workflows/order.yml"],
-            ".github/workflows/order.yml",
+            NO_EMPTY_OR_COMMENTS_ONLY_FILES,
+            "fail",
+            ".no-mistakes.yml",
+            "placeholder.ts",
+            vec![1],
         ),
     ] {
-        let base = crate::test_support::rule_fixture_root(rule);
-        let root = base.join(scenario);
-        let config = if configuration.is_empty() {
-            let mut config = NoMistakesConfig::default();
-            config.rules.push(crate::config::v2::schema::RuleDef {
-                rule: rule.into(),
-                scope: Some(crate::config::v2::schema::RuleScope::Repository),
-                ..Default::default()
-            });
-            config
-        } else {
-            let path = base
-                .parent()
-                .unwrap()
-                .join(format!("configs/{configuration}.yml"));
-            serde_yaml::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
-        };
-        let files = names.iter().map(|name| root.join(name)).collect::<Vec<_>>();
-        assert!(files.iter().all(|path| path.is_file()), "{files:?}");
-        let sources = crate::codebase::rules::source_store_for_files(&files);
-        for deferred in [false, true] {
-            let findings = run(rule, &root, &config, &files, &sources, deferred)
-                .unwrap()
+        let root = crate::test_support::rule_fixture_root(rule).join(scenario);
+        let config: NoMistakesConfig =
+            serde_yaml::from_str(&std::fs::read_to_string(root.join(configuration)).unwrap())
                 .unwrap();
-            assert!(
-                findings.iter().any(|finding| finding.rule == rule
-                    && finding.file == expected
-                    && finding.line > 0),
-                "{rule}: {findings:?}"
-            );
-            if rule == GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT {
-                assert_eq!(
-                    findings
-                        .iter()
-                        .map(|finding| finding.line)
-                        .collect::<Vec<_>>(),
-                    [6, 22, 28, 33, 40, 43, 47, 51]
-                );
-            }
-        }
+        let files = [root.join(name)];
+        assert!(files[0].is_file(), "{files:?}");
+        let sources = crate::codebase::rules::source_store_for_files(&files);
+        let findings = run(rule, &root, &config, &files, &sources, false)
+            .unwrap()
+            .unwrap();
+        assert!(
+            findings
+                .iter()
+                .all(|finding| finding.rule == rule && finding.file == name),
+            "{rule}: {findings:?}"
+        );
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| finding.line)
+                .collect::<Vec<_>>(),
+            lines,
+            "{rule}: {findings:?}"
+        );
     }
 }

@@ -1,60 +1,68 @@
 use super::*;
 use no_mistakes::codebase::analysis_session::AnalysisSession;
-use no_mistakes::config::v2::schema::StringOrList;
 use std::path::PathBuf;
 
-fn inputs() -> (PathBuf, PreparedCheckInputs) {
+#[test]
+fn setup_retains_canonical_playwright_rule_facts_and_prerequisite_failures() {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/partial-playwright"),
     );
+    for (config, failed) in [("valid.yml", false), (".no-mistakes.yml", true)] {
+        let session = AnalysisSession::disabled();
+        session.enable_partial_checks();
+        let prepared = super::super::super::prepared::prepare_with_session(
+            &session,
+            &root,
+            Some(&root.join(config)),
+            None,
+            None,
+            false,
+        )
+        .unwrap();
+        assert!(prepared.playwright.is_some());
+        assert!(prepared.playwright_failure.is_none());
+        let plan = build(&session, &root, &prepared, false).unwrap();
+        assert!(plan.playwright_fact_plan.is_some());
+        assert!(plan.fact_demand.needs_shared_facts());
+        assert!(plan.filesystem_rules_enabled);
+        assert!(plan.prepared_graph.is_none());
+        let failures = session.check_failures();
+        assert_eq!(!failures.is_empty(), failed, "{config}: {failures:?}");
+        assert!(failures
+            .iter()
+            .all(|failure| failure.consumer == "playwright-coverage"
+                && failure.property.as_deref() == Some("testDir")));
+    }
+}
+
+#[test]
+fn setup_derives_graph_only_playwright_facts_without_a_rule_projection() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/playwright/partial-config-failure"),
+    );
+    let session = AnalysisSession::disabled();
+    session.enable_partial_checks();
     let prepared = super::super::super::prepared::prepare_with_session(
-        &AnalysisSession::disabled(),
+        &session,
         &root,
-        Some(&root.join("valid.yml")),
+        Some(&root.join("graph-scopes-check.yml")),
         None,
         None,
         false,
     )
     .unwrap();
-    (root, prepared)
-}
-
-#[test]
-fn setup_recovers_playwright_facts_without_a_prepared_rule_projection() {
-    let (root, mut prepared) = inputs();
-    assert!(prepared.playwright.take().is_some());
-    let session = AnalysisSession::disabled();
+    assert!(prepared.playwright.is_none());
+    assert!(prepared.playwright_failure.is_none());
     let plan = build(&session, &root, &prepared, false).unwrap();
+    assert!(plan.prepared_graph.is_some());
     assert!(plan.playwright_fact_plan.is_some());
     assert!(plan.fact_demand.needs_shared_facts());
-    assert!(plan.filesystem_rules_enabled);
-    assert!(plan.prepared_graph.is_none());
-    assert!(session.check_failures().is_empty());
-}
-
-#[test]
-fn setup_preserves_strict_playwright_errors_and_retains_independent_partial_checks() {
-    let (root, mut prepared) = inputs();
-    prepared.playwright = None;
-    prepared.config.tests.playwright.configs =
-        Some(StringOrList::One("playwright.config.ts".into()));
-    for partial in [false, true] {
-        let session = AnalysisSession::disabled();
-        if partial {
-            session.enable_partial_checks();
-        }
-        let result = build(&session, &root, &prepared, false);
-        if partial {
-            let plan = result.unwrap();
-            assert!(plan.playwright_fact_plan.is_none());
-            assert!(plan.filesystem_rules_enabled);
-            assert!(!plan.fact_demand.needs_shared_facts());
-        } else {
-            let error = result.err().expect("strict fact planning must fail");
-            assert!(format!("{error:#}").contains("testDir"));
-            assert!(session.check_failures().is_empty());
-        }
-    }
+    assert!(plan.plan.graph.imports);
+    let failures = session.check_failures();
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    assert_eq!(failures[0].consumer, "forbidden-dependencies");
+    assert_eq!(failures[0].property.as_deref(), Some("testDir"));
 }
 
 #[test]
