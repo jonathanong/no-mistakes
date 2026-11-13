@@ -58,11 +58,15 @@ function runProfile({
     ...env,
     CARGO_TARGET_DIR: path.resolve(root, env.CARGO_TARGET_DIR || "target"),
   };
+  if (environment.CARGO_TARGET_DIR !== path.resolve(root, "target"))
+    throw new Error(
+      "native compile profiling requires the workspace target directory for test archives. Use a fresh checkout with its default workspace target directory.",
+    );
   for (const marker of ["debug", ".rustc_info.json"]) {
     const existing = path.join(environment.CARGO_TARGET_DIR, marker);
     if (fs.existsSync(existing))
       throw new Error(
-        `native compile profiling requires a cold Cargo target; ${existing} already exists. Use a new CARGO_TARGET_DIR.`,
+        `native compile profiling requires a cold Cargo target; ${existing} already exists. Use a fresh checkout with its default workspace target directory.`,
       );
   }
   const output = path.join(root, "target/native-compile-profile");

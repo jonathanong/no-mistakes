@@ -1,0 +1,4 @@
+{
+  "supported": ["target", "./target", "<root>/target"],
+  "unsupported": ["target/profile-cold", "<external>/profile-cold"]
+}

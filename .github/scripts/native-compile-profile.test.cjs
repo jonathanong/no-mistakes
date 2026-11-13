@@ -284,7 +284,7 @@ for (const kind of ["preexisting-debug", "preexisting-rustc"]) {
                 calls++;
               },
             }),
-          /requires a cold Cargo target/,
+          external ? /requires the workspace target directory/ : /requires a cold Cargo target/,
         );
         assert.equal(calls, 0);
         assert.deepEqual(fs.readFileSync(path.join(input.root, manifest)), original);
@@ -296,4 +296,63 @@ for (const kind of ["preexisting-debug", "preexisting-rustc"]) {
       }
     });
   }
+}
+
+const layouts = require("../../test-cases/native-compile-profile/target-layouts.json");
+for (const layout of layouts.supported) {
+  test(`target archive preflight accepts ${layout}`, () => {
+    const input = fixture();
+    const fake = runner(input.root);
+    try {
+      const report = runProfile({
+        ...input,
+        platform: "darwin",
+        env: {
+          ...env,
+          CARGO_TARGET_DIR: layout.replace("<root>", input.root),
+        },
+        run: fake.run,
+      });
+      assert.equal(report.exitCode, 0);
+      assert.equal(fake.calls.length, 2);
+      assert.deepEqual(fs.readFileSync(path.join(input.root, manifest)), fake.original);
+    } finally {
+      input.cleanup();
+    }
+  });
+}
+
+for (const layout of layouts.unsupported) {
+  test(`target archive preflight rejects unused ${layout} before mutation or execution`, () => {
+    const input = fixture();
+    const external = fixture();
+    const directory = path.resolve(input.root, layout.replace("<external>", external.root));
+    const original = fs.readFileSync(path.join(input.root, manifest));
+    let calls = 0;
+    try {
+      assert.equal(fs.existsSync(directory), false);
+      assert.throws(
+        () =>
+          runProfile({
+            ...input,
+            platform: "darwin",
+            env: {
+              ...env,
+              CARGO_TARGET_DIR: directory,
+            },
+            run: () => {
+              calls++;
+            },
+          }),
+        /requires the workspace target directory/,
+      );
+      assert.equal(calls, 0);
+      assert.equal(fs.existsSync(directory), false);
+      assert.equal(fs.existsSync(path.join(input.root, "target")), false);
+      assert.deepEqual(fs.readFileSync(path.join(input.root, manifest)), original);
+    } finally {
+      input.cleanup();
+      external.cleanup();
+    }
+  });
 }

@@ -181,8 +181,11 @@ For a controlled shared-target experiment, dispatch the existing workflow with
 gh workflow run ci.yml --ref <branch> -f cold_cache=true -f profile_native_compile=true
 ```
 
-The extra macOS job restores no cache or build artifact. Its driver rejects an
-existing Cargo debug tree or compiler-info file before mutating anything. It
+The extra macOS job restores no cache or build artifact. Its driver requires the
+workspace's default `target` directory because the archive uses `target/debug`;
+external or nested target directories fail before compilation. Use a fresh
+checkout for cold profiling. An existing Cargo debug tree or compiler-info file
+also fails before mutating anything. It
 builds the original runtime configuration first, restores the original
 library-only manifest bytes, then builds the unchanged selected test archive in
 the same target directory. It never copies fingerprints or forces Cargo to
