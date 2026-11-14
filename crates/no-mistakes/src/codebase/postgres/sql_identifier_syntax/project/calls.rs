@@ -3,6 +3,7 @@ use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFa
 
 type Owners<'a> = FxHashMap<Span, &'a ModuleBinding>;
 mod member;
+mod receiver;
 pub(super) fn project(
     profile: &EmbeddedSqlOptions,
     selection: &Selection,
@@ -40,7 +41,6 @@ fn direct_calls(
         selected,
         namespaces,
         unsupported,
-        typed,
         ..
     } = selection;
     let mut calls = Vec::new();
@@ -57,12 +57,7 @@ fn direct_calls(
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
-        let delayed = selection.delayed_receivers.contains(root)
-            && (parts.len() == 1 || (parts.len() == 2 && parts[1] == "query"));
-        let typed = (delayed || owner.is_some_and(|binding| typed.contains(&binding.id)))
-            && (parts.len() == 1
-                || (parts.len() == 2 && parts[1] == "query")
-                || input::indirect_executor_call(parts));
+        let (delayed, typed) = receiver::classify(selection, owner, root, parts);
         let loose = member::unproved_receiver(
             profile,
             selection,
