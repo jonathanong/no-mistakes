@@ -56,15 +56,15 @@ function metadata() {
   };
 }
 
-function sample() {
+function sample(run = probe) {
   const result =
     process.platform === "win32"
-      ? probe("powershell", [
+      ? run("powershell", [
           "-NoProfile",
           "-Command",
           'Get-Process | Where-Object { $_.ProcessName -match "^(cargo|rustc|rust-lld|lld|link|clang|cc|ld)$" } | Select-Object Id,ProcessName,CPU,WorkingSet64 | ConvertTo-Json -Compress',
         ])
-      : probe("ps", ["-axo", "pid=,ppid=,pcpu=,rss=,etime=,comm="]);
+      : run("ps", ["-axo", "pid=,ppid=,pcpu=,rss=,etime=,comm="]);
   const output =
     process.platform === "win32"
       ? result.stdout
@@ -77,13 +77,13 @@ function sample() {
     `${JSON.stringify({
       at: new Date().toISOString(),
       status: result.status,
-      error: result.error?.message,
+      error: result.error,
       output,
       stderr: result.stderr,
       freeMemory: os.freemem(),
       loadAverage: os.loadavg(),
-      swap: process.platform === "darwin" ? probe("sysctl", ["vm.swapusage"]) : null,
-      darwin: process.platform === "darwin" ? darwinDiagnostics() : null,
+      swap: process.platform === "darwin" ? run("sysctl", ["vm.swapusage"]) : null,
+      darwin: process.platform === "darwin" ? darwinDiagnostics(run) : null,
     })}\n`,
   );
 }

@@ -708,7 +708,11 @@ Rust step reserved 120 seconds beyond those completed observations.
 
 The native build wrapper retains Cargo's verbose output and `--timings` report,
 the Rust cache-hit result, compiler/linker versions, runner image and CPU/memory
-metadata, and periodic local compiler/linker CPU and RSS samples. macOS also
+metadata, and periodic local compiler/linker CPU and RSS samples. Each
+`processes.jsonl` sample keeps the process probe status and any stderr the
+probe returned. When `ps` or PowerShell is missing or times out, that record
+also keeps the probe error string. A successful probe omits the error field.
+macOS also
 records `/usr/bin/time -l` wall/user/system time and peak RSS for completed builds.
 A small shell converts Cargo signal termination to its conventional failing exit
 status before BSD `time` observes it. This preserves a killed Cargo command's
