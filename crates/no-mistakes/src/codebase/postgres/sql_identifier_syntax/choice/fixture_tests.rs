@@ -1,4 +1,4 @@
-use super::super::{collect, FileFacts, Input};
+use super::super::{tests::collect, FileFacts, Input};
 use crate::codebase::{
     postgres::EmbeddedSqlOptions,
     ts_source::facts::{collect_file_facts_from_program, TsFactContext, TsFactPlan},

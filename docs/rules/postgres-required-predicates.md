@@ -196,12 +196,13 @@ example. `Pool | undefined` and nullable `null` unions work the same way when
 that imported type is configured. Every recovered query still undergoes the
 configured relation checks; the annotation does not waive a required predicate.
 An untyped local, a typed object initialized or assigned a fake `query` method
-(even through a TypeScript cast), literal or array assignments, competing assignments, a write from a nested function, and reads before assignment or
-outside the assigning block retain an unanalyzable result. Rewrite these as an
-immutable configured factory result or a configured typed parameter to make
-ownership explicit. The existing disable directives also apply to these calls. A configured callable
-executor type also accepts a delayed function or arrow assignment followed by
-direct calls such as `execute(sql, binds)`.
+(even through a TypeScript cast), literal or array assignments, competing
+assignments, a write from a nested function, and reads before assignment or outside
+the assigning block retain an unanalyzable result. Rewrite these as an immutable
+configured factory result or a configured typed parameter to make ownership
+explicit. The existing disable directives also apply to these calls. A configured
+callable executor type also accepts a delayed function or arrow assignment followed
+by direct calls such as `execute(sql, binds)`.
 
 Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).

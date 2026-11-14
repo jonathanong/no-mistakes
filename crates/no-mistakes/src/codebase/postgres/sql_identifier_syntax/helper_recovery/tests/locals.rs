@@ -32,7 +32,12 @@ fn exact_local_const_sql_operands_require_closed_uses_and_order() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::collect(program, &ts, &source, &[profile()]),
+            sql_identifier_syntax: super::super::tests::collect(
+                program,
+                &ts,
+                &source,
+                &[profile()],
+            ),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -116,7 +121,12 @@ fn local_const_cannot_revive_reassigned_tag() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::collect(program, &ts, &source, &[profile()]),
+            sql_identifier_syntax: super::super::tests::collect(
+                program,
+                &ts,
+                &source,
+                &[profile()],
+            ),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -168,7 +178,12 @@ fn dynamic_fixture(name: &str) -> (std::path::PathBuf, String, FileIdMap<CheckFi
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::collect(program, &ts, &source, &[profile()]),
+            sql_identifier_syntax: super::super::tests::collect(
+                program,
+                &ts,
+                &source,
+                &[profile()],
+            ),
             ts: Arc::new(ts),
             ..Default::default()
         }

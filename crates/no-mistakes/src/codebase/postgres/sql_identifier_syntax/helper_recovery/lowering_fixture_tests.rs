@@ -37,7 +37,7 @@ fn assert_recovery_mode(name: &str, expected: &[(&str, Option<&str>)], partial: 
             None,
         );
         let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
-        let syntax = super::super::collect(program, &ts, &source, &[profile]);
+        let syntax = super::super::tests::collect(program, &ts, &source, &[profile]);
         CheckFileFacts {
             ts: Arc::new(ts),
             sql_identifier_syntax: syntax,

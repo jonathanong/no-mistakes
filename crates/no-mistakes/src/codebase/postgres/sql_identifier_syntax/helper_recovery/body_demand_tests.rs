@@ -32,7 +32,8 @@ fn prepared(name: &str) -> (PathBuf, String, CheckFileFacts) {
             None,
             None,
         );
-        let syntax = super::super::collect(program, &ts, &source, &[super::tests::profile()]);
+        let syntax =
+            super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
         CheckFileFacts {
             ts: Arc::new(ts),
             sql_identifier_syntax: syntax,

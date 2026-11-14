@@ -201,3 +201,20 @@ mod producer_consumer_tests;
 
 #[path = "freeze_phase2_tests.rs"]
 mod freeze_phase2_tests;
+
+pub(crate) fn collect(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    source: &str,
+    profiles: &[EmbeddedSqlOptions],
+) -> FileFacts {
+    collect_with_scopes(
+        program,
+        ts,
+        source,
+        profiles,
+        &Default::default(),
+        &Default::default(),
+        &mut Default::default(),
+    )
+}

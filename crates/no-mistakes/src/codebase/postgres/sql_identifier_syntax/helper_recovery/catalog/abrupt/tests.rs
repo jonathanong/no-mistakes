@@ -1,7 +1,7 @@
 use super::*;
 use crate::codebase::{
     check_facts::CheckFileFacts,
-    postgres::sql_identifier_syntax::{collect, helper_recovery::tests::profile},
+    postgres::sql_identifier_syntax::{helper_recovery::tests::profile, tests::collect},
     ts_source::{
         facts::{collect_file_facts_from_program, TsFactContext, TsFactPlan},
         FileIdMap,

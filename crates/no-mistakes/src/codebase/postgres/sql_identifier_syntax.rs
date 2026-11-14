@@ -123,8 +123,6 @@ mod selection;
 mod typed;
 use selection::Selection;
 mod project;
-#[cfg(test)]
-pub(crate) use project::collect;
 pub(crate) use project::collect_with_scopes;
 
 mod invalid;
@@ -133,7 +131,7 @@ pub(crate) use invalid::collect_invalid;
 pub(crate) mod plan;
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 #[cfg(test)]
 mod template_bind_tests;

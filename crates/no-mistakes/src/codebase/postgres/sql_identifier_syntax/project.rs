@@ -1,7 +1,5 @@
 use super::*;
 mod entry;
-#[cfg(test)]
-pub(crate) use entry::collect;
 pub(crate) use entry::collect_with_scopes;
 use entry::Declared;
 fn collect_prepared(

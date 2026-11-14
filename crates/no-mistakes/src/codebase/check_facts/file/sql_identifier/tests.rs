@@ -319,3 +319,22 @@ fn low_scoped_preflight_skips_files_without_types_or_delayed_bindings() {
         );
     }
 }
+
+fn collect(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    plan: &CheckFactPlan,
+) -> sql_identifier_syntax::FileFacts {
+    collect_with_scopes(
+        root,
+        path,
+        source,
+        program,
+        ts,
+        plan,
+        &mut Default::default(),
+    )
+}

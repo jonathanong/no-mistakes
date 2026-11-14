@@ -3,24 +3,6 @@ pub(super) type Declared = std::collections::BTreeMap<
     EmbeddedSqlOptions,
     Vec<crate::config::v2::schema::EffectTargetConfig>,
 >;
-#[cfg(test)]
-pub(crate) fn collect(
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    source: &str,
-    profiles: &[EmbeddedSqlOptions],
-) -> FileFacts {
-    collect_with_scopes(
-        program,
-        ts,
-        source,
-        profiles,
-        &Default::default(),
-        &Default::default(),
-        &mut Default::default(),
-    )
-}
-
 pub(crate) fn collect_with_scopes(
     program: &Program<'_>,
     ts: &TsFileFacts,

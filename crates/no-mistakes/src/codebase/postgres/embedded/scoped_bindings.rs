@@ -88,10 +88,7 @@ impl ScopedExecutors {
 }
 
 pub(crate) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> ScopedCollection {
-    #[cfg(test)]
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment("postgres.scoped.collections", 1);
-    }
+    record_embedded_collection!("postgres.scoped.collections");
     let mut imports = classify(program, options);
     let candidates = std::mem::take(&mut imports.candidates);
     // Negative-only preflight: every supported binding spells `let`. Comments

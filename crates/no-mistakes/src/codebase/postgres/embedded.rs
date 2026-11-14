@@ -5,7 +5,7 @@ use std::path::Path;
 
 #[cfg(not(test))]
 macro_rules! record_embedded_collection {
-    () => {};
+    ($($counter:tt)*) => {};
 }
 #[cfg(test)]
 #[macro_use]

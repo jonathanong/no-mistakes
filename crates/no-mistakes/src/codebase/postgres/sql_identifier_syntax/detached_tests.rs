@@ -1,3 +1,4 @@
+use super::tests::collect;
 use super::*;
 use crate::codebase::ts_source::facts::{
     collect_file_facts_from_program, TsFactContext, TsFactPlan,

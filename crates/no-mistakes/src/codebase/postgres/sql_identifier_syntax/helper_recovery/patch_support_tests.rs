@@ -30,7 +30,7 @@ pub(super) fn prepare(names: &[&str]) -> FileIdMap<CheckFileFacts> {
                     None,
                 );
                 let syntax =
-                    super::super::collect(program, &ts, &source, &[super::tests::profile()]);
+                    super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
                 CheckFileFacts {
                     ts: Arc::new(ts),
                     sql_identifier_syntax: syntax,

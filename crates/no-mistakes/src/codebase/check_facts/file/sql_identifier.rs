@@ -77,26 +77,6 @@ pub(super) fn declared_factories_by_profile(
         })
         .collect()
 }
-#[cfg(test)]
-pub(super) fn collect(
-    root: &Path,
-    path: &Path,
-    source: &str,
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    plan: &CheckFactPlan,
-) -> sql_identifier_syntax::FileFacts {
-    collect_with_scopes(
-        root,
-        path,
-        source,
-        program,
-        ts,
-        plan,
-        &mut Default::default(),
-    )
-}
-
 pub(super) fn collect_with_scopes(
     root: &Path,
     path: &Path,

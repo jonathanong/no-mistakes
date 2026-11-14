@@ -1,7 +1,10 @@
 macro_rules! record_embedded_collection {
     () => {
+        record_embedded_collection!("postgres.embedded.collections");
+    };
+    ($counter:literal) => {
         if let Some(observer) = $crate::diagnostics::current() {
-            observer.increment("postgres.embedded.collections", 1);
+            observer.increment($counter, 1);
         }
     };
 }
