@@ -117,6 +117,8 @@ mod cli_postgres_snapshot_no_unbounded_sql_identifier;
 mod cli_postgres_snapshot_numeric_ternary;
 #[path = "cli_postgres_snapshot_object_naming.rs"]
 mod cli_postgres_snapshot_object_naming;
+#[path = "cli_postgres_snapshot_opaque_functions.rs"]
+mod cli_postgres_snapshot_opaque_functions;
 #[path = "cli_postgres_snapshot_redundant_index.rs"]
 mod cli_postgres_snapshot_redundant_index;
 #[path = "cli_postgres_snapshot_require_query_annotation.rs"]
