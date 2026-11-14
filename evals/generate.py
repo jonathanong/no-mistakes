@@ -11,6 +11,11 @@
             claude plugin eval . --eval-dir evals-variants/<name> \\
                 --ablation with-without --judge-model claude-opus-5-5
 
+    python3 evals/generate.py --rules-variant <control|describe|entry>
+        Build that variant of plugins/no-mistakes-rules (see rules_variants.py)
+        and emit only the rules and off-topic cases under
+        evals-variants/rules-<name>/, pointed at it.
+
 Identical prompts and graders across variants; only the skill differs, so any
 change in trigger rate or score is attributable to the frontmatter.
 """
@@ -22,7 +27,17 @@ import textwrap
 _HERE = pathlib.Path(__file__).resolve().parent
 _REPO = _HERE.parent
 
-if "--variant" in sys.argv:
+RULES_VARIANT = None
+RULES_PLUGIN_PATH = "../../plugins/no-mistakes-rules"
+
+if "--rules-variant" in sys.argv:
+    VARIANT = None
+    RULES_VARIANT = sys.argv[sys.argv.index("--rules-variant") + 1]
+    ROOT = _REPO / "evals-variants" / f"rules-{RULES_VARIANT}"
+    PLUGIN_PATH = None
+    # From <repo>/evals-variants/rules-<name>/<case>/ up to evals-variants/.
+    RULES_PLUGIN_PATH = f"../../_plugins/{RULES_VARIANT}"
+elif "--variant" in sys.argv:
     VARIANT = sys.argv[sys.argv.index("--variant") + 1]
     ROOT = _REPO / "evals-variants" / VARIANT
     # From <repo>/evals-variants/<name>/<case>/ up to <repo>, then into the
@@ -32,8 +47,6 @@ else:
     VARIANT = None
     ROOT = _HERE
     PLUGIN_PATH = "../../plugins/no-mistakes/skills/no-mistakes"
-
-RULES_PLUGIN_PATH = "../../plugins/no-mistakes-rules"
 
 # The judge (claude-opus-5-5) is set by scripts/run-evals.sh, which refuses one
 # equal to this agent model.
@@ -1768,6 +1781,16 @@ def clear_generated_cases() -> None:
 
 def main() -> None:
     clear_generated_cases()
+    if RULES_VARIANT is not None:
+        from rules_variants import build
+
+        expect = build(
+            RULES_VARIANT,
+            _REPO / "plugins" / "no-mistakes-rules",
+            _REPO / "evals-variants" / "_plugins" / RULES_VARIANT,
+        )
+        write_rules_cases(expect)
+        return
     for slug, question, rubrics, pattern in CASES:
         case_dir = ROOT / slug
         write_prompt(case_dir, question)
@@ -1803,13 +1826,14 @@ def main() -> None:
         write_rules_cases()
 
 
-def write_rules_cases() -> None:
+def write_rules_cases(expect: str = None) -> None:
     """Cases for the no-mistakes-rules plugin, defined in rules_cases.py.
 
     The whole plugin is loaded, so `skill-fired` checks that the topic's skill
-    was chosen among all of them. Variants only swap the main skill, so these
-    cases are not emitted for a variant."""
-    from rules_cases import RULES_FLOWS, RULES_SYSTEM
+    was chosen among all of them, or that `expect` fired when a rules variant
+    routes every topic through one skill. Variants only swap the main skill, so
+    these cases are not emitted for a --variant run."""
+    from rules_cases import OFF_TOPIC, OFF_TOPIC_SKILL, RULES_FLOWS, RULES_SYSTEM
 
     for skill, cases in RULES_FLOWS:
         topic = skill.removesuffix("-rules")
@@ -1825,8 +1849,22 @@ def write_rules_cases() -> None:
             )
             for name, rubric in rubrics:
                 write_llm(case_dir, name, textwrap.dedent(rubric))
-            write_skill_fired(case_dir, skill)
+            write_skill_fired(case_dir, expect or skill)
             print(f"wrote {case_dir.name}  [rules-{topic}]")
+
+    for slug, question, rubric in OFF_TOPIC:
+        case_dir = ROOT / f"rules-offtopic-{slug}"
+        write_prompt(
+            case_dir,
+            question,
+            tag="rules, rules-offtopic",
+            preamble="",
+            system=RULES_SYSTEM,
+            plugin_path=RULES_PLUGIN_PATH,
+        )
+        write_llm(case_dir, "answers", rubric + "\n")
+        write_skill_fired(case_dir, OFF_TOPIC_SKILL)
+        print(f"wrote {case_dir.name}  [rules-offtopic]")
 
 
 if __name__ == "__main__":

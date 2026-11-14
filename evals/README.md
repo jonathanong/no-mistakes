@@ -200,9 +200,9 @@ estimate means runs errored — see
 
 ## Flows
 
-Every case carries a `tags:` field naming its flow. 78 generated cases across
-13 flows; 69 excluding the holdout. The 62 skill cases are the first 12 flows;
-the 16 `rules` cases load the `no-mistakes-rules` plugin instead.
+Every case carries a `tags:` field naming its flow. 82 generated cases across
+13 flows; 73 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 20 `rules` cases load the `no-mistakes-rules` plugin instead.
 
 | tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
@@ -218,7 +218,7 @@ the 16 `rules` cases load the `no-mistakes-rules` plugin instead.
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
-| `rules` | 16 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases | skill surface |
+| `rules` | 20 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
 "Skill surface" means `SKILL.md` documents it but no comparable question
@@ -270,8 +270,11 @@ every case loads all 16 plugin skills.
 - **exception** (1 per topic, `exception-*`): same vocabulary, but the code is
   correct because of a written exception or a reasoned SHOULD NOT. Pass when
   the response leaves it alone. Over-flagging is the failure. The topic skill
-  should still fire, so these are not `-neg-` slugs, which `summarize.py`
-  counts as should-not-fire.
+  should still fire, so these count as should-fire.
+- **off-topic** (`rules-offtopic-neg-*`, tag `rules-offtopic`): questions no
+  rules skill covers. `skill-fired` matches any `*-rules` skill, so a green row
+  here is over-triggering. The `-neg-` slug makes `summarize.py` count them as
+  negatives.
 
 Selection rule: choose a rule only if an unprimed model's default behaviour
 violates it. A rule the model already follows (SQL injection, secrets in logs)
@@ -279,7 +282,29 @@ cannot show a Δ. A case whose without-arm already passes in a pilot gets
 replaced, and surviving cases are re-measured on fresh runs, not the pilot's.
 
 `skill-fired` here checks the specific topic skill among the 16, not whether the
-plugin fired at all. Demand is "skill surface": these traps come from the rules
+plugin fired at all.
+
+### Trigger variants
+
+`python3 evals/generate.py --rules-variant <name>` builds a copy of the plugin
+under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the 20
+rules cases under `evals-variants/rules-<name>/`, pointed at it. Rule bodies
+are copied unchanged, so a difference between variants is a triggering
+difference.
+
+| variant | change |
+| --- | --- |
+| `control` | unchanged copy, run the same day as the others |
+| `describe` | every description opens "Load before ..." and names concrete files, libraries and activities |
+| `entry` | one `coding-rules` skill that indexes the topics; each topic's rules move to `references/<topic>-rules.md`. `skill-fired` expects `coding-rules`. Whether the topic reference was read is in the trace, not a grader: a `tool_used` grader other than `skill-fired` is scored |
+
+Run all three single-arm (`--ablation none --runs 3`) on the same day:
+
+```bash
+python3 evals/generate.py --rules-variant describe
+pnpm run evals -- --eval-dir evals-variants/rules-describe --tag rules \
+  --runs 3 --ablation none -j 4
+``` Demand is "skill surface": these traps come from the rules
 text, not from mined traffic. `summarize.py --mentions` and
 `power.py --fabrication` do not apply, since there are no graph command forms
 to fabricate.

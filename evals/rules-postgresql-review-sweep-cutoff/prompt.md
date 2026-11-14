@@ -12,23 +12,27 @@ append_system_prompt: |
 ---
 
 
-review this before i merge. runs from cron every minute.
+review this before i merge. runs from cron every 10 minutes.
 
 ```ts
-// src/holds/repository.ts
+// src/holds/release-expired.ts
 export async function releaseExpiredHolds(db: Db): Promise<number> {
-  const { rowCount } = await db.query(
-    `/* holds.release-expired */
-     UPDATE holds SET released_at = now()
-     WHERE id IN (
-       SELECT id FROM holds
-       WHERE released_at IS NULL AND expires_at < now()
-       ORDER BY expires_at
-       LIMIT 500
-       FOR UPDATE SKIP LOCKED
-     )`,
-  );
-  return rowCount ?? 0;
+  let released = 0;
+  for (;;) {
+    const { rowCount } = await db.query(
+      `/* holds.release-expired */
+       UPDATE holds SET released_at = now()
+       WHERE id IN (
+         SELECT id FROM holds
+         WHERE released_at IS NULL AND expires_at < now()
+         ORDER BY expires_at, id
+         LIMIT 500
+         FOR UPDATE SKIP LOCKED
+       )`,
+    );
+    released += rowCount ?? 0;
+    if (!rowCount) return released;
+  }
 }
 
 export async function transferHold(
@@ -37,7 +41,9 @@ export async function transferHold(
   toAccountId: string,
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    // mutex: serializes transfers into one account; this row is neither read nor written
+    // mutex: the holds_account_cap trigger counts an account's open holds on
+    // UPDATE; without this, two concurrent transfers both see room under the cap.
+    // The account row itself is neither read nor written.
     await tx.query(
       `/* holds.lock-account */
        SELECT id FROM accounts WHERE id = $1 FOR UPDATE`,
@@ -52,3 +58,5 @@ export async function transferHold(
   });
 }
 ```
+
+`db.query` runs each call in its own transaction.

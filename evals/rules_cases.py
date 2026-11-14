@@ -330,25 +330,29 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "review-now-in-predicate",
+                "review-sweep-cutoff",
                 """
-                review this before i merge. runs from cron every minute.
+                review this before i merge. runs from cron every 10 minutes.
 
                 ```ts
-                // src/holds/repository.ts
+                // src/holds/release-expired.ts
                 export async function releaseExpiredHolds(db: Db): Promise<number> {
-                  const { rowCount } = await db.query(
-                    `/* holds.release-expired */
-                     UPDATE holds SET released_at = now()
-                     WHERE id IN (
-                       SELECT id FROM holds
-                       WHERE released_at IS NULL AND expires_at < now()
-                       ORDER BY expires_at
-                       LIMIT 500
-                       FOR UPDATE SKIP LOCKED
-                     )`,
-                  );
-                  return rowCount ?? 0;
+                  let released = 0;
+                  for (;;) {
+                    const { rowCount } = await db.query(
+                      `/* holds.release-expired */
+                       UPDATE holds SET released_at = now()
+                       WHERE id IN (
+                         SELECT id FROM holds
+                         WHERE released_at IS NULL AND expires_at < now()
+                         ORDER BY expires_at, id
+                         LIMIT 500
+                         FOR UPDATE SKIP LOCKED
+                       )`,
+                    );
+                    released += rowCount ?? 0;
+                    if (!rowCount) return released;
+                  }
                 }
 
                 export async function transferHold(
@@ -357,7 +361,9 @@ RULES_FLOWS = [
                   toAccountId: string,
                 ): Promise<void> {
                   await db.transaction(async (tx) => {
-                    // mutex: serializes transfers into one account; this row is neither read nor written
+                    // mutex: the holds_account_cap trigger counts an account's open holds on
+                    // UPDATE; without this, two concurrent transfers both see room under the cap.
+                    // The account row itself is neither read nor written.
                     await tx.query(
                       `/* holds.lock-account */
                        SELECT id FROM accounts WHERE id = $1 FOR UPDATE`,
@@ -372,26 +378,31 @@ RULES_FLOWS = [
                   });
                 }
                 ```
+
+                `db.query` runs each call in its own transaction.
                 """,
                 [
                     (
-                        "flags-now-predicate-not-mutex",
+                        "flags-moving-cutoff-not-mutex",
                         _r(
                             """
                             Grade only the review in the final message. Two checks.
 
-                            1. Passing: the review flags `expires_at < now()` in the
-                            `releaseExpiredHolds` subquery as the problem, and says
-                            the bound should be computed once and passed as a
-                            parameter instead of calling `now()` inside the
-                            predicate. Failing: the review never mentions this
-                            predicate, or mentions only `released_at = now()` in the
-                            SET clause.
+                            1. Passing: the review flags that each batch of the
+                            `releaseExpiredHolds` loop re-reads `now()` in
+                            `expires_at < now()`, so the cutoff moves forward every
+                            batch and the run keeps chasing holds that expire while
+                            it runs; it asks for the cutoff to be computed once
+                            before the loop and bound as a parameter. Failing: the
+                            review never raises the moving cutoff, or only objects
+                            to `now()` in general without tying it to the batches.
 
-                            2. Passing: the review does NOT demand removing or
-                            changing the `FOR UPDATE` on the `accounts` row in
-                            `transferHold` (a documented mutex). Failing: it calls
-                            that lock a defect to remove.
+                            2. Passing: the review does NOT demand removing the
+                            lock on the `accounts` row in `transferHold` (a mutex
+                            whose invariant the comment states). Suggesting a
+                            weaker lock mode such as `FOR NO KEY UPDATE`, or a lock
+                            timeout, is fine. Failing: it calls the lock
+                            unjustified or asks for it to be removed.
 
                             Both checks must pass.
                             """,
@@ -823,3 +834,41 @@ RULES_FLOWS = [
         ],
     ),
 ]
+
+
+OFF_TOPIC_SKILL = r"[\w-]+-rules"
+
+# Should-not-fire: questions no rules skill covers. A rules skill firing here
+# is over-triggering. Slugs carry `-neg-` so summarize.py counts them as negatives.
+OFF_TOPIC = [
+    (
+        "neg-mutex-semaphore",
+        "in two or three sentences: what's the difference between a mutex and a semaphore?",
+        "Passing: the answer says a mutex admits one holder (and is owned by it) while a "
+        "semaphore admits up to N concurrent holders by count. Failing: it gets that wrong "
+        "or does not answer.",
+    ),
+    (
+        "neg-release-note",
+        "draft a two-sentence release note for v2.3 of our notes app. it adds dark mode "
+        "and fixes a crash when importing very large markdown files.",
+        "Passing: a release note of about two sentences that mentions both dark mode and "
+        "the large-markdown import crash fix. Failing: it omits either change or is not "
+        "a release note.",
+    ),
+    (
+        "neg-big-o",
+        "what's the time complexity of finding the k largest items with a heap of size "
+        "k, versus sorting the whole list and slicing?",
+        "Passing: the answer gives O(n log k) for the size-k heap and O(n log n) for "
+        "sort-then-slice. Failing: either bound is wrong or missing.",
+    ),
+    (
+        "neg-regex-explain",
+        "what does this regex match? `^\\d{3}-\\d{4}$`",
+        "Passing: the answer says it matches a whole string of exactly three digits, a "
+        "hyphen, then four digits (like 555-1234), with nothing before or after. "
+        "Failing: it misreads the anchors or the counts.",
+    ),
+]
+
