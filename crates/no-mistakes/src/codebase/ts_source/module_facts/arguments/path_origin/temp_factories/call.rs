@@ -45,13 +45,10 @@ impl Projector<'_, '_> {
                         (*sync, *promises_safe)
                     }
                     Expression::CallExpression(call) => {
-                        let Some(&sync) = self
+                        let &sync = self
                             .temp_factories
                             .direct_loads
-                            .get(&(call.span.start, call.span.end))
-                        else {
-                            return None;
-                        };
+                            .get(&(call.span.start, call.span.end))?;
                         if sync && self.temp_factories.unsafe_sync
                             || !sync && self.temp_factories.unsafe_promises
                         {
