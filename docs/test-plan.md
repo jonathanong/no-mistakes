@@ -134,14 +134,16 @@ For a framework-less plan and for Vitest, Playwright, and Jest plans, the
 BFS-found tests are injected into the `dependencies` group. A Swift plan passes
 an empty package list into that group.
 
-`fallback_triggered` is also set when the lockfile has no baseline, the head
+These conditions emit a warning: the lockfile has no baseline, the head
 revision is missing, pnpm YAML is malformed, the pnpm schema is unsupported, a
 non-env document precedes the project document, or a pnpm installation section
 outside the package graph changed. Diff-only mode without `--head` uses the
-same `lockfile-no-baseline` warning as a missing `--base`. Full-suite selection
-still requires explicit opt-in. A framework plan reads `--global-config-fallback`
-or `globalConfigFallback: true` on the selected environment. A framework-less
-plan reads only the CLI flag. Both default to false.
+same `lockfile-no-baseline` warning as a missing `--base`. The plan sets
+`fallback_triggered` for them only when full-suite fallback is opted in. A
+framework plan reads `--global-config-fallback` or `globalConfigFallback: true`
+on the selected environment. A framework-less plan reads only the CLI flag.
+Both default to false. A missing baseline also sets `incomplete` to
+`dependency-baseline-missing` whether or not that flag is on.
 
 - **Unparsable lockfiles and missing baselines**: binary lockfiles (`bun.lockb`)
   and the baseline failures above.
