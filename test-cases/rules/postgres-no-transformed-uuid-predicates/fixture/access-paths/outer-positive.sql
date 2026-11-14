@@ -8,3 +8,6 @@ SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE 
 SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, b.id, c.id) > 0;
 SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1 OR a.id = $1;
 SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE NOT (num_nonnulls(COALESCE(a.id, b.id), c.id) = 1);
+SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, (SELECT NULL::uuid)) = 1;
+SELECT * FROM a WHERE num_nonnulls(a.link, id) = 1;
+SELECT * FROM a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id WHERE num_nonnulls(a.id, q.id) = 1;

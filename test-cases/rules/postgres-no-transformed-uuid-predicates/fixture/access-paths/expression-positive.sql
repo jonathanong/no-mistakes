@@ -24,3 +24,4 @@ SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_ident
 SELECT * FROM items WHERE NOT ((post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity);
 SELECT * FROM items WHERE CASE WHEN (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity THEN true ELSE false END;
 SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;
+SELECT * FROM functions WHERE lower(id::text || (SELECT 'x')) = $1;
