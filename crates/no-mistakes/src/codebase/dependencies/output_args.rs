@@ -13,7 +13,8 @@ pub struct TraverseArgs {
     pub root: Option<PathBuf>,
 
     /// Path to tsconfig.json for path alias resolution.
-    /// If omitted, each importing file uses its owning config.
+    /// If omitted, each importing file uses the config that owns it among the
+    /// discovered configs; otherwise the root tsconfig.
     /// Pass this only to force one config for the whole request.
     #[arg(long, value_name = "FILE")]
     pub tsconfig: Option<PathBuf>,

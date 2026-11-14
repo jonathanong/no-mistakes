@@ -1,6 +1,5 @@
 /// Output format shared across no-mistakes commands.
-/// Each command chooses its own default. `resolve_format` uses JSON when
-/// stdout is not a terminal and the indented tree on a terminal.
+/// Each command chooses its own default.
 #[derive(Debug, Clone, Copy, PartialEq, clap::ValueEnum)]
 pub enum Format {
     /// JSON object. Default is per command; `resolve_format` uses JSON when stdout is not a terminal.

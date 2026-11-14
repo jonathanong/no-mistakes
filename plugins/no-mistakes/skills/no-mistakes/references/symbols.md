@@ -43,7 +43,7 @@ no-mistakes symbols src/api.mts --symbol handler --mode signature-impact --json
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--root <PATH>` | cwd | Project root |
-| `--tsconfig <FILE>` | owning config | Force one tsconfig. Omit it so each file uses its owning config |
+| `--tsconfig <FILE>` | discovered config, else root | Force one tsconfig. Omit it to use the config that owns each file among the discovered configs; otherwise the root tsconfig |
 | `--kind <KIND>` | all | Only include exports of this kind (repeatable). Values: `function`, `class`, `const`, `let`, `var`, `type`, `interface`, `enum`, `default`, `re-export` |
 | `--include <SECTION>` | `exports` | What to emit: `exports`, `imports`, or `both` |
 | `--mode <MODE>` | `list` | `list` keeps the normal symbol listing; `signature-impact` reports definition, exports, callers, and suggested tests for one symbol |

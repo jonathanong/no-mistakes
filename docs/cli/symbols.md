@@ -21,7 +21,8 @@ no-mistakes symbols <FILE>... [--root <PATH>] [--tsconfig <FILE>] [--config <FIL
 Key options: `--root`, `--tsconfig`, `--config`, repeatable `--kind`, `--include
 exports|imports|both` (default `exports`), `--mode` (default `list`), `--symbol`,
 `--format`, `--json`, and `--timings`. Omitted `--tsconfig` uses the config
-owning each file. Pass `--tsconfig <FILE>` only to force that one config.
+that owns each file among the discovered configs; otherwise the root tsconfig.
+Pass `--tsconfig <FILE>` only to force that one config.
 Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 | Option | Default | Description |

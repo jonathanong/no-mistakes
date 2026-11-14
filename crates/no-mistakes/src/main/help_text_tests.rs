@@ -59,7 +59,9 @@ fn omitted_tsconfig_help_uses_the_owning_config() {
     for command in ["dependencies", "dependents", "related"] {
         let help = help_text(&[command, "--help"]);
         assert!(
-            help.contains("each importing file uses its owning config"),
+            help.contains(
+                "each importing file uses the config that owns it among the discovered configs; otherwise the root tsconfig"
+            ),
             "{command}:\n{help}"
         );
         assert!(!help.contains("searches upward"), "{command}:\n{help}");
@@ -67,14 +69,16 @@ fn omitted_tsconfig_help_uses_the_owning_config() {
 
     let symbols = help_text(&["symbols", "--help"]);
     assert!(
-        symbols.contains("each file uses its owning config"),
+        symbols.contains(
+            "each file uses the config that owns it among the discovered configs; otherwise the root tsconfig"
+        ),
         "{symbols}"
     );
     assert!(!symbols.contains("searches upward"), "{symbols}");
 
     let resolve_check = help_text(&["resolve-check", "--help"]);
     assert!(
-        resolve_check.contains("selects the config owning the checked file"),
+        resolve_check.contains("selects the nearest tsconfig above the file"),
         "{resolve_check}"
     );
     assert!(

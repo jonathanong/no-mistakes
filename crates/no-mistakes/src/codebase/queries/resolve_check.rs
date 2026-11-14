@@ -22,7 +22,7 @@ pub struct ResolveCheckArgs {
     #[arg(long, value_name = "PATH")]
     pub root: Option<PathBuf>,
     /// Path to tsconfig.json for alias resolution.
-    /// If omitted, selects the config owning the checked file.
+    /// If omitted, selects the nearest tsconfig above the file.
     #[arg(long, value_name = "FILE")]
     pub tsconfig: Option<PathBuf>,
     /// Output format: json, yml, md, paths, human.

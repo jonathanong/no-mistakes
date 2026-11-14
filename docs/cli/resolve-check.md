@@ -46,8 +46,9 @@ files; type-only imports can. A configured alias takes precedence even when it
 matches a workspace package name, including when the alias target is missing.
 
 A configured tsconfig path alias whose target is missing counts as `unresolved`,
-not `external`. In a workspace, the omitted default selects the config owning
-the checked file; pass `--tsconfig` only to force a particular config. A
+not `external`. In a workspace, the omitted default selects the nearest
+tsconfig above the file, with no ownership check; pass `--tsconfig` only to
+force a particular config. A
 catch-all mapping (`"*": [...]`) matches every bare specifier, so under one a bare
 npm package whose fallback target is absent is reported `unresolved` rather than
 `external`. Conversely, with only `baseUrl` set (no `paths`), a missing

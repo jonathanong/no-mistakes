@@ -172,7 +172,8 @@ It is available even when `selected_tests` is empty and retains deleted paths
 plus both sides of detected renames and copies.
 
 In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
-the config owning each importing file. Passing `tsconfig` deliberately forces a
+the config that owns each importing file among the discovered configs;
+otherwise the root tsconfig. Passing `tsconfig` deliberately forces a
 single config for the whole plan.
 ### Vitest setup dependency tracing
 
