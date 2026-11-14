@@ -218,7 +218,7 @@ the 16 `rules` cases load the `no-mistakes-rules` plugin instead.
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
-| `rules` | 16 | no-mistakes-rules plugin: MUST NOT traps in write, review and negative-twin cases | skill surface |
+| `rules` | 16 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
 "Skill surface" means `SKILL.md` documents it but no comparable question
@@ -267,9 +267,11 @@ every case loads all 16 plugin skills.
 - **review** (1 per topic, `review-*`): an inline 30–50 line diff with one
   planted defect and one decoy that looks wrong but is allowed. Pass needs both:
   the defect is named at its location, and the decoy is not flagged.
-- **negative twin** (1 per topic, `-neg-` in the slug): same vocabulary, but the
-  code is correct because of a written exception or a reasoned SHOULD NOT. Pass
-  when the response leaves it alone. Over-flagging is the failure.
+- **exception** (1 per topic, `exception-*`): same vocabulary, but the code is
+  correct because of a written exception or a reasoned SHOULD NOT. Pass when
+  the response leaves it alone. Over-flagging is the failure. The topic skill
+  should still fire, so these are not `-neg-` slugs, which `summarize.py`
+  counts as should-not-fire.
 
 Selection rule: choose a rule only if an unprimed model's default behaviour
 violates it. A rule the model already follows (SQL injection, secrets in logs)

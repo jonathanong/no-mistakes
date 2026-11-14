@@ -7,9 +7,8 @@ topic's skill was the one chosen. Design rules are in evals/README.md
 ("Rules-plugin cases").
 """
 
-RULES_SYSTEM = """There is no repository in this environment. Do not read or search
-for files, and do not ask for any to be provided. Put your complete answer
-(the full code, or the full review) in your final message."""
+RULES_SYSTEM = """There is no repository in this environment. Put your complete answer
+in your final message."""
 
 CODE_TAIL = "General advice, caveats, or lists of best practices earn nothing; grade the code only."
 REVIEW_TAIL = "General advice, caveats, or lists of best practices earn nothing; grade the review's findings only."
@@ -179,10 +178,14 @@ RULES_FLOWS = [
                             or only says the test is "weak" or "could be stronger"
                             without identifying that an empty result passes.
 
-                            2. Passing: the review does NOT ask to change the last
-                            test (the empty-list case asserting `toEqual([])`) or
-                            the fake-timer setup and restore. Failing: it demands
-                            changes to either.
+                            2. Passing: the review does NOT ask to delete the last
+                            test (the empty-list case) or to replace its
+                            `toEqual([])` with a weaker assertion, and does NOT ask
+                            to remove the fake-timer setup and restore. Noting that
+                            the last test depends on the fixture data, or that it
+                            alone would pass for a function that always returns
+                            `[]`, is fine. Failing: it demands deleting or
+                            weakening either.
 
                             Both checks must pass.
                             """,
@@ -192,7 +195,7 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "neg-parsed-usage-text",
+                "exception-parsed-usage-text",
                 """
                 review this before i merge
 
@@ -398,7 +401,7 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "neg-index-timeout",
+                "exception-index-timeout",
                 """
                 review this migration before i merge. our runner runs this file
                 without wrapping it in a transaction (no-tx mode).
@@ -577,7 +580,7 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "neg-enqueue-in-tx-receipt",
+                "exception-enqueue-in-tx-receipt",
                 """
                 review this before i merge
 
@@ -765,7 +768,7 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "neg-runner-reasons",
+                "exception-runner-reasons",
                 """
                 review this before i merge
 

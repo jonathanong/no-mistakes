@@ -15,10 +15,14 @@ expected list). Failing: the review never raises this,
 or only says the test is "weak" or "could be stronger"
 without identifying that an empty result passes.
 
-2. Passing: the review does NOT ask to change the last
-test (the empty-list case asserting `toEqual([])`) or
-the fake-timer setup and restore. Failing: it demands
-changes to either.
+2. Passing: the review does NOT ask to delete the last
+test (the empty-list case) or to replace its
+`toEqual([])` with a weaker assertion, and does NOT ask
+to remove the fake-timer setup and restore. Noting that
+the last test depends on the fixture data, or that it
+alone would pass for a function that always returns
+`[]`, is fine. Failing: it demands deleting or
+weakening either.
 
 Both checks must pass.
 

@@ -7,9 +7,8 @@ allowed_tools: [Read, Glob, Grep, Skill]
 plugins: [../../plugins/no-mistakes-rules]
 tags: [rules, rules-github-actions]
 append_system_prompt: |
-  There is no repository in this environment. Do not read or search
-  for files, and do not ask for any to be provided. Put your complete answer
-  (the full code, or the full review) in your final message.
+  There is no repository in this environment. Put your complete answer
+  in your final message.
 ---
 
 
