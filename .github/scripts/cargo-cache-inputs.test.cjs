@@ -102,21 +102,22 @@ test("Git symlink modes are omitted even when Windows materializes links as text
   }));
 
 test("malformed, unsafe and mismatched manifests fail before changing any input", () => {
-  for (const name of [
-    "malformed",
-    "traversal",
-    "absolute",
-    "windows",
-    "invalid-hash",
-    "wrong-workspace",
-    "duplicate",
-  ])
+  const expected = {
+    malformed: { name: "SyntaxError", message: "Unexpected end of JSON input" },
+    traversal: { message: 'Unsafe input path: "../outside"' },
+    absolute: { message: 'Unsafe input path: "/outside"' },
+    windows: { message: 'Unsafe input path: "C:\\\\outside"' },
+    "invalid-hash": { message: "Invalid input hash: src/lib.rs" },
+    "wrong-workspace": { message: "Input manifest workspace differs from this checkout" },
+    duplicate: { message: "Duplicate input manifest path: src/lib.rs" },
+  };
+  for (const [name, error] of Object.entries(expected))
     scenario(({ workspace, sidecar, source, manifest }) => {
       fs.mkdirSync(sidecar);
       fs.copyFileSync(path.join(fixtures, "manifests", `${name}.json`), manifest);
       fs.utimesSync(source, new Date(), new Date());
       const before = mtime(source);
-      assert.throws(() => restore(workspace, sidecar));
+      assert.throws(() => restore(workspace, sidecar), error, name);
       assert.equal(mtime(source), before, name);
     });
 });
