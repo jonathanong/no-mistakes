@@ -106,16 +106,14 @@ producer smell" note — this is the exact shape of the historical
 app-wide route scan the `playwright` rule's own check pipeline already
 shares.
 
-`edge_playwright_routes.rs` is exempted: it's the one producer that
-legitimately calls `collect_routes` at all, inside the `compute_routes`
-closure passed to `facts.get_or_compute_playwright_routes` (with a
-`None`-facts fallback calling the same closure directly). ast-grep's
-structural matching can't express "this call must be inside a closure passed
-to `get_or_compute_playwright_routes`", so the whole file is allowlisted —
-narrower than the other two rules' allowlists, which exempt specific call
-sites rather than a whole file. A second, unguarded call added anywhere else
-in that file would not be caught by this rule; review that file's diffs by
-hand for this specific regression class.
+`edge_playwright_routes.rs` is allowlisted. Its scan calls
+`collect_routes_from_visible_paths` inside the `compute_routes` closure
+passed to `facts.get_or_compute_playwright_routes`, with a `None`-facts
+fallback that calls the same closure. That helper is outside this rule's
+`collect_routes` pattern. The file stays allowlisted because ast-grep cannot
+require a call to sit inside that closure, so a later direct `collect_routes`
+anywhere else in the file would not be caught. Review that file's diffs by
+hand for this regression.
 
 ### One-pass gateway guards
 
@@ -216,10 +214,15 @@ the canonical-graph seed before report execution.
 
 ### `no-process-spawn-in-file-loop`
 
-Flags `Command::new` inside `for`, `while`, or `loop` bodies in production
-source. Process startup must be batched once per invocation or replaced with
+Flags `Command::new` and `std::process::Command::new` inside `for`, `while`,
+or `loop` bodies, and inside braced iterator closures, in production source.
+`.iter()` and `.par_iter()` cover `map`, `for_each`, and `filter_map`.
+`.into_iter()` covers `map` and `for_each`. `.into_par_iter()` covers `map`,
+`for_each`, and `filter_map`. An expression-bodied closure is outside those
+patterns. Process startup
+must be batched once per invocation or replaced with
 an in-process parser/resolver. A canonical one-shot Git discovery subprocess
-outside a loop remains valid.
+outside those shapes remains valid.
 
 ### `no-inline-test-fixture-write` and `no-inline-test-fixture-write-cfg`
 

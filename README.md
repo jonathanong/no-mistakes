@@ -75,8 +75,10 @@ and `HAVING` predicates, so the key is compared against a stable bound computed
 once per statement.
 [`postgres-generated-column-predicates`](docs/rules/postgres-generated-column-predicates.md)
 also bans filtering or sorting on a generated column derived from the primary
-key (such as `uuid_extract_timestamp(id)`); compare the key column itself. UUIDv7
-cast and index-loss coverage is coming in #2652.
+key; compare the key column itself.
+[`postgres-no-transformed-uuid-predicates`](docs/rules/postgres-no-transformed-uuid-predicates.md)
+requires catalog-resolved UUID columns to stay bare in `WHERE`, `JOIN ON`, and
+`HAVING`, so a cast or `uuid_extract_timestamp(id)` does not hide the index.
 
 See the [PostgreSQL rules](docs/rules/README.md) and
 [`postgres`](docs/cli/postgres.md).
@@ -121,13 +123,16 @@ Each rule application has two analysis dimensions. Both are described in
 
 **`effort`** is `low` or `max`. `max` is the default and the most complete
 analysis. `low` is opt-in per rule application and only exists for rules that
-adopt it: `declared-payload-compatibility`, `github-actions-download-integrity`,
-`github-actions-job-timeouts`, `nextjs-no-caching`,
-`nextjs-redirect-destinations`, `playwright-coverage`,
+adopt it: `declared-payload-compatibility`, `finite-set-consistency`,
+`github-actions-download-integrity`, `github-actions-job-timeouts`,
+`nextjs-no-caching`, `nextjs-redirect-destinations`, `playwright-coverage`,
 `playwright-unique-html-ids`, `playwright-unique-test-ids`,
-`postgres-no-mutable-sql-registry`, `postgres-no-offset`,
+`postgres-explicit-columns`, `postgres-no-mutable-sql-registry`,
+`postgres-no-offset`, `postgres-no-test-state-mutation`,
+`postgres-no-transformed-uuid-predicates`,
 `postgres-no-unbounded-sql-identifier`, `postgres-require-query-annotation`,
-`require-storybook-stories`, and `test-no-unmocked-dynamic-imports`. Resolution
+`postgres-required-predicates`, `require-storybook-stories`, and
+`test-no-unmocked-dynamic-imports`. Resolution
 order, highest first: CLI `--effort` / N-API `effort`, then `options.effort`,
 then repo-level `effort`, then `max`. `--effort` overrides every rule, so use
 it deliberately. If a partner-backed low rule's partner check is missing or out
@@ -312,7 +317,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 | `pnpm`, `npm`, `yarn`, `bun` | Supported, primarily tested using `pnpm` |
 | `bullmq`, `glide-mq` | Supported, primarily tested for `glide-mq` |
 | Vitest / Jest | Supported |
-| Queue/server/CI/Terraform/OpenTofu | Supported with explicit configuration |
+| Queues, HTTP servers, and GitHub Actions | BullMQ, glide-mq, Express, Fastify, Hono, Koa, and NestJS need no config block. GitHub Actions reads `.github/workflows` unless `ci.workflowDirs` is set. Custom queue wrappers need `queues.factories`. Language queue and route frontends need configured package, module, app, or project roots |
+| Terraform/OpenTofu | Supported when `infra.terraform.moduleRoots` lists module directories |
 | Swift / .NET | Shipped, narrower language frontends |
 | Python / Go / Rust / Ruby / PHP / Java / Kotlin / Elixir / Dart | Shipped v1 frontends and test plans; configure package or module roots explicitly |
 

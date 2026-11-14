@@ -30,7 +30,10 @@ may become `--project <name>` in a runner command.
 Vitest project names populate both fields. Playwright `projects[].name`
 populates both fields. Playwright top-level config `name` populates only
 `policy_name`, because Playwright does not accept it as a CLI project selector.
-Policy-only projects set both fields to the policy key.
+Vitest and Playwright explicit policies set both fields to the policy name. A
+Swift `tests.swift.projects` policy sets `policy_name` to the key and leaves
+`runner_project_arg` empty. Discovered Swift test targets set both fields to
+the target name.
 
 
 ## Swift
@@ -38,5 +41,6 @@ Policy-only projects set both fields to the policy key.
 Swift discovery is explicit and package-scoped. Configure SwiftPM package roots
 with `tests.swift.packages`; each `Package.swift` contributes discovered
 `.testTarget(...)` targets under `Tests/<target>/**/*.swift`. Targets run as
-`swift test --package-path <package> --filter <test-target>`, or the package's
-`tests.swift.baseCommands` argv.
+`swift test --package-path <package> --filter <test-target>`.
+`tests.swift.baseCommands` replaces only the `swift test` base command; the
+target still appends `--package-path` and `--filter`.

@@ -42,8 +42,8 @@ steps are judged, so a valid `pull_request_target` workflow without checkout
 stays clean.
 `pull_request_target` also checks PR-head refs independently of persistence;
 unresolved refs/repositories use the shared policy. Configure the optional
-`defaultBranch` convention in YAML selected by `configPath`, not as a `check()`
-argument. The Node/N-API signature and report types are unchanged. A checkout
+`defaultBranch` convention in the YAML file selected by `config`, not as a
+`check()` argument. The Node/N-API signature and report types are unchanged. A checkout
 can have separate credential and ref rows. See the
 [rule contract](rules/github-actions-checkout-credentials.md#analysis).
 
@@ -585,7 +585,7 @@ a later direct call is analyzed. Defaulted destructuring parameters remain
 uncertain; type-only references are excluded. This adds no public option or
 separate API function.
 
-The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#configured-single-literal-sql-helpers).
+The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#copy-stream-wrappers-and-configured-single-literal-sql-helpers).
 
 `check()` and check reports in `analyzeProject()` support
 [`postgres-no-transformed-uuid-predicates`](rules/postgres-no-transformed-uuid-predicates.md).

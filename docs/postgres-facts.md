@@ -26,9 +26,8 @@ publishes partial diagnostics and source coordinates.
 `postgres-array-columns`, `postgres-key-column-types`, and
 `postgres-identifier-length`, `postgres-required-predicates`, and
 `postgres-sql-shape-policy`
-consume the facts through `no-mistakes check`. Forthcoming DML rules
-(`postgres-idempotent-insert`) will consume the same INSERT/SELECT facts
-once registered.
+consume the facts through `no-mistakes check`. `postgres-idempotent-insert`
+consumes the same INSERT/SELECT facts.
 
 See [mutable SQL builders and conservative recovery](postgres-builder-mutations.md)
 for alias invalidation and escape boundaries.

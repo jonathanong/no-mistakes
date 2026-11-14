@@ -79,7 +79,7 @@ await page.goto("http://localhost:3000/users/42");
 await page.click('a[href="/settings"]');
 await expect(page).toHaveURL("/settings");
 await expect(page).toHaveURL(new RegExp(`/users/${id}`));
-await navigateTo(page, "/settings");
+await navigateTo(page, "/settings"); // only when tests.playwright.navigationHelpers lists navigateTo
 ```
 
 Absolute URLs count only when they match a literal Playwright `baseURL`.

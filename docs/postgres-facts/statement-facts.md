@@ -11,10 +11,10 @@ For SQL returned by `extract_embedded_sql_from_source`, pass its
 This composition API preserves the exact positions of generated interpolation
 markers for sweep and cursor-bind facts, bounded pins, LIMIT and EXISTS
 restrictions, value forms, mutation predicates, and relation-restriction facts.
-A user-written identifier such as `sql_placeholder_1` remains a column while
-the generated marker is treated as a bind. `SqlColumnUseFact` still uses the
-legacy marker-spelling heuristic; exact-position handling there is tracked in
-[issue #1391](https://github.com/jonathanong/no-mistakes/issues/1391).
+A user-written identifier such as `sql_placeholder_1` remains a column.
+`SqlColumnUseFact` treats a marker-shaped identifier as a bind only at a
+recovered placeholder position. With no position list, that spelling stays a
+column.
 It returns `None` when the call has no recovered SQL. This singular helper
 preserves the legacy `sql_text` contract; it does not select an alternative
 from `variants`. Fact line and column locations are relative to the recovered

@@ -37,24 +37,25 @@ no-mistakes tests plan vitest --diff-command "git diff main"
 
 ### Entrypoints (file#export)
 
+A named framework plan does not trace `--entrypoint`. The framework-less planner
+traces `file#export` only when `--symbols` is set.
+
 ```bash
-no-mistakes tests plan vitest --entrypoint "src/utils.mts#formatDate"
-no-mistakes tests plan vitest --entrypoint "src/a.mts" --entrypoint "src/b.mts#handler"
+no-mistakes tests plan --entrypoint "src/utils.mts#formatDate" --symbols
+no-mistakes tests plan --entrypoint "src/a.mts" --entrypoint "src/b.mts#handler" --symbols
 ```
 
 ## `tests impact` Command
 
-Convenience subcommand for entrypoint-based impact analysis:
+`tests impact` traces positional entrypoints. A `#export` suffix exits unless
+`--symbols` is passed. The plan leaves `changed_files` and `groups` empty.
 
 ```bash
-no-mistakes tests impact "src/utils.mts#formatDate" "src/service.mts"
+no-mistakes tests impact "src/utils.mts#formatDate" "src/service.mts" --symbols
 ```
 
-Equivalent to:
-
-```bash
-no-mistakes tests plan vitest --entrypoint "src/utils.mts#formatDate" --entrypoint "src/service.mts"
-```
+This is separate from `tests plan <framework> --entrypoint`, which does not
+trace those entrypoints.
 
 ## Output Formats
 
@@ -67,8 +68,8 @@ no-mistakes tests plan vitest --diff-command "git diff main" --format commands
 ## Execution Targets
 
 CLI JSON plans include `execution_targets` for assembling commands in CI.
-Targets are grouped only when their runner, configuration, project, path-prefix
-name, and normalized `runner_args` match. Runner selectors therefore remain
+Targets are grouped only when their runner, configuration, project, `base_command`,
+path-prefix name, and normalized `runner_args` match. Runner selectors therefore remain
 attached to their target: Cargo integration tests keep distinct `--test` values,
 and Swift packages keep distinct `--filter` values. Identical selectors
 continue to share one grouped target. The Node API exposes these fields as
@@ -98,6 +99,7 @@ const plan = await testsPlan({
 const plan = await testsImpact({
   root: "/path/to/project",
   entrypoints: ["src/utils.mts#formatDate", "src/service.mts"],
+  includeSymbols: true,
 });
 ```
 
@@ -108,7 +110,7 @@ plus both sides of detected renames and copies.
 
 ## Lockfile Change Handling
 
-When a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lock`) appears
+When a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `npm-shrinkwrap.json`, `yarn.lock`, `bun.lock`) appears
 in the changed file list, `tests plan` performs targeted package-level analysis instead of
 falling back to the full test suite. This applies to both plain plans and framework
 (Playwright / Vitest) configured plans.
@@ -128,18 +130,25 @@ unmodeled installation section. Changes to project `settings`, `overrides`, or
 A document before the project document that is not an env lockfile is an unsupported lockfile
 and uses that same fallback.
 
-For framework (Playwright/Vitest/Swift) plans the BFS-found tests are injected into the
-`dependencies` group, exactly mirroring the non-framework path.
+For a framework-less plan, the BFS-found tests are added to `selected_tests`, and `groups` is empty.
+For Vitest, Playwright, and Jest plans, the BFS-found tests are injected into the `dependencies` group. A Swift plan passes
+an empty package list into that group.
 
-Full-suite fallback fires only for:
+These conditions emit a warning: the lockfile has no baseline, the head
+revision is missing, pnpm YAML is malformed, the pnpm schema is unsupported, a
+non-env document precedes the project document, or a pnpm installation section
+outside the package graph changed. Diff-only mode without `--head` uses the
+same `lockfile-no-baseline` warning as a missing `--base`. The plan sets
+`fallback_triggered` for them only when full-suite fallback is opted in. A
+framework plan reads `--global-config-fallback` or `globalConfigFallback: true`
+on the selected environment. A framework-less plan reads only the CLI flag.
+Both default to false. A missing baseline also sets `incomplete` to
+`dependency-baseline-missing` whether or not that flag is on.
 
-- **Unparsable lockfiles**: diff-only mode without `--head`, binary lockfiles (`bun.lockb`).
-  These select the full suite only when `--global-config-fallback=true` is set (or
-  `globalConfigFallback: true` is set in the selected environment).
-- **Genuinely untraceable deps**: tooling packages (`typescript`, `eslint`, etc.) that have
-  no import-graph path to any test file. These fall back only when
-  `--global-config-fallback=true` is set (or `globalConfigFallback: true` in the
-  environment config).
+- **Unparsable lockfiles and missing baselines**: binary lockfiles (`bun.lockb`)
+  and the baseline failures above.
+- **Genuinely untraceable deps**: tooling packages (`typescript`, `eslint`, etc.)
+  that have no import-graph path to any test file.
 
 This requires `--base` (or another mechanism to supply the old lockfile content).
 Without `--base`, a `lockfile-no-baseline` warning is emitted and `--global-config-fallback=true`

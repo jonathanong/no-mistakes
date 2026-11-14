@@ -315,7 +315,7 @@ Tagged builder fragments accessed through namespaces stay unknown because the
 exported object can mutate.
 Named imports, factory handles, and typed executor parameters honor configured
 scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
-23 documented statement kinds, including routines and database utility commands.
+29 statement kinds, including routines and database utility commands.
 `bannedSettings` checks named settings in SET commands and literal `set_config`
 calls, including recovered routine bodies and static EXECUTE. See
 [statement policy](rules/postgres-sql-statement-policy.md).
@@ -580,11 +580,13 @@ string literal produce no edge. `go/ast` in-process is acceptable; invoking the
 
 Kafka is a queue backend, not a language. Producers and consumers in any
 supported language emit the existing `queue-enqueue` and `queue-worker` edges.
-The virtual node identity is `<cluster>:<topic>`: an explicit configured
-logical cluster or broker namespace plus the static topic string. Topic names
-are cluster-scoped, so two clients that reuse `mail.welcome` on different
-clusters stay distinct. A consumer group id is edge metadata (or a downstream
-node), never part of that identity.
+The virtual job identity is `<cluster>:<topic>` when a configured logical
+cluster or broker namespace is present and non-empty, and the bare topic
+otherwise. The queue name falls back to `default` when no cluster is set; that
+fallback is not part of the job identity. Topic names are cluster-scoped, so
+two clients that reuse `mail.welcome` on different clusters stay distinct. A
+consumer group id is edge metadata (or a downstream node), never part of that
+identity.
 
 ```ts
 producer.send({ topic: "mail.welcome", messages });
@@ -866,10 +868,12 @@ non-production. v1 emits `dart test`, not `flutter test`.
 
 ## Shared Domain Rules
 
-Route, queue, and Kafka extractors are language-specific visitors that emit
-the same public edge kinds (`server-route`, `client-call`, `http`,
-`queue-enqueue`, `queue-worker`). A Celery producer in Python and an Asynq
-producer in Go must be traversable with `--relationship queue`.
+Route, queue, and Kafka extractors are language-specific visitors. Route
+visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka
+visitors emit `queue-enqueue` and `queue-worker`. `server-route` and
+`client-call` are server-report kinds, not language graph edges. A Celery
+producer in Python and an Asynq producer in Go must be traversable with
+`--relationship queue`.
 
 Relationship filters for the language graph itself follow Swift/.NET:
 
