@@ -2,7 +2,7 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 
 #[test]
 fn forwarded_executor_wrappers_check_json_snapshot() {
-    let cases: Vec<_> = ["forwarding", "non-forwarding"]
+    let cases: Vec<_> = ["forwarding", "non-forwarding", "duplicate"]
         .into_iter()
         .map(|label| {
             (

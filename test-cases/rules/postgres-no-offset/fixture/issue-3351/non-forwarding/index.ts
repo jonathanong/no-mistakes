@@ -8,6 +8,8 @@ const shadowed = (query: Function, sql: string, values: unknown[]) => query(sql,
 let mutable = (sql: string, values: unknown[]) => query(sql, values);
 const droppedMiddle = (sql: string, values: unknown[], extra: unknown) => query(sql, extra);
 const namedShadow = function query(sql: string, values: unknown[]) { return query(sql, values); };
+const awaited = async (sql: string, values: unknown[]) => await query(sql, values);
+const withEffect = (sql: string, values: unknown[]) => { sideEffect(); return query(sql, values); };
 transformed('SELECT 1', []);
 reordered('SELECT 2', []);
 dropped('SELECT 3', []);
@@ -17,3 +19,5 @@ shadowed(query, 'SELECT 6', []);
 mutable('SELECT 7', []);
 droppedMiddle('SELECT 8', [], 'wrong');
 namedShadow('SELECT 9', []);
+awaited('SELECT 10', []);
+withEffect('SELECT 11', []);

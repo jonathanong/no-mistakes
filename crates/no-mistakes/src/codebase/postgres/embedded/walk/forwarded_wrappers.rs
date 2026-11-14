@@ -3,15 +3,18 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
     Argument, BindingPattern, CallExpression, Expression, FormalParameters, Statement,
 };
+use std::collections::HashSet;
 
 impl ScopeVisitor<'_> {
     pub(super) fn forwarded_executor_wrapper(&self, init: &Expression<'_>) -> Option<u32> {
         let (params, call, self_name) = match unwrap_ts_wrappers(init) {
             Expression::ArrowFunctionExpression(arrow) => {
-                let body = arrow
-                    .body
-                    .as_expression()
-                    .or_else(|| return_call(&arrow.body.statements))?;
+                let body = arrow.body.as_expression().or_else(|| {
+                    arrow
+                        .body
+                        .as_function_body()
+                        .and_then(|body| return_call(&body.statements))
+                })?;
                 let Expression::CallExpression(call) = unwrap_ts_wrappers(body) else {
                     return None;
                 };
@@ -47,7 +50,7 @@ impl ScopeVisitor<'_> {
     }
 }
 
-fn return_call<'a>(statements: &'a [Statement<'a>]) -> Option<&'a Expression<'a>> {
+fn return_call<'a, 'b>(statements: &'b [Statement<'a>]) -> Option<&'b Expression<'a>> {
     let [Statement::ReturnStatement(statement)] = statements else {
         return None;
     };
@@ -62,6 +65,7 @@ fn forwards(params: &FormalParameters<'_>, call: &CallExpression<'_>, callee: &s
     {
         return false;
     }
+    let mut names = HashSet::new();
     params.items.iter().enumerate().all(|(index, param)| {
         if param.initializer.is_some() || !param.decorators.is_empty() {
             return false;
@@ -69,7 +73,7 @@ fn forwards(params: &FormalParameters<'_>, call: &CallExpression<'_>, callee: &s
         let BindingPattern::BindingIdentifier(binding) = &param.pattern else {
             return false;
         };
-        if binding.name == callee {
+        if binding.name == callee || !names.insert(binding.name.as_str()) {
             return false;
         }
         if index >= call.arguments.len() {

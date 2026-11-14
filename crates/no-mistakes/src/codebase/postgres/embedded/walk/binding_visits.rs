@@ -135,7 +135,10 @@ impl<'a> ScopeVisitor<'a> {
         let forwarded = declaration
             .init
             .as_ref()
-            .filter(|_| self.declaring_plain_const)
+            .filter(|_| {
+                self.declaring_plain_const
+                    && matches!(declaration.id, ast::BindingPattern::BindingIdentifier(_))
+            })
             .and_then(|init| self.forwarded_executor_wrapper(init));
         let executor = forwarded.is_some()
             || declaration

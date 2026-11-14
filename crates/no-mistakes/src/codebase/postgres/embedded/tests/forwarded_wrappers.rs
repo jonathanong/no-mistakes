@@ -1,3 +1,4 @@
+use super::super::TrustedSqlTag;
 use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
 use std::path::PathBuf;
 
@@ -43,6 +44,8 @@ fn non_forwarding_wrappers_remain_unresolved() {
         "mutable",
         "droppedMiddle",
         "namedShadow",
+        "awaited",
+        "withEffect",
     ] {
         assert!(
             !facts
@@ -52,7 +55,7 @@ fn non_forwarding_wrappers_remain_unresolved() {
             "{name}: {facts:?}"
         );
     }
-    for line in [2, 3, 4, 5, 6, 8, 9] {
+    for line in [2, 3, 4, 5, 6, 8, 9, 11, 12] {
         assert!(
             facts
                 .calls
@@ -67,7 +70,12 @@ fn non_forwarding_wrappers_remain_unresolved() {
 fn configured_transaction_import_forwards_sql_and_binds() {
     let facts = calls(
         "transaction",
-        &EmbeddedSqlOptions::configured("db-lib", &["transaction".into()]),
+        &EmbeddedSqlOptions::configured("db-lib", &["transaction".into()]).with_trusted_sql_tags(
+            &[TrustedSqlTag {
+                module: "db-lib".into(),
+                name: "sql".into(),
+            }],
+        ),
     );
     let found: Vec<_> = facts
         .calls
@@ -80,5 +88,24 @@ fn configured_transaction_import_forwards_sql_and_binds() {
             ("q", Some("UPDATE items SET a = 1 WHERE id = $1")),
             ("withExtra", Some("UPDATE items SET a = 2 WHERE id = $1")),
         ]
+    );
+}
+
+#[test]
+fn duplicate_function_parameter_cannot_prove_forwarding() {
+    let facts = calls("duplicate", &EmbeddedSqlOptions::configured("pg", &[]));
+    assert!(
+        facts
+            .calls
+            .iter()
+            .any(|call| call.line == 2 && call.is_unanalyzable()),
+        "{facts:?}"
+    );
+    assert!(
+        !facts
+            .calls
+            .iter()
+            .any(|call| call.callee == "duplicate" && call.sql_text.is_some()),
+        "{facts:?}"
     );
 }
