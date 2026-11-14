@@ -4,6 +4,17 @@
 
 Imports decide which local identifiers execute SQL:
 
+A local `const` arrow or function expression also carries executor ownership
+when its entire body returns one direct call to a proven executor and every
+call argument is the corresponding plain parameter. Parameter names may differ,
+and unused parameters may follow the forwarded SQL and bind parameters. A
+single-parameter wrapper must forward that sole parameter. The call through that
+wrapper is checked at its own SQL argument. Default, rest, or destructured
+parameters, spread arguments, transformed, reordered, or dropped arguments,
+optional calls, and mutable bindings do not establish this proof. For example,
+`const run = (text, values, ignored) => query(text, values)` forwards, while
+`const run = (text, values) => query(text.trim(), values)` remains unresolved.
+
 | knob                   | default                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `importSpecifier`      | Empty; configure your database module explicitly                                        |

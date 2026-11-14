@@ -8,6 +8,8 @@ impl<'a> ScopeVisitor<'a> {
         declaration: &oxc_ast::ast::VariableDeclaration<'a>,
     ) {
         let previous = self.declaring_const;
+        let previous_plain = self.declaring_plain_const;
+        self.declaring_plain_const = declaration.kind == ast::VariableDeclarationKind::Const;
         self.declaring_const = declaration.kind == ast::VariableDeclarationKind::Const
             || (self.executor_options.track_transaction_helpers
                 && matches!(
@@ -44,6 +46,7 @@ impl<'a> ScopeVisitor<'a> {
         resolve::initialize_vars(declaration, self);
         walk::walk_variable_declaration(self, declaration);
         self.declaring_const = previous;
+        self.declaring_plain_const = previous_plain;
     }
 
     pub(super) fn walk_assignment_target_reference(
@@ -129,10 +132,16 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclarator<'a>,
     ) {
-        let executor = declaration
+        let forwarded = declaration
             .init
             .as_ref()
-            .is_some_and(|init| self.proven_executor(init));
+            .filter(|_| self.declaring_plain_const)
+            .and_then(|init| self.forwarded_executor_wrapper(init));
+        let executor = forwarded.is_some()
+            || declaration
+                .init
+                .as_ref()
+                .is_some_and(|init| self.proven_executor(init));
         let namespace = declaration
             .init
             .as_ref()
@@ -150,6 +159,9 @@ impl<'a> ScopeVisitor<'a> {
         }
         let outer = self.enter_iife(declaration);
         let saved_plain = self.arm_plain_binding(declaration);
+        if let Some(span) = forwarded {
+            self.forwarded_calls.insert(span);
+        }
         walk::walk_variable_declarator(self, declaration);
         self.restore_plain_binding(saved_plain);
         self.builder_reference_exemptions.truncate(exemptions);

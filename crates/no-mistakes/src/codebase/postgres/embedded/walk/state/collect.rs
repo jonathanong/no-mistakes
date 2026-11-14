@@ -72,6 +72,7 @@ pub(crate) fn collect_calls<'a>(
         builder_reference_exemptions: Vec::new(),
         consumed_links: Default::default(),
         statement_calls: Default::default(),
+        forwarded_calls: Default::default(),
         executor_alias_refs: Default::default(),
         executor_reference_spans: Default::default(),
         executor_direct_refs: Default::default(),
@@ -114,6 +115,7 @@ pub(crate) fn collect_calls<'a>(
             || !(source.contains("Set") || source.contains("\\u"))
             || super::super::guarded_sql::intrinsic_safe(program),
         declaring_const: false,
+        declaring_plain_const: false,
         clause_unions: crate::fx::fx_set(),
         exported_constants: Default::default(),
         plain: Default::default(),

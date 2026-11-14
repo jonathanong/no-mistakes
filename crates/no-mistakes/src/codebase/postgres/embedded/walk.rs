@@ -10,6 +10,7 @@ mod executor_references;
 mod executors;
 mod finite_identifiers;
 mod flow;
+mod forwarded_wrappers;
 mod guarded_sql;
 mod head_calls;
 mod iife;

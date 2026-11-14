@@ -1,0 +1,12 @@
+import { query } from 'pg';
+const same = (sql: string, values: unknown[]) => query(sql, values);
+const renamed = (text: string, params: unknown[]) => query(text, params);
+const extra = (sql: string, values: unknown[], ignored: unknown) => query(sql, values);
+const functionForm = function (sql: string, values: unknown[]) { return query(sql, values); };
+const one = (sql: string) => query(sql);
+same('SELECT 1', []);
+renamed('SELECT 2', []);
+extra('SELECT 3', [], 'unused');
+functionForm('SELECT 4', []);
+one('SELECT 5');
+same('SELECT 6 OFFSET 1', []);

@@ -1,0 +1,84 @@
+use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
+use std::path::PathBuf;
+
+fn calls(case: &str, options: &EmbeddedSqlOptions) -> super::super::EmbeddedSqlFileFacts {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/fixture/issue-3351")
+        .join(case)
+        .join("index.ts");
+    extract_embedded_sql_from_source(&path, &std::fs::read_to_string(&path).unwrap(), options)
+}
+
+#[test]
+fn direct_forwarding_preserves_query_arguments() {
+    let facts = calls("forwarding", &EmbeddedSqlOptions::configured("pg", &[]));
+    let found: Vec<_> = facts
+        .calls
+        .iter()
+        .map(|call| (call.callee.as_str(), call.sql_text.as_deref()))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            ("same", Some("SELECT 1")),
+            ("renamed", Some("SELECT 2")),
+            ("extra", Some("SELECT 3")),
+            ("functionForm", Some("SELECT 4")),
+            ("one", Some("SELECT 5")),
+            ("same", Some("SELECT 6 OFFSET 1")),
+        ]
+    );
+}
+
+#[test]
+fn non_forwarding_wrappers_remain_unresolved() {
+    let facts = calls("non-forwarding", &EmbeddedSqlOptions::configured("pg", &[]));
+    for name in [
+        "transformed",
+        "reordered",
+        "dropped",
+        "spread",
+        "defaulted",
+        "shadowed",
+        "mutable",
+        "droppedMiddle",
+        "namedShadow",
+    ] {
+        assert!(
+            !facts
+                .calls
+                .iter()
+                .any(|call| call.callee == name && call.sql_text.is_some()),
+            "{name}: {facts:?}"
+        );
+    }
+    for line in [2, 3, 4, 5, 6, 8, 9] {
+        assert!(
+            facts
+                .calls
+                .iter()
+                .any(|call| call.line == line && call.is_unanalyzable()),
+            "line {line}: {facts:?}"
+        );
+    }
+}
+
+#[test]
+fn configured_transaction_import_forwards_sql_and_binds() {
+    let facts = calls(
+        "transaction",
+        &EmbeddedSqlOptions::configured("db-lib", &["transaction".into()]),
+    );
+    let found: Vec<_> = facts
+        .calls
+        .iter()
+        .map(|call| (call.callee.as_str(), call.sql_text.as_deref()))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            ("q", Some("UPDATE items SET a = 1 WHERE id = $1")),
+            ("withExtra", Some("UPDATE items SET a = 2 WHERE id = $1")),
+        ]
+    );
+}

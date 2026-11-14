@@ -9,7 +9,8 @@ pub(in crate::codebase::postgres::embedded::walk) use case::FiniteCase;
 use oxc_ast::ast::{
     CallExpression, ImportDeclarationSpecifier, ImportOrExportKind, Program, Statement,
 };
-use oxc_ast_visit::Visit;
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 
 pub(in crate::codebase::postgres::embedded::walk) fn vitest_it_imports(
     program: &Program<'_>,
@@ -51,6 +52,12 @@ pub(in crate::codebase::postgres::embedded::walk) fn vitest_it_imports(
 
 impl<'a> ScopeVisitor<'a> {
     pub(super) fn visit_finite_call(&mut self, call: &CallExpression<'a>) {
+        if self.forwarded_calls.contains(&call.span.start) {
+            let callee = crate::codebase::ts_source::unwrap_ts_wrappers(&call.callee).span();
+            self.executor_direct_refs.insert((callee.start, callee.end));
+            walk::walk_call_expression(self, call);
+            return;
+        }
         self.poison_literal_callee(call);
         let finite = (!self.head_calls_only)
             .then(|| {

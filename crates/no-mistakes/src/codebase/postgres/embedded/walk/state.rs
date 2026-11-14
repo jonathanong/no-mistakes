@@ -68,6 +68,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) consumed_links: crate::fx::FxHashSet<u32>,
     /// Calls that are a whole expression statement: their value is discarded.
     pub(super) statement_calls: crate::fx::FxHashSet<u32>,
+    pub(super) forwarded_calls: crate::fx::FxHashSet<u32>,
     pub(super) executor_alias_refs:
         crate::fx::FxHashMap<u32, crate::fx::FxHashMap<String, Vec<oxc_span::Span>>>,
     pub(super) executor_reference_spans: crate::fx::FxHashSet<(u32, u32)>,
@@ -108,6 +109,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) guarded_cases: Vec<super::guarded_sql::GuardedCase>,
     pub(super) set_intrinsic_safe: bool,
     pub(super) declaring_const: bool,
+    pub(super) declaring_plain_const: bool,
     pub(super) clause_unions: crate::fx::FxHashSet<(usize, String)>,
     pub(crate) exported_constants:
         crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
