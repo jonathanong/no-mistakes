@@ -4,6 +4,26 @@
 
 Imports decide which local identifiers execute SQL:
 
+A local `const` arrow or function expression also carries executor ownership
+when its entire body consists of one direct call to a proven executor, with or
+without `return`, and every call argument is the corresponding plain parameter.
+Parameter names may differ,
+and unused parameters may follow the forwarded SQL and bind parameters. A
+single-parameter wrapper must forward that sole parameter. The call through that
+wrapper is checked at its own SQL argument. Default, rest, or destructured
+parameters, spread arguments, transformed, reordered, or dropped arguments,
+optional calls, and mutable bindings do not establish this proof. For example,
+`const run = (text, values, ignored) => query(text, values)` forwards, while
+`const run = (text, values) => query(text.trim(), values)` remains unresolved.
+An earlier function body that uses a wrapper before the analyzer visits its
+declaration, including through an alias or member, retains an unknown executor
+obligation until that use can be proved; the later wrapper declaration does not
+erase it.
+Passing a wrapper as a callback, copying it to an alias, calling it through a
+member such as `.call`, or exporting it likewise retains the original unknown
+executor call in its body. Only direct, proven wrapper calls suppress that body
+finding.
+
 | knob                   | default                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
 | `importSpecifier`      | Empty; configure your database module explicitly                                        |

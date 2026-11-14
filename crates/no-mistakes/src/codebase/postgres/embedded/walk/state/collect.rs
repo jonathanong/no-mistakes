@@ -72,6 +72,9 @@ pub(crate) fn collect_calls<'a>(
         builder_reference_exemptions: Vec::new(),
         consumed_links: Default::default(),
         statement_calls: Default::default(),
+        preproof_references: Default::default(),
+        escaped_forwarded: Default::default(),
+        forwarded_bodies: Default::default(),
         executor_alias_refs: Default::default(),
         executor_reference_spans: Default::default(),
         executor_direct_refs: Default::default(),
@@ -114,6 +117,7 @@ pub(crate) fn collect_calls<'a>(
             || !(source.contains("Set") || source.contains("\\u"))
             || super::super::guarded_sql::intrinsic_safe(program),
         declaring_const: false,
+        declaring_plain_const: false,
         clause_unions: crate::fx::fx_set(),
         exported_constants: Default::default(),
         plain: Default::default(),
@@ -128,6 +132,7 @@ pub(crate) fn collect_calls<'a>(
         visitor.finish_const_splices();
     }
     visitor.finish_executor_references();
+    visitor.discard_direct_forwarded_bodies();
     super::super::observability::record(&visitor.calls);
     let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
     let pending_imported = helpers::finalize::finalize(

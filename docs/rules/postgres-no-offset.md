@@ -62,6 +62,14 @@ const sql = `SELECT id FROM posts OFFSET 0`;
 query(sql);
 ```
 
+A local `const` wrapper that directly forwards its arguments to a configured
+executor is also checked at calls to the wrapper. For example,
+`const run = (text, values, ignored) => query(text, values)` preserves the SQL
+and bind positions; `run('SELECT 1 OFFSET 1', [], null)` reports the offset.
+Renamed parameters and an unused trailing parameter are supported. A wrapper
+that trims, reorders, or drops an argument remains unresolved and retains the
+`unanalyzableSql` policy. See [executor bindings](../postgres-facts/executor-bindings.md).
+
 Typed parameters support direct calls and `.query` calls, including renamed
 bindings destructured from an inline object parameter type. The type must be a
 reference to the configured named import; a same-named local type is insufficient.

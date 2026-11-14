@@ -73,3 +73,30 @@ fn excluding_all_import_names_preserves_scoped_executor_sources() {
     .unwrap();
     assert_eq!(report.as_array().unwrap().len(), 2, "{report}");
 }
+
+#[test]
+fn forwarded_transaction_wrappers_share_native_extraction() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-no-offset/fixture/issue-3351/transaction/index.ts"
+    ));
+    let report: serde_json::Value = serde_json::from_str(
+        &extract_executed_postgres_sql_json_impl(serde_json::json!({
+            "sources": [{"fileName": "index.ts", "source": source}],
+            "importSpecifier": "db-lib", "executorNames": ["transaction"],
+            "trustedSqlTags": [{"module": "db-lib", "name": "sql"}],
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let statements = report.as_array().unwrap();
+    assert_eq!(statements.len(), 2, "{report}");
+    assert_eq!(
+        statements[0]["sqlText"],
+        "UPDATE items SET a = 1 WHERE id = $1"
+    );
+    assert_eq!(
+        statements[1]["sqlText"],
+        "UPDATE items SET a = 2 WHERE id = $1"
+    );
+}

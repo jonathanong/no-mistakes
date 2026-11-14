@@ -10,6 +10,7 @@ mod executor_references;
 mod executors;
 mod finite_identifiers;
 mod flow;
+mod forwarded_wrappers;
 mod guarded_sql;
 mod head_calls;
 mod iife;
@@ -67,6 +68,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
     fn visit_export_declaration(&mut self, decl: &ast::ExportDeclaration<'a>) {
         walk::walk_export_declaration(self, decl);
+        self.note_exported_forwarded(decl);
         self.poison_exported_const_objects(decl);
     }
     fn visit_arrow_function_expression(
@@ -193,8 +195,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         variants::control::logical(self, expr);
     }
 }
-
+mod stable_binds;
 mod transaction;
 mod transaction_flow;
-
-mod stable_binds;
