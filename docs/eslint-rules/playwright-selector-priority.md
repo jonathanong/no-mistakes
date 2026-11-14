@@ -9,7 +9,7 @@ than raw CSS, tag, or `text=` selectors.
 
 ```ts
 // e2e/save.spec.ts
-page.locator("button.submit");
+page.locator(".submit");
 page.locator("text=Save");
 page.locator("h2");
 ```

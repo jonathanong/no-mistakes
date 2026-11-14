@@ -60,7 +60,7 @@ no-mistakes dependencies src/main.mts --root /path/to/project --filter 'backend/
 # Output as Markdown
 no-mistakes dependencies src/main.mts --root /path/to/project --format md
 
-# Explicit tsconfig (otherwise searches upward from --root)
+# Force one tsconfig (omit it so each file uses its owning config)
 no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfig.base.json
 ```
 
@@ -69,7 +69,7 @@ no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfi
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--root <PATH>` | cwd | Project root |
-| `--tsconfig <FILE>` | auto-detected | Path to tsconfig.json |
+| `--tsconfig <FILE>` | owning config | Force one tsconfig. Omit it so each file uses its owning config |
 | `--depth <N>` | unlimited | Max traversal depth |
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR). Post-traversal. |
 | `--candidate-include <GLOB>` | all visible | Initial import-only inventory (repeatable, OR). Not `--filter`. |
@@ -97,7 +97,7 @@ JSON (`--format json` or `--json` or non-TTY):
 }
 ```
 
-Paths (piped default, for shell `$()`):
+Paths (`--format paths`, for shell `$()`):
 ```
 src/utils.mts
 src/helpers.mts
@@ -112,7 +112,7 @@ src/main.mts
 
 - `path` is relative to `--root`
 - `depth` starts at 1
-- `via` lists edge kinds that reached each file (omitted for pure import traversals)
+- `via` lists edge kinds that reached each file (omitted when empty)
 
 ## Notes
 

@@ -17,10 +17,11 @@ This does not enforce runtime registrations or a universal timeout cap.
 
 Use `tests plan` for all test selection — it is the preferred replacement for
 `dependents --test` in all repos, with or without a `testPlan:` block in
-`.no-mistakes.yml`. Without a config block it uses default direct + dependencies
-groups; with a config block it adds custom environments, limits, coverage groups
-(Playwright only), and global-config triggers. It also handles diff/deleted-file
-and lockfile cases that `dependents --test` misses.
+`.no-mistakes.yml`. With no matching environment, Playwright's default groups
+are `direct`, then `coverage`, then `dependencies`. Every other framework uses
+`direct`, then `dependencies`, and rejects a `coverage` group. A configured
+environment can omit `coverage` and can add limits and global-config triggers.
+It also handles diff/deleted-file and lockfile cases that `dependents --test` misses.
 
 Use `tests why` when you need to explain which dependency path connects a
 changed file to a selected test. Use `tests impact` when you have a fixed set
@@ -84,8 +85,11 @@ Key flags:
   and also selects `tooling/direct.test.ts` (package → test) and
   `tooling/indirect.test.ts` (package → `tooling/helper.ts` → test). Do not
   infer a base, and do not expect the missing baseline to select the full suite.
-- `--from-git-diff <BASE...HEAD>` — single-argument sugar for `--base`/`--head`;
-  desugars to the same `git diff --relative --name-status <base>...<head>` lookup
+- `--from-git-diff <BASE...HEAD>` — single-argument sugar for `--base`/`--head`.
+  The lookup is `git -c core.quotePath=true diff --relative -M --unified=3
+  --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/
+  <base>...<head>`. `git diff --relative --name-status -z <base>...<head>`
+  runs only when `--diff`, `--diff-stdin`, or `--diff-command` is also set
   (three-dot only — bare `<base>` and `<base>...` both default head to `HEAD`;
   two-dot `<base>..<head>` is rejected since it compares a different baseline).
   Conflicts with `--base`/`--head`.

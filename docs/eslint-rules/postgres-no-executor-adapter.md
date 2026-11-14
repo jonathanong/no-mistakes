@@ -345,8 +345,11 @@ run(0 ?? read, account);
   import, a scoped factory or typed parameter, or a `const` alias of one.
   An untyped `client.query` is not an executor. Without a module, `.query`
   matches every member only when `executorNames` includes `query`.
-  Manual-transaction, unbounded-fanout, and nonliteral-registry-key checks use
-  this same receiver boundary; a class method merely named `query` is not enough.
+  Unbounded-fanout and nonliteral-registry-key checks use this same receiver
+  boundary; a class method merely named `query` is not enough.
+  `postgres-no-manual-transaction` does not: when `executorNames` includes
+  `query`, it matches every statically named `.query(...)` call, including an
+  unproven class or client method.
   `import * as db` matches `db.read` when `read` is an executor name and the
   module is `importSpecifier` (a subpath does not match). `const { read } = db`
   is that export. `const { query } = tx` is `tx.query` when `tx` is a proven
@@ -355,7 +358,9 @@ run(0 ?? read, account);
   namespace is that executor, not `Function.prototype.call`, when `call` is the
   configured name.
 - Omitting both `importSpecifier` and `executorNames` is a configuration error.
-  Set `executorNames: []` to select no executor calls.
+  Set `executorNames: []` to select no executor calls. The option schema sets
+  `additionalProperties: false`, so ESLint rejects an `extraExecutorNames` key
+  as a configuration error.
 
 ## Fix
 

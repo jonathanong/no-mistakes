@@ -62,8 +62,10 @@ call outside the `try` when that boundary is not meant to handle it.
 
 ## Editor suggestion
 
-For a matching direct return, ESLint offers one suggestion: insert `await`
-before the returned call. Review the error-boundary intent before applying it.
+For a matching return inside `try`, ESLint offers one suggestion: insert
+`await` before the returned promise expression. That expression may be a call,
+`new Promise`, a conditional or logical expression, or an identifier that
+aliases one. Review the error-boundary intent before applying it.
 
 ## Limits
 

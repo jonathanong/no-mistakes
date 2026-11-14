@@ -27,17 +27,20 @@ export function Page() {
 
 ## Options
 
-- `allowInlineScriptIds` lists literal `id` values allowed on inline raw
-  scripts.
-- `allowInlineScriptIdPatterns` lists regular-expression strings that allow an
-  inline raw script id.
+- `allowInlineScriptIds` lists literal `id` values that exempt a raw `<script>`
+  only when that tag also has `dangerouslySetInnerHTML`.
+- `allowInlineScriptIdPatterns` lists regular-expression strings matched
+  against that same literal `id` on a `<script>` that has
+  `dangerouslySetInnerHTML`.
 
-Both options default to no exemptions.
+Both options default to no exemptions. A raw `<script>` whose `type` is the
+literal `application/ld+json` is always allowed and does not need an id.
 
 ## Fix
 
-Replace the tag with `next/script`. Allow a raw inline script only by a stable,
-reviewable `id` exemption.
+Replace the tag with `next/script`. Allow a `dangerouslySetInnerHTML` script by
+a stable, reviewable `id` exemption. A literal `type="application/ld+json"`
+script is already allowed.
 
 ## Suppression
 

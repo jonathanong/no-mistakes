@@ -37,7 +37,8 @@ Oxlint loads the same ESLint plugin through `jsPlugins`:
 
 Only two rules expose editor suggestions. `async-call-disposition` offers a
 `void` prefix for a bare configured promise; `async-try-catch-return-await`
-offers `await` for a direct configured return inside `try`. Neither suggestion
+offers `await` before a returned promise expression inside `try` when that
+`catch` calls a configured handler. Neither suggestion
 decides whether detaching or catching the work is semantically correct, so
 review it before applying.
 
@@ -118,8 +119,10 @@ The schema accepts an object: `internalSpecifiers?: string[]`,
 
 ### `nextjs-no-manual-script-tags`
 
-`allowInlineScriptIds?: string[]` and `allowInlineScriptIdPatterns?: string[]`;
-both default to no exemptions.
+`allowInlineScriptIds?: string[]` and `allowInlineScriptIdPatterns?: string[]`
+exempt a raw `<script>` only when it also has `dangerouslySetInnerHTML`.
+Both default to no exemptions. A literal `type="application/ld+json"` is
+always allowed.
 
 ### `no-banned-import-outside-allowed-paths`
 
@@ -167,7 +170,7 @@ files (empty `checkedPathPatterns` checks every file).
 ### `playwright-naming-convention`
 
 `selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
-`pattern?: string` (the plugin's kebab-case pattern by default).
+`pattern?: string` (default `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`).
 
 ### `playwright-no-hoisted-unique-token`
 

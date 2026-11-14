@@ -21,8 +21,8 @@ near-duplicates.
 
 - `selectorAttributes` lists test-id attributes; it defaults to
   `["data-testid", "data-pw"]`.
-- `pattern` is the required regular-expression string. It defaults to the
-  plugin's kebab-case pattern.
+- `pattern` is an optional regular-expression string. It defaults to
+  `^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$`.
 
 ## Fix
 

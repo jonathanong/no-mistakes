@@ -3,9 +3,12 @@
 Short-form queries for one file that skip structural-question formulation. Reach
 for these when the question is local ("what imports this file?", "is this export
 used?") and a full `dependents` traversal is more setup than the answer needs.
-All emit JSON on non-TTY (or with `--json`) and accept `--root`, `--tsconfig`,
-`--format`, and `--json`, except `registry-extension`, which has no `--tsconfig`
-and prints human output even when piped, so pass `--json` or `--format json`.
+`importers`, `exports-of`, `dead-exports`, `call-sites`, `resolve-check`, and
+`import-usages` emit JSON on a non-TTY (or with `--json`) and accept `--root`,
+`--tsconfig`, `--format`, and `--json`. `effects` accepts those flags but stays
+`human` when piped unless you pass `--format json` or `--json`.
+`registry-extension` has no `--tsconfig` and prints human output even when
+piped, so pass `--json` or `--format json`.
 
 ## When to use a different tool
 
@@ -59,7 +62,7 @@ no-mistakes exports-of src/components/Tabs.tsx --format json
 no-mistakes exports-of src/components/Tabs.tsx --no-importers   # export list only, instant
 ```
 
-Re-exports include a resolved `source`. Namespace imports (`import * as ns`) are
+Re-exports include a root-relative `resolved` path when the target resolves. Namespace imports (`import * as ns`) are
 counted at file granularity, not per-export.
 
 ## `dead-exports <file> [NAME...]`

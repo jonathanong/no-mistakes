@@ -44,7 +44,7 @@ no-mistakes dependents web/components/dialog.tsx --root /path/to/project --relat
 # Find tests that would need to run after changing a file
 no-mistakes dependents src/utils.mts --root /path/to/project --test vitest --relationship test
 
-# Explicit tsconfig (required for monorepos without a root tsconfig.json)
+# Force one tsconfig (omit it so each file uses its owning config)
 no-mistakes dependents src/utils.mts --root /path/to/project --tsconfig backend/tsconfig.json
 ```
 
@@ -53,7 +53,7 @@ no-mistakes dependents src/utils.mts --root /path/to/project --tsconfig backend/
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--root <PATH>` | cwd | Project root |
-| `--tsconfig <FILE>` | auto-detected | Path to tsconfig.json |
+| `--tsconfig <FILE>` | owning config | Force one tsconfig. Omit it so each file uses its owning config |
 | `--depth <N>` | unlimited | Max traversal depth |
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
 | `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
@@ -94,7 +94,7 @@ JSON (`--format json` or `--json` or non-TTY):
 }
 ```
 
-Paths (piped default, for shell `$()`):
+Paths (`--format paths`, for shell `$()`):
 ```
 src/main.mts
 src/other.mts

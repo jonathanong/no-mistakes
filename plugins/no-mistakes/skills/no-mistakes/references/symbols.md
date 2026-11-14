@@ -12,7 +12,7 @@ Find every named export and (optionally) named import of one or more TS/JS files
 ```
 no-mistakes symbols <FILE>... [--root <PATH>] [--tsconfig <FILE>]
         [--kind <KIND>]... [--include exports|imports|both]
-        [--mode list|signature-impact] [--symbol <SYMBOL>]
+        [--mode list|signature-impact] [--symbol <SYMBOL>] [--config <FILE>]
         [--format <FORMAT>] [--json] [-j <N>]
 ```
 
@@ -48,6 +48,7 @@ no-mistakes symbols src/api.mts --symbol handler --mode signature-impact --json
 | `--include <SECTION>` | `exports` | What to emit: `exports`, `imports`, or `both` |
 | `--mode <MODE>` | `list` | `list` keeps the normal symbol listing; `signature-impact` reports definition, exports, callers, and suggested tests for one symbol |
 | `--symbol <SYMBOL>` | none | Required with `--mode signature-impact` |
+| `--config <FILE>` | auto-discovered | no-mistakes config used to classify tests in `signature-impact` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `-j / --jobs <N>` | all cores | Worker threads. Honors `RAYON_NUM_THREADS`. |
