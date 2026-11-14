@@ -96,10 +96,12 @@ fn callback_roots_check_json_snapshot() {
         [
             "src/after-cleanup.mts",
             "src/async-unawaited.mts",
+            "src/await-using-unawaited.mts",
             "src/buffer-root.mts",
             "src/callback-alias.mts",
             "src/callback-call.mts",
             "src/callback-escape.mts",
+            "src/callback-factory.mts",
             "src/conditional-cleanup.mts",
             "src/escape.mts",
             "src/helper-reassignment.mts",
@@ -113,7 +115,9 @@ fn callback_roots_check_json_snapshot() {
             "src/resource-no-using.mts",
             "src/returned-promise.mts",
             "src/root-return.mts",
+            "src/unawaited-promise.mts",
             "src/unknown-sink.mts",
+            "src/using-async.mts",
             "src/wrong-cleanup.mts",
         ],
         "{report}"
@@ -189,6 +193,57 @@ fn callback_spreads_check_json_snapshot() {
         "test_no_live_repository_scan_callback_spreads",
         &[(
             "callback-spreads",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
+
+#[test]
+fn temp_factory_return_kinds_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(
+        "test-no-live-repository-scan",
+        "temp-factory-return-kinds",
+        "",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let mut enumerations: Vec<_> = ["rules", "advisories"]
+        .into_iter()
+        .flat_map(|key| report[key].as_array().unwrap())
+        .filter(|finding| finding["import"] == "readdirSync")
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap().to_string(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    enumerations.sort_unstable();
+    assert_eq!(
+        enumerations,
+        [
+            ("tests/callback-factory.test.mts".to_string(), 7),
+            ("tests/callback-one-argument.test.mts".to_string(), 7),
+            ("tests/member-unawaited.test.mts".to_string(), 9),
+            ("tests/member-unawaited.test.mts".to_string(), 10),
+            ("tests/mutated-buffer.test.mts".to_string(), 10),
+            ("tests/require-callback.test.cts".to_string(), 9),
+            ("tests/require-callback.test.cts".to_string(), 10),
+            ("tests/require-unawaited.test.cts".to_string(), 10),
+            ("tests/require-unawaited.test.cts".to_string(), 11),
+            ("tests/unawaited-promise.test.mts".to_string(), 8),
+        ],
+        "{report}"
+    );
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_temp_factory_return_kinds",
+        &[(
+            "temp-factory-return-kinds",
             root.clone(),
             root.join(".no-mistakes.yml"),
         )],

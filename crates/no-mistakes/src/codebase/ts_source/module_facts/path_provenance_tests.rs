@@ -158,6 +158,7 @@ fn only_exact_rest_forwarding_inside_a_mock_implementation_passes_through() {
 mod argument_text;
 mod member_origins;
 mod temp_factories;
+mod temp_return;
 mod tmpdir;
 
 mod captured_wrappers;

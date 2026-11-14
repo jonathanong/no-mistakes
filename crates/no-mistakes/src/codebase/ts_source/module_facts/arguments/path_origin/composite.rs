@@ -51,14 +51,12 @@ impl<'a> Projector<'a, '_> {
             }
             _ => return PathOrigin::unknown(),
         };
-        if self.is_temp_factory(callee) {
-            return PathOrigin::anchored(PathAnchor::Temp).with_value_kind(
-                if call.arguments.len() == 1 {
-                    PathValueKind::Scalar
-                } else {
-                    PathValueKind::Mutable
-                },
-            );
+        if let Some(result) = self.temp_factory_result(callee) {
+            return match result {
+                super::temp_factories::TempReturn::Directory => temp_directory(call),
+                super::temp_factories::TempReturn::Promise
+                | super::temp_factories::TempReturn::Callback => PathOrigin::unknown(),
+            };
         }
         let mut args = call.arguments.iter().map(Argument::as_expression);
         match name {
@@ -136,11 +134,15 @@ pub(in super::super) fn callee_root<'a>(expression: &'a Expression<'_>) -> Optio
     }
 }
 
-pub(super) fn disposable_origin(call: &CallExpression<'_>) -> PathOrigin {
+pub(super) fn temp_directory(call: &CallExpression<'_>) -> PathOrigin {
     let kind = if call.arguments.len() == 1 {
         PathValueKind::Scalar
     } else {
         PathValueKind::Mutable
     };
     PathOrigin::anchored(PathAnchor::Temp).with_value_kind(kind)
+}
+
+pub(super) fn disposable_origin(call: &CallExpression<'_>) -> PathOrigin {
+    temp_directory(call)
 }

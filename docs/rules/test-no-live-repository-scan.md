@@ -102,8 +102,11 @@ An enumeration passes when its root is provably bounded:
   return, including an awaited `mkdtemp` in a nested async helper. Owned paths
   returned as object properties can be read through `const` destructuring.
   Node `mkdtempDisposableSync` results and awaited `mkdtempDisposable` results
-  provide an owned root through their `.path` property, including `using` and
-  `await using` bindings. Renamed imports and static namespace/default imports
+  provide an owned root through their `.path` property. Both `using` and
+  `await using` prove that root for `mkdtempDisposableSync`, because async
+  disposal falls back to the synchronous disposer. An awaited
+  `mkdtempDisposable` still requires `await using`; `using` does not own the
+  promise. Renamed imports and static namespace/default imports
   are supported when every use of the module object directly invokes the selected
   factory. Writes, escapes, other methods, and nested accesses remain unproven.
   Default imports of the same built-in module share this stability requirement,
@@ -118,6 +121,16 @@ An enumeration passes when its root is provably bounded:
   A `promises` binding from Node `fs` is also recognized as `fs/promises`.
   A stable Node `fs.promises.mkdtemp` call is recognized; `fs.promises.mkdtempSync`
   is unresolved because the promises API has no synchronous factory.
+  `mkdtempSync` returns a directory string, and awaiting that string does too.
+  A one-argument `mkdtemp` from `fs/promises` returns a promise. The bare call is
+  not a directory. `await` of that call, of a `const` bound to it, or of an
+  immutable `const` alias of that binding, is the new directory. Passing the
+  promise to a filesystem call stays unproven.
+  Callback `fs.mkdtemp` does not return a directory. Its callback argument is
+  not an owned-root proof. A second argument, such as an encoding option, keeps
+  the result mutable because it may be a `Buffer` rather than a string. Another
+  use of that mutable binding, such as filling the buffer, leaves `await` of
+  the binding unproven.
   Static CommonJS selections such as `require('fs').mkdtempSync` and
   `require('fs').promises.mkdtemp` keep their Node factory identity when bound
   locally or called directly. Unknown selections, shadowed loaders, and

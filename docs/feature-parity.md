@@ -34,7 +34,10 @@ separate, and unsupported loads retain the
 [`test-no-live-repository-scan`](rules/test-no-live-repository-scan.md) unresolved
 fallback. That rule also recognizes direct `import.meta.glob` calls and `fs-extra`
 enumerators, and distinguishes the shared temporary directory from an owned
-`mkdtemp` result.
+`mkdtemp` result. A `fs/promises` `mkdtemp` promise that has not been awaited,
+and the return value of callback `fs.mkdtemp`, are not that owned directory.
+Awaiting an immutable `const` alias of that promise is the directory. Another
+use of a mutable buffer result leaves the binding unproven.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory
 and loader aliases do not grant a bounded-path proof.

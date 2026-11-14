@@ -1,3 +1,4 @@
+use super::TempReturn;
 use crate::codebase::ts_source::module_facts::RequireBinding;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::{ast::*, AstKind};
@@ -5,7 +6,7 @@ use oxc_semantic::{Semantic, SymbolId};
 use oxc_span::GetSpan;
 
 pub(super) enum Selection {
-    Named(bool),
+    Named(bool, TempReturn),
     Module(bool),
     Unknown,
 }
@@ -57,9 +58,10 @@ pub(super) fn selection(
     match members.as_slice() {
         [] => Selection::Module(sync),
         ["promises"] if sync => Selection::Module(false),
-        ["mkdtemp"] => Selection::Named(sync),
-        ["mkdtempSync"] if sync => Selection::Named(true),
-        ["promises", "mkdtemp"] if sync => Selection::Named(false),
+        ["mkdtemp"] if sync => Selection::Named(true, TempReturn::Callback),
+        ["mkdtemp"] => Selection::Named(false, TempReturn::Promise),
+        ["mkdtempSync"] if sync => Selection::Named(true, TempReturn::Directory),
+        ["promises", "mkdtemp"] if sync => Selection::Named(false, TempReturn::Promise),
         _ => Selection::Unknown,
     }
 }

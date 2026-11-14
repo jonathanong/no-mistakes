@@ -6,9 +6,6 @@ fn classic_temp_roots_require_stable_node_bindings() {
     for expression in [
         "readdirSync(owned('case-'))",
         "readdirSync(fs.mkdtempSync('case-'))",
-        "readdirSync(promises.mkdtemp('case-'))",
-        "readdirSync(namedPromises.mkdtemp('case-'))",
-        "readdirSync(nodeFs.promises.mkdtemp('case-'))",
     ] {
         assert_eq!(
             read.origin(expression).anchor,
@@ -20,6 +17,9 @@ fn classic_temp_roots_require_stable_node_bindings() {
         "readdirSync(owned('shadow-'))",
         "readdirSync(wrong('case-'))",
         "readdirSync(impossible('case-'))",
+        "readdirSync(promises.mkdtemp('case-'))",
+        "readdirSync(namedPromises.mkdtemp('case-'))",
+        "readdirSync(nodeFs.promises.mkdtemp('case-'))",
         "readdirSync(promises.mkdtempSync('case-'))",
         "readdirSync(promisesDefault.mkdtempSync('case-'))",
         "readdirSync(nodeFs.promises.mkdtempSync('case-'))",
