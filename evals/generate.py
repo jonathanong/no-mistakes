@@ -1398,7 +1398,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+[^\n]*?(--format\s+json|--json)(?![\w-])",
+                r"no-mistakes\s+(?:[^\n]|\\\n)*?(--format\s+json|--json)(?![\w-])",
             ),
             (
                 "usage-02-monorepo-tsconfig",
@@ -1464,7 +1464,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+[^\n]*?(--format\s+json|--json)(?![\w-])",
+                r"no-mistakes\s+(?:[^\n]|\\\n)*?(--format\s+json|--json)(?![\w-])",
             ),
         ],
     ),
@@ -1523,7 +1523,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+[^\n]*?(--format\s+json|--json)(?![\w-])",
+                r"no-mistakes\s+(?:[^\n]|\\\n)*?(--format\s+json|--json)(?![\w-])",
             ),
             (
                 "safety-03-neg-json-flag",
