@@ -149,8 +149,8 @@ impl ScopeVisitor<'_> {
         literals.push(Splice { name, literal, fallback: format!("sql_placeholder_{placeholder}") });
         Some(format!("\u{0}{id}\u{0}"))
     }
+    pub(super) fn poison_closed_roots(&mut self, roots:Vec<String>) { self.literal_objects.poisoned.extend(roots); }
     pub(super) fn closed_splice(&self, name:String, literal:String) -> Option<String> {
-        if self.literal_objects.poisoned.contains(&name) { return None; }
         let mut literals=self.literal_objects.literals.borrow_mut();
         let id=literals.len();
         literals.push(Splice {name,literal,fallback:"sql_placeholder_1".into()});

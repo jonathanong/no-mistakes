@@ -119,6 +119,7 @@ impl<'a> ScopeVisitor<'a> {
         self.enter_plain_function(None, arrow.span.start);
         if let Some(result) = arrow.body.as_expression() {
             // A concise return can expose a receiver to later property writes.
+            self.poison_closed_result(result);
             self.revoke_query_receiver(result);
         }
         walk::walk_arrow_function_expression(self, arrow);

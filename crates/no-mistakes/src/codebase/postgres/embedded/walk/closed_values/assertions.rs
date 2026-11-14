@@ -21,44 +21,58 @@ pub(super) fn recover(
         return None;
     }
     if let Some(assertion) = visitor.literal_objects.closed.assertions.get(name) {
-        let argument = call
-            .arguments
-            .get(assertion.allowlist_argument)?
-            .as_expression()?;
-        let argument = unwrap_ts_wrappers(argument);
-        let values = if let Expression::NewExpression(created) = argument {
-            let Expression::Identifier(constructor) = unwrap_ts_wrappers(&created.callee) else {
-                return None;
-            };
-            if constructor.name != "Set"
-                || !visitor.set_intrinsic_safe
-                || visitor.lookup("Set").is_some()
-                || created.arguments.len() != 1
-            {
-                return None;
-            }
-            expression(visitor, created.arguments[0].as_expression()?, depth - 1)?
-        } else {
-            expression(visitor, argument, depth - 1)?
-        };
-        let mut result = Vec::new();
-        for arm in values {
-            let Node::Array(items) = arm.node else {
-                return None;
-            };
-            for (i, item) in items.into_iter().enumerate() {
-                let Node::Text(_) = item else { return None };
-                let mut choices = arm.choices.clone();
-                choices.push((call.span.start as u64 | (1 << 63), i as u32));
-                result.push(Arm {
-                    node: item,
-                    choices,
-                    root: arm.root.clone(),
-                });
-            }
-        }
-        return (!result.is_empty() && result.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(result);
+        return assertion_values(visitor, call, assertion.allowlist_argument, depth);
     }
+    helper_values(visitor, call, name, depth)
+}
+fn assertion_values(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    index: usize,
+    depth: u8,
+) -> Option<Vec<Arm>> {
+    let argument = call.arguments.get(index)?.as_expression()?;
+    let argument = unwrap_ts_wrappers(argument);
+    let values = if let Expression::NewExpression(created) = argument {
+        let Expression::Identifier(constructor) = unwrap_ts_wrappers(&created.callee) else {
+            return None;
+        };
+        if constructor.name != "Set"
+            || !visitor.set_intrinsic_safe
+            || visitor.lookup("Set").is_some()
+            || created.arguments.len() != 1
+        {
+            return None;
+        }
+        expression(visitor, created.arguments[0].as_expression()?, depth - 1)?
+    } else {
+        expression(visitor, argument, depth - 1)?
+    };
+    let mut result = Vec::new();
+    for arm in values {
+        let Node::Array(items) = arm.node else {
+            return None;
+        };
+        for (i, item) in items.into_iter().enumerate() {
+            let Node::Text(_) = item else { return None };
+            let mut choices = arm.choices.clone();
+            choices.push((call.span.start as u64 | (1 << 63), i as u32));
+            result.push(Arm {
+                node: item,
+                choices,
+                root: arm.root.clone(),
+                provenance: None,
+            });
+        }
+    }
+    (!result.is_empty() && result.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(result)
+}
+fn helper_values(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    name: &str,
+    depth: u8,
+) -> Option<Vec<Arm>> {
     if !visitor.functions.has_program(name) {
         return None;
     }
@@ -96,16 +110,17 @@ pub(super) fn recover(
     }
     let mut strings = Vec::new();
     for args in alternatives {
-        strings.extend(visitor.functions.identifier_clauses(name, &args)?);
+        strings.extend(visitor.functions.identifier_clause_values(name, &args)?);
     }
     Some(
         strings
             .into_iter()
             .enumerate()
-            .map(|(i, text)| Arm {
+            .map(|(i, (text, provenance))| Arm {
                 node: Node::Text(text),
                 choices: vec![(call.span.start as u64 | (1 << 63), i as u32)],
                 root: None,
+                provenance,
             })
             .collect(),
     )

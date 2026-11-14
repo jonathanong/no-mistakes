@@ -48,7 +48,11 @@ fn postgres_closed_identifiers_check_json_snapshot() {
         let rows = report[mode]["report"]["rules"].as_array().unwrap();
         for target in ["DROP TABLE", "pg_sleep", "table:users", "table:posts"] {
             assert!(
-                rows.iter().any(|row| row["target"] == target),
+                rows.iter().any(|row| {
+                    row["target"]
+                        .as_str()
+                        .is_some_and(|value| value.split(", ").any(|part| part == target))
+                }),
                 "{mode} lost a definite mutation or unbounded variant for {target}: {rows:?}"
             );
         }
@@ -71,9 +75,9 @@ fn postgres_closed_identifiers_check_json_snapshot() {
     assert_eq!(
         opaque
             .iter()
-            .filter(|row| row["target"] == "unanalyzable-sql")
+            .filter(|row| row["target"] == "unanalyzable-sql" || row["target"] == "unanalyzable")
             .count(),
-        26,
+        42,
         "every unknown source must remain opaque for both rules: {opaque:?}"
     );
 }

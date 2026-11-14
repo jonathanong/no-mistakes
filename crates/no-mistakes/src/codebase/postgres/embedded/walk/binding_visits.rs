@@ -132,6 +132,12 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclarator<'a>,
     ) {
+        let tracked_closed = matches!(&declaration.id,ast::BindingPattern::BindingIdentifier(name) if self.literal_objects.closed.has(&self.scopes,name.name.as_str()));
+        if !self.declaring_const || !tracked_closed {
+            if let Some(init) = &declaration.init {
+                self.poison_closed_result(init);
+            }
+        }
         let forwarded = declaration
             .init
             .as_ref()

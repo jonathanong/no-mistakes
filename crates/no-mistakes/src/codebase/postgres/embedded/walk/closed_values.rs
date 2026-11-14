@@ -8,7 +8,12 @@ use std::collections::{BTreeMap, HashMap};
 mod assertions;
 #[cfg(test)]
 mod controls_tests;
+mod escapes;
 mod expression;
+#[cfg(test)]
+mod extra_escape_tests;
+#[cfg(test)]
+mod followup_tests;
 mod state;
 use expression::expression;
 #[cfg(test)]
@@ -26,6 +31,7 @@ struct Arm {
     node: Node,
     choices: Vec<(u64, u32)>,
     root: Option<String>,
+    provenance: Option<super::resolve::functions::provenance::RecoveredSql>,
 }
 #[derive(Default)]
 pub(super) struct ClosedValues {
@@ -115,6 +121,15 @@ pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Opti
         ));
         value.origins = vec![expr.span().start; sql.len()];
         value.sql = sql;
+        if let Some(source) = arm
+            .provenance
+            .filter(|source| source.sql == value.sql && source.origins.len() == value.sql.len())
+        {
+            value.line = source.line;
+            value.origins = source.origins;
+            value.positions = source.positions;
+            value.invocations = source.invocations;
+        }
         if let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) {
             value.invocations.record(value.sql.len(), call.span.start);
         }

@@ -684,14 +684,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/finite-set-guard.test.ts",
-          "line": 24,
-          "message": "tests/finite-set-guard.test.ts:24: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
-          "rule": "postgres-no-test-state-mutation",
-          "sourceLine": "return query(sql`/* typeOnly */ SELECT 1 FROM `.append(table));",
-          "target": "unanalyzable-sql"
-        },
-        {
-          "file": "tests/finite-set-guard.test.ts",
           "line": 29,
           "message": "tests/finite-set-guard.test.ts:29: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
           "rule": "postgres-no-test-state-mutation",

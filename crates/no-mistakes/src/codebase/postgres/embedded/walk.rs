@@ -92,20 +92,25 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         walk::walk_expression_statement(self, statement);
     }
     fn visit_await_expression(&mut self, awaited: &ast::AwaitExpression<'a>) {
-        if self.executor_options.track_transaction_helpers {
-            if let ast::Expression::CallExpression(call) =
-                crate::codebase::ts_source::unwrap_ts_wrappers(&awaited.argument)
-            {
-                self.awaited_lock_helper_calls.insert(call.span.start);
-            }
-        }
-        walk::walk_await_expression(self, awaited);
+        self.walk_closed_await(awaited);
+    }
+    fn visit_yield_expression(&mut self, yielded: &ast::YieldExpression<'a>) {
+        self.walk_closed_yield(yielded);
+    }
+    fn visit_property_definition(&mut self, property: &ast::PropertyDefinition<'a>) {
+        self.walk_closed_property(property);
+    }
+    fn visit_accessor_property(&mut self, property: &ast::AccessorProperty<'a>) {
+        self.walk_closed_accessor(property);
+    }
+    fn visit_formal_parameter(&mut self, parameter: &ast::FormalParameter<'a>) {
+        self.walk_closed_parameter(parameter);
+    }
+    fn visit_jsx_expression_container(&mut self, container: &ast::JSXExpressionContainer<'a>) {
+        self.walk_closed_jsx(container);
     }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        let reads = self.literal_objects.read_spans.len();
-        self.exempt_closed_assertion(call);
-        self.visit_finite_call(call);
-        self.literal_objects.read_spans.truncate(reads);
+        self.walk_closed_call(call);
     }
     fn visit_simple_assignment_target(&mut self, target: &ast::SimpleAssignmentTarget<'a>) {
         self.walk_assignment_target_reference(target);
@@ -135,11 +140,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_return_statement(&mut self, statement: &ast::ReturnStatement<'a>) {
-        flow::returned(self, statement);
+        self.walk_closed_return(statement);
     }
     fn visit_throw_statement(&mut self, statement: &oxc_ast::ast::ThrowStatement<'a>) {
-        walk::walk_throw_statement(self, statement);
-        self.invalidate_exited_execution();
+        self.walk_closed_throw(statement);
     }
     fn visit_break_statement(&mut self, statement: &oxc_ast::ast::BreakStatement<'a>) {
         walk::walk_break_statement(self, statement);
@@ -154,11 +158,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
-        resolve::enter_classic_for(statement, self);
-        self.with_append_loop(statement.span.start, |visitor| {
-            walk::walk_for_statement(visitor, statement)
-        });
-        resolve::leave_classic_for(statement, self);
+        self.walk_classic_for_scope(statement);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {

@@ -4,6 +4,7 @@ mod call;
 mod collect;
 mod collection;
 mod exports;
+mod identifier_clauses;
 mod parameter;
 mod positions;
 mod programs;
@@ -72,6 +73,7 @@ impl LocalFunctions {
         self.resolved.contains_key(name) || self.templates.contains_key(name)
     }
 
+    #[cfg(test)]
     pub(crate) fn collect(program: &Program<'_>, source: &str, trusted: &[TrustedSqlTag]) -> Self {
         collection::collect(program, source, trusted, &[])
     }

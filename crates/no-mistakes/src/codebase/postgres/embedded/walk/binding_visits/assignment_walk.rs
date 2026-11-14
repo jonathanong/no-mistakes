@@ -7,6 +7,7 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         assign: &oxc_ast::ast::AssignmentExpression<'a>,
     ) {
+        self.poison_closed_result(&assign.right);
         if let AssignmentTarget::AssignmentTargetIdentifier(left) = &assign.left {
             if let ast::Expression::Identifier(right) =
                 crate::codebase::ts_source::unwrap_ts_wrappers(&assign.right)

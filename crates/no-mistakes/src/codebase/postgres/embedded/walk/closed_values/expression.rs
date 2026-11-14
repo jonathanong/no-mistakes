@@ -53,6 +53,7 @@ pub(super) fn expression(
             node,
             choices: vec![],
             root: None,
+            provenance: None,
         }]);
     }
     match expr {
@@ -63,6 +64,7 @@ pub(super) fn expression(
                 node: Node::Text(member.property.name.to_string()),
                 choices: vec![],
                 root: None,
+                provenance: None,
             }],
         ),
         Expression::ComputedMemberExpression(member) if !member.optional => select(
