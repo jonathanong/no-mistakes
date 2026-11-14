@@ -25,14 +25,16 @@ pub(super) fn mark(expression: &Expr, uses: &mut [SqlTransformedColumnUseFact]) 
         } = expression
         {
             for (operand, value) in [(left, right), (right, left)] {
-                if constant(value)
-                    && let Some(roots) = by_span.get(&span_key(operand))
-                {
-                    for indexes in roots.values() {
-                        if same_operand(operand, &uses[indexes[0]].expression) {
-                            for &index in indexes {
-                                uses[index].index_operand = true;
-                            }
+                if !constant(value) {
+                    continue;
+                }
+                let Some(roots) = by_span.get(&span_key(operand)) else {
+                    continue;
+                };
+                for indexes in roots.values() {
+                    if same_operand(operand, &uses[indexes[0]].expression) {
+                        for &index in indexes {
+                            uses[index].index_operand = true;
                         }
                     }
                 }
