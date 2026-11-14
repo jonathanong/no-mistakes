@@ -63,7 +63,8 @@ pub struct SymbolsArgs {
     pub root: Option<PathBuf>,
 
     /// Path to tsconfig.json for resolving re-export / import specifiers.
-    /// If omitted, searches upward from --root.
+    /// If omitted, each file uses its owning config.
+    /// Pass this only to force one config for the whole request.
     #[arg(long, value_name = "FILE")]
     pub tsconfig: Option<PathBuf>,
 
