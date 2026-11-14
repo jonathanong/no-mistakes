@@ -28,5 +28,7 @@ infra:
 | [`infra outputs`](infra-outputs.md) | Outputs a module exports and the root modules that consume them. |
 | [`infra test-for`](infra-test-for.md) | Test files covering resources defined in a `.tf` file. |
 
+Shared options: `--root`, `--config`, `--format` (default `human`), and `--json`.
+
 See [`Graph edges`](../graph-edges.md) for the `terraform-ref`, `terraform-module`,
 and `terraform-output` edge kinds these queries are built on.

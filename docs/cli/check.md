@@ -35,8 +35,8 @@ Use this before finishing an agent edit when the repository has configured
 rules. `check` runs React, queue, integration, filesystem, Playwright, unique
 export, and codebase rules that are enabled in config.
 
-Key options: `--root`, `--config`, `--tsconfig`, `--format`, `--json`, and
-`--effort <low|max>`. The default effort is `max`, preserving current analysis.
+Key options: `--root`, `--config`, `--tsconfig`, `--format` (default `human`),
+`--json`, and `--effort <low|max>`. The default effort is `max`, preserving current analysis.
 Invocation effort overrides rule and repository defaults. A rule that requires
 a partner check warns and falls back to `max` when that partner is absent or
 outside its configured scope.

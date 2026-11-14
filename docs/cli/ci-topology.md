@@ -18,7 +18,7 @@ no-mistakes ci topology --workflow ci.yml --format mermaid
 | `--workflow` | Restrict output to this workflow (basename, e.g. `ci.yml`, or a path inside `.github/workflows`) plus its transitive local reusable-workflow callees. Repeatable. Defaults to every workflow. |
 | `--root` | Project root directory (default: current directory). |
 | `--config` | Path to config file. |
-| `--format` | Output format: `json` or `mermaid`. |
+| `--format` | Output format: `json` (default) or `mermaid`. |
 | `--json` | Shorthand for `--format json`. |
 
 ## Exit behavior

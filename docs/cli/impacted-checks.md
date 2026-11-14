@@ -47,7 +47,7 @@ no-mistakes impacted-checks --diagnose-empty --format human
 | `--diff-stdin` | Read a unified diff from stdin. Conflicts with `--diff` and `--diff-command`. |
 | `--diff-command` | Run a command and parse its stdout as a unified diff. |
 | `--generic-only` | Return configured `checks.commands` entries only; skip test-framework discovery and selection. |
-| `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
+| `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. Omitted, human on a terminal and JSON otherwise. |
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit analysis phase durations to stderr. |
 | `--verbose-timings` | Also emit deterministic one-pass work counters; implies timings. |

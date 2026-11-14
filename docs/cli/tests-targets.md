@@ -14,7 +14,9 @@ the same project, package, and environment command construction as
 rendered with `--workspace`, including explicitly configured `.json` project
 arrays; ordinary `vitest.config.*` sources use `--config`.
 
-Key options: `--root`, `--config`, `--framework`, `--format`, and `--json`.
+Key options: `--root`, `--config`, `--format`, and `--json`. The framework
+is a required positional argument, as in the examples above. Omitted
+`--format` defaults to `json`.
 
 Node API: `testsTargets(options)`.
 

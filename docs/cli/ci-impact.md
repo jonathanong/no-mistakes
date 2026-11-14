@@ -14,7 +14,7 @@ no-mistakes ci impact .github/workflows/ci.yml --format paths
 |------|-------------|
 | `--root` | Project root directory (default: current directory). |
 | `--config` | Path to config file. |
-| `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
+| `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. Omitted, human on a terminal and JSON otherwise. |
 | `--json` | Shorthand for `--format json`. |
 
 Pass one or more changed files as positional arguments (relative to `--root` or

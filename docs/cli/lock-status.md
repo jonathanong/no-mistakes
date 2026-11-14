@@ -14,7 +14,7 @@ no-mistakes lock status [--format text|json]
 
 | Flag | Description |
 |------|-------------|
-| `--format` | `text` (default) prints `free` or `held by pid ...`; `json` prints one object. |
+| `--format` | `text` (default) prints `free`, `held by <description>`, or `held by another no-mistakes invocation (holder details unavailable)` when the lock is held but the record cannot be read. `json` prints one object. |
 
 `lock status` is read-only and never waits. It probes the lock with an
 instantaneous shared lock and never rewrites the holder record. That brief
@@ -28,6 +28,9 @@ command ignores `--timeout`, `--invocation-timeout-ms`, `--lock-timeout`, and
 ```json
 {"state":"held","lockFile":"/home/me/.cache/no-mistakes/invocation.lock","holder":{"pid":264,"cwd":"/work/repo","command":"no-mistakes","startedAtMs":1700000000000,"ageSeconds":12}}
 ```
+
+`lockFile` is `invocation.lock` under the user runtime directory when one is
+configured, and otherwise under the user cache directory.
 
 - `state` is `held` or `free`.
 - `holder` is `null` when the lock is free (a leftover record from an exited

@@ -30,7 +30,7 @@ an import, otherwise `medium`. A file with no repeated pattern reports
 `patternKind: "none"` with `confidence: "low"` and empty `entries`. Aliased
 imports are matched by local name and reported via their imported symbol +
 source; dynamic-import registrants (`() => import("./x")`) get
-`kind: "dynamic"` with a null `symbol`.
+`kind: "dynamic"`, omit `symbol`, and set `local` to `""`.
 
 Known heuristic gaps (best-effort): namespace-imported factory calls
 (`registry.register(plugins.makeFoo())`) may not resolve to an import; entries
@@ -38,7 +38,7 @@ wrapped in a local helper (`registry.register(makeEntry(Foo))`) can misattribute
 the registrant; and the generated `template` placeholder is approximate for
 namespace-import constructors.
 
-Key options: `--format`, `--json`.
+Key options: `--format` (default `human`), `--json`.
 
 Output shape:
 

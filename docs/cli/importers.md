@@ -26,6 +26,7 @@ non-import edges, use [`dependents`](dependents.md) instead. (Relative, alias,
 NodeNext `.js`, and declaration-only `.d.ts` import targets are resolved.)
 
 Key options: `--root`, `--tsconfig`, `--tests`, `--format`, and `--json`.
+Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 Node API: `importers(options)`.
 

@@ -14,7 +14,7 @@ The current working directory is the analysis root. The command performs one
 prepared `analyzeProject()` request and atomically publishes `dependencies`,
 `dependents`, `symbols`, and Vitest `plan` artifacts into the private output
 directory. The manifest and output-directory privacy and placement contract is
-the same as [`writePlanningImpactArtifacts`](../node-api.md#node-n-api-guide).
+the same as [`writePlanningImpactArtifacts`](../node-api/planning-and-graphs.md).
 
 Options:
 

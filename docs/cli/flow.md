@@ -10,8 +10,9 @@ no-mistakes flow src/api/users.mts#handler --direction dependents --depth 1 --fo
 Targets use the same `file#symbol` syntax as dependency graph commands. The
 report includes the target node, visited nodes, and canonical dependency edges.
 
-Key options: `--root`, `--config`, `--tsconfig`, `--direction`,
-`--depth`, repeatable `--relationship`, `--format`, and `--json`.
+Key options: `--root`, `--config`, `--tsconfig`, `--direction` (default
+`both`), `--depth` (default `2`), repeatable `--relationship`, `--format`
+(default `human`), and `--json`.
 
 Use `--direction deps` to inspect what a file or symbol consumes,
 `--direction dependents` to inspect callers, and `--direction both` for a small

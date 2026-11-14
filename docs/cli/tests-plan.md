@@ -78,9 +78,10 @@ Manual `--changed-file` and `--changed-files` entries must remain within
 an in-root target keeps its lexical path in `changed_files`, while dependency
 analysis follows the resolved target.
 
-Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
-`--limit-percent`, `--limit-files`, `--global-config-fallback`,
-`--include-comment`, `--include-glob`, `--symbols`, `--format`, and `--json`.
+Key options: `--root`, `--config`, `--tsconfig`, `--environment`
+(default `pre-push`), `--limit-percent`, `--limit-files`,
+`--global-config-fallback`, `--include-comment`, `--include-glob`,
+`--symbols`, `--format`, and `--json`. Omitted `--format` defaults to `json`.
 
 ## Dependency manifests and lockfiles
 
@@ -162,7 +163,7 @@ selected environment's groups, includes/excludes, limits, samples, and fallback
 policy; `--entrypoint`, `--limit-percent`, `--limit-files`, and
 `--global-config-fallback` therefore conflict with it. Direct-owner selection
 is intentionally bounded to changed files and one reverse canonical graph edge;
-use `no-mistakes tests impact --entrypoint <FILE>` for explicit entrypoint
+use `no-mistakes tests impact <FILE>` for explicit entrypoint
 traversal. Its result contains one `direct-test-owner` group and never reports
 a fallback. It still reports canonical graph warnings for dynamic resource calls
 in changed files, because they can make reverse owner selection incomplete.

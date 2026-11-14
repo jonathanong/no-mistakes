@@ -20,6 +20,7 @@ For just the export/import symbol list without consumers, use
 [`symbols`](symbols.md).
 
 Key options: `--root`, `--tsconfig`, `--no-importers`, `--format`, and `--json`.
+Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 Node API: `exportsOf(options)`.
 

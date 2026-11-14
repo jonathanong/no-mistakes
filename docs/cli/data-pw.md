@@ -15,7 +15,8 @@ into a `source` section (files that are not test files) and a `test` section
 The scanned attribute names come from `tests.playwright.selectors.testIds`
 (e.g. `["data-testid", "data-pw"]`); override them with repeatable
 `--attribute`. Source roots come from `tests.playwright.selectorRoots`; override
-with repeatable `--scan`. `tests.playwright.selectorExclude` globs are skipped.
+with repeatable `--scan`. `tests.playwright.selectorExclude` skips non-test
+source files. Test files are filtered only by `tests.playwright.testExclude`.
 
 Matching is regex-based on the literal `attribute="value"` form, so it catches
 JSX attributes (`<div data-pw="x">`) and CSS attribute selectors
@@ -23,13 +24,16 @@ JSX attributes (`<div data-pw="x">`) and CSS attribute selectors
 Implicit references such as `getByTestId('x')`, which do not spell out
 `attribute="value"`, are intentionally **not** matched.
 
-When neither `selectorRoots` nor `--scan` is configured, source scanning covers
-the whole repository (so no usage is missed); narrow it with `selectorRoots` or
-`--scan` when you only care about a subtree.
+When neither `selectorRoots` nor `--scan` is configured, source scanning has no
+subtree limit. It still skips dot-directories, `node_modules`, `target`,
+`dist`, `build`, `coverage`, `filesystem.skipDirectories`, and non-source
+files. `selectorInclude` and `selectorExclude` still filter source files.
+Narrow the scan with `selectorRoots` or `--scan` when you only care about a
+subtree.
 
 Key options: `--attribute` (repeatable), `--scan` (repeatable),
-`--include` (comma-separated subset of `source,test`), `--config`, `--format`,
-and `--json`.
+`--include` (comma-separated subset of `source,test`), `--config`, `--format`
+(default `human`), and `--json`.
 
 Output shape:
 

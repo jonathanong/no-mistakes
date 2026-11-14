@@ -17,5 +17,7 @@ projected into the same `server routes|edges|related` report from the language
 | [`server related`](server-related.md) | Print files related through route edges. |
 | [`server contracts`](server-contracts.md) | Compare static client query params with route handler usage. |
 
-Shared options: `--root`, `--tsconfig`, repeatable `--filter`, `--depth`,
-`--format`, `--json`, and `--timings`.
+Shared options: `--root`, `--tsconfig`, repeatable `--filter`, `--depth`
+(alias `--max-depth`; with roots and no depth, edges default to depth 1, and
+with no roots an omitted depth prints every edge), `--format` (default
+`human`), `--json`, and `--timings`.

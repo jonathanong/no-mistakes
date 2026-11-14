@@ -4,10 +4,10 @@ Discovery order:
 
 1. `--config <path>` when provided.
 2. `.no-mistakes.{yaml,yml,json,jsonc}` under `--root`, merged with an
-   optional `.no-mistakes/` section directory.
-3. Legacy per-tool config stems under `--root`.
-4. legacy guardrails config files walking upward from `--root`.
-5. Empty default config.
+   optional `.no-mistakes/` section directory when that directory exists.
+3. Empty default config.
+
+Discovery does not walk parent directories and does not read other config stems.
 
 The `.no-mistakes/` directory splits top-level sections: for example,
 `.no-mistakes/rules/db.yml` contributes to `rules`, without an outer `rules:`
