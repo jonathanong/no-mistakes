@@ -200,8 +200,9 @@ estimate means runs errored — see
 
 ## Flows
 
-Every case carries a `tags:` field naming its flow. 62 generated cases across
-12 flows; 53 excluding the holdout.
+Every case carries a `tags:` field naming its flow. 78 generated cases across
+13 flows; 69 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 16 `rules` cases load the `no-mistakes-rules` plugin instead.
 
 | tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
@@ -217,6 +218,7 @@ Every case carries a `tags:` field naming its flow. 62 generated cases across
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
+| `rules` | 16 | no-mistakes-rules plugin: MUST NOT traps in write, review and negative-twin cases | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
 "Skill surface" means `SKILL.md` documents it but no comparable question
@@ -250,6 +252,35 @@ reports every description so far as identical.
 Should-not-fire cases (`-neg-` slugs and `neg-hard`) pass when both arms score
 well with Δ ≈ 0. They do not assert the skill is never mentioned; a response
 that says "use `rg` here, the graph won't help" is ideal.
+
+## Rules-plugin cases
+
+The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
+`rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
+topics (`testing`, `postgresql`, `queue`, `github-actions`) × four cases, and
+every case loads all 16 plugin skills.
+
+- **write** (2 per topic, slug `write-*`): ordinary work (a function, query,
+  test, worker, workflow). The prompt never names the rule; breaking one
+  specific rule is the path of least resistance. The rubric checks that one
+  thing in the code.
+- **review** (1 per topic, `review-*`): an inline 30–50 line diff with one
+  planted defect and one decoy that looks wrong but is allowed. Pass needs both:
+  the defect is named at its location, and the decoy is not flagged.
+- **negative twin** (1 per topic, `-neg-` in the slug): same vocabulary, but the
+  code is correct because of a written exception or a reasoned SHOULD NOT. Pass
+  when the response leaves it alone. Over-flagging is the failure.
+
+Selection rule: choose a rule only if an unprimed model's default behaviour
+violates it. A rule the model already follows (SQL injection, secrets in logs)
+cannot show a Δ. A case whose without-arm already passes in a pilot gets
+replaced, and surviving cases are re-measured on fresh runs, not the pilot's.
+
+`skill-fired` here checks the specific topic skill among the 16, not whether the
+plugin fired at all. Demand is "skill surface": these traps come from the rules
+text, not from mined traffic. `summarize.py --mentions` and
+`power.py --fabrication` do not apply, since there are no graph command forms
+to fabricate.
 
 ## Conventions
 

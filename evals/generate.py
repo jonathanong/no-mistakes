@@ -33,6 +33,8 @@ else:
     ROOT = _HERE
     PLUGIN_PATH = "../../plugins/no-mistakes/skills/no-mistakes"
 
+RULES_PLUGIN_PATH = "../../plugins/no-mistakes-rules"
+
 # The judge (claude-opus-5-5) is set by scripts/run-evals.sh, which refuses one
 # equal to this agent model.
 AGENT_MODEL = "claude-sonnet-5-5"
@@ -74,13 +76,15 @@ def write_prompt(
     question: str,
     tag: str = "before-edit",
     preamble: str = None,
+    system: str = SYSTEM,
+    plugin_path: str = None,
 ) -> None:
     case_dir.mkdir(parents=True, exist_ok=True)
     body = PROMPT_TMPL.format(
-        system=textwrap.indent(SYSTEM, "  "),
+        system=textwrap.indent(system, "  "),
         preamble=PREAMBLE if preamble is None else preamble,
         question=question.strip(),
-        plugin_path=PLUGIN_PATH,
+        plugin_path=PLUGIN_PATH if plugin_path is None else plugin_path,
         tag=tag,
         agent_model=AGENT_MODEL,
     )
@@ -110,7 +114,7 @@ def write_regex(case_dir: pathlib.Path, name: str, pattern: str) -> None:
     )
 
 
-def write_skill_fired(case_dir: pathlib.Path) -> None:
+def write_skill_fired(case_dir: pathlib.Path, skill: str = None) -> None:
     """Display-only trigger indicator. `arm` deliberately unset: under ablation the
     runner reports it as a plugin-fired indicator and excludes it from the score.
 
@@ -119,8 +123,11 @@ def write_skill_fired(case_dir: pathlib.Path) -> None:
     description is widened."""
     g = case_dir / "graders"
     g.mkdir(parents=True, exist_ok=True)
+    match = ""
+    if skill:
+        match = "input_match: '\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?" + skill + "\"'\n"
     (g / "skill-fired.md").write_text(
-        "---\ntype: tool_used\ntool: Skill\nmin: 1\n---\n"
+        "---\ntype: tool_used\ntool: Skill\n" + match + "min: 1\n---\n"
     )
 
 
@@ -1791,6 +1798,35 @@ def main() -> None:
                 write_regex(case_dir, "names-graph-command", pattern)
             write_skill_fired(case_dir)
             print(f"wrote {slug}  [{tag}]")
+
+    if VARIANT is None:
+        write_rules_cases()
+
+
+def write_rules_cases() -> None:
+    """Cases for the no-mistakes-rules plugin, defined in rules_cases.py.
+
+    The whole plugin is loaded, so `skill-fired` checks that the topic's skill
+    was chosen among all of them. Variants only swap the main skill, so these
+    cases are not emitted for a variant."""
+    from rules_cases import RULES_FLOWS, RULES_SYSTEM
+
+    for skill, cases in RULES_FLOWS:
+        topic = skill.removesuffix("-rules")
+        for slug, question, rubrics in cases:
+            case_dir = ROOT / f"rules-{topic}-{slug}"
+            write_prompt(
+                case_dir,
+                textwrap.dedent(question),
+                tag=f"rules, rules-{topic}",
+                preamble="",
+                system=RULES_SYSTEM,
+                plugin_path=RULES_PLUGIN_PATH,
+            )
+            for name, rubric in rubrics:
+                write_llm(case_dir, name, textwrap.dedent(rubric))
+            write_skill_fired(case_dir, skill)
+            print(f"wrote {case_dir.name}  [rules-{topic}]")
 
 
 if __name__ == "__main__":
