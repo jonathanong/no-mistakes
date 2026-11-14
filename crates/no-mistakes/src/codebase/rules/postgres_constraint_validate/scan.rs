@@ -14,6 +14,7 @@ pub(super) fn scan(
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    let facts: Vec<_> = facts.into_iter().map(|file| file.ddl_facts()).collect();
     let mut not_valid = BTreeMap::<String, (String, usize)>::new();
     let mut validated = BTreeMap::<String, (String, usize)>::new();
     for file in &facts {

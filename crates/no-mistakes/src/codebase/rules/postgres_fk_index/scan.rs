@@ -17,6 +17,7 @@ pub(super) fn scan(
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    let facts: Vec<_> = facts.into_iter().map(|file| file.ddl_facts()).collect();
     let indexes = indexes_by_table(&facts);
     let mut used_columns = BTreeSet::new();
     let mut used_tables = BTreeSet::new();

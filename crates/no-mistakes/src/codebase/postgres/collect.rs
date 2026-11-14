@@ -148,7 +148,7 @@ fn schema_file_facts(
         }
     };
     let mut facts = extract_migration_facts(&source);
-    facts.path = path.to_path_buf();
+    facts.set_path(path.to_path_buf());
     Ok(facts)
 }
 

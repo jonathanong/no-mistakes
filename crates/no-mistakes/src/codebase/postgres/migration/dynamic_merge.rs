@@ -19,6 +19,9 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
                 head.eq_ignore_ascii_case("DO") || head.eq_ignore_ascii_case("CREATE")
             })
     });
+    if bodies.iter().any(|source| source.stored_routine) {
+        facts.ddl_projection = Some(Box::new(facts.clone()));
+    }
     let call_owners: BTreeMap<_, _> = bodies
         .iter()
         .filter_map(|source| {
@@ -50,15 +53,24 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
     for source in dynamic::extract(sql) {
         // A peeled DO body can leave an opaque PL/pgSQL EXECUTE wrapper marker.
         // The exact statement path proves that the static expression was projected.
-        facts.unanalyzable_statements.retain(|marker| {
-            let wrapper = marker.source_order == source.source_order
-                || marker.source_order.len() == source.source_order.len() + 1
-                    && marker.source_order.starts_with(&source.source_order)
-                    && marker.source_order.last() == Some(&0);
-            !wrapper || !execute_wrapper(&marker.head)
-        });
+        clear_execute_wrapper(facts, &source);
+        if !source.stored_routine {
+            if let Some(ddl) = &mut facts.ddl_projection {
+                clear_execute_wrapper(ddl, &source);
+            }
+        }
         append_one(facts, source, false, None);
     }
+}
+
+fn clear_execute_wrapper(facts: &mut SqlSchemaFileFacts, source: &dynamic::DynamicSql) {
+    facts.unanalyzable_statements.retain(|marker| {
+        let wrapper = marker.source_order == source.source_order
+            || marker.source_order.len() == source.source_order.len() + 1
+                && marker.source_order.starts_with(&source.source_order)
+                && marker.source_order.last() == Some(&0);
+        !wrapper || !execute_wrapper(&marker.head)
+    });
 }
 
 fn execute_wrapper(head: &str) -> bool {
@@ -77,11 +89,6 @@ fn append_one(
     } else {
         extract_migration_facts(&source.sql)
     };
-    // Both routine fragments and statically recovered EXECUTE originate inside a body.
-    // Mark only their children; a malformed enclosing wrapper retains its own severity.
-    for failure in &mut nested.unanalyzable_statements {
-        failure.procedural_body = true;
-    }
     if let (Some(range), Some(body_start)) = (owned_calls, source.body_start) {
         nested.function_calls.retain(|call| {
             dynamic::location_offset(&source.sql, call.line as u64, call.column as u64).is_none_or(
@@ -92,17 +99,34 @@ fn append_one(
             )
         });
     }
+    scope_nested(&mut nested, &source, body);
+    dynamic::remap_fact_lines(&mut nested, &source);
+    if !source.stored_routine {
+        if facts.ddl_projection.is_none() && nested.ddl_projection.is_some() {
+            facts.ddl_projection = Some(Box::new(facts.clone()));
+        }
+        if let Some(ddl) = &mut facts.ddl_projection {
+            merge(ddl, nested.ddl_facts().clone());
+        }
+    }
+    merge(facts, nested);
+}
+
+fn scope_nested(facts: &mut SqlSchemaFileFacts, source: &dynamic::DynamicSql, body: bool) {
+    for failure in &mut facts.unanalyzable_statements {
+        failure.procedural_body = true;
+    }
     if body && source.procedural_control {
-        // The source is a recognized body-control chunk. Keep any nested SQL failure.
-        nested
+        facts
             .unanalyzable_statements
             .retain(|marker| marker.source_order.len() != 1);
     }
     if !source.executed {
-        nested.table_events.clear();
+        facts.table_events.clear();
     }
-    dynamic::remap_fact_lines(&mut nested, &source);
-    merge(facts, nested);
+    if let Some(ddl) = &mut facts.ddl_projection {
+        scope_nested(ddl, source, body);
+    }
 }
 
 fn merge(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {

@@ -14,6 +14,7 @@ pub(super) fn scan(
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    let facts: Vec<_> = facts.into_iter().map(|file| file.ddl_facts()).collect();
     let mut findings = Vec::new();
     let mut unique_allowed_migrations = BTreeSet::new();
     for migration in &opts.allowed_migrations {

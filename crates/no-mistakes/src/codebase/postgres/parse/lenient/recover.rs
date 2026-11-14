@@ -150,6 +150,7 @@ fn parse_chunk(
                     crate::codebase::postgres::source::recover_conflict_calls(tokens)
                 {
                     let mut located = LocatedStatement::plain(statement);
+                    located.complete = true;
                     located.recovered_functions = functions;
                     located.policy_arbiter = arbiter;
                     return vec![located];
