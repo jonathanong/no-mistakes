@@ -88,3 +88,16 @@ pub(super) fn qualifier(expr: &Expr) -> Option<String> {
         _ => None,
     }
 }
+
+pub(super) fn visit_expressions(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
+    if matches!(
+        expr,
+        Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. }
+    ) {
+        return;
+    }
+    visit(expr);
+    crate::codebase::postgres::idents::visit_child_exprs(expr, &mut |child| {
+        visit_expressions(child, visit)
+    });
+}

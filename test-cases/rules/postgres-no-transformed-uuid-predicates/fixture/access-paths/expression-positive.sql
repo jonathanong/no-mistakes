@@ -1,0 +1,18 @@
+SELECT * FROM unindexed_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM different_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM swapped_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM invalid_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM unready_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM dead_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM hash_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM partial_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM opclass_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM trailing_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::other_identity = ($1, $2, $3)::other_identity;
+SELECT * FROM items WHERE ((post_id, content_sha256, policy_revision)::item_identity)::text = $1;
+SELECT * FROM functions WHERE lower(id::text) || 'x' = $1;
+SELECT * FROM functions WHERE lower(id::text) = label;
+SELECT * FROM items a JOIN items b ON b.id = a.id WHERE (a.post_id, b.content_sha256, a.policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity <> ($1, $2, $3)::item_identity;
+SELECT * FROM paired_items a JOIN paired_items b ON b.id = a.id WHERE (a.post_id, b.id)::uuid_pair = ($1, $2)::uuid_pair;
+SELECT * FROM functions f WHERE lower(f.id::text) || (SELECT CASE WHEN lower(f.id::text) = $1 THEN 'x' ELSE 'y' END) = $2;

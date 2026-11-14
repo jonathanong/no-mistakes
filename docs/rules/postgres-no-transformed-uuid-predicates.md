@@ -92,6 +92,53 @@ necessary timestamp check as a residual filter.
 Enable this rule on application SQL when key lookups and range scans should use
 their UUID indexes.
 
+### Matching expression indexes
+
+A transform can use an expression index when the complete comparison operand
+matches its leading expression key on the same table and relation occurrence:
+
+```sql
+CREATE INDEX items_identity_idx ON items
+  (((post_id, content_sha256, policy_revision)::item_identity));
+SELECT * FROM items
+WHERE (post_id, content_sha256, policy_revision)::item_identity
+  = ($1, $2, $3)::item_identity;
+```
+
+The index must appear in the configured `schemaCatalogPath` snapshot, including
+its expression key. `sqlInclude` selects analyzed SQL; it does not infer an
+authoritative schema from arbitrary `CREATE INDEX` and `DROP INDEX` statements.
+The rule requires a valid, ready, live, non-partial B-tree index with supported
+ordering. It matches the entire cast or function operand against a literal or
+bind bound. Alias qualification can be resolved, but casts, tuple order,
+identifier quoting, string values, and collations remain significant. A matching
+expression on another table or another self-join occurrence provides no proof.
+An index on `lower(id::text)` does not exempt `lower(id::text) || 'suffix'`.
+See PostgreSQL's [expression-index documentation](https://www.postgresql.org/docs/current/indexes-expressional.html).
+
+### Outer-join row filters
+
+The rule abstains on a qualified, multi-relation `num_nonnulls(...) = 1` filter
+in `WHERE` when at least one referenced relation is null-extended by an outer
+join. For example:
+
+```sql
+SELECT * FROM a
+LEFT JOIN b ON b.link = a.id
+LEFT JOIN c ON c.link = a.id
+WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;
+```
+
+This is recorded as `outer-join-residual-filter`, because the rule cannot prove
+which table's access path the joined-row filter drives. Existing
+`unanalyzableSql` policy applies: `advise` emits an advisory, `ignore` suppresses
+it, and `fail` reports an unanalyzable predicate. It is not a proven UUID-transform
+violation. A separate driving conjunct such as `a.id::text = $1` still reports,
+as does the null-rejecting `b.id::text = $1`. Inner joins, single-relation
+transforms, other functions, and other comparisons do not get this abstention.
+PostgreSQL explains the distinction between outer-join `ON` and `WHERE`
+conditions in [table expressions](https://www.postgresql.org/docs/current/queries-table-expressions.html).
+
 ## What it catches/requires
 
 The rule reports a cast or scalar function call applied to a
