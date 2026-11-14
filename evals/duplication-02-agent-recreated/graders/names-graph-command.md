@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+check(?![\w-])
+(?<![\w/.@-])no-mistakes\s+check(?![\w-])

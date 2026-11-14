@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-analyzeProject|docs/node-api
+analyzeProject|AnalyzeProjectReportType|analyze-project-types\.d\.ts

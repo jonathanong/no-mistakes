@@ -163,7 +163,7 @@ For the next candidate:
 
    ```sh
    # 1. measure the shipped description today, on each gated flow
-   pnpm run evals -- --tag <flow> --ablation none --judge-model sonnet -j 4 \
+   pnpm run evals -- --tag <flow> --ablation none -j 4 \
      --no-publish --trust-plugin --json "$OUT/<flow>-control.json"
 
    # 2. ask what that run can resolve, and what more runs would buy
@@ -205,7 +205,7 @@ the winner's number upward, and the holdout has few live cases to confirm with.
   flight rather than the whole suite. The single-job re-baseline
   [failed once](HISTORY.md#the-two-attempts-before-it) and has no advantage.
 - **Check each flow's `aggregate-result.json` before writing a number down**:
-  zero errored runs, `partial: false`, and cost within $0.16–0.19 per run. An
+  zero errored runs, `partial: false`, and cost near the README's per-run figure (~$0.15 for a Sonnet agent). An
   errored run scores 0 in *both* arms and renders as a plausible `Δ +0.00`.
   `summarize.py` refuses such runs, but a table of zeros at a fraction of the
   expected cost is the tell.
@@ -216,6 +216,28 @@ the winner's number upward, and the holdout has few live cases to confirm with.
   compare a 1-run pilot against a `runs: 3` measurement — that is how the
   [phantom `signature` regression](HISTORY.md#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)
   happened.
+
+## Changing the agent or judge model
+
+The agent model is `AGENT_MODEL` in `generate.py`; the judge is set by
+`scripts/run-evals.sh`. On 2026-11-14 the suite moved from an Opus agent with
+a Sonnet judge to a Sonnet agent (`claude-sonnet-5-5`) with an Opus judge
+(`claude-opus-5-5`). A change like that resets every number:
+
+- **Trigger counts** depend on the agent only. A new agent can reach for the
+  skill more or less often on identical wording.
+- **Scores and Δ** depend on both. A weaker agent moves the without-skill
+  baseline, which changes what Δ measures, and a stricter judge moves both arms.
+- **Noise margins** (the allowed wrong-way gaps above and the README's "≥2 in
+  44% of pairs") were derived from Opus runs. Re-derive them with `power.py`
+  from the first control measured under the new models before writing a gate.
+- **The cost band** in [Running a measurement](#running-a-measurement) is
+  per-model. Take the new per-run cost from a `--runs 1` smoke run and update
+  it there.
+
+Never compare a number measured under one pair with one measured under
+another. Regenerate the cases (`python3 evals/generate.py`) after changing
+`AGENT_MODEL`; a one-off `--model` leaves each case's frontmatter stale.
 
 ## Comparing trigger counts across ablation modes
 

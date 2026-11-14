@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
---relationship
+(?<![\w/.@-])no-mistakes\s+dependents\b(?:[^\n]|\\\n)*--relationship\s+(python|go)

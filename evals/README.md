@@ -15,6 +15,13 @@ having loaded it.
 
 ## Current results
 
+> **Opus-era numbers.** Everything in this section was measured with an
+> Opus agent and a Sonnet judge. The suite now runs a Sonnet agent
+> (`claude-sonnet-5-5`) under an Opus judge (`claude-opus-5-5`), so none of
+> these counts, Δs or noise margins carry over: gate only against a control
+> arm measured under the current models
+> ([why](METHODOLOGY.md#changing-the-agent-or-judge-model)).
+
 **Description:** the `description:` line in `plugins/no-mistakes/skills/no-mistakes/SKILL.md`
 today. **Measured:** 2026-09-21, all eleven routine flows, `runs: 3`, both
 arms, Opus agent / Sonnet judge, 318 runs, zero errored runs. The `heldout`
@@ -114,7 +121,7 @@ failure.
 
 The headline number is **Δ** — the with-plugin score minus the without-plugin
 score. A high absolute score with Δ ≈ 0 means the model would have done just as
-well without the skill. Opus writes a *good* impact-scoping plan either way —
+well without the skill. Opus wrote a *good* impact-scoping plan either way —
 it reasons about barrels and re-export chains unprompted — so where the arms
 genuinely differ is whether the plan is exhaustive **by construction** or only
 **if executed carefully**. The `exhaustive-by-construction` grader on the
@@ -142,25 +149,30 @@ written to be genuinely exhaustive can and should pass it.
 
 ```sh
 # One flow.
-pnpm run evals -- --tag before-edit --ablation with-without --judge-model sonnet -j 4
+pnpm run evals -- --tag before-edit --ablation with-without -j 4
+
+# Targeted: one case-name glob. Prefer this to whole flows while iterating.
+# `--case` takes `*` only; `[...]` and `{a,b}` match nothing.
+pnpm run evals -- --case '01-*' --runs 1 -j 4
 
 # Every routine flow — everything EXCEPT the holdout, which only means
 # something while it stays unseen.
-pnpm run evals -- --ablation with-without --judge-model sonnet -j 4 \
+pnpm run evals -- --ablation with-without -j 4 \
   --tag before-edit queues after-edit signature ci usage safety duplication \
         neg-hard lang-graph napi
 
 # The holdout: only for a candidate that has passed its gates.
-pnpm run evals -- --tag heldout --ablation none --judge-model sonnet -j 4
+pnpm run evals -- --tag heldout --ablation none -j 4
 ```
 
 `pnpm run evals` wraps `claude plugin eval .` via
 [`scripts/run-evals.sh`](../scripts/run-evals.sh). Prefer it over the raw
 command: pnpm forwards its own `--` into the script's argv, and the eval CLI
 reads that as end-of-options — it silently discards every flag after it and
-launches an unfiltered full-suite run. The wrapper strips the `--` and refuses
-to launch unscoped; pass `--all` when an unfiltered run (62 cases × 3 runs × 2
-arms = 372 runs) is what you actually want.
+launches an unfiltered full-suite run. The wrapper strips the `--`, refuses
+to launch without `--tag` or `--case` (pass `--all` when an unfiltered run is
+what you actually want), adds `--judge-model claude-opus-5-5` when no judge is
+given, and refuses a judge from the same model family as the agent.
 
 Other flags the numbers depend on:
 
@@ -179,10 +191,12 @@ python3 evals/summarize.py "$OUT"/*.json   # trigger, per-arm score, Δ; refuses
 python3 evals/power.py "$OUT"/<flow>.json  # what this run can resolve
 ```
 
-**Cost:** ~$0.16–0.19 per case × run × arm at `-j 4`. A 17-case single-arm
-screen is ~$9.50 and ~20 minutes; the full 53-case both-arm re-baseline is
-~320 runs, ~$50 and ~2 hours. A total far below the estimate means runs
-errored — see [METHODOLOGY](METHODOLOGY.md#running-a-measurement).
+**Cost:** ~$0.15 per case × run × arm at `-j 4`, judge included (2026-11-14
+smoke: 8 `before-edit` cases, `--runs 1`, both arms, 16 runs, $2.38). A
+17-case single-arm screen is ~$8; the full 53-case both-arm re-baseline is
+~320 runs and ~$48. Opus-agent runs cost $0.16–0.19. A total far below the
+estimate means runs errored — see
+[METHODOLOGY](METHODOLOGY.md#running-a-measurement).
 
 ## Flows
 
@@ -241,8 +255,9 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 - `plugins: [../../plugins/no-mistakes/skills/no-mistakes]` in each case — the skill is not at the
   repo root, so auto-detection does not find it.
-- `model: claude-opus-5` for the agent, `--judge-model sonnet` for LLM graders.
-  The judge must be sonnet-tier or larger and must not be the agent model.
+- `model: claude-sonnet-5-5` for the agent (`AGENT_MODEL` in `generate.py`),
+  `--judge-model claude-opus-5-5` for LLM graders (set by `run-evals.sh`). The
+  judge must be sonnet-tier or larger and never the agent's model family.
 - `skill-fired` (`tool_used: Skill`) is on every case. Under `with-without` it
   is a **display-only indicator** excluded from the score, so it can never
   move Δ; under `none` it is scored, which is why `summarize.py` drops it

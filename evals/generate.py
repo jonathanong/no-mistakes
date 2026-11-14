@@ -9,7 +9,7 @@
         skill in evals/variants/<name>/. Used for frontmatter A/B runs:
 
             claude plugin eval . --eval-dir evals-variants/<name> \\
-                --ablation with-without --judge-model sonnet
+                --ablation with-without --judge-model claude-opus-5-5
 
 Identical prompts and graders across variants; only the skill differs, so any
 change in trigger rate or score is attributable to the frontmatter.
@@ -33,6 +33,10 @@ else:
     ROOT = _HERE
     PLUGIN_PATH = "../../plugins/no-mistakes/skills/no-mistakes"
 
+# The judge (claude-opus-5-5) is set by scripts/run-evals.sh, which refuses one
+# equal to this agent model.
+AGENT_MODEL = "claude-sonnet-5-5"
+
 PREAMBLE = """Context: the `auto-harness` monorepo. pnpm workspaces under `actions/*`, `modules/*`
 (client, shared, ui) and `services/*` (api, cdk, host-daemon, host-pane, web).
 `modules/shared` is consumed by the other packages as `@auto-harness/shared` through a
@@ -49,7 +53,7 @@ would execute against the real checkout, at the level of detail someone could
 follow without you."""
 
 PROMPT_TMPL = """---
-model: claude-opus-5
+model: {agent_model}
 runs: 3
 max_turns: 10
 timeout_seconds: 300
@@ -78,6 +82,7 @@ def write_prompt(
         question=question.strip(),
         plugin_path=PLUGIN_PATH,
         tag=tag,
+        agent_model=AGENT_MODEL,
     )
     (case_dir / "prompt.md").write_text(body)
 
@@ -93,6 +98,10 @@ def write_llm(case_dir: pathlib.Path, name: str, rubric: str) -> None:
 
 
 def write_regex(case_dir: pathlib.Path, name: str, pattern: str) -> None:
+    # A leading boundary keeps invented forms such as `/no-mistakes check` or
+    # `@foo/no-mistakes` from passing; summarize.py counts those as fabrications.
+    if pattern.startswith("no-mistakes"):
+        pattern = r"(?<![\w/.@-])" + pattern
     g = case_dir / "graders"
     g.mkdir(parents=True, exist_ok=True)
     (g / f"{name}.md").write_text(
@@ -407,7 +416,8 @@ RECALL_CRITICAL = ("01-", "02-", "05-")
 
 # --- Additional flows -------------------------------------------------------
 # Each entry: (tag, preamble, [(slug, question, [(grader, rubric)], regex|None)])
-# A slug containing "-neg-" is a should-NOT-fire case: no trigger indicator.
+# A slug containing "-neg-" is a should-NOT-fire case; its trigger indicator
+# reads red when the skill over-fires.
 
 POLYGLOT_PREAMBLE = """Context: a polyglot monorepo. TypeScript services under `services/*`, Python
 workers under `workers/*`, and Go tooling under `cmd/*`. The Python and Go
@@ -428,12 +438,11 @@ EXTRA_FLOWS = [
     # A held-out case is SPENT once a description has been tuned against its
     # numbers, so this list grows rather than being rewritten:
     #   01-03  spent — used to validate the `real-register` rewrite (4/9 vs 9/9).
-    #   04-06  live  — added and committed BEFORE the descriptions that follow
-    #                  were screened. Deliberately probe forms no candidate
-    #                  description enumerates (04 is the at-risk `signature`
-    #                  shape; 05 and 06 are unenumerated entirely), so they test
-    #                  generalization rather than recall of a listed phrase.
-    # Whoever tunes the next description adds 07-09 before touching anything.
+    #   04-06  seen  — committed before #981's screen, which then read them.
+    #                  They probe forms no candidate description enumerates.
+    #   07-09  live  — never run. Spend them only on a candidate that has
+    #                  passed its gates (see evals/ROADMAP.md §1).
+    # Whoever tunes the next description adds 10+ before touching anything.
     (
         "heldout",
         None,
@@ -1168,7 +1177,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+dependents.*--relationship|--relationship\s+python",
+                r"no-mistakes\s+dependents\b(?:[^\n]|\\\n)*--relationship\s+python",
             ),
             (
                 "lang-graph-02-cross-lang",
@@ -1187,7 +1196,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"--relationship",
+                r"no-mistakes\s+dependents\b(?:[^\n]|\\\n)*--relationship\s+(python|go)",
             ),
             (
                 "lang-graph-03-unconfigured",
@@ -1227,7 +1236,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+tests\s+plan\s+python|--relationship",
+                r"no-mistakes\s+(tests\s+plan\s+python|dependents\b(?:[^\n]|\\\n)*--relationship\s+python)",
             ),
             (
                 "lang-graph-05-neg-docstring",
@@ -1300,7 +1309,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"analyzeProject|docs/node-api",
+                r"analyzeProject|AnalyzeProjectReportType|analyze-project-types\.d\.ts",
             ),
             (
                 "napi-03-equivalent",
@@ -1319,7 +1328,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"analyzeProject|\.d\.ts|docs/node-api",
+                r"analyzeProject|AnalyzeProjectReportType|analyze-project-types\.d\.ts",
             ),
             (
                 "napi-04-shape",
@@ -1338,7 +1347,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"analyzeProject|\.d\.ts|docs/node-api",
+                r"analyzeProject|AnalyzeProjectReportType|analyze-project-types\.d\.ts",
             ),
             (
                 "napi-05-neg-node-version",
@@ -1389,7 +1398,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"(--format\s+json|--json)(?![\w-])",
+                r"no-mistakes\s+[^\n]*?(--format\s+json|--json)(?![\w-])",
             ),
             (
                 "usage-02-monorepo-tsconfig",
@@ -1455,7 +1464,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"(--format\s+json|--json)(?![\w-])",
+                r"no-mistakes\s+[^\n]*?(--format\s+json|--json)(?![\w-])",
             ),
         ],
     ),
@@ -1514,7 +1523,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"(--format\s+json|--json)(?![\w-])",
+                r"no-mistakes\s+[^\n]*?(--format\s+json|--json)(?![\w-])",
             ),
             (
                 "safety-03-neg-json-flag",

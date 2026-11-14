@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+(impacted-checks|check|resolve-check)(?![\w-])
+(?<![\w/.@-])no-mistakes\s+(impacted-checks|check|resolve-check)(?![\w-])
