@@ -130,8 +130,8 @@ unmodeled installation section. Changes to project `settings`, `overrides`, or
 A document before the project document that is not an env lockfile is an unsupported lockfile
 and uses that same fallback.
 
-For a framework-less plan and for Vitest, Playwright, and Jest plans, the
-BFS-found tests are injected into the `dependencies` group. A Swift plan passes
+For a framework-less plan, the BFS-found tests are added to `selected_tests`, and `groups` is empty.
+For Vitest, Playwright, and Jest plans, the BFS-found tests are injected into the `dependencies` group. A Swift plan passes
 an empty package list into that group.
 
 These conditions emit a warning: the lockfile has no baseline, the head
