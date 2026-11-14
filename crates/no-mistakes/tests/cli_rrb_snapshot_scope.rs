@@ -166,6 +166,18 @@ fn required_doc_section_json_matches_snapshot() {
 }
 
 #[test]
+fn invalid_utf8_required_doc_section_json_matches_snapshot() {
+    assert_saved_fixture(
+        "invalid_utf8_required_doc_section",
+        &[rule(
+            "missing_heading",
+            "required-doc-section/fixture/invalid-utf8",
+            ".no-mistakes.yml",
+        )],
+    );
+}
+
+#[test]
 fn required_entrypoint_reachability_json_matches_snapshot() {
     assert_saved_fixture(
         "required_entrypoint_reachability",

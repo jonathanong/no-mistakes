@@ -72,7 +72,7 @@ scoped allow pattern for a documented, intentional fixture.
 
 ### Unanalyzable inputs
 
-- A selected file that cannot be read as UTF-8 is skipped and produces no finding. `options.unanalyzable` does not change that. Literal email domains in readable test files are ordinary findings.
+- A selected file with invalid UTF-8 is decoded lossily and scanned, so a disallowed email domain next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding. `options.unanalyzable` does not change either result. Literal email domains in readable test files are ordinary findings.
 
 ## Suppression
 

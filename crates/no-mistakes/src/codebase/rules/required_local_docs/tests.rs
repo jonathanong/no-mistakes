@@ -382,8 +382,7 @@ fn check_required_doc_section_standalone_discovers_files() {
 
 #[test]
 fn doc_section_unreadable_file_is_skipped() {
-    // Exercises Err(_) => continue (line 64): a file that matches the glob but
-    // cannot be read should be silently skipped.
+    // A glob match that is not on disk is skipped. Invalid UTF-8 is a check JSON snapshot.
     let root = fixture("rules/required-local-docs/doc-unreadable");
     // README.md does NOT exist on disk, so read_to_string will fail.
     let ghost = root.join("agents/email/README.md");

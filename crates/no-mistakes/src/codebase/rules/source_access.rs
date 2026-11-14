@@ -14,6 +14,11 @@ pub(crate) fn read_source(sources: &SourceStore, path: &Path) -> Option<Arc<str>
     sources.read_path(path).ok()
 }
 
+/// Invalid UTF-8 is decoded lossily. Other read errors stay absent so a missing path is not a finding.
+pub(crate) fn read_language_source(sources: &SourceStore, path: &Path) -> Option<Arc<str>> {
+    sources.read_source_path(path).ok()
+}
+
 /// Required rule inputs must retain their read failure rather than become absent facts.
 pub(crate) fn checked_source(
     sources: &SourceStore,

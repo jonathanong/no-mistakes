@@ -66,6 +66,30 @@ fn swift_no_raw_print_json_matches_snapshot() {
 }
 
 #[test]
+fn invalid_utf8_swift_and_csharp_json_matches_snapshot() {
+    assert_saved_fixture(
+        "invalid_utf8_masked_source",
+        &[
+            c(
+                "swift_print",
+                "swift-no-raw-print/fixture/invalid-utf8",
+                ".no-mistakes.yml",
+            ),
+            c(
+                "swift_viewmodel",
+                "swift-viewmodel-main-actor/fixture/invalid-utf8",
+                ".no-mistakes.yml",
+            ),
+            c(
+                "csharp_async_void",
+                "csharp-no-async-void-delegate/fixture/invalid-utf8",
+                ".no-mistakes.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
 fn swift_viewmodel_main_actor_json_matches_snapshot() {
     let fail = "swift-viewmodel-main-actor/fixture/fail";
     assert_saved_fixture(

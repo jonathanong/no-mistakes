@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "email": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "send.test.ts",
+          "import": "person@example.com",
+          "line": 2,
+          "message": "send.test.ts: test email fixtures must not use `example.com`",
+          "rule": "test-email-domain-policy",
+          "target": "example.com"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pins": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pin.test.ts",
+          "import": "NODE_VERSION: '20.11.0",
+          "line": 2,
+          "message": "pin.test.ts:2: tests must not pin exact dependency versions (exact tool version): `NODE_VERSION: '20.11.0`",
+          "rule": "test-no-dependency-pins",
+          "target": "exact tool version"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

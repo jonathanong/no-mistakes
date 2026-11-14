@@ -343,7 +343,7 @@ or move the exact version assertion into a focused production-release check.
 
 ### Unanalyzable inputs
 
-- A selected file that cannot be read as UTF-8 is skipped and produces no finding. `options.unanalyzable` does not change that. Literal version and pin text in readable files are ordinary findings.
+- A selected file with invalid UTF-8 is decoded lossily and scanned, so a pinned dependency next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding. `options.unanalyzable` does not change either result. Literal version and pin text in readable files are ordinary findings.
 
 ## Suppression
 
