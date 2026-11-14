@@ -101,7 +101,11 @@ no requirement. `secretInventory` is separately opt-in:
 - `secretInventory`: optional repository and environment secret-name
   declarations. Organization secrets and Dependabot secrets belong under
   `repository`, not under an environment. Omit it or set it to `null` to
-  disable this check; `{}` enables strict empty declarations. See
+  disable this check. `{}` enables the check with empty repository and
+  environment lists and still exempts `GITHUB_TOKEN`. Set
+  `builtInExemptions`, including to `[]`, to replace that default.
+  `reportUnused` defaults to false: an unprovable secret reference is an
+  ordinary finding only when it is true, and is omitted otherwise. See
   [secret inventory configuration](../configuration/workflow-topology-policy.md).
 - `forbiddenActivityTypes`: entries with `types: string[]` and optional
   `events: string[]` banning exact explicit trigger activity types. Omitted
@@ -247,9 +251,7 @@ a path in a script. See the
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it judges parsed workflow topology: needs, concurrency groups, secrets, and explicit trigger activity types. Nothing is routed through `options.unanalyzable`.
+- Parsed topology findings are ordinary findings. An unprovable secret reference is an ordinary finding only when `secretInventory.reportUnused` is true; otherwise it is omitted. Those diagnostics are not routed through `options.unanalyzable`.
 
 ## Suppression
 

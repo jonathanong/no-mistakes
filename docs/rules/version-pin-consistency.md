@@ -47,9 +47,11 @@ error at line 1 of that anchor through the same `unanalyzable` policy. Restore
 the anchor as readable UTF-8 text to resume the comparison.
 
 Each `pattern` must contain exactly one capturing group. The captured text
-must equal the string pin at `sourceKey`. Missing keys, non-string pins,
-missing captures, and mismatches are findings with file and line when
-possible.
+must equal the string pin at `sourceKey`. Missing keys, non-string pins, and
+invalid patterns are findings only when `sourceFile` is in the selected set.
+A parsed source outside that set with those problems is not reported. Missing
+captures and mismatches on a selected anchor are findings. A missing,
+unreadable, or malformed source outside the set follows `options.unanalyzable`.
 
 Counterexample: the source file pins `0.24.2` while an anchor still says
 `0.24.1`.
@@ -79,8 +81,9 @@ silently dropping it.
 ## What it catches/requires
 
 The source key must resolve to a string pin and every included anchor's single
-capture group must equal it. Missing keys, stale captures, malformed patterns,
-and stale paths are findings. If a selected anchor depends on a missing,
+capture group must equal it. Missing keys, non-string pins, and invalid
+patterns are findings only when `sourceFile` is in the selected set. A parsed
+source outside that set with those problems is not reported. If a selected anchor depends on a missing,
 unreadable, or malformed source that is outside the selected file set, that
 uncertainty follows `options.unanalyzable` (`report` by default, `advise`, or
 `ignore`). A selected anchor that cannot be read as UTF-8 follows the same

@@ -197,7 +197,7 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
 - Inputs this rule cannot prove: executed `INSERT` calls with no complete recovered alternative or over the cap, and unparseable SQL. They follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `executed INSERT SQL is not statically recoverable`.
-  - `advise`: a non-failing advisory with the same reason.
+  - `advise`: a non-failing advisory `{file}:{line}: postgres-idempotent-insert has unresolved SQL for {checks}: {reasons}` (for example `unresolved-sql-fragment`, `opaque-sql-tail`, or `sql-variants-truncated`), not a copy of the report sentence.
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.

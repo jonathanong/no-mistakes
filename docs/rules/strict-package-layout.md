@@ -40,8 +40,12 @@ nothing.
 
 Each `packages` entry supplies `root`, `sourceExtension`, `allowedRootFiles`,
 `allowedSubdirs`, `testFilePatterns`, and `testDirName`; values are policy
-inputs rather than inferred defaults. Unlisted files or directories are
-findings when the corresponding allowlist is present.
+inputs rather than inferred defaults. Package-root `*.md` files and files
+matching `testFilePatterns` are allowed without an `allowedRootFiles` entry.
+The configured `testDirName` is allowed without an `allowedSubdirs` entry. A
+listed subdirectory may contain source files of `sourceExtension` only directly
+inside it, plus `<testDirName>/<test file>`. Deeper files are findings. Only
+files are checked; an empty directory is not a finding.
 
 Per-package `testFilePatterns` and `testDirName` override the rule-wide options.
 Omitted fields inherit the rule-wide values; when those are omitted, the

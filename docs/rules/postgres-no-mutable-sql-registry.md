@@ -15,8 +15,10 @@ module and called in scoped files.
 A `projects: [<name>]` entry inherits
 [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when
 that block is set. Do not restate `importSpecifier`, `executorNames`,
-`executorFactoryNames`, `executorTypeNames`, or `trustedSqlTags` on the rule.
-`include` and `exclude` may only narrow the project scope.
+`extraExecutorNames`, `excludeExecutorNames`, `executorFactoryNames`,
+`executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql`.
+`include` and `exclude` may only narrow the project scope. `sqlInclude` is
+accepted as a project narrowing key and is not read by this rule.
 
 Flags a member write in one module that mutates an exported SQL identifier
 registry declared in another module, when a configured executor interpolates

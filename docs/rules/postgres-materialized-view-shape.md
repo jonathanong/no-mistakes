@@ -122,7 +122,10 @@ CREATE INDEX recent_orders_score ON recent_orders (score DESC);
 ```
 
 A bounded driver may read lookup rows by their complete keys, with a window
-supplied by a one-row CTE (`users.id` is its primary key):
+supplied by a one-row CTE. `posts.id` must lead a primary key, unique
+constraint, or eligible btree, because the inlined `fn_min_uuidv7` range is a
+key predicate on `posts`. `users.id` must be its primary or unique key so
+`u.id = p.author_id` is a complete-key lookup:
 
 ```sql
 CREATE MATERIALIZED VIEW recent_authors AS

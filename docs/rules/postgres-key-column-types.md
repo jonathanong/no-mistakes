@@ -125,6 +125,8 @@ supporting indexes. [`postgres-array-columns`](postgres-array-columns.md) checks
 array-valued columns.
 
 Stale allow reporting retains this rule's established diagnostic messages and
-severity for checked inputs. Entries outside the checked scope stay silent;
-uncertain or partial selector coverage cannot prove staleness. See
+severity for checked inputs. When the catalog path is in scope, every allow
+entry that did not suppress an emitted finding is a failing stale diagnostic
+on that catalog file, including an entry for a key kind whose check is turned
+off. A catalog outside `include` / `exclude` stays silent. See
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

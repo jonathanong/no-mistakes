@@ -22,8 +22,10 @@ carry at least one local regression test.
 
 ## What it catches/requires
 
-Each selected first-level subdirectory containing source must match at least
-one file under `testGlob`. Roots are normalized before the scan: `./`, empty
+Each first-level subdirectory that contains any discovered file must contain
+at least one file whose name matches `testGlob`. The match is against the
+file name, not the relative path. Files directly in the root do not create a
+subdirectory requirement. Roots are normalized before the scan: `./`, empty
 segments, and in-repo `..` collapse, so `services/../agents` is `agents`. A
 root that leaves the repository, such as `..`, is one finding on the config
 file at line 1 (`..: configured root escapes the repository`). The parent

@@ -205,8 +205,8 @@ keys; use a reasoned `allow` entry for an intentional content-deduplication key.
 Example messages:
 
 ```text
-db/write.sql:12: (postgres-json-relation-ids) key "accountId" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason
-db/schema.json:8: (postgres-json-relation-ids) column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason
+db/write.sql:12: key "accountId" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason
+db/schema.json:8: column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason
 ```
 
 Each finding references `table:<table>` or `column:<table>.<column>`. Results
@@ -251,7 +251,7 @@ types. [`postgres-column-naming`](postgres-column-naming.md) enforces configured
 column naming policies. This rule covers references hidden in JSON or unique
 fingerprints that those declared-column checks cannot see.
 
-Unused explicit exception entries produce non-failing `unused-allow-entry` advisories by default when their complete selector scope was checked. Remove stale entries; narrowed or unproven scopes stay silent. An entry is used only when it suppresses a finding, and overlapping exceptions are all credited.
+Unused `allow` entries become non-failing `unused-allow-entry` advisories only when `idKeyPattern` is unset and `schemaCatalogPath` is an exact checked file. When `idKeyPattern` is set, unused entries stay silent. An entry is used only when it suppresses a finding, and overlapping exceptions are all credited.
 
 Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
 `ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).

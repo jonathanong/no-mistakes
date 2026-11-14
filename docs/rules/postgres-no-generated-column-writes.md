@@ -129,7 +129,7 @@ executed SQL statically recoverable or set `unanalyzableSql: ignore`.
 
 ### Effort
 
-Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files whose writes are checked. Two scopes apply: `sqlInclude` (default `**/*.sql`) selects the schema inputs (table, column and trigger definitions) that establish which columns are generated, while `options.include` selects the query inputs whose writes are checked (when empty, the default DML paths apply).
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files whose writes are checked. Two scopes apply: `sqlInclude` (default `**/*.sql` when unlocked; a locked empty project list stays empty) selects the schema inputs (table, column and trigger definitions) that establish which columns are generated, while `options.include` selects the query inputs whose writes are checked (when empty, the default DML paths apply).
 
 ### Unanalyzable inputs
 
@@ -145,7 +145,7 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
 - Inputs this rule cannot prove: dynamic executor calls that could assign a generated or trigger-maintained column and cannot be ruled out. They follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out`.
-  - `advise`: a non-failing advisory with the same reason.
+  - `advise`: a non-failing advisory `{file}:{line}: postgres-no-generated-column-writes has unresolved SQL for {checks}: {reasons}` (for example `unresolved-sql-fragment` or `opaque-sql-tail`). The target is the subcheck (`generated-write`, or `trigger-maintained-write` when trigger columns are configured), not the report sentence.
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.

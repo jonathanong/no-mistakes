@@ -1,6 +1,6 @@
 # `rust-no-inline-tests`
 
-Bans inline Rust `#[cfg(test)] mod tests` modules.
+Flags `#[cfg(test)]` items in non-test Rust files when the `cfg` argument is exactly `test`.
 
 ```yaml
 rules:
@@ -20,8 +20,10 @@ small and integration fixtures should be visible to reviewers.
 
 ## What it catches/requires
 
-Inline `#[cfg(test)] mod tests` modules are findings. Sibling test modules and
-integration tests are the supported locations.
+Any `#[cfg(test)]` item whose `cfg` argument is exactly `test` is a finding:
+inline modules, functions, `use` items, and impl items. An out-of-line
+`#[cfg(test)] mod tests;` declaration is accepted. `#[cfg(all(test))]` does not
+match. Sibling test modules and integration tests are the supported locations.
 
 ## Options and defaults
 

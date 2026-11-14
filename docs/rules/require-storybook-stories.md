@@ -197,14 +197,14 @@ configured selection/catalog scope.
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove (a parse-error file under `include`, and at low effort a child component covered only through a parent's render chain) follow `options.unanalyzable`:
-  - `report` (default): fails as a finding, e.g. `src/UserCard.tsx:1: unanalyzable (file has a parse error)`.
+  - `report` (default): fails as a finding. A parse error in selected React source is reported at line 1 as `Selected React source could not be analyzed ({first cause line}), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.` At low effort, a component covered only through a parent render is `Storybook coverage of `{export}` is unanalyzable at effort low: transitive rendering and dynamic/mock boundaries are not followed. Import and use the component directly in a configured story, enable allowColocatedTests and add a matching colocated test, or use effort max to infer coverage.`
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy.
 
 - A configured or reachable story with a syntax or read error produces one
-  line-1 `unanalyzable` diagnostic at the story path. Coverage remains unknown
+  line-1 finding at the story path: `Selected Storybook story could not be analyzed ({first cause line}), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.` Coverage remains unknown
   for otherwise uncovered components in that rule application: a failed parse
   can hide imports, so the rule cannot claim those components have no story.
   Valid stories still establish known coverage, and other rule applications

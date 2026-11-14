@@ -1,10 +1,12 @@
 # `tsconfig-file-coverage`
 
-Requires every tracked TypeScript file (`.ts`, `.mts`, `.cts`, `.tsx`) to
-belong to at least one tracked tsconfig `files`/`include` set, or to a reasoned
-`allow` entry. This is the file-universe check: it does not inspect CI or local
-`tsc` registration. Use [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md)
-for that.
+Requires every tracked TypeScript file (`.ts`, `.mts`, `.cts`, `.tsx`) to be
+owned by a tracked tsconfig, or by a reasoned `allow` entry. Ownership is an
+explicit `files` entry, a matching `include`, or, when both keys are absent,
+TypeScript's implicit include of sources under that config directory, minus
+`exclude`. `files` is exclusive only when `include` is absent. This is the
+file-universe check: it does not inspect CI or local `tsc` registration. Use
+[`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) for that.
 
 The filesystem dispatcher supplies the Git-tracked inventory when a discovery
 snapshot is available, so untracked scratch files are ignored. Direct callers
@@ -16,8 +18,12 @@ rules:
     scope: repository
 ```
 
-Optional `allow` and `auxiliaryConfigs` entries name reasoned exceptions. Those
-paths must exist or they are findings:
+Optional `allow` and `auxiliaryConfigs` entries name reasoned exceptions.
+Empty `reason` values and absolute or `..` paths are findings for both. An
+`auxiliaryConfigs` path that is not a tracked tsconfig is a stale finding. A
+missing `allow` path is not a `tsconfig-file-coverage` finding; it is an
+`unused-allow-entry` advisory when `reportUnusedAllowEntries` is `advise`
+(the default) or `report`:
 
 ```yaml
 rules:
@@ -42,13 +48,12 @@ silent.
 Configured `allow` and `auxiliaryConfigs` entries are still validated.
 `auxiliaryConfigs` entries are not compiler programs: they must not declare
 `files`, `include`, `exclude`, or `references`, and their basename defaults to
-`tsconfig.dependency-cruiser.json`. Empty `reason` values, stale paths, and
-absolute or `..` option paths are findings.
+`tsconfig.dependency-cruiser.json`.
 
-v1 membership uses `TsConfigCatalog::project_source_membership` for
-include/files/exclude matching. It does not close over the static import graph,
-so a file imported only by a program member is still uncovered unless that file
-itself matches a tsconfig `files`/`include` set.
+Coverage uses `TsConfigCatalog::project_source_union` and the same
+`files`/`include`/`exclude` matcher as `project_source_membership`. It does
+not close over the static import graph, so a file imported only by a program
+member is still uncovered unless that file is itself owned by a tsconfig.
 
 Counterexample: `orphan.ts` sits next to a program that only includes `src`.
 
@@ -82,8 +87,9 @@ compiler program, independent of whether CI happens to run that program.
 
 ## What it catches/requires
 
-Every tracked `.ts`, `.mts`, `.cts`, and `.tsx` file must match at least one
-tracked tsconfig `files`/`include` set or a reasoned `allow` entry.
+Every tracked `.ts`, `.mts`, `.cts`, and `.tsx` file must be owned by at least
+one tracked tsconfig or a reasoned `allow` entry, using the ownership rules
+above.
 
 ## Options and defaults
 
@@ -131,7 +137,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares tsconfig `include` coverage with the file inventory, so `options.unanalyzable` has no effect on it.
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares tsconfig ownership with the file inventory, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 
@@ -159,9 +165,8 @@ Next to a tsconfig whose `include` is `["src"]`, neither file is a finding.
 typecheck registration; [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)
 checks alias targets.
 
-Stale allow reporting retains this rule's established diagnostic messages and
-severity for checked inputs. Entries outside the checked scope stay silent;
-uncertain or partial selector coverage cannot prove staleness. See
+A missing `allow` path is not a finding of this rule. See the
+`unused-allow-entry` note below and
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
 
 With `reportUnusedAllowEntries: report` or `advise`, `allow[].path` also

@@ -122,7 +122,7 @@ exact-prefix requirement.
 
 ### Executor configuration
 
-Omitting both `importSpecifier` and `executorNames` is a configuration error.
+Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error. `extraExecutorNames` alone selects `[query, read, write]` plus those extras.
 Set `importSpecifier` to your database module or list `executorNames` explicitly.
 Use `executorNames: []` without a module to select no executor calls and retain
 SQL-file/native-SQL analysis where supported. See the
@@ -141,7 +141,7 @@ SQL-file/native-SQL analysis where supported. See the
 `await using tx = await openTransaction()` or `run` in `run: TxExecutor` is scanned
 only inside the block or function that declares it, and a same-named identifier
 elsewhere is not. Matching is by configuration only, both default to empty, and
-neither counts as executor selection: still set `importSpecifier` or `executorNames`.
+neither counts as executor selection: still set `importSpecifier`, `executorNames`, or `extraExecutorNames`.
 With `importSpecifier` set, these two options also match imports from its subpaths
 (`@example/db/types` for `@example/db`) but not sibling packages such as
 `@example/dbx`. A relative import (`../transaction`) matches only when the resolved
@@ -149,7 +149,7 @@ file is inside the package `importSpecifier` resolves to; a same-named import ou
 that package does not. If the package root cannot be determined, relative imports do
 not match. `executorNames` still requires the exact module.
 
-Omitting both options is a configuration error. Set `executorNames: []` without
+Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module or explicit `query` enables `.query` members. A configured module also recognizes
 its transaction helpers. Native SQL and recovered SQL-builder fragments retain
@@ -194,7 +194,7 @@ Executor calls without statically recovered SQL follow `options.unanalyzable`:
 
 - `report` (default): a finding explains that a possible `FOR UPDATE` lock and
   its row order cannot be checked for ABBA deadlocks.
-- `advise`: a non-failing advisory with the same reason.
+- `advise`: a non-failing advisory `{file}:{line}: postgres-lock-ordering has unresolved SQL for row-lock-order: {reasons}` (for example `opaque-sql-tail`), not the fail-mode `FOR UPDATE` sentence. With a catalog, `catalog-key-order` is included.
 - `ignore`: omitted.
 
 The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore`

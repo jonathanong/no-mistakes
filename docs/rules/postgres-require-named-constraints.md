@@ -58,7 +58,7 @@ adds are intentionally outside the finding set.
 
 ## Options and defaults
 
-`sqlInclude` is the only option and defaults to `**/*.sql`. Supported statements
+`sqlInclude` defaults to `**/*.sql`. `effort` and `unanalyzable` are the shared analysis options (`effort: low` warns and still runs at `max`). Supported statements
 inside `DO $$` blocks are included in the same migration fact pass.
 
 ## Valid example

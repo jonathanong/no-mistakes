@@ -223,7 +223,7 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
 - Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for shape policy` or `SQL could not be analyzed for shape policy`.
-  - `advise`: a non-failing advisory with the same reason.
+  - `advise`: a non-failing advisory `{file}:{line}: postgres-sql-shape-policy has unresolved SQL for {checks}: {reasons}` (for example `opaque-sql-tail` or `invalid-sql`). Native SQL parse failures use the residual reason `SQL could not be analyzed`, not `SQL could not be analyzed for shape policy`.
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.

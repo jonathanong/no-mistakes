@@ -31,8 +31,11 @@ An error class is reported unless non-test source does one of these:
 
 `instanceof`, a type guard, a `catch` clause, and a type-only reference are not
 construction. Test files never count as construction sites, so a class that only
-a test builds is reported. Test files are `__tests__` directories and
-`.test.*` / `.spec.*` files; the `testFiles` option adds more.
+a test builds is reported. Built-in test files contain a `/__tests__/` path
+segment or end in `.test.ts`, `.test.tsx`, `.test.js`, `.test.jsx`,
+`.test.mts`, `.test.cts`, `.test.mjs`, `.test.cjs`, or the same eight `.spec`
+suffixes. A `.test` or `.spec` name whose extension adds `m` or `c` in front
+of `tsx` or `jsx` is not a built-in test file. The `testFiles` option adds more.
 
 An unresolved `new`, including `new this()` or `new this.ctor()`, does not prove
 that its lexically enclosing class is constructed or unconstructed. Both the
@@ -186,15 +189,15 @@ rules:
 
 `testFiles` is a list of repository-relative globs for files that only exercise
 code, such as a shared `test-helpers/` directory. A construction there does not
-count. It defaults to an empty list, so only the built-in `__tests__`,
-`.test.*`, and `.spec.*` classification applies. Unknown options are rejected.
+count. It defaults to an empty list, so only the built-in `/__tests__/` segment
+and the suffixes above apply. Unknown options are rejected.
 
 The common rule fields select class declarations and unresolved construction
 sites. `include`, `exclude`, and `projects` choose where diagnostics are reported;
 a known construction in a file outside them still counts, because the rule must
-see every use to know a class is dead. `message` is prefixed to the class name: `message: Dead error` reports
-"Dead error: `ClassName`". Without it the message names the class and says it is
-never constructed or subclassed in non-test source.
+see every use to know a class is dead. On a definite finding, `message` is prefixed to the class name: `message: Dead error` reports
+"Dead error: `ClassName`". Without it the message is "exported error class `ClassName` is never constructed or subclassed in non-test source".
+An unresolved-constructor diagnostic prefixes the full detail sentence ("{message}: Cannot resolve ..."), not the class name alone.
 
 The rule builds the repository call graph, so give it `scope: repository`.
 

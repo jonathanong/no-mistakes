@@ -207,7 +207,7 @@ The same configured rule runs through asynchronous `check()` and batched
 `analyzeProject()` checks. Exported `VitestProjectPolicyOptions`,
 `VitestDeclaredProjectPolicy`, `VitestPropertyLiteralKind`,
 `VitestPropertyParity`, and `VitestPropertyLiteral` describe rule configuration.
-The existing async `checkJson` native binding and JS facade return ordinary
+The native `checkJson` binding is exposed as async `check()`. It returns ordinary
 findings plus `CheckReport.incomplete`; no additional function is needed.
 
 
