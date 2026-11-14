@@ -15,7 +15,6 @@ pub(super) struct Splice {
     literal: String,
     fallback: String,
 }
-
 #[derive(Default)]
 pub(super) struct LiteralObjects {
     frames: Vec<HashMap<String, Members>>,
@@ -109,6 +108,7 @@ impl ScopeVisitor<'_> {
         let oxc_ast::ast::Declaration::VariableDeclaration(var) = &decl.declaration else { return };
         for declarator in &var.declarations {
             let oxc_ast::ast::BindingPattern::BindingIdentifier(ident) = &declarator.id else { continue };
+            if let Some(init)=&declarator.init { self.forget_closed_flat_export(ident.name.as_str(),init); }
             self.literal_objects.poison_id(&self.scopes, ident.name.as_str());
         }
     }

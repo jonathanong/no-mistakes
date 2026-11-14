@@ -16,6 +16,8 @@ mod followup_tests;
 #[cfg(test)]
 mod member_ownership_tests;
 mod members;
+#[cfg(test)]
+mod parent_fields_tests;
 mod state;
 use expression::expression;
 #[cfg(test)]
@@ -137,6 +139,7 @@ pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Opti
         }
         value.choices = arm.choices;
         value.enumerated = true;
+        value.closed_domain = true;
         result.push(value);
     }
     (result.len() <= MAX_EMBEDDED_SQL_VARIANTS && !result.is_empty()).then_some(result)

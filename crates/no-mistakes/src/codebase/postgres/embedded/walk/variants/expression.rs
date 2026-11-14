@@ -179,5 +179,6 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
         decision_offs: Vec::new(),
         variants_truncated: false,
         enumerated: false,
+        closed_domain: false,
     }])
 }

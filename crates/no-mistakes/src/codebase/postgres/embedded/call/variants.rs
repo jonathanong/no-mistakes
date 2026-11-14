@@ -20,6 +20,7 @@ pub struct EmbeddedSqlVariant {
     pub(crate) first_append_offset: Option<usize>,
     /// Feasible outcomes remain beyond a site cap, sampled loop, or opaque interpolation.
     pub(crate) variants_truncated: bool,
+    pub(crate) closed_domain: bool,
 }
 
 impl EmbeddedSqlVariant {
@@ -43,6 +44,7 @@ impl EmbeddedSqlVariant {
             .zip(value.first_append_offset)
             .map(|(left, right)| left.max(right));
         values[index].variants_truncated |= value.variants_truncated;
+        values[index].closed_domain &= value.closed_domain;
         for site in value.append_sites {
             if !values[index].append_sites.contains(&site) {
                 values[index].append_sites.push(site);

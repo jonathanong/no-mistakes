@@ -24,6 +24,24 @@ pub(super) fn apply_call(objects: &LiteralObjects, call: &mut EmbeddedSqlCall) {
         // blank dynamic call, and it must not stay a confident splice.
         call.kind = EmbeddedSqlKind::Dynamic;
     }
+    sync_closed_singleton(call);
+}
+fn sync_closed_singleton(call: &mut EmbeddedSqlCall) {
+    let [variant] = call.variants.as_slice() else {
+        return;
+    };
+    if call.kind != EmbeddedSqlKind::Dynamic
+        || !variant.closed_domain
+        || variant.variants_truncated
+        || variant.sql_text.contains('\0')
+        || crate::codebase::postgres::embedded::helpers::sentinel::contains(&variant.sql_text)
+    {
+        return;
+    }
+    call.sql_text = Some(variant.sql_text.clone());
+    call.sql_source_positions = variant.sql_source_positions.clone();
+    call.sql_source_offsets = variant.sql_source_offsets.clone();
+    call.recovered_placeholder_positions = variant.recovered_placeholder_positions.clone();
 }
 
 pub(super) fn apply_variant(objects: &LiteralObjects, variant: &mut EmbeddedSqlVariant) -> bool {

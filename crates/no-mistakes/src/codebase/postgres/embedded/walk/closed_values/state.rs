@@ -12,6 +12,30 @@ impl ScopeVisitor<'_> {
         }
     }
 
+    pub(in crate::codebase::postgres::embedded::walk) fn forget_closed_flat_export(
+        &mut self,
+        name: &str,
+        init: &Expression<'_>,
+    ) {
+        if !matches!(unwrap_ts_wrappers(init), Expression::ObjectExpression(_)) {
+            return;
+        }
+        let Some(arms) = lookup(self, name) else {
+            return;
+        };
+        if !arms.iter().all(|arm|matches!(&arm.node,Node::Object(fields) if fields.values().all(|value|matches!(value,Node::Text(_))))) { return; }
+        let roots: Vec<_> = arms.iter().filter_map(|arm| arm.root.as_ref()).collect();
+        for frame in &mut self.literal_objects.closed.frames {
+            frame.retain(|_, values| {
+                !values.iter().any(|value| {
+                    value
+                        .root
+                        .as_ref()
+                        .is_some_and(|root| roots.contains(&root))
+                })
+            });
+        }
+    }
     pub(in crate::codebase::postgres::embedded::walk) fn note_closed_imports(
         &mut self,
         program: &Program<'_>,

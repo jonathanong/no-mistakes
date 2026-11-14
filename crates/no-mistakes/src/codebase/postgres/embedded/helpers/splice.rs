@@ -130,6 +130,7 @@ fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<Emb
             .map(|(joined, boundary)| {
                 let mut filled = publish_variant(joined, variant.append_sites.clone());
                 filled.variants_truncated = variant.variants_truncated;
+                filled.closed_domain = variant.closed_domain;
                 filled.first_append_offset = boundary;
                 filled
             })
@@ -152,5 +153,6 @@ fn publish_variant(joined: RecoveredSql, append_sites: Vec<u32>) -> EmbeddedSqlV
         append_sites,
         first_append_offset: None,
         variants_truncated: false,
+        closed_domain: false,
     }
 }

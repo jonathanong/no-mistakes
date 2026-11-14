@@ -29,7 +29,10 @@ or otherwise unstable parameters remain opaque. An unresolved helper body,
 non-literal return, missing record key, spread, getter, escaped collection, or
 record mutation also prevents a complete proof. Recovery retains the existing
 16-alternative budget and bounded expression depth. It does not keep a subset
-and present that subset as exhaustive.
+and present that subset as exhaustive. Exported records retain the existing
+prepared literal-map projection; nested exported records remain opaque. Keep a
+closed lookup local or use a literal-returning switch when local ownership
+cannot be established.
 
 ## Assertion contracts
 
