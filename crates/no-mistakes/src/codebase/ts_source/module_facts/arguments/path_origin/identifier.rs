@@ -54,6 +54,7 @@ impl<'a> Projector<'a, '_> {
             None => {
                 let mut origin = self
                     .destructured_origin(id, depth)
+                    .or_else(|| self.loop_binding(id))
                     .or_else(|| self.param_origin(id))
                     .or_else(|| self.owned_binding(id, depth))
                     .unwrap_or_else(PathOrigin::unknown);

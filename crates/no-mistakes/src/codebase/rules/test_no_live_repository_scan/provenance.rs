@@ -1,6 +1,33 @@
 //! Decide whether an enumeration root is bounded test input.
 use crate::codebase::ts_source::module_facts::arguments::{PathAnchor, PathOrigin};
 
+pub(super) fn scan_origin<'a>(
+    facts: &'a crate::codebase::ts_source::facts::TsFileFacts,
+    site: &crate::codebase::dependencies::graph::ResolvedCallSite,
+) -> Option<&'a PathOrigin> {
+    let arguments = super::super::forbidden_calls::call_argument_values(facts, site.offset)?;
+    let origin = arguments.path.as_ref()?;
+    // Dynamic scope poisoning also marks a spread at argument zero.
+    if super::enumerators::uses_glob_cwd(site)
+        || (arguments.spread_from == Some(0) && origin == &PathOrigin::unknown())
+    {
+        return Some(origin);
+    }
+    let paths = facts
+        .module_bindings
+        .as_deref()?
+        .path_provenance
+        .as_deref()?;
+    paths
+        .arg_paths
+        .get(&site.offset)
+        .into_iter()
+        .chain(paths.arg_unproven.get(&site.offset))
+        .flatten()
+        .find(|(index, _)| *index == 0)
+        .map(|(_, origin)| origin)
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Verdict {
     /// Rooted under a fixtures directory or a temporary directory the test owns.

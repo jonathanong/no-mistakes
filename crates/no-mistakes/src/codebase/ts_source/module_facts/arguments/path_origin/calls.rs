@@ -46,45 +46,30 @@ impl<'a> Projector<'a, '_> {
         }
         // `glob(pattern, { cwd })` resolves the pattern against `cwd`; options this
         // pass cannot read leave a relative pattern with an unknown base.
-        let options = call
-            .arguments
-            .get(1)
-            .and_then(Argument::as_expression)
-            .map(Expression::get_inner_expression);
-        let options = match options {
-            Some(Expression::Identifier(id)) => self
-                .const_init(id)
-                .map(Expression::get_inner_expression)
-                .or(options),
-            other => other,
-        };
         if origin.anchor != PathAnchor::Relative {
             return Some(origin);
         }
-        Some(match options {
+        let Some(options) = call.arguments.get(1).and_then(Argument::as_expression) else {
+            return Some(origin);
+        };
+        let kind = match options.get_inner_expression() {
+            Expression::Identifier(id) => self
+                .const_init(id)
+                .map(Expression::get_inner_expression)
+                .unwrap_or(options.get_inner_expression()),
+            other => other,
+        };
+        if !matches!(
+            kind,
+            Expression::ObjectExpression(_) | Expression::Identifier(_)
+        ) {
+            return Some(origin);
+        }
+        let (mut paths, unknown) = self.object_shape(options, 0);
+        Some(match paths.remove("cwd") {
+            Some(cwd) => cwd.append(origin),
+            None if unknown => PathOrigin::unknown(),
             None => origin,
-            Some(Expression::ObjectExpression(options)) => {
-                let cwd = options.properties.iter().find_map(|p| match p {
-                    ObjectPropertyKind::ObjectProperty(p)
-                        if !p.computed
-                            && crate::ast::property_key_name(&p.key).as_deref() == Some("cwd") =>
-                    {
-                        Some(&p.value)
-                    }
-                    _ => None,
-                });
-                let spread = options
-                    .properties
-                    .iter()
-                    .any(|p| matches!(p, ObjectPropertyKind::SpreadProperty(_)));
-                match cwd {
-                    Some(cwd) => self.origin(cwd, 0).append(origin),
-                    None if spread => PathOrigin::unknown(),
-                    None => origin,
-                }
-            }
-            Some(Expression::Identifier(_)) => PathOrigin::unknown(),
-            Some(_) => origin,
         })
     }
 }
