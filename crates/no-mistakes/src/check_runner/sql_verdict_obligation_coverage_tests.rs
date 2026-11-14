@@ -48,6 +48,7 @@ fn obligation_verdicts_preserve_lock_width_and_whole_row_evidence() {
         }
         // Whole equality rejects absent calls and sibling subchecks, and keeps
         // incomplete catalog/width evidence from becoming a false Known.
+        // The generated fixture's unknown-order insert also records positional-column-order.
         assert_eq!(actual, expected, "{case}");
     }
 }
