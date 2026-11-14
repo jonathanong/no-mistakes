@@ -62,7 +62,7 @@ fn invalid_utf8_test_file_rules_json_matches_snapshot() {
         &[
             c(
                 "email",
-                "test-email-domain-policy/fixture/invalid-utf8",
+                "test-email-domain-policy/invalid-utf8",
                 ".no-mistakes.yml",
             ),
             c(
