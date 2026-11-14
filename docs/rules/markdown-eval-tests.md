@@ -44,7 +44,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because a file matches only when three whole-file regexes all match (a quoted string containing `.md`, a spawn or exec of `bash`, `sh`, or `zsh`, and `eval`), so `options.unanalyzable` has no effect on it. Findings are on line 1.
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because a file matches only when three whole-file regexes all match (a quoted string containing `.md`, a spawn or exec of `bash`, `sh`, or `zsh` whose name is immediately followed by `(`, and `eval`), so `options.unanalyzable` has no effect on it. Findings are on line 1.
 
 ## Suppression
 
@@ -67,6 +67,7 @@ rules:
 
 A file matches only when all three heuristics are present in the whole file: a
 `.md` string literal, a `spawn`/`exec` of `bash`/`sh`/`zsh`, and `\beval\b`.
+The command name must be followed immediately by `(`. `execFileSync ("bash"` does not match.
 `allow` is exact relative paths, not directory globs, for example
 `opentofu/reference-live-runbook-execution-safety.test.mts`. Unused allow
 entries are findings.

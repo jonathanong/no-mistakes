@@ -109,6 +109,7 @@ SQL-file/native-SQL analysis where supported. See the
 only inside the block or function that declares it, and a same-named identifier
 elsewhere is not. Matching is by configuration only, both default to empty, and
 neither counts as executor selection: still set `importSpecifier`, `executorNames`, or `extraExecutorNames`.
+With a selector set, they still scan direct calls of the scoped binding. `.query` on that binding stays off unless a module or an explicit `query` name enables member queries.
 With `importSpecifier` set, these two options also match imports from its subpaths
 (`@example/db/types` for `@example/db`) but not sibling packages such as
 `@example/dbx`. A relative import (`../transaction`) matches only when the resolved
@@ -117,8 +118,9 @@ that package does not. If the package root cannot be determined, relative import
 not match. `executorNames` still requires the exact module.
 
 Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error.
-Set `executorNames: []` without `importSpecifier` to explicitly skip executor calls
-(including `.query`).
+Set `executorNames: []` without `importSpecifier` to skip imported executor calls and
+`.query` members, including `.query` on a factory-scoped receiver. Direct calls of an
+`executorFactoryNames` or `executorTypeNames` binding are still scanned.
 A configured module enables `.query` only for proven executor receivers.
 Explicit `executorNames: [query]` without a module enables broad member matching.
 A configured module also recognizes
