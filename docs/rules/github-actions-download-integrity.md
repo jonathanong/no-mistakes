@@ -168,7 +168,7 @@ rules:
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove (a downloader URL built from a variable, a dynamic option name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an indirect command prefix, at low effort) follow `options.unanalyzable`:
-  - `report` (default): fails as a finding, e.g. `curl URL argument "$BASE/x.sh" is unanalyzable at effort low`.
+  - `report` (default): fails as a finding. The message names the job, step, and argument shape, and says `download URL or argument shape` is unanalyzable at effort low. An indirect command says `downloader command is unanalyzable at effort low`.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 

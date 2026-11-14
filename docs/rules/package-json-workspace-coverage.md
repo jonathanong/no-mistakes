@@ -13,8 +13,12 @@ not match across `/`, so `packages/*` covers `packages/api` and leaves
 `packages/group/app` uncovered. Each non-negated pattern is checked on its
 own: a pattern that matches a package directory is not "unmatched" when a
 later `!` exclusion removes that directory from the workspace. Negated
-patterns are not reported. The finding is attached to `pnpm-workspace.yaml`
-when that file is in the file list, and otherwise to the root `package.json`.
+patterns are not reported. An omitted package directory is reported on that package's own `package.json`.
+Unmatched workspace patterns and a `packages` conflict are attached to
+`pnpm-workspace.yaml` when that file exists in the unfiltered file inventory, and
+otherwise to the root `package.json`. These findings are reported only when the
+owning file is in the rule scope. When the owning file is outside the rule scope,
+they are not reported and are not moved to `package.json`.
 
 A root `pnpm-workspace.yaml` may `include` a local `./` or `../` YAML file
 that owns `packages`. Patterns in that file are relative to the included

@@ -72,11 +72,12 @@ Then update the workflow line:
 - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 ```
 
-The comment must start with a version number (`# v1.2.3`, `# v2`, or
-`# 1.96.0`). For an untagged action, a numeric snapshot date such as
-`# 2026.10.09` also passes. The Rust example pins the setup action snapshot
-while selecting the latest stable compiler through its input. Branch-name and
-tool-name comments (`# main`, `# stable`) are rejected.
+The entire trailing comment must match a version (`# v1.2.3`, `# v2`,
+`# 1.96.0`, or `# v1.0.0-beta+build.1`). Extra words fail. The diagnostic
+names `# v1.2.3` and `# 1.87.0` as the accepted shapes. For an untagged action, a
+numeric snapshot date such as `# 2026.10.09` also passes. The Rust example pins
+the setup action snapshot while selecting the latest stable compiler through
+its input. Branch-name and tool-name comments (`# main`, `# stable`) are rejected.
 
 **Exemptions:** Local action references (`./`, `../`) and Docker image
 references (`docker://`) are never checked. Use `excludePaths` to opt out
@@ -128,8 +129,9 @@ by the line scan remain findings when YAML cannot be parsed, including with
 Use `no-mistakes-disable-next-line github-actions-pinned-hash` to suppress a
 single line.
 
-**Scope:** Checks `.github/workflows/*.{yml,yaml}` and
-`.github/actions/**/action.{yml,yaml}` composite action files.
+**Scope:** Checks any `.yml` or `.yaml` file under `.github/workflows/`,
+including nested directories, and `.github/actions/**/action.{yml,yaml}`
+composite action files.
 
 ## Related rules
 

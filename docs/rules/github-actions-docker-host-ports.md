@@ -128,9 +128,7 @@ flow list such as `ports: [6004]`, is not a finding.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it judges literal Docker port mappings in parsed workflow input. Nothing is routed through `options.unanalyzable`.
+Invalid YAML and commands the parser does not read produce no finding. They are not sent through `options.unanalyzable`. Literal parsed publish mappings are judged.
 
 ## Suppression
 

@@ -70,9 +70,9 @@ Following [recall over precision](../../README.md#how-analysis-works), nothing t
 ## Suppression
 
 Use `// no-mistakes-disable-file nextjs-no-api-routes` for a deliberate legacy
-endpoint during migration. Findings are on line 1, so a matching
-`no-mistakes-disable-line` or `no-mistakes-disable-next-line` directive must
-suppress that line.
+endpoint during migration. Findings are always on line 1. A `no-mistakes-disable-line` on that line
+suppresses them. `no-mistakes-disable-next-line` looks at the previous line
+and cannot suppress a line-1 finding.
 
 ## Limitations
 

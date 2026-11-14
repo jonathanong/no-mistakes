@@ -112,6 +112,12 @@ adjusting the explicit TypeScript directive selection.
 There is no automatic fix: deleting a suppression without fixing its cause can
 expose an existing lint or type error.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
 ## Suppression
 
 The standard no-mistakes directives apply to this check, including file,

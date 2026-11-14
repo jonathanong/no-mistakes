@@ -62,7 +62,7 @@ rules:
           reason: pins fromJSON branch values the timeout rule cannot resolve
 ```
 
-`include` defaults to `.github/workflows/**/*.test.mts` and `*.test.ts`.
+`include` defaults to `.github/workflows/**/*.test.mts` and `.github/workflows/**/*.test.ts`.
 `allow` keys are `${file}#${trimmed line}`. Empty `reason` is a finding.
 Unused `allow` entries for scanned files are findings.
 
@@ -102,7 +102,7 @@ expect(step?.['timeout-minutes']).toBe(10)
 
 Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
 
-- This rule has no unanalyzable inputs: it judges literal test-timeout values in parsed workflow steps. Nothing is routed through `options.unanalyzable`.
+- This rule has no `options.unanalyzable` channel. It regex-scans the selected test sources for `timeout-minutes` fragments and for `expect(...).toBe`, `toEqual`, `toStrictEqual`, and `toContain`. It does not parse workflow YAML.
 
 Equality and containment assertions may span lines. Their finding starts at `expect(`; a reasoned allow entry for a multiline assertion uses the exact reported `target`, preserving internal newlines. The target includes the full source lines enclosing the matched timeout expression.
 

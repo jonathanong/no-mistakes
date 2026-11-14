@@ -13,7 +13,7 @@ unless it matches an allowed constant context. It does not rank confidence.
 
 ## What it catches
 
-The rule scans `jobs.*.steps` in `.github/workflows/*.{yml,yaml}` and
+The rule scans `jobs.*.steps` in any `.yml` or `.yaml` file under `.github/workflows/`, including nested directories, and
 `runs.steps` in composite actions (`.github/actions/**/action.{yml,yaml}` whose
 `runs.using` is `composite`). Other action kinds, including Docker `args`, are
 not script bodies.
@@ -169,7 +169,7 @@ Following [recall over precision](../../README.md#how-analysis-works), inputs th
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy.
-- Anchors, aliases, flow-style steps, and split expressions that the line scan cannot align with the parsed script are reported as one failing `unanalyzable` finding per file. This case is not routed through `options.unanalyzable`; rewrite them as block-style `run` or `with.script` bodies.
+- Anchors, aliases, flow-style steps, and split expressions that the line scan cannot align with the parsed script are one ordinary finding per file at line 1 (`target` is absent): `{file}: script expressions could not be aligned to source locations. ...`. This case is not routed through `options.unanalyzable`; rewrite them as block-style `run` or `with.script` bodies.
 
 ## Suppression
 

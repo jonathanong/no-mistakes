@@ -37,8 +37,9 @@ lockfile, is reported instead of "no pnpm importers".
 ## Options
 
 `packages` and `forbidden` are the selected origins and blocked package names.
-`dependencyTypes` defaults to the documented manifest dependency kinds, and
-optional `lockfile` adds resolved lockfile edges.
+`dependencyTypes` defaults to `dependencies` and `optionalDependencies`.
+`devDependencies` and `peerDependencies` count only when listed. Optional
+`lockfile` adds resolved lockfile edges.
 
 ## Valid example
 
