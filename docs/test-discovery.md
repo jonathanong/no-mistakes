@@ -41,8 +41,6 @@ the target name.
 Swift discovery is explicit and package-scoped. Configure SwiftPM package roots
 with `tests.swift.packages`; each `Package.swift` contributes discovered
 `.testTarget(...)` targets under `Tests/<target>/**/*.swift`. Targets run as
-`swift test --package-path <package> --filter <test-target>`. The command
-omits `--package-path` when the package is `""` or `"."`.
+`swift test --package-path <package> --filter <test-target>`.
 `tests.swift.baseCommands` replaces only the `swift test` base command; the
-target still appends `--filter`, and `--package-path` unless the package is
-`""` or `"."`.
+target still appends `--package-path` and `--filter`.
