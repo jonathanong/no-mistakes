@@ -2,20 +2,27 @@ use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 
 #[test]
 fn forwarded_executor_wrappers_check_json_snapshot() {
-    let cases: Vec<_> = ["forwarding", "non-forwarding", "duplicate"]
-        .into_iter()
-        .map(|label| {
-            (
-                label,
-                rules_path(
-                    "postgres-no-offset",
-                    "fixture",
-                    &format!("issue-3351/{label}"),
-                ),
-                rules_path("postgres-no-offset", "configs", "issue-3351.yml"),
-            )
-        })
-        .collect();
+    let cases: Vec<_> = [
+        "forwarding",
+        "non-forwarding",
+        "duplicate",
+        "early-call",
+        "early-alias",
+        "early-member",
+    ]
+    .into_iter()
+    .map(|label| {
+        (
+            label,
+            rules_path(
+                "postgres-no-offset",
+                "fixture",
+                &format!("issue-3351/{label}"),
+            ),
+            rules_path("postgres-no-offset", "configs", "issue-3351.yml"),
+        )
+    })
+    .collect();
     let mut cases = cases;
     cases.push((
         "transaction",

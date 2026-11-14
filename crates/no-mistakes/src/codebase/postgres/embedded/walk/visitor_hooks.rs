@@ -14,6 +14,7 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn walk_executor_identifier(&mut self, id: &ast::IdentifierReference<'a>) {
+        self.note_preproof_reference(id);
         self.note_executor_identifier(id);
         self.poison_literal_reference(id);
         if self.executor_options.track_transaction_helpers {

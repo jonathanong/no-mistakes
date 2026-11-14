@@ -27,6 +27,8 @@ fn direct_forwarding_preserves_query_arguments() {
             ("functionForm", Some("SELECT 4")),
             ("one", Some("SELECT 5")),
             ("same", Some("SELECT 6 OFFSET 1")),
+            ("blockArrow", Some("SELECT 7")),
+            ("blockFunction", Some("SELECT 8")),
         ]
     );
 }
@@ -108,4 +110,19 @@ fn duplicate_function_parameter_cannot_prove_forwarding() {
             .any(|call| call.callee == "duplicate" && call.sql_text.is_some()),
         "{facts:?}"
     );
+}
+
+#[test]
+fn earlier_call_keeps_unknown_executor_obligation() {
+    for case in ["early-call", "early-alias", "early-member"] {
+        let facts = calls(case, &EmbeddedSqlOptions::configured("pg", &[]));
+        let line = if case == "early-alias" { 6 } else { 5 };
+        assert!(
+            facts
+                .calls
+                .iter()
+                .any(|call| call.line == line && call.is_unanalyzable()),
+            "{case}: {facts:?}"
+        );
+    }
 }

@@ -10,3 +10,7 @@ extra('SELECT 3', [], 'unused');
 functionForm('SELECT 4', []);
 one('SELECT 5');
 same('SELECT 6 OFFSET 1', []);
+const blockArrow = (sql: string, values: unknown[]) => { query(sql, values); };
+const blockFunction = function (sql: string, values: unknown[]) { query(sql, values); };
+blockArrow('SELECT 7', []);
+blockFunction('SELECT 8', []);

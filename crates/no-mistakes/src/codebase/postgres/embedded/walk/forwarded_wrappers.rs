@@ -1,11 +1,52 @@
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    Argument, BindingPattern, CallExpression, Expression, FormalParameters, Statement,
+    Argument, BindingPattern, CallExpression, Expression, FormalParameters, IdentifierReference,
+    Statement,
 };
 use std::collections::HashSet;
 
 impl ScopeVisitor<'_> {
+    pub(super) fn note_preproof_reference(&mut self, id: &IdentifierReference<'_>) {
+        let Some((index, binding)) = self
+            .scopes
+            .iter()
+            .enumerate()
+            .rev()
+            .find_map(|(index, scope)| scope.get(id.name.as_str()).map(|binding| (index, binding)))
+        else {
+            return;
+        };
+        if binding.executor_alias == Some(false) {
+            self.preproof_references.insert((
+                self.member_query_proof.scope_ids[index],
+                id.name.to_string(),
+            ));
+        }
+    }
+
+    pub(super) fn suppress_forwarded_body(
+        &mut self,
+        declaration: &oxc_ast::ast::VariableDeclarator<'_>,
+        forwarded: Option<u32>,
+    ) {
+        let (Some(span), BindingPattern::BindingIdentifier(id)) = (forwarded, &declaration.id)
+        else {
+            return;
+        };
+        let scope = *self
+            .member_query_proof
+            .scope_ids
+            .last()
+            .expect("declaration scope");
+        if !self
+            .preproof_references
+            .contains(&(scope, id.name.to_string()))
+        {
+            self.forwarded_calls.insert(span);
+        }
+    }
+
     pub(super) fn forwarded_executor_wrapper(&self, init: &Expression<'_>) -> Option<u32> {
         let (params, call, self_name) = match unwrap_ts_wrappers(init) {
             Expression::ArrowFunctionExpression(arrow) => {
@@ -13,7 +54,7 @@ impl ScopeVisitor<'_> {
                     arrow
                         .body
                         .as_function_body()
-                        .and_then(|body| return_call(&body.statements))
+                        .and_then(|body| sole_call(&body.statements))
                 })?;
                 let Expression::CallExpression(call) = unwrap_ts_wrappers(body) else {
                     return None;
@@ -22,7 +63,7 @@ impl ScopeVisitor<'_> {
             }
             Expression::FunctionExpression(function) if !function.generator => {
                 let body = function.body.as_ref()?;
-                let call = return_call(&body.statements)?;
+                let call = sole_call(&body.statements)?;
                 let Expression::CallExpression(call) = unwrap_ts_wrappers(call) else {
                     return None;
                 };
@@ -50,11 +91,12 @@ impl ScopeVisitor<'_> {
     }
 }
 
-fn return_call<'a, 'b>(statements: &'b [Statement<'a>]) -> Option<&'b Expression<'a>> {
-    let [Statement::ReturnStatement(statement)] = statements else {
-        return None;
-    };
-    statement.argument.as_ref()
+fn sole_call<'a, 'b>(statements: &'b [Statement<'a>]) -> Option<&'b Expression<'a>> {
+    match statements {
+        [Statement::ReturnStatement(statement)] => statement.argument.as_ref(),
+        [Statement::ExpressionStatement(statement)] => Some(&statement.expression),
+        _ => None,
+    }
 }
 
 fn forwards(params: &FormalParameters<'_>, call: &CallExpression<'_>, callee: &str) -> bool {

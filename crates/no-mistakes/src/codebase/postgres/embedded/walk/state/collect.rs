@@ -73,6 +73,7 @@ pub(crate) fn collect_calls<'a>(
         consumed_links: Default::default(),
         statement_calls: Default::default(),
         forwarded_calls: Default::default(),
+        preproof_references: Default::default(),
         executor_alias_refs: Default::default(),
         executor_reference_spans: Default::default(),
         executor_direct_refs: Default::default(),

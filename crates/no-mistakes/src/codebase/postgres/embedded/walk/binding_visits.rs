@@ -162,9 +162,7 @@ impl<'a> ScopeVisitor<'a> {
         }
         let outer = self.enter_iife(declaration);
         let saved_plain = self.arm_plain_binding(declaration);
-        if let Some(span) = forwarded {
-            self.forwarded_calls.insert(span);
-        }
+        self.suppress_forwarded_body(declaration, forwarded);
         walk::walk_variable_declarator(self, declaration);
         self.restore_plain_binding(saved_plain);
         self.builder_reference_exemptions.truncate(exemptions);
