@@ -41,10 +41,12 @@ const rule = config.rules?.find(
 Load it once per policy or CI run and pass the returned object to its readers.
 
 The declared view merges source declarations without materializing defaults.
-It rewrites a fixed set of test-plan aliases to camelCase: root `test_plan`,
-`dependencies` under a framework plan, `ignore_changed_tests` on a full-suite
-trigger, `global_config_fallback` on an environment, and `sample_when_limited`
-on a group. Other serde aliases stay as authored. A repository with no config
+It rewrites a fixed set of test-plan aliases: root `test_plan` becomes
+`testPlan`, `dependencies` under a framework plan becomes `fullSuiteTriggers`,
+`ignore_changed_tests` on a full-suite trigger becomes `ignoreChangedTests`,
+`global_config_fallback` on an environment becomes `globalConfigFallback`, and
+`sample_when_limited` on a group becomes `sampleWhenLimited`. Other serde
+aliases stay as authored. A repository with no config
 returns `{}`. List order is stable: root entries first, then fragment entries
 from files in sorted relative-path order, preserving item order inside each
 file. Use semantic lookups such as `find` by `rule` and `name` instead of

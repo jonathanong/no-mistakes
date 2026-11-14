@@ -1,8 +1,8 @@
 # Explicit PostgreSQL executors
 
-The next minor release removes the consumer-specific embedded SQL import
-default. This is a breaking configuration change for every PostgreSQL rule
-that scans TypeScript or JavaScript executor calls.
+Configuration requires an explicit embedded SQL executor selection. This
+applies to every PostgreSQL rule that scans TypeScript or JavaScript executor
+calls.
 
 To migrate, set `importSpecifier` explicitly to your database module:
 
@@ -14,7 +14,8 @@ options:
 
 A module with no `executorNames` uses `query`, `read`, and `write`. Without a
 module, explicitly configured executor names match named imports from any
-module. Omitting both options is a configuration error in the next minor release.
+module. Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames`
+is a configuration error.
 To intentionally select no executor calls, omit `importSpecifier` and write
 `executorNames: []` explicitly. Native SQL and SQL-builder fragment policies
 retain their existing scope. This prevents a CI configuration that has not migrated

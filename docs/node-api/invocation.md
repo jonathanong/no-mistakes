@@ -3,8 +3,9 @@
 Async analysis functions accept these common options, except `version()`,
 `lockStatus()`, `diagnosticsSnapshot({ id })`, `parsePostgresSql(...)`, and
 `extractExecutedPostgresSql(...)`. `lockStatus()` takes no arguments.
-`diagnosticsSnapshot` accepts only `id`. The two SQL functions parse supplied
-text and reject invocation fields.
+`diagnosticsSnapshot` accepts only `id`. `parsePostgresSql` parses supplied
+text and ignores other fields, including invocation options such as `timeout`.
+`extractExecutedPostgresSql` rejects unknown fields.
 
 ```ts
 interface InvocationOptions {

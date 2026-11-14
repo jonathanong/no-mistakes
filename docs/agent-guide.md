@@ -151,7 +151,9 @@ See the [Node/N-API guide](node-api.md) for report types and dedicated APIs.
 - CLI JSON field names follow each report type. `tests plan` and
   `impacted-checks` use snake_case (`changed_files`, `fallback_triggered`).
   `symbols`, `dead-exports`, `call-sites`, `importers`, and `resolve-check`
-  use camelCase. Node results use camelCase.
+  use camelCase. Node `impactedChecks()` uses snake_case
+  (`changed_files`, `fallback_triggered`, `empty_result`). `testsPlan()`
+  uses camelCase (`fallbackTriggered`).
 - Use `--format paths` to review paths or trusted command text. Prefer JSON
   command arrays for execution so spaces and shell syntax stay data.
 - Use `--format human` for interactive debugging.
