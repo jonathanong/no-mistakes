@@ -74,8 +74,8 @@ function fixture(scenario, logFailure, temporaryParent = os.tmpdir()) {
     });
   const search =
     scenario === "missing"
-      ? ["empty-bin", path.dirname(process.execPath)]
-      : ["bin", process.env.PATH];
+      ? [path.join(directory, "empty-bin")]
+      : ["bin", process.env.PATH].map((entry) => path.resolve(directory, entry));
   return {
     directory,
     options: {
@@ -84,7 +84,7 @@ function fixture(scenario, logFailure, temporaryParent = os.tmpdir()) {
       timeout: 20000,
       env: {
         ...process.env,
-        PATH: search.map((entry) => path.resolve(directory, entry)).join(path.delimiter),
+        PATH: search.join(path.delimiter),
         NATIVE_BUILD_FIXTURE: scenario,
         ...(["midwrite", "stalled"].includes(logFailure)
           ? {
@@ -195,6 +195,15 @@ for (const [scenario, status] of [
         if (scenario === "missing") {
           if (process.platform === "darwin") assert.match(result.stderr, /No such file|not found/i);
           else assert.match(input.read("spawn-error.txt"), /ENOENT/);
+          assert.deepEqual(input.options.env.PATH.split(path.delimiter), [
+            path.join(input.directory, "empty-bin"),
+          ]);
+          for (const line of input.read("processes.jsonl").trim().split("\n")) {
+            const record = JSON.parse(line);
+            assert.equal(record.status, null);
+            assert.equal(typeof record.error, "string");
+            assert.match(record.error, /spawnSync ps ENOENT/);
+          }
         } else {
           if (scenario === "signal") assertSignalTermination(completed);
           else assert.equal(completed.exitCode, status);
@@ -206,6 +215,13 @@ for (const [scenario, status] of [
             input.read("cargo-timings/cargo-timing.html"),
             fs.readFileSync(path.join(saved, "timing.html"), "utf8"),
           );
+          if (scenario === "success") {
+            for (const line of input.read("processes.jsonl").trim().split("\n")) {
+              const record = JSON.parse(line);
+              assert.equal(record.status, 0);
+              assert.equal(Object.hasOwn(record, "error"), false);
+            }
+          }
         }
       } finally {
         input.cleanup();
@@ -256,6 +272,30 @@ for (const logFailure of [undefined, "open", "midwrite", "stalled"]) {
     },
   );
 }
+
+test("sample writer retains a timed-out process probe error", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-probe-sample-"));
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [path.join(root, "test-cases/native-build-diagnostics/sample-probe-failure.cjs")],
+      { cwd: directory, encoding: "utf8", timeout: 20000 },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const record = JSON.parse(
+      fs.readFileSync(
+        path.join(directory, "target/native-build-diagnostics/processes.jsonl"),
+        "utf8",
+      ),
+    );
+    assert.equal(record.status, null);
+    assert.equal(typeof record.error, "string");
+    assert.match(record.error, /ETIMEDOUT/);
+    assert.equal(Object.hasOwn(record, "stderr"), true);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 require("./native-build-output.test.cjs");
 require("./native-build-output-edge.test.cjs");
