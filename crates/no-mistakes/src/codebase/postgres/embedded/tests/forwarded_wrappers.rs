@@ -126,3 +126,17 @@ fn earlier_call_keeps_unknown_executor_obligation() {
         );
     }
 }
+
+#[test]
+fn later_escapes_keep_original_unknown_executor_calls() {
+    let facts = calls("later-escapes", &EmbeddedSqlOptions::configured("pg", &[]));
+    for line in [2, 8, 12, 15] {
+        assert!(
+            facts
+                .calls
+                .iter()
+                .any(|call| call.line == line && call.is_unanalyzable()),
+            "line {line}: {facts:?}"
+        );
+    }
+}

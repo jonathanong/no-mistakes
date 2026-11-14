@@ -107,6 +107,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "later-escapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 10,
+          "message": "index.ts:10: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "alias('SELECT 2 OFFSET 1');",
+          "target": "offset"
+        },
+        {
+          "file": "index.ts",
+          "line": 12,
+          "message": "index.ts:12: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "sourceLine": "const memberTarget = (sql: string) => query(sql);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "index.ts",
+          "line": 15,
+          "message": "index.ts:15: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "sourceLine": "export const exported = (sql: string) => query(sql);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "index.ts",
+          "line": 2,
+          "message": "index.ts:2: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "sourceLine": "const callback = (sql: string) => query(sql);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "index.ts",
+          "line": 8,
+          "message": "index.ts:8: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "sourceLine": "const aliasTarget = (sql: string) => query(sql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "non-forwarding": {
     "exitCode": 1,
     "report": {

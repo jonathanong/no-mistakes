@@ -9,6 +9,7 @@ fn forwarded_executor_wrappers_check_json_snapshot() {
         "early-call",
         "early-alias",
         "early-member",
+        "later-escapes",
     ]
     .into_iter()
     .map(|label| {

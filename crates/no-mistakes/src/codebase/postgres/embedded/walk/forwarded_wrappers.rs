@@ -4,9 +4,28 @@ use oxc_ast::ast::{
     Argument, BindingPattern, CallExpression, Expression, FormalParameters, IdentifierReference,
     Statement,
 };
+use oxc_span::Span;
 use std::collections::HashSet;
 
 impl ScopeVisitor<'_> {
+    pub(super) fn note_exported_forwarded(&mut self, decl: &oxc_ast::ast::ExportDeclaration<'_>) {
+        let oxc_ast::ast::Declaration::VariableDeclaration(variable) = &decl.declaration else {
+            return;
+        };
+        let Some(&scope) = self.member_query_proof.scope_ids.last() else {
+            return;
+        };
+        for item in &variable.declarations {
+            let BindingPattern::BindingIdentifier(id) = &item.id else {
+                continue;
+            };
+            let key = (scope, id.name.to_string());
+            if self.forwarded_bodies.contains_key(&key) {
+                self.escaped_forwarded.insert(key);
+            }
+        }
+    }
+
     pub(super) fn note_preproof_reference(&mut self, id: &IdentifierReference<'_>) {
         let Some((index, binding)) = self
             .scopes
@@ -22,13 +41,25 @@ impl ScopeVisitor<'_> {
                 self.member_query_proof.scope_ids[index],
                 id.name.to_string(),
             ));
+        } else if binding.executor_alias == Some(true)
+            && !self
+                .executor_direct_refs
+                .contains(&(id.span.start, id.span.end))
+        {
+            let key = (
+                self.member_query_proof.scope_ids[index],
+                id.name.to_string(),
+            );
+            if self.forwarded_bodies.contains_key(&key) {
+                self.escaped_forwarded.insert(key);
+            }
         }
     }
 
-    pub(super) fn suppress_forwarded_body(
+    pub(super) fn record_forwarded_body(
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclarator<'_>,
-        forwarded: Option<u32>,
+        forwarded: Option<Span>,
     ) {
         let (Some(span), BindingPattern::BindingIdentifier(id)) = (forwarded, &declaration.id)
         else {
@@ -39,15 +70,55 @@ impl ScopeVisitor<'_> {
             .scope_ids
             .last()
             .expect("declaration scope");
-        if !self
-            .preproof_references
-            .contains(&(scope, id.name.to_string()))
+        self.forwarded_bodies
+            .insert((scope, id.name.to_string()), span);
+    }
+
+    pub(super) fn discard_direct_forwarded_bodies(&mut self) {
+        if self.calls.len() != self.call_spans.len()
+            || (self.track_order && self.calls.len() != self.confirmed_order.len())
         {
-            self.forwarded_calls.insert(span);
+            return;
+        }
+        let spans: HashSet<_> = self
+            .forwarded_bodies
+            .iter()
+            .filter(|(key, _)| {
+                !self.preproof_references.contains(*key) && !self.escaped_forwarded.contains(*key)
+            })
+            .map(|(_, span)| (span.start, span.end))
+            .collect();
+        if spans.is_empty() {
+            return;
+        }
+        let keep: Vec<_> = self
+            .call_spans
+            .iter()
+            .map(|span| !spans.contains(span))
+            .collect();
+        let mut index = 0;
+        self.calls.retain(|_| {
+            let result = keep[index];
+            index += 1;
+            result
+        });
+        let mut index = 0;
+        self.call_spans.retain(|_| {
+            let result = keep[index];
+            index += 1;
+            result
+        });
+        if self.track_order {
+            let mut index = 0;
+            self.confirmed_order.retain(|_| {
+                let result = keep[index];
+                index += 1;
+                result
+            });
         }
     }
 
-    pub(super) fn forwarded_executor_wrapper(&self, init: &Expression<'_>) -> Option<u32> {
+    pub(super) fn forwarded_executor_wrapper(&self, init: &Expression<'_>) -> Option<Span> {
         let (params, call, self_name) = match unwrap_ts_wrappers(init) {
             Expression::ArrowFunctionExpression(arrow) => {
                 let body = arrow.body.as_expression().or_else(|| {
@@ -87,7 +158,7 @@ impl ScopeVisitor<'_> {
         if !forwards(params, call, callee.name.as_str()) {
             return None;
         }
-        Some(call.span.start)
+        Some(call.span)
     }
 }
 

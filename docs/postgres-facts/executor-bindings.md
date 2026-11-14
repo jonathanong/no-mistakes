@@ -19,6 +19,10 @@ An earlier function body that uses a wrapper before the analyzer visits its
 declaration, including through an alias or member, retains an unknown executor
 obligation until that use can be proved; the later wrapper declaration does not
 erase it.
+Passing a wrapper as a callback, copying it to an alias, calling it through a
+member such as `.call`, or exporting it likewise retains the original unknown
+executor call in its body. Only direct, proven wrapper calls suppress that body
+finding.
 
 | knob                   | default                                                                                 |
 | ---------------------- | --------------------------------------------------------------------------------------- |
