@@ -7,10 +7,11 @@
 `no-mistakes` is about **deterministically not making mistakes**. It tells
 coding agents and CI which files, tests, and routes a change can affect, then
 enforces the static shapes that keep those answers true and the PostgreSQL
-patterns that are expensive to fix later. It parses the current checkout
-locally. It does not run the app, call a model, or keep a database.
+patterns that are expensive to fix later. Agent rule skills catch the
+mistakes no check can see before the code is written. It parses the current
+checkout locally. It does not run the app, call a model, or keep a database.
 
-## Four pillars
+## Five pillars
 
 ### 1. Scope the change
 
@@ -79,6 +80,22 @@ cast and index-loss coverage is coming in #2652.
 
 See the [PostgreSQL rules](docs/rules/README.md) and
 [`postgres`](docs/cli/postgres.md).
+
+### 5. Rules for the agent
+
+Some mistakes have no static shape a check can catch, such as a non-idempotent
+`INSERT` on a retried path, a new feature flag that ships turned on, or a
+test that patches a name the code under test never looks up. The
+[`no-mistakes-rules`](plugins/no-mistakes-rules/README.md) agent plugin states
+them as short MUST NOT and SHOULD NOT lists, one skill per topic. An agent
+loads a skill only when its topic comes up, so it reads the rules before it
+writes the code. MUST NOT marks a defect to fix before handoff. SHOULD NOT
+needs a stated, measured reason. Topics include testing, PostgreSQL, queues,
+TypeScript, React, Rust, GitHub Actions, security, git, rollout,
+integrations, and observability. The plugin needs no CLI.
+
+See the [rule skills](plugins/no-mistakes-rules/README.md) and
+[Agent plugin](#agent-plugin) for install.
 
 ## How analysis works
 
