@@ -293,9 +293,10 @@ Parallelism is used where measurement shows it helps:
 4. Traversal pre-computation can run per root when roots are independent.
 5. Expensive caches must be concurrent or thread-local plus merged.
 
-The CLI initializes the global rayon pool from `--jobs`,
-`NO_MISTAKES_JOBS`, or CPU defaults. New commands should use the shared
-initialization path instead of creating ad hoc thread pools.
+The CLI initializes the global rayon pool from a positive `--jobs` value, then
+from `RAYON_NUM_THREADS` when that variable is a positive integer, then from
+the CPU count. New commands should use the shared initialization path instead
+of creating ad hoc thread pools.
 
 Visitor fusion requires at least a 5% representative end-to-end improvement.
 Outer graph parallelism requires at least a 10% improvement, no more than 10%
@@ -479,7 +480,7 @@ The ledger labels observed closure/helper events separately from full-collector
 counts derived from inspected nested helper call paths. Four-worker capacity is
 checked after stop; profiles must substantiate worker initialization/participation.
 
-All modes validate the same 117/69/66/7/6/41 fact and 125/14/117 edge/glob counts.
+All modes validate the same 118/70/67/7/6/49 fact and 143/14/118 edge/glob counts.
 Cold mode keeps edge/glob preflight after stop; the other modes validate their
 recorded prefix after stop. Request fact maps are destroyed within each helper;
 fixture data, global workers, and reusable regex pools remain alive at stop.

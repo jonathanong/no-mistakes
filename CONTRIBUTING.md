@@ -103,9 +103,9 @@ aliases. Analysis timings use the optional `InvocationObserver`; its clock
 owners, compatibility adapters, deadline control clock, tests, and benchmarks
 have documented expectations. The OXC parser gateway remains guarded by
 ast-grep because its exact source adapter allowlist is a separate policy.
-The quality job's Rust validation parity tests exercise Clippy alias rejection
-and exemptions with a saved fixture. Run the same smoke check with
-`bash .github/scripts/rust-lint-policy.sh`.
+The source-policy job (`quality-source`) runs Rust validation parity tests
+that exercise Clippy alias rejection and exemptions with a saved fixture. Run
+the same smoke check with `bash .github/scripts/rust-lint-policy.sh`.
 It uses an isolated temporary target and requires Clippy, without adding that
 requirement to ordinary Rust test or coverage jobs.
 
@@ -181,9 +181,9 @@ run those tests alongside the focused module tests.
 For shared diagnostics changes, run the full `suite_cli_queries` target to cover
 every command's basic timing catalog alongside verbose instrumentation.
 
-Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
-`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and
-`suite_contracts`. This links the analyzer once per suite instead of once per
+Rust integration tests share six explicitly registered suites: `suite_cli_queries`,
+`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_package_config`,
+`suite_cli_test_plans`, and `suite_contracts`. This links the analyzer once per suite instead of once per
 source file. Keep new root `crates/no-mistakes/tests/*.rs` modules registered in
 one suite; the registration test rejects omitted or duplicate sources. Original
 module and fixture paths stay unchanged. To run one former target, use, for example,
@@ -220,12 +220,13 @@ CI checks links to this repository's `main` documentation against the checked-ou
 `docs/` files, including new pages in a pull request. Missing targets still fail;
 links outside that documentation prefix continue to be checked over the network.
 
-ARM macOS release builds use ThinLTO and 16 code generation units so LLVM can
-optimize the combined CLI and N-API build in parallel on a cold runner. The
-workflow sets these Cargo profile overrides before restoring its build cache.
-Other release targets and local builds retain full LTO and one code generation
-unit. Compile-time and runtime differences require measurements on the same
-platform; Linux benchmarks do not establish the macOS tradeoff.
+ARM macOS and Windows MSVC release builds use ThinLTO and 16 code generation
+units so LLVM can optimize the combined CLI and N-API build in parallel on a
+cold runner. The workflow sets these Cargo profile overrides before restoring
+its build cache. Linux release targets and local builds retain full LTO and
+one code generation unit. Compile-time and runtime differences require
+measurements on the same platform; Linux benchmarks do not establish the macOS
+or Windows tradeoff.
 
 Real-addon API tests and platform Rust tests each run in six Windows shards
 and two macOS shards. The macOS Rust plan uses observed outlier weights to

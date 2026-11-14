@@ -1,10 +1,13 @@
 # PostgreSQL executor extraction
 
 PostgreSQL rules invoked through `check()` or an `analyzeProject()` check query
-use the same explicit executor configuration as the CLI. Set `importSpecifier`
-or `executorNames` in the rule options to select embedded executor calls;
-omitting both is a configuration error. Set `executorNames: []` explicitly
-without a module to select no executor calls. `executorFactoryNames` and
+use the same explicit executor configuration as the CLI. Set `importSpecifier`,
+`executorNames`, or `extraExecutorNames` in the rule options to select embedded
+executor calls. Omitting all three is a configuration error. `executorNames`
+replaces `[query, read, write]`; `extraExecutorNames` extends those defaults,
+including an empty list and no `importSpecifier`. Setting both name lists is
+an error. Set `executorNames: []` explicitly without a module to select no
+executor calls. `executorFactoryNames` and
 `executorTypeNames` additionally select block- or function-scoped executors from
 factory results and executor-typed parameters, imported from `importSpecifier`,
 a subpath of it, or a relative path that resolves into that package. `trustedSqlTags` (default empty) opts in to named imports of

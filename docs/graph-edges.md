@@ -129,6 +129,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | Filter              | Included edge kinds                                                                                                                                   |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `call`              | `call`                                                                                                                                                |
+| `assertion-owner`   | `assertion-owner`                                                                                                                                     |
 | `import`            | `import`, `type-import`, `dynamic-import`, `conditional-dynamic-import`, `require`, `require-resolve`                                                 |
 | `import-static`     | `import`                                                                                                                                              |
 | `import-type`       | `type-import`                                                                                                                                         |
@@ -167,7 +168,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `kotlin`            | `kotlin-import`, `kotlin-ref`                                                                                                                         |
 | `elixir`            | `elixir-import`, `elixir-ref`                                                                                                                         |
 | `dart`              | `dart-import`, `dart-ref`                                                                                                                             |
-| `all`               | all standard edge kinds, including `workflow`; excludes the opt-in `call`, `route-import`, and `trpc` views, and `extends`, which has no filter value |
+| `all`               | all standard edge kinds, including `workflow`; excludes the opt-in `call`, `assertion-owner`, `route-import`, and `trpc` views, and `extends`, which has no filter value |
 
 Workflow virtual-node IDs are stable and project-relative:
 `path/to/workflow.yml#job:<job>` for a job and

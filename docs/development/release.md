@@ -59,9 +59,12 @@ so the helper reports it as a possible staging problem and stops conservatively.
 
 Propagation alone has taken longer than the old two minute window. For 0.109.31
 and 0.109.32, each platform package became visible 4.5 to 7.3 minutes after its
-upload exited 0. The 15 minute window covers that with margin. The platform
-publish step allows 17 minutes for each of its four packages, and the root and
-ESLint steps cover one package each. Each publish job's timeout covers its
+upload exited 0. The 15 minute packument window covers that with margin. The
+platform publish step allows 80 minutes for all four packages together. Each
+`publish-npm` attempt polls the packument for up to 15 minutes, and each npm
+command uses a 2 minute process deadline. The same step then waits up to 30
+minutes per package for the tarball. The root and ESLint publish steps are 40
+minutes each. Each publish job's timeout covers its
 longest step and stays below the sum of its step timeouts, matching
 [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md).
 `.github/scripts/publish-npm.test.cjs` enforces those budgets.

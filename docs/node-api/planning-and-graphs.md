@@ -74,6 +74,8 @@ optional `jobsPoolWarning` (`JobsPoolWarning`), exposed by the exported
 resize the process pool; the field is omitted otherwise. Arrays, scalar results,
 source-only SQL parsing/extraction, and diagnostics polling do not add this metadata.
 
+## Vitest timeout-policy entrypoints
+
 The package also exposes its optional Vitest integration through
 `no-mistakes/test-timeout-policy` and
 `no-mistakes/test-timeout-policy/plugin`. The `/plugin` entry provides Vite

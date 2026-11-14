@@ -13,7 +13,7 @@ semantics. Replacing the package implementation or a shared builder prototype
 at runtime is outside that contract. Local builder writes and escapes remain
 subject to the ownership checks below.
 
-The composed SQL is `/* widgets/list */SELECT id FROM widgets WHERE owner_id = ?`.
+The recovered SQL text is `/* widgets/list */SELECT id FROM widgets WHERE owner_id = sql_placeholder_1`.
 The extractor retains generated bind positions separately from literal text;
 its structured SQL facts use normalized placeholder identifiers.
 

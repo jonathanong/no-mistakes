@@ -23,8 +23,8 @@ globals must be disabled because global APIs bypass import routing. Use the dedi
 Vite/Vitest configuration; it imports the optional Vitest peer. The policy entry
 itself remains available without Vitest.
 
-For a custom Node runner, pass the absolute resolved path of the final runner
-module as the third argument:
+For a custom Node runner, pass an object as the third argument. Its `runner`
+field is the absolute resolved path of the final runner module:
 
 ```js
 plugins: [
@@ -35,7 +35,8 @@ plugins: [
 ```
 
 The module must default-export the final constructor. Browser projects use
-`browserTestTimeoutPolicyPlugin` instead. See [Node API exports](node-api.md#runtime-export-surface)
+`browserTestTimeoutPolicyPlugin` instead. See
+[Vitest timeout-policy entrypoints](node-api/planning-and-graphs.md#vitest-timeout-policy-entrypoints)
 for the package entrypoints and [Vitest configuration](rules/vitest-ci-path-coverage.md)
 for related repository test configuration guidance.
 

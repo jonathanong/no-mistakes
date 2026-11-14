@@ -1,6 +1,10 @@
 # Invocation Lock And Timeouts
 
-Every async analysis function except `version()` accepts these common options:
+Async analysis functions accept these common options, except `version()`,
+`lockStatus()`, `diagnosticsSnapshot({ id })`, `parsePostgresSql(...)`, and
+`extractExecutedPostgresSql(...)`. `lockStatus()` takes no arguments.
+`diagnosticsSnapshot` accepts only `id`. The two SQL functions parse supplied
+text and reject invocation fields.
 
 ```ts
 interface InvocationOptions {

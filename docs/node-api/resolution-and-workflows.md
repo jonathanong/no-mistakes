@@ -8,8 +8,8 @@ a less-specific mapping.
 
 `ciTopology(options)` returns the same schema-v1 `WorkflowTopology` JSON as
 `ci topology --format json` — it never throws on diagnostics (unlike the CLI,
-which exits non-zero and prints nothing when any diagnostic is an error);
-callers inspect the returned `diagnostics` array themselves.
+which writes each diagnostic to stderr, exits non-zero, and writes no graph
+to stdout); callers inspect the returned `diagnostics` array themselves.
 `createWorkflowTopologyIndex(topology)` builds a frozen, sorted query index
 (`directUpstreamJobIds`, `transitiveCalleeWorkflowPaths`,
 `artifactConsumersForProducerJob`, etc.) over that result — it is pure JS,
