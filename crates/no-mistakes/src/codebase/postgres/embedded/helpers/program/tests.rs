@@ -434,9 +434,12 @@ fn calls_between_helpers() {
 #[test]
 fn unsupported_statements_fail_only_when_reached() {
     let p = load("exec.ts");
-    for name in ["usesAssignment", "opaqueTaken", "usesSwitch"] {
+    for name in ["usesAssignment", "opaqueTaken"] {
         fails(&p, name, &[lit("a")]);
     }
+    assert_eq!(one(&p, "usesSwitch", &[lit("a")]), "sql:SELECT 1");
+    fails(&p, "usesSwitch", &[SiteArg::Scalar]);
+    fails(&p, "usesSwitch", &[lit("missing")]);
     // These keep their SQL inside statements the model does not know, so
     // there is nothing left to run.
     for name in ["usesTry", "usesVar"] {

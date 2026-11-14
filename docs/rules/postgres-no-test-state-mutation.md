@@ -47,6 +47,17 @@ globs are outside this rule. There is no `sqlInclude` option: the rule checks
 SQL that reaches configured executors in this explicit scope rather than
 scanning raw `.sql` files.
 
+At max effort, [closed identifier values](../postgres-facts/closed-identifiers.md)
+can supply finite SQL alternatives through raw append operations and untagged
+templates. Direct stable literal-union parameters, complete literal-return
+switches, and immutable lookup records are supported. Rule-local
+`sqlIdentifierAssertions` selects named imports with a literal allowlist argument;
+`rawSqlTags` explicitly selects tags that insert text instead of binding values.
+Both default to `[]`. These analysis contracts remain rule-local when project
+executor settings are inherited. Existing parameterized tags keep their binding
+semantics. Every mutating alternative still reports, including under
+`unanalyzable: ignore`; any unknown alternative keeps the residual opaque.
+
 Source-visible synchronous helpers may return one of several fixed SQL
 statements from a `switch`. A default that always throws adds no SQL variant,
 including when it calls a prepared imported function whose body is proved to
@@ -66,8 +77,8 @@ domain through `it.each(['first', 'second'])`. Inside its callback, a local
 fixed fragment per row before a configured executor call. Every selected key
 must exist. Method or tagged calls through a selected record can change its
 SQL field through `this` and remain unanalyzable. Writes, aliases, escapes,
-unknown iterator bindings, and keys
-inferred only from TypeScript types remain unanalyzable.
+unknown iterator bindings, and keys without a supported closed domain remain
+unanalyzable.
 
 A same-function `const` literal `Set` can bound an appended SQL identifier when
 an exact negated `.has(value)` guard immediately throws before the executor.
@@ -76,7 +87,8 @@ and unmodified. Repeated uses retain the same runtime choice. This proof covers
 up to 16 fixed strings. Shadowed constructors, including runtime TypeScript
 bindings,
 member overrides, escaped sets, parameter defaults, reassigned arguments, caught throws, and
-TypeScript-only unions stay unanalyzable.
+unsupported type aliases or casts stay unanalyzable. Direct stable literal-union
+parameters use the closed-domain proof described above.
 
 `importSpecifier` defaults to empty, so configure an executor module or inherit
 it from [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope).
@@ -243,7 +255,9 @@ Dropping the table changes shared database state and may break later tests.
 ```ts
 // tests/users.test.ts
 test("handles an executor failure", async () => {
-  const query = async () => { throw new Error("database unavailable"); };
+  const query = async () => {
+    throw new Error("database unavailable");
+  };
   await expect(loadUsers({ query })).rejects.toThrow("database unavailable");
 });
 ```

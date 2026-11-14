@@ -24,6 +24,8 @@ pub(super) struct Options {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    raw_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    sql_identifier_assertions: Vec<crate::codebase::postgres::SqlIdentifierAssertion>,
     unanalyzable_sql: String,
 }
 
@@ -53,7 +55,9 @@ impl CompiledOptions {
                 &options.executor_factory_names,
                 &options.executor_type_names,
             )
-            .with_trusted_sql_tags(&options.trusted_sql_tags),
+            .with_trusted_sql_tags(&options.trusted_sql_tags)
+            .with_sql_identifier_assertions(&options.sql_identifier_assertions)
+            .with_raw_sql_tags(&options.raw_sql_tags),
             fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
                 RULE_ID,
                 &options.unanalyzable_sql,

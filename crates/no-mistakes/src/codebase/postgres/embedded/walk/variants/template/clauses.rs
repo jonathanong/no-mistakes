@@ -43,8 +43,6 @@ pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(visitor: 
             versions = combine(versions, values)?;
         }
     }
-    // NUL is a deferred const-splice marker; dropping only those arms is partial.
-    if versions.iter().any(|value| value.sql.contains('\0')) { return None; }
     for version in &mut versions { version.enumerated = true; version.fragment = false; }
     Some(versions)
 }
@@ -76,6 +74,7 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
     if depth == 0 { return None; }
     let expr = unwrap_ts_wrappers(expr);
     let line = byte_offset_to_line(visitor.source, expr.span().start as usize);
+    if let Some(values) = super::super::super::super::closed_values::recover(visitor, expr) { return Some(values); }
     match expr {
         Expression::StringLiteral(literal) => text(visitor, expr, crate::ast::js_literal(literal).into_owned(), line),
         Expression::NumericLiteral(literal) => {
@@ -142,7 +141,7 @@ fn at_reference(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, mut values: V
 }
 
 fn text(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, sql: String, line: u32) -> Option<Vec<Recovered>> {
-    if tainted(&sql) { return None; }
+    if sql.contains('\0') || tainted(&sql) { return None; }
     let mut value = Recovered::empty(line);
     value.origins = source_positions::origins::expression(expr, visitor.source, &sql);
     value.positions = source_positions::for_expression(expr, visitor.source, expr.span().start as usize, line);
@@ -162,7 +161,7 @@ fn plain(values: &[Recovered]) -> bool {
     values.iter().all(|value| matches!(value.value, ValueKind::Sql | ValueKind::Number(_)) && !value.fragment && !tainted(&value.sql))
 }
 fn tainted(sql: &str) -> bool {
-    sql.contains('\0') || crate::codebase::postgres::embedded::helpers::sentinel::contains(sql)
+    crate::codebase::postgres::embedded::helpers::sentinel::contains(sql)
 }
 fn same_sql(left: &[Recovered], right: &[Recovered]) -> bool {
     let mut left: Vec<_> = left.iter().map(|value| value.sql.as_str()).collect();

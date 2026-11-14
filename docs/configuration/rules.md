@@ -440,6 +440,13 @@ also supports `effort: low`. Literal SQL and templates without relation-name
 interpolation are decidable; imported registry relations and helper SQL use
 `unanalyzable`. The low tier does not infer cross-file mutation provenance.
 
+For `postgres-no-test-state-mutation` and `postgres-bounded-statements`,
+`options.sqlIdentifierAssertions` names exact imported assertion functions and
+the zero-based allowlist argument. `options.rawSqlTags` names tags whose
+interpolations are SQL text. Both lists default to `[]` and remain rule-local,
+including with inherited project executor settings. Parameterized tags are
+unchanged. See [closed identifier construction](../postgres-facts/closed-identifiers.md).
+
 For `postgres-require-query-annotation`, `options.sqlLiteralHelpers` accepts exact `module#export` identities (for example `pg-copy-streams#from`). It defaults to `[]`; only a direct configured runtime import wrapping one static string or interpolation-free template literal supplies an annotation proof, at low and max effort. See [the rule grammar and policy](../rules/postgres-require-query-annotation.md#copy-stream-wrappers-and-configured-single-literal-sql-helpers).
 
 [`postgres-no-transformed-uuid-predicates`](../rules/postgres-no-transformed-uuid-predicates.md)
@@ -471,7 +478,6 @@ rules:
     options:
       maxLines: 3
 ```
-
 
 ### Vitest project properties
 

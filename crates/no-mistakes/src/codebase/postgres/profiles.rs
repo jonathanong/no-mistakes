@@ -1,4 +1,4 @@
-use super::{EmbeddedSqlOptions, TrustedSqlTag};
+use super::{EmbeddedSqlOptions, SqlIdentifierAssertion, TrustedSqlTag};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -70,6 +70,8 @@ struct EmbeddedSqlRuleOptions {
     executor_option_properties: Vec<String>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
     sql_literal_helpers: Vec<String>,
+    raw_sql_tags: Vec<TrustedSqlTag>,
+    sql_identifier_assertions: Vec<SqlIdentifierAssertion>,
     include: Vec<String>,
     test_globs: Vec<String>,
     helper_roots: Vec<String>,

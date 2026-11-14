@@ -22,6 +22,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn piece(
         || visitor.functions.has_static_helper(name)
         || visitor.functions.is_parameter_builder(name)
         || !call.arguments.iter().all(plain_argument)
+        || super::super::closed_values::closed_call(visitor, call)
     {
         return None;
     }

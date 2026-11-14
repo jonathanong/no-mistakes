@@ -114,7 +114,7 @@ impl super::LocalFunctions {
     }
 
     pub(crate) fn has_program(&self, name: &str) -> bool {
-        self.programs.contains_key(name)
+        self.programs.contains_key(name) || self.guarded_identifiers.contains_key(name)
     }
 
     /// Literal strings a same-file helper returns for these arguments.
@@ -126,6 +126,9 @@ impl super::LocalFunctions {
     ) -> Option<Vec<String>> {
         use crate::codebase::postgres::embedded::helpers::program::exec::{run, Ret};
         use crate::codebase::postgres::embedded::helpers::sentinel;
+        if let Some(values) = self.guarded_identifiers.get(name) {
+            return Some(values.clone());
+        }
         let program = self.programs.get(name).cloned()?;
         let mut callees = SameFile {
             programs: &self.programs,

@@ -1,0 +1,32 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/records.test.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      sqlIdentifierAssertions:
+        - {
+            module: "@example/identifiers",
+            name: assertWhitelistedSqlIdentifier,
+            allowlistArgument: 1,
+          }
+      unanalyzable: report
+  - rule: postgres-bounded-statements
+    scope: repository
+    include:
+      - tests/records.test.ts
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      sqlIdentifierAssertions:
+        - {
+            module: "@example/identifiers",
+            name: assertWhitelistedSqlIdentifier,
+            allowlistArgument: 1,
+          }
+      unanalyzable: report

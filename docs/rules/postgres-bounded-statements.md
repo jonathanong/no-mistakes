@@ -34,6 +34,23 @@ rules:
           reason: "Fixed lookup table of under 200 rows"
 ```
 
+## Closed identifier construction
+
+At max effort, [closed identifier values](../postgres-facts/closed-identifiers.md)
+can expand raw SQL construction into at most 16 alternatives. Correlated record
+fields keep the same key choice. Each statement must independently satisfy its
+catalog/key bounds; one bounded variant does not exempt another unbounded one.
+Unknown branches, mutation, escaped collections, or budget overflow retain the
+configured unanalyzable policy.
+
+The rule accepts optional `sqlIdentifierAssertions` entries
+`{module, name, allowlistArgument}` and `rawSqlTags` entries `{module, name}`,
+both defaulting to `[]`. The argument index is zero-based. These options stay
+on the rule even with project PostgreSQL scope. Import aliases are supported;
+assertion module matching is exact, while raw tags follow trusted-tag module
+and subpath matching. Existing parameterized tags continue to bind values.
+See the shared page for examples, counterexamples, suppression, and contracts.
+
 ## Why and when
 
 See [rationale](postgres-bounded-statements-rationale.md).

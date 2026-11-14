@@ -160,11 +160,18 @@ impl<'a> ScopeVisitor<'a> {
                 self.allow_builder_value(init);
             }
         }
+        let literal_reads = self.literal_objects.read_spans.len();
+        if self.declaring_const {
+            if let Some(init) = &declaration.init {
+                self.exempt_closed_const_alias(init);
+            }
+        }
         let outer = self.enter_iife(declaration);
         let saved_plain = self.arm_plain_binding(declaration);
         self.record_forwarded_body(declaration, forwarded);
         walk::walk_variable_declarator(self, declaration);
         self.restore_plain_binding(saved_plain);
+        self.literal_objects.read_spans.truncate(literal_reads);
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor, namespace);

@@ -1,0 +1,139 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "users": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "post_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "status": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "users_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX users_id_key ON public.users USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "users_user_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX users_user_id_key ON public.users USING btree (user_id)",
+          "keys": [
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "posts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "post_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "status": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": ["id"]
+      },
+      "indexes": {
+        "posts_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX posts_id_key ON public.posts USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "posts_post_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX posts_post_id_key ON public.posts USING btree (post_id)",
+          "keys": [
+            {
+              "column": "post_id",
+              "expression": "post_id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

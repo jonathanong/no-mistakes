@@ -34,6 +34,7 @@ pub(super) fn apply_variant(objects: &LiteralObjects, variant: &mut EmbeddedSqlV
         variant.sql_source_positions.clear();
         variant.recovered_placeholder_positions.clear();
     }
+    variant.variants_truncated |= outcome.poisoned;
     outcome.poisoned
 }
 

@@ -68,7 +68,8 @@ mod shape {
             let Some(test) = &case.test else {
                 let throws = |name: &str| scope.ctx.throws.contains(name) && !scope.is_rebound(name);
                 let proven = sequence(&case.consequent, &throws) || inert_then_throw(scope, &case.consequent);
-                let deferred = if proven { None } else { deferred_throw(scope, &case.consequent) };
+                let returned = if proven { None } else { literal_return(scope, &case.consequent, &mut Vec::new()).map(|arm| arm.value) };
+                let deferred = if proven { None } else { returned.or_else(|| deferred_throw(scope, &case.consequent)) };
                 if !proven && deferred.is_none() { return Stmt::Opaque; }
                 seen.append(&mut pending);
                 default = Some(deferred);
@@ -83,6 +84,7 @@ mod shape {
             let Some(arm) = literal_return(scope, &case.consequent, &mut pending) else { return Stmt::Opaque };
             arms.push(arm);
         }
+        let default = default.or_else(|| (!statement.cases.iter().any(|case| case.test.is_none())).then_some(Some(Expr::Opaque)));
         if let Some(default) = default.filter(|_| pending.is_empty() && !arms.is_empty()) {
             Stmt::Switch(discriminant, arms, default)
         } else { Stmt::Opaque }
@@ -137,7 +139,7 @@ mod shape {
         let [Statement::ReturnStatement(ret)] = statements else { return None };
         let argument = ret.argument.as_ref()?;
         let value = expr::lower(scope, argument);
-        if !matches!(value, Expr::Lit(_) | Expr::Sql(..)) { return None; }
+        if !matches!(value, Expr::Lit(_) | Expr::Sql(..) | Expr::RawSql(..)) { return None; }
         Some(SwitchArm { cases: std::mem::take(labels), value, mark: scope.mark(argument.span()) })
     }
 }

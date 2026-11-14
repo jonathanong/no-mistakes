@@ -203,6 +203,58 @@ test("bounded statement options export key fan-out contracts", () => {
   );
 });
 
+test("identifier assertion contracts are shared by supported PostgreSQL rules", () => {
+  const types = readFileSync(
+    join(packageRoot, "postgres-sql-identifier-assertion-types.d.ts"),
+    "utf8",
+  );
+  assert.match(types, /export interface PostgresSqlIdentifierAssertion/);
+  assert.match(types, /module: string;/);
+  assert.match(types, /name: string;/);
+  assert.match(types, /allowlistArgument: number;/);
+  for (const file of [
+    "postgres-test-state-mutation-types.d.ts",
+    "postgres-bounded-statements-types.d.ts",
+  ]) {
+    const options = readFileSync(join(packageRoot, file), "utf8");
+    assert.match(options, /import type \{ PostgresSqlIdentifierAssertion \} from/);
+    assert.match(options, /sqlIdentifierAssertions\?: PostgresSqlIdentifierAssertion\[\];/);
+  }
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./postgres-sql-identifier-assertion-types";',
+    ),
+  );
+});
+
+test("raw SQL tag contracts are shared by supported PostgreSQL rules", () => {
+  const types = readFileSync(join(packageRoot, "postgres-raw-sql-tag-types.d.ts"), "utf8");
+  assert.match(types, /export interface PostgresRawSqlTag/);
+  assert.match(types, /module: string;/);
+  assert.match(types, /name: string;/);
+  for (const file of [
+    "postgres-test-state-mutation-types.d.ts",
+    "postgres-bounded-statements-types.d.ts",
+  ]) {
+    const options = readFileSync(join(packageRoot, file), "utf8");
+    assert.match(options, /import type \{ PostgresRawSqlTag \} from/);
+    assert.match(options, /rawSqlTags\?: PostgresRawSqlTag\[\];/);
+  }
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./postgres-raw-sql-tag-types";',
+    ),
+  );
+});
+
+test("SQL executor profiles expose rule-local identifier and raw tag contracts", () => {
+  const report = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
+  assert.match(report, /import type \{ PostgresSqlIdentifierAssertion \} from/);
+  assert.match(report, /import type \{ PostgresRawSqlTag \} from/);
+  assert.match(report, /sqlIdentifierAssertions\?: PostgresSqlIdentifierAssertion\[\];/);
+  assert.match(report, /rawSqlTags\?: PostgresRawSqlTag\[\];/);
+});
+
 test("signature impact exposes scoped unanalyzed files", () => {
   const impact = readFileSync(join(packageRoot, "signature-impact-types.d.ts"), "utf8");
   assert.match(impact, /export interface UnanalyzedFile \{\s*file: string;\s*reason: string;/);

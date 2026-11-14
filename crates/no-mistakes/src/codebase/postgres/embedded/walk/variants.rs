@@ -53,7 +53,7 @@ pub(super) struct Recovered {
 }
 
 impl Recovered {
-    fn empty(line: u32) -> Self {
+    pub(in crate::codebase::postgres::embedded::walk) fn empty(line: u32) -> Self {
         Self {
             value: ValueKind::Sql,
             sql: String::new(),

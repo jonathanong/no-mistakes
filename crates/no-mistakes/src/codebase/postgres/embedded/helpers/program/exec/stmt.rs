@@ -81,24 +81,39 @@ impl Machine<'_> {
                     if let Some(arm) = arms.iter().find(|arm| arm.cases.iter().any(|case| case == &text.value)) {
                         out.extend(self.switch_arm(arm, path)?);
                     } else if let Some(default) = default {
-                        if !self.eval(default, path)?.is_empty() { return None; }
+                        out.extend(self.switch_default(default,path)?);
                     }
                 }
                 Val::Unknown | Val::Free => {
                     for arm in arms { out.extend(self.switch_arm(arm, path.clone())?); }
                     if let Some(default) = default {
-                        if !self.eval(default, path)?.is_empty() { return None; }
+                        out.extend(self.switch_default(default,path)?);
                     }
                 }
                 _ => {
                     if let Some(default) = default {
-                        if !self.eval(default, path)?.is_empty() { return None; }
+                        out.extend(self.switch_default(default,path)?);
                     }
                 }
             }
             if out.len() > MAX_EMBEDDED_SQL_VARIANTS { return None; }
         }
         Some(out)
+    }
+
+    fn switch_default(&mut self, value: &Expr, path: Path) -> Option<Vec<Path>> {
+        let returns = matches!(value, Expr::Lit(_) | Expr::Sql(..) | Expr::RawSql(..));
+        let values = self.eval(value, path)?;
+        if returns {
+            Some(
+                values
+                    .into_iter()
+                    .map(|(path, value)| returned(path, value))
+                    .collect(),
+            )
+        } else {
+            values.is_empty().then_some(Vec::new())
+        }
     }
 
     #[rustfmt::skip]

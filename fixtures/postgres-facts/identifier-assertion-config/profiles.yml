@@ -1,0 +1,38 @@
+version: 2
+projects:
+  database:
+    root: .
+    include: ["tests/**/*.ts"]
+    postgres:
+      schemaCatalogPath: schema.json
+      executors:
+        importSpecifier: "@example/db"
+        extraExecutorNames: [custom]
+        excludeExecutorNames: [query]
+rules:
+  - rule: postgres-no-test-state-mutation
+    projects: [database]
+    options:
+      testGlobs: ["tests/**/*.ts"]
+      rawSqlTags:
+        - { module: "@example/sql", name: raw }
+        - { module: "@example/sql", name: raw }
+      sqlIdentifierAssertions:
+        - { module: "@example/identifiers", name: assertIdentifier, allowlistArgument: 1 }
+        - { module: "@example/identifiers", name: assertIdentifier, allowlistArgument: 1 }
+  - rule: postgres-bounded-statements
+    projects: [database]
+    options:
+      rawSqlTags:
+        - { module: "@example/sql", name: raw }
+        - { module: "@example/sql", name: raw }
+      sqlIdentifierAssertions:
+        - { module: "@example/identifiers", name: assertIdentifier, allowlistArgument: 1 }
+  - rule: postgres-no-offset
+    projects: [database]
+    options:
+      rawSqlTags:
+        - { module: "@example/sql", name: raw }
+        - { module: "@example/sql", name: raw }
+      sqlIdentifierAssertions:
+        - { module: "@example/identifiers", name: assertIdentifier, allowlistArgument: 1 }

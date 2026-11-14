@@ -3,6 +3,14 @@ use oxc_ast::ast;
 use oxc_ast_visit::walk;
 
 impl<'a> ScopeVisitor<'a> {
+    pub(super) fn walk_closed_new(&mut self, expression: &ast::NewExpression<'a>) {
+        let reads = self.literal_objects.read_spans.len();
+        self.exempt_closed_set_input(expression);
+        walk::walk_new_expression(self, expression);
+        self.literal_objects.read_spans.truncate(reads);
+        self.revoke_namespace_arguments(&expression.callee, &expression.arguments);
+    }
+
     pub(super) fn walk_runtime_export(&mut self, declaration: &ast::ExportNamedDeclaration<'a>) {
         if !declaration.export_kind.is_type() {
             for specifier in &declaration.specifiers {
@@ -28,13 +36,17 @@ impl<'a> ScopeVisitor<'a> {
         walk::walk_expression(self, expression);
     }
     pub(super) fn walk_computed_member(&mut self, member: &ast::ComputedMemberExpression<'a>) {
+        let reads = self.literal_objects.read_spans.len();
+        self.exempt_literal_read(&member.object);
         self.with_builder_receiver(&member.object, matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression), ast::Expression::StringLiteral(name) if name.value == "text"), |visitor| {
             walk::walk_computed_member_expression(visitor, member)
         });
+        self.literal_objects.read_spans.truncate(reads);
     }
 
     pub(super) fn walk_program_scope(&mut self, program: &ast::Program<'a>) {
         self.push_scope();
+        self.note_closed_imports(program);
         resolve::hoist_vars(&program.body, self);
         resolve::record_statements(&program.body, self);
         walk::walk_program(self, program);

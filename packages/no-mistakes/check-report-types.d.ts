@@ -1,3 +1,5 @@
+import type { PostgresRawSqlTag } from "./postgres-raw-sql-tag-types";
+import type { PostgresSqlIdentifierAssertion } from "./postgres-sql-identifier-assertion-types";
 import type { QueueCheckFinding } from "./queue-report-types";
 import type { ReactViolation } from "./react-report-types";
 import type { Effort } from "./traversal-types";
@@ -69,6 +71,8 @@ export interface SqlExecutorProfile {
   executorTypeNames: string[];
   trustedSqlTags: { module: string; name: string }[];
   sqlLiteralHelpers?: string[];
+  sqlIdentifierAssertions?: PostgresSqlIdentifierAssertion[];
+  rawSqlTags?: PostgresRawSqlTag[];
 }
 /** Zero-based ordinal among enabled applications of the same rule in config order. */
 export interface SqlRuleApplication {

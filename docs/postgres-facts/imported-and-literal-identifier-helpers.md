@@ -27,7 +27,8 @@ Three fixed helper shapes recover directly:
   `col.length`, `col + '...'` or a local alias), a literal containing a
   newline, or an async or generator helper keeps the call `Dynamic`. Tagged
   `sql` templates are different: their `${...}` values are bound parameters,
-  not SQL text.
+  not SQL text. Explicit [raw SQL tags](closed-identifiers.md#raw-tags-and-parameterized-tags)
+  instead declare text interpolation and require complete finite alternatives.
 - **Statement builders**: a helper that appends fixed `sql` fragments to a
   `SQLStatement` parameter and returns it. The caller supplies a trusted tagged
   template or a fully recovered local builder, as for same-file helpers.

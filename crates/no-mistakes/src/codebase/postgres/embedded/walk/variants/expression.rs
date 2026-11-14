@@ -16,6 +16,9 @@ pub(super) fn recover(
     }
     let expr = unwrap_ts_wrappers(expr);
     let line = byte_offset_to_line(visitor.source, expr.span().start as usize);
+    if let Some(values) = super::super::closed_values::recover(visitor, expr) {
+        return Some(values);
+    }
     match expr {
         Expression::NullLiteral(_) => {
             let mut value = Recovered::empty(line);
@@ -85,7 +88,14 @@ pub(super) fn recover(
                 visitor.functions.imported_sql_tags(),
             ) =>
         {
-            if visitor
+            if visitor.functions.imported_sql_tags().raw(&tagged.tag) {
+                let mut values =
+                    template::clauses::recover(visitor, &tagged.quasi, depth - 1, constraints)?;
+                for value in &mut values {
+                    value.fragment = true;
+                }
+                Some(values)
+            } else if visitor
                 .functions
                 .imported_sql_tags()
                 .parameterizes_all(&tagged.tag)

@@ -18,7 +18,7 @@ pub struct EmbeddedSqlVariant {
     /// Private append occurrences that contributed SQL to this alternative.
     pub(crate) append_sites: Vec<u32>,
     pub(crate) first_append_offset: Option<usize>,
-    /// Feasible append outcomes remain beyond the site cap or sampled loop iterations.
+    /// Feasible outcomes remain beyond a site cap, sampled loop, or opaque interpolation.
     pub(crate) variants_truncated: bool,
 }
 

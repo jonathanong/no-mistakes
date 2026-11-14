@@ -94,9 +94,12 @@ fn call_expression(scope: &mut Scope<'_, '_>, call: &CallExpression<'_>) -> Expr
 /// Whether evaluating the expression can produce or hand on SQL text.
 pub(super) fn contributes_sql(expr: &Expr) -> bool {
     match expr {
-        Expr::Lit(_) | Expr::Template(..) | Expr::Sql(..) | Expr::Append(..) | Expr::Call(..) => {
-            true
-        }
+        Expr::Lit(_)
+        | Expr::Template(..)
+        | Expr::Sql(..)
+        | Expr::RawSql(..)
+        | Expr::Append(..)
+        | Expr::Call(..) => true,
         Expr::Cond(a, b, c) => [a, b, c].into_iter().any(|e| contributes_sql(e)),
         Expr::And(a, b) | Expr::Or(a, b) | Expr::Nullish(a, b) | Expr::Add(a, b) => {
             contributes_sql(a) || contributes_sql(b)

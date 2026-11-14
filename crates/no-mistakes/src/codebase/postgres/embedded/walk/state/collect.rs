@@ -102,9 +102,18 @@ pub(crate) fn collect_calls<'a>(
         function_scopes: Vec::new(),
         var_scopes: Vec::new(),
         functions: if head_calls_only {
-            resolve::LocalFunctions::collect_heads(program, &options.trusted_sql_tags)
+            resolve::LocalFunctions::collect_heads_with_raw(
+                program,
+                &options.trusted_sql_tags,
+                &options.raw_sql_tags,
+            )
         } else {
-            resolve::LocalFunctions::collect(program, source, &options.trusted_sql_tags)
+            resolve::LocalFunctions::collect_with_raw(
+                program,
+                source,
+                &options.trusted_sql_tags,
+                &options.raw_sql_tags,
+            )
         },
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),

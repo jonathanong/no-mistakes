@@ -2,6 +2,7 @@ mod bodies;
 mod body;
 mod call;
 mod collect;
+mod collection;
 mod exports;
 mod parameter;
 mod positions;
@@ -9,8 +10,6 @@ mod programs;
 pub(crate) mod provenance;
 pub(crate) mod reassigned;
 mod shadows;
-pub(crate) use shadows::looks_like_tag_implementation;
-
 use super::super::super::helpers::template::TemplateHelper;
 use super::super::super::options::TrustedSqlTag;
 use super::super::super::tags::SqlTagNames;
@@ -20,52 +19,31 @@ use crate::codebase::postgres::embedded::{
 };
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
-use collect::collect_named_functions;
 use exports::{template_helpers, Callables};
 use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
+pub(crate) use shadows::looks_like_tag_implementation;
 use shadows::TagShadows;
 use std::collections::HashMap;
-
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
-
-/// Same-file functions whose body is a statically resolvable SQL fragment
-/// — a single `return`, or a straight-line `const`/`let` plus `.append`
-/// chain ending in `return` — pre-resolved once per file.
-///
-/// Collection only walks `program.body` — a helper declared lexically nested
-/// inside another function or block is never collected, so a call to it
-/// fails closed (`Dynamic`) rather than risking resolving through the wrong
-/// binding. This is an accepted limitation, not a soundness gap: extending
-/// collection to nested scopes only widens what resolves as `Composed`, it
-/// never narrows it.
 pub(crate) struct LocalFunctions {
     resolved: FxHashMap<String, provenance::RecoveredSql>,
+    guarded_identifiers: FxHashMap<String, Vec<String>>,
     templates: FxHashMap<String, TemplateHelper>,
     parameter_builders: HashMap<String, parameter::ParameterBuilder>,
     tag_shadows: TagShadows,
     programs: FxHashMap<String, std::sync::Arc<super::super::super::helpers::program::Program>>,
-    /// Import and ambient `declare function` names with no other binding.
-    /// Passing a receiver to one of these is not a mutation.
     declared_elsewhere: crate::fx::FxHashSet<String>,
 }
-
-/// A same-file helper's params and body, however it was declared
-/// (`function`, `const x = function() {}`, or `const x = () => {}`).
-///
-/// A single lifetime, not two: [`unwrap_ts_wrappers`] requires its argument's
-/// reference and arena lifetimes to be the same, so any type built from its
-/// result must use one lifetime throughout rather than distinguishing a
-/// "place" lifetime from an "arena" lifetime.
 pub(super) struct Resolvable<'a> {
     params: &'a FormalParameters<'a>,
     body: &'a FunctionBody<'a>,
 }
-
 impl LocalFunctions {
     pub(crate) fn collect_heads(program: &Program<'_>, trusted_sql_tags: &[TrustedSqlTag]) -> Self {
         Self {
             resolved: Default::default(),
+            guarded_identifiers: Default::default(),
             templates: Default::default(),
             parameter_builders: Default::default(),
             tag_shadows: TagShadows::collect(
@@ -77,71 +55,34 @@ impl LocalFunctions {
             declared_elsewhere: bodies::collect(program),
         }
     }
+    pub(crate) fn collect_heads_with_raw(
+        program: &Program<'_>,
+        trusted: &[TrustedSqlTag],
+        raw: &[TrustedSqlTag],
+    ) -> Self {
+        let mut value = Self::collect_heads(program, trusted);
+        value.tag_shadows.configure_raw(
+            program,
+            raw,
+            &super::super::super::bindings::sql_statement_type_bindings(program),
+        );
+        value
+    }
     pub(crate) fn has_static_helper(&self, name: &str) -> bool {
         self.resolved.contains_key(name) || self.templates.contains_key(name)
     }
 
-    pub(crate) fn collect(
+    pub(crate) fn collect(program: &Program<'_>, source: &str, trusted: &[TrustedSqlTag]) -> Self {
+        collection::collect(program, source, trusted, &[])
+    }
+    pub(crate) fn collect_with_raw(
         program: &Program<'_>,
         source: &str,
-        trusted_sql_tags: &[TrustedSqlTag],
+        trusted: &[TrustedSqlTag],
+        raw: &[TrustedSqlTag],
     ) -> Self {
-        let mut raw: HashMap<&str, Resolvable<'_>> = HashMap::new();
-        for statement in &program.body {
-            collect_named_functions(statement, &mut raw);
-        }
-        let declared_elsewhere = bodies::collect(program);
-        let reassigned = ReassignedNames::collect(program);
-        raw.retain(|name, _| !reassigned.contains(name));
-        let sql_statement_types =
-            super::super::super::bindings::sql_statement_type_bindings(program);
-        let tag_shadows = TagShadows::collect(program, trusted_sql_tags, &sql_statement_types);
-        let templates = template_helpers(program, source, &reassigned);
-        let programs = programs::lower_all(
-            program,
-            source,
-            &raw,
-            &tag_shadows,
-            &reassigned,
-            &sql_statement_types,
-        );
-        let mut resolved = FxHashMap::default();
-        let mut parameter_builders = HashMap::new();
-        for name in raw.keys().copied() {
-            let mut resolving = Vec::new();
-            if let Some(value) = resolve_named(
-                name,
-                source,
-                MAX_RESOLVE_DEPTH,
-                &Callables {
-                    raw: &raw,
-                    templates: &templates,
-                },
-                &mut resolving,
-                &tag_shadows,
-            ) {
-                resolved.insert(name.to_string(), value);
-            }
-            if let Some(builder) = parameter::summarize(
-                raw[name].params,
-                raw[name].body,
-                &sql_statement_types,
-                &tag_shadows,
-                source,
-            ) {
-                parameter_builders.insert(name.to_string(), builder);
-            }
-        }
-        Self {
-            resolved,
-            templates,
-            parameter_builders,
-            tag_shadows,
-            programs,
-            declared_elsewhere,
-        }
+        collection::collect(program, source, trusted, raw)
     }
-
     pub(crate) fn is_parameter_builder(&self, name: &str) -> bool {
         self.parameter_builders.contains_key(name)
     }
@@ -153,22 +94,14 @@ impl LocalFunctions {
         self.parameter_builders.get(name)
     }
 
-    /// Whether `name` is a top-level binding that rebinds a same-file
-    /// helper's tag away from trusted meaning (see [`shadows::TagShadows`]).
-    /// Exposed so callers resolving a call or tag directly — not through an
-    /// intermediate same-file helper body, which already consults this via
-    /// [`resolve_named`] — apply the same check.
     pub(crate) fn is_tag_shadowed(&self, name: &str) -> bool {
         self.tag_shadows.contains(name)
     }
 
-    /// Local names of a default import from `sql-template-strings`, or of a
-    /// configured named `trustedSqlTags` import.
     pub(crate) fn imported_sql_tags(&self) -> &SqlTagNames {
         self.tag_shadows.imported_tags()
     }
 }
-
 pub(super) fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
     let mut shadows = false;
     let mut check = |bound: &str| shadows |= bound == name;
@@ -181,15 +114,6 @@ pub(super) fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
     shadows
 }
 
-/// A function inlines when [`body::resolve`] can recover its SQL through
-/// the same conservative expression model as a single `return`. Parameters
-/// used outside a template placeholder never resolve, because
-/// `chain::resolve_expr` has no `Identifier` case. A callee that shadows one
-/// of this function's own parameters is rejected rather than resolved
-/// through the global declaration of the same name — and so is a tagged
-/// template whose tag name (e.g. `sql`) is one of this function's own
-/// parameters, or is rebound anywhere else at the top level by something
-/// other than a same-file helper (see [`shadows::TagShadows`]).
 fn resolve_named(
     name: &str,
     source: &str,

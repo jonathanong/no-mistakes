@@ -75,7 +75,7 @@ pub(super) struct Membership {
 }
 
 pub(super) fn throwing_membership(
-    function: &ast::Function<'_>,
+    params: &ast::FormalParameters<'_>,
     guard: &ast::IfStatement<'_>,
     set: &str,
 ) -> Option<Membership> {
@@ -106,7 +106,7 @@ pub(super) fn throwing_membership(
         || receiver.name != set
         || set == argument.name
         || !throws(&guard.consequent)
-        || !function.params.items.iter().any(|param| {
+        || !params.items.iter().any(|param| {
             param.initializer.is_none()
                 && matches!(&param.pattern, BindingPattern::BindingIdentifier(id) if id.name == argument.name)
         })

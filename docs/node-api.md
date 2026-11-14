@@ -578,7 +578,7 @@ guard throws on nonmembers, with the same CLI and async API result.
 The prepared helper projection also resolves fixed SQL switch arms whose
 default is proven to throw, including a source-visible imported thrower.
 It composes finite literal-string returns into complete ordinary SQL templates
-before the shared policy check; tagged-template substitutions remain binds.
+before the shared policy check; parameterized-tag substitutions remain binds.
 Local builder assignments after a direct throwing branch use the same
 reachable SQL alternatives in CLI and async Node check reports.
 Destructured and bound methods selected by `executorNames` on a configured imported receiver,
@@ -587,6 +587,14 @@ Non-call runtime references retain the configured unanalyzable policy even if
 a later direct call is analyzed. Defaulted destructuring parameters remain
 uncertain; type-only references are excluded. This adds no public option or
 separate API function.
+
+The async `check()` API and `analyzeProject()` check reports also support
+[closed identifier construction](postgres-facts/closed-identifiers.md) for
+`postgres-no-test-state-mutation` and `postgres-bounded-statements`. Their options
+accept `sqlIdentifierAssertions` and `rawSqlTags`, using the exported
+`PostgresSqlIdentifierAssertion` and `PostgresRawSqlTag` types. The same optional
+fields appear on `SqlExecutorProfile` in requested SQL verdicts. Ordinary
+parameterized tags still bind values; raw tag semantics require explicit opt-in.
 
 The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#copy-stream-wrappers-and-configured-single-literal-sql-helpers).
 
