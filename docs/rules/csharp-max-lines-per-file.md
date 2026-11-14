@@ -92,8 +92,9 @@ rules:
 
 `srcMax` applies to production `.cs` files (default 200). `testMax` applies to
 test files (default 500). A file uses the test limit when its normalized path
-contains `/tests/`, or when it matches `testRoots` (default `**/tests/**` and
-`**/*.Tests/**`). Generated files matching `**/*.g.cs` are excluded by default.
+starts with `tests/` or contains `/tests/`, or when it matches `testRoots`
+(default `**/tests/**` and `**/*.Tests/**`). The `tests/` prefix applies even
+when custom `testRoots` do not match that file. Generated files matching `**/*.g.cs` are excluded by default.
 `roots` limits discovery to selected directories. Additional `excludes` are path
 globs or substrings.
 

@@ -393,8 +393,8 @@ largest in-flight statement.
 | `include`, `exclude` | `[]` | Additional source include and exclude globs inside the selected application scope. |
 | `sqlInclude` | shared PostgreSQL scope | Explicit SQL paths/globs; project PostgreSQL scope can supply these. An empty list uses the shared PostgreSQL fallback within the selected application scope. |
 | `importSpecifier` | empty | Module exporting configured executors. |
-| `executorNames` | `query`, `read`, `write` | Replaces executor names; mutually exclusive with extras. |
-| `extraExecutorNames` | unset | Adds names to the defaults. |
+| `executorNames` | `[query, read, write]` when `importSpecifier` is set and this list is omitted; otherwise empty | Replaces executor names. Mutually exclusive with `extraExecutorNames`. With neither a module nor a name list, executor calls stay unselected. |
+| `extraExecutorNames` | unset | When set, selects `query`, `read`, and `write` plus these names. Mutually exclusive with `executorNames`. |
 | `excludeExecutorNames` | `[]` | Removes names after replacement/defaults and extras. |
 | `executorFactoryNames`, `executorTypeNames` | `[]` | Explicit executor factories and types. |
 | `executorOptionProperties` | `[]` | Declared option properties carrying an executor. |
@@ -404,6 +404,12 @@ largest in-flight statement.
 No allow list or fail option is supported. Public Node options are exported as
 `PostgresGroupingNotAggregationOptions`; the target union is
 `PostgresGroupingNotAggregationCode`.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
 
 ## Suppression
 

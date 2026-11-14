@@ -27,8 +27,9 @@ info token case-insensitively; indented code is not a Mermaid block.
 
 Finding paths are lexical from the request root. External configured projects
 use a stable `../project/file.md` path, so standard file suppressions resolve
-back to the source. Baseline entries remain relative to each effective project
-root, keeping a project's rollout state portable across request locations.
+back to the source. Baseline entries for files inside the request root, including nested projects,
+are request-root-relative. Only paths outside the request root stay relative
+to their effective project root.
 
 For staged rollout, `baselineFile` may name a tracked JSON object mapping each
 current violation to exact `{ "tables": N, "mermaid": N }` counts. Any count

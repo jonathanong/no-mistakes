@@ -139,6 +139,12 @@ Add `CHECK (item_count >= 0)` to the table, correct existing negative values,
 and validate the constraint. Regenerate the schema catalog. There is no automatic
 fix because the rule cannot decide how to repair stored data.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
 ## Suppression
 
 `allow` defaults to an empty list. For an intentional signed column, put

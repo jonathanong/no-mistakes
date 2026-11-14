@@ -18,8 +18,8 @@ non-static members according to the selected comparison mode.
 `sets` entries require `name` and `kind` plus that extractor's documented
 fields (`file`, `target`, `key`, `pattern`, `property`, `minSize`,
 `stripPrefix`, or `excludePrefix`). `comparisons` entries require `left` and
-`right` and default `mode` to `equal-set`; supported modes are documented
-below.
+`right` and default `mode` to `equal-set`. Optional `message` replaces the
+generated finding text. Supported modes are documented below.
 
 ```yaml
 rules:

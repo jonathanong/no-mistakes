@@ -57,13 +57,16 @@ rules:
   - rule: github-actions-job-timeouts
     scope: repository
     options:
+      maxMinutes: 10
       allow:
         - job: ".github/workflows/ci.yml#coverage"
           maxMinutes: 20
 ```
 
-`timeout-minutes` must be a number or numeric string. Invalid YAML is a
-diagnostic, and unused `allow` entries for jobs in scanned files are findings.
+`allow` is consulted only when `maxMinutes` is set. Without that cap, an entry
+for a scanned workflow is unused. `timeout-minutes` must be a number or numeric
+string. Invalid YAML is a diagnostic, and unused `allow` entries for jobs in
+scanned files are findings.
 
 ## Valid example
 
@@ -193,7 +196,7 @@ the partner reports over-cap steps.
 
 Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
 
-- This rule has no unanalyzable inputs: it judges literal `timeout-minutes` values and their sums, and a missing, malformed, or over-cap value is a definite finding. Nothing is routed through `options.unanalyzable`.
+- This rule has no `options.unanalyzable` channel. A missing or malformed job `timeout-minutes` is a finding, and invalid YAML is a finding. Step timeouts are judged only when `rejectStepExceedingJob` is enabled: a missing step timeout is not a finding, and a value with no supported literal upper bound is. An over-cap finding requires `maxMinutes`.
 
 ## Related rules
 

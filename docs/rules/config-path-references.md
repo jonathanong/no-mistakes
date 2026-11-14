@@ -63,11 +63,11 @@ paths:
 | ------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `oxlintrc`               | `.oxlintrc.json` / `.oxlintrc.jsonc` (including nested)                     | relative `jsPlugins[].specifier`, non-glob `overrides.files`, `rules.*.baseline[][0]` |
 | `knip`                   | `knip.json` / `knip.jsonc`                                                  | `workspaces.{name}.entry` and `.project`, prefixed by the workspace path unless `.`   |
-| `dependabot`             | `.github/dependabot.yml`                                                    | `updates[].directory`                                                                 |
-| `sgconfig`               | `sgconfig.yml`                                                              | `ruleDirs`                                                                            |
+| `dependabot`             | `.github/dependabot.yml` or `.github/dependabot.yaml`                                                    | `updates[].directory`                                                                 |
+| `sgconfig`               | `sgconfig.yml` or `sgconfig.yaml`                                                              | `ruleDirs`                                                                            |
 | `syncpack`               | `.syncpackrc.json`                                                          | `source` globs                                                                        |
-| `coverage-rules`         | `.coverage-rules.yml`                                                       | `rules[].paths`                                                                       |
-| `pnpm-workspace-filters` | `.github/workflows/*.{yml,yaml}` and `.github/actions/**/action.{yml,yaml}` | `pnpm --filter ./path...` selectors in shell commands                                 |
+| `coverage-rules`         | `.coverage-rules.yml` or `.coverage-rules.yaml`                                                       | `rules[].paths`                                                                       |
+| `pnpm-workspace-filters` | any `.yml` or `.yaml` under `.github/workflows/` (including nested paths) and `.github/actions/**/action.{yml,yaml}` | `pnpm --filter ./path...` selectors in shell commands                                 |
 | `no-mistakes`            | root `.no-mistakes.{yaml,yml,json,jsonc}` and `.no-mistakes/` fragments     | schema-known project, test config, TestPlan trigger, and rule-option paths             |
 
 Counterexample: `config/app.yml` contains `paths.requiredFiles:
@@ -95,7 +95,7 @@ rule-specific option fields:
 | `csharp-max-lines-per-file` | `roots`, `testRoots` |
 | `doc-consistency` | `requiredFiles`, `requiredSubstrings[].file`, `bannedPatterns[].files` |
 | `file-extension-policy` | `allowlist`, `scopes[].path` |
-| `forbidden-dependencies` | `roots`, `forbiddenFiles` |
+| `forbidden-dependencies` | `roots`, `excludeRoots`, `forbiddenFiles`, `exceptions[].roots`, `exceptions[].allowedFiles` |
 | `forbidden-workspace-closure` | `lockfile` |
 | `markdown-reachability`, `markdown-structure-budget` | `baselineFile` |
 | `nextjs-redirect-destinations` | `configPath`, `appRoot` |

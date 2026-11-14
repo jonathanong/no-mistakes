@@ -18,7 +18,8 @@ export default async function Page() {
 ## Suppression
 
 Use a line directive for a documented cache escape hatch or a file directive
-for a route intentionally outside the policy. Prefer a narrow `allow` entry.
+for a route intentionally outside the policy. There is no `allow` option;
+narrow `include` or `exclude` instead.
 
 ## Why and when
 
@@ -105,7 +106,7 @@ Suppression still applies after extraction.
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove (at low effort, fetch options that are not an inline object, spreads, computed keys, indirect segment exports, and configuration wrappers) follow `options.unanalyzable`:
-  - `report` (default): fails as a finding, e.g. `app/page.tsx:2: fetch cache option is unanalyzable at effort low`.
+  - `report` (default): fails as a finding. The message is `Next.js caching configuration is unanalyzable at effort low; write literal fetch options, literal route segment exports, or a literal next.config object directly at the use site`.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 

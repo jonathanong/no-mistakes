@@ -103,6 +103,12 @@ Composite-action findings explain that scripts beside the action need
 For workflows triggered by `workflow_run` or `pull_request_target`, findings
 require the moved script to come from the trusted ref, never the PR head.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
 ## Suppression
 
 YAML comment directives work on the script key line, immediately above that line, or for

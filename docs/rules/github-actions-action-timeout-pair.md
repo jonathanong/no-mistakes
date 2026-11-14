@@ -55,9 +55,7 @@ jobs:
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it pairs `uses` actions with timeouts from parsed workflow keys. Nothing is routed through `options.unanalyzable`.
+Invalid YAML is skipped and produces no finding. It is not sent through `options.unanalyzable`. Parsed `uses` and timeout keys are judged.
 
 ## Suppression
 

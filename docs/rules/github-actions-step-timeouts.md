@@ -29,8 +29,10 @@ cap below GitHub's 360-minute maximum. The effective cap never exceeds 360.
 job's `steps` array, such as `path#jobId#2`. An allow entry permits an absent or
 expression timeout; malformed literal values still fail. Its optional
 `maxMinutes` overrides the ordinary cap for a literal timeout, but cannot
-exceed 360. Blank reasons, duplicate entries, and stale entries (including for
-deleted or renamed workflow files) are findings. A raising entry is stale if
+exceed 360. Blank reasons and duplicate entries are findings. Stale entries
+are findings only for files this run scanned. A unique allow entry for a
+deleted or renamed file is not a stale finding; duplicate entries for that
+absent path are still duplicate findings. A raising entry is stale if
 its step already has a valid literal timeout within the ordinary cap; a lower
 cap stays active as a stricter limit. For a step inside `parallel`, append
 `/childId` or a 1-based child position to its group's selector; for example,

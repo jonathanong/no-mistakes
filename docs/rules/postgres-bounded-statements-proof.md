@@ -202,9 +202,10 @@ A chain of CTEs whose bounds grow past a few thousand items is compacted to its
 distinct uncapped base-relation reads plus an opaque source. This retains findings
 while preventing the summary from bounding another relation, so pathological generated
 SQL stays cheap to analyze. A `COPY (SELECT …)` query is judged like a `SELECT`. The rule
-reports each relation that makes a statement unbounded, once, at that relation's line.
-Each report keeps its own `table:` target and rule message when a query reads
-several unbounded relations.
+emits one finding per statement. Distinct unbounded relations are joined in `target`
+(for example `table:feeds, table:items`) and their messages are joined with `; `.
+A single-relation finding keeps one `table:` target. The finding is placed at the
+earliest remaining relation location.
 Imported or appended shared SQL keeps each root's report at its executing
 caller, with the fragment line named in the message.
 An uncapped SELECT also reports unbounded relations read by its IN-subquery pins,

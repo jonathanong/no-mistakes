@@ -52,7 +52,7 @@ pattern produces no findings.
 
 Search uses the leftmost match, then the next non-overlapping match. Inline
 flags such as `(?m)` and `(?s)` are part of the pattern. The finding line is
-the count of newline bytes before the match start, so a carriage return plus
+1 plus the count of newline bytes before the match start, so a carriage return plus
 line feed is one line break and the count is Unicode-safe. One finding is
 reported per pattern per start line. Repeated matches of one pattern on that
 line collapse. Different patterns on the same line each produce a finding.

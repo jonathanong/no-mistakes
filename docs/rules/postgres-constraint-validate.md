@@ -83,7 +83,7 @@ Every named `NOT VALID` constraint add in the included SQL must have a matching
 
 ## Options and defaults
 
-`sqlInclude` is the only rule option and defaults to `**/*.sql`. Pairing uses
+`sqlInclude` defaults to `**/*.sql`. `sqlIncludeLocked` is internal; do not set it. Pairing uses
 the canonical `table.name`; unnamed checks that do not identify one column
 cannot be paired by a predictable generated name.
 

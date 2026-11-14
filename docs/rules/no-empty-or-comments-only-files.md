@@ -12,8 +12,7 @@ comments or whitespace.
 
 ## Options
 
-`extensions` defaults to TypeScript, JavaScript, SQL, Rust, and CSS source
-extensions. `intentionallyEmpty` defaults to an empty list of exceptions. Use
+`extensions` defaults to `.ts`, `.mts`, `.cts`, `.tsx`, `.js`, `.jsx`, `.sql`, `.rs`, and `.css`. `.mjs` and `.cjs` are not included. `intentionallyEmpty` defaults to an empty list of exceptions. Use
 the common rule `include` and `exclude` fields to narrow the file scope.
 
 With `reportUnusedAllowEntries: report` (or `advise`), an

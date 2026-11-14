@@ -83,7 +83,7 @@ exception is being removed. `safeDirective` defaults to `deadlock-safe`.
 
 ### Executor configuration
 
-Omitting both `importSpecifier` and `executorNames` is a configuration error.
+Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error.
 Set `importSpecifier` to your database module or list `executorNames` explicitly.
 Use `executorNames: []` without a module to select no executor calls and retain
 SQL-file/native-SQL analysis where supported. See the

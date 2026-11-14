@@ -110,7 +110,7 @@ route.
 External destinations (`://`, `//`) and parameterized `:[A-Za-z]` destinations
 are skipped. Query strings and hashes are stripped before matching. Dynamic
 App Router segments use the same `[slug]`, `[...x]`, and `[[...x]]` matching
-as an application `matchesRouteSegments` helper.
+the same way this rule matches App Router segments.
 
 If `redirects` or `rewrites` text exists but the extractor cannot find a
 method/function body or string destinations, the rule reports extractor drift
@@ -208,7 +208,7 @@ async redirects() {
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove (at low effort, identifiers, helpers, `.map()` callbacks, spreads, destructuring, and interpolated templates; at either effort, an unreadable or unparsable `next.config.*`) follow `options.unanalyzable`:
-  - `report` (default): fails as a finding, e.g. `next.config.ts: redirects() destinations are unanalyzable at effort low`.
+  - `report` (default): fails as a finding. At low effort the message says extraction is unanalyzable in `redirects()` or `rewrites()` and names the literal-array rewrite. A destination that is not a string literal says `found destination properties` that are not string literals at effort low.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 

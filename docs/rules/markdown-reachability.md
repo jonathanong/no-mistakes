@@ -53,8 +53,9 @@ implicitly resolved to `README.md`.
 
 Finding paths are lexical from the request root. External configured projects
 use a stable `../project/file.md` path, so standard file suppressions resolve
-back to the source. Baseline entries remain relative to each effective project
-root, keeping a project's rollout state portable across request locations.
+back to the source. Baseline entries for files inside the request root, including nested projects,
+are request-root-relative. Only paths outside the request root stay relative
+to their effective project root.
 
 For a staged rollout, `baselineFile` may name a tracked JSON object mapping a
 path to `{ "state": "depth", "depth": N }` or
