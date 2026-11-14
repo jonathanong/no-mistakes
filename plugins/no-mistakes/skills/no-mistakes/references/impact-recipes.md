@@ -247,7 +247,8 @@ Read the results as:
   comparison base in git itself.
 - Test files that changed directly are included in the plan without needing a
   dependency-graph traversal.
-- `--format commands` prints one runner invocation per selected test. Vitest
+- `--format commands` emits one command per execution target, sorted and
+  deduplicated. Vitest
   is `vitest`, then `--workspace <file>` or `--config <file>` when one is set,
   then `--project <name>` when set, then the test file. Playwright is
   `playwright test` with those same config and project flags; the file
@@ -450,9 +451,8 @@ For imported APIs that adopt callback returns, configure `awaitingConsumers`
 with explicit `callbackArgumentIndexes`, or `callbackArgumentProperties` for
 named properties of fresh DI objects. Same-file awaited consumers can prove
 adoption directly. Resolvable named imports prove adoption without a TypeScript
-program, including under Oxlint `--type-aware`. A unique bare `export * from`
-is followed and can prove the named export. `export default` and
-`module.exports` stay unproven on that path, and a `require()` consumer
+program, including under Oxlint `--type-aware`. `export default`, `export *`,
+and `module.exports` stay unproven on that path, and a `require()` consumer
 stays unproven in either mode. Unknown callback APIs remain reported.
 
 For file-local API prevention policies, configure the opt-in

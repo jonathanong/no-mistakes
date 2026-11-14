@@ -30,7 +30,7 @@ All `playwright` subcommands accept:
 - `--playwright-config <FILE>` — path to a Playwright config (repeatable for
   multiple configs).
 - `--project <NAME>` — match the Playwright config file's top-level `name`.
-  If exactly one loaded config has no top-level name, it selects an inner
+  If the only loaded config has no top-level name, it selects an inner
   `projects[]` name instead. Multiple configs still need unique top-level
   names. This is not the `.no-mistakes.yml` `projects:` key; `--app` is.
 - `--app <NAME>` — `.no-mistakes.yml` `projects:` key of the frontend app to
