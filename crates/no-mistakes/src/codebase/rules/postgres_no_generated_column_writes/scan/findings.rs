@@ -1,5 +1,6 @@
 use super::super::{finding, trigger_finding, unanalyzable_finding};
 use super::history::Catalogs;
+use super::positional::PositionalUncertainty;
 use crate::codebase::postgres::dml::writes::positional_insert_hits;
 use crate::codebase::postgres::{
     recovered_sql_may_write_columns, EmbeddedSqlFileFacts, SqlStatementFileFacts, SqlWriteColumns,
@@ -32,9 +33,11 @@ pub(super) fn extend_writes<'a>(
     dedup: &mut crate::codebase::rules::VariantFindingDedup,
     source: Option<&str>,
     lookup: &dyn Fn(usize, usize) -> &'a Catalogs,
+    uncertainty: &PositionalUncertainty<'_>,
 ) {
     for statement in statements {
         let mut hits = Vec::new();
+        let mut unproven = Vec::new();
         for (write_index, write) in statement.writes.iter().enumerate() {
             let catalog = &lookup(write.line, write.column).combined;
             let Some(meta) = catalog.get(&write.table) else {
@@ -54,10 +57,16 @@ pub(super) fn extend_writes<'a>(
                     .map(|(_, column)| column.clone())
                     .collect(),
                 SqlWriteColumns::Positional(width) => {
-                    positional_insert_hits(&write.table, meta, *width)
-                        .into_iter()
-                        .map(|hit| hit.column)
-                        .collect()
+                    // Absent width is `DEFAULT VALUES` (no column assigned), not an unknown order.
+                    if meta.column_order.is_none() && width.is_some_and(|count| count > 0) {
+                        unproven.push((write.line, meta.name.clone(), write_index));
+                        Vec::new()
+                    } else {
+                        positional_insert_hits(&write.table, meta, *width)
+                            .into_iter()
+                            .map(|hit| hit.column)
+                            .collect()
+                    }
                 }
                 SqlWriteColumns::All => meta.generated.iter().cloned().collect(),
             };
@@ -108,6 +117,15 @@ pub(super) fn extend_writes<'a>(
                 render(file, line, table, &column),
             );
         }
+        super::positional::emit_unproven(
+            findings,
+            dedup,
+            statement,
+            source,
+            file,
+            &unproven,
+            uncertainty,
+        );
     }
 }
 fn write_site(

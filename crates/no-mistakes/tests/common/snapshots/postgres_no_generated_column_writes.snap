@@ -130,6 +130,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "UPDATE external_orders SET updated_at = now();",
           "target": "updated_at"
+        },
+        {
+          "file": "external.sql",
+          "line": 3,
+          "message": "external.sql:3: columnless insert into `external_orders` cannot be checked because its column order is unknown; name the columns explicitly so a generated or trigger-maintained column can be ruled out, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO external_orders VALUES (1);",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []
@@ -367,14 +375,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "ctas_order": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "line": 2,
+          "message": "writes.sql:2: columnless insert into `snapshot` cannot be checked because its column order is unknown; name the columns explicitly so a generated or trigger-maintained column can be ruled out, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO snapshot VALUES (1);",
+          "target": "unanalyzable"
+        }
+      ],
       "warnings": []
     }
   },
@@ -1910,6 +1927,128 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown_positional": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (1, 'n', now());",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "votes.created_at",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `votes.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO votes (created_at) VALUES (now());",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "line": 1,
+          "message": "writes.sql:1: columnless insert into `votes` cannot be checked because its column order is unknown; name the columns explicitly so a generated or trigger-maintained column can be ruled out, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO votes VALUES (1, now());",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_positional_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "writes.sql",
+          "line": 1,
+          "message": "writes.sql:1: postgres-no-generated-column-writes application #0 has unresolved SQL for positional-column-order: an explicit column list is required for `votes` because its column order is unknown",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO votes VALUES (1, now());",
+          "target": "positional-column-order"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (1, 'n', now());",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "votes.created_at",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `votes.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO votes (created_at) VALUES (now());",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_positional_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unknown_positional_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 4,
+          "message": "writes.sql:4: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (1, 'n', now());",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "votes.created_at",
+          "line": 3,
+          "message": "writes.sql:3: do not write generated column `votes.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO votes (created_at) VALUES (now());",
+          "target": "created_at"
+        }
+      ],
       "warnings": []
     }
   },

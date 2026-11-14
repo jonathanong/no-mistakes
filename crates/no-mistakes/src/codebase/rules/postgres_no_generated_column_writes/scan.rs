@@ -94,6 +94,7 @@ pub(super) fn scan(
                 &mut dedup,
                 source.as_deref(),
                 &lookup,
+                &positional_uncertainty(opts, facts),
             );
             if let Some(embedded) = profile
                 .filter(|_| opts.fail_unanalyzable)
@@ -110,6 +111,20 @@ pub(super) fn scan(
 mod findings;
 use findings::{extend_unanalyzable, extend_writes};
 mod history;
+mod positional;
+
+fn positional_uncertainty<'a>(
+    opts: &'a CompiledOptions,
+    facts: &'a dyn crate::codebase::check_facts::SqlFactContext,
+) -> positional::PositionalUncertainty<'a> {
+    if opts.fail_unanalyzable {
+        positional::PositionalUncertainty::Report
+    } else if opts.advise_unanalyzable {
+        positional::PositionalUncertainty::Advise(facts, &opts.embedded)
+    } else {
+        positional::PositionalUncertainty::Ignore
+    }
+}
 #[cfg(test)]
 mod tests;
 mod verdicts;

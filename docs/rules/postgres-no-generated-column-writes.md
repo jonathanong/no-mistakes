@@ -148,7 +148,9 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
   - `advise`: a non-failing advisory `{file}:{line}: postgres-no-generated-column-writes has unresolved SQL for {checks}: {reasons}` (for example `unresolved-sql-fragment` or `opaque-sql-tail`). The target is the subcheck (`generated-write`, or `trigger-maintained-write` when trigger columns are configured), not the report sentence.
   - `ignore`: omitted.
 
-  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+A columnless `INSERT` or `MERGE` insert that supplies positional values into a catalogued table whose column order is unknown follows the same policy. `report` fails with target `unanalyzable` and asks for an explicit column list. `advise` uses subcheck `positional-column-order`. The finding does not name a generated column. A named column list that omits those columns stays clean, as does a known order whose known value width stops before them. `INSERT ... DEFAULT VALUES` assigns no columns and stays clean. `INSERT ... TABLE` is unsupported SQL and keeps the generic unanalyzable diagnostic.
+
+Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
 SQL schema statements selected by `sqlInclude` also retain diagnostics when the
 lenient parser cannot parse or recover them. Each diagnostic identifies the file,
@@ -267,8 +269,13 @@ use the final catalog. DDL inside a `DO $$` body follows physical statement
 order even when the body and an outer write share a line. `CREATE TABLE ... AS`,
 `LIKE`, `INHERITS`, and partition tables keep an unknown positional column
 order, so positional `INSERT` values are
-not attributed to later `ALTER ... ADD COLUMN` generated columns. Quoted and
-unquoted column names that differ in case are distinct during `ALTER` replay.
+not attributed to later `ALTER ... ADD COLUMN` generated columns.
+`extraGeneratedColumns` entries also have no column order. A columnless
+`INSERT` into one of those tables is not attributed to a later
+`ALTER ... ADD COLUMN` generated column. It follows `unanalyzableSql` and asks
+for an explicit column list, because the column order is unknown. `INSERT ...
+DEFAULT VALUES` assigns no columns and stays clean. Quoted and unquoted column
+names that differ in case are distinct during `ALTER` replay.
 
 ## Invalid UTF-8
 

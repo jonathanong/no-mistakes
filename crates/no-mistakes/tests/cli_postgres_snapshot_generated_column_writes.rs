@@ -438,6 +438,34 @@ fn postgres_no_generated_column_writes_check_json_snapshot() {
             "unanalyzable",
             "unanalyzable-ordinary.yml",
         ),
+        // votes VALUES is unanalyzable. votes (created_at) and the wide items
+        // VALUES stay definite. votes (id), the narrow items VALUES, and both
+        // DEFAULT VALUES inserts stay quiet.
+        (
+            "unknown_positional",
+            "unit-fixture",
+            "unknown-positional",
+            "unknown-positional.yml",
+        ),
+        (
+            "unknown_positional_ignore",
+            "unit-fixture",
+            "unknown-positional",
+            "unknown-positional-ignore.yml",
+        ),
+        (
+            "unknown_positional_advise",
+            "unit-fixture",
+            "unknown-positional",
+            "unknown-positional-advise.yml",
+        ),
+        // The next-line disable on the only votes VALUES suppresses it.
+        (
+            "unknown_positional_disabled",
+            "unit-fixture",
+            "unknown-positional-disabled",
+            "unknown-positional-disabled.yml",
+        ),
     ];
     let cases = rows.map(|(label, kind, name, config)| {
         (
