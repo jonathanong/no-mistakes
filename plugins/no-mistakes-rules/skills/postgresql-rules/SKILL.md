@@ -16,9 +16,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
 - MUST NOT issue one query per item in a loop, `.map`, or `Promise.all`; write the batch query and make the single-item call wrap it.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.
-- MUST NOT put volatile functions (`random()`, `clock_timestamp()`) in predicates; they are evaluated per row.
-- MUST NOT re-read the clock in each batch or transaction of one sweep or change-detection pass; `now()` moves between transactions, so compute the cutoff once and bind it.
-- MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT`.
+- MUST NOT put volatile functions (`random()`, `clock_timestamp()`) in predicates; they are evaluated per row.- MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT`.
 - MUST NOT write generated or trigger-maintained columns.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `SELECT *`, `alias.*`, or `RETURNING *`; list columns.
