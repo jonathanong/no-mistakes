@@ -159,9 +159,12 @@ context, option propagation, and safe command execution.
 
 ## Output and scope contract
 
-- Use `--format json` (or `--json`) for parsing; CLI JSON is the authoritative
-  structured result. Inspect warnings and fallback fields before assuming an
-  empty or narrow plan is complete.
+- Use `--format json` for parsing when the command accepts it. `playwright`
+  has `--json` only. `tests why` accepts `--format json` and has no `--json`.
+  `config resolve` and `ci topology-impact` always print JSON and have no
+  format switch. CLI JSON is the authoritative structured result. Inspect
+  warnings and fallback fields before assuming an empty or narrow plan is
+  complete.
 - Use `--format paths` only for reviewing or piping trusted path lists. Prefer
   JSON `command` arrays to execute configured validation commands; do not
   `eval` command text from an untrusted source.

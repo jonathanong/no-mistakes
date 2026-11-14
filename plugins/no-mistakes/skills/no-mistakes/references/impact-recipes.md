@@ -72,7 +72,7 @@ Use this before adding a new directory to `tests.playwright.selectorRoots` or
 before deciding whether selectors under a directory are intentionally uncovered.
 
 ```bash
-no-mistakes config resolve --root . --view declared | jq '.tests.playwright | {selectorRoots, selectorInclude, selectorExclude, testIdAttribute, testIds, componentTestIds}'
+no-mistakes config resolve --root . --view declared | jq '.tests.playwright | {selectorRoots, selectorInclude, selectorExclude, testIdAttribute, testIds: .selectors.testIds, componentTestIds: .selectors.componentTestIds}'
 rg -n 'data-pw=|data-testid=|dataPw|testId' web/path/to/candidate-root another/path/to/root
 ```
 
@@ -237,18 +237,24 @@ no-mistakes impacted-checks --base origin/main --format paths
 
 Read the results as:
 
-- `--from-git-diff <base...head>` is sugar for `--base <base> --head <head>`; it
-  runs the same `git diff --relative --name-status <base>...<head>` lookup
-  `tests plan` already performs for `--base`/`--head`. Use three-dot refspecs
+- `--from-git-diff <base...head>` is sugar for `--base <base> --head <head>`.
+  The lookup is `git -c core.quotePath=true diff --relative -M --unified=3
+  --no-color --no-ext-diff --no-textconv --src-prefix=a/ --dst-prefix=b/
+  <base>...<head>`. `git diff --relative --name-status -z` runs only when
+  `--diff`, `--diff-stdin`, or `--diff-command` is also set. Use three-dot refspecs
   only (`origin/main...HEAD`, or a bare `origin/main` to diff against `HEAD`);
   two-dot (`origin/main..HEAD`) is rejected because it is a different
   comparison base in git itself.
 - Test files that changed directly are included in the plan without needing a
   dependency-graph traversal.
-- `--format commands` prints the exact runner invocation for every selected
-  test (`vitest <file>`, `playwright test <file>`, `dotnet test <project>
-  --no-restore`, `swift test --filter <target>`, or the package's
-  `tests.swift.baseCommands` argv), ready to run as-is.
+- `--format commands` prints one runner invocation per selected test. Vitest
+  is `vitest`, then `--workspace <file>` or `--config <file>` when one is set,
+  then `--project <name>` when set, then the test file. Playwright is
+  `playwright test` with those same config and project flags; the file
+  argument is regex-escaped (`login.spec.ts` becomes `login\.spec\.ts`).
+  Dotnet is `dotnet test <project> --no-restore` and does not take the test
+  file. Swift uses `tests.swift.baseCommands` when set, otherwise `swift test`,
+  then `--package-path` when a package is set, then `--filter <target>`.
 - `--environment <name>` selects a configured `testPlan` environment (e.g. a
   narrower `pre-push` budget vs. a broader `pull-request` budget); omit it to
   use the default groups.
@@ -444,8 +450,9 @@ For imported APIs that adopt callback returns, configure `awaitingConsumers`
 with explicit `callbackArgumentIndexes`, or `callbackArgumentProperties` for
 named properties of fresh DI objects. Same-file awaited consumers can prove
 adoption directly. Resolvable named imports prove adoption without a TypeScript
-program, including under Oxlint `--type-aware`. `export default`, `export *`,
-and `module.exports` stay unproven on that path, and a `require()` consumer
+program, including under Oxlint `--type-aware`. A unique bare `export * from`
+is followed and can prove the named export. `export default` and
+`module.exports` stay unproven on that path, and a `require()` consumer
 stays unproven in either mode. Unknown callback APIs remain reported.
 
 For file-local API prevention policies, configure the opt-in

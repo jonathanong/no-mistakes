@@ -190,7 +190,16 @@ See [flow](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/flow.md
 | `--format human` | Debugging interactively on a TTY |
 | `--format yml` | YAML pipelines |
 
-Default: `human` on TTY, `json` when piped.
+Default for commands that share the TTY switch (`dependencies`, `dependents`,
+`symbols`, `importers`, `exports-of`, `dead-exports`, `call-sites`,
+`resolve-check`, `import-usages`, `impacted-checks`, `ci impact`, `ci env`):
+`human` on a TTY, `json` when piped. `tests plan`, `tests impact`, and
+`tests targets` default to `json` on a TTY. `tests why` defaults to `text`
+and has no `--json`. `check`, `effects`, `react`, `queues`, `server`,
+`fetches`, `flow`, `infra`, and `swift` stay `human` when piped unless you
+pass `--format json` or `--json`. `ci topology` defaults to `json` (`json` or
+`mermaid` only). `config resolve` and `ci topology-impact` always print JSON
+and have no format switch. `playwright` has `--json` only.
 
 ## Filtering results
 

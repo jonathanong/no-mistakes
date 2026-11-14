@@ -2,9 +2,9 @@
 
 ## Why
 
-Next.js discovers `metadata` and `generateMetadata` only from route segment
-modules. Exporting them from ordinary components implies behavior Next.js will
-not use.
+Next.js reads `metadata` and `generateMetadata` from App Router `page` and
+`layout` files. Exporting them from ordinary components implies behavior
+Next.js will not use.
 
 ## Disallowed
 
@@ -26,8 +26,10 @@ This rule has no options.
 
 ## Fix
 
-Move the export to a Next.js `page`, `layout`, `template`, or other route
-segment module, or use an ordinary component constant instead.
+Move the export to an App Router `page` or `layout` file
+(`app/**/page.{js,jsx,ts,tsx}` or `app/**/layout.{js,jsx,ts,tsx}`), or use an
+ordinary component constant instead. `app/template.tsx` and `pages/page.tsx`
+are still reported.
 
 ## Suppression
 
