@@ -17,10 +17,7 @@ impl Projector<'_, '_> {
             Expression::Identifier(id) => self
                 .binding_symbol(id)
                 .and_then(|symbol| self.temp_factories.bindings.get(&symbol.index()))
-                .and_then(|binding| match binding {
-                    TempFactoryBinding::Named { result, .. } => Some(*result),
-                    TempFactoryBinding::Module { .. } => None,
-                }),
+                .and_then(super::result::named_result),
             Expression::StaticMemberExpression(member) => {
                 let (root, nested) = match member.object.get_inner_expression() {
                     Expression::StaticMemberExpression(inner)

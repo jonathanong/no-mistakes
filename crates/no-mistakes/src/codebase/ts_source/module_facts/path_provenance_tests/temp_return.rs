@@ -42,6 +42,8 @@ fn temp_factory_return_kind_is_not_the_module_family() {
         "readdirSync(promises.mkdtemp('ns-promise-'))",
         "readdirSync(nodeFs.mkdtemp('member-callback-'))",
         "readdirSync(nodeFs.promises.mkdtemp('member-promise-'))",
+        "readdirSync(replacedSync('written-sync'))",
+        "readdirSync(await nodeFs['mkdtemp']('computed-member'))",
     ] {
         let origin = read.origin(expression);
         assert_eq!(
@@ -50,4 +52,8 @@ fn temp_factory_return_kind_is_not_the_module_family() {
             "{expression}: {origin:?}"
         );
     }
+    let awaited_literal = read.origin("readdirSync(await directoryName)");
+    assert_eq!(awaited_literal.anchor, PathAnchor::Relative);
+    assert_eq!(awaited_literal.segments, ["not-a-call"]);
+    assert_eq!(awaited_literal.value_kind, PathValueKind::Scalar);
 }

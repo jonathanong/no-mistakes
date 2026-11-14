@@ -1,7 +1,10 @@
 import { mkdtemp, mkdtempSync, readdirSync } from 'node:fs';
+import { mkdtempSync as replacedSync } from 'node:fs';
 import { mkdtemp as makeTemp } from 'node:fs/promises';
 import * as promises from 'node:fs/promises';
 import * as nodeFs from 'node:fs';
+
+replacedSync = () => 'written';
 
 readdirSync(mkdtempSync('sync-'));
 readdirSync(await mkdtempSync('await-sync-'));
@@ -21,3 +24,7 @@ readdirSync(nodeFs.mkdtemp('member-callback-'));
 readdirSync(nodeFs.mkdtempSync('member-sync-'));
 readdirSync(nodeFs.promises.mkdtemp('member-promise-'));
 readdirSync(await nodeFs.promises.mkdtemp('await-member-promise-'));
+readdirSync(replacedSync('written-sync'));
+readdirSync(await nodeFs['mkdtemp']('computed-member'));
+const directoryName = 'not-a-call';
+readdirSync(await directoryName);
