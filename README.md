@@ -7,8 +7,8 @@
 `no-mistakes` is about **deterministically not making mistakes**. It tells
 coding agents and CI which files, tests, and routes a change can affect, then
 enforces the static shapes that keep those answers true and the PostgreSQL
-patterns that are expensive to fix later. Agent rule skills catch the
-mistakes no check can see before the code is written. It parses the current
+patterns that are expensive to fix later. Before the agent writes code, rule
+skills tell it about the mistakes no check can catch. It parses the current
 checkout locally. It does not run the app, call a model, or keep a database.
 
 ## Five pillars
