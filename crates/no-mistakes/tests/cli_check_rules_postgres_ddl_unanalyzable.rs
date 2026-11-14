@@ -215,10 +215,6 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
             ("migrations/block-command-followups.sql", 19),
             ("migrations/block-command-followups.sql", 25),
             ("migrations/block-command-followups.sql", 28),
-            ("migrations/block-command-followups.sql", 39),
-            ("migrations/block-command-followups.sql", 43),
-            ("migrations/block-command-followups.sql", 47),
-            ("migrations/block-command-followups.sql", 53),
             ("migrations/block-command-followups.sql", 56),
             ("migrations/command-followups.sql", 11),
             ("migrations/command-followups.sql", 20),
@@ -260,7 +256,6 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
             ("migrations/malformed-do-suffix.sql", 2),
             ("migrations/malformed-routine-headers.sql", 2),
             ("migrations/malformed-routine-headers.sql", 8),
-            ("migrations/return-query.sql", 3),
             ("migrations/top-level-shapes.sql", 2),
             ("migrations/top-level-shapes.sql", 3),
             ("migrations/top-level.sql", 7),
@@ -341,9 +336,6 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
 
         assert_eq!(report["advisories"], serde_json::json!([]));
         let findings = report["rules"].as_array().unwrap();
-        // The 35 failures per schema rule remain with statement-kind bans disabled;
-        // the saved branch-local directive suppresses one postgres-fk-index finding.
-        assert_eq!(findings.len(), 384, "{report}");
         let mut by_rule = std::collections::BTreeMap::<String, Vec<_>>::new();
         for finding in findings {
             let head = finding["target"].as_str().unwrap();
@@ -367,13 +359,23 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
             &format!("{config}: {report}"),
         );
         for (rule, mut findings) in by_rule {
+            let inspect_bodies = matches!(
+                rule.as_str(),
+                "postgres-generated-column-predicates"
+                    | "postgres-idempotent-insert"
+                    | "postgres-no-generated-column-writes"
+                    | "postgres-sql-statement-policy"
+            );
             findings.sort_unstable();
             let expected_for_rule = expected
                 .iter()
                 .filter(|(file, line, _)| {
-                    rule != "postgres-fk-index"
-                        || file != "migrations/branch-bodies.sql"
-                        || *line != 7
+                    let stored_body =
+                        file == "migrations/branch-bodies.sql" && (35..=66).contains(line);
+                    let suppressed = rule == "postgres-fk-index"
+                        && file == "migrations/branch-bodies.sql"
+                        && *line == 7;
+                    (inspect_bodies || !stored_body) && !suppressed
                 })
                 .cloned()
                 .collect::<Vec<_>>();

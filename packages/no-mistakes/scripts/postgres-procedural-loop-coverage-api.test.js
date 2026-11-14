@@ -21,8 +21,8 @@ function shape(occurrences) {
 for (const [config, findings, advisories] of [
   ["valid.yml", 0, 0],
   ["valid-report.yml", 0, 0],
-  ["default.yml", 0, 11],
-  ["report.yml", 11, 0],
+  ["default.yml", 0, 4],
+  ["report.yml", 4, 0],
   ["generated-write.yml", 1, 0],
   ["uncertain-header-default.yml", 3, 8],
   ["uncertain-header-report.yml", 11, 0],
@@ -63,6 +63,14 @@ for (const [config, findings, advisories] of [
           [5, 5, 12, 12, 19, 19, 26, 26],
         );
       } else {
+        if (["default.yml", "report.yml"].includes(config)) {
+          assert.deepEqual([...report.rules, ...report.advisories].map(({ rule }) => rule).sort(), [
+            "postgres-generated-column-predicates",
+            "postgres-idempotent-insert",
+            "postgres-no-generated-column-writes",
+            "postgres-sql-statement-policy",
+          ]);
+        }
         for (const row of [...report.rules, ...report.advisories]) {
           assert.equal(row.file, "malformed.sql");
           assert.equal(row.line, 6);

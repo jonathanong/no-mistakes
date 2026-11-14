@@ -1,0 +1,22 @@
+rules:
+  - rule: postgres-constraint-validate
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}
+  - rule: postgres-fk-index
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}
+  - rule: postgres-identifier-length
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}
+  - rule: postgres-no-add-column
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}
+  - rule: postgres-redundant-index
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}
+  - rule: postgres-require-fk-on-delete
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options: {sqlInclude: ['migrations/execute-into.sql']}

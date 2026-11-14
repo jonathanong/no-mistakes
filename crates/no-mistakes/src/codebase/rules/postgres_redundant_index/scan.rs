@@ -1,11 +1,14 @@
 use super::order::cmp_sql_rel;
 use super::redundancy::{describe_index, is_redundant_prefix, LiveIndex};
 use super::{sql_rel, CompiledOptions, RuleFinding, RULE_ID};
+
+mod findings;
 use crate::codebase::postgres::{
     collect_prepared_schema_facts, SqlDropIndexMetadata, SqlSchemaFileFacts,
 };
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;
+use findings::{finding, stale_allowlist};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -26,6 +29,7 @@ pub(super) fn scan(
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    let facts: Vec<_> = facts.into_iter().map(|file| file.ddl_facts()).collect();
     let index_drops = named_drops(root, &facts, |file| &file.dropped_indexes);
     let table_drops = named_drops(root, &facts, |file| &file.dropped_tables);
     let indexes = live_indexes(root, &facts, &index_drops, &table_drops);
@@ -181,27 +185,4 @@ pub(super) fn directive_on_line(source: &str, line: usize, directive: &str) -> b
             .lines()
             .nth(line - 1)
             .is_some_and(|text| text.contains("--") && text.contains(directive))
-}
-
-fn stale_allowlist(opts: &CompiledOptions, used: &BTreeSet<String>) -> Vec<RuleFinding> {
-    opts.allowed_indexes
-        .iter()
-        .filter(|entry| !used.contains(*entry))
-        .map(|entry| {
-            let message = format!("stale postgres-redundant-index allowedIndexes entry: {entry}");
-            finding(entry, 1, message, entry)
-        })
-        .collect()
-}
-
-fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
-    RuleFinding {
-        causes: Vec::new(),
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line,
-        message,
-        import: None,
-        target: Some(target.to_string()),
-    }
 }

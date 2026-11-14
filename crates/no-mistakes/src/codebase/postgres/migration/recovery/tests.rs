@@ -188,8 +188,14 @@ fn parse_failure_locations_account_for_recovered_inserts_before_unsafe_siblings(
                 failure.recovered_insert_count
             ))
             .collect::<Vec<_>>(),
-        [(1, 1, 1), (3, 0, 0), (4, 1, 0)]
+        [(3, 0, 0), (4, 1, 0)]
     );
+    assert!(facts.parse_failures[0]
+        .head
+        .starts_with("CREATE RECURSIVE VIEW invalid_view"));
+    assert!(facts.parse_failures[1]
+        .head
+        .starts_with("INSERT INTO events"));
     let facts = extract_sql_statement_facts(
         &std::fs::read_to_string(fixture("failed-trigger.sql")).unwrap(),
     );
@@ -205,7 +211,20 @@ fn canonical_failures_keep_schema_and_partial_dml_projections_distinct() {
     let source = std::fs::read_to_string(&path).unwrap();
     let parsed =
         crate::codebase::postgres::parse::parse_postgres_sql_with_function_sources(&source);
+    assert!(matches!(
+        parsed[0].statement,
+        sqlparser::ast::Statement::Insert(_)
+    ));
+    assert!(parsed[0].complete);
+    assert!(parsed[0].recovery_failure.is_none());
     let canonical = super::recovery_failures(&parsed);
+    assert_eq!(
+        canonical
+            .iter()
+            .map(|failure| failure.line)
+            .collect::<Vec<_>>(),
+        [3, 4]
+    );
     let direct = extract_sql_statement_facts(&source);
     assert_eq!(direct.parse_failures, canonical);
     assert_eq!(
@@ -213,10 +232,10 @@ fn canonical_failures_keep_schema_and_partial_dml_projections_distinct() {
             .iter()
             .map(|failure| failure.schema_unanalyzable)
             .collect::<Vec<_>>(),
-        [false, true, true]
+        [true, true]
     );
     let schema = crate::codebase::postgres::extract_migration_facts(&source);
-    assert_eq!(schema.unanalyzable_statements, canonical[1..]);
+    assert_eq!(schema.unanalyzable_statements, canonical);
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
     let facts = collect_check_facts_with_graph_files_playwright_and_sources(
         path.parent().unwrap(),

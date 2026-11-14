@@ -8,7 +8,7 @@ unsupported PostgreSQL forms produce non-failing advisories. Any statement that
 cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body
 also advises by default. Malformed or unrecognized top-level statements still
 produce findings at their source lines. Explicit `options.unanalyzable: report`
-produces findings for all of these cases.
+produces findings for these cases within each rule's analysis scope.
 This includes rejected syntax such as `CREATE RECURSIVE VIEW` without its
 required explicit column list, which could previously disappear from analysis.
 
@@ -23,6 +23,14 @@ required explicit column list, which could previously disappear from analysis.
 - [`postgres-require-fk-on-delete`](../rules/postgres-require-fk-on-delete.md)
 - [`postgres-require-named-constraints`](../rules/postgres-require-named-constraints.md)
 - [`postgres-sql-statement-policy`](../rules/postgres-sql-statement-policy.md)
+
+The DDL rules `postgres-constraint-validate`, `postgres-fk-index`,
+`postgres-identifier-length`, `postgres-no-add-column`, `postgres-redundant-index`,
+`postgres-require-fk-on-delete`, and `postgres-require-named-constraints` treat
+stored function and procedure bodies as opaque. Their bodies produce neither
+DDL findings nor schema-parse advisories, including with explicit `report`.
+Routine declarations, top-level DDL, and executable `DO` blocks remain checked.
+The other rules above retain their routine-body analysis.
 
 A diagnostic means the analyzer could not establish schema facts for that
 statement. It does not decide whether PostgreSQL accepts the SQL. Valid but
@@ -143,6 +151,8 @@ An explicit rule or repository policy takes precedence over the body default.
 Rust consumers constructing `SqlUnanalyzableStatement` facts must now provide
 `procedural_body`: use `false` for top-level statements and `true` for statements
 identified inside a routine body. Node options and JSON report shapes are unchanged.
+`SqlSchemaFileFacts` also has an optional `ddl_projection` for the shared DDL
+view; hand-built legacy facts can use `None` or `..Default::default()`.
 
 Diagnostic heads retain the original statement spelling, including radix
 literals such as `0x1F` and `0b101`, through compatibility rewrites. Rejected
@@ -154,7 +164,7 @@ advises on them.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`
-(explicitly including body statements), `advise` for a non-failing advisory, or
+(including body statements within the rule's scope), `advise` for a non-failing advisory, or
 `ignore`
 to omit these diagnostics. For example:
 

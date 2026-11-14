@@ -4,6 +4,54 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const ddlRules = [
+  "postgres-constraint-validate",
+  "postgres-fk-index",
+  "postgres-identifier-length",
+  "postgres-no-add-column",
+  "postgres-redundant-index",
+  "postgres-require-fk-on-delete",
+  "postgres-require-named-constraints",
+];
+const bodyRules = [
+  "postgres-generated-column-predicates",
+  "postgres-idempotent-insert",
+  "postgres-no-generated-column-writes",
+  "postgres-sql-statement-policy",
+];
+
+function opaqueFindings(scenario) {
+  const cases = Object.fromEntries(
+    ["execute-using", "execute-into", "conflict-row"].map((name) => {
+      const first = name === "conflict-row" ? 11 : 8;
+      return [
+        name,
+        [3, 0, 6, 1, 4, 0, 2].map((offset, index) => [
+          ddlRules[index],
+          `migrations/${name}.sql`,
+          first + offset,
+        ]),
+      ];
+    }),
+  );
+  cases["body-ddl"] = [
+    ["postgres-sql-statement-policy", "migrations/body-ddl.sql", 5],
+    ["postgres-no-add-column", "migrations/body-ddl.sql", 8],
+  ];
+  cases["nested-stored"] = [
+    ["postgres-identifier-length", "migrations/nested-stored.sql", 3],
+    ["postgres-no-add-column", "migrations/nested-stored.sql", 9],
+  ];
+  cases["top-level-conflict"] = [];
+  cases.report = Object.values(cases)
+    .flat()
+    .filter(
+      ([rule, file]) =>
+        rule !== "postgres-sql-statement-policy" &&
+        !(rule === "postgres-constraint-validate" && /execute-(into|using)/u.test(file)),
+    );
+  return cases[scenario].map((row) => JSON.stringify(row)).sort();
+}
 
 for (const policy of ["default", "report", "advise", "ignore"]) {
   test(
@@ -178,7 +226,7 @@ test(
 
 // Each scenario independently checks its CJS, ESM, and prepared-report contract.
 for (const [scenario, config, findings, advisories, subdirectory = ""] of [
-  ["postgres-ddl-unanalyzable", "report.yml", 384, 0, "issue-2731"],
+  ["postgres-ddl-unanalyzable", "report.yml", 328, 0, "issue-2731"],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],
@@ -188,12 +236,19 @@ for (const [scenario, config, findings, advisories, subdirectory = ""] of [
   ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
   ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
   ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
-  ["postgres-ddl-unanalyzable", "report.yml", 69, 0, "procedural"],
+  ["postgres-ddl-unanalyzable", "report.yml", 64, 0, "procedural"],
   ["postgres-ddl-unanalyzable", "default.yml", 121, 77, "unsupported-policy"],
   ["postgres-ddl-unanalyzable", "report.yml", 198, 0, "unsupported-policy"],
   ["postgres-ddl-unanalyzable", "advise.yml", 0, 198, "unsupported-policy"],
   ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0, "unsupported-policy"],
   ["postgres-ddl-unanalyzable", "override.yml", 198, 0, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "execute-using.yml", 7, 0, "opaque-functions"],
+  ["postgres-ddl-unanalyzable", "execute-into.yml", 7, 0, "opaque-functions"],
+  ["postgres-ddl-unanalyzable", "conflict-row.yml", 7, 0, "opaque-functions"],
+  ["postgres-ddl-unanalyzable", "top-level-conflict.yml", 0, 0, "opaque-functions"],
+  ["postgres-ddl-unanalyzable", "body-ddl.yml", 2, 0, "opaque-functions"],
+  ["postgres-ddl-unanalyzable", "nested-stored.yml", 2, 0, "opaque-functions"],
+  ["postgres-ddl-unanalyzable", "report.yml", 22, 0, "opaque-functions"],
 ]) {
   test(
     `compiled recall policy: ${scenario}/${subdirectory || "root"}/${config}`,
@@ -210,7 +265,45 @@ for (const [scenario, config, findings, advisories, subdirectory = ""] of [
       assert.deepEqual(report.warnings, []);
       assert.equal(report.rules.length, findings, config);
       assert.equal(policyAdvisories(report).length, advisories, config);
+      if (subdirectory === "opaque-functions") {
+        assert.deepEqual(report.advisories, []);
+        assert.deepEqual(
+          report.rules.map(({ rule, file, line }) => JSON.stringify([rule, file, line])).sort(),
+          opaqueFindings(config.replace(/\.yml$/u, "")),
+        );
+      }
+      if (subdirectory === "procedural") {
+        const expected = JSON.parse(readFileSync(join(options.root, "expected.json"), "utf8"));
+        assert.deepEqual(
+          report.rules.map(({ file, line, target }) => JSON.stringify([file, line, target])).sort(),
+          expected.map((row) => JSON.stringify(row)).sort(),
+        );
+      }
       if (scenario === "postgres-ddl-unanalyzable" && subdirectory === "issue-2731") {
+        const corpus = JSON.parse(readFileSync(join(options.root, "expected.json"), "utf8"));
+        const expected = Object.entries(corpus).flatMap(([file, rows]) =>
+          rows.map(([line, , target]) => [`migrations/${file}`, line, target]),
+        );
+        assert.deepEqual(
+          [...new Set(report.rules.map(({ rule }) => rule))].sort(),
+          [...ddlRules, ...bodyRules].sort(),
+        );
+        for (const rule of [...ddlRules, ...bodyRules]) {
+          const rows = expected.filter(([file, line]) => {
+            const stored = file === "migrations/branch-bodies.sql" && line >= 35 && line <= 66;
+            const suppressed =
+              rule === "postgres-fk-index" && file === "migrations/branch-bodies.sql" && line === 7;
+            return (bodyRules.includes(rule) || !stored) && !suppressed;
+          });
+          assert.deepEqual(
+            report.rules
+              .filter((finding) => finding.rule === rule)
+              .map(({ file, line, target }) => JSON.stringify([file, line, target]))
+              .sort(),
+            rows.map((row) => JSON.stringify(row)).sort(),
+            rule,
+          );
+        }
         const file = "migrations/branch-bodies.sql";
         const lines = readFileSync(join(options.root, file), "utf8").split(/\r?\n/u);
         for (const [definition, invalidSql] of [

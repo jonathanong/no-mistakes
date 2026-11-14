@@ -69,7 +69,7 @@ pub(super) fn collect(
                             failures,
                             &tokens,
                         );
-                        value.path = path.clone();
+                        value.set_path(path.clone());
                         Arc::new(value)
                     })
                     .or_else(|error| {

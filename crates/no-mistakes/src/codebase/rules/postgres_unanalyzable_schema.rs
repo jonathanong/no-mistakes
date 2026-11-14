@@ -145,6 +145,20 @@ fn append_rule(
         } else {
             facts.postgres_schema_file(path)?
         };
+        let file = if matches!(
+            rule_id,
+            "postgres-constraint-validate"
+                | "postgres-fk-index"
+                | "postgres-identifier-length"
+                | "postgres-no-add-column"
+                | "postgres-redundant-index"
+                | "postgres-require-fk-on-delete"
+                | "postgres-require-named-constraints"
+        ) {
+            file.ddl_facts()
+        } else {
+            file
+        };
         let rel = relative_slash_path(root, path);
         for statement in &file.unanalyzable_statements {
             let line = statement.line.max(1);

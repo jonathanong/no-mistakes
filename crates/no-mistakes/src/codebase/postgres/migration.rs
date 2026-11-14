@@ -151,6 +151,10 @@ fn extract_parsed_migration_facts(
         }
     }
     dynamic_merge::append(sql, &mut facts);
+    if let Some(ddl) = &mut facts.ddl_projection {
+        ddl.unanalyzable_statements.sort_by_key(|item| item.line);
+        table_positions.apply_transaction_projection(&mut ddl.table_events);
+    }
     facts.unanalyzable_statements.sort_by_key(|item| item.line);
     table_positions.apply_transaction_projection(&mut facts.table_events);
     facts

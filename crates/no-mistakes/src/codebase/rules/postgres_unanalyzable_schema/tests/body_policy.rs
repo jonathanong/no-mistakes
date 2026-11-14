@@ -52,7 +52,7 @@ fn default_body_advisories_keep_line_and_file_suppressions() {
     .unwrap();
     let mut output = diagnostics(&root, &config, &files, &facts).unwrap();
     assert!(output.findings.is_empty());
-    assert_eq!(output.advisories.len(), 4);
+    assert_eq!(output.advisories.len(), 3);
     suppress_rule_findings_with_sources(&root, &mut output.advisories, &sources);
     assert_eq!(rule_lines(&output.advisories, "postgres-fk-index"), [6]);
 }

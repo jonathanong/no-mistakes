@@ -1,0 +1,322 @@
+[
+  [
+    "migrations/block-command-followups.sql",
+    11,
+    "FROBULATE after_while"
+  ],
+  [
+    "migrations/block-command-followups.sql",
+    15,
+    "FROBULATE after_for"
+  ],
+  [
+    "migrations/block-command-followups.sql",
+    19,
+    "FROBULATE after_foreach"
+  ],
+  [
+    "migrations/block-command-followups.sql",
+    25,
+    "FROBULATE after_exception"
+  ],
+  [
+    "migrations/block-command-followups.sql",
+    28,
+    "FROBULATE after_block_do"
+  ],
+  [
+    "migrations/block-command-followups.sql",
+    56,
+    "FROBULATE after_block_function"
+  ],
+  [
+    "migrations/command-followups.sql",
+    11,
+    "FROBULATE after_command_do"
+  ],
+  [
+    "migrations/command-followups.sql",
+    20,
+    "FROBULATE after_command_function"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    4,
+    "DECLARE broken_declaration"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    6,
+    "missing_type := 1"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    7,
+    "bad_cursor_prefix NO SCROLL FOR SELECT id FROM grammar_error_rows"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    8,
+    "missing_cursor_for CURSOR SELECT id FROM grammar_error_rows"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    9,
+    "bad_collation text COLLATE"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    14,
+    "1 := 2"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    15,
+    "selected_id :="
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    16,
+    "GET DIAGNOSTICS"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    17,
+    "OPEN"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    18,
+    "OPEN cursor_value FOR"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    19,
+    "MOVE TO FROM cursor_value"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    20,
+    "FETCH NEXT FROM cursor_value INTO"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    21,
+    "FOR row_value SELECT id FROM grammar_error_rows LOOP NULL"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    24,
+    "FOR 1 IN 1..2 LOOP NULL"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    27,
+    "FOR row_value IN 1.. BY 2 LOOP"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    30,
+    "FOR row_value IN 1..2 BY LOOP NULL"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    33,
+    "FOREACH 1 IN ARRAY ARRAY[1,"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    36,
+    "FOREACH row_value IN ARRAY LOOP NULL"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    44,
+    "DECLARE wrong_scroll NO WRONG CURSOR FOR SELECT 1"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    46,
+    "missing_type CONSTANT"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    47,
+    "wrong_collation text COLLATE 1"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    49,
+    "GET CURRENT WRONG value = ROW_COUNT"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    50,
+    "OPEN 1"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    51,
+    "OPEN cursor_value NO WRONG FOR SELECT 1"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    52,
+    "OPEN cursor_value BOGUS"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    53,
+    "OPEN cursor_value ((1)"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    54,
+    "MOVE"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    55,
+    "MOVE 1"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    57,
+    "FOR range_value IN 1 2 LOOP NULL"
+  ],
+  [
+    "migrations/grammar-errors.sql",
+    58,
+    "FOREACH row_value ARRAY ARRAY[1] LOOP"
+  ],
+  [
+    "migrations/lexical-command-error.sql",
+    2,
+    "DO $body$\nDECLARE\n  value_text text;\nBEGIN\n  value_text := 'ok';\n  value_text := 'unterminated;\nEND\n$body$"
+  ],
+  [
+    "migrations/lexical-command-error.sql",
+    10,
+    "FROBULATE after_lexical_body"
+  ],
+  [
+    "migrations/lexical-command-error.sql",
+    13,
+    "DO $broken$\nBEGIN\n  CREATE TABLE before_lexical_failure (id integer);\n  value_text := 'unterminated;\nEND\n$broken$"
+  ],
+  [
+    "migrations/lexical-command-error.sql",
+    19,
+    "FROBULATE after_partial_lexical_body"
+  ],
+  [
+    "migrations/malformed-command-tail.sql",
+    7,
+    "OPEN cursor_value NO SCROLL FOR SELECT id FROM"
+  ],
+  [
+    "migrations/malformed-do-suffix.sql",
+    2,
+    "DO 'BEGIN PERFORM 1; END' unexpected"
+  ],
+  [
+    "migrations/malformed-routine-headers.sql",
+    2,
+    "CREATE FUNCTION malformed_function() RETURNS void LANGUAGE"
+  ],
+  [
+    "migrations/malformed-routine-headers.sql",
+    8,
+    "CREATE PROCEDURE malformed_procedure() LANGUAGE plpgsql BOGUS"
+  ],
+  [
+    "migrations/top-level-shapes.sql",
+    2,
+    "DECLARE local_count integer := 0"
+  ],
+  [
+    "migrations/top-level-shapes.sql",
+    3,
+    "local_count := 1"
+  ],
+  [
+    "migrations/top-level.sql",
+    7,
+    "FROBULATE after_do"
+  ],
+  [
+    "migrations/top-level.sql",
+    13,
+    "FROBULATE after_function"
+  ],
+  [
+    "migrations/top-level.sql",
+    19,
+    "FROBULATE after_procedure"
+  ],
+  [
+    "migrations/top-level.sql",
+    21,
+    "END IF"
+  ],
+  [
+    "migrations/unknown-loop-query.sql",
+    6,
+    "FOR loop_id IN FROBULATE accounts LOOP NULL"
+  ],
+  [
+    "migrations/unknown-payloads.sql",
+    7,
+    "OPEN cursor_value FOR FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown-payloads.sql",
+    8,
+    "FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown-payloads.sql",
+    9,
+    "SELECT 1 + ) INTO selected_id"
+  ],
+  [
+    "migrations/unknown-payloads.sql",
+    10,
+    "GET DIAGNOSTICS selected_id = ROW_COUNT FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown-payloads.sql",
+    11,
+    "SELECT 1 INTO selected_id FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown-procedural-commands.sql",
+    4,
+    "PERFORM 1 + )"
+  ],
+  [
+    "migrations/unknown-procedural-commands.sql",
+    10,
+    "OPEN missing_cursor FOR FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown-procedural-commands.sql",
+    15,
+    "DECLARE bad_cursor CURSOR FOR FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown.sql",
+    6,
+    "FROBULATE accounts"
+  ],
+  [
+    "migrations/unknown.sql",
+    14,
+    "FROBULATE first_after_if"
+  ],
+  [
+    "migrations/unknown.sql",
+    22,
+    "FROBULATE first_after_loop"
+  ]
+]

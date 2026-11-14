@@ -27,6 +27,7 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
             let line = body_line(body, code[at]);
             if let Some(mut sql) = executed_expression(&code[at + 1..], &variables, line) {
                 sql.executed &= executed;
+                sql.stored_routine = !body.executed;
                 sql.source_order = body
                     .source_order
                     .iter()

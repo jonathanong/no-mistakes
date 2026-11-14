@@ -85,14 +85,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "declaration-locations.sql",
-          "line": 4,
-          "message": "declaration-locations.sql:4: identifier \"repeated_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE TABLE repeated_table (id int);",
-          "target": "repeated_table"
-        },
-        {
-          "file": "declaration-locations.sql",
           "line": 7,
           "message": "declaration-locations.sql:7: identifier \"repeated_table\" is 14 bytes; exceeds configured maxBytes 10; shorten the declared name to at most 10 bytes",
           "rule": "postgres-identifier-length",
@@ -343,23 +335,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "function_body_line": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "function-body.sql",
-          "line": 3,
-          "message": "function-body.sql:3: identifier \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\" is 64 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE INDEX do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);",
-          "target": "do_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },

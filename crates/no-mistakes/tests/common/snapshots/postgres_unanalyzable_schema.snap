@@ -8,22 +8,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -107,22 +91,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -412,22 +380,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -511,22 +463,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -715,22 +651,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -816,22 +736,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -915,22 +819,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -1119,22 +1007,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 21,
           "message": "migrations/001.sql:21: SQL statement `FROBULATE quoted_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -1219,22 +1091,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 1,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 21,
@@ -1527,22 +1383,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 21,
           "message": "migrations/001.sql:21: SQL statement `FROBULATE quoted_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -1627,22 +1467,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 1,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 21,
@@ -1833,22 +1657,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 21,
           "message": "migrations/001.sql:21: SQL statement `FROBULATE quoted_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -1935,22 +1743,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 21,
           "message": "migrations/001.sql:21: SQL statement `FROBULATE quoted_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -2035,22 +1827,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 1,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 21,
@@ -2246,22 +2022,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -2345,22 +2105,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -2650,22 +2394,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -2749,22 +2477,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -2953,22 +2665,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -3054,22 +2750,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -3153,22 +2833,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -3489,22 +3153,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -3588,22 +3236,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -3893,22 +3525,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -3992,22 +3608,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -4196,22 +3796,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -4297,22 +3881,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -4396,22 +3964,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -4600,22 +4152,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -4699,22 +4235,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -5004,22 +4524,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -5103,22 +4607,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -5307,22 +4795,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -5408,22 +4880,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -5507,22 +4963,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -5706,22 +5146,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -5805,22 +5229,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -6110,22 +5518,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -6209,22 +5601,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -6413,22 +5789,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -6514,22 +5874,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `ALTER TABLE before_body ADD COLUMN` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -6613,22 +5957,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 13,
-          "message": "migrations/001.sql:13: SQL statement `FROBULATE function_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE function_body;",
-          "target": "FROBULATE function_body"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 18,
-          "message": "migrations/001.sql:18: SQL statement `FROBULATE procedure_body` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE procedure_body;",
-          "target": "FROBULATE procedure_body"
-        },
         {
           "file": "migrations/001.sql",
           "line": 2,
@@ -6954,6 +6282,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-fk-index",
           "sourceLine": "FROBULATE remaining_body;",
           "target": "FROBULATE remaining_body"
+        },
+        {
+          "file": "migrations/file-suppressed.sql",
+          "line": 1,
+          "message": "directive for `postgres-fk-index` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-file postgres-fk-index: intentionally unsupported routine body",
+          "target": "postgres-fk-index"
         }
       ],
       "codebase": [],
@@ -6967,16 +6303,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_constraint_validate": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -7005,16 +6332,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_fk_index": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -7119,16 +6437,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_identifier_length": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -7157,16 +6466,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_no_add_column": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -7233,16 +6533,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_redundant_index": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -7271,16 +6562,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_require_fk_on_delete": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -7309,16 +6591,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "body_wrapper_require_named_constraints": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `FROBULATE child_of_malformed_wrapper` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE child_of_malformed_wrapper;",
-          "target": "FROBULATE child_of_malformed_wrapper"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -10139,70 +9412,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -10431,70 +9640,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-fk-index",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -11338,70 +10483,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -11639,70 +10720,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-add-column",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -12250,70 +11267,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -12554,70 +11507,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -12855,70 +11744,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-require-named-constraints",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -13466,70 +12291,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
@@ -13756,70 +12517,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-fk-index",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -14657,70 +13354,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
@@ -14956,70 +13589,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-add-column",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -15563,70 +14132,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
@@ -15865,70 +14370,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
           "line": 69,
           "message": "migrations/branch-bodies.sql:69: SQL statement `CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
@@ -16164,70 +14605,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-require-named-constraints",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
@@ -19152,38 +17529,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "migrations/block-command-followups.sql",
-          "line": 39,
-          "message": "migrations/block-command-followups.sql:39: SQL statement `FROBULATE after_function_while` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE after_function_while;",
-          "target": "FROBULATE after_function_while"
-        },
-        {
-          "file": "migrations/block-command-followups.sql",
-          "line": 43,
-          "message": "migrations/block-command-followups.sql:43: SQL statement `FROBULATE after_function_for` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE after_function_for;",
-          "target": "FROBULATE after_function_for"
-        },
-        {
-          "file": "migrations/block-command-followups.sql",
-          "line": 47,
-          "message": "migrations/block-command-followups.sql:47: SQL statement `FROBULATE after_function_foreach` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE after_function_foreach;",
-          "target": "FROBULATE after_function_foreach"
-        },
-        {
-          "file": "migrations/block-command-followups.sql",
-          "line": 53,
-          "message": "migrations/block-command-followups.sql:53: SQL statement `FROBULATE after_function_exception` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE after_function_exception;",
-          "target": "FROBULATE after_function_exception"
-        },
-        {
-          "file": "migrations/block-command-followups.sql",
           "line": 56,
           "message": "migrations/block-command-followups.sql:56: SQL statement `FROBULATE after_block_function` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
@@ -19665,23 +18010,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "procedural_return_query": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "migrations/return-query.sql",
-          "line": 3,
-          "message": "migrations/return-query.sql:3: SQL statement `RETURN QUERY FROBULATE accounts` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "RETURN QUERY FROBULATE accounts;",
-          "target": "RETURN QUERY FROBULATE accounts"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -22040,70 +20376,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-fk-index",
           "sourceLine": "FROBULATE 0b101;",
           "target": "FROBULATE 0b101"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 40,
-          "message": "migrations/branch-bodies.sql:40: SQL statement `CREATE RECURSIVE VIEW function_if_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 42,
-          "message": "migrations/branch-bodies.sql:42: SQL statement `CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 44,
-          "message": "migrations/branch-bodies.sql:44: SQL statement `CREATE RECURSIVE VIEW function_else_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 49,
-          "message": "migrations/branch-bodies.sql:49: SQL statement `CREATE RECURSIVE VIEW function_loop_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 51,
-          "message": "migrations/branch-bodies.sql:51: SQL statement `CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 58,
-          "message": "migrations/branch-bodies.sql:58: SQL statement `CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 60,
-          "message": "migrations/branch-bodies.sql:60: SQL statement `CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1;",
-          "target": "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
-        },
-        {
-          "file": "migrations/branch-bodies.sql",
-          "line": 64,
-          "message": "migrations/branch-bodies.sql:64: SQL statement `FROBULATE 0x1F` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "FROBULATE 0x1F;",
-          "target": "FROBULATE 0x1F"
         },
         {
           "file": "migrations/branch-bodies.sql",
