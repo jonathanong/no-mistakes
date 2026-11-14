@@ -440,7 +440,7 @@ also supports `effort: low`. Literal SQL and templates without relation-name
 interpolation are decidable; imported registry relations and helper SQL use
 `unanalyzable`. The low tier does not infer cross-file mutation provenance.
 
-For `postgres-require-query-annotation`, `options.sqlLiteralHelpers` accepts exact `module#export` identities (for example `pg-copy-streams#from`). It defaults to `[]`; only a direct configured runtime import wrapping one static string or interpolation-free template literal supplies an annotation proof, at low and max effort. See [the rule grammar and policy](../rules/postgres-require-query-annotation.md#configured-single-literal-sql-helpers).
+For `postgres-require-query-annotation`, `options.sqlLiteralHelpers` accepts exact `module#export` identities (for example `pg-copy-streams#from`). It defaults to `[]`; only a direct configured runtime import wrapping one static string or interpolation-free template literal supplies an annotation proof, at low and max effort. See [the rule grammar and policy](../rules/postgres-require-query-annotation.md#copy-stream-wrappers-and-configured-single-literal-sql-helpers).
 
 [`postgres-no-transformed-uuid-predicates`](../rules/postgres-no-transformed-uuid-predicates.md)
 requires `schemaCatalogPath` and explicit executor selection (`importSpecifier`

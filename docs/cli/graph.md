@@ -2,7 +2,7 @@
 
 `dependencies`, `dependents`, and `related` query the canonical dependency
 graph. They share root, tsconfig, depth, relationship, test, module, and output
-filters.
+filters. Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 When `--tsconfig` is omitted, graph commands select the TypeScript config that
 owns each importing file. This lets package-local aliases remain isolated while
@@ -33,7 +33,9 @@ and `new` of a TypeScript `namespace` member such as `new Errors.NotFound()`.
 Imports resolve like the import graph, including workspace package names
 (`@scope/pkg`) and their `exports` subpaths.
 `--depth 1` is the direct-call boundary and `--depth 0` returns no related
-nodes. Computed members, dynamic callees, globals, and ambiguous re-exports
+nodes. String-literal computed members, including TypeScript-wrapped receivers
+such as `(api as typeof api)["run"]()`, resolve the same as static members.
+Dynamic computed members, dynamic callees, globals, and ambiguous re-exports
 remain unconnected because terminal-name matching would create unsound edges.
 `FILE#SYMBOL` call queries start at the selected callable rather than the file
 root, so unrelated top-level calls in that file are omitted. File-level call

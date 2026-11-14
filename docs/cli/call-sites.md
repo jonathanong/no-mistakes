@@ -26,6 +26,7 @@ unresolved. Files with parser failures contribute no call sites. Use `rg` on
 the returned files when exact call text matters.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
+Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 Node API: `callSites(options)`.
 

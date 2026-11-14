@@ -60,6 +60,7 @@ it can still read, so a malformed file may report `allResolve: true` from a
 partial list.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
+Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 Node API: `resolveCheck({ file, ... })` returns the single-file result;
 `resolveCheck({ files, ... })` always returns the batch result, including for a

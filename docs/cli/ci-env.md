@@ -14,7 +14,7 @@ no-mistakes ci env CARGO_TERM_COLOR --format paths
 |------|-------------|
 | `--root` | Project root directory (default: current directory). |
 | `--config` | Path to config file. |
-| `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
+| `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. Omitted, human on a terminal and JSON otherwise. |
 | `--json` | Shorthand for `--format json`. |
 
 The variable name is a positional argument and is matched case-sensitively.

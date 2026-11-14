@@ -11,7 +11,7 @@ Use this when an agent needs to justify a targeted test set or investigate why
 a test was missing.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--changed`, `--plan`, and
-`--format text|json`.
+`--format text|json` (default `text`).
 
 Node API: `testsWhy(options)`.
 

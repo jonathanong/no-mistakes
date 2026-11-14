@@ -31,6 +31,7 @@ edge when workspace resolution handles it. Third-party packages are outside
 this query's project-wide reverse index.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
+Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
 Node API: `deadExports(options)`.
 

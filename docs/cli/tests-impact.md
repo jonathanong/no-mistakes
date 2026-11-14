@@ -13,7 +13,7 @@ from that export and narrow the result. A `file#symbol` entrypoint without
 `--symbols` is an error.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--symbols`, `--format`, and
-`--json`.
+`--json`. Omitted `--format` defaults to `json`.
 Supported formats are `json`, `paths`, `commands`, `markdown`, and `md`.
 `explain` is reserved for `tests plan`, whose changed-file provenance gives
 that output its meaning.

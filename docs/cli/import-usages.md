@@ -22,6 +22,8 @@ no-mistakes import-usages [FILE]... [--root <PATH>] [--scan-root <PATH>]...
   [--filter <GLOB>]... [--format json|yml|md|paths|human] [--json]
 ```
 
+Omitted `--format` is human when stdout is a terminal and JSON otherwise.
+
 JSON output:
 
 ```json

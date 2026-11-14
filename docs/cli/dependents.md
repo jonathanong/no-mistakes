@@ -15,7 +15,8 @@ Use `--relationship call` for reverse impact through statically resolved
 lexical calls. Direct named imports, static namespace-member imports, and
 explicit named re-exports are followed when their target is unambiguous;
 `--depth 1` is the direct caller boundary and
-`--depth 0` returns no callers. Computed members, dynamic callees, globals, and
+`--depth 0` returns no callers. String-literal computed members resolve the
+same as static members. Dynamic computed members, dynamic callees, globals, and
 ambiguous star re-exports are not connected because a guessed edge would make
 impact results unsound. Call edges are opt-in and are excluded by
 `--relationship all`.

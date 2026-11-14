@@ -12,12 +12,17 @@ no-mistakes dependents src/utils.mts --format json
 no-mistakes dependents src/utils.mts --test vitest --format paths
 ```
 
-Global `--jobs <N>` controls rayon worker count for commands that parallelize
-analysis.
+Global `--jobs <N>` controls the Rayon worker count for commands that parallelize
+analysis. It defaults to `0`, which uses `RAYON_NUM_THREADS` when that variable
+is a positive integer and otherwise the CPU count. Each process creates the
+pool once and does not resize it.
 
 Every analysis invocation takes a per-user, machine-wide lock so CPU-intensive
 CLI and Node/N-API work cannot overlap, even across repositories. While waiting,
-stderr reports `waiting for lock held by pid <pid> for <n>s`. Successful stdout
+stderr reports `waiting for lock held by <holder> for <n>s`. `<holder>` is the
+holder description: `pid <pid>` alone, or that pid plus the cwd, command
+basename, and age present on the record. When no holder record can be read,
+`<holder>` is `another no-mistakes invocation`. Successful stdout
 or JSON output is unchanged. The following
 root-global options are inherited by every nested command and may appear before
 or after the command name:

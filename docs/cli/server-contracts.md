@@ -5,7 +5,7 @@ query parameter usage.
 
 ```sh
 no-mistakes server contracts --format json
-no-mistakes server contracts /api/search --format md
+no-mistakes server contracts --format md
 ```
 
 The report lists each extracted route, the query params the backend handler

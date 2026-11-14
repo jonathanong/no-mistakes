@@ -33,7 +33,8 @@ effects:
 ```
 
 Key options: `--entry` (required), `--category` (repeatable, restricts to those
-categories), `--depth`, `--tsconfig`, `--config`, `--format`, and `--json`.
+categories), `--depth` (default unlimited), `--tsconfig`, `--config`,
+`--format` (default `human`), and `--json`.
 
 Output shape:
 

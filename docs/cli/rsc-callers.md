@@ -21,7 +21,8 @@ Each caller is classified as a `page` (an App Router routing file such as
 `not-found`) or a `component`, with its `environment` (`server`/`unknown`) and
 import `depth` from the target. The page classification is a filename heuristic.
 
-Key options: `--depth`, `--tsconfig`, `--config`, `--format`, and `--json`.
+Key options: `--depth`, `--tsconfig`, `--config`, `--format` (default `human`),
+and `--json`.
 
 Output shape:
 

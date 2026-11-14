@@ -22,4 +22,6 @@ tests:
 | [`swift importers`](swift-importers.md) | Swift files that import or reference a Swift file. |
 | [`swift test-targets`](swift-test-targets.md) | SwiftPM test targets that transitively cover a Swift file. |
 
+Shared options: `--root`, `--config`, `--format` (default `human`), and `--json`.
+
 See [`Graph edges`](../graph-edges.md) for the Swift edge kinds these queries use.
