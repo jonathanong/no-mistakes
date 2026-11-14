@@ -210,9 +210,10 @@ never treated as clean; they follow `options.unanalyzable`.
   JavaScript escapes in literals, and embedded SQL that does not parse
   completely. Unparseable statements at max are skipped while recoverable
   siblings stay checked.
-  - `report` (default): fails as a finding, e.g. `executed SQL is not statically
-    recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out`.
-  - `advise`: a non-failing advisory with the same reason.
+  - `report` (default): at max, fails with `executed SQL is not statically
+    recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out` (target
+    `unanalyzable`). At low, fails with `SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out`.
+  - `advise`: a non-failing advisory `{file}:{line}: postgres-no-offset has unresolved SQL for offset: {reasons}`. At max the reason is a SQL-verdict residual such as `unresolved-sql-fragment` or `opaque-sql-tail`. At low the residual starts with `SQL is unanalyzable at effort low`.
   - `ignore`: omitted.
 
   Definite `OFFSET` clauses remain findings under every policy.

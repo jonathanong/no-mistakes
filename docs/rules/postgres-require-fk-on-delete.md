@@ -55,7 +55,7 @@ Included foreign keys must specify one of `RESTRICT`, `CASCADE`, `SET NULL`, or
 
 ## Options and defaults
 
-`sqlInclude` is the only option and defaults to `**/*.sql`. Statements inside
+`sqlInclude` defaults to `**/*.sql`. `effort` and `unanalyzable` are the shared analysis options (`effort: low` warns and still runs at `max`). Statements inside
 supported `DO $$` blocks are included in the same schema-fact pass.
 
 ## Valid example

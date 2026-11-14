@@ -37,7 +37,7 @@ rules:
     scope: repository
 ```
 
-`sqlInclude` defaults to `**/*.sql`. There is no hardcoded `backend/` or
+An omitted or empty `sqlInclude` becomes `**/*.sql` when it is not locked by a postgres project scope. A locked empty project `sqlInclude` stays empty. There is no hardcoded `backend/` or
 migrations root. Mixed migration files are usable: schema DDL inside `DO $$`
 blocks is collected into the catalog, DML (`UPDATE` / `INSERT` / `MERGE`)
 inside `DO $$` is reported like top-level DML (see statement lines below), and PostgreSQL 18 `VIRTUAL` generated
@@ -73,14 +73,15 @@ Counterexample: DML assigns a generated column.
 ```ts
 import { write } from "@example/db";
 
-write(`UPDATE items SET created_at = now()`);
-write(`INSERT INTO items (id, created_at) VALUES ($1, $2)`);
-write(`INSERT INTO items VALUES ($1, $2, $3)`);
-write(`INSERT INTO items (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET created_at = now()`);
+write(`UPDATE votes SET created_at = now()`);
+write(`INSERT INTO votes (id, created_at) VALUES ($1, $2)`);
+write(`INSERT INTO votes (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET created_at = now()`);
 ```
 
+An `INSERT INTO votes VALUES (...)` that names no columns is not a finding from `extraGeneratedColumns` alone, because that option does not supply column order.
+
 ```sql
-MERGE INTO items t
+MERGE INTO votes t
 USING s ON t.id = s.id
 WHEN MATCHED THEN UPDATE SET created_at = now()
 WHEN NOT MATCHED THEN INSERT (id, created_at) VALUES (s.id, now());
@@ -90,8 +91,8 @@ Fix: omit the generated column and write the source column instead. PostgreSQL
 computes `GENERATED ALWAYS` values from that source.
 
 ```ts
-write(`INSERT INTO items (id, note) VALUES ($1, $2)`);
-write(`UPDATE items SET note = $1`);
+write(`INSERT INTO votes (id, note) VALUES ($1, $2)`);
+write(`UPDATE votes SET note = $1`);
 ```
 
 Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a

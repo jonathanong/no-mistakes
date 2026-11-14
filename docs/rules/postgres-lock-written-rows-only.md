@@ -229,8 +229,7 @@ used only when it covers an otherwise-unwritten row lock.
 
 ### Analysis and unresolved SQL
 
-`effort: max` is the default; `low` uses syntax proofs without the cross-file
-max-effort evaluator. The rule checks configured TS/JS executor calls and
+Runs at `max` only. Configuring `effort: low` is accepted: `check` warns `requested effort low; effective effort max because this rule has no low implementation` and still runs at `max`. The rule checks configured TS/JS executor calls and
 transaction-local write sets. Standalone SQL files are outside this rule’s scope.
 SQL or transaction membership that cannot be resolved follows the shared
 unanalyzable policy: `unanalyzable: report` (default) fails, `advise` adds a

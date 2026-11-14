@@ -68,7 +68,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it matches `print` calls in parsed Swift source, so `options.unanalyzable` has no effect on it.
+A selected Swift file that cannot be read as UTF-8 is skipped and produces no finding. `options.unanalyzable` does not change that. `print` calls in parsed Swift source are ordinary findings.
 
 ## Suppression
 

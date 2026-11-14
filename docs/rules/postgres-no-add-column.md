@@ -54,7 +54,7 @@ qualified or unqualified `format()` templates, and variables assigned one of
 those expressions are also analyzed. Runtime-built expressions remain
 intentionally opaque and cannot satisfy an allowlist entry.
 
-`sqlInclude` defaults to `**/*.sql`.
+An omitted or empty `sqlInclude` becomes `**/*.sql` when it is not locked by a postgres project scope. A locked empty project list stays empty.
 
 Counterexample: a later migration adds a column.
 
@@ -90,7 +90,7 @@ complete `allowedMigrations` entry. Stale allowlist entries also fail.
 
 ## Options and defaults
 
-`sqlInclude` defaults to `**/*.sql`; `allowedMigrations` defaults to an empty
+An omitted or empty `sqlInclude` becomes `**/*.sql` when it is not locked by a postgres project scope. A locked empty project list stays empty. `allowedMigrations` defaults to an empty
 list, meaning no add-column operation is allowed. Entries compare `path`,
 `table`, `column`, `type`, `nullable`, and optional `default` exactly.
 

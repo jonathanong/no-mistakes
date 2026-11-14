@@ -254,7 +254,7 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
 - Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for statement policy`.
-  - `advise`: a non-failing advisory with the same reason.
+  - `advise`: a non-failing advisory `{file}:{line}: postgres-sql-statement-policy has unresolved SQL for {checks}: {reasons}` (for example `opaque-sql-tail` or `invalid-sql`), not a copy of the report sentence. Schema-file diagnostics keep one message at either severity.
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
@@ -274,8 +274,11 @@ For schema parse failures, the implicit default advises for any statement that
 cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
 This includes malformed body statements: an advisory means analysis is incomplete,
 not that PostgreSQL accepts the SQL. Successfully parsed body statements still
-contribute facts and rule findings. At the top level, only these complete forms
-advise. Malformed and unrecognized statements retain findings.
+contribute facts and rule findings. At the top level, examples of complete
+recognized forms that advise include the list below. The list is not exhaustive:
+`CREATE PUBLICATION name` without `FOR`, `ALTER PUBLICATION` add, drop, rename,
+owner, and set forms, `DROP PUBLICATION`, and supported `REVOKE` also advise.
+Malformed and unrecognized statements retain findings.
 
 - Complete `CREATE EXTENSION [IF NOT EXISTS] name` with optional `WITH`,
   `SCHEMA`, `VERSION`, and `CASCADE` options; each option may occur at most once.

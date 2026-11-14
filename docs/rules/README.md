@@ -159,7 +159,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`rust-max-lines-per-file`](rust-max-lines-per-file.md)                       | Cap Rust source/test file length.                                               |
 | [`rust-no-inline-allows`](rust-no-inline-allows.md)                           | Ban inline Rust `allow` attributes.                                             |
 | [`rust-no-inline-tests`](rust-no-inline-tests.md)                             | Ban inline Rust test modules.                                                   |
-| [`server-route-client-boundary`](server-route-client-boundary.md)             | Keep generated/direct clients out of server route folders.                      |
+| [`server-route-client-boundary`](server-route-client-boundary.md)             | Keep client/helper code out of configured server route folders.                 |
 | [`shellcheck-runner`](shellcheck-runner.md)                                   | Run ShellCheck for shell files/scripts, optionally limited to tracked files.   |
 | [`strict-package-layout`](strict-package-layout.md)                           | Enforce configured package file layout.                                         |
 | [`structured-config-policy`](structured-config-policy.md)                     | Require or ban structured config keys.                                          |
@@ -170,7 +170,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`test-no-live-repository-scan`](test-no-live-repository-scan.md)             | Ban live-repository directory scans reachable from Vitest roots.                |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
-| [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to belong to a tsconfig program.               |
+| [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to be owned by a tracked tsconfig.             |
 | [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md)                         | Require tracked TypeScript projects to have CI and local typecheck registrations. |
 | [`unconstructed-error-class`](unconstructed-error-class.md)                   | Flag exported error classes that no production code constructs or subclasses.   |
 | [`unique-exports`](unique-exports.md)                                         | Prevent ambiguous duplicate public export names.                                |
@@ -195,8 +195,12 @@ Top-of-file opt-outs use `no-mistakes-disable-file`. Line suppressions require
 rules to report line numbers. `no-mistakes check --include-suppressed` is an
 opt-in audit view: it adds a deterministic `suppressed` array containing the
 domain, rule ID, finding location/reason, and matching directive kind/line.
-Unknown rule IDs, malformed directives, and unused directives are ignored;
-they never hide a finding. File directives apply even when a finding has no
+A comment that does not parse as a directive is ignored. A parsed directive
+that names an unknown, disabled, or out-of-scope rule is
+`invalid-disable-directive`; one that suppresses nothing is
+`unused-disable-directive`. Both are advisories by default
+(`reportUnusedDisableDirectives: advise`) and never hide a real finding.
+`report` fails the check; `ignore` omits them. File directives apply even when a finding has no
 line, while line and next-line directives require an exact finding location.
 
 Each rule page says when a file-level directive is the practical option. Prefer

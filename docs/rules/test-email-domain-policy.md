@@ -72,9 +72,7 @@ scoped allow pattern for a documented, intentional fixture.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it judges literal email domains in test files. Nothing is routed through `options.unanalyzable`.
+- A selected file that cannot be read as UTF-8 is skipped and produces no finding. `options.unanalyzable` does not change that. Literal email domains in readable test files are ordinary findings.
 
 ## Suppression
 

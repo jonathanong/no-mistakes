@@ -25,23 +25,26 @@ they can be built, published, and tested independently.
 
 The workspace package graph must contain no cycles among the configured
 dependency types. A dependency is a workspace edge when its name is a
-workspace package and the specifier resolves to that package. `workspace:`
-always does. `file:`, `link:`, and `portal:` do when the path, resolved from
-the depending package, is that package's directory. A version range or `*`
-does when that package's `version` satisfies the range and the specifier is
-not an explicit non-workspace resolution. That is how npm and Yarn link
-workspace packages, and how pnpm links them when `linkWorkspacePackages`
-allows a matching range. A dependency is skipped only when it is proven to
-resolve outside the workspace: `catalog:`, an `npm:` alias, a git or URL
-specifier, a path that is not the workspace package directory, or a range the
-workspace version does not satisfy (including a package that has no
-`version`). Findings report the package-level cycle path.
+workspace package and the specifier resolves to that package. `workspace:*`
+and a `workspace:` specifier that is not a relative path always name that
+package. `workspace:` followed by a path starting with `.` counts only when
+that path is the package directory. `file:`, `link:`, and `portal:` count
+only for a relative path that starts with `.` (not an archive) when that path,
+resolved from the depending package, is the package directory. A satisfying
+version range or `*` is a workspace edge even when pnpm `linkWorkspacePackages`
+is off; this rule does not read that setting. A dependency is skipped when it
+is proven to resolve outside the workspace: `catalog:`, an `npm:` alias,
+`jsr:`, `github:`, `gist:`, `bitbucket:`, `gitlab:`, a git or URL specifier, a
+path that is not the workspace package directory, or a range the workspace
+version does not satisfy (including a package that has no `version`). Findings
+report the package-level cycle path.
 
 ## Options and defaults
 
-`dependencyTypes` selects dependency fields and defaults to the repository's
-configured dependency policy; `allowlist` defaults to empty and may hold
-documented intentional cycles.
+`dependencyTypes` selects dependency fields. When omitted or empty it is
+`dependencies`, `devDependencies`, `peerDependencies`, and
+`optionalDependencies`. `allowlist` defaults to empty and may hold documented
+intentional cycles.
 
 ## Valid example
 

@@ -92,7 +92,9 @@ whole prefix and suffix, so a multiline `$` cannot stop at an earlier line.
 `{table}` stands for the unqualified owning table. A matching abbreviation
 keeps every word, in order, with the first letter and at least `minLetters`
 characters taken from the word. The mismatch text suggests one abbreviation
-by dropping later ASCII vowels. Tokens inside a matched `{table}` middle are
+per word: keep the first character and the later consonants, then use a prefix
+of the original word when that skeleton is shorter than `minLetters`. At
+`minLetters: 3`, `order_line_items` is suggested as `ordr_lin_itms`. Tokens inside a matched `{table}` middle are
 skipped only when that token also appears in the real table name. An
 abbreviation-only token, such as a denied `cfg` standing in for
 `configuration`, is still reported.

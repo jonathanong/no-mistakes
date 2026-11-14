@@ -23,8 +23,10 @@ ownership, entrypoint, or agent workflow.
 
 ## What it catches/requires
 
-Each selected code directory under `roots` must contain `requiredFile`.
-`codeExtensions` determines which files make a directory relevant. Roots are
+Each first-level directory under a root that contains a matching code file
+anywhere beneath it must contain `requiredFile` directly in that directory.
+Nested directories do not each need their own copy. `codeExtensions`
+determines which files make a directory relevant. Roots are
 normalized before the scan: `./`, empty segments, and in-repo `..` collapse,
 so `services/../agents` is `agents`. A root that leaves the repository, such
 as `..`, is one finding on the config file at line 1

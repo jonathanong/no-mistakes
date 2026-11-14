@@ -17,8 +17,9 @@ HTTP method handlers on `route.ts`, Pages data helpers such as `getStaticProps`
 and `getInitialProps`, and similar) are exempt only inside a
 detected Next.js project. Remix route-module exports (`loader`, `action`,
 `clientLoader`, `clientAction`, `meta`, `links`, `ErrorBoundary`) are exempt
-only for files under a configured `type: remix` project's `app/routes/` (or
-`app/root.*`). A `@remix-run/*` package.json dependency is not enough.
+only under a configured `type: remix` project's `app/routes/`, `routes/`, or
+`app/root.*`, and not when the file stem ends in `.server` or `.client`. A
+`@remix-run/*` package.json dependency is not enough.
 
 Fix: rename one export, narrow the rule scope, or use a documented suppression
 for intentional public aliases.

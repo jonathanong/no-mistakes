@@ -177,9 +177,9 @@ shared SQL extractor parses PostgreSQL `ANALYZE` relation lists with `VERBOSE` a
 per-relation column lists; malformed lists and parenthesized option lists
 remain unanalyzable.
 
-At `max`, finite helper returns, direct throwing branches, literal iterator
-domains, and local Set guards use bounded full-SQL proofs. Annotation `low`
-requests skip these proofs and do not invoke the annotation evaluator.
+Bounded helper returns, direct throwing branches, and literal iterator domains
+are checked at `low` and at `max`. This rule does not run the query-annotation
+evaluator.
 
 Member `.query` calls on runtime receivers imported from the exact configured
 module remain unresolved at low when the receiver has no declared executor

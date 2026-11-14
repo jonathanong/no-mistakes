@@ -37,7 +37,7 @@ Every identifier the SQL declares must be at most `maxBytes` UTF-8 bytes
 after unquoting (`"Order"` is `Order`) and after dropping a schema qualifier.
 Declared names are table names, column names, inline and table `CONSTRAINT`
 names, index names, trigger names, function and procedure names, view and
-materialized view names and explicit view column names, enum type names, and the new name in `ALTER TABLE`
+materialized view names and explicit view column names, names declared by `CREATE TYPE` (enums, composites, ranges, and base types), and the new name in `ALTER TABLE`
 `ADD CONSTRAINT`, `ADD COLUMN`, `RENAME TO`, `RENAME COLUMN … TO`,
 `RENAME CONSTRAINT … TO`, and `ALTER INDEX … RENAME TO`.
 
@@ -46,9 +46,9 @@ Length is measured on the unquoted identifier, including decoded PostgreSQL
 Unicode identifiers (`U&"..."` with optional `UESCAPE`). Declaration modifiers,
 nested comments, and recovered static `EXECUTE` statements retain their source
 locations. `RECURSIVE VIEW` names and explicit columns are retained even when the SQL
-parser cannot construct that view AST. Only omitted-language or explicit
-`plpgsql` DO bodies contribute recovered PostgreSQL declarations; other
-languages remain opaque. `DO LANGUAGE` bodies use their original
+parser cannot construct that view AST. Omitted-language or explicit
+`plpgsql` `DO` bodies, and plpgsql function and procedure bodies, contribute
+recovered PostgreSQL declarations; other languages remain opaque. `DO LANGUAGE` bodies use their original
 source lines. Routine-body declarations do not consume an outer declaration's line.
 At the default 63-byte limit, the finding shows PostgreSQL's truncated prefix
 on a character boundary. A smaller `maxBytes` reports the configured naming

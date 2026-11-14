@@ -343,9 +343,7 @@ or move the exact version assertion into a focused production-release check.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
-
-- This rule has no unanalyzable inputs: it judges literal version and pin text. Nothing is routed through `options.unanalyzable`.
+- A selected file that cannot be read as UTF-8 is skipped and produces no finding. `options.unanalyzable` does not change that. Literal version and pin text in readable files are ordinary findings.
 
 ## Suppression
 
