@@ -237,7 +237,7 @@ rule-local assertions, separate from schema uniqueness and `viewBounds`.
 
 Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error.
 Set `importSpecifier` to your database module, list `executorNames`, or set `extraExecutorNames`.
-Use `executorNames: []` without a module to select no executor calls and retain
+Use `executorNames: []` without a module to skip imported executor calls and retain
 SQL-file/native-SQL analysis where supported. See the
 [executor migration](../migrations/explicit-postgres-executors.md).
 
