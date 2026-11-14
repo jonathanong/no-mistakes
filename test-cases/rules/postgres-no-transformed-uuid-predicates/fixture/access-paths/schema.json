@@ -16,6 +16,9 @@
         },
         "id": {
           "dataType": "uuid"
+        },
+        "sql_placeholder_1": {
+          "dataType": "text"
         }
       },
       "indexes": {
@@ -321,6 +324,9 @@
           "dataType": "uuid"
         },
         "label": {
+          "dataType": "text"
+        },
+        "sql_placeholder_0": {
           "dataType": "text"
         }
       },

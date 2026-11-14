@@ -8,6 +8,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "access-paths/embedded.mts",
+          "line": 11,
+          "message": "access-paths/embedded.mts:11: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (${postId}, ${contentSha256}, ${policyRevision})::item_identity;`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 12,
+          "message": "access-paths/embedded.mts:12: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(${postId}, ${contentSha256}, ${policyRevision})::item_identity;`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 13,
+          "message": "access-paths/embedded.mts:13: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM functions WHERE lower(id::text) = ${postId};`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 15,
+          "message": "access-paths/embedded.mts:15: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (sql_placeholder_1, ${contentSha256}, ${policyRevision})::item_identity;`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/embedded.mts",
           "line": 3,
           "message": "access-paths/embedded.mts:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -28,6 +60,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 14,
+          "message": "access-paths/embedded.mts:14: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;`);",
+          "target": "functions.id"
+        },
         {
           "file": "access-paths/embedded.mts",
           "line": 4,
@@ -82,6 +122,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 14,
+          "message": "access-paths/embedded.mts:14: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;`);",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 15,
+          "message": "access-paths/embedded.mts:15: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (sql_placeholder_1, ${contentSha256}, ${policyRevision})::item_identity;`);",
+          "target": "items.post_id"
+        },
         {
           "file": "access-paths/embedded.mts",
           "line": 4,

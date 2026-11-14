@@ -1,7 +1,15 @@
-import { query } from 'db';
+import { query, sql } from 'db';
 query(`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;`);
 query(`SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;`);
 query(`SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE a.id::text = $1;`);
 query(`SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE b.id::text = $1;`);
 query(`SELECT * FROM unindexed_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;`);
 query(`SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE a.id::text = $1 AND num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;`);
+declare const postId: string;
+declare const contentSha256: string;
+declare const policyRevision: number;
+query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (${postId}, ${contentSha256}, ${policyRevision})::item_identity;`);
+query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(${postId}, ${contentSha256}, ${policyRevision})::item_identity;`);
+query(sql`SELECT * FROM functions WHERE lower(id::text) = ${postId};`);
+query(`SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;`);
+query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (sql_placeholder_1, ${contentSha256}, ${policyRevision})::item_identity;`);

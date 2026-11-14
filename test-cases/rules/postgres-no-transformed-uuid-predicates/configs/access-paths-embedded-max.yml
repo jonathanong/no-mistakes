@@ -9,4 +9,6 @@ rules:
       sqlInclude: ["access-paths/*.sql"]
       importSpecifier: db
       executorNames: [query]
+      trustedSqlTags:
+        - { module: db, name: sql }
       unanalyzableSql: advise

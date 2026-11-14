@@ -35,7 +35,7 @@ pub(super) fn collect(
         out,
     }
     .walk(expression, None);
-    index_operands::mark(expression, &mut out[start..]);
+    index_operands::mark(expression, positions, &mut out[start..]);
 }
 struct Inputs<'a, 'b, 'c> {
     clause: Clause,

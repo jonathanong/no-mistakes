@@ -1,8 +1,13 @@
-use super::SqlTransformedColumnUseFact;
+use super::{PlaceholderPositions, SqlTransformedColumnUseFact};
+use crate::codebase::postgres::statements::value::is_placeholder_ident_at;
 use sqlparser::ast::{BinaryOperator, Expr, Spanned};
 use std::collections::BTreeMap;
 
-pub(super) fn mark(expression: &Expr, uses: &mut [SqlTransformedColumnUseFact]) {
+pub(super) fn mark(
+    expression: &Expr,
+    positions: PlaceholderPositions<'_>,
+    uses: &mut [SqlTransformedColumnUseFact],
+) {
     let mut by_span = BTreeMap::<_, BTreeMap<usize, Vec<usize>>>::new();
     for (index, use_) in uses.iter().enumerate() {
         if use_.clause == super::super::Clause::Having {
@@ -28,7 +33,7 @@ pub(super) fn mark(expression: &Expr, uses: &mut [SqlTransformedColumnUseFact]) 
         } = expression
         {
             for (operand, value) in [(left, right), (right, left)] {
-                if !constant(value) {
+                if !constant(value, positions) {
                     continue;
                 }
                 let Some(roots) = by_span.get(&span_key(operand)) else {
@@ -45,12 +50,13 @@ pub(super) fn mark(expression: &Expr, uses: &mut [SqlTransformedColumnUseFact]) 
         }
     });
 }
-fn constant(expression: &Expr) -> bool {
+fn constant(expression: &Expr, positions: PlaceholderPositions<'_>) -> bool {
     match unnest(expression) {
         Expr::Value(_) => true,
-        Expr::Tuple(values) => values.iter().all(constant),
-        Expr::Cast { expr, .. } => constant(expr),
-        Expr::Function(function) => constant_row(function),
+        Expr::Identifier(ident) => positions.is_some() && is_placeholder_ident_at(ident, positions),
+        Expr::Tuple(values) => values.iter().all(|value| constant(value, positions)),
+        Expr::Cast { expr, .. } => constant(expr, positions),
+        Expr::Function(function) => constant_row(function, positions),
         _ => false,
     }
 }
@@ -76,7 +82,7 @@ fn span_key(expression: &Expr) -> (u64, u64, u64, u64) {
     )
 }
 
-fn constant_row(function: &sqlparser::ast::Function) -> bool {
+fn constant_row(function: &sqlparser::ast::Function, positions: PlaceholderPositions<'_>) -> bool {
     use sqlparser::ast::{FunctionArg, FunctionArgExpr, FunctionArguments, ObjectNamePart};
     matches!(function.name.0.as_slice(), [ObjectNamePart::Identifier(name)] if name.quote_style.is_none() && name.value.eq_ignore_ascii_case("row"))
         && matches!(function.parameters, FunctionArguments::None)
@@ -86,7 +92,7 @@ fn constant_row(function: &sqlparser::ast::Function) -> bool {
         && matches!(&function.args, FunctionArguments::List(list) if list.args.len() > 1
             && list.clauses.is_empty()
             && list.duplicate_treatment.is_none()
-            && list.args.iter().all(|arg| matches!(arg, FunctionArg::Unnamed(FunctionArgExpr::Expr(value)) if constant(value))))
+            && list.args.iter().all(|arg| matches!(arg, FunctionArg::Unnamed(FunctionArgExpr::Expr(value)) if constant(value, positions))))
 }
 
 fn positive_predicates(expression: &Expr, visit: &mut impl FnMut(&Expr)) {

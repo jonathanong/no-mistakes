@@ -165,6 +165,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/expression-positive.sql",
+          "line": 26,
+          "message": "access-paths/expression-positive.sql:26: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
           "line": 3,
           "message": "access-paths/expression-positive.sql:3: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -383,6 +391,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM items WHERE CASE WHEN (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity THEN true ELSE false END;",
           "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 26,
+          "message": "access-paths/expression-positive.sql:26: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;",
+          "target": "functions.id"
         },
         {
           "file": "access-paths/expression-positive.sql",

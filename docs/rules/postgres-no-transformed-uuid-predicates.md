@@ -117,6 +117,9 @@ PostgreSQL's catalog spelling `ROW(a, b)` matches the equivalent implicit tuple
 `(a, b)`. A one-field `ROW(a)` remains distinct from the scalar expression `(a)`.
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.
+At effort max, recorded interpolation positions in configured trusted SQL
+templates also prove bind bounds. An authored `sql_placeholder_0` column is still
+a column; effort low retains its existing unanalyzable policy for interpolations.
 An index on `lower(id::text)` does not exempt `lower(id::text) || 'suffix'`.
 See PostgreSQL's [expression-index documentation](https://www.postgresql.org/docs/current/indexes-expressional.html).
 
