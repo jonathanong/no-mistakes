@@ -10,7 +10,7 @@ module.exports = Object.assign(
   rule(
     {
       type: "problem",
-      docs: { description: "disallow exported never placeholder type aliases", recommended: false },
+      docs: { description: "disallow exported never placeholder type aliases", recommended: true },
       schema: [],
       messages: {
         placeholder:

@@ -18,7 +18,7 @@ function unwrapExpression(node) {
 module.exports = rule(
   {
     type: "problem",
-    docs: { description: "disallow deleting object properties", recommended: false },
+    docs: { description: "disallow deleting object properties", recommended: true },
     schema: [],
     messages: {
       delete:
