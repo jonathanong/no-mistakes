@@ -28,3 +28,13 @@ export async function reassignedPool() {
     await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);
   } finally { await pool?.end(); }
 }
+export async function fakeAssignment() {
+  let client: PoolClient | undefined;
+  client = { query: async () => undefined, release() {} } as PoolClient;
+  await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);
+}
+export async function fakePoolAssignment() {
+  let pool: Pool | undefined;
+  pool = ({ query: async () => undefined, end: async () => undefined } as Pool);
+  await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);
+}

@@ -1,0 +1,13 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "items": {
+      "columns": {
+        "id": {"dataType": "integer", "ordinalPosition": 1},
+        "a": {"dataType": "integer", "ordinalPosition": 2},
+        "account_id": {"dataType": "integer", "ordinalPosition": 3}
+      }
+    }
+  }
+}

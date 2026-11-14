@@ -279,6 +279,7 @@ fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
         let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
         for file in [
             "direct.ts",
+            "callable.ts",
             "subpath.ts",
             "null.ts",
             "pool.ts",
@@ -300,7 +301,7 @@ fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
                 "{effort}/{file}: {report}"
             );
         }
-        for file in ["direct.ts", "pool.ts"] {
+        for file in ["direct.ts", "pool.ts", "callable.ts"] {
             let verdicts = report["sqlVerdicts"]
                 .as_array()
                 .unwrap()
@@ -318,16 +319,18 @@ fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
                 "{effort}/{file}: {report}"
             );
         }
-        let controls = report["sqlVerdicts"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .filter(|row| row["file"] == "controls.ts")
-            .collect::<Vec<_>>();
-        assert!(!controls.is_empty(), "{report}");
-        assert!(
-            controls.iter().all(|row| row["status"] == "abstain"),
-            "{report}"
-        );
+        for file in ["controls.ts", "literal-assignments.ts"] {
+            let controls = report["sqlVerdicts"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|row| row["file"] == file)
+                .collect::<Vec<_>>();
+            assert!(!controls.is_empty(), "{report}");
+            assert!(
+                controls.iter().all(|row| row["status"] == "abstain"),
+                "{report}"
+            );
+        }
     }
 }

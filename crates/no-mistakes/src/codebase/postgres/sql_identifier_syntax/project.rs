@@ -4,14 +4,13 @@ mod entry;
 pub(crate) use entry::collect;
 pub(crate) use entry::collect_with_scopes;
 use entry::Declared;
-fn collect_with_declarations_and_demand(
+fn collect_prepared(
     program: &Program<'_>,
     ts: &TsFileFacts,
     source: &str,
     profiles: &[EmbeddedSqlOptions],
     declared_types: &Declared,
     declared_factories: &Declared,
-    recover_helpers: bool,
     scopes: &mut super::super::embedded::scoped_bindings::PreparedScopes,
 ) -> FileFacts {
     let Some(module) = ts.module_bindings.as_deref() else {
@@ -55,12 +54,8 @@ fn collect_with_declarations_and_demand(
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
         source,
-        recovery_bindings: if recover_helpers {
-            helper_recovery::lower::Bindings::new(module)
-        } else {
-            Default::default()
-        },
-        recover_helpers,
+        recovery_bindings: helper_recovery::lower::Bindings::new(module),
+        recover_helpers: true,
         metadata: metadata::Metadata::new(module, &selections),
         template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {

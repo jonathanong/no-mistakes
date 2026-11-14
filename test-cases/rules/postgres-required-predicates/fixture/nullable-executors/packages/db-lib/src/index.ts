@@ -6,3 +6,4 @@ export interface Pool {
   query(sql: string, binds: unknown[]): Promise<unknown>;
   end(): Promise<void>;
 }
+export type Execute = (sql: string, binds: unknown[]) => Promise<unknown>;

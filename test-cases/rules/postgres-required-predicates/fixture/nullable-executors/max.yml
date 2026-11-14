@@ -5,6 +5,7 @@ rules:
     scope: repository
     options:
       importSpecifier: db-lib
-      executorTypeNames: [PoolClient, Pool]
+      executorTypeNames: [PoolClient, Pool, Execute]
+      schemaCatalogPath: schema.json
       include: ['*.ts']
       relations: [{table: items, requireColumns: [account_id]}]

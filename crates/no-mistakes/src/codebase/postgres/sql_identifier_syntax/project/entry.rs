@@ -30,14 +30,13 @@ pub(crate) fn collect_with_scopes(
     declared_factories: &Declared,
     scopes: &mut crate::codebase::postgres::embedded::scoped_bindings::PreparedScopes,
 ) -> FileFacts {
-    collect_with_declarations_and_demand(
+    collect_prepared(
         program,
         ts,
         source,
         profiles,
         declared_types,
         declared_factories,
-        true,
         scopes,
     )
 }

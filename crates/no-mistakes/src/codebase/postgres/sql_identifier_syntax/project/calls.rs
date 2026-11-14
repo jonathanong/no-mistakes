@@ -57,8 +57,8 @@ fn direct_calls(
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
-        let delayed =
-            selection.delayed_receivers.contains(root) && parts.len() == 2 && parts[1] == "query";
+        let delayed = selection.delayed_receivers.contains(root)
+            && (parts.len() == 1 || (parts.len() == 2 && parts[1] == "query"));
         let typed = (delayed || owner.is_some_and(|binding| typed.contains(&binding.id)))
             && (parts.len() == 1
                 || (parts.len() == 2 && parts[1] == "query")
