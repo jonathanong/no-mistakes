@@ -33,7 +33,7 @@ pub(super) fn mark(
             preceding.extend(right);
         }
     }
-    scope::visit_expressions(selection, &mut |expr| {
+    positive_conjuncts(selection, &mut |expr| {
         let Expr::BinaryOp {
             left,
             op: BinaryOperator::Eq,
@@ -66,10 +66,17 @@ pub(super) fn mark(
                     let Some(qualifier) = qualifier(expr) else {
                         return ControlFlow::Break(());
                     };
-                    if scope::owner(&relations, Some(&qualifier)).0.is_empty() {
+                    let (table, _) = scope::owner(&relations, Some(&qualifier));
+                    if table.is_empty() {
                         return ControlFlow::Break(());
                     }
-                    owners.insert(qualifier);
+                    let Some(relation) = relations.iter().find(|relation| {
+                        relation.alias.as_deref() == Some(&qualifier)
+                            || (relation.alias.is_none() && relation.table == table)
+                    }) else {
+                        return ControlFlow::Break(());
+                    };
+                    owners.insert(identity(relation));
                 }
                 ControlFlow::Continue(())
             });
@@ -98,4 +105,19 @@ fn unnest(mut expression: &Expr) -> &Expr {
         expression = inner;
     }
     expression
+}
+
+fn positive_conjuncts(expression: &Expr, visit: &mut impl FnMut(&Expr)) {
+    let expression = unnest(expression);
+    if let Expr::BinaryOp {
+        left,
+        op: BinaryOperator::And,
+        right,
+    } = expression
+    {
+        positive_conjuncts(left, visit);
+        positive_conjuncts(right, visit);
+    } else {
+        visit(expression);
+    }
 }

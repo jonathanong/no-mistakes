@@ -6,3 +6,5 @@ SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE num_nonnulls(b.id) = 1;
 SELECT * FROM a LEFT JOIN b ON b.id::text = a.label;
 SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE custom.num_nonnulls(a.id, b.id, c.id) = 1;
 SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, b.id, c.id) > 0;
+SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1 OR a.id = $1;
+SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE NOT (num_nonnulls(COALESCE(a.id, b.id), c.id) = 1);

@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 pub(super) struct Columns<'a> {
     catalog: &'a SchemaCatalog,
-    expression_indexes: expression_indexes::IndexCache<'a>,
+    expression_indexes: expression_indexes::IndexCache,
     tables: BTreeMap<&'a str, BTreeMap<String, bool>>,
 }
 impl<'a> Columns<'a> {

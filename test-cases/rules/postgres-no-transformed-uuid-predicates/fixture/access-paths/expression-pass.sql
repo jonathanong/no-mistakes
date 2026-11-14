@@ -4,3 +4,4 @@ SELECT * FROM public.items i WHERE (i.post_id, i.content_sha256, i.policy_revisi
 SELECT * FROM items i JOIN unindexed_items u ON u.id = i.id WHERE (i.post_id, i.content_sha256, i.policy_revision)::item_identity = ($1, $2, $3)::item_identity;
 SELECT * FROM functions WHERE lower(id::text) = $1;
 SELECT * FROM paired_items WHERE (post_id, id)::uuid_pair = ($1, $2)::uuid_pair;
+SELECT * FROM items AS "I" WHERE ("I".post_id, "I".content_sha256, "I".policy_revision)::item_identity = ($1, $2, $3)::item_identity;

@@ -5,19 +5,22 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 use std::ops::ControlFlow;
 
-pub(super) type IndexCache<'a> =
-    dashmap::DashMap<(usize, &'a str), (std::sync::Arc<Expr>, bool), rustc_hash::FxBuildHasher>;
+pub(super) type IndexCache =
+    dashmap::DashMap<(usize, String), (std::sync::Arc<Expr>, bool), rustc_hash::FxBuildHasher>;
 
-impl<'a> Columns<'a> {
+impl Columns<'_> {
     pub(super) fn expression_indexed(
         &self,
         use_: &SqlTransformedColumnUseFact,
-        table: &'a str,
+        table: &str,
     ) -> bool {
         if !use_.index_operand || !use_.expression_single_relation {
             return false;
         }
-        let key = (std::sync::Arc::as_ptr(&use_.expression) as usize, table);
+        let key = (
+            std::sync::Arc::as_ptr(&use_.expression) as usize,
+            table.to_string(),
+        );
         self.expression_indexes
             .entry(key)
             .or_insert_with(|| {

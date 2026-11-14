@@ -7,6 +7,8 @@ fn postgres_uuid_access_paths_check_json_snapshot() {
         "expression-pass",
         "expression-positive",
         "outer-residual",
+        "outer-residual-fail",
+        "outer-residual-ignore",
         "outer-positive",
         "embedded",
     ] {

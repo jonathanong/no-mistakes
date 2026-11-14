@@ -23,6 +23,18 @@ fn expression_indexes_and_outer_join_residuals_preserve_driving_controls() {
         }
         assert_eq!(lines.len(), source.lines().count(), "{name}");
         for (line, uses) in lines {
+            for use_ in &uses {
+                if let Some(first) = uses
+                    .iter()
+                    .find(|other| other.expression_site == use_.expression_site)
+                {
+                    assert!(std::sync::Arc::ptr_eq(&first.expression, &use_.expression));
+                    assert!(std::sync::Arc::ptr_eq(
+                        &first.expression_relations,
+                        &use_.expression_relations
+                    ));
+                }
+            }
             assert_eq!(
                 columns.judge(&uses).status,
                 expected,
