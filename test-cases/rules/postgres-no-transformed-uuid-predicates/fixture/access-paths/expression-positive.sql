@@ -16,3 +16,10 @@ SELECT * FROM items a JOIN items b ON b.id = a.id WHERE (a.post_id, b.content_sh
 SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity <> ($1, $2, $3)::item_identity;
 SELECT * FROM paired_items a JOIN paired_items b ON b.id = a.id WHERE (a.post_id, b.id)::uuid_pair = ($1, $2)::uuid_pair;
 SELECT * FROM functions f WHERE lower(f.id::text) || (SELECT CASE WHEN lower(f.id::text) = $1 THEN 'x' ELSE 'y' END) = $2;
+SELECT * FROM single_row_items WHERE (post_id)::uuid_single = $1::uuid_single;
+SELECT * FROM quoted_row_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM qualified_row_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(post_id, $1, $2)::item_identity;
+SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = "ROW"($1, $2, $3)::item_identity;
+SELECT * FROM items WHERE NOT ((post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity);
+SELECT * FROM items WHERE CASE WHEN (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity THEN true ELSE false END;

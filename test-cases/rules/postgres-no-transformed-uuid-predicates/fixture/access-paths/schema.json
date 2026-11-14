@@ -26,7 +26,7 @@
           "accessMethod": "btree",
           "keys": [
             {
-              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+              "expression": "(ROW(post_id, content_sha256, policy_revision)::item_identity)"
             }
           ]
         }
@@ -401,6 +401,93 @@
           "keys": [
             {
               "expression": "(post_id, id)::uuid_pair"
+            }
+          ]
+        }
+      }
+    },
+    "single_row_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(ROW(post_id)::uuid_single)"
+            }
+          ]
+        }
+      }
+    },
+    "quoted_row_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(\"ROW\"(post_id, content_sha256, policy_revision)::item_identity)"
+            }
+          ]
+        }
+      }
+    },
+    "qualified_row_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(custom.row(post_id, content_sha256, policy_revision)::item_identity)"
             }
           ]
         }

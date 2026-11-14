@@ -113,6 +113,10 @@ ordering. It matches the entire cast or function operand against a literal or
 bind bound. Alias qualification can be resolved, but casts, tuple order,
 identifier quoting, string values, and collations remain significant. A matching
 expression on another table or another self-join occurrence provides no proof.
+PostgreSQL's catalog spelling `ROW(a, b)` matches the equivalent implicit tuple
+`(a, b)`. A one-field `ROW(a)` remains distinct from the scalar expression `(a)`.
+In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
+this proof; a comparison inside `NOT` or `CASE` cannot.
 An index on `lower(id::text)` does not exempt `lower(id::text) || 'suffix'`.
 See PostgreSQL's [expression-index documentation](https://www.postgresql.org/docs/current/indexes-expressional.html).
 

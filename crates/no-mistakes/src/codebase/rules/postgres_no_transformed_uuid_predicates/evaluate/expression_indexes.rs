@@ -101,6 +101,7 @@ fn tokens(expression: &str) -> Option<Vec<Token>> {
             other => other,
         })
         .collect();
+    normalize_rows(&mut tokens);
     while matches!(tokens.first(), Some(Token::LParen)) {
         let mut depth = 0;
         let enclosing = tokens.iter().enumerate().all(|(index, token)| {
@@ -118,4 +119,37 @@ fn tokens(expression: &str) -> Option<Vec<Token>> {
         tokens.remove(0);
     }
     Some(tokens)
+}
+
+fn normalize_rows(tokens: &mut Vec<Token>) {
+    let mut parentheses = Vec::new();
+    let mut remove = vec![false; tokens.len()];
+    for (index, token) in tokens.iter().enumerate() {
+        match token {
+            Token::LParen => parentheses.push((index, false)),
+            Token::Comma => {
+                if let Some((_, comma)) = parentheses.last_mut() {
+                    *comma = true;
+                }
+            }
+            Token::RParen => {
+                let Some((open, true)) = parentheses.pop() else {
+                    continue;
+                };
+                if open > 0
+                    && matches!(&tokens[open - 1], Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case("row"))
+                    && (open < 2 || tokens[open - 2] != Token::Period)
+                {
+                    remove[open - 1] = true;
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut index = 0;
+    tokens.retain(|_| {
+        let keep = !remove[index];
+        index += 1;
+        keep
+    });
 }

@@ -5,6 +5,9 @@ use std::collections::BTreeMap;
 pub(super) fn mark(expression: &Expr, uses: &mut [SqlTransformedColumnUseFact]) {
     let mut by_span = BTreeMap::<_, BTreeMap<usize, Vec<usize>>>::new();
     for (index, use_) in uses.iter().enumerate() {
+        if use_.clause == super::super::Clause::Having {
+            continue;
+        }
         by_span
             .entry(span_key(&use_.expression))
             .or_default()
@@ -12,7 +15,7 @@ pub(super) fn mark(expression: &Expr, uses: &mut [SqlTransformedColumnUseFact]) 
             .or_default()
             .push(index);
     }
-    super::super::scope::visit_expressions(expression, &mut |expression| {
+    positive_predicates(expression, &mut |expression| {
         if let Expr::BinaryOp {
             left,
             op:
@@ -47,6 +50,7 @@ fn constant(expression: &Expr) -> bool {
         Expr::Value(_) => true,
         Expr::Tuple(values) => values.iter().all(constant),
         Expr::Cast { expr, .. } => constant(expr),
+        Expr::Function(function) => constant_row(function),
         _ => false,
     }
 }
@@ -70,4 +74,32 @@ fn span_key(expression: &Expr) -> (u64, u64, u64, u64) {
         span.end.line,
         span.end.column,
     )
+}
+
+fn constant_row(function: &sqlparser::ast::Function) -> bool {
+    use sqlparser::ast::{FunctionArg, FunctionArgExpr, FunctionArguments, ObjectNamePart};
+    matches!(function.name.0.as_slice(), [ObjectNamePart::Identifier(name)] if name.quote_style.is_none() && name.value.eq_ignore_ascii_case("row"))
+        && matches!(function.parameters, FunctionArguments::None)
+        && function.filter.is_none()
+        && function.over.is_none()
+        && function.within_group.is_empty()
+        && matches!(&function.args, FunctionArguments::List(list) if list.args.len() > 1
+            && list.clauses.is_empty()
+            && list.duplicate_treatment.is_none()
+            && list.args.iter().all(|arg| matches!(arg, FunctionArg::Unnamed(FunctionArgExpr::Expr(value)) if constant(value))))
+}
+
+fn positive_predicates(expression: &Expr, visit: &mut impl FnMut(&Expr)) {
+    let expression = unnest(expression);
+    if let Expr::BinaryOp {
+        left,
+        op: BinaryOperator::And | BinaryOperator::Or,
+        right,
+    } = expression
+    {
+        positive_predicates(left, visit);
+        positive_predicates(right, visit);
+    } else {
+        visit(expression);
+    }
 }
