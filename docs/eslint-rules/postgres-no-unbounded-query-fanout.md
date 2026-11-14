@@ -156,7 +156,9 @@ names do not remove that proof requirement. See the
 [migration notes](../migrations/explicit-postgres-executors.md).
 
 Omitting both `importSpecifier` and `executorNames` is a configuration error.
-Set `executorNames: []` explicitly to select no executor calls.
+Set `executorNames: []` explicitly to select no executor calls. This rule's
+schema has no `extraExecutorNames` property, so that name does not select
+executors.
 
 With `importSpecifier: "pg"`, receiver identity must still be proven. Queries on
 instances created by `new Pool()` or `new Client()`, and clients obtained from

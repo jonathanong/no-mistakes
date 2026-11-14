@@ -200,7 +200,9 @@ PostgreSQL rules retain their proven-receiver policy. See the
 [migration notes](../migrations/explicit-postgres-executors.md).
 
 Omitting both `importSpecifier` and `executorNames` is a configuration error.
-Set `executorNames: []` explicitly to select no executor calls.
+Set `executorNames: []` explicitly to select no executor calls. This rule's
+schema has no `extraExecutorNames` property, so that name does not select
+executors.
 
 For example, with `importSpecifier: "pg"`, calls on a pool and on a client
 obtained through `connect()` are checked even though the receiver is not typed

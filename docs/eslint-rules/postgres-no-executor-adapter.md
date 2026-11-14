@@ -358,7 +358,8 @@ run(0 ?? read, account);
   namespace is that executor, not `Function.prototype.call`, when `call` is the
   configured name.
 - Omitting both `importSpecifier` and `executorNames` is a configuration error.
-  Set `executorNames: []` to select no executor calls.
+  Set `executorNames: []` to select no executor calls. This rule's schema has no
+  `extraExecutorNames` property, so that name does not select executors.
 
 ## Fix
 
