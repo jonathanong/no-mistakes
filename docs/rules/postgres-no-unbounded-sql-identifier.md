@@ -517,7 +517,12 @@ may appear after `WHERE expires_at < $1` beside a guarded derived table name.
 At max effort the identifier proof checks each hole independently, including
 immutable aliases of literal alternatives, even with `unanalyzableSql: ignore`.
 The guarded table stays clean; an unchecked string table in the same statement
-is reported. Type-only string unions do not validate runtime input.
+is reported. A stable parameter annotated only with string literals is a closed
+domain and each literal is checked;
+[closed identifier values](../postgres-facts/closed-identifiers.md) states the
+limits. A union that includes `string`, an optional or defaulted parameter, or
+a cast of external data stays unbounded. Type-only unions do not validate
+runtime input outside that stable literal-union parameter.
 
 ## Composed parameterized fragments
 
