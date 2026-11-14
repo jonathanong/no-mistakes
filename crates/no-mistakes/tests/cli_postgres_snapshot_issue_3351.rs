@@ -6,6 +6,7 @@ fn forwarded_executor_wrappers_check_json_snapshot() {
         "forwarding",
         "non-forwarding",
         "duplicate",
+        "destructured",
         "early-call",
         "early-alias",
         "early-member",

@@ -113,6 +113,18 @@ fn duplicate_function_parameter_cannot_prove_forwarding() {
 }
 
 #[test]
+fn destructured_formal_keeps_original_unknown_executor_call() {
+    let facts = calls("destructured", &EmbeddedSqlOptions::configured("pg", &[]));
+    assert!(
+        facts
+            .calls
+            .iter()
+            .any(|call| call.line == 2 && call.is_unanalyzable()),
+        "{facts:?}"
+    );
+}
+
+#[test]
 fn earlier_call_keeps_unknown_executor_obligation() {
     for case in ["early-call", "early-alias", "early-member"] {
         let facts = calls(case, &EmbeddedSqlOptions::configured("pg", &[]));

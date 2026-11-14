@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "destructured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "index.ts",
+          "line": 2,
+          "message": "index.ts:2: executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out; pass a SQL literal or trusted tagged template, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-offset",
+          "sourceLine": "const destructured = ({ sql }: { sql: string }) => query(sql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "duplicate": {
     "exitCode": 1,
     "report": {
