@@ -82,7 +82,7 @@ columns can be checked, suppress the executor line with
 
 ### Executor configuration
 
-Omitting both `importSpecifier` and `executorNames` is a configuration error.
+Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error. `extraExecutorNames` alone selects `[query, read, write]` plus those extras.
 Set `importSpecifier` to your database module or list `executorNames` explicitly.
 Use `executorNames: []` without a module to select no executor calls and retain
 SQL-file/native-SQL analysis where supported. See the
