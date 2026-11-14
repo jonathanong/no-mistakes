@@ -260,6 +260,20 @@ fn postgres_required_predicates_index_probes_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_nullable_executors_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "nullable-executors");
+    let cases =
+        ["low", "max"].map(|effort| (effort, root.clone(), root.join(format!("{effort}.yml"))));
+    let report = super::check_json_snapshot::assert_saved_fixture_report(
+        "postgres_nullable_executors",
+        &cases,
+        &[],
+        &["--include-sql-verdicts"],
+    );
+    assert!(report.to_string().contains("account_id"));
+}
+
+#[test]
 fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
     let root = rules_path(RULE, "fixture", "nullable-executors");
     for effort in ["low", "max"] {
