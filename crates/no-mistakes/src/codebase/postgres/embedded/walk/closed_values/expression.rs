@@ -83,7 +83,7 @@ pub(super) fn expression(
         _ => None,
     }
 }
-fn select(objects: Vec<Arm>, keys: Vec<Arm>) -> Option<Vec<Arm>> {
+pub(super) fn select(objects: Vec<Arm>, keys: Vec<Arm>) -> Option<Vec<Arm>> {
     let mut result = Vec::new();
     for object in objects {
         for key in &keys {

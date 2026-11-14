@@ -97,14 +97,20 @@ impl ScopeVisitor<'_> {
         &mut self,
         init: &Expression<'_>,
     ) {
-        if let Expression::Identifier(id) = unwrap_ts_wrappers(init) {
-            if self
-                .literal_objects
-                .closed
-                .has(&self.scopes, id.name.as_str())
+        let init = unwrap_ts_wrappers(init);
+        match init {
+            Expression::Identifier(id)
+                if self
+                    .literal_objects
+                    .closed
+                    .has(&self.scopes, id.name.as_str()) =>
             {
-                self.exempt_literal_read(init);
+                self.exempt_literal_read(init)
             }
+            Expression::StaticMemberExpression(_) | Expression::ComputedMemberExpression(_) => {
+                self.literal_objects.member_uses.push(init.span())
+            }
+            _ => {}
         }
     }
     pub(in crate::codebase::postgres::embedded::walk) fn exempt_closed_set_input(

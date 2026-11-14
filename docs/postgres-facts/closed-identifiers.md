@@ -16,7 +16,9 @@ non-key column can still be unbounded.
 - Local immutable lookup records composed of string literals and nested
   records. A literal-union key can select a record before reading its fields.
   Related fields retain the same key choice, and repeated uses of one value
-  retain the same alternative.
+  retain the same alternative. Structured values may flow through tracked
+  immutable aliases and scalar field reads. An untracked object-valued read
+  invalidates the owning record, even when no write is visible.
 - Configured assertion calls with a literal string array or intrinsic `Set`
   allowlist, including a local unmodified collection or const alias.
 - A source-visible same-file helper whose local literal membership guard throws

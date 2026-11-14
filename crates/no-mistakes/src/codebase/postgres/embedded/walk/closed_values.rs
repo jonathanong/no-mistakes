@@ -8,12 +8,14 @@ use std::collections::{BTreeMap, HashMap};
 mod assertions;
 #[cfg(test)]
 mod controls_tests;
-mod escapes;
 mod expression;
 #[cfg(test)]
 mod extra_escape_tests;
 #[cfg(test)]
 mod followup_tests;
+#[cfg(test)]
+mod member_ownership_tests;
+mod members;
 mod state;
 use expression::expression;
 #[cfg(test)]

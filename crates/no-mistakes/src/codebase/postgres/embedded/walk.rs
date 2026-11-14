@@ -94,21 +94,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_await_expression(&mut self, awaited: &ast::AwaitExpression<'a>) {
         self.walk_closed_await(awaited);
     }
-    fn visit_yield_expression(&mut self, yielded: &ast::YieldExpression<'a>) {
-        self.walk_closed_yield(yielded);
-    }
-    fn visit_property_definition(&mut self, property: &ast::PropertyDefinition<'a>) {
-        self.walk_closed_property(property);
-    }
-    fn visit_accessor_property(&mut self, property: &ast::AccessorProperty<'a>) {
-        self.walk_closed_accessor(property);
-    }
-    fn visit_formal_parameter(&mut self, parameter: &ast::FormalParameter<'a>) {
-        self.walk_closed_parameter(parameter);
-    }
-    fn visit_jsx_expression_container(&mut self, container: &ast::JSXExpressionContainer<'a>) {
-        self.walk_closed_jsx(container);
-    }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.walk_closed_call(call);
     }
@@ -140,10 +125,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_return_statement(&mut self, statement: &ast::ReturnStatement<'a>) {
-        self.walk_closed_return(statement);
+        flow::returned(self, statement);
     }
     fn visit_throw_statement(&mut self, statement: &oxc_ast::ast::ThrowStatement<'a>) {
-        self.walk_closed_throw(statement);
+        walk::walk_throw_statement(self, statement);
+        self.invalidate_exited_execution();
     }
     fn visit_break_statement(&mut self, statement: &oxc_ast::ast::BreakStatement<'a>) {
         walk::walk_break_statement(self, statement);

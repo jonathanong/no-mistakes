@@ -11,6 +11,8 @@ mod programs;
 pub(crate) mod provenance;
 pub(crate) mod reassigned;
 mod shadows;
+#[cfg(test)]
+mod tests;
 use super::super::super::helpers::template::TemplateHelper;
 use super::super::super::options::TrustedSqlTag;
 use super::super::super::tags::SqlTagNames;
@@ -73,10 +75,6 @@ impl LocalFunctions {
         self.resolved.contains_key(name) || self.templates.contains_key(name)
     }
 
-    #[cfg(test)]
-    pub(crate) fn collect(program: &Program<'_>, source: &str, trusted: &[TrustedSqlTag]) -> Self {
-        collection::collect(program, source, trusted, &[])
-    }
     pub(crate) fn collect_with_raw(
         program: &Program<'_>,
         source: &str,

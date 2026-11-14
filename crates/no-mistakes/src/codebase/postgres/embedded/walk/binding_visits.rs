@@ -133,11 +133,6 @@ impl<'a> ScopeVisitor<'a> {
         declaration: &oxc_ast::ast::VariableDeclarator<'a>,
     ) {
         let tracked_closed = matches!(&declaration.id,ast::BindingPattern::BindingIdentifier(name) if self.literal_objects.closed.has(&self.scopes,name.name.as_str()));
-        if !self.declaring_const || !tracked_closed {
-            if let Some(init) = &declaration.init {
-                self.poison_closed_result(init);
-            }
-        }
         let forwarded = declaration
             .init
             .as_ref()
@@ -167,7 +162,8 @@ impl<'a> ScopeVisitor<'a> {
             }
         }
         let literal_reads = self.literal_objects.read_spans.len();
-        if self.declaring_const {
+        let member_reads = self.literal_objects.member_uses.len();
+        if self.declaring_const && tracked_closed {
             if let Some(init) = &declaration.init {
                 self.exempt_closed_const_alias(init);
             }
@@ -178,6 +174,7 @@ impl<'a> ScopeVisitor<'a> {
         walk::walk_variable_declarator(self, declaration);
         self.restore_plain_binding(saved_plain);
         self.literal_objects.read_spans.truncate(literal_reads);
+        self.literal_objects.member_uses.truncate(member_reads);
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor, namespace);

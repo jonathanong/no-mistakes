@@ -26,6 +26,7 @@ pub(super) struct LiteralObjects {
     poisoned: HashSet<String>,
     literals: RefCell<Vec<Splice>>,
     pub(super) read_spans: Vec<u32>,
+    pub(super) member_uses: Vec<oxc_span::Span>,
 }
 
 #[rustfmt::skip]
