@@ -14,6 +14,9 @@ mechanism. No step waits by looping.
 
 Failing: any step polls for CI status with a sleep loop,
 `gh run watch`, `gh run list`/`gh api` in a retry loop,
-or a third-party "wait for checks" action.
+or a third-party "wait for checks" action. Also failing:
+a one-shot lookup of CI's result through `gh` or the API,
+because on a tag push CI for that commit may still be
+running, so the gate races it.
 
 General advice, caveats, or lists of best practices earn nothing; grade the code only.

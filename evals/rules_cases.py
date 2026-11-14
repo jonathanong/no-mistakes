@@ -232,10 +232,11 @@ RULES_FLOWS = [
                             generator parses that text. Other unrelated remarks are
                             fine.
 
-                            Failing: the review calls those exact-text assertions a
-                            defect, brittle, or a thing to change (loosen to a regex
-                            or substring, replace with a snapshot, delete), or
-                            demands the test stop asserting the literal lines.
+                            Failing: the review asks for those exact-text assertions
+                            to change: loosen them to a regex or substring, replace
+                            them with a snapshot, delete them, or stop asserting the
+                            literal lines. Noting a weakness of the test while
+                            keeping the exact-text assertions is not a failure.
                             """,
                             review=True,
                         ),
@@ -682,7 +683,10 @@ RULES_FLOWS = [
 
                             Failing: any step polls for CI status with a sleep loop,
                             `gh run watch`, `gh run list`/`gh api` in a retry loop,
-                            or a third-party "wait for checks" action.
+                            or a third-party "wait for checks" action. Also failing:
+                            a one-shot lookup of CI's result through `gh` or the API,
+                            because on a tag push CI for that commit may still be
+                            running, so the gate races it.
                             """
                         ),
                     ),
@@ -717,24 +721,25 @@ RULES_FLOWS = [
                           node-version: 24
                       - run: corepack enable && pnpm install --frozen-lockfile
                       - run: pnpm --filter api test
-                  snapshots:
+                  integration:
                     needs: test
-                    runs-on: ubuntu-latest
-                    timeout-minutes: 10
-                    permissions:
-                      contents: write
+                    # Measured: 31 min on ubuntu-latest, 9 min here (parallel Postgres shards).
+                    runs-on: ubuntu-latest-8-cores
+                    timeout-minutes: 20
                     steps:
                       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
                         with:
-                          persist-credentials: true # the push step below needs the token
+                          persist-credentials: false
+                      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+                        with:
+                          node-version: 24
                       - run: corepack enable && pnpm install --frozen-lockfile
-                      - run: pnpm --filter api snapshots:update
-                      - run: git add -A && git diff --cached --quiet || (git commit -m "chore: update snapshots" && git push)
+                      - run: pnpm --filter api test:integration
                 ```
                 """,
                 [
                     (
-                        "flags-paths-not-persist",
+                        "flags-paths-not-runner",
                         _r(
                             """
                             Grade only the review in the final message. Two checks.
@@ -747,10 +752,10 @@ RULES_FLOWS = [
                             gate or for the filter to be removed. Failing: the review
                             does not raise this.
 
-                            2. Passing: the review does NOT demand changing
-                            `persist-credentials: true` or the job-level
-                            `contents: write` in the `snapshots` job. Failing: it
-                            calls either a defect to fix.
+                            2. Passing: the review does NOT demand moving the
+                            `integration` job off `ubuntu-latest-8-cores`; the
+                            measured runtime reason is stated beside it. Failing: it
+                            calls the larger runner a defect to fix.
 
                             Both checks must pass.
                             """,

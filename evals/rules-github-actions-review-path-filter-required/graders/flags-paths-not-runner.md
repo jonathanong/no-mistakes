@@ -14,10 +14,10 @@ the PR cannot merge), and asks for an always-reporting
 gate or for the filter to be removed. Failing: the review
 does not raise this.
 
-2. Passing: the review does NOT demand changing
-`persist-credentials: true` or the job-level
-`contents: write` in the `snapshots` job. Failing: it
-calls either a defect to fix.
+2. Passing: the review does NOT demand moving the
+`integration` job off `ubuntu-latest-8-cores`; the
+measured runtime reason is stated beside it. Failing: it
+calls the larger runner a defect to fix.
 
 Both checks must pass.
 
