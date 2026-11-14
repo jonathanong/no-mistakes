@@ -1,0 +1,10 @@
+effort: max
+unanalyzable: report
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: db-lib
+      executorTypeNames: [PoolClient, Pool]
+      include: ['*.ts']
+      relations: [{table: items, requireColumns: [account_id]}]

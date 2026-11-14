@@ -17,7 +17,9 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     let plan = variant.plan;
     let playwright = variant.playwright;
     let collect_tests = variant.collect_tests;
-    let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
+    let mut scoped_executors = Default::default();
+    let embedded_sql =
+        embedded::prepared_with_scopes(root, path, source, program, plan, &mut scoped_executors);
     let mut head_candidates = heads::candidates(plan, &embedded_sql);
     let (helpers, helper_candidates) = heads::helper_candidates(plan, &embedded_sql, program);
     head_candidates.extend(helper_candidates);
@@ -136,8 +138,15 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
             ),
         )
     });
-    let sql_identifier_syntax =
-        super::sql_identifier::collect(root, path, source, program, &ts, plan);
+    let sql_identifier_syntax = super::sql_identifier::collect_with_scopes(
+        root,
+        path,
+        source,
+        program,
+        &ts,
+        plan,
+        &mut scoped_executors,
+    );
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         fact_extraction_panicked: false,

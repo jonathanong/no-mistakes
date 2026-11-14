@@ -57,7 +57,9 @@ fn direct_calls(
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
-        let typed = owner.is_some_and(|binding| typed.contains(&binding.id))
+        let delayed =
+            selection.delayed_receivers.contains(root) && parts.len() == 2 && parts[1] == "query";
+        let typed = (delayed || owner.is_some_and(|binding| typed.contains(&binding.id)))
             && (parts.len() == 1
                 || (parts.len() == 2 && parts[1] == "query")
                 || input::indirect_executor_call(parts));
@@ -78,9 +80,10 @@ fn direct_calls(
             || (alias && detached != Some(true))
             || (namespace && !typed)
             || loose
-            || unsupported
-                .iter()
-                .any(|id| owner.is_some_and(|binding| binding.id == *id));
+            || (!delayed
+                && unsupported
+                    .iter()
+                    .any(|id| owner.is_some_and(|binding| binding.id == *id)));
         if !uncertain && !input::indirect_executor_call(parts) {
             trusted.insert(call.span);
         }
@@ -126,7 +129,8 @@ fn append_escapes(
         for usage in &binding.references {
             let at = (usage.span.start, usage.span.end);
             if (namespaces.contains(&binding.id)
-                || (typed.contains(&binding.id) && !unsupported.contains(&binding.id)))
+                || (typed.contains(&binding.id) && !unsupported.contains(&binding.id))
+                || selection.delayed_bindings.contains(&binding.id))
                 && syntax
                     .namespace_members
                     .get(&at)

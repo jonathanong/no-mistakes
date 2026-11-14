@@ -24,8 +24,10 @@ pub(crate) fn from_configured_module(source: &str, specifier: &str) -> bool {
     candidates::from_configured_module(source, specifier)
 }
 
-pub(super) struct ScopedCollection {
-    pub(super) executors: ScopedExecutors,
+pub(crate) type PreparedScopes = std::collections::BTreeMap<EmbeddedSqlOptions, ScopedCollection>;
+
+pub(crate) struct ScopedCollection {
+    pub(crate) executors: ScopedExecutors,
     pub(super) candidates: Vec<RelativeScopedCandidate>,
     pub(super) spans: Vec<PendingRelativeSpan>,
 }
@@ -51,7 +53,7 @@ pub(super) type UndeclaredReceiverTypes = HashMap<String, super::UndeclaredExecu
 
 /// Binding name to the source spans in which it is an executor.
 #[derive(Debug, Default)]
-pub(super) struct ScopedExecutors {
+pub(crate) struct ScopedExecutors {
     spans: HashMap<String, Vec<Span>>,
     pub(super) transactions: HashMap<String, Vec<Span>>,
     pub(super) delayed: std::collections::HashSet<u32>,
@@ -62,6 +64,10 @@ pub(super) struct ScopedExecutors {
 }
 
 impl ScopedExecutors {
+    pub(crate) fn delayed_reference(&self, start: u32) -> bool {
+        self.delayed.contains(&start)
+    }
+
     pub(super) fn contains_declaration(&self, name: &str, start: u32) -> bool {
         self.spans
             .get(name)
@@ -81,7 +87,11 @@ impl ScopedExecutors {
     }
 }
 
-pub(super) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> ScopedCollection {
+pub(crate) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> ScopedCollection {
+    #[cfg(test)]
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.scoped.collections", 1);
+    }
     let mut imports = classify(program, options);
     let candidates = std::mem::take(&mut imports.candidates);
     // Negative-only preflight: every supported binding spells `let`. Comments

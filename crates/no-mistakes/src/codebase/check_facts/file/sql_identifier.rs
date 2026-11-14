@@ -77,6 +77,7 @@ pub(super) fn declared_factories_by_profile(
         })
         .collect()
 }
+#[cfg(test)]
 pub(super) fn collect(
     root: &Path,
     path: &Path,
@@ -84,6 +85,26 @@ pub(super) fn collect(
     program: &Program<'_>,
     ts: &TsFileFacts,
     plan: &CheckFactPlan,
+) -> sql_identifier_syntax::FileFacts {
+    collect_with_scopes(
+        root,
+        path,
+        source,
+        program,
+        ts,
+        plan,
+        &mut Default::default(),
+    )
+}
+
+pub(super) fn collect_with_scopes(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    plan: &CheckFactPlan,
+    scopes: &mut crate::codebase::postgres::embedded::scoped_bindings::PreparedScopes,
 ) -> sql_identifier_syntax::FileFacts {
     let profiles = profiles(root, path, plan);
     if profiles.is_empty() {
@@ -95,15 +116,9 @@ pub(super) fn collect(
     let factories = declared_factories_by_profile(root, path, plan)
         .into_iter()
         .collect::<std::collections::BTreeMap<_, _>>();
-    let mut facts = if typed.is_empty() && factories.is_empty() {
-        sql_identifier_syntax::collect(program, ts, source, &profiles)
-    } else if factories.is_empty() {
-        sql_identifier_syntax::collect_with_types(program, ts, source, &profiles, &typed)
-    } else {
-        sql_identifier_syntax::collect_with_declarations(
-            program, ts, source, &profiles, &typed, &factories,
-        )
-    };
+    let mut facts = sql_identifier_syntax::collect_with_scopes(
+        program, ts, source, &profiles, &typed, &factories, scopes,
+    );
     register(root, path, plan, &mut facts);
     facts
 }

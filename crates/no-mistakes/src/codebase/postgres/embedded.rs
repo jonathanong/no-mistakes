@@ -30,7 +30,7 @@ pub use undeclared::{
     summarize_undeclared_executor_types, UndeclaredExecutorType, UndeclaredExecutorTypeSummary,
 };
 pub(crate) use unproven::retain_unproven_spans;
-pub(super) mod scoped_bindings;
+pub(crate) mod scoped_bindings;
 pub(crate) mod site_identity;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
@@ -84,6 +84,7 @@ pub(crate) fn extract_embedded_sql_from_program_with_demand(
 }
 mod projection;
 pub(crate) use projection::extract_embedded_sql_from_program_with_projections;
+pub(crate) use projection::extract_with_scopes;
 
 mod fragment_debug;
 pub use fragment_debug::{EmbeddedSqlFileFacts, EmbeddedSqlFragment};
