@@ -1,0 +1,23 @@
+import { mkdtemp, mkdtempSync, readdirSync } from 'node:fs';
+import { mkdtemp as makeTemp } from 'node:fs/promises';
+import * as promises from 'node:fs/promises';
+import * as nodeFs from 'node:fs';
+
+readdirSync(mkdtempSync('sync-'));
+readdirSync(await mkdtempSync('await-sync-'));
+readdirSync(mkdtempSync('sync-option-', 'buffer'));
+readdirSync(makeTemp('promise-'));
+readdirSync(await makeTemp('await-promise-'));
+readdirSync(await makeTemp('await-promise-option-', 'buffer'));
+const pending = makeTemp('bound-');
+readdirSync(await pending);
+readdirSync(pending);
+readdirSync(mkdtemp('callback-one-'));
+readdirSync(mkdtemp('callback-two-', () => {}));
+readdirSync(await mkdtemp('await-callback-', () => {}));
+readdirSync(promises.mkdtemp('ns-promise-'));
+readdirSync(await promises.mkdtemp('await-ns-'));
+readdirSync(nodeFs.mkdtemp('member-callback-'));
+readdirSync(nodeFs.mkdtempSync('member-sync-'));
+readdirSync(nodeFs.promises.mkdtemp('member-promise-'));
+readdirSync(await nodeFs.promises.mkdtemp('await-member-promise-'));

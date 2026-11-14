@@ -45,7 +45,9 @@ impl<'a> Projector<'a, '_> {
             Expression::StringLiteral(text) => PathOrigin::literal(&crate::ast::js_literal(text)),
             Expression::TemplateLiteral(template) => self.template(template, depth),
             Expression::Identifier(id) => self.identifier(id, depth),
-            Expression::AwaitExpression(inner) => self.origin(&inner.argument, depth + 1),
+            Expression::AwaitExpression(inner) => self
+                .awaited_promise_directory(&inner.argument)
+                .unwrap_or_else(|| self.origin(&inner.argument, depth + 1)),
             Expression::StaticMemberExpression(member) => {
                 let module = matches!(&member.object, Expression::ImportMeta(_))
                     && matches!(
@@ -97,6 +99,25 @@ impl<'a> Projector<'a, '_> {
     /// Origin of a path expression with no call-site context.
     pub(super) fn path_of(&mut self, expression: &Expression<'a>) -> PathOrigin {
         self.origin(expression, 0)
+    }
+
+    /// `await` of an `fs/promises` `mkdtemp` call is the directory string.
+    /// Awaiting a synchronous string is left to the inner origin.
+    fn awaited_promise_directory(&mut self, argument: &Expression<'a>) -> Option<PathOrigin> {
+        let call = match argument.get_inner_expression() {
+            Expression::CallExpression(call) => call,
+            Expression::Identifier(id) => {
+                let init = self.const_init(id)?;
+                let Expression::CallExpression(call) = init.get_inner_expression() else {
+                    return None;
+                };
+                call
+            }
+            _ => return None,
+        };
+        (self.temp_factory_result(call.callee.get_inner_expression())
+            == Some(temp_factories::TempReturn::Promise))
+        .then(|| composite::temp_directory(call))
     }
 
     fn binding_symbol(&self, id: &IdentifierReference<'a>) -> Option<oxc_semantic::SymbolId> {

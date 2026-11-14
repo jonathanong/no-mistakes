@@ -91,12 +91,18 @@ impl<'a> Projector<'a, '_> {
             return None;
         };
         if root.disposable {
-            let kind = if awaited {
-                VariableDeclarationKind::AwaitUsing
+            // `await using` falls back to a sync disposer; `using` cannot own a promise.
+            let accepted = if self.disposable_factory(factory, false) {
+                matches!(
+                    root.kind,
+                    VariableDeclarationKind::Using | VariableDeclarationKind::AwaitUsing
+                )
             } else {
-                VariableDeclarationKind::Using
+                awaited
+                    && root.kind == VariableDeclarationKind::AwaitUsing
+                    && self.disposable_factory(factory, true)
             };
-            if root.kind != kind || !self.disposable_factory(factory, awaited) {
+            if !accepted {
                 return None;
             }
         } else if root.kind != VariableDeclarationKind::Const

@@ -3,11 +3,14 @@ use crate::fx::{FxHashMap, FxHashSet};
 use oxc_semantic::Semantic;
 mod call;
 mod require_chains;
+mod result;
 mod safety;
+
+pub(super) use result::TempReturn;
 
 #[derive(Clone)]
 pub(in crate::codebase::ts_source::module_facts::arguments) enum TempFactoryBinding {
-    Named(bool),
+    Named { sync: bool, result: TempReturn },
     Module { sync: bool, promises_safe: bool },
 }
 
@@ -19,21 +22,6 @@ pub(in crate::codebase::ts_source::module_facts::arguments) struct TempFactories
     pub(super) unsafe_promises: bool,
 }
 
-fn node_fs(specifier: &str) -> bool {
-    matches!(
-        specifier,
-        "node:fs" | "fs" | "node:fs/promises" | "fs/promises"
-    )
-}
-
-fn factory(name: &str, specifier: &str) -> bool {
-    match name {
-        "mkdtemp" => node_fs(specifier),
-        "mkdtempSync" => matches!(specifier, "node:fs" | "fs"),
-        _ => false,
-    }
-}
-
 pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
     semantic: &Semantic<'_>,
     facts: &TypeScriptModuleFacts,
@@ -42,18 +30,18 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
     let loads: FxHashMap<_, _> = facts
         .loads
         .iter()
-        .filter(|load| load.kind == "require" && node_fs(&load.specifier))
+        .filter(|load| load.kind == "require" && result::node_fs(&load.specifier))
         .map(|load| (load.span.start, (load.span.end, load.specifier.as_str())))
         .collect();
     if !facts.imports.iter().any(|import| {
         !import.type_only
             && import.bindings.iter().any(|binding| {
                 !binding.type_only
-                    && (factory(&binding.imported, &import.specifier)
+                    && (result::factory(&binding.imported, &import.specifier)
                         || binding.kind == "named"
                             && binding.imported == "promises"
                             && matches!(import.specifier.as_str(), "fs" | "node:fs")
-                        || node_fs(&import.specifier)
+                        || result::node_fs(&import.specifier)
                             && matches!(binding.kind.as_str(), "namespace" | "default"))
             })
     }) && loads.is_empty()
@@ -73,7 +61,7 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
     let mut unsafe_sync = false;
     let mut unsafe_promises = false;
     for import in &facts.imports {
-        if import.type_only || !node_fs(&import.specifier) {
+        if import.type_only || !result::node_fs(&import.specifier) {
             continue;
         }
         let sync = matches!(import.specifier.as_str(), "fs" | "node:fs");
@@ -83,16 +71,21 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
             }
             let symbol = symbols.get(&binding.binding_id).copied();
             let promises = binding.kind == "named" && binding.imported == "promises" && sync;
-            if binding.kind == "named"
-                && factory(&binding.imported, &import.specifier)
-                && symbol.is_some_and(|symbol| {
+            if let Some(result) = (binding.kind == "named")
+                .then_some(binding.imported.as_str())
+                .and_then(|imported| result::named(imported, sync))
+            {
+                if symbol.is_some_and(|symbol| {
                     semantic
                         .scoping()
                         .get_resolved_references(symbol)
                         .all(|reference| !reference.is_write())
-                })
-            {
-                bindings.insert(binding.binding_id, TempFactoryBinding::Named(sync));
+                }) {
+                    bindings.insert(
+                        binding.binding_id,
+                        TempFactoryBinding::Named { sync, result },
+                    );
+                }
             } else if promises || matches!(binding.kind.as_str(), "namespace" | "default") {
                 if let Some(symbol) = symbol {
                     let module_sync = sync && !promises;
@@ -124,13 +117,13 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
             continue;
         };
         match require_chains::selection(semantic, symbol, binding, load_end, specifier) {
-            require_chains::Selection::Named(sync)
+            require_chains::Selection::Named(sync, result)
                 if semantic
                     .scoping()
                     .get_resolved_references(symbol)
                     .all(|r| !r.is_write()) =>
             {
-                bindings.insert(id, TempFactoryBinding::Named(sync));
+                bindings.insert(id, TempFactoryBinding::Named { sync, result });
             }
             require_chains::Selection::Module(sync) => {
                 let unsafe_family = if sync {
@@ -156,7 +149,7 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
     }
     bindings.retain(|_, binding| {
         let sync = match binding {
-            TempFactoryBinding::Named(sync) => *sync,
+            TempFactoryBinding::Named { sync, .. } => *sync,
             TempFactoryBinding::Module {
                 sync,
                 promises_safe,
@@ -176,7 +169,7 @@ pub(in crate::codebase::ts_source::module_facts::arguments) fn temp_factories(
     let direct_loads = facts
         .loads
         .iter()
-        .filter(|load| load.kind == "require" && node_fs(&load.specifier))
+        .filter(|load| load.kind == "require" && result::node_fs(&load.specifier))
         .map(|load| {
             (
                 (load.span.start, load.span.end),
