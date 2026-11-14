@@ -74,8 +74,8 @@ function fixture(scenario, logFailure, temporaryParent = os.tmpdir()) {
     });
   const search =
     scenario === "missing"
-      ? ["empty-bin", path.dirname(process.execPath)]
-      : ["bin", process.env.PATH];
+      ? [path.join(directory, "empty-bin")]
+      : ["bin", process.env.PATH].map((entry) => path.resolve(directory, entry));
   return {
     directory,
     options: {
@@ -84,7 +84,7 @@ function fixture(scenario, logFailure, temporaryParent = os.tmpdir()) {
       timeout: 20000,
       env: {
         ...process.env,
-        PATH: search.map((entry) => path.resolve(directory, entry)).join(path.delimiter),
+        PATH: search.join(path.delimiter),
         NATIVE_BUILD_FIXTURE: scenario,
         ...(["midwrite", "stalled"].includes(logFailure)
           ? {
@@ -195,11 +195,14 @@ for (const [scenario, status] of [
         if (scenario === "missing") {
           if (process.platform === "darwin") assert.match(result.stderr, /No such file|not found/i);
           else assert.match(input.read("spawn-error.txt"), /ENOENT/);
+          assert.deepEqual(input.options.env.PATH.split(path.delimiter), [
+            path.join(input.directory, "empty-bin"),
+          ]);
           for (const line of input.read("processes.jsonl").trim().split("\n")) {
             const record = JSON.parse(line);
             assert.equal(record.status, null);
             assert.equal(typeof record.error, "string");
-            assert.match(record.error, /ENOENT/);
+            assert.match(record.error, /spawnSync ps ENOENT/);
           }
         } else {
           if (scenario === "signal") assertSignalTermination(completed);
@@ -275,10 +278,7 @@ test("sample writer retains a timed-out process probe error", () => {
   try {
     const result = spawnSync(
       process.execPath,
-      [
-        path.join(root, "test-cases/native-build-diagnostics/sample-probe-failure.cjs"),
-        "timeout",
-      ],
+      [path.join(root, "test-cases/native-build-diagnostics/sample-probe-failure.cjs")],
       { cwd: directory, encoding: "utf8", timeout: 20000 },
     );
     assert.equal(result.status, 0, result.stderr);

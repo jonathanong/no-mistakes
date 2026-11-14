@@ -712,8 +712,8 @@ metadata, and periodic local compiler/linker CPU and RSS samples. Each
 `processes.jsonl` sample keeps the process probe status and any stderr the
 probe returned. When `ps` or PowerShell is missing or times out, that record
 also keeps the probe error string. A successful probe omits the error field.
-macOS also
-records `/usr/bin/time -l` wall/user/system time and peak RSS for completed builds.
+macOS also records `/usr/bin/time -l` wall/user/system time and peak RSS for
+completed builds.
 A small shell converts Cargo signal termination to its conventional failing exit
 status before BSD `time` observes it. This preserves a killed Cargo command's
 status instead of BSD `time` returning its own signal-handling error. The saved
