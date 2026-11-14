@@ -3,6 +3,52 @@ use oxc_ast::ast;
 use oxc_ast_visit::walk;
 
 impl<'a> ScopeVisitor<'a> {
+    pub(super) fn walk_variable_declaration_bindings(
+        &mut self,
+        declaration: &oxc_ast::ast::VariableDeclaration<'a>,
+    ) {
+        let previous = self.declaring_const;
+        let previous_plain = self.declaring_plain_const;
+        self.declaring_plain_const = declaration.kind == ast::VariableDeclarationKind::Const;
+        self.declaring_const = declaration.kind == ast::VariableDeclarationKind::Const
+            || (self.executor_options.track_transaction_helpers
+                && matches!(
+                    declaration.kind,
+                    ast::VariableDeclarationKind::Using | ast::VariableDeclarationKind::AwaitUsing
+                ));
+        for declarator in &declaration.declarations {
+            if let Some(init) = &declarator.init {
+                // A mutable alias or mixed const result can expose `.query`.
+                let tracked_alias =
+                    matches!(declarator.id, ast::BindingPattern::BindingIdentifier(_))
+                        && matches!(
+                            crate::codebase::ts_source::unwrap_ts_wrappers(init),
+                            ast::Expression::Identifier(_)
+                        )
+                        && !self.receiver_origins(init).is_empty();
+                let copied_query =
+                    !crate::codebase::postgres::executor_detachment::executor_bindings(
+                        &declarator.id,
+                        &self.executor_options.executor_names,
+                    )
+                    .is_empty()
+                        && self.detached_query_receiver(init);
+                if !copied_query
+                    && ((!tracked_alias && !self.declaring_const)
+                        || (self.stable_executor_category(init).is_none()
+                            && self.relative_executor_proof(init).is_none()
+                            && !tracked_alias))
+                {
+                    self.revoke_query_receiver(init);
+                }
+            }
+        }
+        resolve::initialize_vars(declaration, self);
+        walk::walk_variable_declaration(self, declaration);
+        self.declaring_const = previous;
+        self.declaring_plain_const = previous_plain;
+    }
+
     pub(super) fn walk_closed_call(&mut self, call: &ast::CallExpression<'a>) {
         let reads = self.literal_objects.read_spans.len();
         self.exempt_closed_assertion(call);
