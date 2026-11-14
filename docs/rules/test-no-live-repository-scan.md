@@ -123,11 +123,14 @@ An enumeration passes when its root is provably bounded:
   is unresolved because the promises API has no synchronous factory.
   `mkdtempSync` returns a directory string, and awaiting that string does too.
   A one-argument `mkdtemp` from `fs/promises` returns a promise. The bare call is
-  not a directory. `await` of that call, or of a `const` bound to it, is the new
-  directory. Passing the promise to a filesystem call stays unproven.
+  not a directory. `await` of that call, of a `const` bound to it, or of an
+  immutable `const` alias of that binding, is the new directory. Passing the
+  promise to a filesystem call stays unproven.
   Callback `fs.mkdtemp` does not return a directory. Its callback argument is
   not an owned-root proof. A second argument, such as an encoding option, keeps
-  the result mutable because it may be a `Buffer` rather than a string.
+  the result mutable because it may be a `Buffer` rather than a string. Another
+  use of that mutable binding, such as filling the buffer, leaves `await` of
+  the binding unproven.
   Static CommonJS selections such as `require('fs').mkdtempSync` and
   `require('fs').promises.mkdtemp` keep their Node factory identity when bound
   locally or called directly. Unknown selections, shadowed loaders, and

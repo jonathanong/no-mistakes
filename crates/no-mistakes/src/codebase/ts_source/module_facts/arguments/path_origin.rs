@@ -101,23 +101,50 @@ impl<'a> Projector<'a, '_> {
         self.origin(expression, 0)
     }
 
-    /// `await` of an `fs/promises` `mkdtemp` call is the directory string.
-    /// Awaiting a synchronous string is left to the inner origin.
+    /// `await` of an `fs/promises` `mkdtemp` call, or of an immutable `const`
+    /// alias of that call, is the directory string. Another use of a mutable
+    /// binding leaves it unproven. Awaiting a synchronous string is left to
+    /// the inner origin.
     fn awaited_promise_directory(&mut self, argument: &Expression<'a>) -> Option<PathOrigin> {
+        let mut bindings = Vec::new();
         let call = match argument.get_inner_expression() {
             Expression::CallExpression(call) => call,
-            Expression::Identifier(id) => {
-                let init = self.const_init(id)?;
-                let Expression::CallExpression(call) = init.get_inner_expression() else {
-                    return None;
-                };
-                call
-            }
+            Expression::Identifier(id) => self.const_promise_call(id, &mut bindings)?,
             _ => return None,
         };
-        (self.temp_factory_result(call.callee.get_inner_expression())
-            == Some(temp_factories::TempReturn::Promise))
-        .then(|| composite::temp_directory(call))
+        if self.temp_factory_result(call.callee.get_inner_expression())
+            != Some(temp_factories::TempReturn::Promise)
+        {
+            return None;
+        }
+        let mut origin = composite::temp_directory(call);
+        for id in &bindings {
+            origin = self.value_requirement(id, origin);
+            if origin.anchor != PathAnchor::Temp {
+                return None;
+            }
+        }
+        Some(origin)
+    }
+
+    /// Call behind at most 16 immutable `const` identifiers, recording each hop.
+    fn const_promise_call<'b>(
+        &mut self,
+        id: &'b IdentifierReference<'a>,
+        bindings: &mut Vec<&'b IdentifierReference<'a>>,
+    ) -> Option<&'a CallExpression<'a>> {
+        bindings.push(id);
+        let mut init = self.const_init(id)?;
+        loop {
+            match init.get_inner_expression() {
+                Expression::CallExpression(call) => return Some(call),
+                Expression::Identifier(alias) if bindings.len() < 16 => {
+                    bindings.push(alias);
+                    init = self.const_init(alias)?;
+                }
+                _ => return None,
+            }
+        }
     }
 
     fn binding_symbol(&self, id: &IdentifierReference<'a>) -> Option<oxc_semantic::SymbolId> {

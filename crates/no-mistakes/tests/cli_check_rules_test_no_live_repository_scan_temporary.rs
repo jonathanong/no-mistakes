@@ -231,6 +231,7 @@ fn temp_factory_return_kinds_check_json_snapshot() {
             ("tests/callback-one-argument.test.mts".to_string(), 7),
             ("tests/member-unawaited.test.mts".to_string(), 9),
             ("tests/member-unawaited.test.mts".to_string(), 10),
+            ("tests/mutated-buffer.test.mts".to_string(), 10),
             ("tests/require-callback.test.cts".to_string(), 9),
             ("tests/require-callback.test.cts".to_string(), 10),
             ("tests/require-unawaited.test.cts".to_string(), 10),
