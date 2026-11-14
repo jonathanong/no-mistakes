@@ -17,10 +17,11 @@ impl<'a> Projector<'a, '_> {
             return self.object_shape(expression, depth + 1).0.remove(key);
         }
         let mut value = None;
-        for property in &object.properties {
-            let ObjectPropertyKind::ObjectProperty(property) = property else {
-                return None;
-            };
+        for property in object
+            .properties
+            .iter()
+            .filter_map(ObjectPropertyKind::as_property)
+        {
             if property.computed || property.method || property.kind != PropertyKind::Init {
                 return None;
             }

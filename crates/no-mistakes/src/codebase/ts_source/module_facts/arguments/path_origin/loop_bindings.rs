@@ -8,14 +8,14 @@ impl<'a> Projector<'a, '_> {
             return None;
         }
         let symbol = self.binding_symbol(id)?;
-        if !self.immutable_binding(symbol) {
-            return None;
-        }
         let semantic = self.semantic;
         let node = semantic.scoping().symbol_declaration(symbol);
         let AstKind::VariableDeclarator(declaration) = semantic.nodes().kind(node) else {
             return None;
         };
+        if !self.immutable_binding(symbol) {
+            return None;
+        }
         if declaration.init.is_some()
             || !matches!(&declaration.id, BindingPattern::BindingIdentifier(binding)
                 if binding.symbol_id.get() == Some(symbol))
@@ -23,20 +23,23 @@ impl<'a> Projector<'a, '_> {
             return None;
         }
         let parent = semantic.nodes().parent_id(node);
-        let AstKind::ForOfStatement(looped) = semantic.nodes().parent_kind(parent) else {
-            return None;
-        };
-        let ForStatementLeft::VariableDeclaration(left) = &looped.left else {
+        let AstKind::ForOfStatement(ForOfStatement {
+            left: ForStatementLeft::VariableDeclaration(left),
+            body,
+            right,
+            ..
+        }) = semantic.nodes().parent_kind(parent)
+        else {
             return None;
         };
         if left.kind != VariableDeclarationKind::Const
             || left.declarations.len() != 1
             || left.declarations[0].span != declaration.span
-            || !looped.body.span().contains_inclusive(id.span)
+            || !body.span().contains_inclusive(id.span)
         {
             return None;
         }
-        let Expression::ArrayExpression(array) = looped.right.get_inner_expression() else {
+        let Expression::ArrayExpression(array) = right.get_inner_expression() else {
             return None;
         };
         if array.elements.is_empty() || array.elements.len() > 16 {
@@ -66,3 +69,7 @@ impl<'a> Projector<'a, '_> {
         Some(PathOrigin::alternatives(origins))
     }
 }
+
+#[cfg(test)]
+#[path = "loop_bindings/tests.rs"]
+mod tests;

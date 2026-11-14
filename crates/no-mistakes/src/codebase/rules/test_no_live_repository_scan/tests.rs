@@ -262,3 +262,5 @@ fn json_config_read_errors_poison_and_absolute_paths_stay_unpoisoned_when_missin
     config.tests.vitest.configs = Some(StringOrList::One(absolute.display().to_string()));
     assert!(!json_configs_poison(&root, &config));
 }
+
+mod scan_origin;
