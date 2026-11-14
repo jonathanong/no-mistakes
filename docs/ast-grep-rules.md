@@ -215,9 +215,11 @@ the canonical-graph seed before report execution.
 ### `no-process-spawn-in-file-loop`
 
 Flags `Command::new` and `std::process::Command::new` inside `for`, `while`,
-or `loop` bodies, and inside braced `.iter()`, `.par_iter()`, `.into_iter()`, and
-`.into_par_iter()` `map`, `for_each`, and `filter_map` closures, in production
-source. An expression-bodied closure is outside those patterns. Process startup
+or `loop` bodies, and inside braced iterator closures, in production source.
+`.iter()` and `.par_iter()` cover `map`, `for_each`, and `filter_map`.
+`.into_iter()` covers `map` and `for_each`. `.into_par_iter()` covers `map`,
+`for_each`, and `filter_map`. An expression-bodied closure is outside those
+patterns. Process startup
 must be batched once per invocation or replaced with
 an in-process parser/resolver. A canonical one-shot Git discovery subprocess
 outside those shapes remains valid.

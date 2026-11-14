@@ -317,7 +317,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 | `pnpm`, `npm`, `yarn`, `bun` | Supported, primarily tested using `pnpm` |
 | `bullmq`, `glide-mq` | Supported, primarily tested for `glide-mq` |
 | Vitest / Jest | Supported |
-| Queues, HTTP servers, and GitHub Actions | Supported without a custom config block. CI reads `.github/workflows` unless `ci.workflowDirs` is set |
+| Queues, HTTP servers, and GitHub Actions | BullMQ, glide-mq, Express, Fastify, Hono, Koa, and NestJS need no config block. GitHub Actions reads `.github/workflows` unless `ci.workflowDirs` is set. Custom queue wrappers need `queues.factories`. Language queue and route frontends need configured package, module, app, or project roots |
 | Terraform/OpenTofu | Supported when `infra.terraform.moduleRoots` lists module directories |
 | Swift / .NET | Shipped, narrower language frontends |
 | Python / Go / Rust / Ruby / PHP / Java / Kotlin / Elixir / Dart | Shipped v1 frontends and test plans; configure package or module roots explicitly |
