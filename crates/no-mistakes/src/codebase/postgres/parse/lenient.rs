@@ -101,6 +101,7 @@ fn parse_with_normalized_sources(
     original_heads.restore(sql, normalized, &separated, &head_map, &mut statements);
     for statement in &mut statements {
         super::fetch_expression::restore(&mut statement.statement, &fetch);
+        super::named_arguments::rewrite(&mut statement.statement);
     }
     if fragment {
         let source: Arc<[TokenWithSpan]> = located.into();

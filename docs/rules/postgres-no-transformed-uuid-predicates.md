@@ -124,6 +124,19 @@ SELECT * FROM single_row_items
 WHERE ROW(post_id)::uuid_single = ROW($1)::uuid_single;
 ```
 
+A column, `NULL`, or a multi-field row that mixes a constant with a column does not:
+
+```sql
+SELECT * FROM single_row_items
+WHERE ROW(post_id)::uuid_single = ROW(other_col)::uuid_single;
+SELECT * FROM single_row_items
+WHERE ROW(post_id)::uuid_single = ROW(NULL)::uuid_single;
+SELECT * FROM single_row_items
+WHERE ROW(post_id)::uuid_single = ROW($1, other_col)::uuid_single;
+```
+
+`NULL` is not a proven constant: the comparison is unknown, so it does not show that an expression index can satisfy the predicate. A named argument label, including legacy `name := value`, is not a column, so `make_interval(secs := $4)` does not by itself make the statement unanalyzable.
+
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.
 At effort max, recorded interpolation positions in configured trusted SQL

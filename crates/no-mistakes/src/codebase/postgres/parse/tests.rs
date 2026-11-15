@@ -11,6 +11,7 @@ fn prepared_copy_source_keeps_lexical_errors_outside_copy_data() {
     assert!(prepared.tokens().is_empty());
 }
 
+mod assignment_argument_tests;
 mod derived_table_limit;
 mod fetch_expressions;
 mod function_call_tests;

@@ -4,4 +4,4 @@ rules:
     options:
       schemaCatalogPath: schema.json
       executorNames: []
-      sqlInclude: ['statements.sql']
+      sqlInclude: ['statements.sql', 'parser/recall.sql']

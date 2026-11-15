@@ -67,3 +67,37 @@ FROM entries e
 RIGHT JOIN flows f ON e.id = f.id
 ORDER BY e.id
 LIMIT 1;
+
+-- CASE in the CTE select list, as reported for the bounded-statement inventory.
+WITH candidates AS (
+ SELECT current_flow.id,
+   CASE
+     WHEN current_flow.provider = 'x'
+       AND current_flow.callback_received_at <= CURRENT_TIMESTAMP - make_interval(secs => $4)
+       THEN 'expired'
+     WHEN current_flow.status = 'exchanging' THEN 'unknown'
+     WHEN current_flow.exchange_attempts >= $3 THEN 'failed'
+     ELSE 'unknown'
+   END AS callback_error
+ FROM flows flow JOIN flows current_flow ON current_flow.id = flow.id
+ WHERE flow.status = 'callback_received' ORDER BY current_flow.id LIMIT $1
+)
+UPDATE flows SET callback_error = candidates.callback_error
+FROM candidates WHERE flows.id = candidates.id;
+
+-- Same select-list CASE with legacy := named arguments.
+WITH candidates AS (
+ SELECT current_flow.id,
+   CASE
+     WHEN current_flow.provider = 'x'
+       AND current_flow.callback_received_at <= CURRENT_TIMESTAMP - make_interval(secs := $4)
+       THEN 'expired'
+     WHEN current_flow.status = 'exchanging' THEN 'unknown'
+     WHEN current_flow.exchange_attempts >= $3 THEN 'failed'
+     ELSE 'unknown'
+   END AS callback_error
+ FROM flows flow JOIN flows current_flow ON current_flow.id = flow.id
+ WHERE flow.status = 'callback_received' ORDER BY current_flow.id LIMIT $1
+)
+UPDATE flows SET callback_error = candidates.callback_error
+FROM candidates WHERE flows.id = candidates.id;

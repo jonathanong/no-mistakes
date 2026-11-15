@@ -294,7 +294,7 @@ retains each quoted/qualified name component; unary roots expose their typed
 A `functionCall` retains its exact name, ordered `PostgresSqlCallArgument`
 records, `argumentsComplete`, `syntax`, and call `modifiers`. Argument roots
 distinguish `f(id)`, `f(id + 1)`, `f(g(id))`, and `f('id')`; repeated arguments
-remain repeated. Named arguments retain the name. Argument `sql` is rendered
+remain repeated. Named arguments retain the name. Legacy `name := value` is that named argument; an assignment whose left side is not a single identifier stays a binary expression. Argument `sql` is rendered
 SQL, while spans refer to the original UTF-8 source. When that rendered SQL
 occurs verbatim around the parser span, the span grows in either direction so
 `source.slice(span.start.offset, span.end.offset)` equals `sql`. That covers

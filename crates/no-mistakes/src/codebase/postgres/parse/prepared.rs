@@ -72,6 +72,7 @@ impl<'a> PreparedSql<'a> {
             recursive_views.validate(statement)?;
             recursive_views.restore(statement);
         }
+        super::named_arguments::rewrite(&mut statements);
         *self.functions.borrow_mut() = functions;
         *self.policy_arbiters.borrow_mut() = arbiters;
         Ok(statements)

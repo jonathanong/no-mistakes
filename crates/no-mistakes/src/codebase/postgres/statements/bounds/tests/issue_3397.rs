@@ -50,6 +50,8 @@ fn issue_3397_scalar_calls_keep_explicit_limits() {
             "update: flows[id=value]",
             "select: capped entries flows[id=#0]",
             "select: capped entries[id=#1] flows",
+            "update: flows[id=#1] (capped flows[id=#1 status=value] flows[id=#0])",
+            "update: flows[id=#1] (capped flows[id=#1 status=value] flows[id=#0])",
         ],
         "actual bounds: {lines:?}"
     );
