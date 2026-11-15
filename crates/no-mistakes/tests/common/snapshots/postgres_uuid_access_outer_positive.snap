@@ -1,0 +1,273 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 13,
+          "message": "access-paths/outer-positive.sql:13: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 4,
+          "message": "access-paths/outer-positive.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE a.id::text = $1 AND num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 1,
+          "message": "access-paths/outer-positive.sql:1: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE a.id::text = $1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 10,
+          "message": "access-paths/outer-positive.sql:10: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE NOT (num_nonnulls(COALESCE(a.id, b.id), c.id) = 1);",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 11,
+          "message": "access-paths/outer-positive.sql:11: WHERE applies num_nonnulls to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, (SELECT NULL::uuid)) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 12,
+          "message": "access-paths/outer-positive.sql:12: WHERE applies num_nonnulls to UUID columns a.id, a.link; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a WHERE num_nonnulls(a.link, id) = 1;",
+          "target": "a.id, a.link"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 13,
+          "message": "access-paths/outer-positive.sql:13: WHERE applies num_nonnulls to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 2,
+          "message": "access-paths/outer-positive.sql:2: WHERE applies cast to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE b.id::text = $1;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 3,
+          "message": "access-paths/outer-positive.sql:3: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a JOIN b ON b.link = a.id JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 4,
+          "message": "access-paths/outer-positive.sql:4: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE a.id::text = $1 AND num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 5,
+          "message": "access-paths/outer-positive.sql:5: WHERE applies num_nonnulls to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE num_nonnulls(b.id) = 1;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 6,
+          "message": "access-paths/outer-positive.sql:6: JOIN ON applies cast to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.id::text = a.label;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 7,
+          "message": "access-paths/outer-positive.sql:7: WHERE applies custom.num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE custom.num_nonnulls(a.id, b.id, c.id) = 1;",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 8,
+          "message": "access-paths/outer-positive.sql:8: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, b.id, c.id) > 0;",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 9,
+          "message": "access-paths/outer-positive.sql:9: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1 OR a.id = $1;",
+          "target": "a.id, b.id, c.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 13,
+          "message": "access-paths/outer-positive.sql:13: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 4,
+          "message": "access-paths/outer-positive.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE a.id::text = $1 AND num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 1,
+          "message": "access-paths/outer-positive.sql:1: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE a.id::text = $1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 10,
+          "message": "access-paths/outer-positive.sql:10: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE NOT (num_nonnulls(COALESCE(a.id, b.id), c.id) = 1);",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 11,
+          "message": "access-paths/outer-positive.sql:11: WHERE applies num_nonnulls to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, (SELECT NULL::uuid)) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 12,
+          "message": "access-paths/outer-positive.sql:12: WHERE applies num_nonnulls to UUID columns a.id, a.link; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a WHERE num_nonnulls(a.link, id) = 1;",
+          "target": "a.id, a.link"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 13,
+          "message": "access-paths/outer-positive.sql:13: WHERE applies num_nonnulls to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 2,
+          "message": "access-paths/outer-positive.sql:2: WHERE applies cast to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE b.id::text = $1;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 3,
+          "message": "access-paths/outer-positive.sql:3: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a JOIN b ON b.link = a.id JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 4,
+          "message": "access-paths/outer-positive.sql:4: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE a.id::text = $1 AND num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 5,
+          "message": "access-paths/outer-positive.sql:5: WHERE applies num_nonnulls to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id WHERE num_nonnulls(b.id) = 1;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 6,
+          "message": "access-paths/outer-positive.sql:6: JOIN ON applies cast to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.id::text = a.label;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 7,
+          "message": "access-paths/outer-positive.sql:7: WHERE applies custom.num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE custom.num_nonnulls(a.id, b.id, c.id) = 1;",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 8,
+          "message": "access-paths/outer-positive.sql:8: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, b.id, c.id) > 0;",
+          "target": "a.id, b.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-positive.sql",
+          "line": 9,
+          "message": "access-paths/outer-positive.sql:9: WHERE applies num_nonnulls to UUID columns a.id, b.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1 OR a.id = $1;",
+          "target": "a.id, b.id, c.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,5 +1,6 @@
 use crate::codebase::postgres::statements::SqlTransformedColumnUseFact;
 mod anchored;
+mod expression_indexes;
 #[path = "view_columns.rs"]
 mod view_columns;
 use crate::codebase::postgres::{SchemaCatalog, SqlBranchJudgment};
@@ -7,6 +8,7 @@ use std::collections::BTreeMap;
 
 pub(super) struct Columns<'a> {
     catalog: &'a SchemaCatalog,
+    expression_indexes: expression_indexes::IndexCache,
     tables: BTreeMap<&'a str, BTreeMap<String, bool>>,
 }
 impl<'a> Columns<'a> {
@@ -29,7 +31,11 @@ impl<'a> Columns<'a> {
                 tables.insert(view.name.as_str(), columns);
             }
         }
-        Self { catalog, tables }
+        Self {
+            catalog,
+            tables,
+            expression_indexes: Default::default(),
+        }
     }
     pub(super) fn resolve(
         &self,
@@ -52,7 +58,13 @@ impl<'a> Columns<'a> {
                         .is_some_and(|view| view.name == table))
             })
         });
-        Ok((table, uuid && !drives_uuid_probe && !self.anchored(use_)))
+        if !uuid || drives_uuid_probe || self.anchored(use_) {
+            return Ok((table, false));
+        }
+        if use_.outer_join_residual {
+            return Err("outer-join-residual-filter");
+        }
+        Ok((table, !self.expression_indexed(use_, table)))
     }
     fn resolve_owner(
         &self,

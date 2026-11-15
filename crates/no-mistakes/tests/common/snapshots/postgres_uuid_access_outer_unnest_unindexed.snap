@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 2,
+          "message": "access-paths/outer-unnest.mts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 2,
+          "message": "access-paths/outer-unnest.mts:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

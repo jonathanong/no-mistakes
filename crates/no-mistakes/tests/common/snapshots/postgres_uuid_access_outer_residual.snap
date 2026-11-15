@@ -1,0 +1,143 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 1,
+          "message": "access-paths/outer-residual.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 2,
+          "message": "access-paths/outer-residual.sql:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(b.id, c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 3,
+          "message": "access-paths/outer-residual.sql:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE 1 = pg_catalog.num_nonnulls(COALESCE(b.id, a.id), c.id);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 4,
+          "message": "access-paths/outer-residual.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM public.a LEFT JOIN public.b ON b.link = a.id LEFT JOIN public.c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 5,
+          "message": "access-paths/outer-residual.sql:5: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a RIGHT JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 6,
+          "message": "access-paths/outer-residual.sql:6: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a FULL JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 7,
+          "message": "access-paths/outer-residual.sql:7: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a AS \"A\" LEFT JOIN b AS \"B\" ON \"B\".link = \"A\".id WHERE num_nonnulls(\"A\".id, \"B\".id) = 1;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 1,
+          "message": "access-paths/outer-residual.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 2,
+          "message": "access-paths/outer-residual.sql:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE num_nonnulls(b.id, c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 3,
+          "message": "access-paths/outer-residual.sql:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a LEFT JOIN b ON b.link = a.id LEFT JOIN c ON c.link = a.id WHERE 1 = pg_catalog.num_nonnulls(COALESCE(b.id, a.id), c.id);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 4,
+          "message": "access-paths/outer-residual.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM public.a LEFT JOIN public.b ON b.link = a.id LEFT JOIN public.c ON c.link = a.id WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 5,
+          "message": "access-paths/outer-residual.sql:5: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a RIGHT JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 6,
+          "message": "access-paths/outer-residual.sql:6: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a FULL JOIN b ON b.link = a.id WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-residual.sql",
+          "line": 7,
+          "message": "access-paths/outer-residual.sql:7: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM a AS \"A\" LEFT JOIN b AS \"B\" ON \"B\".link = \"A\".id WHERE num_nonnulls(\"A\".id, \"B\".id) = 1;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

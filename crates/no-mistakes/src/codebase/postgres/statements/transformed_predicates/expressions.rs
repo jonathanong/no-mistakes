@@ -1,4 +1,5 @@
 mod columns;
+mod index_operands;
 use super::boolean::boolean_result;
 use super::scope::{owner, qualifier};
 use super::{Clause, SqlTransformedColumnUseFact};
@@ -8,6 +9,7 @@ use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use crate::codebase::postgres::statements::SqlTransformedColumnProbeFact as Probe;
 use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned};
+type Transformation<'a> = (&'a str, (usize, usize), &'a columns::Provenance);
 
 pub(super) fn collect(
     expression: &Expr,
@@ -18,6 +20,7 @@ pub(super) fn collect(
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
     out: &mut Vec<SqlTransformedColumnUseFact>,
 ) {
+    let start = out.len();
     Inputs {
         clause,
         relations,
@@ -32,6 +35,7 @@ pub(super) fn collect(
         out,
     }
     .walk(expression, None);
+    index_operands::mark(expression, positions, &mut out[start..]);
 }
 struct Inputs<'a, 'b, 'c> {
     clause: Clause,
@@ -77,7 +81,7 @@ impl Inputs<'_, '_, '_> {
         self.walk(expr, None);
         (self.probe_value, self.null_test) = previous;
     }
-    fn walk(&mut self, expr: &Expr, transformation: Option<(&str, (usize, usize))>) {
+    fn walk(&mut self, expr: &Expr, transformation: Option<Transformation<'_>>) {
         let previous = self.probe_value;
         let positive_conjunct = self.positive_conjunct;
         let null_test = self.null_test;
@@ -98,7 +102,7 @@ impl Inputs<'_, '_, '_> {
         self.positive_conjunct = positive_conjunct;
         self.null_test = null_test;
     }
-    fn walk_value(&mut self, expr: &Expr, transformation: Option<(&str, (usize, usize))>) {
+    fn walk_value(&mut self, expr: &Expr, transformation: Option<Transformation<'_>>) {
         // A surrounding transformation consumes the boolean result, not its UUID operands.
         let transformation = if boolean_result(expr) {
             None
@@ -142,17 +146,21 @@ impl Inputs<'_, '_, '_> {
                 }
             }
             Expr::Function(function) => {
-                // Aggregate values do not constrain a base-row UUID lookup. Their
-                // FILTER predicates and nested queries still get independent analysis.
                 if !is_aggregate(&function.name) {
                     let name = function.name.to_string();
+                    let expression = transformation
+                        .is_none()
+                        .then(|| columns::Provenance::new(expr, self.relations, self.positions));
                     let transform = transformation.unwrap_or_else(|| {
                         let at = function.name.span().start;
-                        (&name, (at.line as usize, at.column as usize))
+                        (
+                            &name,
+                            (at.line as usize, at.column as usize),
+                            expression.as_ref().unwrap(),
+                        )
                     });
                     for args in [&function.parameters, &function.args] {
                         if let FunctionArguments::List(list) = args {
-                            // Argument labels and ordering are syntax, not transformed inputs.
                             visit_function_args(&list.args, &mut |arg| {
                                 self.walk(arg, Some(transform))
                             });
@@ -166,10 +174,17 @@ impl Inputs<'_, '_, '_> {
             Expr::Cast {
                 expr: value, kind, ..
             } => {
+                let expression = transformation
+                    .is_none()
+                    .then(|| columns::Provenance::new(expr, self.relations, self.positions));
                 let transform = transformation.unwrap_or_else(|| {
                     let span = expr.span();
                     let at = super::cast_sites::site(self.tokens, span, kind).unwrap_or(span.start);
-                    ("cast", (at.line as usize, at.column as usize))
+                    (
+                        "cast",
+                        (at.line as usize, at.column as usize),
+                        expression.as_ref().unwrap(),
+                    )
                 });
                 self.walk(value, Some(transform));
             }

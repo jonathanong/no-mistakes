@@ -92,6 +92,80 @@ necessary timestamp check as a residual filter.
 Enable this rule on application SQL when key lookups and range scans should use
 their UUID indexes.
 
+### Matching expression indexes
+
+A transform can use an expression index when the complete comparison operand
+matches its leading expression key on the same table and relation occurrence:
+
+```sql
+CREATE INDEX items_identity_idx ON items
+  (((post_id, content_sha256, policy_revision)::item_identity));
+SELECT * FROM items
+WHERE (post_id, content_sha256, policy_revision)::item_identity
+  = ($1, $2, $3)::item_identity;
+```
+
+The index must appear in the configured `schemaCatalogPath` snapshot, including
+its expression key. `sqlInclude` selects analyzed SQL; it does not infer an
+authoritative schema from arbitrary `CREATE INDEX` and `DROP INDEX` statements.
+The rule requires a valid, ready, live, non-partial B-tree index with supported
+ordering. It matches the entire cast or function operand against a literal or
+bind bound. Alias qualification can be resolved, but casts, tuple order,
+identifier quoting, string values, and collations remain significant. A matching
+expression on another table or another self-join occurrence provides no proof.
+PostgreSQL's catalog spelling `ROW(a, b)` matches the equivalent implicit tuple
+`(a, b)`. A one-field `ROW(a)` remains distinct from the scalar expression `(a)`.
+In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
+this proof; a comparison inside `NOT` or `CASE` cannot.
+At effort max, recorded interpolation positions in configured trusted SQL
+templates also prove bind bounds. An authored `sql_placeholder_0` column is still
+a column; effort low retains its existing unanalyzable policy for interpolations.
+An index on `lower(id::text)` does not exempt `lower(id::text) || 'suffix'`.
+See PostgreSQL's [expression-index documentation](https://www.postgresql.org/docs/current/indexes-expressional.html).
+
+### Outer-join row filters
+
+After applying proven bare-key anchors and other catalog-backed exemptions,
+the rule classifies a remaining qualified, multi-relation `num_nonnulls(...) = 1`
+filter in `WHERE` as unanalyzable when at least one referenced relation is
+null-extended by an outer join. For example:
+
+```sql
+SELECT * FROM a
+LEFT JOIN b ON b.link = a.id
+LEFT JOIN c ON c.link = a.id
+WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;
+```
+
+The classification reason is `outer-join-residual-filter`: the rule cannot prove
+which table's access path the joined-row filter drives. Visible output follows
+the effective `unanalyzableSql` policy:
+
+| Policy | Output |
+| --- | --- |
+| `advise` | A non-failing `outer-join-residual-filter` advisory |
+| `ignore` | No finding and no advisory |
+| `fail` | An unanalyzable-predicate finding |
+
+With no rule or shared analysis-policy override, the default is `fail`/`report`.
+The example configuration at the top of this page explicitly selects `ignore`,
+so a newly unanalyzable filter is silent under that configuration. Use
+`unanalyzableSql: advise` to request its advisory. `check --include-sql-verdicts`
+exposes the `abstain` status and residual reason even when `ignore` suppresses
+visible diagnostics.
+
+The same policy applies to statically recovered TS embedded queries starting
+from `unnest($1::uuid[]) AS src(id)` with eight `LEFT JOIN`s and a nested
+`COALESCE` inside `num_nonnulls`. Neither the function source nor the nested call
+alone suppresses the advisory. Proven anchors can instead clear every transformed
+column before this classification, which also produces no diagnostic.
+
+A separate driving conjunct such as `a.id::text = $1` still reports,
+as does the null-rejecting `b.id::text = $1`. Inner joins, single-relation
+transforms, other functions, and other comparisons do not get this abstention.
+PostgreSQL explains the distinction between outer-join `ON` and `WHERE`
+conditions in [table expressions](https://www.postgresql.org/docs/current/queries-table-expressions.html).
+
 ## What it catches/requires
 
 The rule reports a cast or scalar function call applied to a

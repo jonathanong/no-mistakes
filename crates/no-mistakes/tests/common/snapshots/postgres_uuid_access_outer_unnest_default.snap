@@ -1,0 +1,95 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 14,
+          "message": "access-paths/outer-unnest.mts:14: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "COALESCE(joined_a.id, joined_b.id, joined_c.id, joined_d.id, joined_e.id),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 15,
+          "message": "access-paths/outer-unnest.mts:15: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "joined_f.id,",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 16,
+          "message": "access-paths/outer-unnest.mts:16: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "joined_g.id,",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 17,
+          "message": "access-paths/outer-unnest.mts:17: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "joined_h.id",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 14,
+          "message": "access-paths/outer-unnest.mts:14: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "COALESCE(joined_a.id, joined_b.id, joined_c.id, joined_d.id, joined_e.id),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 15,
+          "message": "access-paths/outer-unnest.mts:15: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "joined_f.id,",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 16,
+          "message": "access-paths/outer-unnest.mts:16: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "joined_g.id,",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "access-paths/outer-unnest.mts",
+          "line": 17,
+          "message": "access-paths/outer-unnest.mts:17: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "joined_h.id",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
