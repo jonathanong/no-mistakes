@@ -68,6 +68,11 @@ fn equivalent_cast_spellings_share_expression_index_tokens() {
         ("CAST(id::text[] AS uuid)", "id::text[]::uuid"),
         ("CAST(id::varchar(32) AS text)", "id::varchar(32)::text"),
         (
+            "CAST(id::char varying(36) AS text)",
+            "id::char varying(36)::text",
+        ),
+        ("CAST(\"not\"(x) AS boolean)", "\"not\"(x)::boolean"),
+        (
             "CAST(id::timestamp with instant AS text)",
             "(id::timestamp with instant)::text",
         ),
@@ -135,6 +140,10 @@ fn distinct_cast_spellings_keep_expression_index_tokens() {
         ("CAST id AS text", "id::text"),
         ("CAST(id AS text AS uuid)", "id::text::uuid"),
         ("CAST(id AS text", "id::text"),
+        ("CAST(NOT (x) AS boolean)", "NOT (x)::boolean"),
+        ("CAST(ANY (x) AS boolean)", "ANY (x)::boolean"),
+        ("CAST(ALL (x) AS boolean)", "ALL (x)::boolean"),
+        ("CAST(SOME (x) AS boolean)", "SOME (x)::boolean"),
     ] {
         assert_ne!(
             super::tokens(left),

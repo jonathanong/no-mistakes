@@ -2,8 +2,6 @@ use sqlparser::tokenizer::Token;
 #[path = "expression_index_cast_operands.rs"]
 mod operands;
 
-/// `::` binds tighter than unary and binary operators, so only a primary
-/// operand can drop `CAST`'s parentheses. `CAST(a || b AS text)` is `(a || b)::text`.
 pub(super) fn normalize(tokens: &mut Vec<Token>) {
     while let Some((start, end, separator)) = innermost(tokens) {
         let primary = operands::is_operand(&tokens[start + 2..separator]);

@@ -39,6 +39,7 @@ fn consume_primary(tokens: &[Token], index: &mut usize) -> bool {
             *index += 1;
             consume_pair(tokens, index, &Token::LParen, &Token::RParen)
         }
+        Some(Token::Word(word)) if grouped_prefix(word, tokens, *index) => false,
         Some(Token::Word(_)) => consume_identifier(tokens, index),
         _ => false,
     };
@@ -47,6 +48,13 @@ fn consume_primary(tokens: &[Token], index: &mut usize) -> bool {
         return false;
     }
     true
+}
+
+fn grouped_prefix(word: &Word, tokens: &[Token], index: usize) -> bool {
+    tokens.get(index + 1) == Some(&Token::LParen)
+        && ["not", "any", "all", "some"]
+            .iter()
+            .any(|name| bare_word(word, name))
 }
 
 fn consume_identifier(tokens: &[Token], index: &mut usize) -> bool {

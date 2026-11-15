@@ -32,7 +32,7 @@ fn consume_type_head(tokens: &[Token], index: &mut usize) -> bool {
             }
             true
         }
-        "character" | "bit" | "national" => {
+        "character" | "char" | "bit" | "national" => {
             if bare(tokens, *index, "character") {
                 *index += 1;
             }
@@ -47,8 +47,6 @@ fn consume_type_head(tokens: &[Token], index: &mut usize) -> bool {
 }
 
 fn consume_time_type(tokens: &[Token], index: &mut usize) -> bool {
-    // A failed precision rewind leaves the token in place. The caller rejects
-    // an operand that does not consume every token.
     let _ = maybe_precision(tokens, index);
     if bare(tokens, *index, "with") || bare(tokens, *index, "without") {
         let mark = *index;
