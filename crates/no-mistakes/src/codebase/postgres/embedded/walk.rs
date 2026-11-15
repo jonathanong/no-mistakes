@@ -12,6 +12,7 @@ mod executors;
 mod finite_identifiers;
 mod flow;
 mod forwarded_wrappers;
+mod frozen_alias;
 mod guarded_sql;
 mod head_calls;
 mod iife;

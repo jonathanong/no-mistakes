@@ -9,6 +9,8 @@ impl ScopeVisitor<'_> {
             if let Some(frame) = self.literal_objects.closed.frames.get_mut(i) {
                 frame.remove(name);
             }
+            self.frozen_aliases
+                .retain(|alias| alias.scope != i || alias.name != name);
         }
     }
 
@@ -79,6 +81,7 @@ impl ScopeVisitor<'_> {
         if matches!(unwrap_ts_wrappers(init), Expression::StringLiteral(_)) {
             return;
         }
+        super::super::frozen_alias::note(self, init, scope, name);
         let Some(mut arms) = expression(self, init, 8) else {
             return;
         };

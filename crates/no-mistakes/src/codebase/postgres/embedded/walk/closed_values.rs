@@ -19,6 +19,7 @@ mod extra_escape_tests;
 mod fixture;
 #[cfg(test)]
 mod followup_tests;
+mod frozen_return;
 #[cfg(test)]
 mod member_ownership_tests;
 mod members;
@@ -26,6 +27,8 @@ mod members;
 mod parent_fields_tests;
 mod state;
 use expression::expression;
+#[cfg(test)]
+mod hasown_tests;
 #[cfg(test)]
 mod tests;
 mod types;

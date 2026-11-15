@@ -76,6 +76,8 @@ fn postgres_no_unbounded_sql_identifier_check_json_snapshot() {
         &config,
         &[
             "pass-switch",
+            "pass-hasown-record",
+            "pass-computed-member-return",
             "pass-bind-value",
             "pass-http-query",
             "pass-suppressed",

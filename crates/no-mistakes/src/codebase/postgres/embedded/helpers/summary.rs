@@ -101,6 +101,8 @@ pub(crate) struct PendingImportedSql {
     /// The call with hole markers still in `sql_text`.
     pub(crate) template: EmbeddedSqlCall,
     pub(crate) sites: Vec<(usize, ImportedSite)>,
+    /// Hole indexes that must take the same alternative, keyed by site index.
+    pub(crate) correlation: crate::fx::FxHashMap<usize, u32>,
 }
 
 /// A helper function that is summarized once, where it is declared.

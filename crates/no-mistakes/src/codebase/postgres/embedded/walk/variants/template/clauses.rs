@@ -88,7 +88,7 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
         Expression::ConditionalExpression(branch) => conditional(visitor, branch, depth, constraints),
         Expression::LogicalExpression(branch) => logic::recover(visitor, branch, depth, constraints),
         Expression::CallExpression(call) => call_clause(visitor, expr, call, line),
-        Expression::StaticMemberExpression(member) => finite_member::recover(visitor, member, expr, line),
+        Expression::StaticMemberExpression(member) => finite_member::recover(visitor, member, expr, line).or_else(|| super::super::super::super::frozen_alias::member_hole(visitor, member)),
         _ => None,
     }
 }
@@ -158,7 +158,7 @@ fn agrees(value: &Recovered, constraints: &[(u64, u32)]) -> bool {
     !value.choices.iter().any(|(id, arm)| constraints.iter().any(|(other, choice)| id == other && arm != choice))
 }
 fn plain(values: &[Recovered]) -> bool {
-    values.iter().all(|value| matches!(value.value, ValueKind::Sql | ValueKind::Number(_)) && !value.fragment && !tainted(&value.sql))
+    values.iter().all(|value| matches!(value.value, ValueKind::Sql | ValueKind::Number(_)) && !value.fragment && !super::super::super::super::frozen_alias::rejects_clause(&value.sql))
 }
 fn tainted(sql: &str) -> bool {
     crate::codebase::postgres::embedded::helpers::sentinel::contains(sql)
@@ -180,6 +180,9 @@ fn scope_index(visitor: &ScopeVisitor<'_>, name: &str) -> Option<usize> {
 fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast::ast::CallExpression<'_>, line: u32) -> Option<Vec<Recovered>> {
     let oxc_ast::ast::Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else { return None };
     if call.optional || visitor.shadowed_locally(name.name.as_str()) { return None; }
+    if visitor.imported_names.contains(name.name.as_str()) {
+        return super::super::super::super::frozen_alias::call_hole(visitor, call);
+    }
     let args = super::known_helper_args(&visitor.functions, name.name.as_str(), || super::super::super::super::imported::clause_args(visitor, call))?;
     let strings = visitor.functions.identifier_clauses(name.name.as_str(), &args)?;
     let mut values = Vec::new();

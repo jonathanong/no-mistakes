@@ -4,10 +4,10 @@ use std::sync::Arc;
 
 fn lowered(expr: Expr) -> Lowered {
     Lowered {
-        program: Arc::new(Program {
-            params: Vec::new(),
-            body: vec![Stmt::Return(Some(expr), Mark { line: 1, origin: 0 })],
-        }),
+        program: Arc::new(Program::new(
+            Vec::new(),
+            vec![Stmt::Return(Some(expr), Mark { line: 1, origin: 0 })],
+        )),
         asynchronous: false,
         tags: Default::default(),
         references: Vec::new(),

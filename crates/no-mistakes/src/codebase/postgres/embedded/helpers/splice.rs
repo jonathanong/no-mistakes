@@ -12,18 +12,27 @@ use fill::fill_all;
 /// Every alternative text of each hole, by the site index the walk gave it.
 type Holes = FxHashMap<usize, Vec<RecoveredSql>>;
 
+#[cfg(test)]
+pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<EmbeddedSqlCall> {
+    splice_grouped(template, holes, &FxHashMap::default())
+}
+
 /// Fills every hole of `template` and republishes it. A call whose own text
 /// holds holes becomes a complete `Composed` call when every hole has one
 /// text, and a call with finite alternatives otherwise; a call whose holes
 /// sit in its complete alternatives keeps its kind and legacy text and gets
 /// filled alternatives. Any gap, or more than
 /// [`MAX_EMBEDDED_SQL_VARIANTS`] results, yields `None` so the scrubbed
-/// `Dynamic` call stays in place.
-pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<EmbeddedSqlCall> {
+/// `Dynamic` call stays in place. `groups` zips holes that share one choice.
+pub(crate) fn splice_grouped(
+    template: &EmbeddedSqlCall,
+    holes: &Holes,
+    groups: &FxHashMap<usize, u32>,
+) -> Option<EmbeddedSqlCall> {
     if !template.variants.is_empty() {
         let mut variants = Vec::new();
         for variant in &template.variants {
-            for filled in splice_variant(variant, holes)? {
+            for filled in splice_variant(variant, holes, groups)? {
                 EmbeddedSqlVariant::push_unique(&mut variants, filled);
             }
         }
@@ -80,7 +89,7 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
         line: first_line,
         sql,
     };
-    let mut filled = fill_all(&caller, holes)?;
+    let mut filled = fill_all(&caller, holes, groups)?;
     if filled.len() > 1 {
         let mut variants = Vec::new();
         for joined in filled {
@@ -111,7 +120,11 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
     })
 }
 
-fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<EmbeddedSqlVariant>> {
+fn splice_variant(
+    variant: &EmbeddedSqlVariant,
+    holes: &Holes,
+    groups: &FxHashMap<usize, u32>,
+) -> Option<Vec<EmbeddedSqlVariant>> {
     let positions = &variant.recovered_placeholder_positions;
     let caller = RecoveredSql {
         invocations: super::unpublish::unpublish_invocations(
@@ -125,7 +138,7 @@ fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<Emb
         positions: variant.sql_source_positions.clone(),
     };
     Some(
-        fill::fill_with_boundaries(&caller, holes, fill::internal_boundary(variant))?
+        fill::fill_with_boundaries(&caller, holes, fill::internal_boundary(variant), groups)?
             .into_iter()
             .map(|(joined, boundary)| {
                 let mut filled = publish_variant(joined, variant.append_sites.clone());

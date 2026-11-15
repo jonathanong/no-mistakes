@@ -21,6 +21,9 @@ mod prerequisites;
 #[path = "tests/plain_clause.rs"]
 mod plain_clause;
 
+#[path = "tests/hasown.rs"]
+mod hasown;
+
 fn variant_root(name: &str) -> PathBuf {
     normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

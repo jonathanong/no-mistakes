@@ -23,6 +23,7 @@ fn finish(fragments: &mut [EmbeddedSqlFragment]) {
             fragment_variants: &mut variants,
         },
         &[],
+        &crate::fx::FxHashMap::default(),
     );
 }
 
@@ -192,6 +193,7 @@ fn incomplete_or_mismatched_singleton_helper_mirrors_stay_unknown() {
                 fragment_variants: &mut variants,
             },
             &sites,
+            &crate::fx::FxHashMap::default(),
         );
         assert!(recovered.is_empty(), "invalid shape {invalid}");
         assert_eq!(calls[0].kind, EmbeddedSqlKind::Dynamic);

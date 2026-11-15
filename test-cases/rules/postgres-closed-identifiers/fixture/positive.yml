@@ -7,6 +7,7 @@ rules:
       - tests/records.test.ts
       - tests/assertions.test.ts
       - tests/parameter-values.test.ts
+      - tests/hasown.test.ts
     options:
       testGlobs: ["tests/**/*.test.ts"]
       importSpecifier: "@example/db"
@@ -26,6 +27,7 @@ rules:
       - tests/records.test.ts
       - tests/assertions.test.ts
       - tests/parameter-values.test.ts
+      - tests/hasown.test.ts
     options:
       schemaCatalogPath: schema.json
       importSpecifier: "@example/db"

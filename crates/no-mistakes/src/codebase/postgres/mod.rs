@@ -72,7 +72,7 @@ pub(crate) use embedded::helpers::{
         exec::{run as run_helper_program, Callee, Callees, Outcome, Ret, MAX_CALL_DEPTH},
         Program as HelperProgram,
     },
-    splice::splice as splice_imported_sql,
+    splice::splice_grouped as splice_imported_sql_grouped,
     ImportedSite, PendingImportedSql, SiteArg, SiteKind,
 };
 pub(crate) use embedded::walk::resolve::functions::provenance::RecoveredSql;

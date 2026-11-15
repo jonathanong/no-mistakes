@@ -23,14 +23,18 @@ pub(crate) struct Walked<'a> {
     pub(crate) fragment_variants: &'a mut [Vec<EmbeddedSqlVariant>],
 }
 
-pub(crate) fn finalize(walked: Walked<'_>, sites: &[ImportedSite]) -> Vec<PendingImportedSql> {
+pub(crate) fn finalize(
+    walked: Walked<'_>,
+    sites: &[ImportedSite],
+    groups: &crate::fx::FxHashMap<usize, u32>,
+) -> Vec<PendingImportedSql> {
     let mut pending = Vec::new();
     for (call, span) in walked.calls.iter_mut().zip(walked.call_spans) {
-        pending.extend(take_pending(call, *span, sites));
+        pending.extend(take_pending(call, *span, sites, groups));
     }
     for relative in walked.pending_calls.iter_mut() {
         let span = walked.pending_spans.get(&relative.seq).copied();
-        pending.extend(span.and_then(|span| take_pending(&mut relative.call, span, sites)));
+        pending.extend(span.and_then(|span| take_pending(&mut relative.call, span, sites, groups)));
     }
     for fragment in walked.fragments.iter_mut() {
         if !fragment.sql_text.as_deref().is_some_and(sentinel::contains) {
@@ -65,6 +69,7 @@ fn take_pending(
     call: &mut EmbeddedSqlCall,
     span: (u32, u32),
     sites: &[ImportedSite],
+    groups: &crate::fx::FxHashMap<usize, u32>,
 ) -> Option<PendingImportedSql> {
     let in_text = call.sql_text.as_deref().is_some_and(sentinel::contains);
     let in_variants = call
@@ -103,10 +108,16 @@ fn take_pending(
         .iter()
         .chain(template.variants.iter().map(|variant| &variant.sql_text));
     let sites = used_sites(texts, sites)?;
+    let correlation = groups
+        .iter()
+        .filter(|(index, _)| sites.iter().any(|(seen, _)| seen == *index))
+        .map(|(index, group)| (*index, *group))
+        .collect();
     Some(PendingImportedSql {
         span,
         template,
         sites,
+        correlation,
     })
 }
 

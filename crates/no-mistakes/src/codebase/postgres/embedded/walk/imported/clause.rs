@@ -14,11 +14,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn piece(
         return None;
     };
     let name = name.name.as_str();
+    let imported = visitor.imported_names.contains(name);
     if visitor.head_calls_only
         || call.optional
         || visitor.shadowed_locally(name)
-        || visitor.imported_names.contains(name)
-        || !visitor.functions.has_program(name)
+        || (!imported && !visitor.functions.has_program(name))
         || visitor.functions.has_static_helper(name)
         || visitor.functions.is_parameter_builder(name)
         || !call.arguments.iter().all(plain_argument)
@@ -27,7 +27,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn piece(
         return None;
     }
     let args = super::clause_args(visitor, call)?;
-    if visitor.functions.identifier_clauses(name, &args).is_some() {
+    if !imported && visitor.functions.identifier_clauses(name, &args).is_some() {
         return None;
     }
     let line = byte_offset_to_line(visitor.source, call.span.start as usize);

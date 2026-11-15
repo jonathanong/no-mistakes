@@ -17,6 +17,7 @@ use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 mod frame;
+mod frozen;
 use frame::Frame;
 
 /// Profile index, executor module, helper module, helper, arguments.
@@ -105,6 +106,9 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         from: &Path,
         site: &ImportedSite,
     ) -> Option<Vec<RecoveredSql>> {
+        if site.constant.is_none() && site.member.is_some() {
+            return frozen::member(self, options, from, site);
+        }
         if site.constant.is_some() {
             return super::constants::recovered(self, options, from, site).map(|text| vec![text]);
         }

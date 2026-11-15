@@ -4,6 +4,8 @@ rules:
     scope: repository
     include:
       - tests/opaque.test.ts
+      - tests/hasown-opaque.test.ts
+      - tests/hasown-shadow.test.ts
     options:
       testGlobs: ["tests/**/*.test.ts"]
       importSpecifier: "@example/db"
@@ -20,6 +22,8 @@ rules:
     scope: repository
     include:
       - tests/opaque.test.ts
+      - tests/hasown-opaque.test.ts
+      - tests/hasown-shadow.test.ts
     options:
       schemaCatalogPath: schema.json
       importSpecifier: "@example/db"

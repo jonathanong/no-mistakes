@@ -113,10 +113,7 @@ pub(crate) fn lower(
         // Runs first, so a hoisted function is never silently skipped.
         body.insert(0, Stmt::Opaque);
     }
-    Some(Program {
-        params: lowered,
-        body,
-    })
+    Some(Program::new(lowered, body))
 }
 
 impl Program {

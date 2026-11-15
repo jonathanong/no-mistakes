@@ -22,6 +22,13 @@ non-key column can still be unbounded.
   retain the same alternative. Structured values may flow through tracked
   immutable aliases and scalar field reads. An untracked object-valued read
   invalidates the owning record, even when no write is visible.
+- A module-private `Object.freeze` of a closed literal record, returned by a
+  helper whose body is exactly `if (!Object.hasOwn(record, key)) throw ...`
+  and then `return record[key]`. String values enumerate like a switch. Nested
+  records keep one choice for every field when the caller binds the helper
+  result to a const, including across imports. A type-only union is not this
+  proof. Extra statements, an exported, mutated, or escaped record, a shadowed
+  `Object`, or more than 16 entries stay opaque.
 - Configured assertion calls with a literal string array or intrinsic `Set`
   allowlist, including a local unmodified collection or const alias.
 - A source-visible same-file helper whose local literal membership guard throws
@@ -101,6 +108,14 @@ string-literal union lets `postgres-no-test-state-mutation` and
 `postgres-no-unbounded-sql-identifier` also trusts a declared finite
 string-literal parameter union. Broad or unresolved types, reassigned parameters,
 and casts of external data remain unbounded.
+A helper that returns `record[key]` for a non-literal key is quiet on that
+rule for a different reason: value-flow records the computed member as
+unknown, and an unknown helper return is already a finite validator. The
+`Object.hasOwn` throw is what lets the mutation and bounded-statement rules
+name each literal, including nested fields kept on one choice. The same
+unbounded-identifier result holds when that throw is absent. A field of the
+unknown return is not an open identifier. Interpolating the raw string
+parameter still reports.
 
 These options stay on the rule, including when executor selection is inherited
 from a PostgreSQL project. They do not add fields to `projects.*.postgres`.

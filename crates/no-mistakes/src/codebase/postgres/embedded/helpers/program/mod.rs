@@ -20,9 +20,36 @@ pub(crate) struct Mark {
 }
 
 #[derive(Clone, PartialEq, Eq)]
+pub(crate) struct FrozenField {
+    pub(crate) name: String,
+    pub(crate) sql: RecoveredSql,
+}
+
+/// One key of a frozen literal record returned by a guarded helper.
+#[derive(Clone, PartialEq, Eq)]
+pub(crate) struct FrozenEntry {
+    pub(crate) key: String,
+    pub(crate) fields: Vec<FrozenField>,
+}
+
+#[derive(Clone, PartialEq, Eq)]
 pub(crate) struct Program {
     pub(crate) params: Vec<Param>,
     pub(crate) body: Vec<Stmt>,
+    /// Parameter index that selects `frozen_entries`. `None` for ordinary bodies.
+    pub(crate) frozen_key: Option<usize>,
+    pub(crate) frozen_entries: Vec<FrozenEntry>,
+}
+
+impl Program {
+    pub(crate) fn new(params: Vec<Param>, body: Vec<Stmt>) -> Self {
+        Self {
+            params,
+            body,
+            frozen_key: None,
+            frozen_entries: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq)]

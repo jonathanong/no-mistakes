@@ -525,6 +525,14 @@ preserve that contract, including assertions through those finite aliases.
 Conflicting declarations stay unbounded.
 Reassignment, an unresolved type, a union containing
 `string`, or widening through `as string` does not establish this proof.
+A helper that returns `record[key]` for a non-literal key is
+also quiet: value-flow records that computed member as unknown, and an unknown
+helper return is a finite validator. An `Object.hasOwn` throw in front of
+that return does not add a separate proof. It is what lets
+`postgres-no-test-state-mutation` and `postgres-bounded-statements` name each
+literal. A field read of that unknown return is not an open identifier.
+`postgres-no-test-state-mutation` and `postgres-bounded-statements` may still
+enumerate each literal of that union.
 [closed identifier values](../postgres-facts/closed-identifiers.md) states the
 recovery limits. A union that includes `string`, an optional or defaulted
 parameter, or a cast of external data stays unbounded.

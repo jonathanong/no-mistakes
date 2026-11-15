@@ -61,13 +61,13 @@ impl Bindings {
     fn opaque_program(&self) -> Arc<Program> {
         Arc::clone(self.opaque_program.get_or_init(|| {
             // This mark is never projected: Return(Opaque) fails before it can yield SQL.
-            Arc::new(Program {
-                params: Vec::new(),
-                body: vec![Stmt::Return(
+            Arc::new(Program::new(
+                Vec::new(),
+                vec![Stmt::Return(
                     Some(Expr::Opaque),
                     Mark { line: 0, origin: 0 },
                 )],
-            })
+            ))
         }))
     }
 }
@@ -131,7 +131,7 @@ pub(crate) fn function(function: &Function<'_>, ctx: &Context<'_>) -> Option<Low
         &function.body.as_ref()?.statements,
     )?);
     Some(Lowered {
-        program: Arc::new(Program { params, body }),
+        program: Arc::new(Program::new(params, body)),
         asynchronous: function.r#async,
         tags: scope.tags,
         references: scope.references,
@@ -157,7 +157,7 @@ pub(crate) fn arrow(
     let (params, mut body) = parameters::lower(&mut scope, &function.params)?;
     body.extend(statements::block(&mut scope, &block.statements)?);
     Some(Lowered {
-        program: Arc::new(Program { params, body }),
+        program: Arc::new(Program::new(params, body)),
         asynchronous: function.r#async,
         tags: scope.tags,
         references: scope.references,
@@ -175,10 +175,10 @@ pub(crate) fn expression(node: &Expression<'_>, ctx: &Context<'_>) -> Lowered {
     let mark = scope.mark(node.span());
     let value = scope.expression(node);
     Lowered {
-        program: Arc::new(Program {
-            params: Vec::new(),
-            body: vec![Stmt::Return(Some(value), mark)],
-        }),
+        program: Arc::new(Program::new(
+            Vec::new(),
+            vec![Stmt::Return(Some(value), mark)],
+        )),
         asynchronous: false,
         tags: scope.tags,
         references: scope.references,
