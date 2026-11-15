@@ -82,7 +82,7 @@ fn query_targets_are_not_base_relation_write_facts() {
 }
 
 #[test]
-fn columnless_shapes_keep_one_write_fact_per_statement() {
+fn columnless_shapes_record_write_facts_in_source_order() {
     let sql = include_str!("../../../../../../../test-cases/rules/postgres-no-generated-column-writes/unit-fixture/columnless-shapes/writes.sql");
     let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(sql);
     let mut out = Vec::new();
@@ -119,6 +119,20 @@ fn columnless_shapes_keep_one_write_fact_per_statement() {
                 "items",
                 SqlWriteColumns::Named(vec!["note".to_string()]),
             ),
+            (19, "items", SqlWriteColumns::Positional(Some(3))),
+            (20, "votes", SqlWriteColumns::Positional(Some(2))),
+            (
+                21,
+                "items",
+                SqlWriteColumns::Named(vec!["id".to_string(), "note".to_string()]),
+            ),
+            (
+                21,
+                "items",
+                SqlWriteColumns::Named(vec!["created_at".to_string()]),
+            ),
+            (23, "items", SqlWriteColumns::Positional(Some(3))),
+            (28, "items", SqlWriteColumns::Positional(Some(3))),
         ]
     );
 }

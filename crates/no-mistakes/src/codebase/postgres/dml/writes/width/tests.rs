@@ -1,6 +1,6 @@
 use super::query_value_width;
 use crate::codebase::postgres::parse_postgres_sql;
-use sqlparser::ast::{Query, Statement};
+use sqlparser::ast::{Parens, Query, SetExpr, Statement};
 
 fn insert_source(sql: &str) -> Query {
     match parse_postgres_sql(sql).unwrap().pop().expect("stmt") {
@@ -11,6 +11,22 @@ fn insert_source(sql: &str) -> Query {
 
 #[test]
 fn query_width_covers_values_select_union_and_unknown() {
+    assert!(parse_postgres_sql("INSERT INTO t VALUES ()").is_err());
+    let mut empty_row = insert_source("INSERT INTO t VALUES (1)");
+    {
+        let SetExpr::Values(values) = empty_row.body.as_mut() else {
+            panic!("values");
+        };
+        values.rows.clear();
+    }
+    assert_eq!(query_value_width(&empty_row), None);
+    {
+        let SetExpr::Values(values) = empty_row.body.as_mut() else {
+            panic!("values");
+        };
+        values.rows.push(Parens::with_empty_span(Vec::new()));
+    }
+    assert_eq!(query_value_width(&empty_row), Some(0));
     assert_eq!(
         query_value_width(&insert_source("INSERT INTO t VALUES (1, 2), (3)")),
         Some(2)

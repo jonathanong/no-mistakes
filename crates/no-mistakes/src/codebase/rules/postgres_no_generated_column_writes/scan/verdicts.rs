@@ -57,9 +57,8 @@ fn judge<'a>(
                 true,
             ),
             SqlWriteColumns::Positional(width) => {
-                // Absent width is uncounted, so it abstains instead of proving clear.
                 let supplies = width.is_some_and(|count| count > 0);
-                let violation = if width.is_none() || (supplies && meta.column_order.is_none()) {
+                let violation = if width.is_none() || meta.column_order.is_none() {
                     unknown = true;
                     false
                 } else {
