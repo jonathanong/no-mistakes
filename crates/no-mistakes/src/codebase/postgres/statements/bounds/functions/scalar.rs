@@ -117,10 +117,7 @@ const DATETIME_KEYWORDS: &[&str] = &[
 
 /// Unquoted unqualified keyword. A quoted or schema-qualified spelling is an ordinary call.
 pub(super) fn is_datetime_keyword(name: &ObjectName) -> bool {
-    let [part] = name.0.as_slice() else {
-        return false;
-    };
-    let Some(ident) = part.as_ident() else {
+    let [sqlparser::ast::ObjectNamePart::Identifier(ident)] = name.0.as_slice() else {
         return false;
     };
     ident.quote_style.is_none() && DATETIME_KEYWORDS.contains(&ident_key(ident).as_str())
