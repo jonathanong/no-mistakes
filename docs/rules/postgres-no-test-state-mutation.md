@@ -51,7 +51,8 @@ At max effort, [closed identifier values](../postgres-facts/closed-identifiers.m
 can supply finite SQL alternatives through raw append operations and untagged
 templates. Direct stable literal-union parameters, complete literal-return
 switches, immutable lookup records, and a module-private frozen literal record
-returned through an `Object.hasOwn` throw-guard are supported. Rule-local
+returned through an `Object.hasOwn` throw-guard are supported, including a nested
+`Object.freeze` of literal fields. Rule-local
 `sqlIdentifierAssertions` selects named imports with a literal allowlist argument;
 `rawSqlTags` explicitly selects tags that insert text instead of binding values.
 Both default to `[]`. These analysis contracts remain rule-local when project

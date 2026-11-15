@@ -1,6 +1,5 @@
 //! End-of-walk step: no hole marker may reach a public fact.
-//! Marker-bearing calls become `Dynamic` with a leading statement or an
-//! identifier placeholder. Complete calls keep markers for projection.
+//! Unfilled calls stay dynamic, with a leading statement or `sql_placeholder_N`.
 
 use super::sentinel;
 use super::split::coordinate;
@@ -83,8 +82,6 @@ fn take_pending(
         && call.variants.len() == 1
         && !call.variants_truncated()
         && call.sql_text.as_deref() == Some(call.variants[0].sql_text.as_str());
-    // Either the call's own text is a complete statement, or each of its
-    // complete alternatives is and the legacy text holds no hole.
     let complete = if call.variants.is_empty() {
         in_text && call.kind != EmbeddedSqlKind::Dynamic
     } else {
@@ -129,6 +126,7 @@ fn keep_identifier_placeholders(call: &EmbeddedSqlCall, sites: &[ImportedSite]) 
         .chain(call.variants.iter().map(|variant| &variant.sql_text))
         .collect();
     texts.iter().any(|text| sentinel::keeps_placeholder(text))
+        || texts.iter().any(|text| unfilled_statement(text))
         || (texts
             .iter()
             .any(|text| sentinel::has_identifier_slot_hole(text))
@@ -165,8 +163,6 @@ fn used_sites<'a>(
     Some(used)
 }
 
-/// What a call with an unrecoverable helper holds: only the verified leading
-/// statement that precedes the first hole.
 fn scrub(call: &mut EmbeddedSqlCall) {
     call.variants.clear();
     call.kind = EmbeddedSqlKind::Dynamic;
@@ -191,6 +187,10 @@ fn trimmed_prefix(text: &str) -> Option<(String, (u32, u32))> {
     let prefix = sentinel::prefix(text);
     let kept = keep_prefix(text)?;
     Some((kept, coordinate(text, prefix.len())))
+}
+
+fn unfilled_statement(text: &str) -> bool {
+    sentinel::contains(text) && !sentinel::is_bare(text) && keep_prefix(text).is_none()
 }
 
 /// The prefix before the first hole, when it is a known statement.

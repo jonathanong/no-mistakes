@@ -66,6 +66,8 @@ mod cli_postgres_snapshot_closed_candidates;
 mod cli_postgres_snapshot_closed_identifier_correlation;
 #[path = "cli_postgres_snapshot_closed_identifiers.rs"]
 mod cli_postgres_snapshot_closed_identifiers;
+#[path = "cli_postgres_snapshot_closed_record_prefix.rs"]
+mod cli_postgres_snapshot_closed_record_prefix;
 #[path = "cli_postgres_snapshot_column_naming.rs"]
 mod cli_postgres_snapshot_column_naming;
 #[path = "cli_postgres_snapshot_column_naming_more.rs"]

@@ -102,6 +102,20 @@ fn hasown_frozen_records_enumerate_strings_and_keep_nested_fields_together() {
             .unwrap_or_else(|| panic!("missing {marker}: {calls:#?}"));
         assert!(call.is_unanalyzable(), "{marker}: {call:#?}");
     }
+    assert_eq!(
+        sqls(&calls, "/* frozen-column */"),
+        [
+            "/* frozen-column */ INSERT INTO impacts (request_id, a_id) VALUES ($1, $2)",
+            "/* frozen-column */ INSERT INTO impacts (request_id, b_id) VALUES ($1, $2)",
+        ]
+    );
+    assert_eq!(
+        sqls(&calls, "/* frozen-table */"),
+        [
+            "/* frozen-table */ INSERT INTO retained_a (id) VALUES ($1)",
+            "/* frozen-table */ INSERT INTO retained_b (id) VALUES ($1)",
+        ]
+    );
 }
 
 #[test]

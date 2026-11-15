@@ -25,8 +25,9 @@ non-key column can still be unbounded.
 - A module-private `Object.freeze` of a closed literal record, returned by a
   helper whose body is exactly `if (!Object.hasOwn(record, key)) throw ...`
   and then `return record[key]`. String values enumerate like a switch. Nested
-  records keep one choice for every field when the caller binds the helper
-  result to a const, including across imports. A literal or literal-union
+  records, including a field that is itself `Object.freeze` of literal fields,
+  keep one choice for every field when the caller binds the helper result to a
+  const, including across imports. A literal or literal-union
   argument selects the matching entries, and a no-substitution template counts
   as a literal value. A type-only union is not this proof. Extra statements, an
   exported, mutated, or escaped record, a shadowed `Object`, a getter, an empty
@@ -94,7 +95,9 @@ binding, a type-only import, or a missing/non-literal allowlist supplies no proo
 No helper is recognized just because its name contains `safe` or `identifier`.
 
 An imported `assertSafeSqlIdentifier(table)` with no resolvable allowlist remains
-opaque. A directly visible helper can instead supply its own literal guard:
+opaque. The statement keeps `sql_placeholder_N` where that call stood, including
+`LOCK` and other commands outside the DML keywords. A directly visible helper
+can instead supply its own literal guard:
 
 ```ts
 function assertSafeSqlIdentifier(table: string) {

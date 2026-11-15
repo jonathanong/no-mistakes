@@ -19,7 +19,7 @@ pub(super) fn record_values(object: &ObjectExpression<'_>, source: &str) -> Opti
     let mut objects = Vec::new();
     for property in &object.properties {
         let (key, value) = field(property)?;
-        if let Expression::ObjectExpression(inner) = unwrap_ts_wrappers(value) {
+        if let Some(inner) = nested_record(value) {
             objects.push((key, nested(inner, source)?));
         } else {
             strings.push((key, sql_of(value, source)?));
@@ -32,6 +32,41 @@ pub(super) fn record_values(object: &ObjectExpression<'_>, source: &str) -> Opti
         return unique_keys(&strings).then_some(Values::Strings(strings));
     }
     object_entries(objects)
+}
+
+/// The outer `Object.freeze(...)` object, after one layer of type wrappers.
+pub(super) fn frozen_object<'a>(expr: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
+    let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
+        return None;
+    };
+    match unwrap_ts_wrappers(freeze_argument(call)?) {
+        Expression::ObjectExpression(object) => Some(object),
+        _ => None,
+    }
+}
+
+fn nested_record<'a>(value: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
+    let value = unwrap_ts_wrappers(value);
+    if let Expression::ObjectExpression(object) = value {
+        return Some(object);
+    }
+    frozen_object(value)
+}
+
+fn freeze_argument<'a>(call: &'a oxc_ast::ast::CallExpression<'a>) -> Option<&'a Expression<'a>> {
+    if call.optional || call.arguments.len() != 1 {
+        return None;
+    }
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+        return None;
+    };
+    let Expression::Identifier(object) = unwrap_ts_wrappers(&member.object) else {
+        return None;
+    };
+    if member.optional || object.name != "Object" || member.property.name != "freeze" {
+        return None;
+    }
+    call.arguments[0].as_expression()
 }
 
 fn field<'a>(property: &'a ObjectPropertyKind<'a>) -> Option<(String, &'a Expression<'a>)> {

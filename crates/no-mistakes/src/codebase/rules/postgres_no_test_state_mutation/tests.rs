@@ -1,5 +1,6 @@
 use super::*;
 
+mod closed_record_prefix;
 mod factory;
 mod iterator;
 mod low;

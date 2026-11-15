@@ -3,7 +3,6 @@ use super::Resolvable;
 use crate::codebase::postgres::embedded::helpers::program::{
     Expr, Mark, Param, Program as HelperProgram, Stmt, SwitchArm,
 };
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{self, BindingPattern, Expression, Statement};
 use std::collections::HashMap;
@@ -154,25 +153,5 @@ fn exported(module: &ast::Program<'_>, name: &str) -> bool {
 }
 
 fn freeze_values(init: &Expression<'_>, source: &str) -> Option<Values> {
-    let Expression::CallExpression(call) = unwrap_ts_wrappers(init) else {
-        return None;
-    };
-    if call.optional || call.arguments.len() != 1 {
-        return None;
-    }
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
-        return None;
-    };
-    let Expression::Identifier(object) = unwrap_ts_wrappers(&member.object) else {
-        return None;
-    };
-    if member.optional || object.name != "Object" || member.property.name != "freeze" {
-        return None;
-    }
-    let Expression::ObjectExpression(object) =
-        unwrap_ts_wrappers(call.arguments[0].as_expression()?)
-    else {
-        return None;
-    };
-    records::record_values(object, source)
+    records::record_values(records::frozen_object(init)?, source)
 }

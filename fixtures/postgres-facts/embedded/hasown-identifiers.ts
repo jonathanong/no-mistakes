@@ -54,3 +54,19 @@ export function optionalField(kind: string) {
   const config = getRelationConfig(kind);
   query(`/* optional */ DELETE FROM ${config?.table} WHERE id = $1`);
 }
+
+const frozenConfigs = Object.freeze({
+  a: Object.freeze({ table: 'retained_a', column: 'a_id' }),
+  b: Object.freeze({ table: 'retained_b', column: 'b_id' }),
+});
+
+export function getFrozenConfig(name: string) {
+  if (!Object.hasOwn(frozenConfigs, name)) throw new Error(`unknown ${name}`);
+  return frozenConfigs[name as keyof typeof frozenConfigs];
+}
+
+export function insertFrozen(name: string) {
+  const config = getFrozenConfig(name);
+  query(`/* frozen-column */ INSERT INTO impacts (request_id, ${config.column}) VALUES ($1, $2)`);
+  query(`/* frozen-table */ INSERT INTO ${config.table} (id) VALUES ($1)`);
+}
