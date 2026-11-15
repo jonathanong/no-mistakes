@@ -1,0 +1,189 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "tail_users": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "username": { "dataType": "text", "nullable": true, "ordinalPosition": 2 },
+        "platform_account_kind": { "dataType": "text", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "tail_users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX tail_users_pkey ON tail_users (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "tail_users_username": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "username IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX tail_users_username ON tail_users (lower(username)) WHERE username IS NOT NULL",
+          "keys": [{ "column": null, "expression": "lower(username)" }]
+        }
+      }
+    },
+    "kind_users": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "username": { "dataType": "text", "nullable": true, "ordinalPosition": 2 },
+        "platform_account_kind": { "dataType": "text", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "kind_users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX kind_users_pkey ON kind_users (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "kind_users_username": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "platform_account_kind IS NULL",
+          "definition": "CREATE UNIQUE INDEX kind_users_username ON kind_users (lower(username)) WHERE platform_account_kind IS NULL",
+          "keys": [{ "column": null, "expression": "lower(username)" }]
+        }
+      }
+    },
+    "shaped_users": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "username": { "dataType": "text", "nullable": true, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "shaped_users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX shaped_users_pkey ON shaped_users (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "shaped_users_username": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "username IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX shaped_users_username ON shaped_users (upper(username)) WHERE username IS NOT NULL",
+          "keys": [{ "column": null, "expression": "upper(username)" }]
+        }
+      }
+    },
+    "qualified_users": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "username": { "dataType": "text", "nullable": true, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "qualified_users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX qualified_users_pkey ON qualified_users (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "qualified_users_username": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "username IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX qualified_users_username ON qualified_users (pg_catalog.lower(username)) WHERE username IS NOT NULL",
+          "keys": [{ "column": null, "expression": "pg_catalog.lower(username)" }]
+        }
+      }
+    },
+    "trimmed_users": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "username": { "dataType": "text", "nullable": true, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "trimmed_users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX trimmed_users_pkey ON trimmed_users (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "trimmed_users_username": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "username IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX trimmed_users_username ON trimmed_users (btrim(username)) WHERE username IS NOT NULL",
+          "keys": [{ "column": null, "expression": "btrim(username)" }]
+        }
+      }
+    }
+  }
+}

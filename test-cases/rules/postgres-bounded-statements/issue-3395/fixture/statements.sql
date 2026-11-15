@@ -22,7 +22,7 @@ SELECT 1 FROM directories AS d JOIN normalized AS e ON e.email = d.email WHERE d
 SELECT id FROM actors WHERE lower(username) = $1 AND username IS NOT NULL;
 -- Report: null-safe equality on a nullable column does not fix the expression.
 SELECT id FROM actors WHERE username IS NOT DISTINCT FROM $1;
--- Report: function equality does not imply username IS NOT NULL.
+-- Pass: strict lower(username) = $1 implies username IS NOT NULL.
 SELECT id FROM actors WHERE lower(username) = $1;
 -- Report: the reverse direction. lower(name) is not unique on raw name.
 SELECT name FROM raw_names WHERE lower(name) = $1;

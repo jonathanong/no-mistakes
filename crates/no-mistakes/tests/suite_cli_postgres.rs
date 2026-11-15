@@ -39,6 +39,8 @@ mod cli_postgres_snapshot_bounded_chains;
 mod cli_postgres_snapshot_bounded_false_positives;
 #[path = "cli_postgres_snapshot_bounded_issue_3395.rs"]
 mod cli_postgres_snapshot_bounded_issue_3395;
+#[path = "cli_postgres_snapshot_bounded_issue_3432.rs"]
+mod cli_postgres_snapshot_bounded_issue_3432;
 #[path = "cli_postgres_snapshot_bounded_on.rs"]
 mod cli_postgres_snapshot_bounded_on;
 #[path = "cli_postgres_snapshot_bounded_statements.rs"]

@@ -257,9 +257,14 @@ Every key element must have a finite pin. Supported index shapes include:
   conjuncts are accepted. Strict equality `col = $1` also implies `col IS NOT NULL`
   on that same column, so `username = $1` proves
   `UNIQUE (lower(username)) WHERE username IS NOT NULL`.
-  A function expression's equality does not prove its argument non-null, so
-  `lower(username) = $1` still needs `username IS NOT NULL` written in the query.
-  Raw equality does not prove `f(col) IS NOT NULL` or a predicate on another column.
+  Equality of unquoted `lower`, `upper`, or one-argument `btrim` (unqualified or
+  `pg_catalog`-qualified) also implies that its column argument is not null, because
+  those functions yield null for a null argument and null never compares equal.
+  `lower(username) = lower($1)` therefore pins `UNIQUE (lower(username))` and proves
+  `username IS NOT NULL`. `coalesce` is not strict. `IS NOT DISTINCT FROM` can match
+  null, so it does not. A quoted name, another schema, a filter, a window, or an extra
+  argument stays unrecognized. Raw equality does not prove `f(col) IS NOT NULL` or a
+  predicate on another column.
   A predicate present only in an `OR` alternative, or an outer join's `ON` for
   the preserved side, does not establish the scan's predicate. Positional column
   alias lists keep expression/partial-index proofs conservative.
