@@ -71,6 +71,8 @@ mod cli_postgres_snapshot_fk_on_delete;
 mod cli_postgres_snapshot_generated_column_predicates;
 #[path = "cli_postgres_snapshot_generated_column_writes.rs"]
 mod cli_postgres_snapshot_generated_column_writes;
+#[path = "cli_postgres_snapshot_generated_column_writes_positional.rs"]
+mod cli_postgres_snapshot_generated_column_writes_positional;
 #[path = "cli_postgres_snapshot_generated_identifier_returns.rs"]
 mod cli_postgres_snapshot_generated_identifier_returns;
 #[path = "cli_postgres_snapshot_generated_identifiers.rs"]

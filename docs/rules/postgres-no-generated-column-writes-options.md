@@ -37,7 +37,11 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   generated-column findings unchanged.
 - `unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or `advise`; other values are a
   configuration error). `ignore` skips dynamic executor SQL that cannot be
-  checked instead of reporting it.
+  checked instead of reporting it. The same policy covers a positional insert
+  that omits its column list and supplies values into a catalogued table whose column order
+  is unknown: `fail` reports it, `advise` records a non-failing advisory, and
+  `ignore` omits it. `INSERT ... DEFAULT VALUES` stays clean. Definite
+  generated-column writes stay findings under every setting.
 
 ### Unanalyzable SQL
 

@@ -1,0 +1,1 @@
+-- votes is catalogued only through extraGeneratedColumns.

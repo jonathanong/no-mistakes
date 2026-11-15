@@ -87,13 +87,26 @@ pub(super) fn scan(
                 );
             }
             let source = crate::codebase::rules::read_language_source(sources, path);
+            let uncertainty = positional_uncertainty(opts, facts);
+            let anchors = match &uncertainty {
+                positional::PositionalUncertainty::Advise(_, _) => profile
+                    .and_then(|profile| prepared.embedded_sql(path, profile).ok())
+                    .map(|embedded| positional::call_anchors(embedded, statements.len()))
+                    .unwrap_or_default(),
+                positional::PositionalUncertainty::Report
+                | positional::PositionalUncertainty::Ignore => Vec::new(),
+            };
             extend_writes(
                 &mut findings,
                 &rel,
                 statements,
                 &mut dedup,
-                source.as_deref(),
                 &lookup,
+                &positional::WriteScan {
+                    source: source.as_deref(),
+                    anchors: &anchors,
+                    uncertainty: &uncertainty,
+                },
             );
             if let Some(embedded) = profile
                 .filter(|_| opts.fail_unanalyzable)
@@ -110,6 +123,20 @@ pub(super) fn scan(
 mod findings;
 use findings::{extend_unanalyzable, extend_writes};
 mod history;
+mod positional;
+
+fn positional_uncertainty<'a>(
+    opts: &'a CompiledOptions,
+    facts: &'a dyn crate::codebase::check_facts::SqlFactContext,
+) -> positional::PositionalUncertainty<'a> {
+    if opts.fail_unanalyzable {
+        positional::PositionalUncertainty::Report
+    } else if opts.advise_unanalyzable {
+        positional::PositionalUncertainty::Advise(facts, &opts.embedded)
+    } else {
+        positional::PositionalUncertainty::Ignore
+    }
+}
 #[cfg(test)]
 mod tests;
 mod verdicts;

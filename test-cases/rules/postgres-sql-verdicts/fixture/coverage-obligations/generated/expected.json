@@ -28,6 +28,14 @@
     ]
   },
   {
+    "line": 5,
+    "subcheck": "positional-column-order",
+    "status": "abstain",
+    "residualReasons": [
+      "an explicit column list is required for `partial_accounts` because its column order is unknown"
+    ]
+  },
+  {
     "line": 6,
     "subcheck": "generated-write",
     "status": "violation",
