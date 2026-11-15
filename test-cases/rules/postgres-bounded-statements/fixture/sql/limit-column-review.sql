@@ -18,3 +18,14 @@ SELECT r.id FROM LATERAL (SELECT 1 AS n) d RIGHT JOIN (VALUES (NULL::int)) extra
 SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit::int) x;
 SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM (probe JOIN probe AS p2 ON true) LIMIT f.row_limit) x;
 SELECT q.n FROM budgets CROSS JOIN LATERAL (SELECT generate_series(1, 0) AS n FROM probe LIMIT budgets.cap) q;
+SELECT r.id FROM (SELECT v.n FROM (VALUES (1)) v(n) GROUP BY ALL) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (SELECT v.n FROM (VALUES (1)) v(n) GROUP BY ((v.n))) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (SELECT v.n FROM (VALUES (1)) v(n) GROUP BY v.n GROUPING SETS ((v.n), ())) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (SELECT 1 AS n, 1 + 1) p(cap) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.cap) r;
+SELECT r.id FROM (SELECT 1 AS n UNION ALL SELECT $1 AS n) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (SELECT 1 AS n UNION ALL SELECT 2 AS a, 3 AS b) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (VALUES (1), (2, 3)) p(n) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM budgets CROSS JOIN LATERAL (SELECT id FROM probe LIMIT public.budgets.cap) r;
+SELECT r.id FROM (VALUES (1)) d(n) FULL JOIN (VALUES (2)) extra(n) ON true CROSS JOIN LATERAL (SELECT id FROM probe LIMIT d.n) r;
+SELECT r.id FROM (SELECT d.n FROM (VALUES (1)) d(n) LEFT JOIN (VALUES (2)) extra(n) ON true) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (SELECT d.n FROM (VALUES (1)) d(n) RIGHT JOIN ((VALUES (1)) a(n) JOIN (VALUES (2)) b(n) ON true) ON true RIGHT JOIN (VALUES (3)) e(n) ON true) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;

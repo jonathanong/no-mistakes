@@ -128,10 +128,10 @@ impl Relations {
         }
     }
 
-    pub(super) fn catalog_column(&self, expr: &Expr) -> Option<(String, String)> {
-        let Expr::CompoundIdentifier(parts) = expr else {
-            return None;
-        };
+    pub(super) fn catalog_column(
+        &self,
+        parts: &[sqlparser::ast::Ident],
+    ) -> Option<(String, String)> {
         if parts.len() != 2 {
             return None;
         }

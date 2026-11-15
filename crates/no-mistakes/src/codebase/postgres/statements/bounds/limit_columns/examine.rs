@@ -1,7 +1,7 @@
 use super::{work, Relations};
 use crate::codebase::postgres::statements::limit::is_limited_with_columns;
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
-use sqlparser::ast::{Expr, LimitClause, Query, SetExpr, TableFactor};
+use sqlparser::ast::{Expr, Ident, LimitClause, Query, SetExpr, TableFactor};
 use std::cell::OnceCell;
 
 pub(in crate::codebase::postgres::statements::bounds) fn examine(
@@ -14,11 +14,11 @@ pub(in crate::codebase::postgres::statements::bounds) fn examine(
         prepare(query, scope, positions, &visible).contains(expr)
     });
     let catalog = catalog_site(query)
-        .and_then(|expr| prepare(query, scope, positions, &visible).catalog_column(expr));
+        .and_then(|parts| prepare(query, scope, positions, &visible).catalog_column(parts));
     (limited, catalog)
 }
 
-fn catalog_site(query: &Query) -> Option<&Expr> {
+fn catalog_site(query: &Query) -> Option<&[Ident]> {
     if let Some(fetch) = &query.fetch {
         if fetch.with_ties || fetch.percent {
             return None;
@@ -48,7 +48,7 @@ fn prepare<'a>(
     })
 }
 
-fn limit_column(query: &Query) -> Option<&Expr> {
+fn limit_column(query: &Query) -> Option<&[Ident]> {
     let expr = if let Some(fetch) = &query.fetch {
         fetch.quantity.as_ref()?
     } else {
@@ -63,10 +63,10 @@ fn limit_column(query: &Query) -> Option<&Expr> {
     column_root(expr)
 }
 
-fn column_root(expr: &Expr) -> Option<&Expr> {
+fn column_root(expr: &Expr) -> Option<&[Ident]> {
     match expr {
         Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => column_root(inner),
-        Expr::CompoundIdentifier(_) => Some(expr),
+        Expr::CompoundIdentifier(parts) => Some(parts),
         _ => None,
     }
 }

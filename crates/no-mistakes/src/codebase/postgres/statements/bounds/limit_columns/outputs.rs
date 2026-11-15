@@ -60,14 +60,6 @@ fn prove_select(
     positions: PlaceholderPositions<'_>,
     parent: &Relations,
 ) -> Option<Proof> {
-    if select.projection.iter().any(|item| {
-        matches!(
-            item,
-            SelectItem::Wildcard(_) | SelectItem::QualifiedWildcard(_, _)
-        )
-    }) {
-        return None;
-    }
     let mut visible = parent.clone();
     visible.absorb(&select.from, positions);
     let drop_columns = super::shape::grouping_adds_nulls(select);
@@ -117,13 +109,8 @@ fn project_kind(
         if drop_columns {
             return Some(FixedCount::Nullable);
         }
-        if let Some(kind) = visible.contains(column) {
-            Some(kind)
-        } else if matches!(column, Expr::Identifier(_) | Expr::CompoundIdentifier(_)) {
-            Some(FixedCount::Nullable)
-        } else {
-            None
-        }
+        // Only identifiers reach this callback. An unknown one is nullable, not a proof.
+        Some(visible.contains(column).unwrap_or(FixedCount::Nullable))
     })
     .filter(|kind| matches!(kind, FixedCount::Caller | FixedCount::NonNull))
 }
