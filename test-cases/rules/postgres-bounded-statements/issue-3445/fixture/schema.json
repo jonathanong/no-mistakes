@@ -1,0 +1,129 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "custom": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "payload": { "dataType": "mytype", "nullable": true, "ordinalPosition": 2 },
+        "n": { "dataType": "integer", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "custom_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX custom_pkey ON custom (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "custom_payload": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "payload IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX custom_payload ON custom (lower(payload)) WHERE payload IS NOT NULL",
+          "keys": [{ "column": null, "expression": "lower(payload)" }]
+        },
+        "custom_n": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "n IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX custom_n ON custom (lower(n)) WHERE n IS NOT NULL",
+          "keys": [{ "column": null, "expression": "lower(n)" }]
+        }
+      }
+    },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "name": { "dataType": "character varying(64)", "nullable": true, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "labels_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labels_pkey ON labels (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "labels_name": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "name IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX labels_name ON labels (lower(name)) WHERE name IS NOT NULL",
+          "keys": [{ "column": null, "expression": "lower(name)" }]
+        }
+      }
+    },
+    "counters": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "n": { "dataType": "integer", "nullable": true, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "counters_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX counters_pkey ON counters (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "counters_n": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "n IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX counters_n ON counters (n) WHERE n IS NOT NULL",
+          "keys": [{ "column": "n", "expression": "n" }]
+        }
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ pub(in super::super) fn collect(
     restricted: &[usize],
     conjuncts: &mut Vec<(usize, Expr)>,
     nonnull: &mut Vec<(usize, String)>,
+    strict_nonnull: &mut Vec<(usize, String)>,
 ) {
     let expr = unwrap_expr(expr);
     if let Expr::BinaryOp {
@@ -19,8 +20,22 @@ pub(in super::super) fn collect(
         right,
     } = expr
     {
-        collect(left, resolver, restricted, conjuncts, nonnull);
-        collect(right, resolver, restricted, conjuncts, nonnull);
+        collect(
+            left,
+            resolver,
+            restricted,
+            conjuncts,
+            nonnull,
+            strict_nonnull,
+        );
+        collect(
+            right,
+            resolver,
+            restricted,
+            conjuncts,
+            nonnull,
+            strict_nonnull,
+        );
         return;
     }
     for &item in restricted {
@@ -37,12 +52,13 @@ pub(in super::super) fn collect(
     } = expr
     {
         for side in [left.as_ref(), right.as_ref()] {
-            let column = resolver
-                .column(side)
-                .or_else(|| strict_column(side, resolver));
-            if let Some((item, column)) = column {
+            if let Some((item, column)) = resolver.column(side) {
                 if restricted.contains(&item) && resolver.is_table(item) {
                     nonnull.push((item, column));
+                }
+            } else if let Some((item, column)) = strict_column(side, resolver) {
+                if restricted.contains(&item) && resolver.is_table(item) {
+                    strict_nonnull.push((item, column));
                 }
             }
         }

@@ -77,8 +77,12 @@ pub struct SqlBoundItem {
     pub predicate_conjuncts: Vec<Expr>,
     /// Conjuncts that hold only inside one OR alternative, in alternative order.
     pub alternative_predicates: Vec<Vec<Expr>>,
-    /// Plain columns made non-NULL by strict equality in those same conjuncts.
+    /// Columns made non-null by raw `=` equality. Sound for every catalog type.
     pub nonnull_columns: Vec<String>,
+    /// Columns of unquoted `lower`, `upper`, or one-argument `btrim`.
+    /// Sound only for a text-family catalog column.
+    /// See docs/rules/postgres-bounded-statements-proof.md.
+    pub strict_nonnull_columns: Vec<String>,
     /// Number of disjunctive alternatives; every alternative must complete a unique key.
     pub pin_alternatives: usize,
     /// Alternatives that reject every row of this item, so they need no key.

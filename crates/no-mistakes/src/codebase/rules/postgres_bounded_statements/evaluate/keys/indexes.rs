@@ -41,7 +41,7 @@ pub(super) fn append(
             continue;
         }
         for (alternative, branch) in prepared.iter_mut().enumerate() {
-            if !predicate::holds(&index.predicate, item, alternative, &[], catalog) {
+            if !predicate::holds(&index.predicate, item, alternative, &[], table, catalog) {
                 continue;
             }
             if let Some(key) = pinned_key(index, &pins, alternative) {

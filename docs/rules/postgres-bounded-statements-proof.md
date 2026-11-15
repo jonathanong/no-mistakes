@@ -304,12 +304,19 @@ Every key element must have a finite pin. Supported index shapes include:
   `UNIQUE (lower(username)) WHERE username IS NOT NULL`.
   Equality of unquoted `lower`, `upper`, or one-argument `btrim` (unqualified or
   `pg_catalog`-qualified) also implies that its column argument is not null, because
-  those functions yield null for a null argument and null never compares equal.
-  `lower(username) = lower($1)` therefore pins `UNIQUE (lower(username))` and proves
-  `username IS NOT NULL`. `coalesce` is not strict. `IS NOT DISTINCT FROM` can match
+  those built-ins yield null for a null argument and null never compares equal.
+  The column's catalog type must be `text`, `varchar`, `character varying`, or
+  `char varying`, the same family as a raw equality that fixes one of those functions.
+  `lower` of a user-defined type, `lower` of an integer, `char`, and a column the
+  catalog does not list do not: that overload need not be strict. `lower(username) = lower($1)`
+  therefore pins `UNIQUE (lower(username))` and proves `username IS NOT NULL` when
+  `username` is `text`. `coalesce` is not strict. `IS NOT DISTINCT FROM` can match
   null, so it does not. A quoted name, another schema, a filter, a window, or an extra
-  argument stays unrecognized. Raw equality does not prove `f(col) IS NOT NULL` or a
-  predicate on another column.
+  argument stays unrecognized. The call is recorded for a base table the condition
+  restricts (`WHERE`, or the filtered side of a join). An outer join `ON` does not
+  record the preserved table, and a derived item is not a base table. Raw equality
+  on any catalog type still implies that column `IS NOT NULL`. It does not prove
+  `f(col) IS NOT NULL` or a predicate on another column.
   An outer join's `ON` for the preserved side does not establish the scan's
   predicate. Positional column alias lists keep expression and partial-index
   proofs conservative.

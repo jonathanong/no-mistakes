@@ -95,6 +95,7 @@ impl<'a> Builder<'a> {
         let mut found = Vec::new();
         let mut conjuncts = Vec::new();
         let mut nonnull = Vec::new();
+        let mut strict_nonnull = Vec::new();
         for (restricted, condition) in &self.conditions {
             pins::extract(
                 condition,
@@ -110,6 +111,7 @@ impl<'a> Builder<'a> {
                 restricted,
                 &mut conjuncts,
                 &mut nonnull,
+                &mut strict_nonnull,
             );
         }
         for using in &self.usings {
@@ -124,7 +126,14 @@ impl<'a> Builder<'a> {
                 self.positions,
                 &mut found,
             );
-            pins::collect_evidence(selection, &resolver, &all, &mut conjuncts, &mut nonnull);
+            pins::collect_evidence(
+                selection,
+                &resolver,
+                &all,
+                &mut conjuncts,
+                &mut nonnull,
+                &mut strict_nonnull,
+            );
         }
         for (item, pin) in found {
             if !matches!(
@@ -145,6 +154,11 @@ impl<'a> Builder<'a> {
         for (item, column) in nonnull {
             if !self.items[item].nonnull_columns.contains(&column) {
                 self.items[item].nonnull_columns.push(column);
+            }
+        }
+        for (item, column) in strict_nonnull {
+            if !self.items[item].strict_nonnull_columns.contains(&column) {
+                self.items[item].strict_nonnull_columns.push(column);
             }
         }
         if let Some(selection) = selection {

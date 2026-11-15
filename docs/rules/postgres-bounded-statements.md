@@ -522,10 +522,16 @@ a parameter bound to that literal in the same alternative, and a catalog enum
 parameter when every label hits a pinned unique index whose source rows are
 themselves bounded),
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
-A strict call also proves the argument is not null: `lower(username) = lower($1)`
-matches `UNIQUE (lower(username)) WHERE username IS NOT NULL`. The same holds for
+A strict call also proves the argument is not null when that column's catalog
+type is `text` or `varchar`: `lower(username) = lower($1)` matches
+`UNIQUE (lower(username)) WHERE username IS NOT NULL`. The same holds for
 unquoted `upper` and one-argument `btrim`, unqualified or `pg_catalog`-qualified.
-`coalesce`, `IS NOT DISTINCT FROM`, a quoted name, and another schema do not.
+`lower` of a user-defined type and `lower` of an integer stay findings, because
+that overload need not be strict. `coalesce`, `IS NOT DISTINCT FROM`, a quoted name,
+and another schema do not. The call is recorded for a base table the condition
+restricts (`WHERE`, or the filtered side of a join). An outer join `ON` does not
+record the preserved table, and a derived item is not a base table. Raw equality
+on any type still implies that column `IS NOT NULL`.
 A literal cast counts only when it preserves the value
 (`text`, `boolean`, unlimited `varchar`, `varchar(n)` that fits, or a catalog
 enum label, including a quoted mixed-case enum name). An array constructor
