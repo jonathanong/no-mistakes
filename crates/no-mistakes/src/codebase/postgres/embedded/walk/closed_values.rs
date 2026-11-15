@@ -16,6 +16,8 @@ mod expression;
 #[cfg(test)]
 mod extra_escape_tests;
 #[cfg(test)]
+mod fixture;
+#[cfg(test)]
 mod followup_tests;
 #[cfg(test)]
 mod member_ownership_tests;

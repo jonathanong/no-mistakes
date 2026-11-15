@@ -146,10 +146,8 @@ fn expand_argument(
             expanded.push(Expanded { args, choices });
         }
     }
-    if expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
-        return None;
-    }
-    if !values.is_empty() && expanded.is_empty() {
+    // An empty expansion is not proof that the statement has no SQL.
+    if expanded.is_empty() || expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
         return None;
     }
     Some(expanded)

@@ -28,7 +28,10 @@ non-key column can still be unbounded.
   before returning a permitted value.
 
 Casts alone do not establish a domain. Widened, optional, defaulted, reassigned,
-or otherwise unstable parameters remain opaque. An unresolved helper body,
+or otherwise unstable parameters remain opaque. A transformed argument, such as
+a conditional, does not keep the parameter's choices, and neither does a `let`
+binding after a later assignment. A helper call that produces no arm stays
+opaque as well. An empty result does not clear the statement. An unresolved helper body,
 non-literal return, missing record key, spread, getter, escaped collection, or
 record mutation also prevents a complete proof. Recovery retains the existing
 16-alternative budget and bounded expression depth. It does not keep a subset

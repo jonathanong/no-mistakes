@@ -1,28 +1,5 @@
-use crate::codebase::postgres::embedded::{
-    extract_embedded_sql_from_source, EmbeddedSqlOptions, TrustedSqlTag,
-};
-use std::path::PathBuf;
-
-fn fixture_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/postgres-bounded-statements/closed-identifier-correlation/fixture/query.ts",
-    )
-}
-
 fn texts(index: usize) -> Vec<String> {
-    let path = fixture_path();
-    let source = std::fs::read_to_string(&path).expect("fixture");
-    let options =
-        EmbeddedSqlOptions::configured("@example/db", &[]).with_raw_sql_tags(&[TrustedSqlTag {
-            module: "@example/raw-sql".into(),
-            name: "sql".into(),
-        }]);
-    let facts = extract_embedded_sql_from_source(&path, &source, &options);
-    facts.calls[index]
-        .variants
-        .iter()
-        .map(|variant| variant.sql_text.clone())
-        .collect()
+    super::fixture::texts("query.ts", index)
 }
 
 #[test]
@@ -45,6 +22,27 @@ fn two_helpers_keep_the_same_argument_choice() {
             "DELETE FROM posts WHERE post_id = $1"
         ]
     );
+}
+
+fn stays_unresolved(index: usize) {
+    let call = super::fixture::call("query.ts", index);
+    assert!(call.variants.is_empty(), "{call:#?}");
+    assert!(call.is_unanalyzable(), "{call:#?}");
+}
+
+#[test]
+fn transformed_argument_stays_unresolved() {
+    stays_unresolved(3);
+}
+
+#[test]
+fn reassigned_argument_stays_unresolved() {
+    stays_unresolved(4);
+}
+
+#[test]
+fn unmatched_literal_does_not_clear_the_statement() {
+    stays_unresolved(5);
 }
 
 #[test]
