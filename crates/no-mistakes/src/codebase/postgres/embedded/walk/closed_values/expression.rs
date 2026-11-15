@@ -108,7 +108,7 @@ pub(super) fn select(objects: Vec<Arm>, keys: Vec<Arm>) -> Option<Vec<Arm>> {
     }
     (result.len() <= MAX_EMBEDDED_SQL_VARIANTS && !result.is_empty()).then_some(result)
 }
-fn compatible(left: &[(u64, u32)], right: &[(u64, u32)]) -> bool {
+pub(super) fn compatible(left: &[(u64, u32)], right: &[(u64, u32)]) -> bool {
     !left.iter().any(|(id, arm)| {
         right
             .iter()

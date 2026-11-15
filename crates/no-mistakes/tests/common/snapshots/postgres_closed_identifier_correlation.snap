@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "correlation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 36,
+          "message": "query.ts:36: DELETE can remove every row of posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; DELETE can remove every row of users; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`DELETE FROM ${CONFIG[kind].table} WHERE ${column(other)} = $1`);",
+          "target": "table:posts, table:users"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

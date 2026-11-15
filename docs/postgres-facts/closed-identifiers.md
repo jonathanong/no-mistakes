@@ -12,7 +12,10 @@ non-key column can still be unbounded.
   as `table: 'users' | 'posts'`.
 - Synchronous helper switches whose reachable returns are all string literals.
   A switch without a default needs complete literal arguments that cover every
-  reachable case; an unmatched or unknown path remains opaque.
+  reachable case; an unmatched or unknown path remains opaque. Each returned
+  arm keeps the choices of the arguments that selected it. A record field and
+  a helper selected by the same literal-union argument therefore stay on one
+  alternative, and composition drops the pairs that cannot run together.
 - Local immutable lookup records composed of string literals and nested
   records. A literal-union key can select a record before reading its fields.
   Related fields retain the same key choice, and repeated uses of one value
