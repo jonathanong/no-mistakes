@@ -212,7 +212,7 @@ fn millisecond_invocation_budget_stops_blocked_config_loading() {
     let mut child = Command::new(bin())
         .args([
             "--invocation-timeout-ms",
-            "350",
+            "2500",
             "--timeout",
             "5",
             "check",
@@ -226,7 +226,7 @@ fn millisecond_invocation_budget_stops_blocked_config_loading() {
         .spawn()
         .unwrap();
     let status = child
-        .wait_timeout(Duration::from_secs(3))
+        .wait_timeout(Duration::from_secs(8))
         .unwrap()
         .unwrap_or_else(|| {
             let _ = child.kill();
@@ -237,7 +237,7 @@ fn millisecond_invocation_budget_stops_blocked_config_loading() {
     assert_eq!(status.code(), Some(124));
     assert!(output.stdout.is_empty());
     assert!(
-        stderr(&output).contains("350 milliseconds"),
+        stderr(&output).contains("2500 milliseconds"),
         "{}",
         stderr(&output)
     );

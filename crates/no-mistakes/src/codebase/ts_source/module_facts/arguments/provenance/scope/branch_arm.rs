@@ -9,12 +9,10 @@ pub(super) fn in_named_branch(nodes: &oxc_semantic::AstNodes<'_>, node: NodeId) 
     if direct_arm(nodes, current) {
         return true;
     }
-    // The write itself must be the statement. An argument is not.
     let statement = nodes.parent_id(current);
     if !matches!(nodes.kind(statement), AstKind::ExpressionStatement(_)) {
         return false;
     }
-    // A hook callback is a statement in the arm only after leaving the call.
     let mut current = statement;
     loop {
         let parent = nodes.parent_id(current);
@@ -61,7 +59,6 @@ fn direct_arm(nodes: &oxc_semantic::AstNodes<'_>, current: NodeId) -> bool {
     }
 }
 
-/// A ternary arm counts only when the ternary itself is a statement.
 fn named_ternary_arm(nodes: &oxc_semantic::AstNodes<'_>, arm: NodeId) -> bool {
     let mut child = arm;
     let mut node = nodes.parent_id(arm);

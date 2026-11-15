@@ -30,6 +30,7 @@ pub(in super::super) struct ConfiguredSetups {
     projects: Vec<Project>,
     known: bool,
     configs_known: bool,
+    /// Why test roots could not be named. Absent when `known` is true.
     gap: Option<SetupGap>,
 }
 
@@ -97,7 +98,6 @@ impl ConfiguredSetups {
     pub(in super::super) fn known(&self) -> bool {
         self.known
     }
-
     pub(in super::super) fn config_files(&self) -> Option<FxHashSet<PathBuf>> {
         self.configs_known.then(|| {
             self.projects

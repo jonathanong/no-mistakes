@@ -280,6 +280,8 @@ mod cli_postgres_snapshot_materialized_view_shape;
 #[path = "cli_postgres_unused_disables.rs"]
 mod cli_postgres_unused_disables;
 
+#[path = "cli_check_rules_test_no_live_repository_scan_conditional_import.rs"]
+mod cli_check_rules_test_no_live_repository_scan_conditional_import;
 #[path = "cli_check_rules_test_no_live_repository_scan_env.rs"]
 mod cli_check_rules_test_no_live_repository_scan_env;
 #[path = "cli_check_rules_test_no_live_repository_scan_env_cause.rs"]

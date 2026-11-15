@@ -88,6 +88,7 @@ pub(crate) enum WriteScope {
     BeforeEach(u32, u32),
     AfterEach(u32, u32),
     AfterAll(u32, u32),
+    /// Nested in a branch, loop, or handler, so it may not have run.
     Conditional(ConditionalPlace),
 }
 
