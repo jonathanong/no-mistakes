@@ -134,14 +134,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
-          "line": 33,
-          "message": "sql/lookups.sql:33: SELECT can return every row of slugs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT slug FROM slugs WHERE slug = $1;",
-          "target": "table:slugs"
-        },
-        {
-          "file": "sql/lookups.sql",
           "line": 4,
           "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -292,14 +284,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
-          "line": 33,
-          "message": "sql/lookups.sql:33: SELECT can return every row of slugs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT slug FROM slugs WHERE slug = $1;",
-          "target": "table:slugs"
-        },
-        {
-          "file": "sql/lookups.sql",
           "line": 4,
           "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -438,14 +422,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
           "target": "table:wide_slots"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 33,
-          "message": "sql/lookups.sql:33: SELECT can return every row of slugs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT slug FROM slugs WHERE slug = $1;",
-          "target": "table:slugs"
         },
         {
           "file": "sql/lookups.sql",
