@@ -10,7 +10,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Secrets and auth
 
 - MUST NOT log, print, return, or commit credentials or tokens.
-- MUST NOT store bearer, OAuth, OTP, or TOTP secrets raw; hash or encrypt through one shared module.
+- MUST NOT store bearer, OAuth, OTP, or TOTP secrets raw; hash or encrypt them.
 - MUST NOT make API keys recoverable after creation; show them once.
 - MUST NOT accept a partial session or skip revocation checks; fail closed on missing or malformed credentials.
 - MUST NOT substitute an admin credential for a missing client credential.
@@ -31,9 +31,5 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT return fields a lower-privilege caller must not see; check each field against roles.
 - MUST NOT skip suspension, block, or quota guards on mutating routes.
 - MUST NOT gate backend behavior on frontend feature flags.
-- MUST NOT expose unbounded lists; paginate with opaque cursors and clamp limits.
+- MUST NOT expose unbounded lists; clamp page sizes.
 - MUST NOT let a schema drift from its handler, or widen it to hide drift.
-- MUST NOT expose internal ids as the user-facing identifier when a stable slug exists.
-- SHOULD NOT put business logic in route handlers, or response and cookie handling in services.
-- SHOULD NOT use RPC-style bodies (`{ action: "verb" }`); use resource paths.
-- SHOULD NOT hand-build cache headers per route; centralize caching.

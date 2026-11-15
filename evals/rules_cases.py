@@ -72,54 +72,6 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "write-inline-fixture",
-                """
-                write vitest tests for readManifest. happy path, a manifest where
-                one entry has no name, and no manifest.json in the dir.
-
-                ```ts
-                import { readFile } from "node:fs/promises";
-                import { join } from "node:path";
-
-                export type ManifestResult = { names: string[]; skipped: number };
-
-                export async function readManifest(dir: string): Promise<ManifestResult> {
-                  let raw: string;
-                  try {
-                    raw = await readFile(join(dir, "manifest.json"), "utf8");
-                  } catch {
-                    return { names: [], skipped: 0 };
-                  }
-                  const entries = JSON.parse(raw).entries as Array<{ name?: string }>;
-                  const names = entries.flatMap((e) => (e.name ? [e.name] : []));
-                  return { names, skipped: entries.length - names.length };
-                }
-                ```
-                """,
-                [
-                    (
-                        "no-fixture-writes-in-test",
-                        _r(
-                            """
-                            Grade only the test code in the final message.
-
-                            Passing: the test file itself never creates files or
-                            directories. It reads manifests from pre-saved fixture
-                            directories (the fixture files are shown as separate
-                            blocks or referenced by a path under a fixtures
-                            directory), and the missing-manifest case points at a
-                            directory that has no manifest.json without creating one.
-
-                            Failing: any test code calls `writeFile`, `mkdir`,
-                            `mkdtemp`, `outputFile`, `cp`, or similar to build the
-                            manifest or directory at test time, including in a
-                            `beforeEach` or a helper defined in the test file.
-                            """
-                        ),
-                    ),
-                ],
-            ),
-            (
                 "review-empty-per-item",
                 """
                 review this before i merge
@@ -588,37 +540,6 @@ RULES_FLOWS = [
 
                             Failing: `paths:` or `paths-ignore:` appears under the
                             `pull_request` trigger of that workflow.
-                            """
-                        ),
-                    ),
-                ],
-            ),
-            (
-                "write-poll-for-ci",
-                """
-                publish.yml: on a v* tag push, publish the package to npm. only
-                publish if our CI workflow (ci.yml, it has jobs lint and test)
-                passed for that commit. trusted publishing, node 24.
-                """,
-                [
-                    (
-                        "no-polling-wait",
-                        _r(
-                            """
-                            Grade only the workflow in the final message.
-
-                            Passing: the publish waits on CI through workflow
-                            structure: it calls ci.yml as a reusable workflow and
-                            depends on it with `needs`, or uses a `workflow_run`
-                            trigger with validation, or an equivalent event-driven
-                            mechanism. No step waits by looping.
-
-                            Failing: any step polls for CI status with a sleep loop,
-                            `gh run watch`, `gh run list`/`gh api` in a retry loop,
-                            or a third-party "wait for checks" action. Also failing:
-                            a one-shot lookup of CI's result through `gh` or the API,
-                            because on a tag push CI for that commit may still be
-                            running, so the gate races it.
                             """
                         ),
                     ),

@@ -16,3 +16,21 @@ pattern is deliberate.
   the rule or downgrade it. Do not leave it for the reader to infer.
 - Downgrading from MUST NOT to SHOULD NOT needs no evidence. Upgrading needs
   the failure it prevents.
+
+## Rules, not a design
+
+The plugin is a list of rules. It does not prescribe how a codebase should be
+designed.
+
+- Name the mistake, not the architecture that avoids it. A rule can end with
+  the smallest local fix ("use `NOT EXISTS`"). It must not require a specific
+  mechanism, such as a trigger, an outbox, a lease table, a service layer, a
+  shared helper module, or a project layout, when other designs also avoid the
+  mistake.
+- Do not encode one project's conventions (file-size budgets, comment policy,
+  partitioning scheme, id format) as general rules.
+- Do not put numeric budgets (lines per file, script length) in rules. A
+  linter configured by the project sets those.
+- Add a short reason ("; NULLs silently drop rows") only when the failure is
+  not obvious from the rule itself. Without the reason, an agent would either
+  dismiss the rule or fix the wrong thing. Do not explain obvious rules.
