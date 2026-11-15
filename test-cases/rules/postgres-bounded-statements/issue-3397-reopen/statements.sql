@@ -130,3 +130,9 @@ SELECT app.current_timestamp() FROM flows LIMIT 1;
 
 -- report unlimited-current-timestamp
 SELECT CURRENT_TIMESTAMP FROM flows;
+
+-- report quoted-keyword
+SELECT "current_timestamp"(id) FROM flows LIMIT 1;
+
+-- report qualified-keyword
+SELECT pg_catalog.current_timestamp() FROM flows LIMIT 1;

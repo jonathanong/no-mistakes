@@ -73,7 +73,7 @@ fn datetime_scalars_keep_a_limit_unknown_calls_do_not() {
         capped,
         vec![
             true, true, true, true, true, true, true, true, true, true, true, true, true, false,
-            false, false, false,
+            false, false, false, false, false,
         ],
         "actual caps: {capped:?}"
     );
