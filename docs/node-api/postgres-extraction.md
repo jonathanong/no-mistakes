@@ -48,6 +48,10 @@ recoverable conditional alternative, in source order. Sources without a configur
 executor call return an empty array, including when import-aware analysis evaluates
 nested SQL-building helpers. This remains the default return shape. Records
 include `fileName`, the one-based executor `line`, `annotation`, `sqlText`, `kind`, and `complete`.
+An immutable local arrow or function expression that only calls a proven
+executor with its parameters in the same positions is also a callable executor.
+Its own call is checked; unused trailing parameters are allowed. Transformed,
+reordered, and omitted arguments leave that wrapper unresolved.
 With `importSpecifier`, a `.query` member requires a receiver from a configured
 import, factory, type, or immutable alias; unrelated HTTP query parameters are
 excluded. Explicit `executorNames: [query]` without a module selects broad

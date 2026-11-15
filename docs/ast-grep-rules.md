@@ -94,12 +94,13 @@ effect performed indirectly (a helper method call, `std::mem::replace`,
 
 ### `no-direct-playwright-route-scan`
 
-Flags a direct call to `crate::routes::collect_routes(...)` from
+Flags a direct call to `crate::routes::collect_routes(...)` or
+`crate::routes::collect_routes_from_visible_paths(...)` from
 `codebase/dependencies/graph/**` — the `DepGraph` edge-producer directory.
 `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a _no-key_
 shared cache: every caller within one `no-mistakes check` invocation wants
 the exact same app-wide Playwright route scan, so there is never a
-legitimate reason for an edge producer to call `collect_routes` directly
+legitimate reason for an edge producer to call either function directly
 instead of going through the shared cache. See `crates/AGENTS.md`'s "Edge
 producer smell" note — this is the exact shape of the historical
 `collect_playwright_route_edges` bug, which independently re-ran the entire
@@ -109,11 +110,10 @@ shares.
 `edge_playwright_routes.rs` is allowlisted. Its scan calls
 `collect_routes_from_visible_paths` inside the `compute_routes` closure
 passed to `facts.get_or_compute_playwright_routes`, with a `None`-facts
-fallback that calls the same closure. That helper is outside this rule's
-`collect_routes` pattern. The file stays allowlisted because ast-grep cannot
-require a call to sit inside that closure, so a later direct `collect_routes`
-anywhere else in the file would not be caught. Review that file's diffs by
-hand for this regression.
+fallback that calls the same closure. The file stays allowlisted because
+ast-grep cannot require a call to sit inside that closure, so a later direct
+call to either function anywhere else in the file would not be caught.
+Review that file's diffs by hand for this regression.
 
 ### One-pass gateway guards
 

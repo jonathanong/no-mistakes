@@ -136,7 +136,21 @@ fn procedural_control_noise_keeps_node_reports_and_real_statement_lines_in_sync(
     let root = category_fixture("rules", "postgres-ddl-unanalyzable").join("procedural");
     let report = recall_check_report(&root, "report.yml");
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 69, "{report:#?}");
+    let expected: Vec<(String, u64, String)> =
+        serde_json::from_str(&std::fs::read_to_string(root.join("expected.json")).unwrap())
+            .unwrap();
+    let mut actual: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap().to_owned(),
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    actual.sort_unstable();
+    assert_eq!(actual, expected, "{report:#?}");
     assert!(findings.iter().all(|finding| {
         !["migrations/valid.sql", "migrations/quoted-do-bodies.sql"]
             .contains(&finding["file"].as_str().unwrap())

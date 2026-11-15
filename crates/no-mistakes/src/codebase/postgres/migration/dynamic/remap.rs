@@ -4,6 +4,9 @@ pub(in super::super) fn remap_fact_lines(
     facts: &mut SqlSchemaFileFacts,
     dynamic: &super::DynamicSql,
 ) {
+    if let Some(ddl) = &mut facts.ddl_projection {
+        remap_fact_lines(ddl, dynamic);
+    }
     for statement in &mut facts.unanalyzable_statements {
         let mut order = dynamic.source_order.clone();
         order.extend(&statement.source_order);

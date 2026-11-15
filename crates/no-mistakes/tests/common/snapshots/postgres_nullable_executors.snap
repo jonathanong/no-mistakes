@@ -1,0 +1,3457 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "callable.ts",
+          "import": "items.account_id",
+          "line": 12,
+          "message": "callable.ts:12: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await execute('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "callable.ts",
+          "import": "items.account_id",
+          "line": 6,
+          "message": "callable.ts:6: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await execute('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "controls.ts",
+          "line": 16,
+          "message": "controls.ts:16: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 17,
+          "message": "controls.ts:17: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "} finally { client?.release(); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 21,
+          "message": "controls.ts:21: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 26,
+          "message": "controls.ts:26: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "pool = await Promise.resolve({} as Pool);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 28,
+          "message": "controls.ts:28: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 29,
+          "message": "controls.ts:29: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "} finally { await pool?.end(); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 34,
+          "message": "controls.ts:34: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 39,
+          "message": "controls.ts:39: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 8,
+          "message": "controls.ts:8: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "controls.ts",
+          "line": 9,
+          "message": "controls.ts:9: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "} finally { client?.release(); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "direct.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "direct.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "direct.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "direct.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 11,
+          "message": "literal-assignments.ts:11: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 16,
+          "message": "literal-assignments.ts:16: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 21,
+          "message": "literal-assignments.ts:21: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 26,
+          "message": "literal-assignments.ts:26: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 31,
+          "message": "literal-assignments.ts:31: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 36,
+          "message": "literal-assignments.ts:36: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 41,
+          "message": "literal-assignments.ts:41: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 46,
+          "message": "literal-assignments.ts:46: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 51,
+          "message": "literal-assignments.ts:51: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 56,
+          "message": "literal-assignments.ts:56: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 6,
+          "message": "literal-assignments.ts:6: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "line": 61,
+          "message": "literal-assignments.ts:61: executed SQL is not statically recoverable for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "null.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "null.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "null.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "null.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "pool-subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "pool-subpath.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "pool.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "pool.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "subpath.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "subpath.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-direct.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-direct.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-direct.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-direct.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-pool-subpath.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-pool-subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-pool.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-pool.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-subpath.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-subpath.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            219,
+            268
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            278,
+            349
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            486,
+            535
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            545,
+            616
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            245,
+            299
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            311,
+            365
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            377,
+            453
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "null.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            240,
+            294
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "null.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            306,
+            360
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            219,
+            271
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            283,
+            335
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            213,
+            265
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            277,
+            329
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            341,
+            415
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            251,
+            305
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            317,
+            371
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            207,
+            261
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            271,
+            325
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            181,
+            233
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            243,
+            295
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            175,
+            227
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            237,
+            289
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            213,
+            267
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            277,
+            331
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1009,
+            1061
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1083,
+            1087
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1260,
+            1314
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1482,
+            1534
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            231,
+            285
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            301,
+            307
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            513,
+            567
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            583,
+            589
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            743,
+            797
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            913,
+            915
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1056,
+            1110
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1241,
+            1295
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1431,
+            1485
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1617,
+            1671
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1807,
+            1861
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1999,
+            2053
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            2192,
+            2246
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            240,
+            294
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            2444,
+            2498
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            495,
+            549
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            680,
+            734
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+            "opaque-sql-tail",
+            "unresolved-sql-fragment"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            866,
+            920
+          ],
+          "status": "abstain",
+          "subcheck": "relation:items:column:account_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "callable.ts",
+          "import": "items.account_id",
+          "line": 12,
+          "message": "callable.ts:12: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await execute('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "callable.ts",
+          "import": "items.account_id",
+          "line": 6,
+          "message": "callable.ts:6: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await execute('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "controls.ts",
+          "import": "db-lib",
+          "line": 16,
+          "message": "controls.ts:16: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "controls.ts",
+          "import": "db-lib",
+          "line": 21,
+          "message": "controls.ts:21: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "controls.ts",
+          "import": "db-lib",
+          "line": 28,
+          "message": "controls.ts:28: configured executor receiver of type `Pool` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "controls.ts",
+          "import": "db-lib",
+          "line": 34,
+          "message": "controls.ts:34: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "controls.ts",
+          "import": "db-lib",
+          "line": 39,
+          "message": "controls.ts:39: configured executor receiver of type `Pool` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "direct.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "direct.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "direct.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "direct.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 11,
+          "message": "literal-assignments.ts:11: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 16,
+          "message": "literal-assignments.ts:16: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 21,
+          "message": "literal-assignments.ts:21: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 26,
+          "message": "literal-assignments.ts:26: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 31,
+          "message": "literal-assignments.ts:31: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 36,
+          "message": "literal-assignments.ts:36: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 41,
+          "message": "literal-assignments.ts:41: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 46,
+          "message": "literal-assignments.ts:46: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 51,
+          "message": "literal-assignments.ts:51: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 56,
+          "message": "literal-assignments.ts:56: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 6,
+          "message": "literal-assignments.ts:6: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "literal-assignments.ts",
+          "import": "db-lib",
+          "line": 61,
+          "message": "literal-assignments.ts:61: configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "unresolved-configured-executor-receiver"
+        },
+        {
+          "file": "null.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "null.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "null.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "null.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "pool-subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "pool-subpath.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "pool.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "pool.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "pool.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "subpath.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "subpath.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-direct.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-direct.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-direct.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-direct.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-pool-subpath.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool-subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-pool-subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-pool.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-pool.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-pool.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await pool.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-subpath.ts",
+          "import": "items.account_id",
+          "line": 7,
+          "message": "top-subpath.ts:7: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "top-subpath.ts",
+          "import": "items.account_id",
+          "line": 8,
+          "message": "top-subpath.ts:8: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            219,
+            268
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            278,
+            349
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            486,
+            535
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "callable.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            545,
+            616
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            245,
+            299
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            311,
+            365
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            377,
+            453
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "null.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            240,
+            294
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "null.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            306,
+            360
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            219,
+            271
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            283,
+            335
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            213,
+            265
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            277,
+            329
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            341,
+            415
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            251,
+            305
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            317,
+            371
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            207,
+            261
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-direct.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            271,
+            325
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            181,
+            233
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            243,
+            295
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            175,
+            227
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-pool.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            237,
+            289
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            213,
+            267
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "top-subpath.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            277,
+            331
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1260,
+            1314
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            513,
+            567
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            743,
+            797
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `Pool` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1009,
+            1061
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "controls.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `Pool` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1482,
+            1534
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1056,
+            1110
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1241,
+            1295
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1431,
+            1485
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1617,
+            1671
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1807,
+            1861
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            1999,
+            2053
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            2192,
+            2246
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            240,
+            294
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            2444,
+            2498
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            495,
+            549
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            680,
+            734
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "file": "literal-assignments.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "residualReasons": [
+            "configured executor receiver of type `PoolClient` from `db-lib` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked"
+          ],
+          "rule": "postgres-required-predicates",
+          "span": [
+            866,
+            920
+          ],
+          "status": "abstain",
+          "subcheck": "unresolved-configured-executor-receiver"
+        }
+      ],
+      "unprovenMemberQuerySql": 18,
+      "warnings": []
+    }
+  }
+}

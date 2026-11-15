@@ -28,6 +28,7 @@ pub(super) struct DynamicSql {
     source_lines: Vec<usize>,
     pub(super) source_order: Vec<usize>,
     pub(super) executed: bool,
+    pub(super) stored_routine: bool,
     pub(super) procedural_control: bool,
     /// A validated SELECT carried by a cursor or FOR wrapper, not a second wrapper.
     pub(super) query_payload: bool,
@@ -46,6 +47,7 @@ impl DynamicSql {
             source_order: Vec::new(),
             // A literal is certain until its assignment/execution scope narrows it.
             executed: true,
+            stored_routine: false,
             procedural_control: false,
             query_payload: false,
             body_start: None,

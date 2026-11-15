@@ -1,7 +1,10 @@
 macro_rules! record_embedded_collection {
     () => {
+        record_embedded_collection!("postgres.embedded.collections");
+    };
+    ($counter:literal) => {
         if let Some(observer) = $crate::diagnostics::current() {
-            observer.increment("postgres.embedded.collections", 1);
+            observer.increment($counter, 1);
         }
     };
 }
@@ -55,6 +58,7 @@ mod builder_text;
 #[path = "tests/coverage_gap.rs"]
 mod coverage_gap;
 mod direct_builder_text;
+mod forwarded_wrappers;
 mod iife_fail_closed;
 mod part1;
 mod part2;

@@ -177,6 +177,7 @@ fn push_schema_statement(
     let source_lines = source_lines(sql, source_bytes, body.line);
     result.push(DynamicSql {
         executed,
+        stored_routine: !body.executed,
         procedural_control,
         query_payload: false,
         body_start: Some(start),

@@ -13,6 +13,10 @@ valid:
         };
         Vec::new()
     }
+  - |
+    fn collect_visible_elsewhere(root: &Path, paths: &[PathBuf]) -> Vec<Route> {
+        routes::collect_routes_from_visible_paths(&root, paths, &["page"])
+    }
 invalid:
   # Matches even inside the compute_routes closure that get_or_compute_playwright_routes
   # eventually calls (ast-grep test doesn't apply the rule's file-level `ignores`, which
@@ -26,5 +30,10 @@ invalid:
   - |
     fn collect_other_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
         let routes = crate::routes::collect_routes(&root, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        let routes = crate::routes::collect_routes_from_visible_paths(&root, paths, &["page"]);
         Vec::new()
     }

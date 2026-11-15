@@ -47,7 +47,7 @@ compare exactly against the analyzer's canonical PostgreSQL parser output. Each
 entry permits one matching operation; repeated identical `ADD COLUMN`
 statements require distinct entries, and duplicate entries are rejected. For a
 column with no default, omit `default`. Direct schema statements in executable
-PL/pgSQL `DO`, function, and procedure bodies are analyzed like other migration
+PL/pgSQL `DO` bodies are analyzed like other migration
 SQL, including dollar, plain, escaped, Unicode (with custom `UESCAPE`), and
 newline-concatenated body strings. Statically recoverable `EXECUTE` strings,
 qualified or unqualified `format()` templates, and variables assigned one of
@@ -144,11 +144,16 @@ statement is parsed normally; the parser's internal recovery marker supplies
 no schema proof. File and line suppression directives apply to these diagnostics.
 A failure to collect facts still aborts the rule with an error.
 
+Stored function and procedure bodies are opaque to this DDL rule. Statements
+inside them contribute neither findings nor schema-parse advisories, even with
+`options.unanalyzable: report`. Routine declarations themselves, top-level table
+DDL, and executable `DO` blocks remain checked. Rules that inspect routine bodies
+keep their own analysis.
+
 For schema parse failures, the implicit default advises for any statement that
-cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
-This includes malformed body statements: an advisory means analysis is incomplete,
-not that PostgreSQL accepts the SQL. Successfully parsed body statements still
-contribute facts and rule findings. At the top level, examples of complete
+cannot be analyzed inside a recognized `DO` block. This includes malformed body
+statements: an advisory means analysis is incomplete, not that PostgreSQL accepts
+the SQL. Successfully parsed `DO` statements still contribute facts and findings. At the top level, examples of complete
 recognized forms that advise include:
 
 - `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`

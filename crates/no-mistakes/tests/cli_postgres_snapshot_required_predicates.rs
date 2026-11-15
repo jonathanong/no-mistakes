@@ -258,3 +258,93 @@ fn postgres_required_predicates_index_probes_check_json_snapshot() {
         );
     }
 }
+
+#[test]
+fn postgres_nullable_executors_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "nullable-executors");
+    let cases =
+        ["low", "max"].map(|effort| (effort, root.clone(), root.join(format!("{effort}.yml"))));
+    let report = super::check_json_snapshot::assert_saved_fixture_report(
+        "postgres_nullable_executors",
+        &cases,
+        &[],
+        &["--include-sql-verdicts"],
+    );
+    assert!(report.to_string().contains("account_id"));
+}
+
+#[test]
+fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
+    let root = rules_path(RULE, "fixture", "nullable-executors");
+    for effort in ["low", "max"] {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args([
+                "check",
+                "--format",
+                "json",
+                "--include-sql-verdicts",
+                "--root",
+            ])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(format!("{effort}.yml")))
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        for file in [
+            "direct.ts",
+            "callable.ts",
+            "subpath.ts",
+            "null.ts",
+            "pool.ts",
+            "pool-subpath.ts",
+            "top-direct.ts",
+            "top-subpath.ts",
+            "top-pool.ts",
+            "top-pool-subpath.ts",
+        ] {
+            let rows = report["rules"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|row| row["file"] == file)
+                .collect::<Vec<_>>();
+            assert_eq!(rows.len(), 2, "{effort}/{file}: {report}");
+            assert!(
+                rows.iter().all(|row| row["target"] == "items"),
+                "{effort}/{file}: {report}"
+            );
+        }
+        for file in ["direct.ts", "pool.ts", "callable.ts"] {
+            let verdicts = report["sqlVerdicts"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|row| row["file"] == file)
+                .collect::<Vec<_>>();
+            assert!(
+                verdicts.iter().any(|row| row["status"] == "proven-clear"),
+                "{effort}/{file}: {report}"
+            );
+            assert!(
+                verdicts
+                    .iter()
+                    .all(|row| row["status"] != "abstain" && row["advisory"] == false),
+                "{effort}/{file}: {report}"
+            );
+        }
+        for file in ["controls.ts", "literal-assignments.ts"] {
+            let controls = report["sqlVerdicts"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|row| row["file"] == file)
+                .collect::<Vec<_>>();
+            assert!(!controls.is_empty(), "{report}");
+            assert!(
+                controls.iter().all(|row| row["status"] == "abstain"),
+                "{report}"
+            );
+        }
+    }
+}

@@ -1,3 +1,4 @@
+use super::tests::collect;
 use super::*;
 fn fixture() -> std::path::PathBuf {
     crate::test_support::rule_fixture_root("postgres-no-offset").join("opaque-escape-sites")

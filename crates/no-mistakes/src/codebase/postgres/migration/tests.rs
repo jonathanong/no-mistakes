@@ -463,3 +463,5 @@ fn records_schema_statement_kinds() {
         "{facts:?}"
     );
 }
+
+mod opaque_functions;

@@ -1,72 +1,15 @@
 use super::*;
-type Declared = std::collections::BTreeMap<
-    EmbeddedSqlOptions,
-    Vec<crate::config::v2::schema::EffectTargetConfig>,
->;
-pub(crate) fn collect(
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    source: &str,
-    profiles: &[EmbeddedSqlOptions],
-) -> FileFacts {
-    collect_with_types(program, ts, source, profiles, &Default::default())
-}
-pub(crate) fn collect_with_types(
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    source: &str,
-    profiles: &[EmbeddedSqlOptions],
-    declared_types: &Declared,
-) -> FileFacts {
-    collect_with_types_and_demand(program, ts, source, profiles, declared_types, true)
-}
-
-pub(crate) fn collect_with_declarations(
+mod entry;
+pub(crate) use entry::collect_with_scopes;
+use entry::Declared;
+fn collect_prepared(
     program: &Program<'_>,
     ts: &TsFileFacts,
     source: &str,
     profiles: &[EmbeddedSqlOptions],
     declared_types: &Declared,
     declared_factories: &Declared,
-) -> FileFacts {
-    collect_with_declarations_and_demand(
-        program,
-        ts,
-        source,
-        profiles,
-        declared_types,
-        declared_factories,
-        true,
-    )
-}
-
-pub(crate) fn collect_with_types_and_demand(
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    source: &str,
-    profiles: &[EmbeddedSqlOptions],
-    declared_types: &Declared,
-    recover_helpers: bool,
-) -> FileFacts {
-    collect_with_declarations_and_demand(
-        program,
-        ts,
-        source,
-        profiles,
-        declared_types,
-        &Default::default(),
-        recover_helpers,
-    )
-}
-
-fn collect_with_declarations_and_demand(
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    source: &str,
-    profiles: &[EmbeddedSqlOptions],
-    declared_types: &Declared,
-    declared_factories: &Declared,
-    recover_helpers: bool,
+    scopes: &mut super::super::embedded::scoped_bindings::PreparedScopes,
 ) -> FileFacts {
     let Some(module) = ts.module_bindings.as_deref() else {
         return FileFacts::default();
@@ -85,6 +28,21 @@ fn collect_with_declarations_and_demand(
             let types = declared_types.get(profile).map_or(&[][..], Vec::as_slice);
             let (typed, unsupported, runtime, transports) =
                 typed::collect(program, module, profile, &selection, types);
+            if !profile.executor_type_names.is_empty() && source.contains("let") {
+                let scoped = scopes.entry(profile.clone()).or_insert_with(|| {
+                    super::super::embedded::scoped_bindings::collect(program, profile)
+                });
+                for binding in &module.bindings {
+                    for reference in &binding.references {
+                        if scoped.executors.delayed_reference(reference.span.start) {
+                            selection
+                                .delayed_receivers
+                                .insert((reference.span.start, reference.span.end));
+                            selection.delayed_bindings.insert(binding.id);
+                        }
+                    }
+                }
+            }
             selection.typed = typed;
             selection.runtime = runtime;
             selection.transports = transports;
@@ -94,12 +52,8 @@ fn collect_with_declarations_and_demand(
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
         source,
-        recovery_bindings: if recover_helpers {
-            helper_recovery::lower::Bindings::new(module)
-        } else {
-            Default::default()
-        },
-        recover_helpers,
+        recovery_bindings: helper_recovery::lower::Bindings::new(module),
+        recover_helpers: true,
         metadata: metadata::Metadata::new(module, &selections),
         template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {

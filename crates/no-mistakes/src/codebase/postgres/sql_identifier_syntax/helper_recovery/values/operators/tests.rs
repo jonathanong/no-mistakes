@@ -6,7 +6,7 @@ use super::super::super::{
 };
 use crate::codebase::{
     check_facts::CheckFileFacts,
-    postgres::{sql_identifier_syntax::collect, EmbeddedSqlOptions},
+    postgres::{sql_identifier_syntax::tests::collect, EmbeddedSqlOptions},
     ts_source::{
         facts::{collect_file_facts_from_program, TsFactContext, TsFactPlan},
         FileIdMap,

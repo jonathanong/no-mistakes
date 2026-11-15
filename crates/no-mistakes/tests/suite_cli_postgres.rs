@@ -95,6 +95,8 @@ mod cli_postgres_snapshot_issue_3046;
 mod cli_postgres_snapshot_issue_3114;
 #[path = "cli_postgres_snapshot_issue_3114_exact.rs"]
 mod cli_postgres_snapshot_issue_3114_exact;
+#[path = "cli_postgres_snapshot_issue_3351.rs"]
+mod cli_postgres_snapshot_issue_3351;
 #[path = "cli_postgres_snapshot_json_relation_ids.rs"]
 mod cli_postgres_snapshot_json_relation_ids;
 #[path = "cli_postgres_snapshot_key_column_types.rs"]
@@ -117,6 +119,8 @@ mod cli_postgres_snapshot_no_unbounded_sql_identifier;
 mod cli_postgres_snapshot_numeric_ternary;
 #[path = "cli_postgres_snapshot_object_naming.rs"]
 mod cli_postgres_snapshot_object_naming;
+#[path = "cli_postgres_snapshot_opaque_functions.rs"]
+mod cli_postgres_snapshot_opaque_functions;
 #[path = "cli_postgres_snapshot_redundant_index.rs"]
 mod cli_postgres_snapshot_redundant_index;
 #[path = "cli_postgres_snapshot_require_query_annotation.rs"]

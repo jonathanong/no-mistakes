@@ -14,6 +14,7 @@ pub(super) fn scan(
 ) -> Result<Vec<RuleFinding>> {
     let facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
         .map_err(|error| anyhow::anyhow!("{RULE_ID} option sqlInclude: {error}"))?;
+    let facts: Vec<_> = facts.into_iter().map(|file| file.ddl_facts()).collect();
     let mut findings = Vec::new();
     for file in &facts {
         let rel = relative_slash_path(root, &file.path);

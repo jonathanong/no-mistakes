@@ -28,7 +28,7 @@ fn irrelevant_arguments_keep_skeletons_and_references_without_full_ir() {
             None,
             None,
         );
-        let facts = super::super::collect(program, &ts, &source, &[super::tests::profile()]);
+        let facts = super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
         let models = &facts.recovery;
         let call = |marker: &str| {
             let line = source
@@ -146,7 +146,7 @@ fn opaque_argument_programs_share_only_within_one_parsed_file() {
                 None,
                 None,
             );
-            super::super::collect(program, &ts, &source, &[super::tests::profile()])
+            super::super::tests::collect(program, &ts, &source, &[super::tests::profile()])
         })
         .unwrap()
     };

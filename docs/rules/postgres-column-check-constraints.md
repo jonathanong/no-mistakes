@@ -5,7 +5,9 @@
 Require a validated CHECK proof for configured integer columns. This keeps values
 that represent non-negative quantities from becoming negative through another
 writer or a migration. The rule reads existing catalog `checkConstraints` facts;
-it does not connect to a database or infer column conventions.
+it does not connect to a database or infer column conventions. Stored function
+bodies are not inputs to this catalog-only rule and cannot produce schema SQL
+parse advisories.
 
 ## Options
 

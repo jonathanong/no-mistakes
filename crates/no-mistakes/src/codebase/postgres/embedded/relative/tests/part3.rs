@@ -156,3 +156,23 @@ fn mixed_confirmed_and_relative_calls_keep_source_order() {
     );
     assert_eq!(bodies(&dropped), ["confirmed_first"]);
 }
+
+#[test]
+fn forwarded_wrapper_keeps_relative_source_order_without_body_duplicate() {
+    let mut facts = extract("forwarded-relative-order.ts", &scoped("@example/db"));
+    assert_eq!(facts.calls.len(), 1);
+    assert_eq!(bodies(&facts), ["SELECT confirmed_first"]);
+    assert_eq!(facts.pending_relative.confirmed_order.len(), 1);
+    assert_eq!(facts.pending_relative.calls.len(), 1);
+
+    project(
+        &mut facts,
+        Some(Path::new("/pkg")),
+        Some(PathBuf::from("/pkg/transaction.ts")),
+    );
+    assert_eq!(facts.calls.len(), 2);
+    assert_eq!(
+        bodies(&facts),
+        ["SELECT confirmed_first", "SELECT relative_second"]
+    );
+}

@@ -59,6 +59,8 @@ pub struct SqlUnanalyzableStatement {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlSchemaFileFacts {
     pub path: PathBuf,
+    /// Schema projection that keeps executable DO blocks and leaves stored routines opaque.
+    pub ddl_projection: Option<Box<SqlSchemaFileFacts>>,
     pub unanalyzable_statements: Vec<SqlUnanalyzableStatement>,
     pub tables: Vec<SqlCreateTableMetadata>,
     /// Qualified CREATE/ALTER/DROP operations in statement order for live-column catalogs.
@@ -77,4 +79,17 @@ pub struct SqlSchemaFileFacts {
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
     pub declared_identifiers: Vec<SqlDeclaredIdentifier>,
+}
+
+impl SqlSchemaFileFacts {
+    pub(crate) fn ddl_facts(&self) -> &Self {
+        self.ddl_projection.as_deref().unwrap_or(self)
+    }
+
+    pub(crate) fn set_path(&mut self, path: PathBuf) {
+        if let Some(ddl) = &mut self.ddl_projection {
+            ddl.set_path(path.clone());
+        }
+        self.path = path;
+    }
 }

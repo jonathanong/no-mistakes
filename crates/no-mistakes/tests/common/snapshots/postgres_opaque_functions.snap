@@ -1,0 +1,471 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "body-ddl": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/body-ddl.sql",
+          "line": 5,
+          "message": "migrations/body-ddl.sql:5: SQL files matching this rule must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "TRUNCATE hidden;",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "migrations/body-ddl.sql",
+          "line": 8,
+          "message": "migrations/body-ddl.sql:8: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "DO $$ BEGIN ALTER TABLE visible ADD COLUMN reported text; END $$;",
+          "target": "visible.reported"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "conflict-row": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 11,
+          "message": "children.parent_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE parent_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 11,
+          "message": "migrations/conflict-row.sql:11: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 12,
+          "message": "migrations/conflict-row.sql:12: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE children ADD COLUMN extra text;",
+          "target": "children.extra"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 13,
+          "message": "migrations/conflict-row.sql:13: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (extra IS NOT NULL);",
+          "target": "children.CHECK"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 14,
+          "message": "ALTER TABLE ADD CONSTRAINT children_extra_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE children ADD CONSTRAINT children_extra_check CHECK (extra IS NOT NULL) NOT VALID;",
+          "target": "children.children_extra_check"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 15,
+          "message": "children.children_extra_idx: redundant index — its columns are a strict prefix of children_extra_parent_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX children_extra_idx ON children (extra);",
+          "target": "children.children_extra_idx"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 17,
+          "message": "migrations/conflict-row.sql:17: identifier \"this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 81 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_table_name_is_longer_than_the_postgres_identifier_limit_of\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes (id int);",
+          "target": "this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "execute-into": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 10,
+          "message": "migrations/execute-into.sql:10: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (extra IS NOT NULL);",
+          "target": "children.CHECK"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 11,
+          "message": "ALTER TABLE ADD CONSTRAINT children_extra_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE children ADD CONSTRAINT children_extra_check CHECK (extra IS NOT NULL) NOT VALID;",
+          "target": "children.children_extra_check"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 12,
+          "message": "children.children_extra_idx: redundant index — its columns are a strict prefix of children_extra_parent_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX children_extra_idx ON children (extra);",
+          "target": "children.children_extra_idx"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 14,
+          "message": "migrations/execute-into.sql:14: identifier \"this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 81 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_table_name_is_longer_than_the_postgres_identifier_limit_of\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes (id int);",
+          "target": "this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 8,
+          "message": "children.parent_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE parent_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 8,
+          "message": "migrations/execute-into.sql:8: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 9,
+          "message": "migrations/execute-into.sql:9: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE children ADD COLUMN extra text;",
+          "target": "children.extra"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "execute-using": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 10,
+          "message": "migrations/execute-using.sql:10: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (extra IS NOT NULL);",
+          "target": "children.CHECK"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 11,
+          "message": "ALTER TABLE ADD CONSTRAINT children_extra_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE children ADD CONSTRAINT children_extra_check CHECK (extra IS NOT NULL) NOT VALID;",
+          "target": "children.children_extra_check"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 12,
+          "message": "children.children_extra_idx: redundant index — its columns are a strict prefix of children_extra_parent_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX children_extra_idx ON children (extra);",
+          "target": "children.children_extra_idx"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 14,
+          "message": "migrations/execute-using.sql:14: identifier \"this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 81 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_table_name_is_longer_than_the_postgres_identifier_limit_of\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes (id int);",
+          "target": "this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 8,
+          "message": "children.parent_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE parent_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 8,
+          "message": "migrations/execute-using.sql:8: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 9,
+          "message": "migrations/execute-using.sql:9: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE children ADD COLUMN extra text;",
+          "target": "children.extra"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested-stored": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/nested-stored.sql",
+          "line": 3,
+          "message": "migrations/nested-stored.sql:3: identifier \"this_function_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 84 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_function_name_is_longer_than_the_postgres_identifier_limit\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE FUNCTION this_function_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes() RETURNS void LANGUAGE plpgsql AS $body$",
+          "target": "this_function_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/nested-stored.sql",
+          "line": 9,
+          "message": "migrations/nested-stored.sql:9: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE visible ADD COLUMN reported text;",
+          "target": "visible.reported"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/body-ddl.sql",
+          "line": 8,
+          "message": "migrations/body-ddl.sql:8: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "DO $$ BEGIN ALTER TABLE visible ADD COLUMN reported text; END $$;",
+          "target": "visible.reported"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 11,
+          "message": "children.parent_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE parent_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 11,
+          "message": "migrations/conflict-row.sql:11: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 12,
+          "message": "migrations/conflict-row.sql:12: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE children ADD COLUMN extra text;",
+          "target": "children.extra"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 13,
+          "message": "migrations/conflict-row.sql:13: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (extra IS NOT NULL);",
+          "target": "children.CHECK"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 14,
+          "message": "ALTER TABLE ADD CONSTRAINT children_extra_check NOT VALID must have a matching VALIDATE CONSTRAINT",
+          "rule": "postgres-constraint-validate",
+          "sourceLine": "ALTER TABLE children ADD CONSTRAINT children_extra_check CHECK (extra IS NOT NULL) NOT VALID;",
+          "target": "children.children_extra_check"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 15,
+          "message": "children.children_extra_idx: redundant index — its columns are a strict prefix of children_extra_parent_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX children_extra_idx ON children (extra);",
+          "target": "children.children_extra_idx"
+        },
+        {
+          "file": "migrations/conflict-row.sql",
+          "line": 17,
+          "message": "migrations/conflict-row.sql:17: identifier \"this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 81 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_table_name_is_longer_than_the_postgres_identifier_limit_of\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes (id int);",
+          "target": "this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 10,
+          "message": "migrations/execute-into.sql:10: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (extra IS NOT NULL);",
+          "target": "children.CHECK"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 12,
+          "message": "children.children_extra_idx: redundant index — its columns are a strict prefix of children_extra_parent_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX children_extra_idx ON children (extra);",
+          "target": "children.children_extra_idx"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 14,
+          "message": "migrations/execute-into.sql:14: identifier \"this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 81 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_table_name_is_longer_than_the_postgres_identifier_limit_of\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes (id int);",
+          "target": "this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 8,
+          "message": "children.parent_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE parent_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 8,
+          "message": "migrations/execute-into.sql:8: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-into.sql",
+          "line": 9,
+          "message": "migrations/execute-into.sql:9: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE children ADD COLUMN extra text;",
+          "target": "children.extra"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 10,
+          "message": "migrations/execute-using.sql:10: ALTER TABLE ADD CHECK constraints must have an explicit name for validation pairing",
+          "rule": "postgres-require-named-constraints",
+          "sourceLine": "ALTER TABLE children ADD CHECK (extra IS NOT NULL);",
+          "target": "children.CHECK"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 12,
+          "message": "children.children_extra_idx: redundant index — its columns are a strict prefix of children_extra_parent_idx with the same predicate; drop it",
+          "rule": "postgres-redundant-index",
+          "sourceLine": "CREATE INDEX children_extra_idx ON children (extra);",
+          "target": "children.children_extra_idx"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 14,
+          "message": "migrations/execute-using.sql:14: identifier \"this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 81 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_table_name_is_longer_than_the_postgres_identifier_limit_of\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE TABLE this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes (id int);",
+          "target": "this_table_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 8,
+          "message": "children.parent_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE parent_id IS NOT NULL`)",
+          "rule": "postgres-fk-index",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 8,
+          "message": "migrations/execute-using.sql:8: foreign keys must declare an explicit ON DELETE action",
+          "rule": "postgres-require-fk-on-delete",
+          "sourceLine": "CREATE TABLE children (parent_id uuid REFERENCES parents(id));",
+          "target": "children.parent_id"
+        },
+        {
+          "file": "migrations/execute-using.sql",
+          "line": 9,
+          "message": "migrations/execute-using.sql:9: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE children ADD COLUMN extra text;",
+          "target": "children.extra"
+        },
+        {
+          "file": "migrations/nested-stored.sql",
+          "line": 3,
+          "message": "migrations/nested-stored.sql:3: identifier \"this_function_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes\" is 84 bytes; PostgreSQL truncates identifiers longer than 63 bytes to \"this_function_name_is_longer_than_the_postgres_identifier_limit\"",
+          "rule": "postgres-identifier-length",
+          "sourceLine": "CREATE FUNCTION this_function_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes() RETURNS void LANGUAGE plpgsql AS $body$",
+          "target": "this_function_name_is_longer_than_the_postgres_identifier_limit_of_sixty_three_bytes"
+        },
+        {
+          "file": "migrations/nested-stored.sql",
+          "line": 9,
+          "message": "migrations/nested-stored.sql:9: migration files must not use ALTER TABLE ADD COLUMN; fold the column into the original CREATE TABLE definition",
+          "rule": "postgres-no-add-column",
+          "sourceLine": "ALTER TABLE visible ADD COLUMN reported text;",
+          "target": "visible.reported"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "top-level-conflict": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

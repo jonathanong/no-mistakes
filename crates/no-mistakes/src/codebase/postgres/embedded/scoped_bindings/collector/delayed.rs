@@ -67,7 +67,9 @@ impl ScopeCollector {
             let ast::AssignmentTarget::AssignmentTargetIdentifier(id) = &assignment.left else {
                 continue;
             };
-            if assignment.operator == ast::AssignmentOperator::Assign {
+            if assignment.operator == ast::AssignmentOperator::Assign
+                && !known_nonexecutor(&assignment.right)
+            {
                 self.delayed
                     .assignments
                     .insert(id.span.start, Span::new(assignment.span.end, end));
@@ -134,4 +136,20 @@ impl ScopeCollector {
             }
         }
     }
+}
+
+fn known_nonexecutor(expression: &Expression<'_>) -> bool {
+    use crate::codebase::ts_source::unwrap_ts_wrappers;
+    let expression = unwrap_ts_wrappers(expression);
+    if let Expression::AwaitExpression(awaited) = expression {
+        return known_nonexecutor(&awaited.argument);
+    }
+    expression.is_literal()
+        || matches!(
+            expression,
+            Expression::ObjectExpression(_)
+                | Expression::ArrayExpression(_)
+                | Expression::ClassExpression(_)
+                | Expression::TemplateLiteral(_)
+        )
 }

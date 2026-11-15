@@ -33,7 +33,12 @@ fn prepared() -> FileIdMap<CheckFileFacts> {
                 None,
             );
             CheckFileFacts {
-                sql_identifier_syntax: super::super::collect(program, &ts, &source, &[profile()]),
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
                 ts: Arc::new(ts),
                 ..Default::default()
             }
@@ -113,7 +118,7 @@ fn switch_lowering_keeps_only_bounded_exclusive_arms() {
             None,
             None,
         );
-        super::super::collect(program, &ts, &source, &[profile()]).recovery
+        super::super::tests::collect(program, &ts, &source, &[profile()]).recovery
     })
     .unwrap();
     let rejected = [

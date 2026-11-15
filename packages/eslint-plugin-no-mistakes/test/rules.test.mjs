@@ -18,6 +18,17 @@ describe("plugin exports", () => {
       undefined,
     );
   });
+
+  it("sets meta.docs.recommended to match configs.recommended", () => {
+    for (const [name, rule] of Object.entries(plugin.rules)) {
+      const configured = Object.hasOwn(plugin.configs.recommended.rules, `no-mistakes/${name}`);
+      assert.equal(rule.meta.docs.recommended, configured, name);
+    }
+    for (const name of Object.keys(plugin.configs.recommended.rules)) {
+      assert.equal(name.startsWith("no-mistakes/"), true, name);
+      assert.ok(plugin.rules[name.slice("no-mistakes/".length)], name);
+    }
+  });
 });
 
 function lintCase(name, code, rule, option) {

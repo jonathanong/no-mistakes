@@ -219,3 +219,122 @@ fn optional_executor_declarations_preserve_direct_calls_and_empty_scope() {
     })
     .unwrap();
 }
+
+#[test]
+fn mixed_effort_reuses_one_scoped_collection_per_profile() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    use std::sync::Arc;
+    let root = crate::test_support::rule_fixture_root("postgres-required-predicates")
+        .join("nullable-executors");
+    let path = root.join("direct.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    let rule = config.rule_applications("postgres-required-predicates")[0];
+    let profile = EmbeddedSqlOptions::configured("db-lib", &[])
+        .with_scoped_executors(&[], &["PoolClient".into(), "Pool".into()]);
+    let scan = SqlIdentifierScan::new(&root, &config, rule, 0, &["direct.ts".into()], &[]).unwrap();
+    let plan = CheckFactPlan {
+        embedded_sql: true,
+        embedded_sql_options: vec![profile.clone()],
+        sql_identifier_profiles: [(profile, vec![scan])].into(),
+        ..Default::default()
+    };
+    let observer = InvocationObserver::new(true);
+    crate::ast::with_program(&path, &source, |program, _| {
+        let variant = super::super::CheckFactVariant {
+            root: &root,
+            plan: &plan,
+            playwright: None,
+            collect_tests: false,
+        };
+        let file = with_observer(Some(Arc::clone(&observer)), || {
+            super::super::collect_file_facts_from_program_with_discovery(
+                &variant, &path, &source, program, None,
+            )
+        });
+        assert_eq!(file.embedded_sql[0].1.calls.len(), 3);
+        let calls = &file.sql_identifier_syntax.profiles[0].1;
+        assert_eq!(calls.len(), 3);
+        assert!(calls
+            .iter()
+            .all(|call| matches!(call.input, sql_identifier_syntax::Input::Sql { .. })));
+    })
+    .unwrap();
+    assert_eq!(observer.snapshot().work["postgres.scoped.collections"], 1);
+}
+
+#[test]
+fn low_scoped_preflight_skips_files_without_types_or_delayed_bindings() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    use std::sync::Arc;
+    let root = crate::test_support::rule_fixture_root("postgres-required-predicates")
+        .join("nullable-executors");
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    let rule = config.rule_applications("postgres-required-predicates")[0];
+    for (path, profile, expected) in [
+        (
+            root.join("direct.ts"),
+            EmbeddedSqlOptions::configured("db-lib", &[]),
+            0,
+        ),
+        (
+            crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+                .join("delayed-try-receivers/no-keyword.mts"),
+            EmbeddedSqlOptions::configured("pg", &[])
+                .with_scoped_executors(&[], &["PoolClient".into()]),
+            1,
+        ),
+    ] {
+        let source = std::fs::read_to_string(&path).unwrap();
+        let fixture_root = path.parent().unwrap();
+        let scan = SqlIdentifierScan::new(fixture_root, &config, rule, 0, &[], &[]).unwrap();
+        let plan = CheckFactPlan {
+            sql_identifier_profiles: [(profile, vec![scan])].into(),
+            ..Default::default()
+        };
+        let observer = InvocationObserver::new(true);
+        crate::ast::with_program(&path, &source, |program, _| {
+            let variant = super::super::CheckFactVariant {
+                root: fixture_root,
+                plan: &plan,
+                playwright: None,
+                collect_tests: false,
+            };
+            let file = with_observer(Some(Arc::clone(&observer)), || {
+                super::super::collect_file_facts_from_program_with_discovery(
+                    &variant, &path, &source, program, None,
+                )
+            });
+            assert_eq!(file.sql_identifier_syntax.profiles[0].1.len(), expected);
+        })
+        .unwrap();
+        assert_eq!(
+            observer
+                .snapshot()
+                .work
+                .get("postgres.scoped.collections")
+                .copied()
+                .unwrap_or_default(),
+            0
+        );
+    }
+}
+
+fn collect(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    plan: &CheckFactPlan,
+) -> sql_identifier_syntax::FileFacts {
+    collect_with_scopes(
+        root,
+        path,
+        source,
+        program,
+        ts,
+        plan,
+        &mut Default::default(),
+    )
+}

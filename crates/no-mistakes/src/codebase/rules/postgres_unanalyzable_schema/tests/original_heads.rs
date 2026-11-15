@@ -68,7 +68,38 @@ fn original_heads_and_rejected_branch_actions_reach_every_schema_rule() {
         .unwrap();
         let output = diagnostics(&root, &config, &files, &facts).unwrap();
         assert!(output.advisories.is_empty());
-        assert_eq!(output.findings.len(), RULE_IDS.len() * 35);
+        for rule in RULE_IDS {
+            let inspect_bodies = matches!(
+                *rule,
+                "postgres-generated-column-predicates"
+                    | "postgres-idempotent-insert"
+                    | "postgres-no-generated-column-writes"
+                    | "postgres-sql-statement-policy"
+            );
+            let mut expected_rows: Vec<_> = expected
+                .iter()
+                .flat_map(|(name, rows)| {
+                    rows.iter()
+                        .filter(move |(line, _, _)| {
+                            inspect_bodies
+                                || name != "branch-bodies.sql"
+                                || !(35..=66).contains(line)
+                        })
+                        .map(move |(line, _, head)| {
+                            (format!("migrations/{name}"), *line, head.clone())
+                        })
+                })
+                .collect();
+            let mut actual_rows: Vec<_> = output
+                .findings
+                .iter()
+                .filter(|item| item.rule == *rule)
+                .map(|item| (item.file.clone(), item.line, item.target.clone().unwrap()))
+                .collect();
+            expected_rows.sort();
+            actual_rows.sort();
+            assert_eq!(actual_rows, expected_rows, "{config_name}: {rule}");
+        }
         // Per-rule messages are in the snapshot. This line exists before
         // suppression and is dropped only for postgres-fk-index.
         assert!(output.findings.iter().any(|item| {
