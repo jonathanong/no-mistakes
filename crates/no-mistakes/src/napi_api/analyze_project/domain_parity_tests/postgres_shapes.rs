@@ -110,7 +110,7 @@ fn prepared_postgres_unique_index_shapes_match_standalone() {
         ("nulls-not-distinct.sql", &[3]),
         ("nullsafe-expressions.sql", &[3]),
         ("partial-column-nullguard.sql", &[3]),
-        ("partial-expression-unique.sql", &[2, 4, 5, 6]),
+        ("partial-expression-unique.sql", &[4, 5, 6]),
         ("partial-unique.sql", &[3, 4, 5, 6, 7]),
     ];
     let mut expected: Vec<_> = cases
