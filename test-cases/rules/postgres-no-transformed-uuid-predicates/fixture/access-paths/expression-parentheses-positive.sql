@@ -1,0 +1,16 @@
+SELECT * FROM functions WHERE lower((id::text) || 'x') = $1;
+SELECT * FROM functions WHERE (lower((id)::text)) || 'x' = $1;
+SELECT * FROM items WHERE ((post_id), (policy_revision), (content_sha256))::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM items WHERE ((post_id, content_sha256), policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM swapped_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM single_row_items WHERE ((post_id))::uuid_single = $1::uuid_single;
+SELECT * FROM quoted_row_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM wrapped_functions WHERE lower(id || (label)::text) = $1;
+SELECT * FROM wrapped_functions WHERE lower(id::text || (label || 'x')) = $1;
+SELECT * FROM wrapped_functions WHERE lower((id::text || label) || 'x') = $1;
+SELECT * FROM functions WHERE lower((-id)::text) = $1;
+SELECT * FROM items WHERE ((post_id), (content_sha256), (policy_revision))::other_identity = ($1, $2, $3)::other_identity;
+SELECT * FROM grouping_functions WHERE lower(id::text || (label IS NULL)::text) = $1;
+SELECT * FROM grouping_functions WHERE (id, (NOT label) = policy_revision)::item_identity = ($1, $2)::item_identity;
+SELECT * FROM grouping_functions WHERE lower(id::text || (label BETWEEN 'a' AND 'z')) = $1;
+SELECT * FROM grouping_functions WHERE lower(id::text || ((@ n) + 1)::text) = $1;

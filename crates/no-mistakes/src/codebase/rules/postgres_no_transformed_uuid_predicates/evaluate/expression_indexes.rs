@@ -10,6 +10,9 @@ mod cast_tests;
 #[path = "expression_index_casts.rs"]
 mod casts;
 
+#[path = "expression_index_nesting.rs"]
+mod expression_index_nesting;
+
 pub(super) type IndexCache =
     dashmap::DashMap<(usize, String), (std::sync::Arc<Expr>, bool), rustc_hash::FxBuildHasher>;
 
@@ -57,6 +60,7 @@ impl Columns<'_> {
         if VisitMut::visit(&mut expression, &mut Unqualify).is_break() {
             return false;
         }
+        expression_index_nesting::strip_redundant_nesting(&mut expression);
         let Some(expression) = tokens(&expression.to_string()) else {
             return false;
         };
@@ -69,7 +73,7 @@ impl Columns<'_> {
                 && index.keys.first().is_some_and(|key| {
                     key.ordering_supported
                         && key.column.is_none()
-                        && tokens(&key.expression).as_ref() == Some(&expression)
+                        && catalog_tokens(&key.expression).as_ref() == Some(&expression)
                 })
         })
     }
@@ -90,6 +94,27 @@ impl VisitorMut for Unqualify {
         }
         ControlFlow::Continue(())
     }
+}
+
+fn catalog_tokens(expression: &str) -> Option<Vec<Token>> {
+    let raw = tokens(expression)?;
+    let Some(mut parsed) = crate::codebase::postgres::parse_postgres_expression(expression) else {
+        return Some(raw);
+    };
+    expression_index_nesting::strip_redundant_nesting(&mut parsed);
+    match tokens(&parsed.to_string()) {
+        Some(normalized) if parentheses_only(&raw, &normalized) => Some(normalized),
+        _ => Some(raw),
+    }
+}
+
+fn parentheses_only(left: &[Token], right: &[Token]) -> bool {
+    fn significant(tokens: &[Token]) -> impl Iterator<Item = &Token> {
+        tokens
+            .iter()
+            .filter(|token| !matches!(token, Token::LParen | Token::RParen))
+    }
+    significant(left).eq(significant(right))
 }
 
 fn tokens(expression: &str) -> Option<Vec<Token>> {
@@ -159,3 +184,7 @@ fn normalize_rows(tokens: &mut Vec<Token>) {
         keep
     });
 }
+
+#[cfg(test)]
+#[path = "expression_index_fallback_tests.rs"]
+mod expression_index_fallback_tests;

@@ -341,6 +341,28 @@
               "expression": "lower(id::text)"
             }
           ]
+        },
+        "literal_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text"
+            }
+          ]
+        },
+        "printed_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id NOTNULL)"
+            }
+          ]
         }
       }
     },
@@ -560,6 +582,142 @@
           "keys": [
             {
               "expression": "(custom.row(post_id, content_sha256, policy_revision)::item_identity)"
+            }
+          ]
+        }
+      }
+    },
+    "wrapped_functions": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower((id)::text)"
+            }
+          ]
+        },
+        "grouped_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower((id || label)::text)"
+            }
+          ]
+        },
+        "concat_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || label || 'x')"
+            }
+          ]
+        }
+      }
+    },
+    "wrapped_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "((post_id), (content_sha256), (policy_revision))::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "grouping_functions": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "n": {
+          "dataType": "integer"
+        }
+      },
+      "indexes": {
+        "null_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || label IS NULL::text)"
+            }
+          ]
+        },
+        "not_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(id, NOT label = policy_revision)::item_identity"
+            }
+          ]
+        },
+        "between_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || label BETWEEN 'a' AND 'z')"
+            }
+          ]
+        },
+        "abs_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || (@ n + 1)::text)"
             }
           ]
         }

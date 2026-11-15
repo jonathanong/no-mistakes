@@ -11,6 +11,14 @@ fn expression_indexes_and_outer_join_residuals_preserve_driving_controls() {
     for (name, expected) in [
         ("expression-pass.sql", SqlVerdictStatus::ProvenClear),
         ("expression-positive.sql", SqlVerdictStatus::Violation),
+        (
+            "expression-parentheses-pass.sql",
+            SqlVerdictStatus::ProvenClear,
+        ),
+        (
+            "expression-parentheses-positive.sql",
+            SqlVerdictStatus::Violation,
+        ),
         ("outer-residual.sql", SqlVerdictStatus::Abstain),
         ("outer-positive.sql", SqlVerdictStatus::Violation),
     ] {
