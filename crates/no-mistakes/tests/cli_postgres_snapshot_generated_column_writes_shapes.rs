@@ -18,8 +18,6 @@ fn postgres_no_generated_column_writes_columnless_shapes_snapshot() {
         &[],
     );
 
-    // Twelve findings, zero advisories: seven unknown-order votes writes, three
-    // definite items writes, and two unsupported INSERT ... TABLE statements.
     assert_eq!(source_lines(&report, "shapes"), expected_reported_lines());
     assert_eq!(advisory_count(&report, "shapes"), 0);
     let shapes = &report["shapes"]["report"]["rules"];
@@ -42,22 +40,21 @@ fn postgres_no_generated_column_writes_columnless_shapes_snapshot() {
         "could not be analyzed",
     );
 
-    // Three definite findings, zero advisories. `unanalyzableSql` is the legacy
-    // alias of `options.unanalyzable`, so ignore also omits both TABLE diagnostics.
     assert_eq!(
         source_lines(&report, "shapes_ignore"),
         expected_definite_lines()
     );
     assert_eq!(advisory_count(&report, "shapes_ignore"), 0);
 
-    // Three definite findings. Nine advisories: seven positional-column-order
-    // votes writes and two INSERT ... TABLE diagnostics.
     assert_eq!(
         source_lines(&report, "shapes_advise"),
         expected_definite_lines()
     );
     let advisories = &report["shapes_advise"]["report"]["advisories"];
-    assert_eq!(advisory_count(&report, "shapes_advise"), 9);
+    assert_eq!(
+        advisory_count(&report, "shapes_advise"),
+        expected_unknown_lines().len() + expected_table_lines().len()
+    );
     assert_messages(
         advisories,
         &expected_unknown_lines(),
@@ -129,6 +126,7 @@ fn expected_unknown_lines() -> Vec<String> {
         "WITH written AS (INSERT INTO votes VALUES (1, now()) RETURNING id) SELECT id FROM written;",
         "INSERT INTO votes VALUES (1, now()) ON CONFLICT (id) DO NOTHING;",
         "MERGE INTO votes USING source_rows ON true WHEN NOT MATCHED THEN INSERT VALUES (1, now());",
+        "WITH outer_rows AS (WITH inner_rows AS (INSERT INTO votes VALUES (1, now()) RETURNING id) SELECT id FROM inner_rows) SELECT id FROM outer_rows;",
     ]
     .into_iter()
     .map(str::to_string)
@@ -140,6 +138,9 @@ fn expected_definite_lines() -> Vec<String> {
         "INSERT INTO items VALUES (1, 'n', now());",
         "INSERT INTO items SELECT * FROM source_rows;",
         "WITH edited AS (UPDATE items SET created_at = now() RETURNING id) SELECT id FROM edited;",
+        "WITH RECURSIVE seed AS (INSERT INTO items VALUES (1, 'n', now()) RETURNING id), chain AS (SELECT id FROM seed UNION ALL SELECT id FROM chain) SELECT id FROM chain;",
+        "WITH upserted AS (INSERT INTO items (id, note) VALUES (1, 'n') ON CONFLICT (id) DO UPDATE SET created_at = now() RETURNING id) SELECT id FROM upserted;",
+        "INSERT INTO items VALUES (2, 'n', now()) RETURNING id",
     ]
     .into_iter()
     .map(str::to_string)

@@ -15,3 +15,16 @@ WITH edited AS (UPDATE items SET created_at = now() RETURNING id) SELECT id FROM
 WITH noted AS (UPDATE items SET note = 'n' RETURNING id) SELECT id FROM noted;
 INSERT INTO votes TABLE source_rows;
 INSERT INTO items TABLE source_rows;
+WITH removed AS (DELETE FROM items WHERE id = 1 RETURNING id) SELECT id FROM removed;
+WITH RECURSIVE seed AS (INSERT INTO items VALUES (1, 'n', now()) RETURNING id), chain AS (SELECT id FROM seed UNION ALL SELECT id FROM chain) SELECT id FROM chain;
+WITH outer_rows AS (WITH inner_rows AS (INSERT INTO votes VALUES (1, now()) RETURNING id) SELECT id FROM inner_rows) SELECT id FROM outer_rows;
+WITH upserted AS (INSERT INTO items (id, note) VALUES (1, 'n') ON CONFLICT (id) DO UPDATE SET created_at = now() RETURNING id) SELECT id FROM upserted;
+WITH placed AS (
+INSERT INTO items VALUES (2, 'n', now()) RETURNING id
+)
+SELECT id FROM placed;
+WITH skipped AS (
+-- no-mistakes-disable-next-line postgres-no-generated-column-writes
+INSERT INTO items VALUES (3, 'n', now()) RETURNING id
+)
+SELECT id FROM skipped;

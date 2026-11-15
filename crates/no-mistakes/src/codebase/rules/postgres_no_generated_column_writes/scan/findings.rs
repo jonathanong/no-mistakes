@@ -56,7 +56,6 @@ pub(super) fn extend_writes<'a>(
                     .map(|(_, column)| column.clone())
                     .collect(),
                 SqlWriteColumns::Positional(width) => {
-                    // Absent or zero width assigns no column. `SELECT *` covers every column.
                     if meta.column_order.is_none() && width.is_some_and(|count| count > 0) {
                         unproven.push((write.line, meta.name.clone(), write_index));
                         Vec::new()

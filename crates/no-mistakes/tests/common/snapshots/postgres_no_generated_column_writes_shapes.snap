@@ -40,6 +40,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 19,
+          "message": "writes.sql:19: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH RECURSIVE seed AS (INSERT INTO items VALUES (1, 'n', now()) RETURNING id), chain AS (SELECT id FROM seed UNION ALL SELECT id FROM chain) SELECT id FROM chain;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 21,
+          "message": "writes.sql:21: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH upserted AS (INSERT INTO items (id, note) VALUES (1, 'n') ON CONFLICT (id) DO UPDATE SET created_at = now() RETURNING id) SELECT id FROM upserted;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 23,
+          "message": "writes.sql:23: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (2, 'n', now()) RETURNING id",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
           "line": 1,
           "message": "writes.sql:1: columnless insert into `votes` cannot be checked because its column order is unknown; name the columns explicitly so a generated or trigger-maintained column can be ruled out, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
@@ -68,6 +95,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "writes.sql:2: columnless insert into `votes` cannot be checked because its column order is unknown; name the columns explicitly so a generated or trigger-maintained column can be ruled out, or set unanalyzableSql: ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "INSERT INTO votes SELECT 1, now();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "writes.sql",
+          "line": 20,
+          "message": "writes.sql:20: columnless insert into `votes` cannot be checked because its column order is unknown; name the columns explicitly so a generated or trigger-maintained column can be ruled out, or set unanalyzableSql: ignore",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH outer_rows AS (WITH inner_rows AS (INSERT INTO votes VALUES (1, now()) RETURNING id) SELECT id FROM inner_rows) SELECT id FROM outer_rows;",
           "target": "unanalyzable"
         },
         {
@@ -152,6 +187,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "writes.sql",
+          "line": 20,
+          "message": "writes.sql:20: postgres-no-generated-column-writes application #0 has unresolved SQL for positional-column-order: an explicit column list is required for `votes` because its column order is unknown",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH outer_rows AS (WITH inner_rows AS (INSERT INTO votes VALUES (1, now()) RETURNING id) SELECT id FROM inner_rows) SELECT id FROM outer_rows;",
+          "target": "positional-column-order"
+        },
+        {
+          "file": "writes.sql",
           "line": 3,
           "message": "writes.sql:3: postgres-no-generated-column-writes application #0 has unresolved SQL for positional-column-order: an explicit column list is required for `votes` because its column order is unknown",
           "rule": "postgres-no-generated-column-writes",
@@ -222,6 +265,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "WITH edited AS (UPDATE items SET created_at = now() RETURNING id) SELECT id FROM edited;",
           "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 19,
+          "message": "writes.sql:19: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH RECURSIVE seed AS (INSERT INTO items VALUES (1, 'n', now()) RETURNING id), chain AS (SELECT id FROM seed UNION ALL SELECT id FROM chain) SELECT id FROM chain;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 21,
+          "message": "writes.sql:21: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH upserted AS (INSERT INTO items (id, note) VALUES (1, 'n') ON CONFLICT (id) DO UPDATE SET created_at = now() RETURNING id) SELECT id FROM upserted;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 23,
+          "message": "writes.sql:23: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (2, 'n', now()) RETURNING id",
+          "target": "created_at"
         }
       ],
       "warnings": []
@@ -261,6 +331,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "writes.sql:14: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "WITH edited AS (UPDATE items SET created_at = now() RETURNING id) SELECT id FROM edited;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 19,
+          "message": "writes.sql:19: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH RECURSIVE seed AS (INSERT INTO items VALUES (1, 'n', now()) RETURNING id), chain AS (SELECT id FROM seed UNION ALL SELECT id FROM chain) SELECT id FROM chain;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 21,
+          "message": "writes.sql:21: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "WITH upserted AS (INSERT INTO items (id, note) VALUES (1, 'n') ON CONFLICT (id) DO UPDATE SET created_at = now() RETURNING id) SELECT id FROM upserted;",
+          "target": "created_at"
+        },
+        {
+          "file": "writes.sql",
+          "import": "items.created_at",
+          "line": 23,
+          "message": "writes.sql:23: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "sourceLine": "INSERT INTO items VALUES (2, 'n', now()) RETURNING id",
           "target": "created_at"
         }
       ],

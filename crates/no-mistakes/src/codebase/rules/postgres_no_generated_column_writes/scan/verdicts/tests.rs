@@ -39,15 +39,22 @@ fn judgment(order: Option<Vec<String>>, complete: bool, width: Option<usize>) ->
 }
 
 #[test]
-fn absent_width_abstains_and_a_counted_zero_clears() {
+fn unknown_order_or_absent_width_abstains_and_known_zero_clears() {
     let order = Some(vec!["id".to_string(), "created_at".to_string()]);
     for complete in [true, false] {
         let absent = judgment(None, complete, None);
         assert_eq!(absent.status, SqlVerdictStatus::Abstain, "{complete}");
         assert_eq!(absent.reason, Some("unknown-relation-or-write-width"));
         let zero = judgment(None, complete, Some(0));
-        assert_eq!(zero.status, SqlVerdictStatus::ProvenClear, "{complete}");
-        assert_eq!(zero.reason, None);
+        assert_eq!(zero.status, SqlVerdictStatus::Abstain, "{complete}");
+        assert_eq!(zero.reason, Some("unknown-relation-or-write-width"));
+        let known_zero = judgment(order.clone(), complete, Some(0));
+        assert_eq!(
+            known_zero.status,
+            SqlVerdictStatus::ProvenClear,
+            "{complete}"
+        );
+        assert_eq!(known_zero.reason, None);
         let counted = judgment(None, complete, Some(2));
         assert_eq!(counted.status, SqlVerdictStatus::Abstain, "{complete}");
         assert_eq!(counted.reason, Some("unknown-relation-or-write-width"));
