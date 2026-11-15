@@ -37,8 +37,7 @@ fn consume_primary(tokens: &[Token], index: &mut usize) -> bool {
         Some(Token::Word(word)) if bare_word(word, "array") => consume_array(tokens, index),
         Some(Token::Word(word)) if bare_word(word, "exists") => {
             *index += 1;
-            tokens.get(*index) == Some(&Token::LParen)
-                && consume_pair(tokens, index, &Token::LParen, &Token::RParen)
+            consume_pair(tokens, index, &Token::LParen, &Token::RParen)
         }
         Some(Token::Word(_)) => consume_identifier(tokens, index),
         _ => false,
@@ -51,9 +50,7 @@ fn consume_primary(tokens: &[Token], index: &mut usize) -> bool {
 }
 
 fn consume_identifier(tokens: &[Token], index: &mut usize) -> bool {
-    if !consume_word(tokens, index) {
-        return false;
-    }
+    *index += 1;
     while tokens.get(*index) == Some(&Token::Period) {
         *index += 1;
         if !consume_word(tokens, index) {

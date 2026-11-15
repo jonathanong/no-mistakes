@@ -74,6 +74,24 @@ fn equivalent_cast_spellings_share_expression_index_tokens() {
         ("CAST(id::schema.+1 AS text)", "(id::schema.+1)::text"),
         ("CAST(id:: AS text)", "(id::)::text"),
         ("CAST(id::(int) AS text)", "(id::(int))::text"),
+        ("CAST(N'abc' AS text)", "N'abc'::text"),
+        ("CAST(X'DEAD' AS text)", "X'DEAD'::text"),
+        ("CAST(EXISTS (SELECT 1) AS text)", "EXISTS (SELECT 1)::text"),
+        ("CAST(ARRAY[1] AS text)", "ARRAY[1]::text"),
+        ("CAST(ARRAY(SELECT 1) AS text)", "ARRAY(SELECT 1)::text"),
+        ("CAST(ARRAY 1 AS text)", "(ARRAY 1)::text"),
+        (
+            "CAST(CASE WHEN 1 THEN CASE WHEN 0 THEN 2 END END AS text)",
+            "CASE WHEN 1 THEN CASE WHEN 0 THEN 2 END END::text",
+        ),
+        (
+            "CAST(CASE WHEN 1 THEN 2 AS text)",
+            "(CASE WHEN 1 THEN 2)::text",
+        ),
+        ("CAST(id[ AS text)", "(id[)::text"),
+        ("CAST(f(g(a)) AS text)", "f(g(a))::text"),
+        ("CAST(a.+1 AS text)", "(a.+1)::text"),
+        ("CAST(EXISTS 1 AS text)", "(EXISTS 1)::text"),
     ] {
         assert_eq!(
             super::tokens(left),
@@ -114,6 +132,9 @@ fn distinct_cast_spellings_keep_expression_index_tokens() {
             "CAST(id::timestamp with instant AS text)",
             "id::timestamp with instant::text",
         ),
+        ("CAST id AS text", "id::text"),
+        ("CAST(id AS text AS uuid)", "id::text::uuid"),
+        ("CAST(id AS text", "id::text"),
     ] {
         assert_ne!(
             super::tokens(left),
