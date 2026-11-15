@@ -11,7 +11,7 @@ fn lateral_limits_follow_caller_array_columns_and_relation_scope() {
     let statements = parse_postgres_sql(sql).unwrap();
     let expected = [
         true, false, true, true, true, true, false, false, false, false, false, false, false, true,
-        false, false, true, false, false, false, true, false, false, false, false, false, false,
+        false, false, true, true, false, false, true, false, false, false, false, false, false,
         true, false, false,
     ];
     assert_eq!(statements.len(), expected.len());
@@ -192,6 +192,81 @@ fn parent_column_limits_cap_nested_queries_and_keep_rejected_counts() {
             index + 1
         );
     }
+}
+
+#[test]
+fn limit_column_review_keeps_null_limits_uncapped() {
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
+        .join("sql/limit-column-review.sql");
+    let sql = std::fs::read_to_string(path).unwrap();
+    let statements = parse_postgres_sql(&sql).unwrap();
+    let expected = [
+        (false, None),
+        (false, None),
+        (true, None),
+        (false, None),
+        (false, None),
+        (false, None),
+        (true, None),
+        (true, None),
+        (true, None),
+        (true, None),
+        (false, None),
+        (false, None),
+        (false, None),
+        (true, None),
+        (false, None),
+        (false, Some(("budgets", "cap"))),
+        (false, None),
+        (true, None),
+        (true, None),
+    ];
+    assert_eq!(statements.len(), expected.len());
+    for (index, (statement, (capped, catalog))) in statements.iter().zip(expected).enumerate() {
+        let Statement::Query(ast) = statement else {
+            panic!("saved fixture must contain queries");
+        };
+        let bound = query::bound_query(ast, &Scope::default(), None);
+        let found = probe_caps(&bound);
+        assert_eq!(found.len(), 1, "fixture SQL statement {}", index + 1);
+        assert_eq!(found[0].0, capped, "fixture SQL statement {}", index + 1);
+        assert_eq!(
+            found[0]
+                .1
+                .as_ref()
+                .map(|(table, column)| (table.as_str(), column.as_str())),
+            catalog,
+            "fixture SQL statement {}",
+            index + 1
+        );
+    }
+}
+
+fn probe_caps(
+    query: &crate::codebase::postgres::SqlBoundQuery,
+) -> Vec<(bool, Option<(String, String)>)> {
+    let mut found = Vec::new();
+    fn walk(
+        query: &crate::codebase::postgres::SqlBoundQuery,
+        found: &mut Vec<(bool, Option<(String, String)>)>,
+    ) {
+        let direct = query.items.iter().any(|item| {
+            matches!(
+                &item.kind,
+                SqlBoundItemKind::Table(name) if name.contains("probe")
+            )
+        });
+        if direct {
+            found.push((query.capped, query.catalog_limit.clone()));
+        }
+        for item in &query.items {
+            if let SqlBoundItemKind::Query(inner) = &item.kind {
+                walk(inner, found);
+            }
+        }
+    }
+    walk(query, &mut found);
+    found
 }
 
 fn consumptions_caps(query: &crate::codebase::postgres::SqlBoundQuery) -> Vec<bool> {

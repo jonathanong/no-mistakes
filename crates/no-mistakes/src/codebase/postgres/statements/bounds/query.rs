@@ -65,7 +65,10 @@ fn bound_body_observed(
         bound.capped = capped;
     }
     let (limited, catalog_limit) = super::limit_columns::examine(query, scope, positions);
-    bound.catalog_limit = catalog_limit;
+    // Parentheses reuse this bound. An absent wrapper catalog column must not clear it.
+    if bound.catalog_limit.is_none() {
+        bound.catalog_limit = catalog_limit;
+    }
     if is_zero_limited(query) {
         bound.capped = true;
         bound.input_mode = SqlBoundInputMode::Skipped;

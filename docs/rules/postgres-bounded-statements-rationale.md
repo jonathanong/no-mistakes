@@ -136,7 +136,9 @@ caller-owned cap. A qualified parent column written directly in `LIMIT` counts
 only when its value is provably non-null: a `NOT NULL` catalog column, a
 `VALUES` or `SELECT` column whose every row is a non-null literal or bind, or
 an expression such as `GREATEST(col, 0)` or `COALESCE(col, 0)`. `GREATEST`
-ignores NULL arguments, so the literal makes the result non-null. A nullable
+ignores NULL arguments, so the literal makes the result non-null. A renamed
+reference, a same-level non-`LATERAL` sibling, and a `ROLLUP`, `CUBE`, or
+`GROUPING SETS` column stay nullable. A nullable
 column, a `NULL` parent value, and a column from the nullable side of a
 `LEFT`, `RIGHT`, or `FULL` join do not count. A potentially empty
 CTE or a `NULL` count cannot supply this proof: a missing scalar row becomes

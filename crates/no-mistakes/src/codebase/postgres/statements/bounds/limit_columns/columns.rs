@@ -6,6 +6,23 @@ use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, JoinOperator, ObjectName, TableFactor};
 use std::collections::BTreeMap;
 
+impl super::Relations {
+    pub(super) fn begin_from(&mut self) {
+        self.outer.clone_from(&self.names);
+        self.outer_opaque = self.opaque;
+    }
+
+    pub(super) fn proof_parent(&self, lateral: bool) -> Self {
+        if lateral {
+            return self.clone();
+        }
+        let mut parent = self.clone();
+        parent.names.clone_from(&self.outer);
+        parent.opaque = self.outer_opaque;
+        parent
+    }
+}
+
 pub(super) fn relation_key(factor: &TableFactor) -> Option<String> {
     let (alias, name) = match factor {
         TableFactor::UNNEST { alias, .. } | TableFactor::Derived { alias, .. } => (alias, None),

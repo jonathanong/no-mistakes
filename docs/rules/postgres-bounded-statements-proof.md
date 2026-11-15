@@ -14,11 +14,15 @@ set operation). A statement is bounded when any of these holds:
   preceding `LATERAL` sibling, or a column of a query outside the one that owns the
   `LIMIT`. A nested subquery keeps those enclosing columns even when it is not
   itself `LATERAL`. A same-level non-`LATERAL` subquery does not see sibling `FROM`
-  items. A column of the query that owns the `LIMIT` does not count. A bare name
+  items, including when proving that a projected column is non-null. A column of the query that owns the `LIMIT` does not count. A bare name
   counts only when exactly one preceding `unnest` of parameter arrays declares that
   column. A bare name over a single table does not count. A parent column is
   non-null when it is a `NOT NULL` catalog column, or a `VALUES` or `SELECT` column
-  whose every row is a non-null literal or bind. `GREATEST` ignores NULL arguments,
+  whose every row is a non-null literal or bind. A reference column-alias list is
+  not that proof. `ROLLUP`, `CUBE`, and `GROUPING SETS` can make a grouped column
+  NULL. A set operation uses the left arm's output names, and a short alias list
+  renames only that prefix. Parentheses keep an inner catalog column.
+  `GREATEST` ignores NULL arguments,
   so `GREATEST(col, 0)` is non-null; `COALESCE(col, 0)` and `LEAST` with a non-null
   literal are too. A column from the nullable side of a `LEFT`, `RIGHT`, or `FULL`
   join stays reported unless wrapped that way. Literal NULL arguments are allowed

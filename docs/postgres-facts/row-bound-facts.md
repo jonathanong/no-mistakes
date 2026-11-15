@@ -52,7 +52,9 @@ row is a non-null literal or bind. Columns from the nullable side of a `LEFT`,
 `RIGHT`, or `FULL` join stay nullable. All-NULL or unknown inputs do not establish a cap.
 `catalog_limit` records the catalog table and column when that count is exactly one
 qualified column of a base table that is not on the null-extended side of an outer
-join. The rule accepts it only when the catalog column is `NOT NULL`. The separate
+join. Parentheses around that query keep the record. The rule accepts it only when
+the catalog column is `NOT NULL`. A column alias list on the reference, and a
+grouped column under `ROLLUP`, `CUBE`, or `GROUPING SETS`, do not count as non-null. The separate
 limit-value classification remains unchanged. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
 operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`

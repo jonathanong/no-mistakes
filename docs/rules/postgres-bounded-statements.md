@@ -405,7 +405,13 @@ null-extended outer-join column do not cap. A column of the same query, a bare
 name (including a bare name when the only visible relation is a table), an
 unknown qualifier, a same-level non-`LATERAL` sibling, a subquery, and an
 unknown function do not cap. A bare name counts only for one preceding
-`unnest` of parameter arrays.
+`unnest` of parameter arrays. A reference that supplies its own column alias
+list is not that proof. `ROLLUP`, `CUBE`, and `GROUPING SETS` can emit NULL
+for a grouped column, so the column itself is not proof; a literal or
+`GREATEST`, `COALESCE`, or `LEAST` with a non-null argument still is. A set
+operation takes output names from its left arm. An alias list shorter than
+the output list renames that prefix and keeps the remaining names. Parentheses
+around a query do not drop an inner catalog column limit.
 
 ## Counterexample
 

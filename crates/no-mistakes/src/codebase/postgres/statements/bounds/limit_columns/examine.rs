@@ -43,8 +43,6 @@ fn prepare<'a>(
                     shadow(&mut visible, &join.relation, positions);
                 }
             }
-        } else {
-            visible = Relations::default();
         }
         visible
     })
@@ -82,8 +80,5 @@ fn shadow(visible: &mut Relations, factor: &TableFactor, positions: PlaceholderP
             name,
             super::Columns::Named(std::collections::BTreeMap::new()),
         );
-    }
-    if local.opaque {
-        visible.names.clear();
     }
 }

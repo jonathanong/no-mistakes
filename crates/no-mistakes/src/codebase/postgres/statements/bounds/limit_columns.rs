@@ -8,6 +8,7 @@ mod columns;
 mod context;
 mod examine;
 mod outputs;
+mod shape;
 pub(in crate::codebase::postgres::statements::bounds) use columns::null_extended_sides;
 use columns::{alias_names, relation_key};
 pub(super) use context::RelationContext;
@@ -31,8 +32,12 @@ enum Columns {
 #[derive(Clone, Default)]
 pub(super) struct Relations {
     names: BTreeMap<String, Columns>,
+    /// Snapshot taken before this `FROM` list. A non-`LATERAL` derived table sees it,
+    /// not same-level siblings added afterward.
+    outer: BTreeMap<String, Columns>,
     outputs: BTreeMap<String, Option<BTreeMap<String, Option<FixedCount>>>>,
     opaque: bool,
+    outer_opaque: bool,
 }
 
 impl Relations {
@@ -58,16 +63,33 @@ impl Relations {
                 args.len(),
                 columns::function_caller(name, args, positions),
             ),
-            TableFactor::Table { name, .. } => columns::table_columns(self, name),
+            TableFactor::Table { name, alias, .. } => {
+                // A column alias list renames by position. The stored names are the
+                // relation's own outputs, so a renamed reference is not that proof.
+                if alias
+                    .as_ref()
+                    .is_some_and(|alias| !alias.columns.is_empty())
+                {
+                    Columns::Named(BTreeMap::new())
+                } else {
+                    columns::table_columns(self, name)
+                }
+            }
             TableFactor::Derived {
-                alias, subquery, ..
-            } => match of_query(subquery, positions, self, &alias_names(alias)) {
-                Some(map) => Columns::Named(map),
-                None => Columns::Any {
-                    table: None,
-                    null_extended: false,
-                },
-            },
+                lateral,
+                alias,
+                subquery,
+                ..
+            } => {
+                let parent = self.proof_parent(*lateral);
+                match of_query(subquery, positions, &parent, &alias_names(alias)) {
+                    Some(map) => Columns::Named(map),
+                    None => Columns::Any {
+                        table: None,
+                        null_extended: false,
+                    },
+                }
+            }
             _ => {
                 self.names.clear();
                 self.opaque = true;
@@ -141,6 +163,7 @@ impl Relations {
         tables: &[TableWithJoins],
         positions: PlaceholderPositions<'_>,
     ) {
+        self.begin_from();
         for table in tables {
             let mut keys = Vec::new();
             if let Some(key) = self.add(&table.relation, positions) {

@@ -61,6 +61,7 @@ impl<'a> RelationContext<'a> {
                     work::builder_materialization();
                     let mut relations =
                         (*inherited).map_or_else(Relations::default, |parent| parent.clone());
+                    relations.begin_from();
                     for (factor, key, null_extended) in factors.drain(..) {
                         work::builder_relation_add();
                         relations.add(factor, positions);

@@ -13,7 +13,7 @@ pub(in crate::codebase::postgres::statements::bounds) fn of_query(
     parent: &Relations,
     alias_columns: &[String],
 ) -> Option<BTreeMap<String, Option<FixedCount>>> {
-    name_columns(&prove(query, positions, parent)?, alias_columns)
+    super::shape::name_columns(&prove(query, positions, parent)?, alias_columns)
 }
 
 fn prove(query: &Query, positions: PlaceholderPositions<'_>, parent: &Relations) -> Option<Proof> {
@@ -70,14 +70,15 @@ fn prove_select(
     }
     let mut visible = parent.clone();
     visible.absorb(&select.from, positions);
+    let drop_columns = super::shape::grouping_adds_nulls(select);
     let mut proved = Vec::new();
     for item in &select.projection {
         let (expr, name) = match item {
-            SelectItem::UnnamedExpr(expr) => (expr, expr_name(expr)),
+            SelectItem::UnnamedExpr(expr) => (expr, super::shape::expr_name(expr)),
             SelectItem::ExprWithAlias { expr, alias } => (expr, Some(ident_key(alias))),
             _ => return None,
         };
-        proved.push((name, project_kind(expr, positions, &visible)));
+        proved.push((name, project_kind(expr, positions, &visible, drop_columns)));
     }
     Some(proved)
 }
@@ -91,7 +92,7 @@ fn prove_values(
     for row in &values.rows {
         let kinds = row
             .iter()
-            .map(|expr| project_kind(expr, positions, parent))
+            .map(|expr| project_kind(expr, positions, parent, false))
             .collect::<Vec<_>>();
         proved = Some(match proved {
             None => kinds,
@@ -110,8 +111,12 @@ fn project_kind(
     expr: &Expr,
     positions: PlaceholderPositions<'_>,
     visible: &Relations,
+    drop_columns: bool,
 ) -> Option<FixedCount> {
     fixed_count_at(expr, positions, &|column| {
+        if drop_columns {
+            return Some(FixedCount::Nullable);
+        }
         if let Some(kind) = visible.contains(column) {
             Some(kind)
         } else if matches!(column, Expr::Identifier(_) | Expr::CompoundIdentifier(_)) {
@@ -131,10 +136,11 @@ fn merge_proofs(left: Proof, right: Proof) -> Option<Proof> {
         left.into_iter()
             .zip(right)
             .map(|((left_name, left_kind), (right_name, right_kind))| {
-                let name = match (left_name, right_name) {
-                    (Some(left), Some(right)) if left == right => Some(left),
-                    (Some(name), None) | (None, Some(name)) => Some(name),
-                    _ => None,
+                // PostgreSQL names a set-operation output from the left arm.
+                let name = if left_name.is_some() {
+                    left_name
+                } else {
+                    right_name
                 };
                 (name, merge_kind(left_kind, right_kind))
             })
@@ -149,45 +155,6 @@ fn merge_kind(left: Option<FixedCount>, right: Option<FixedCount>) -> Option<Fix
             Some(FixedCount::NonNull | FixedCount::Caller),
             Some(FixedCount::NonNull | FixedCount::Caller),
         ) => Some(FixedCount::Caller),
-        _ => None,
-    }
-}
-
-fn name_columns(
-    proved: &Proof,
-    alias_columns: &[String],
-) -> Option<BTreeMap<String, Option<FixedCount>>> {
-    let names = if alias_columns.is_empty() {
-        proved
-            .iter()
-            .map(|(name, _)| name.clone())
-            .collect::<Option<Vec<_>>>()?
-    } else if alias_columns.len() == proved.len() {
-        alias_columns.to_vec()
-    } else {
-        return None;
-    };
-    if names.len()
-        != names
-            .iter()
-            .collect::<std::collections::BTreeSet<_>>()
-            .len()
-    {
-        return None;
-    }
-    Some(
-        names
-            .into_iter()
-            .zip(proved.iter().map(|(_, kind)| *kind))
-            .collect(),
-    )
-}
-
-fn expr_name(expr: &Expr) -> Option<String> {
-    match expr {
-        Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => expr_name(inner),
-        Expr::Identifier(ident) => Some(ident_key(ident)),
-        Expr::CompoundIdentifier(parts) => parts.last().map(ident_key),
         _ => None,
     }
 }
