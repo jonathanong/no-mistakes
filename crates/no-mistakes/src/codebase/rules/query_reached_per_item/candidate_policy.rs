@@ -17,7 +17,7 @@ impl CandidatePolicy<'_> {
             || !self.filter.is_match(&site.file)
             || exempt(self.effect, &site.source_callee)
             || self.excluded.binary_search(&source_node(site)).is_ok()
-            || (site.targets().len() > 0
+            || (!site.targets().is_empty()
                 && site.targets().all(|candidate| {
                     candidate
                         .node

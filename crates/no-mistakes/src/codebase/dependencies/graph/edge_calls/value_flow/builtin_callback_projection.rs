@@ -95,7 +95,7 @@ pub(in super::super) fn project_builtin_callbacks(
             );
         });
     }
-    sites.retain(|site| site.invocation != InvocationKind::Call || site.targets().len() > 0);
+    sites.retain(|site| site.invocation != InvocationKind::Call || !site.targets().is_empty());
     for site in &sites {
         for target in site.target_nodes() {
             let source = site.caller.as_deref().map_or_else(

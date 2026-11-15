@@ -8,7 +8,8 @@ pub(super) fn scan_origin<'a>(
     let arguments = super::super::forbidden_calls::call_argument_values(facts, site.offset)?;
     let origin = arguments.path.as_ref()?;
     // Dynamic scope poisoning also marks a spread at argument zero.
-    if super::enumerators::uses_glob_cwd(site)
+    if super::enumerators::is_import_meta_glob(site)
+        || super::enumerators::uses_glob_cwd(site)
         || (arguments.spread_from == Some(0) && origin == &PathOrigin::unknown())
     {
         return Some(origin);

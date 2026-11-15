@@ -20,4 +20,6 @@ it('reports globs without a bounded pattern and cwd', () => {
   globSync('**/*.test.mts', { cwd: root, ...opaqueOptions });
   globSync('**/*.test.mts', { cwd: root, cwd: process.cwd() });
   readdirSync('./src', { cwd: root });
+  import.meta.glob('**/*.test.mts', { cwd: root });
+  import.meta.globEager('**/*.test.mts', { cwd: root });
 });

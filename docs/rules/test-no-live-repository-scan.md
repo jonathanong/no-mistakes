@@ -57,7 +57,8 @@ bounded:
   call wherever it lives.
 - Direct `import.meta.glob` and `import.meta.globEager` calls, including static
   bracket access such as `import.meta["glob"]`. Literal patterns are relative
-  to the module. Dynamic patterns and pattern arrays produce an unresolved-root
+  to the module; a `cwd` option does not relocate them or establish an owned root.
+  Dynamic patterns and pattern arrays produce an unresolved-root
   advisory when their boundedness cannot be established.
 
 The built-in matcher does not cover `fdir` builder chains or enumeration through

@@ -86,7 +86,7 @@ impl<'a> Sinks<'a> {
         // Unknown possibilities add no query evidence, but a known plain
         // export remains selectable without changing singleton precedence.
         let alternative_identity =
-            multiple || (site.targets().len() > 0 && site.has_unknown_target());
+            multiple || (!site.targets().is_empty() && site.has_unknown_target());
         if !multiple && (provenance.is_some() || returned) {
             return Some(true);
         }
@@ -94,7 +94,7 @@ impl<'a> Sinks<'a> {
             !*transaction
                 || site.source_callee.contains('.')
                 || !site.returned_from.is_empty()
-                || site.targets().len() == 0
+                || site.targets().is_empty()
                 || site.targets().any(|candidate| {
                     !matches!(
                         candidate.target,

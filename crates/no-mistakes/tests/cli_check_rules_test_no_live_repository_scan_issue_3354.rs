@@ -29,6 +29,14 @@ fn owned_root_paths_options_and_globs_check_json_snapshot() {
         .collect();
     let expected = BTreeSet::from([
         (
+            "tests/unsafe-globs.test.mts",
+            "import.meta.glob('**/*.test.mts', { cwd: root });",
+        ),
+        (
+            "tests/unsafe-globs.test.mts",
+            "import.meta.globEager('**/*.test.mts', { cwd: root });",
+        ),
+        (
             "tests/unsafe-options.test.mts",
             "readdirSync(unsafeDirect.root);",
         ),

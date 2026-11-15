@@ -106,3 +106,55 @@ fn missing_prepared_path_provenance_keeps_recorded_argument_facts_unresolved() {
         )
     );
 }
+
+#[test]
+fn vite_globs_keep_module_relative_roots_without_honoring_cwd() {
+    let module = origin(PathAnchor::Module, &["**", "*.test.mts"]);
+    let relative = origin(PathAnchor::Relative, &["**", "*.test.mts"]);
+    let facts = facts(module.clone(), relative);
+    for callee in ["import.meta.glob", "import.meta.globEager"] {
+        let mut site = site(ResolvedCallTarget::Global {
+            name: callee.into(),
+        });
+        site.source_callee = callee.into();
+        assert!(!uses_glob_cwd(&site), "{callee}");
+        assert_eq!(scan_origin(&facts, &site), Some(&module), "{callee}");
+        assert_eq!(
+            classify(scan_origin(&facts, &site), DEFAULT_FIXTURE_DIRS),
+            Verdict::Live("a path under the test module's directory"),
+            "{callee}"
+        );
+    }
+}
+
+#[test]
+fn target_emptiness_tracks_single_unknown_and_consumed_alternatives() {
+    use crate::codebase::dependencies::graph::{
+        KnownCallTarget, ResolvedCallAlternatives, ResolvedCallCandidate,
+    };
+    let unknown = site(ResolvedCallTarget::Unknown);
+    assert!(unknown.targets().is_empty());
+    let single = site(ResolvedCallTarget::Global { name: "one".into() });
+    let mut targets = single.targets();
+    assert!(!targets.is_empty());
+    assert!(targets.next().is_some());
+    assert!(targets.is_empty());
+    let alternatives = site(ResolvedCallTarget::Alternatives(Arc::new(
+        ResolvedCallAlternatives::new(
+            ["one", "two"]
+                .into_iter()
+                .map(|name| ResolvedCallCandidate {
+                    target: KnownCallTarget::Global { name: name.into() },
+                    node: None,
+                })
+                .collect(),
+            false,
+        ),
+    )));
+    let mut targets = alternatives.targets();
+    assert!(!targets.is_empty());
+    assert!(targets.next().is_some());
+    assert!(!targets.is_empty());
+    assert!(targets.next().is_some());
+    assert!(targets.is_empty());
+}

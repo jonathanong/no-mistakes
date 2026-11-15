@@ -121,6 +121,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "tests/unsafe-globs.test.mts",
+          "import": "import.meta.glob",
+          "line": 23,
+          "message": "live repository scan: `import.meta.glob` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "import.meta.glob('**/*.test.mts', { cwd: root });",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/unsafe-globs.test.mts",
+          "import": "import.meta.globEager",
+          "line": 24,
+          "message": "live repository scan: `import.meta.globEager` enumerates a path under the test module's directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "import.meta.globEager('**/*.test.mts', { cwd: root });",
+          "target": "live repository scan"
+        },
+        {
+          "file": "tests/unsafe-globs.test.mts",
           "import": "readdirSync",
           "line": 22,
           "message": "live repository scan: `readdirSync` enumerates a relative path resolved against the working directory, and a test root reaches it. Live trees change with unrelated files. Fix: enumerate a path under a fixtures directory or a mkdtemp directory the test owns, and run repository-wide policy in static CI.",

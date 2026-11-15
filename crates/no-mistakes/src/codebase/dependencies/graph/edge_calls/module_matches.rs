@@ -5,7 +5,7 @@ impl DepGraph {
         export: &str,
         site: &ResolvedCallSite,
     ) -> bool {
-        if site.has_unknown_target() || site.targets().len() == 0 {
+        if site.has_unknown_target() || site.targets().is_empty() {
             return false;
         }
         site.targets().all(|candidate| {
