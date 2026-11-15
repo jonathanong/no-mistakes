@@ -55,5 +55,5 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 - MUST NOT import a package the owning `package.json` does not declare.
 - MUST NOT use relative imports that escape a package root.
-- MUST NOT use Node-only APIs in packages meant for other runtimes (Workers, browsers).
+- MUST NOT use Node-only APIs in code that other runtimes (Workers, browsers) load.
 - MUST NOT leave tracked TS files outside every `tsconfig`, or create workspace dependency cycles.

@@ -11,13 +11,13 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 - MUST NOT build SQL text or identifiers from input; bind values and pick identifiers from a closed allowlist.
 - MUST NOT run an unbounded `SELECT`, `UPDATE`, or `DELETE` in a job or endpoint; add a `LIMIT` or required predicates.
-- MUST NOT paginate with `OFFSET`; its cost grows with page depth and concurrent inserts shift rows between pages. Use keyset `(key, id) < ($1, $2)` ordered the same way.
+- SHOULD NOT paginate a growing result with `OFFSET`; its cost grows with page depth and concurrent inserts shift rows between pages. Use keyset `(key, id) < ($1, $2)` ordered the same way.
 - MUST NOT trust a client page size; clamp it to a static ceiling.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
 - MUST NOT issue one query per item in a loop, `.map`, or `Promise.all`; write the batch query and make the single-item call wrap it.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.
-- MUST NOT put volatile functions (`random()`, `clock_timestamp()`) in predicates; they are evaluated per row.
-- MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT`.
+- SHOULD NOT put volatile functions (`random()`, `clock_timestamp()`) in predicates unless per-row evaluation is intended; they are evaluated per row.
+- MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT` on a key the retry repeats, not a freshly generated one.
 - MUST NOT write generated or trigger-maintained columns.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
@@ -31,7 +31,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
-- MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it.
+- MUST NOT take session-scoped advisory locks on a pooled connection; they outlive the transaction and stay with the connection.
 - MUST NOT read from a replica for read-after-write, locking, or lag-sensitive reads.
 - MUST NOT add `BEGIN`/`COMMIT` inside a migration whose runner already wraps it in a transaction.
 - MUST NOT run `EXPLAIN ANALYZE` on a write outside a rolled-back transaction.
@@ -47,14 +47,14 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 ## Schema and migrations
 
-- MUST NOT add a foreign key without an index on the referencing column; deleting or updating a parent row scans the child table under lock.
+- SHOULD NOT add a foreign key without an index on the referencing column; deleting or updating a parent row scans the child table under lock.
 - SHOULD NOT store relations as arrays, JSON ids, or type/id pairs; use foreign keys or child rows.
 - MUST NOT leave a `NOT VALID` constraint without a later `VALIDATE CONSTRAINT`.
 - MUST NOT exceed 63-byte identifiers; PostgreSQL truncates them silently.
 - MUST NOT put `now()` or `timestamptz + interval` in generated or index expressions; they are not immutable.
 - MUST NOT run DDL or session settings from runtime or seed SQL; keep them in migrations.
 - MUST NOT raise `statement_timeout` or idle timeouts to make slow work fit; split, reorder, or shrink the work. Exception: a migration step that cannot be split, such as an index build on a large table, may raise it for that step only (`SET LOCAL` in a transaction, or `SET` then `RESET` around a `CONCURRENTLY` build) with its reason stated beside it.
-- MUST NOT update or delete append-only history rows.
+- MUST NOT update append-only history rows, or delete them outside a retention policy.
 - MUST NOT add a `NOT NULL`, unique, or check constraint without first querying for rows that already violate it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.

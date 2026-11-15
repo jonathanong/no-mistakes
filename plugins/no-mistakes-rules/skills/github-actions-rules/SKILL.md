@@ -24,7 +24,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT path-filter a required check; skipped jobs look missing. Use an always-reporting gate.
 - MUST NOT fake required checks with check runs or statuses.
 - MUST NOT rely on implicit success for jobs that must run after a failure; check `needs.<job>.result`.
-- MUST NOT cancel in-progress runs on the default branch; the cancelled commit is left without check results.
+- SHOULD NOT cancel in-progress runs on the default branch when each commit needs check results; the cancelled commit is left without them.
 - MUST NOT use a local action before checking out its repository, or workflow-only keys in composite steps.
 - MUST NOT assume runner-local state survives on ephemeral runners; use keyed caches.
 - MUST NOT publish container ports to fixed host ports on hosted runners.
