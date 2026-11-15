@@ -12,3 +12,14 @@ SELECT * FROM single_row_items WHERE ROW((post_id))::uuid_single = $1::uuid_sing
 SELECT * FROM items WHERE ROW((post_id), (content_sha256), (policy_revision))::item_identity = ROW($1, $2, $3)::item_identity;
 SELECT * FROM quoted_row_items WHERE "ROW"((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;
 SELECT * FROM functions WHERE lower(CAST((id) AS text)) = $1;
+SELECT * FROM wrapped_functions WHERE lower((CAST(id AS text)) || label || 'x') = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'x') THEN (id)::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE (label) WHEN 'x' THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(label := (id)::text) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label) IS NULL THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN label BETWEEN ('a') AND ('z') THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN label IN (('a'), ('b')) THEN id::text ELSE id::text END) = $1;
+SELECT * FROM cast_collations WHERE lower(((id)::text) COLLATE "C") = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label) IS DISTINCT FROM ('x') THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'y') THEN (id)::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower((id)::text, *) = $1;

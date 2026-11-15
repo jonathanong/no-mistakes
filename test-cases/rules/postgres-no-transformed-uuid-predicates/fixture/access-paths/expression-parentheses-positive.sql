@@ -14,3 +14,7 @@ SELECT * FROM grouping_functions WHERE lower(id::text || (label IS NULL)::text) 
 SELECT * FROM grouping_functions WHERE (id, (NOT label) = policy_revision)::item_identity = ($1, $2)::item_identity;
 SELECT * FROM grouping_functions WHERE lower(id::text || (label BETWEEN 'a' AND 'z')) = $1;
 SELECT * FROM grouping_functions WHERE lower(id::text || ((@ n) + 1)::text) = $1;
+SELECT * FROM cast_collations WHERE lower((id::text || 'x') COLLATE "C") = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'a' OR label = 'b') IS NULL THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN label BETWEEN (label = 'a' OR label = 'b') AND 'z' THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'a' OR label = 'b') IN ('a') THEN id::text ELSE id::text END) = $1;
