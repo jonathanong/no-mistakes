@@ -67,7 +67,7 @@ fn absent_width_abstains_and_a_counted_zero_clears() {
 }
 
 #[test]
-fn named_column_key_decides_the_generated_write() {
+fn named_write_uses_the_column_key_or_folded_name() {
     let mut statement = SqlStatementFileFacts::default();
     statement.writes.push(SqlWriteFact {
         table: "votes".to_string(),
@@ -89,4 +89,11 @@ fn named_column_key_decides_the_generated_write() {
     let unknown = judge("generated-write", &statement, &|_, _| &incomplete);
     assert_eq!(unknown.status, SqlVerdictStatus::Abstain);
     assert_eq!(unknown.reason, Some("unknown-relation-or-write-width"));
+    statement.writes[0].column_keys = None;
+    statement.writes[0].columns = SqlWriteColumns::Named(vec!["Created_At".to_string()]);
+    let folded = judge("generated-write", &statement, &|_, _| &complete);
+    assert_eq!(folded.status, SqlVerdictStatus::Violation);
+    statement.writes[0].columns = SqlWriteColumns::Named(vec!["Note".to_string()]);
+    let other = judge("generated-write", &statement, &|_, _| &complete);
+    assert_eq!(other.status, SqlVerdictStatus::ProvenClear);
 }
