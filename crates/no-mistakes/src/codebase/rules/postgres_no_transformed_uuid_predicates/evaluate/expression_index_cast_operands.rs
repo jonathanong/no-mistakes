@@ -60,12 +60,8 @@ fn consume_identifier(tokens: &[Token], index: &mut usize) -> bool {
             return false;
         }
     }
-    if tokens.get(*index) == Some(&Token::LParen)
-        && !consume_pair(tokens, index, &Token::LParen, &Token::RParen)
-    {
-        return false;
-    }
-    true
+    tokens.get(*index) != Some(&Token::LParen)
+        || consume_pair(tokens, index, &Token::LParen, &Token::RParen)
 }
 
 fn consume_array(tokens: &[Token], index: &mut usize) -> bool {
