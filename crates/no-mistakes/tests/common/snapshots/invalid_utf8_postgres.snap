@@ -73,10 +73,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `invalid UTF-8 SQL file; save the file as UTF-8` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
+          "line": 4,
+          "message": "comments.post_id: foreign key has no leading btree/hash index (predicate must be absent or `WHERE post_id IS NOT NULL`)",
           "rule": "postgres-fk-index",
-          "target": "invalid UTF-8 SQL file; save the file as UTF-8"
+          "target": "comments.post_id"
         }
       ],
       "warnings": []
@@ -334,10 +334,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `invalid UTF-8 SQL file; save the file as UTF-8` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
+          "line": 8,
+          "message": "events.idx_events__topic_id: redundant index — its columns are a strict prefix of idx_events__topic_id__created_at with the same predicate; drop it",
           "rule": "postgres-redundant-index",
-          "target": "invalid UTF-8 SQL file; save the file as UTF-8"
+          "target": "events.idx_events__topic_id"
         }
       ],
       "warnings": []

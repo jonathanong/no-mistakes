@@ -131,22 +131,11 @@ pub fn collect_postgres_facts(
     })
 }
 
-fn schema_file_facts(
+pub(super) fn schema_file_facts(
     path: &Path,
     sources: &SourceStore,
 ) -> Result<SqlSchemaFileFacts, PostgresFactError> {
-    let source = match sources.read_path(path) {
-        Ok(source) => source,
-        Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
-            return Ok(encoding::failure(path));
-        }
-        Err(error) => {
-            return Err(PostgresFactError::for_path(
-                path,
-                format!("failed to read: {error}"),
-            ))
-        }
-    };
+    let source = read_source(path, sources)?;
     let mut facts = extract_migration_facts(&source);
     facts.set_path(path.to_path_buf());
     Ok(facts)

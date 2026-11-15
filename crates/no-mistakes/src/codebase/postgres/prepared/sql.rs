@@ -74,7 +74,14 @@ pub(super) fn collect(
                     })
                     .or_else(|error| {
                         if error.source_kind == Some(std::io::ErrorKind::InvalidData) {
-                            Ok(Arc::new(super::super::collect::encoding::failure(path)))
+                            super::super::collect::schema_file_facts(path, sources)
+                                .map(Arc::new)
+                                .map_err(|failure| {
+                                    Arc::new(PreparationError {
+                                        message: Arc::from(failure.to_string()),
+                                        source_kind: Some(std::io::ErrorKind::InvalidData),
+                                    })
+                                })
                         } else {
                             Err(Arc::clone(error))
                         }

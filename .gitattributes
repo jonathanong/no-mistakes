@@ -45,6 +45,13 @@ fixtures/postgres/prepared-projection-low/src/low.ts -text -whitespace
 test-cases/rules/postgres-no-transformed-uuid-predicates/fixture/crlf.ts -text -whitespace
 test-cases/rules/postgres-ddl-unanalyzable/fixture/copy/migrations/crlf.sql -text -whitespace
 fixtures/analysis-dataset/source-store/invalid-utf8.ts -text -whitespace
+test-cases/rules/postgres-fk-index/invalid-utf8/** -text -whitespace
+test-cases/rules/postgres-grouping-not-aggregation/invalid-utf8/** -text -whitespace
+test-cases/rules/postgres-json-relation-ids/invalid-utf8/** -text -whitespace
+test-cases/rules/postgres-no-offset/invalid-utf8/** -text -whitespace
+test-cases/rules/postgres-no-offset/invalid-utf8-low/** -text -whitespace
+test-cases/rules/postgres-no-transformed-uuid-predicates/invalid-utf8-low/** -text -whitespace
+test-cases/rules/postgres-redundant-index/invalid-utf8/** -text -whitespace
 fixtures/symbols/signature-impact-encoding/** -text -whitespace
 test-cases/rules/github-actions-job-permissions/fixture/unreadable/.github/workflows/invalid.yml -text -whitespace
 test-cases/rules/github-actions-job-permissions/fixture/unreadable/.github/workflows/disabled.yml -text -whitespace

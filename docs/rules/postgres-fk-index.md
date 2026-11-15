@@ -185,4 +185,4 @@ uncertain or partial selector coverage cannot prove staleness. See
 
 ## Invalid UTF-8
 
-Allow-directive text is decoded lossily. A read that still fails is an unanalyzable finding. Standalone SQL that is not valid UTF-8 stays an encoding-failure diagnostic at line 1. Save the file as UTF-8 to analyze its foreign keys.
+Schema SQL is decoded lossily through the source store, so a stray byte does not drop the file's foreign keys. Allow-directive text uses that same decode. A read that still fails is an unanalyzable finding.
