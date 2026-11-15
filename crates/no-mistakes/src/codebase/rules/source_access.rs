@@ -10,7 +10,10 @@ pub(crate) fn complete_source_store_for_files(files: &[PathBuf]) -> Arc<SourceSt
     Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(files))).with_complete_inventory())
 }
 
-#[allow(dead_code)] // Strict reads stay for tests. Rule scans use read_language_source.
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "strict reads stay available to tests")
+)]
 pub(crate) fn read_source(sources: &SourceStore, path: &Path) -> Option<Arc<str>> {
     sources.read_path(path).ok()
 }
