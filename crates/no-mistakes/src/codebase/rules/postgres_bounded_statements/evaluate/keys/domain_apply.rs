@@ -117,19 +117,15 @@ fn key_outcome(columns: &[Vec<Vec<usize>>], domains: Option<&[Option<u64>]>, cap
     {
         return Key::Incomplete;
     }
+    // Value pins and open columns already returned. One domain remains.
     let mut product = 1u64;
-    let mut used = false;
     for state in &states {
         if let State::Domain(width) = state {
-            used = true;
             let Some(next) = product.checked_mul(*width) else {
                 return Key::Incomplete;
             };
             product = next;
         }
-    }
-    if !used {
-        return Key::Incomplete;
     }
     if product <= cap {
         Key::Accept(product)

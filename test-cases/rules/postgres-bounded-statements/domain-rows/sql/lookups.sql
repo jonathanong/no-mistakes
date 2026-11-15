@@ -33,3 +33,4 @@ UPDATE wide_slots SET id = id WHERE owner_id = $1;
 SELECT slug FROM slugs WHERE slug = $1;
 SELECT actor_id FROM participants
 WHERE conversation_id = $1 AND (slot = 1 OR slot = (SELECT NULL::integer));
+SELECT id FROM (SELECT NULL::integer AS slot FROM participants) d WHERE d.slot = $1;

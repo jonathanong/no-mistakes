@@ -126,6 +126,35 @@ fn comparisons_cover_both_orders_casts_and_negative_bounds() {
     assert!(intersect(Some(low), Some(high)).is_none());
     assert!(intersect(None, None).is_none());
     assert_eq!(intersect(Some(low), None).unwrap().width(), low.width());
+    assert_eq!(
+        width("10 >= slot AND slot >= 1", "slot", Literal::Integer),
+        Some(10)
+    );
+    assert_eq!(
+        width("slot BETWEEN other AND other", "slot", Literal::Integer),
+        None
+    );
+    assert_eq!(
+        width("other BETWEEN 1 AND 50", "slot", Literal::Integer),
+        None
+    );
+    assert_eq!(width("slot <= other", "slot", Literal::Integer), None);
+    assert_eq!(width("other <= slot", "slot", Literal::Integer), None);
+    assert_eq!(width("other >= slot", "slot", Literal::Integer), None);
+    assert_eq!(
+        width("slot >= CAST(1.5 AS integer)", "slot", Literal::Integer),
+        None
+    );
+    assert_eq!(
+        width("slot >= CAST(other AS integer)", "slot", Literal::Integer),
+        None
+    );
+    assert_eq!(
+        width("day >= CAST(other AS date)", "day", Literal::Date),
+        None
+    );
+    assert_eq!(width("day >= 1", "day", Literal::Date), None);
+    assert_eq!(width("day >= CAST(1 AS date)", "day", Literal::Date), None);
 }
 
 #[test]
