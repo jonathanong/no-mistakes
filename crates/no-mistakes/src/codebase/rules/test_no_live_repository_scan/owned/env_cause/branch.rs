@@ -18,7 +18,7 @@ pub(super) enum FileHit {
     Blocked,
 }
 
-enum Candidate {
+pub(super) enum Candidate {
     Absent,
     One(PathBuf, u32),
     Abstain,
@@ -138,7 +138,11 @@ pub(super) fn file_hit(paths: &PathProvenance, name: &str) -> FileHit {
     }
 }
 
-fn external_candidate(files: &[PathBuf], name: &str, facts: &dyn TsFactLookup) -> Candidate {
+pub(super) fn external_candidate(
+    files: &[PathBuf],
+    name: &str,
+    facts: &dyn TsFactLookup,
+) -> Candidate {
     let mut found = None;
     for file in files {
         let Some(paths) = facts.get_ts_facts(file).and_then(diagnostic_paths) else {
@@ -158,17 +162,5 @@ fn external_candidate(files: &[PathBuf], name: &str, facts: &dyn TsFactLookup) -
     match found {
         Some((file, line)) => Candidate::One(file, line),
         None => Candidate::Absent,
-    }
-}
-
-#[cfg(test)]
-pub(super) fn external_branch(
-    files: &[PathBuf],
-    name: &str,
-    facts: &dyn TsFactLookup,
-) -> Option<(PathBuf, u32)> {
-    match external_candidate(files, name, facts) {
-        Candidate::One(file, line) => Some((file, line)),
-        Candidate::Absent | Candidate::Abstain => None,
     }
 }

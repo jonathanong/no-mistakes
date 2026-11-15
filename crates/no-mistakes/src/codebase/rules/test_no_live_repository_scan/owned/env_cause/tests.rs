@@ -1,5 +1,5 @@
 use super::super::coverage::{assemble, blank, call_site, empty_graph};
-use super::branch::{covering_line, external_branch, file_hit, Cover, FileHit};
+use super::branch::{covering_line, external_candidate, file_hit, Candidate, Cover, FileHit};
 use super::*;
 use crate::codebase::dependencies::extract::CallableId;
 use crate::codebase::ts_source::facts::TsFileFacts;
@@ -360,28 +360,38 @@ fn one_external_conditional_is_named_and_a_second_blocks_it() {
     let mut facts = facts_for("/repo/setup.mts", setup);
     facts.0.insert("/repo/other.mts".into(), stored(other));
     facts.0.insert("/repo/blocked.mts".into(), stored(blocked));
-    let named = external_branch(&[PathBuf::from("/repo/setup.mts")], "ROOT", &facts).unwrap();
-    assert_eq!(named.1, 5);
-    assert!(external_branch(
-        &[
-            PathBuf::from("/repo/setup.mts"),
-            PathBuf::from("/repo/other.mts")
-        ],
-        "ROOT",
-        &facts,
-    )
-    .is_none());
-    assert!(external_branch(&[PathBuf::from("/repo/blocked.mts")], "ROOT", &facts).is_none());
-    assert!(external_branch(&[PathBuf::from("/repo/missing.mts")], "ROOT", &facts).is_none());
-    assert!(external_branch(
-        &[
-            PathBuf::from("/repo/setup.mts"),
-            PathBuf::from("/repo/missing.mts")
-        ],
-        "ROOT",
-        &facts,
-    )
-    .is_none());
+    facts
+        .0
+        .insert("/repo/empty.mts".into(), stored(PathProvenance::default()));
+    assert!(matches!(
+        external(&["/repo/setup.mts"], &facts),
+        Candidate::One(_, 5)
+    ));
+    assert!(matches!(
+        external(&["/repo/setup.mts", "/repo/other.mts"], &facts),
+        Candidate::Abstain
+    ));
+    assert!(matches!(
+        external(&["/repo/blocked.mts"], &facts),
+        Candidate::Abstain
+    ));
+    assert!(matches!(
+        external(&["/repo/missing.mts"], &facts),
+        Candidate::Abstain
+    ));
+    assert!(matches!(
+        external(&["/repo/setup.mts", "/repo/missing.mts"], &facts),
+        Candidate::Abstain
+    ));
+    assert!(matches!(
+        external(&["/repo/empty.mts"], &facts),
+        Candidate::Absent
+    ));
+}
+
+fn external(files: &[&str], facts: &Facts) -> Candidate {
+    let paths: Vec<PathBuf> = files.iter().map(PathBuf::from).collect();
+    external_candidate(&paths, "ROOT", facts)
 }
 
 fn facts_for(file: &str, paths: PathProvenance) -> Facts {
