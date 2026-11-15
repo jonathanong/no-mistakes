@@ -4,6 +4,11 @@ use sqlparser::ast::{Expr, VisitMut, VisitorMut};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 use std::ops::ControlFlow;
+#[cfg(test)]
+#[path = "expression_index_casts_tests.rs"]
+mod cast_tests;
+#[path = "expression_index_casts.rs"]
+mod casts;
 
 pub(super) type IndexCache =
     dashmap::DashMap<(usize, String), (std::sync::Arc<Expr>, bool), rustc_hash::FxBuildHasher>;
@@ -101,6 +106,7 @@ fn tokens(expression: &str) -> Option<Vec<Token>> {
             other => other,
         })
         .collect();
+    casts::normalize(&mut tokens);
     normalize_rows(&mut tokens);
     while matches!(tokens.first(), Some(Token::LParen)) {
         let mut depth = 0;

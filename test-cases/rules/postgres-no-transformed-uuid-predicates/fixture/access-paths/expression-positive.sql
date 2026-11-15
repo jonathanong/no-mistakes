@@ -25,3 +25,11 @@ SELECT * FROM items WHERE NOT ((post_id, content_sha256, policy_revision)::item_
 SELECT * FROM items WHERE CASE WHEN (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity THEN true ELSE false END;
 SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;
 SELECT * FROM functions WHERE lower(id::text || (SELECT 'x')) = $1;
+SELECT * FROM functions WHERE lower(CAST(id AS uuid)) = $1;
+SELECT * FROM functions WHERE lower(CAST("id" AS text)) = $1;
+SELECT * FROM functions WHERE lower(CAST(id AS text) COLLATE "C") = $1;
+SELECT * FROM functions WHERE lower(CAST(CAST(id AS text) AS text)) = $1;
+SELECT * FROM cast_groups WHERE lower(id::text || label::text) = $1;
+SELECT * FROM cast_groups WHERE lower(CAST(id AS text) || label) = $1;
+SELECT * FROM cast_collations WHERE lower(CAST(id AS text) COLLATE "POSIX") = $1;
+SELECT * FROM cast_collations WHERE lower(id::text) = $1;

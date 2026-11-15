@@ -13,3 +13,6 @@ query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::
 query(sql`SELECT * FROM functions WHERE lower(id::text) = ${postId};`);
 query(`SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;`);
 query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (sql_placeholder_1, ${contentSha256}, ${policyRevision})::item_identity;`);
+query(sql`SELECT * FROM functions WHERE lower(CAST(id AS text)) = ${postId};`);
+query(`SELECT * FROM functions WHERE lower(CAST(id AS text)) = $1;`);
+query(`SELECT * FROM functions WHERE lower(CAST(id AS uuid)) = $1;`);
