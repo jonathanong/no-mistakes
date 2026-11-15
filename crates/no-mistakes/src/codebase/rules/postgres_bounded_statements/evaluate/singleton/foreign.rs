@@ -90,7 +90,7 @@ fn visible<'a>(
     aliases: &'a [String],
     column: &'a str,
 ) -> Option<&'a str> {
-    super::super::super::arrays::key_visible(table, aliases, column)
+    super::super::super::arrays::complete_visible(table, aliases, column)
 }
 
 fn same_table<'a>(

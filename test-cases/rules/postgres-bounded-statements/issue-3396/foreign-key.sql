@@ -63,3 +63,15 @@ SELECT o.id
 FROM operations AS o(id, source_id, lineage_id, context_id, operation_kind, idempotency_key)
 JOIN lineages l ON o.lineage_id = l.id AND o.context_id = l.context_id
 WHERE l.id = $1 AND l.context_id = $2 AND o.idempotency_key = $3;
+
+-- A complete alias list still names each foreign-key column.
+SELECT o.op_id
+FROM operations AS o(op_id, src, lin, ctx, kind, idem)
+JOIN lineages l ON o.lin = l.id AND o.ctx = l.context_id
+WHERE l.id = $1 AND l.context_id = $2 AND o.idem = $3;
+
+-- A repeated alias does not identify one foreign-key column.
+SELECT o.id
+FROM operations AS o(id, source_id, lineage_id, lineage_id, operation_kind, idempotency_key)
+JOIN lineages l ON o.lineage_id = l.id AND o.context_id = l.context_id
+WHERE l.id = $1 AND l.context_id = $2 AND o.idempotency_key = $3;

@@ -83,7 +83,7 @@ fn rows(
         bounded[index] = true;
         for column in &table.columns {
             if let Some(visible) =
-                super::super::arrays::key_visible(table, &item.column_aliases, &column.name)
+                super::super::arrays::complete_visible(table, &item.column_aliases, &column.name)
             {
                 columns[index].insert(visible.to_owned());
             }
@@ -102,7 +102,7 @@ pub(super) fn physical_pinned(
         .columns
         .iter()
         .filter_map(|column| {
-            let name = super::super::arrays::key_visible(table, aliases, &column.name)?;
+            let name = super::super::arrays::complete_visible(table, aliases, &column.name)?;
             visible.contains(name).then(|| column.name.clone())
         })
         .collect()

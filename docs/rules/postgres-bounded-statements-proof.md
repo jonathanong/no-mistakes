@@ -176,7 +176,10 @@ set operation). A statement is bounded when any of these holds:
   or expression unique index does not complete it. A positional
   column alias list does not let that alias satisfy a unique key of a different physical
   column. A positional alias list is also the name a foreign-key equality uses, so an alias
-  that reuses a foreign-key column's spelling does not equate that physical column. Two columns that
+  that reuses a foreign-key column's spelling does not equate that physical column. A complete
+  alias list, one name for each catalog column, is that column's visible name, so a join on
+  the new names still fills the foreign key. A repeated name in that list does not identify
+  one column, and a shorter list does not rename the columns it leaves out. Two columns that
   are each one value are not treated as equal unless the statement equates them. A `LIMIT`
   of more than one row is a bounded input, not one row, so it does not feed this proof.
 

@@ -74,6 +74,8 @@ fn issue_3396_shapes_keep_their_negative_controls() {
             vec!["draft_operations".to_string()],
             vec!["operations".to_string()],
             vec![],
+            vec![],
+            vec!["operations".to_string()],
         ]
     );
 }

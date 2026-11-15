@@ -66,6 +66,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM operations AS o(id, lineage_id, source_id, context_id, operation_kind, idempotency_key)",
           "target": "table:operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 75,
+          "message": "foreign-key.sql:75: SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM operations AS o(id, source_id, lineage_id, lineage_id, operation_kind, idempotency_key)",
+          "target": "table:operations"
         }
       ],
       "warnings": []
