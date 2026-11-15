@@ -1,0 +1,18 @@
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a RIGHT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a FULL JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a AS "A" LEFT JOIN b AS "B" ON "B".link = "A".id) WHERE num_nonnulls("A".id, "B".id) = 1;
+SELECT * FROM c JOIN (a LEFT JOIN b ON b.link = a.id) ON true WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM ((a LEFT JOIN b ON b.link = a.id) LEFT JOIN c ON c.link = a.id) WHERE num_nonnulls(b.id, c.id) = 1;
+SELECT * FROM (public.a LEFT JOIN public.b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a JOIN b ON b.link = a.id) RIGHT JOIN c ON c.link = b.id WHERE num_nonnulls(a.id, c.id) = 1;
+SELECT * FROM (a JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a INNER JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE b.id::text = $1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1 AND num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id) WHERE num_nonnulls(a.id, q.id) = 1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) AS pair WHERE num_nonnulls(a.id, b.id) = 1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, a.link) = 1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, c.id) = 1;
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id) CROSS JOIN c WHERE num_nonnulls(a.id, c.id) = 1;

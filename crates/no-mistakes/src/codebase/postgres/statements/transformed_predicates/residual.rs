@@ -1,6 +1,7 @@
+use super::super::select::uses::scope::BaseRel;
 use super::scope::{self, qualifier};
 use super::SqlTransformedColumnUseFact;
-use sqlparser::ast::{BinaryOperator, Expr, JoinOperator, TableWithJoins, Value};
+use sqlparser::ast::{BinaryOperator, Expr, JoinOperator, TableFactor, TableWithJoins, Value};
 use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 
@@ -11,28 +12,7 @@ pub(super) fn mark(
     uses: &mut [SqlTransformedColumnUseFact],
 ) {
     let relations = scope::base_relations(tables, ctes);
-    let mut nullable = BTreeSet::new();
-    for table in tables {
-        let mut preceding = Vec::new();
-        scope::push_factor(&table.relation, ctes, &mut preceding);
-        for join in &table.joins {
-            let mut right = Vec::new();
-            scope::push_factor(&join.relation, ctes, &mut right);
-            match join.join_operator {
-                JoinOperator::Left(_) | JoinOperator::LeftOuter(_) => {
-                    nullable.extend(right.iter().map(identity));
-                }
-                JoinOperator::Right(_) | JoinOperator::RightOuter(_) => {
-                    nullable.extend(preceding.iter().map(identity));
-                }
-                JoinOperator::FullOuter(_) => {
-                    nullable.extend(preceding.iter().chain(&right).map(identity));
-                }
-                _ => {}
-            }
-            preceding.extend(right);
-        }
-    }
+    let nullable = nullable_identities(tables, ctes);
     positive_conjuncts(selection, &mut |expr| {
         let Expr::BinaryOp {
             left,
@@ -94,7 +74,59 @@ pub(super) fn mark(
     });
 }
 
-fn identity(relation: &super::super::select::uses::scope::BaseRel) -> String {
+fn nullable_identities(tables: &[TableWithJoins], ctes: &[String]) -> BTreeSet<String> {
+    let mut nullable = BTreeSet::new();
+    let _introduced = introduced(tables, ctes, &mut nullable);
+    nullable
+}
+
+fn introduced(
+    tables: &[TableWithJoins],
+    ctes: &[String],
+    nullable: &mut BTreeSet<String>,
+) -> Vec<BaseRel> {
+    let mut relations = Vec::new();
+    for table in tables {
+        let mut preceding = factor_relations(&table.relation, ctes, nullable);
+        for join in &table.joins {
+            let right = factor_relations(&join.relation, ctes, nullable);
+            match join.join_operator {
+                JoinOperator::Left(_) | JoinOperator::LeftOuter(_) => {
+                    nullable.extend(right.iter().map(identity));
+                }
+                JoinOperator::Right(_) | JoinOperator::RightOuter(_) => {
+                    nullable.extend(preceding.iter().map(identity));
+                }
+                JoinOperator::FullOuter(_) => {
+                    nullable.extend(preceding.iter().chain(&right).map(identity));
+                }
+                _ => {}
+            }
+            preceding.extend(right);
+        }
+        relations.extend(preceding);
+    }
+    relations
+}
+
+fn factor_relations(
+    factor: &TableFactor,
+    ctes: &[String],
+    nullable: &mut BTreeSet<String>,
+) -> Vec<BaseRel> {
+    if let TableFactor::NestedJoin {
+        table_with_joins,
+        alias: None,
+    } = factor
+    {
+        return introduced(std::slice::from_ref(table_with_joins), ctes, nullable);
+    }
+    let mut relations = Vec::new();
+    scope::push_factor(factor, ctes, &mut relations);
+    relations
+}
+
+fn identity(relation: &BaseRel) -> String {
     relation
         .alias
         .clone()

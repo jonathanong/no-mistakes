@@ -1,0 +1,353 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 1,
+          "message": "access-paths/outer-grouped.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 13,
+          "message": "access-paths/outer-grouped.sql:13: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1 AND num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 14,
+          "message": "access-paths/outer-grouped.sql:14: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id) WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 15,
+          "message": "access-paths/outer-grouped.sql:15: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) AS pair WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 2,
+          "message": "access-paths/outer-grouped.sql:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a RIGHT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 3,
+          "message": "access-paths/outer-grouped.sql:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a FULL JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 4,
+          "message": "access-paths/outer-grouped.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a AS \"A\" LEFT JOIN b AS \"B\" ON \"B\".link = \"A\".id) WHERE num_nonnulls(\"A\".id, \"B\".id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 5,
+          "message": "access-paths/outer-grouped.sql:5: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM c JOIN (a LEFT JOIN b ON b.link = a.id) ON true WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 6,
+          "message": "access-paths/outer-grouped.sql:6: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM ((a LEFT JOIN b ON b.link = a.id) LEFT JOIN c ON c.link = a.id) WHERE num_nonnulls(b.id, c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 7,
+          "message": "access-paths/outer-grouped.sql:7: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (public.a LEFT JOIN public.b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 8,
+          "message": "access-paths/outer-grouped.sql:8: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a JOIN b ON b.link = a.id) RIGHT JOIN c ON c.link = b.id WHERE num_nonnulls(a.id, c.id) = 1;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 10,
+          "message": "access-paths/outer-grouped.sql:10: WHERE applies num_nonnulls to UUID columns a.id, b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a INNER JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "a.id, b.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 11,
+          "message": "access-paths/outer-grouped.sql:11: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 12,
+          "message": "access-paths/outer-grouped.sql:12: WHERE applies cast to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE b.id::text = $1;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 13,
+          "message": "access-paths/outer-grouped.sql:13: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1 AND num_nonnulls(a.id, b.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 14,
+          "message": "access-paths/outer-grouped.sql:14: WHERE applies num_nonnulls to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id) WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 16,
+          "message": "access-paths/outer-grouped.sql:16: WHERE applies num_nonnulls to UUID columns a.id, a.link; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, a.link) = 1;",
+          "target": "a.id, a.link"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 17,
+          "message": "access-paths/outer-grouped.sql:17: WHERE applies num_nonnulls to UUID columns a.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, c.id) = 1;",
+          "target": "a.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 18,
+          "message": "access-paths/outer-grouped.sql:18: WHERE applies num_nonnulls to UUID columns a.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) CROSS JOIN c WHERE num_nonnulls(a.id, c.id) = 1;",
+          "target": "a.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 9,
+          "message": "access-paths/outer-grouped.sql:9: WHERE applies num_nonnulls to UUID columns a.id, b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "a.id, b.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 1,
+          "message": "access-paths/outer-grouped.sql:1: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 13,
+          "message": "access-paths/outer-grouped.sql:13: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1 AND num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 14,
+          "message": "access-paths/outer-grouped.sql:14: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id) WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 15,
+          "message": "access-paths/outer-grouped.sql:15: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) AS pair WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 2,
+          "message": "access-paths/outer-grouped.sql:2: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a RIGHT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 3,
+          "message": "access-paths/outer-grouped.sql:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a FULL JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 4,
+          "message": "access-paths/outer-grouped.sql:4: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a AS \"A\" LEFT JOIN b AS \"B\" ON \"B\".link = \"A\".id) WHERE num_nonnulls(\"A\".id, \"B\".id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 5,
+          "message": "access-paths/outer-grouped.sql:5: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM c JOIN (a LEFT JOIN b ON b.link = a.id) ON true WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 6,
+          "message": "access-paths/outer-grouped.sql:6: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM ((a LEFT JOIN b ON b.link = a.id) LEFT JOIN c ON c.link = a.id) WHERE num_nonnulls(b.id, c.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 7,
+          "message": "access-paths/outer-grouped.sql:7: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (public.a LEFT JOIN public.b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 8,
+          "message": "access-paths/outer-grouped.sql:8: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a JOIN b ON b.link = a.id) RIGHT JOIN c ON c.link = b.id WHERE num_nonnulls(a.id, c.id) = 1;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 10,
+          "message": "access-paths/outer-grouped.sql:10: WHERE applies num_nonnulls to UUID columns a.id, b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a INNER JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "a.id, b.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 11,
+          "message": "access-paths/outer-grouped.sql:11: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 12,
+          "message": "access-paths/outer-grouped.sql:12: WHERE applies cast to UUID column b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE b.id::text = $1;",
+          "target": "b.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 13,
+          "message": "access-paths/outer-grouped.sql:13: WHERE applies cast to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE a.id::text = $1 AND num_nonnulls(a.id, b.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 14,
+          "message": "access-paths/outer-grouped.sql:14: WHERE applies num_nonnulls to UUID column a.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN (SELECT id FROM b) q ON q.id = a.id) WHERE num_nonnulls(a.id, q.id) = 1;",
+          "target": "a.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 16,
+          "message": "access-paths/outer-grouped.sql:16: WHERE applies num_nonnulls to UUID columns a.id, a.link; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, a.link) = 1;",
+          "target": "a.id, a.link"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 17,
+          "message": "access-paths/outer-grouped.sql:17: WHERE applies num_nonnulls to UUID columns a.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) JOIN c ON c.link = a.id WHERE num_nonnulls(a.id, c.id) = 1;",
+          "target": "a.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 18,
+          "message": "access-paths/outer-grouped.sql:18: WHERE applies num_nonnulls to UUID columns a.id, c.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a LEFT JOIN b ON b.link = a.id) CROSS JOIN c WHERE num_nonnulls(a.id, c.id) = 1;",
+          "target": "a.id, c.id"
+        },
+        {
+          "file": "access-paths/outer-grouped.sql",
+          "line": 9,
+          "message": "access-paths/outer-grouped.sql:9: WHERE applies num_nonnulls to UUID columns a.id, b.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM (a JOIN b ON b.link = a.id) WHERE num_nonnulls(a.id, b.id) = 1;",
+          "target": "a.id, b.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
