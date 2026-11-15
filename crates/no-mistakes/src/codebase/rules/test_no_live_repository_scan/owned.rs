@@ -83,6 +83,7 @@ pub(super) struct Owners<'g> {
     /// Caller-entry walks memoized by the symbol they start from.
     entry_memo: RefCell<entry_memo::EntryMemo<'g>>,
     env_entries: RefCell<FxHashMap<PathBuf, Vec<env_cause::Entry>>>,
+    related_files_cache: RefCell<FxHashMap<PathBuf, Vec<PathBuf>>>,
 }
 
 impl<'g> Owners<'g> {
@@ -140,6 +141,7 @@ impl<'g> Owners<'g> {
             reached: RefCell::new(FxHashMap::default()),
             entry_memo: RefCell::new(entry_memo::EntryMemo::default()),
             env_entries: RefCell::new(FxHashMap::default()),
+            related_files_cache: RefCell::new(FxHashMap::default()),
             imported: imports::ImportedWrites::new(graph),
             env: env::EnvWrites::new(
                 facts,

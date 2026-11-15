@@ -13,6 +13,8 @@ use std::sync::Arc;
 
 #[path = "branch_gap_tests.rs"]
 mod branch_gap_tests;
+#[path = "offset_tests.rs"]
+mod offset_tests;
 
 struct Facts(FxHashMap<PathBuf, TsFileFacts>);
 impl TsFactLookup for Facts {

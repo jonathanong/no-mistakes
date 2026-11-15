@@ -365,16 +365,22 @@ When no owned write is proven before a selected test call, the message names
 that variable and call site. If that gap is exactly one assignment that is a
 statement in an `if` or conditional arm, the message also names that assignment.
 The condition itself does not count, and neither does a write passed as an
-argument. The assignment may sit in the test, a covering `beforeEach` or
-`beforeAll`, a directly imported setup module, a module imported through one
-of those, or a configured `setupFiles` module. The finding stays. The generic
-explanation, which does not guess a line, stays when more than one such
-assignment exists, when one is in the test and another is in a setup or import,
-when the other write is inside a function that may not run, when the test file
-or a related file has no analyzable facts, when an unnamed `process.env`
-mutation could also target that variable, when the only other-file candidate is
-inside a `describe`-scoped hook, when the write is a ternary inside a call, or
-when the route is not one concrete test. It reports uncertainty when no concrete test or setup entry can
+argument. A ternary counts only when the ternary itself is a statement. A hook
+callback counts as that statement only after the walk leaves the call. A
+file-wide hook starts at offset 0; a `describe` callback does not. The
+assignment may sit in the test, a covering `beforeEach` or `beforeAll`, a
+directly imported setup module, a module imported through one of those, or a
+configured `setupFiles` module. A JSON, CSS, or other non-script file, whether
+imported or listed in `setupFiles`, is not one of those modules: it is ignored,
+and it does not hide the one script assignment. The finding stays. The generic explanation, which does not guess a
+line, stays when more than one such assignment exists, when one is in the test
+and another is in a setup or import, when the other write is inside a function
+that may not run, when the test file or a related script file has no analyzable
+facts, when an unnamed `process.env` mutation could also target that variable,
+when the call site has no source offset and the test file also writes that
+variable, when the only other-file candidate is inside a `describe`-scoped hook,
+when the write is a ternary inside a call, or when the route is not one concrete
+test. It reports uncertainty when no concrete test or setup entry can
 be identified. Multiple possible environment roots retain the
 generic unresolved-root explanation. A computed fallback such as
 `join(process.cwd(), "tmp", "example")` remains unowned, but is not presented

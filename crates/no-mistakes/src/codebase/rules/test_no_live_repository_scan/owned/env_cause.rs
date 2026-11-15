@@ -1,5 +1,6 @@
 mod branch;
 mod entries;
+mod related;
 mod selection;
 use entries::diagnostic_paths;
 mod text;

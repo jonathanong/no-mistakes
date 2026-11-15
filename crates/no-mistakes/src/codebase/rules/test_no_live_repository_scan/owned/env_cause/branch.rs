@@ -1,6 +1,6 @@
 use super::diagnostic_paths;
 use super::Owners;
-use crate::codebase::dependencies::graph::{EdgeKind, NodeId, TsFactLookup};
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::module_facts::arguments::{
     ConditionalPlace, EnvWrite, PathProvenance, WriteScope,
 };
@@ -40,40 +40,6 @@ impl Owners<'_> {
             _ => None,
         }
     }
-
-    fn related_files(&self, file: &Path) -> Vec<PathBuf> {
-        let mut files = self.setups.setup_files_for(file);
-        let mut pending: Vec<NodeId> = files.iter().map(NodeId::file).collect();
-        pending.push(NodeId::file(file));
-        let mut seen = pending.clone();
-        while let Some(current) = pending.pop() {
-            for (node, kind) in self
-                .graph
-                .dependencies_of_node(&current)
-                .into_iter()
-                .flatten()
-            {
-                if *kind != EdgeKind::Import {
-                    continue;
-                }
-                let NodeId::File(path) = node else {
-                    continue;
-                };
-                if seen.iter().any(|seen| seen == node) {
-                    continue;
-                }
-                seen.push(node.clone());
-                pending.push(node.clone());
-                if path.as_ref() != file {
-                    files.push(path.as_ref().to_path_buf());
-                }
-            }
-        }
-        files.retain(|path| path != file);
-        files.sort();
-        files.dedup();
-        files
-    }
 }
 
 fn local_candidate(
@@ -82,11 +48,15 @@ fn local_candidate(
     offset: Option<u32>,
     facts: &dyn TsFactLookup,
 ) -> Candidate {
-    let Some(offset) = offset else {
-        return Candidate::Absent;
-    };
     let Some(paths) = facts.get_ts_facts(file).and_then(diagnostic_paths) else {
         return Candidate::Abstain;
+    };
+    let Some(offset) = offset else {
+        return if local_write_conflicts(paths, name) {
+            Candidate::Abstain
+        } else {
+            Candidate::Absent
+        };
     };
     match covering_line(paths, name, offset) {
         Cover::None => Candidate::Absent,
@@ -122,8 +92,11 @@ fn unnamed_mutation(paths: &PathProvenance) -> bool {
     paths.env_unknown_write || paths.env_opaque_write
 }
 
+fn local_write_conflicts(paths: &PathProvenance, name: &str) -> bool {
+    unnamed_mutation(paths) || paths.env_writes.iter().any(|write| write.name == name)
+}
+
 fn names_one_branch(place: ConditionalPlace) -> bool {
-    // A file-wide hook span starts at 0. A describe callback span does not.
     place.branch && place.function.is_none() && place.hook.is_none_or(|(start, _)| start == 0)
 }
 
