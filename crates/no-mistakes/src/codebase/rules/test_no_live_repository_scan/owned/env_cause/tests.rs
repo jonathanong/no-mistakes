@@ -11,6 +11,9 @@ use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[path = "branch_gap_tests.rs"]
+mod branch_gap_tests;
+
 struct Facts(FxHashMap<PathBuf, TsFileFacts>);
 impl TsFactLookup for Facts {
     fn get_ts_facts(&self, file: &Path) -> Option<&TsFileFacts> {

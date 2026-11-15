@@ -370,9 +370,11 @@ argument. The assignment may sit in the test, a covering `beforeEach` or
 of those, or a configured `setupFiles` module. The finding stays. The generic
 explanation, which does not guess a line, stays when more than one such
 assignment exists, when one is in the test and another is in a setup or import,
-when the other write is inside a function that may not run, when a related file
-has no analyzable facts, when the write is a ternary inside a call, or when the
-route is not one concrete test. It reports uncertainty when no concrete test or setup entry can
+when the other write is inside a function that may not run, when the test file
+or a related file has no analyzable facts, when an unnamed `process.env`
+mutation could also target that variable, when the only other-file candidate is
+inside a `describe`-scoped hook, when the write is a ternary inside a call, or
+when the route is not one concrete test. It reports uncertainty when no concrete test or setup entry can
 be identified. Multiple possible environment roots retain the
 generic unresolved-root explanation. A computed fallback such as
 `join(process.cwd(), "tmp", "example")` remains unowned, but is not presented

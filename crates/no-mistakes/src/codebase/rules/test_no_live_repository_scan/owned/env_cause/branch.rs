@@ -86,7 +86,7 @@ fn local_candidate(
         return Candidate::Absent;
     };
     let Some(paths) = facts.get_ts_facts(file).and_then(diagnostic_paths) else {
-        return Candidate::Absent;
+        return Candidate::Abstain;
     };
     match covering_line(paths, name, offset) {
         Cover::None => Candidate::Absent,
@@ -96,6 +96,9 @@ fn local_candidate(
 }
 
 pub(super) fn covering_line(paths: &PathProvenance, name: &str, offset: u32) -> Cover {
+    if unnamed_mutation(paths) {
+        return Cover::Many;
+    }
     let mut found = Cover::None;
     for write in &paths.env_writes {
         let WriteScope::Conditional(place) = write.scope else {
@@ -115,6 +118,15 @@ pub(super) fn covering_line(paths: &PathProvenance, name: &str, offset: u32) -> 
     found
 }
 
+fn unnamed_mutation(paths: &PathProvenance) -> bool {
+    paths.env_unknown_write || paths.env_opaque_write
+}
+
+fn names_one_branch(place: ConditionalPlace) -> bool {
+    // A file-wide hook span starts at 0. A describe callback span does not.
+    place.branch && place.function.is_none() && place.hook.is_none_or(|(start, _)| start == 0)
+}
+
 fn reaches(place: ConditionalPlace, write: &EnvWrite, paths: &PathProvenance, offset: u32) -> bool {
     if let Some((start, end)) = place.hook {
         return paths
@@ -129,16 +141,17 @@ fn reaches(place: ConditionalPlace, write: &EnvWrite, paths: &PathProvenance, of
 }
 
 pub(super) fn file_hit(paths: &PathProvenance, name: &str) -> FileHit {
+    if unnamed_mutation(paths) {
+        return FileHit::Blocked;
+    }
     let mut line = None;
     for write in paths.env_writes.iter().filter(|write| write.name == name) {
-        let WriteScope::Conditional(ConditionalPlace {
-            branch: true,
-            function: None,
-            ..
-        }) = write.scope
-        else {
+        let WriteScope::Conditional(place) = write.scope else {
             return FileHit::Blocked;
         };
+        if !names_one_branch(place) {
+            return FileHit::Blocked;
+        }
         if line.is_some() {
             return FileHit::Blocked;
         }
