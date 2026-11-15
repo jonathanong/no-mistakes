@@ -83,6 +83,7 @@ fn full_snapshot_fills_the_read_only_model() {
             on_delete: "set null".to_string(),
             on_update: "no action".to_string(),
             validated: false,
+            deferrable: true,
         }]
     );
     assert_eq!(

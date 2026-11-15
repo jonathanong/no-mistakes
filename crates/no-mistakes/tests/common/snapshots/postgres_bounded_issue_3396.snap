@@ -13,6 +13,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "foreign-key.sql",
+          "line": 111,
+          "message": "foreign-key.sql:111: SELECT can return every row of labeled_keys; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT row.title FROM labeled_keys AS row(id) WHERE row.id = $1;",
+          "target": "table:labeled_keys"
+        },
+        {
+          "file": "foreign-key.sql",
           "line": 12,
           "message": "foreign-key.sql:12: SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -74,6 +82,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM operations AS o(id, source_id, lineage_id, lineage_id, operation_kind, idempotency_key)",
           "target": "table:operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 81,
+          "message": "foreign-key.sql:81: SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM operations operation",
+          "target": "table:operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 87,
+          "message": "foreign-key.sql:87: SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "JOIN operations operation ON operation.source_id = membership.source_id OR operation.id = membership.id",
+          "target": "table:operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 92,
+          "message": "foreign-key.sql:92: SELECT can return every row of partial_lineages; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of partial_operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM partial_lineages lineage",
+          "target": "table:partial_lineages, table:partial_operations"
         }
       ],
       "warnings": []
@@ -88,6 +120,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "group-by.sql",
+          "line": 106,
+          "message": "group-by.sql:106: SELECT can return every row of entry_signals; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "LEFT JOIN entry_signals signals ON TRUE",
+          "target": "table:entry_signals"
+        },
         {
           "file": "group-by.sql",
           "line": 30,

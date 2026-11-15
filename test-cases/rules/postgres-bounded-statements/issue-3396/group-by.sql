@@ -98,3 +98,10 @@ SELECT DISTINCT ON (flow.status) flow.status
 FROM flows flow
 WHERE flow.status = 'pending'
 GROUP BY flow.status;
+
+-- A group key on the nullable side of a left join is not one value.
+WITH page AS (SELECT id FROM flows WHERE status = 'pending' ORDER BY id LIMIT 25)
+SELECT signals.source
+FROM page
+LEFT JOIN entry_signals signals ON TRUE
+GROUP BY signals.source;

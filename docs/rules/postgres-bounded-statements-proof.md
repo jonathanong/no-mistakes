@@ -155,16 +155,19 @@ set operation). A statement is bounded when any of these holds:
   out. One caller value is an unconditional `=` to a literal or bind. A CTE output that
   projects that column carries the same value, so `GROUP BY current.post_id` is one row
   when every `post_id` equals one bind. A chain of more than eight output renames does
-  not carry that value. An expression output has no source column to follow. `GROUP BY page.id` stays bounded when `page` itself
-  is a fixed `LIMIT`, including when the grouped query also joins an unbounded table: the
-  grouped result cannot grow past that input. `ROLLUP`, `CUBE`, `GROUPING SETS`, and any
-  other grouping modifier are not this proof, because they can add subtotal rows. An
-  integer `GROUP BY` literal is an output ordinal, not a constant. A set-returning
-  function in the select list, in `DISTINCT ON`, or in `ORDER BY` can multiply the grouped
-  rows, so those queries stay unbounded. `IN`, `ANY`, `OR`, and `IS NOT DISTINCT FROM` are not one caller
-  value. A key that still comes from an unbounded item keeps that item reported.
-  A positional alias list is the grouped name, so `d(id, status)` makes `GROUP BY d.status`
-  follow the second output.
+  not carry that value. An expression output has no source column to follow.
+- `GROUP BY page.id` stays bounded when `page` itself is a fixed `LIMIT`, including when
+  the grouped query also joins an unbounded table: the grouped result cannot grow past
+  that input. A key that still comes from an unbounded item keeps that item reported.
+  A caller-sized output is accepted as one group key. That output is a finite set the
+  caller supplies, not one value. A `GROUP BY` key from the nullable side of a `LEFT JOIN`
+  stays a finding.
+- `ROLLUP`, `CUBE`, `GROUPING SETS`, and any other grouping modifier are not this proof,
+  because they can add subtotal rows. An integer `GROUP BY` literal is an output ordinal,
+  not a constant. A set-returning function in the select list, in `DISTINCT ON`, or in
+  `ORDER BY` can multiply the grouped rows, so those queries stay unbounded. `IN`, `ANY`,
+  `OR`, and `IS NOT DISTINCT FROM` are not one caller value. A positional alias list is
+  the grouped name, so `d(id, status)` makes `GROUP BY d.status` follow the second output.
 - A row whose unique key is pinned to one caller value is one row, so every catalog
   column of that row is one value. Those values cross a direct column equality (`a.col = b.col`)
   when the equality is unconditional, not null-safe, and names both columns. A validated
@@ -184,7 +187,11 @@ set operation). A statement is bounded when any of these holds:
   that reuses a foreign-key column's spelling does not equate that physical column. A complete
   alias list, one name for each catalog column, is that column's visible name, so a join on
   one of those names still fills the remaining foreign-key column. A repeated name in that list does not identify
-  one column, and a shorter list does not rename the columns it leaves out. Two columns that
+  one column, and a shorter list does not rename the columns it leaves out. Those columns
+  stay visible under their own names. A name that the shorter list already uses does not
+  identify the later column. A foreign key the transaction can postpone is recorded and
+  still fills: a postponed violation removes the child from an inner join, so the result
+  cannot grow. Two columns that
   are each one value are not treated as equal unless the statement equates them. A `LIMIT`
   of more than one row is a bounded input, not one row, so it does not feed this proof.
 

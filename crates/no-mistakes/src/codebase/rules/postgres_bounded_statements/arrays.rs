@@ -155,7 +155,7 @@ pub(super) fn key_visible<'a>(
         .then_some(column)
 }
 
-/// Visible name from a complete alias list. A shorter list does not rename a column.
+/// Visible name of one physical column. A shorter list leaves later columns unchanged.
 pub(super) fn complete_visible<'a>(
     table: &crate::codebase::postgres::CatalogTable,
     aliases: &'a [String],
@@ -170,9 +170,14 @@ pub(super) fn complete_visible<'a>(
     let index = table
         .columns
         .iter()
-        .position(|entry| entry.name == column)
-        .filter(|_| aliases.len() == table.columns.len())?;
-    let visible = aliases[index].as_str();
+        .position(|entry| entry.name == column)?;
+    let visible = if index >= aliases.len() {
+        column
+    } else if aliases.len() == table.columns.len() {
+        aliases[index].as_str()
+    } else {
+        return None;
+    };
     column_type(table, aliases, visible)
         .is_some_and(|entry| entry.name == column)
         .then_some(visible)

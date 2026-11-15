@@ -734,6 +734,161 @@
           "validated": true
         }
       }
+    },
+    "partial_lineages": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "context_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "partial_lineages_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "predicate": "context_id = id",
+          "definition": "CREATE UNIQUE INDEX partial_lineages_id_key ON public.partial_lineages USING btree (id) WHERE context_id = id",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "partial_operations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "lineage_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "context_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "idempotency_key": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "partial_operations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX partial_operations_pkey ON public.partial_operations USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "partial_operations_context_idempotency_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX partial_operations_context_idempotency_key ON public.partial_operations USING btree (context_id, idempotency_key)",
+          "keys": [
+            {
+              "column": "context_id",
+              "expression": "context_id"
+            },
+            {
+              "column": "idempotency_key",
+              "expression": "idempotency_key"
+            }
+          ]
+        }
+      },
+      "foreignKeys": {
+        "partial_operations_lineage_context_fkey": {
+          "columns": [
+            "lineage_id",
+            "context_id"
+          ],
+          "referencedTable": "partial_lineages",
+          "referencedColumns": [
+            "id",
+            "context_id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    },
+    "labeled_keys": {
+      "relationKind": "table",
+      "columns": {
+        "label": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "labeled_keys_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labeled_keys_pkey ON public.labeled_keys USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
     }
   }
 }
