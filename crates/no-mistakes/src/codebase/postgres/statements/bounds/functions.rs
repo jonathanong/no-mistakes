@@ -45,7 +45,7 @@ const LATER_SCALAR: &[&str] = &[
 const POSTGRES_18_SCALAR: &[&str] = &["uuidv4", "uuidv7"];
 
 mod scalar;
-use scalar::SCALAR;
+use scalar::{DATETIME_KEYWORDS, SCALAR};
 
 /// Functions whose result row count follows caller-provided argument values.
 #[rustfmt::skip]
@@ -106,6 +106,7 @@ pub(super) fn projection_can_expand(function: &Function) -> bool {
     }
     is_set_returning(name)
         || !(builtin(name, SCALAR) && (!builtin(name, LATER_SCALAR) || pg_catalog_qualified(name))
+            || builtin(name, DATETIME_KEYWORDS)
             || (builtin(name, POSTGRES_18_SCALAR) && pg_catalog_qualified(name)))
 }
 
