@@ -51,3 +51,5 @@ SELECT name FROM wrapped WHERE name = $1;
 SELECT label FROM labels AS renamed(label) WHERE label = $1;
 -- Report: the joined column comes from an unbounded relation.
 SELECT 1 FROM directories AS d JOIN normalized AS e ON e.email = d.email;
+-- Report: range lower can be null for a non-null empty range.
+SELECT span FROM spans WHERE span = $1;

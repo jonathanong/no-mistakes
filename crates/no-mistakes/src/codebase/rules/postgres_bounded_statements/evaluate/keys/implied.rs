@@ -27,7 +27,7 @@ const FAMILIES: &[(&str, &[&str])] = &[
 /// Catalog column fixed when the statement equates that column.
 pub(super) fn source_column(expression: &Expr, table: &CatalogTable) -> Option<String> {
     let name = match unwrap_expr(expression) {
-        Expr::Function(function) => function_column(function)?,
+        Expr::Function(function) => function_column(function, table)?,
         Expr::Cast {
             kind: CastKind::Cast | CastKind::DoubleColon,
             expr,
@@ -40,7 +40,7 @@ pub(super) fn source_column(expression: &Expr, table: &CatalogTable) -> Option<S
     Some(name)
 }
 
-fn function_column(function: &Function) -> Option<String> {
+fn function_column(function: &Function, table: &CatalogTable) -> Option<String> {
     if !plain_call(function) {
         return None;
     }
@@ -57,10 +57,12 @@ fn function_column(function: &Function) -> Option<String> {
     {
         return None;
     }
-    match arguments.args.first()? {
-        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => bare_column(expr),
-        _ => None,
-    }
+    let column = match arguments.args.first()? {
+        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => bare_column(expr)?,
+        _ => return None,
+    };
+    // A non-null range can still have a null bound. See postgres-bounded-statements-proof.md.
+    (family(column_type(table, &column)?)? == "text").then_some(column)
 }
 
 fn plain_call(function: &Function) -> bool {

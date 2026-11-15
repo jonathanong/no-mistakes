@@ -138,6 +138,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT 1 FROM directories AS d JOIN normalized AS e ON e.email = d.email;",
           "target": "table:directories, table:normalized"
+        },
+        {
+          "file": "statements.sql",
+          "line": 55,
+          "message": "statements.sql:55: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT span FROM spans WHERE span = $1;",
+          "target": "table:spans"
         }
       ],
       "warnings": []

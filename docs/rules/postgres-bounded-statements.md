@@ -506,7 +506,8 @@ relation alias. Catalog indexes include plain unique keys such as
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
 Raw equality also fixes a recognized function of that column: `username = $1`
 matches `UNIQUE (lower(username))` for unquoted `lower`, `upper`, and
-one-argument `btrim`. A cast matches only inside one equality family
+one-argument `btrim` when the column type is `text` or `varchar`. Range
+`lower` and `upper` stay unrecognized. A cast matches only inside one equality family
 (`text` with `varchar`, the integer types, `uuid`, or `boolean`).
 `lower(col) = $1` against a unique index on raw `col` still reports.
 Redundant predicate parentheses and quoted lowercase identifiers preserve the

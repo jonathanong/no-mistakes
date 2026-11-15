@@ -714,6 +714,36 @@
           ]
         }
       }
+    },
+    "spans": {
+      "relationKind": "table",
+      "columns": {
+        "span": {
+          "dataType": "int4range",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "spans_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX spans_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(span)"
+            }
+          ]
+        }
+      }
     }
   }
 }

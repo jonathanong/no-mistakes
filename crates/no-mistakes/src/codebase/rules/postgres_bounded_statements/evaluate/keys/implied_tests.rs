@@ -44,6 +44,10 @@ fn column_equality_fixes_only_allowlisted_shapes() {
         ("flag", "boolean"),
         ("token", "uuid"),
         ("code", "text"),
+        ("code_char", "char"),
+        ("span", "int4range"),
+        ("spans", "int4multirange"),
+        ("blob", "bytea"),
         ("custom", "public.text"),
     ]);
     let cases = [
@@ -60,6 +64,7 @@ fn column_equality_fixes_only_allowlisted_shapes() {
         ("length(username)", None),
         ("lower(absent)", None),
         ("username", None),
+        ("lower(email)", Some("email")),
         ("email::pg_catalog.text", Some("email")),
         ("n::bigint", Some("n")),
         ("CAST(n AS bigint)", Some("n")),
@@ -85,6 +90,11 @@ fn column_equality_fixes_only_allowlisted_shapes() {
         ("a.b.lower(username)", None),
         ("\"pg_catalog\".lower(username)", None),
         ("pg_catalog.\"lower\"(username)", None),
+        ("lower(code_char)", None),
+        ("lower(span)", None),
+        ("upper(span)", None),
+        ("lower(spans)", None),
+        ("btrim(blob)", None),
     ];
     for (expression, expected) in cases {
         let parsed =

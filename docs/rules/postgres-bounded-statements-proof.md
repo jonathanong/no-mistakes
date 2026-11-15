@@ -236,7 +236,11 @@ Every key element must have a finite pin. Supported index shapes include:
   Raw equality on a column also fixes an allowlisted function of that column.
   Equal inputs produce one result, so a unique index on the function admits at
   most one row. Recognized functions are unquoted `lower`, `upper`, and
-  one-argument `btrim`, unqualified or `pg_catalog`-qualified.
+  one-argument `btrim`, unqualified or `pg_catalog`-qualified. The column's
+  catalog type must be `text`, `varchar`, `character varying`, or `char varying`.
+  `lower` and `upper` of a range are different functions: a non-null empty or
+  unbounded range can have a null bound, and a unique index still admits many
+  null keys.
   `username = $1` matches `UNIQUE (lower(username))`. The reverse does not:
   `lower(col) = $1` against a unique index on raw `col` can match many inputs.
   A cast of one bare column is recognized when the catalog column type and the
