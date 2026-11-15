@@ -143,7 +143,16 @@ fn column_widths(
             let Expr::Identifier(ident) = unwrap_expr(expression) else {
                 return None;
             };
-            super::domain_rows::column_domain(table, catalog, item, &ident_key(ident), alternative)
+            let physical = ident_key(ident);
+            let visible =
+                super::super::super::arrays::key_visible(table, &item.column_aliases, &physical)?;
+            super::domain_rows::column_domain(
+                table,
+                catalog,
+                item,
+                (visible, &physical),
+                alternative,
+            )
         })
         .collect()
 }

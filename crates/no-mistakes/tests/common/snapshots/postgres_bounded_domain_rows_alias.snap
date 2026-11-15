@@ -1,0 +1,80 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "rows_5": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: accepted alias_slots by unique-key domain product 5, within maxDomainRows 5",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT n FROM alias_slots AS renamed(n) WHERE n BETWEEN 1 AND 5;",
+          "target": "domain-product"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: accepted alias_slots by unique-key domain product 5, within maxDomainRows 5",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM alias_slots WHERE id BETWEEN 1 AND 5;",
+          "target": "domain-product"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 3,
+          "message": "sql/lookups.sql:3: SELECT can return every row of alias_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT n FROM alias_slots AS renamed(n);",
+          "target": "table:alias_slots"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of alias_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT n FROM alias_slots AS renamed(n) WHERE n BETWEEN 1 AND 5;",
+          "target": "table:alias_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: SELECT can return every row of alias_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM alias_slots WHERE id BETWEEN 1 AND 5;",
+          "target": "table:alias_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 3,
+          "message": "sql/lookups.sql:3: SELECT can return every row of alias_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT n FROM alias_slots AS renamed(n);",
+          "target": "table:alias_slots"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

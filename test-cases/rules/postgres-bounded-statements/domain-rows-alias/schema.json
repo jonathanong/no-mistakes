@@ -1,0 +1,31 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "alias_slots": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "alias_slots_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX alias_slots_id_key ON public.alias_slots USING btree (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  }
+}

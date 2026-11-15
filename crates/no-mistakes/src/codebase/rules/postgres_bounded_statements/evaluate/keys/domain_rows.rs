@@ -32,7 +32,7 @@ pub(super) fn column_domain(
     table: &CatalogTable,
     catalog: &SchemaCatalog,
     item: &SqlBoundItem,
-    physical: &str,
+    (visible, physical): (&str, &str),
     alternative: usize,
 ) -> Option<u64> {
     let column = table
@@ -52,10 +52,10 @@ pub(super) fn column_domain(
         return (count > 0).then_some(count);
     }
     if domain_range::integer_type(&lower) {
-        return integer_domain(table, item, physical, alternative);
+        return integer_domain(table, item, (visible, physical), alternative);
     }
     if lower == "date" {
-        return date_domain(item, physical, alternative);
+        return date_domain(item, visible, alternative);
     }
     None
 }
@@ -70,9 +70,9 @@ pub(super) fn widths_for(
 ) -> Vec<Option<u64>> {
     columns
         .iter()
-        .map(|(_, physical)| {
+        .map(|(visible, physical)| {
             eligible
-                .then(|| column_domain(table, catalog, item, physical, alternative))
+                .then(|| column_domain(table, catalog, item, (visible, physical), alternative))
                 .flatten()
         })
         .collect()
@@ -81,7 +81,7 @@ pub(super) fn widths_for(
 fn integer_domain(
     table: &CatalogTable,
     item: &SqlBoundItem,
-    physical: &str,
+    (visible, physical): (&str, &str),
     alternative: usize,
 ) -> Option<u64> {
     let mut span = None;
@@ -97,24 +97,19 @@ fn integer_domain(
         span = domain_range::intersect(span, Some(next));
         span?;
     }
-    if let Some(next) = arm_span(item, physical, alternative, Literal::Integer) {
+    if let Some(next) = arm_span(item, visible, alternative, Literal::Integer) {
         saw = true;
         span = domain_range::intersect(span, Some(next));
     }
     saw.then_some(span?.width()).flatten()
 }
 
-fn date_domain(item: &SqlBoundItem, physical: &str, alternative: usize) -> Option<u64> {
-    arm_span(item, physical, alternative, Literal::Date)?.width()
+fn date_domain(item: &SqlBoundItem, visible: &str, alternative: usize) -> Option<u64> {
+    arm_span(item, visible, alternative, Literal::Date)?.width()
 }
 
-fn arm_span(
-    item: &SqlBoundItem,
-    physical: &str,
-    alternative: usize,
-    kind: Literal,
-) -> Option<Span> {
+fn arm_span(item: &SqlBoundItem, visible: &str, alternative: usize, kind: Literal) -> Option<Span> {
     let arms = domain_range::query_spans(&item.predicate_conjuncts, item.pin_alternatives);
     let arm = arms.get(alternative).or_else(|| arms.first())?;
-    domain_range::closed_span(physical, arm, kind)
+    domain_range::closed_span(visible, arm, kind)
 }

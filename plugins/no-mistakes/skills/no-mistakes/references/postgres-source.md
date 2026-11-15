@@ -263,6 +263,7 @@ declaration on an already bounded statement is a finding. See
 whose free columns each have a proven finite domain when the product of those
 domains is at most the cap. Leave it unset to keep the current findings. A
 domain is a validated integer check, a non-null enum, a non-null boolean, or a
-closed inclusive literal range. `smallint` and `integer` widths are not domains.
+closed inclusive literal range on the column's visible name, including a
+positional alias. `smallint` and `integer` widths are not domains.
 An accepted product is an advisory; a product above the cap stays a finding and
 names that product.
