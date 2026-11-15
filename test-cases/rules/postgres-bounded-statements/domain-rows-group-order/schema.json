@@ -1,0 +1,78 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "questions": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "group_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "order_index": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "questions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX questions_pkey ON public.questions USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "questions_group_order": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX questions_group_order ON public.questions USING btree (group_id, order_index) WHERE (deleted_at IS NULL)",
+          "keys": [
+            {
+              "column": "group_id",
+              "expression": "group_id"
+            },
+            {
+              "column": "order_index",
+              "expression": "order_index"
+            }
+          ],
+          "predicate": "(deleted_at IS NULL)"
+        }
+      },
+      "checkConstraints": {
+        "questions_order_index_check": {
+          "definition": "CHECK (order_index BETWEEN 0 AND 999)"
+        }
+      }
+    }
+  }
+}

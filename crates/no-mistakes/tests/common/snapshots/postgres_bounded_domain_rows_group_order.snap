@@ -1,0 +1,93 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "rows_5000": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: accepted questions by unique-key domain product 1000, within maxDomainRows 5000",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE group_id = $1 AND deleted_at IS NULL ORDER BY order_index;",
+          "target": "domain-product"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE group_id = $1 ORDER BY order_index;",
+          "target": "table:questions"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rows_999": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 1000, above maxDomainRows 999",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE group_id = $1 AND deleted_at IS NULL ORDER BY order_index;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE group_id = $1 ORDER BY order_index;",
+          "target": "table:questions"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE group_id = $1 AND deleted_at IS NULL ORDER BY order_index;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE group_id = $1 ORDER BY order_index;",
+          "target": "table:questions"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
