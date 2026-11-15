@@ -103,6 +103,7 @@ fn project_columns<'a>(
                             reads: Vec::new(),
                             qualified_reads: Vec::new(),
                             peer_column: None,
+                            single_value: false,
                         };
                         if !projected.items[index].pins.contains(&pin) {
                             projected.to_mut().items[index].pins.push(pin);

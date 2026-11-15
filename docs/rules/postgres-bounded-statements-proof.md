@@ -148,7 +148,40 @@ set operation). A statement is bounded when any of these holds:
   and one bounded source cannot lend its bound to an unrelated unbounded
   sibling. A direct target-key predicate still bounds the target even when another source
   is unbounded. The target is always the physical relation, even when a CTE of the same
-  name exists.
+  name exists. Joining that limited set on a column that is not a unique key of the target
+  still reports the target.
+- A plain `GROUP BY` produces a bounded result when every key is one caller value, or
+  comes from an item that is already bounded, even when another input would otherwise fan
+  out. One caller value is an unconditional `=` to a literal or bind. A CTE output that
+  projects that column carries the same value, so `GROUP BY current.post_id` is one row
+  when every `post_id` equals one bind. A chain of more than eight output renames does
+  not carry that value. An expression output has no source column to follow. `GROUP BY page.id` stays bounded when `page` itself
+  is a fixed `LIMIT`, including when the grouped query also joins an unbounded table: the
+  grouped result cannot grow past that input. `ROLLUP`, `CUBE`, `GROUPING SETS`, and any
+  other grouping modifier are not this proof, because they can add subtotal rows. An
+  integer `GROUP BY` literal is an output ordinal, not a constant. A set-returning
+  function in the select list, in `DISTINCT ON`, or in `ORDER BY` can multiply the grouped
+  rows, so those queries stay unbounded. `IN`, `ANY`, `OR`, and `IS NOT DISTINCT FROM` are not one caller
+  value. A key that still comes from an unbounded item keeps that item reported.
+  A positional alias list is the grouped name, so `d(id, status)` makes `GROUP BY d.status`
+  follow the second output.
+- A row whose unique key is pinned to one caller value is one row, so every catalog
+  column of that row is one value. Those values cross a direct column equality (`a.col = b.col`)
+  when the equality is unconditional, not null-safe, and names both columns. A validated
+  foreign key whose columns are all `NOT NULL` then fills the remaining foreign-key
+  columns when the equated referenced columns include a unique key of that one referenced
+  row. The filled columns can complete another composite unique key. A `NOT VALID`
+  foreign key, a nullable foreign-key column, or a composite unique key with one column
+  still free does not prove the row. This fill-in uses plain unique keys, so a partial
+  or expression unique index does not complete it. A positional
+  column alias list does not let that alias satisfy a unique key of a different physical
+  column. A positional alias list is also the name a foreign-key equality uses, so an alias
+  that reuses a foreign-key column's spelling does not equate that physical column. A complete
+  alias list, one name for each catalog column, is that column's visible name, so a join on
+  one of those names still fills the remaining foreign-key column. A repeated name in that list does not identify
+  one column, and a shorter list does not rename the columns it leaves out. Two columns that
+  are each one value are not treated as equal unless the statement equates them. A `LIMIT`
+  of more than one row is a bounded input, not one row, so it does not feed this proof.
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
 uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,

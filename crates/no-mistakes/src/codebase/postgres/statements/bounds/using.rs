@@ -61,6 +61,7 @@ impl<'a> Using<'a> {
                         reads: Vec::new(),
                         qualified_reads: Vec::new(),
                         peer_column: None,
+                        single_value: false,
                     },
                 ));
             }

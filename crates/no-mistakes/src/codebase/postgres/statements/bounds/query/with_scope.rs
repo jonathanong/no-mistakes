@@ -121,5 +121,7 @@ fn opaque(at: (usize, usize)) -> SqlBoundQuery {
         outputs: Vec::new(),
         capped: false,
         items: vec![items::opaque(at)],
+        group_constant: false,
+        group_keys: Vec::new(),
     }
 }

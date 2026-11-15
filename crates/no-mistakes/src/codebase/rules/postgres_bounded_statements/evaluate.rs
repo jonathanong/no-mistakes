@@ -18,6 +18,8 @@ mod qualified;
 mod reads;
 mod scalar_output;
 mod scalar_reads;
+mod settle;
+mod singleton;
 mod statement;
 use statement::offenders_with_columns;
 mod target;
@@ -167,20 +169,22 @@ fn evaluate(
             )
         })
         .collect();
-    propagation::bound(&keys, &mut bounded);
-    let offenders = reads::collect(
-        query,
-        &nested,
-        &pin_subqueries,
-        &bounded,
-        catalog,
-        views,
-        precise_columns,
+    let (result_bounded, offenders) = settle::finish(
+        &settle::Inputs {
+            query,
+            keys: &keys,
+            nested: &nested,
+            pin_subqueries: &pin_subqueries,
+            catalog,
+            views,
+            precise_columns,
+        },
+        &mut bounded,
     );
     target::project(
         query,
         Evaluation {
-            bounded: query.capped || bounded.iter().all(|state| *state),
+            bounded: result_bounded,
             finite_outputs: keys::output_domains(query, &nested),
             items: bounded,
             offenders,

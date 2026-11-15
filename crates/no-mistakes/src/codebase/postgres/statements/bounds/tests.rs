@@ -3,6 +3,7 @@ mod table_mixed_components;
 use format::item;
 mod caller_projection;
 mod explain_table;
+mod issue_3396;
 mod nested_positive_order;
 mod nonrecursive_ctes;
 mod pin_query_reads;

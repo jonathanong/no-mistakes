@@ -78,6 +78,8 @@ fn push(
             capped,
             items,
             outputs: Vec::new(),
+            group_constant: false,
+            group_keys: Vec::new(),
         },
         target: Some(0),
         scalar_reads: None,

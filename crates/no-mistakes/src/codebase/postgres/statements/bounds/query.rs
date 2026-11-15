@@ -6,6 +6,7 @@ use sqlparser::ast::{Query, SetExpr, SetOperator, SetQuantifier, Spanned, Statem
 mod blocking;
 mod compact;
 mod distinct_on;
+mod group_by;
 mod outputs;
 
 pub(super) use outputs::caller_value;
@@ -78,6 +79,7 @@ fn bound_body_observed(
         }
     }
     bound.capped |= orders_by_aggregate(query);
+    group_by::apply_order(&mut bound, query, scope);
     // Aggregate/SRF expansion may emit rows despite an empty WHERE input. Preserve its
     // existing uncapped semantics rather than converting that input predicate to a row cap.
     if !bound.capped && bound.input_mode == SqlBoundInputMode::Skipped {
@@ -192,5 +194,7 @@ pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
         capped: false,
         items: vec![items::other(at)],
         outputs: Vec::new(),
+        group_constant: false,
+        group_keys: Vec::new(),
     }
 }
