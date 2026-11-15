@@ -1,4 +1,4 @@
-use super::{sole_argument, strict_name};
+use super::{is_literal, placeholder_binding, sole_argument, strict_name};
 use crate::codebase::postgres::parse_postgres_expression;
 use sqlparser::ast::{
     Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgOperator, FunctionArguments, Ident,
@@ -51,4 +51,27 @@ fn strict_names_are_unquoted_lower_upper_or_btrim() {
         }];
     }
     assert!(sole_argument(&named).is_none());
+}
+
+fn parsed(sql: &str) -> Expr {
+    parse_postgres_expression(sql).unwrap_or_else(|| panic!("parse {sql}"))
+}
+
+#[test]
+fn placeholder_bindings_require_one_placeholder_and_one_literal() {
+    assert!(placeholder_binding(&parsed("$1 = 'pending'")).is_some());
+    assert!(placeholder_binding(&parsed("'pending' = $2")).is_some());
+    assert!(placeholder_binding(&parsed("$1 = 'pending'::text")).is_some());
+    assert!(placeholder_binding(&parsed("true = $1")).is_some());
+    assert!(placeholder_binding(&parsed("$1 = 1")).is_some());
+    assert!(placeholder_binding(&parsed("$1 = $2")).is_none());
+    assert!(placeholder_binding(&parsed("status = 'pending'")).is_none());
+    assert!(placeholder_binding(&parsed("$1 = lower('pending')")).is_none());
+    assert!(is_literal(&parsed("'pending'")));
+    assert!(is_literal(&parsed("true")));
+    assert!(is_literal(&parsed("1")));
+    assert!(is_literal(&parsed("'pending'::varchar(3)")));
+    assert!(!is_literal(&parsed("$1")));
+    assert!(!is_literal(&parsed("status")));
+    assert!(!is_literal(&parsed("lower('pending')")));
 }

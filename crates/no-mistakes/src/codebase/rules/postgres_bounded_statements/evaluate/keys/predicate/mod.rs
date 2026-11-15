@@ -1,5 +1,5 @@
 //! Partial-index implication: literal shapes, parameter forwarding, and enum splits.
-use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
+use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::SqlBoundItem;
 use crate::codebase::postgres::{CatalogTable, SchemaCatalog};
 use sqlparser::ast::Expr;
@@ -7,9 +7,14 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod assign;
 mod casts;
+mod columns;
+mod literals;
 mod shape;
 
-use shape::{atom, binding, eq_literal, eq_placeholder, membership, plain_column, same, Atom, Lit};
+use columns::column_types;
+use shape::{
+    atom_with, binding, eq_literal, eq_placeholder, membership_with, plain_column, same, Atom, Lit,
+};
 
 pub(super) fn holds(
     predicates: &[Expr],
@@ -61,25 +66,26 @@ impl Evidence {
             bindings: BTreeMap::new(),
             conflicts: BTreeSet::new(),
         };
+        let types = column_types(item, catalog);
         let branch = item
             .alternative_predicates
             .get(alternative)
             .map(Vec::as_slice)
             .unwrap_or(&[]);
         for expr in item.predicate_conjuncts.iter().chain(branch) {
-            evidence.classify(expr, catalog);
+            evidence.classify(expr, catalog, &types);
         }
         evidence.forward();
         evidence.atoms.extend(extra.iter().cloned());
         evidence
     }
 
-    fn classify(&mut self, expr: &Expr, catalog: &SchemaCatalog) {
-        if let Some((column, literal)) = eq_literal(expr, catalog) {
+    fn classify(&mut self, expr: &Expr, catalog: &SchemaCatalog, types: &BTreeMap<String, String>) {
+        if let Some((column, literal)) = eq_literal(expr, catalog, types) {
             self.atoms.push(Atom::Eq(column, literal));
             return;
         }
-        if let Some((column, placeholder)) = eq_placeholder(expr) {
+        if let Some((column, placeholder)) = eq_placeholder(expr, types) {
             self.params.push((column, placeholder));
             return;
         }
@@ -93,7 +99,7 @@ impl Evidence {
             }
             return;
         }
-        if let Some(atom) = membership(expr, catalog) {
+        if let Some(atom) = membership_with(expr, catalog, types) {
             self.atoms.push(atom);
         }
     }
@@ -146,15 +152,23 @@ impl Evidence {
             return true;
         }
         if let Expr::IsNotNull(column) = unwrap_expr(predicate) {
-            if let Expr::Identifier(ident) = unwrap_expr(column) {
-                if super::not_null::proves(&ident_key(ident), item, table) {
+            if let Some(name) = plain_column(column) {
+                if super::not_null::proves(&name, item, table, self.strict_not_null(&name)) {
                     return true;
                 }
             }
         }
-        let Some(need) = atom(predicate, catalog) else {
+        let types = column_types(item, catalog);
+        let Some(need) = atom_with(predicate, catalog, &types) else {
             return false;
         };
         self.atoms.iter().any(|have| same(have, &need))
+    }
+
+    fn strict_not_null(&self, name: &str) -> bool {
+        self.atoms.iter().any(|atom| match atom {
+            Atom::Eq(column, _) | Atom::In(column, _) => column == name,
+            Atom::Null(_) => false,
+        }) || self.params.iter().any(|(column, _)| column == name)
     }
 }

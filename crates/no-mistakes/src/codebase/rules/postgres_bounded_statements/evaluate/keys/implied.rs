@@ -108,9 +108,11 @@ fn bare_column(expr: &Expr) -> Option<String> {
 }
 
 pub(super) fn text_family_column(table: &CatalogTable, name: &str) -> bool {
-    column_type(table, name)
-        .and_then(family)
-        .is_some_and(|kind| kind == "text")
+    column_type(table, name).is_some_and(text_family_name)
+}
+
+pub(super) fn text_family_name(data_type: &str) -> bool {
+    family(data_type).is_some_and(|kind| kind == "text")
 }
 
 fn column_type<'a>(table: &'a CatalogTable, name: &str) -> Option<&'a str> {

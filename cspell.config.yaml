@@ -38,6 +38,7 @@ words:
   - constantize
   - conname
   - ctid
+  - citext
   - conrelid
   - cooldown
   - dedup

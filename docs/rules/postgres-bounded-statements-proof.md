@@ -322,9 +322,11 @@ Every key element must have a finite pin. Supported index shapes include:
   proofs conservative.
   A conjunct holds when the same alternative contains the same shape: `col IS NULL`;
   `col = literal`; or `col IN (literals)` with the same set of literals. A cast
-  stays on the literal only when it preserves the value: `text`, `boolean`, unlimited
+  stays on the literal only when it preserves the value and the catalog column
+  type compares the same way: `text`, `boolean`, unlimited
   `varchar` / `character varying`, `varchar(n)` when every character fits, and a
-  catalog enum whose label is the literal. A quoted enum name keeps its case, so
+  catalog enum whose label is the literal. `citext` and `char` / `character`
+  do not treat `col = 'a'::text` as `col = 'a'`. A quoted enum name keeps its case, so
   `'direct'::"SourceKinds"` matches the catalog key `"SourceKinds"`.
   `ANY (ARRAY[...]::type[])` applies that rule to each element.
   A scalar cast to an array type drops the literal.
@@ -333,13 +335,22 @@ Every key element must have a finite pin. Supported index shapes include:
   scalar or to more than one array dimension, and any other cast stay unrecognized,
   so `'pending'::varchar(3)` does not match `'pending'`.
   PostgreSQL stores that list as `col = ANY (ARRAY[...])`,
-  and the two spellings match. A longer list, a shorter list, or `col = one-literal`
+  and the two spellings match. On a `varchar` column the catalog stores the
+  predicate as `(col)::text = ANY (ARRAY['pending'::text, 'ready'::text])`, or
+  `(col)::text = ANY ((ARRAY['pending'::character varying, 'ready'::character varying])::text[])`
+  when the index was written with `IN`. Those match the same literal set.
+  `(col)::text` is not a bare column for `citext` or `char` / `character`.
+  A longer list, a shorter list, or `col = one-literal`
   does not match a multi-value list. A bare parameter does not match a literal.
   `col = $n` together with `$n = literal` or `literal = $n` in the same alternative
   does. Two different literals for that placeholder cancel the binding, so it
   neither forwards nor chooses an enum label. Shared
   `AND` conjuncts count for every alternative. A conjunct that appears only in one
-  `OR` arm counts only for that arm.
+  `OR` arm counts only for that arm. A strict equality or `IN` in that arm also
+  implies `col IS NOT NULL` for that arm alone, so `UNIQUE (owner) WHERE state IS NOT NULL`
+  holds for `state = 'x' OR state IN ('y', 'z')` and for `state = $2 OR state = $3`.
+  The other arm does not inherit it: `state = 'x' OR state IS NULL` stays unproven.
+  `IS NOT DISTINCT FROM` does not imply the column is not null.
   When the catalog types a column as an enum and the alternative equates that
   column to a parameter, each catalog label is tried in its place, up to 32
   combinations. Every label must pin some unique index using that alternative's

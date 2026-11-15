@@ -1,9 +1,10 @@
 //! Shapes a partial-index predicate can share with a query conjunct.
-use super::casts::preserves;
+use super::columns::stored_column;
+use super::literals::{array_literals, literal, literals};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::SchemaCatalog;
-use sqlparser::ast::{ArrayElemTypeDef, BinaryOperator, DataType, Expr, Value};
-use std::collections::BTreeSet;
+use sqlparser::ast::{BinaryOperator, Expr, Value};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(in super::super) enum Atom {
@@ -12,12 +13,7 @@ pub(in super::super) enum Atom {
     In(String, BTreeSet<Lit>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(in super::super) enum Lit {
-    Str(String),
-    Bool(bool),
-    Num(String),
-}
+pub(super) use super::literals::Lit;
 
 pub(super) fn same(have: &Atom, need: &Atom) -> bool {
     match (have, need) {
@@ -28,61 +24,93 @@ pub(super) fn same(have: &Atom, need: &Atom) -> bool {
     }
 }
 
-pub(super) fn atom(expr: &Expr, catalog: &SchemaCatalog) -> Option<Atom> {
-    if let Some((column, literal)) = eq_literal(expr, catalog) {
+pub(super) fn atom_with(
+    expr: &Expr,
+    catalog: &SchemaCatalog,
+    types: &BTreeMap<String, String>,
+) -> Option<Atom> {
+    if let Some((column, literal)) = eq_literal(expr, catalog, types) {
         return Some(Atom::Eq(column, literal));
     }
     if let Expr::IsNull(column) = unwrap_expr(expr) {
         return plain_column(column).map(Atom::Null);
     }
-    membership(expr, catalog)
+    membership_with(expr, catalog, types)
 }
 
-pub(super) fn membership(expr: &Expr, catalog: &SchemaCatalog) -> Option<Atom> {
+pub(super) fn membership_with(
+    expr: &Expr,
+    catalog: &SchemaCatalog,
+    types: &BTreeMap<String, String>,
+) -> Option<Atom> {
     match unwrap_expr(expr) {
         Expr::InList {
             expr,
             list,
             negated: false,
-        } => Some(Atom::In(plain_column(expr)?, literals(list, catalog)?)),
+        } => {
+            let column = stored_column(expr, types)?;
+            Some(Atom::In(
+                column.clone(),
+                literals(list, catalog, Some(&column), types)?,
+            ))
+        }
         Expr::AnyOp {
             left,
             compare_op: BinaryOperator::Eq,
             right,
             ..
-        } => Some(Atom::In(
-            plain_column(left)?,
-            array_literals(right, catalog)?,
-        )),
+        } => {
+            let column = stored_column(left, types)?;
+            Some(Atom::In(
+                column.clone(),
+                array_literals(right, catalog, Some(&column), types)?,
+            ))
+        }
         _ => None,
     }
 }
 
-pub(super) fn eq_literal(expr: &Expr, catalog: &SchemaCatalog) -> Option<(String, Lit)> {
+pub(super) fn eq_literal(
+    expr: &Expr,
+    catalog: &SchemaCatalog,
+    types: &BTreeMap<String, String>,
+) -> Option<(String, Lit)> {
     let (left, right) = eq_pair(expr)?;
-    let (column, value) = column_and_other(left, right)?;
-    Some((column, literal(value, catalog)?))
+    let (column, value) = column_and_other(left, right, types)?;
+    Some((
+        column.clone(),
+        literal(value, catalog, Some(&column), types)?,
+    ))
 }
 
-pub(super) fn eq_placeholder(expr: &Expr) -> Option<(String, String)> {
+pub(super) fn eq_placeholder(
+    expr: &Expr,
+    types: &BTreeMap<String, String>,
+) -> Option<(String, String)> {
     let (left, right) = eq_pair(expr)?;
-    let (column, value) = column_and_other(left, right)?;
+    let (column, value) = column_and_other(left, right, types)?;
     Some((column, placeholder(value)?))
 }
 
 pub(super) fn binding(expr: &Expr, catalog: &SchemaCatalog) -> Option<(String, Lit)> {
+    let types = BTreeMap::new();
     let (left, right) = eq_pair(expr)?;
-    if let (Some(name), Some(value)) = (placeholder(left), literal(right, catalog)) {
+    if let (Some(name), Some(value)) = (placeholder(left), literal(right, catalog, None, &types)) {
         return Some((name, value));
     }
-    if let (Some(name), Some(value)) = (placeholder(right), literal(left, catalog)) {
+    if let (Some(name), Some(value)) = (placeholder(right), literal(left, catalog, None, &types)) {
         return Some((name, value));
     }
     None
 }
 
-fn column_and_other<'a>(left: &'a Expr, right: &'a Expr) -> Option<(String, &'a Expr)> {
-    match (plain_column(left), plain_column(right)) {
+fn column_and_other<'a>(
+    left: &'a Expr,
+    right: &'a Expr,
+    types: &BTreeMap<String, String>,
+) -> Option<(String, &'a Expr)> {
+    match (stored_column(left, types), stored_column(right, types)) {
         (Some(column), None) => Some((column, right)),
         (None, Some(column)) => Some((column, left)),
         _ => None,
@@ -100,57 +128,9 @@ fn eq_pair(expr: &Expr) -> Option<(&Expr, &Expr)> {
     }
 }
 
-fn array_element(data_type: &DataType) -> Option<&DataType> {
-    match data_type {
-        DataType::Array(
-            ArrayElemTypeDef::SquareBracket(inner, _) | ArrayElemTypeDef::Qualified(inner, _),
-        ) => Some(inner),
-        _ => None,
-    }
-}
-
-fn literals(list: &[Expr], catalog: &SchemaCatalog) -> Option<BTreeSet<Lit>> {
-    list.iter().map(|expr| literal(expr, catalog)).collect()
-}
-
-fn array_literals(expr: &Expr, catalog: &SchemaCatalog) -> Option<BTreeSet<Lit>> {
-    match unwrap_expr(expr) {
-        Expr::Array(array) => literals(&array.elem, catalog),
-        Expr::Cast {
-            expr, data_type, ..
-        } => {
-            let values = array_literals(expr, catalog)?;
-            let element = array_element(data_type)?;
-            values
-                .iter()
-                .all(|value| preserves(element, value, catalog))
-                .then_some(values)
-        }
-        _ => None,
-    }
-}
-
 pub(super) fn plain_column(expr: &Expr) -> Option<String> {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => Some(ident_key(ident)),
-        _ => None,
-    }
-}
-
-fn literal(expr: &Expr, catalog: &SchemaCatalog) -> Option<Lit> {
-    match unwrap_expr(expr) {
-        Expr::Value(value) => match &value.value {
-            Value::SingleQuotedString(text) => Some(Lit::Str(text.clone())),
-            Value::Boolean(flag) => Some(Lit::Bool(*flag)),
-            Value::Number(text, _) => Some(Lit::Num(text.clone())),
-            _ => None,
-        },
-        Expr::Cast {
-            expr, data_type, ..
-        } => {
-            let inner = literal(expr, catalog)?;
-            preserves(data_type, &inner, catalog).then_some(inner)
-        }
         _ => None,
     }
 }

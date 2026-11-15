@@ -1,0 +1,66 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "partial-index-gaps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "arm-null-safe.sql",
+          "line": 1,
+          "message": "arm-null-safe.sql:1: DELETE can remove every row of marks; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM marks",
+          "target": "table:marks"
+        },
+        {
+          "file": "arm-null.sql",
+          "line": 1,
+          "message": "arm-null.sql:1: DELETE can remove every row of marks; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM marks",
+          "target": "table:marks"
+        },
+        {
+          "file": "char-literal.sql",
+          "line": 1,
+          "message": "char-literal.sql:1: DELETE can remove every row of codes_literal; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM codes_literal",
+          "target": "table:codes_literal"
+        },
+        {
+          "file": "char-text.sql",
+          "line": 1,
+          "message": "char-text.sql:1: DELETE can remove every row of codes; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM codes",
+          "target": "table:codes"
+        },
+        {
+          "file": "citext-literal.sql",
+          "line": 1,
+          "message": "citext-literal.sql:1: DELETE can remove every row of folds_literal; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM folds_literal",
+          "target": "table:folds_literal"
+        },
+        {
+          "file": "citext-text.sql",
+          "line": 1,
+          "message": "citext-text.sql:1: DELETE can remove every row of folds; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM folds",
+          "target": "table:folds"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,315 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "marks": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner": { "dataType": "uuid", "ordinalPosition": 2 },
+        "state": { "dataType": "text", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "marks_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX marks_pkey ON marks (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "marks_owner_live": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(state IS NOT NULL)",
+          "definition": "CREATE UNIQUE INDEX marks_owner_live ON marks (owner) WHERE (state IS NOT NULL)",
+          "keys": [{ "column": "owner", "expression": "owner" }]
+        }
+      }
+    },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "device_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "session_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "label": { "dataType": "character varying", "nullable": true, "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "labels_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labels_pkey ON labels (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "labels_open": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((label)::text = ANY (ARRAY['pending'::text, 'ready'::text]))",
+          "definition": "CREATE UNIQUE INDEX labels_open ON labels (device_id, session_id) WHERE ((label)::text = ANY (ARRAY['pending'::text, 'ready'::text]))",
+          "keys": [
+            { "column": "device_id", "expression": "device_id" },
+            { "column": "session_id", "expression": "session_id" }
+          ]
+        }
+      }
+    },
+    "label_lists": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "device_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "session_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "label": { "dataType": "character varying", "nullable": true, "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "label_lists_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX label_lists_pkey ON label_lists (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "label_lists_open": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((label)::text = ANY ((ARRAY['pending'::character varying, 'ready'::character varying])::text[]))",
+          "definition": "CREATE UNIQUE INDEX label_lists_open ON label_lists (device_id, session_id) WHERE ((label)::text = ANY ((ARRAY['pending'::character varying, 'ready'::character varying])::text[]))",
+          "keys": [
+            { "column": "device_id", "expression": "device_id" },
+            { "column": "session_id", "expression": "session_id" }
+          ]
+        }
+      }
+    },
+    "notes": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "device_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "session_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "status": { "dataType": "text", "nullable": true, "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "notes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX notes_pkey ON notes (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "notes_pending": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(status = 'pending')",
+          "definition": "CREATE UNIQUE INDEX notes_pending ON notes (device_id, session_id) WHERE (status = 'pending')",
+          "keys": [
+            { "column": "device_id", "expression": "device_id" },
+            { "column": "session_id", "expression": "session_id" }
+          ]
+        }
+      }
+    },
+    "folds": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner": { "dataType": "uuid", "ordinalPosition": 2 },
+        "folded": { "dataType": "citext", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "folds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX folds_pkey ON folds (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "folds_exact": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((folded)::text = 'a'::text)",
+          "definition": "CREATE UNIQUE INDEX folds_exact ON folds (owner) WHERE ((folded)::text = 'a'::text)",
+          "keys": [{ "column": "owner", "expression": "owner" }]
+        }
+      }
+    },
+    "folds_literal": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner": { "dataType": "uuid", "ordinalPosition": 2 },
+        "folded": { "dataType": "citext", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "folds_literal_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX folds_literal_pkey ON folds_literal (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "folds_literal_ci": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(folded = 'a')",
+          "definition": "CREATE UNIQUE INDEX folds_literal_ci ON folds_literal (owner) WHERE (folded = 'a')",
+          "keys": [{ "column": "owner", "expression": "owner" }]
+        }
+      }
+    },
+    "codes": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner": { "dataType": "uuid", "ordinalPosition": 2 },
+        "code": { "dataType": "character", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "codes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX codes_pkey ON codes (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "codes_padded": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((code)::text = 'a '::text)",
+          "definition": "CREATE UNIQUE INDEX codes_padded ON codes (owner) WHERE ((code)::text = 'a '::text)",
+          "keys": [{ "column": "owner", "expression": "owner" }]
+        }
+      }
+    },
+    "codes_literal": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner": { "dataType": "uuid", "ordinalPosition": 2 },
+        "code": { "dataType": "character", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "codes_literal_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX codes_literal_pkey ON codes_literal (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "codes_literal_bpchar": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(code = 'a')",
+          "definition": "CREATE UNIQUE INDEX codes_literal_bpchar ON codes_literal (owner) WHERE (code = 'a')",
+          "keys": [{ "column": "owner", "expression": "owner" }]
+        }
+      }
+    }
+  }
+}
