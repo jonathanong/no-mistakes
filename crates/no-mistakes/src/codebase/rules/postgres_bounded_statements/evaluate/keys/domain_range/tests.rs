@@ -27,6 +27,17 @@ fn date_predicate_counts_inclusive_days() {
             .width(),
         Some(365)
     );
+    let absent = |sql: &str| {
+        let expr = parse_postgres_expression(sql).unwrap();
+        let expr = canonical_bound_expr(&expr);
+        let mut conjuncts = Vec::new();
+        dnf::and_conjuncts(&expr, &mut conjuncts);
+        closed_span("day", &conjuncts, Literal::Date).is_none()
+    };
+    assert!(absent("day >= DATE '01-02-03' AND day <= DATE '01-02-04'"));
+    assert!(absent(
+        "day >= DATE '2026-1-01' AND day <= DATE '2026-01-02'"
+    ));
 }
 
 #[test]

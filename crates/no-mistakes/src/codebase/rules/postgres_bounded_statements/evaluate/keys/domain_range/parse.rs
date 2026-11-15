@@ -141,9 +141,12 @@ fn date_text(value: &Value) -> Option<(i32, u32, u32)> {
     let Value::SingleQuotedString(text) = value else {
         return None;
     };
-    let mut parts = text.split('-');
-    let year = parts.next()?.parse().ok()?;
-    let month = parts.next()?.parse().ok()?;
-    let day = parts.next()?.parse().ok()?;
-    parts.next().is_none().then_some((year, month, day))
+    let bytes = text.as_bytes();
+    if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' {
+        return None;
+    }
+    let year = text.get(..4)?.parse().ok()?;
+    let month = text.get(5..7)?.parse().ok()?;
+    let day = text.get(8..)?.parse().ok()?;
+    Some((year, month, day))
 }

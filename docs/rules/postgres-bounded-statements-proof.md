@@ -92,10 +92,10 @@ set operation). A statement is bounded when any of these holds:
   accepts a lookup when every column left free on one unique key has a proven
   finite domain and the product of those domains is at most the cap. Equality
   pins are not multiplied. A domain is a validated integer check, a non-null
-  enum, a non-null boolean, or a closed inclusive literal range. An integer
+  enum, a non-null boolean, or a closed inclusive `YYYY-MM-DD` literal range. An integer
   type's width is not a domain. `OR` arms add their products. A product within
   the cap is silent. A product above the cap stays a finding and names that
-  product. The proof skips a statement another bound already accepts. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
+  product, including a materialized body. The proof skips a statement another bound already accepts. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
   LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
   only preceding FROM sources; a later source with the same column name cannot hide that

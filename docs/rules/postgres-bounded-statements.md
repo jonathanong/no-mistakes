@@ -266,14 +266,14 @@ sizes is at most `maxDomainRows`. Equality-pinned columns do not multiply. A
 domain is a validated `CHECK (col BETWEEN a AND b)` or
 `CHECK (col >= a AND col <= b)` on a non-null integer column, a non-null enum,
 a non-null boolean, or a closed inclusive literal range in the query predicate,
-including a `date` column between two date literals. A query range matches
+including a `date` column between two `YYYY-MM-DD` date literals. A query range matches
 the column's visible name, so `FROM alias_slots AS renamed(n)` is closed by
 `WHERE n BETWEEN 1 AND 5`. A catalog check still names the physical column.
 Several checks and query bounds intersect. An integer type's width is not a domain: `smallint` and
 `integer` stay reported unless a check or a literal range closes them. Nullable
 columns, checks that are not validated, `OR` checks, and open ranges are not
 domains. `OR` branches add their products and the sum must fit the cap. The
-finding for a product above the cap names that product. A product within the
+finding for a product above the cap names that product, including a materialized-body finding. A product within the
 cap accepts the statement silently, the same way a `LIMIT` or a unique-key
 lookup does. The domain proof runs only for a statement that would otherwise
 be a finding, so a statement an allow entry, a `LIMIT`, or another bound

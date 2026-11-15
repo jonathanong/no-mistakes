@@ -92,6 +92,22 @@ fn postgres_bounded_domain_rows_redundant_allow_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_bounded_domain_rows_body_check_json_snapshot() {
+    let root = root();
+    assert_saved_fixture(
+        "postgres_bounded_domain_rows_body",
+        &[
+            (
+                "unset",
+                root.clone(),
+                root.join("domain-rows-body-unset.yml"),
+            ),
+            ("rows_5", root.clone(), root.join("domain-rows-body-5.yml")),
+        ],
+    );
+}
+
+#[test]
 fn postgres_bounded_domain_rows_group_order_check_json_snapshot() {
     let root = group_order();
     assert_saved_fixture(

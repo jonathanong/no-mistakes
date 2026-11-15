@@ -138,9 +138,10 @@ not exempt other predicates or SQL-derived unbounded key sets. See
 integer that defaults to unset. When set, a lookup whose free unique-key
 columns each have a proven finite domain is accepted when the product of those
 domain sizes is at most the cap. A domain is a validated integer check range, a
-non-null enum, a non-null boolean, or a closed inclusive literal range in the
-predicate. An integer type's width is not a domain. An accepted product is
-silent. A larger product stays a finding and names that product. The proof
+non-null enum, a non-null boolean, or a closed inclusive `YYYY-MM-DD`
+literal range in the predicate. An integer type's width is not a domain. An
+accepted product is silent. A larger product stays a finding and names that
+product, including a materialized-body finding. The proof
 does not apply to a statement an allow entry or another bound already accepts.
 An allow entry the proof replaces entirely is reported once, on that entry.
 See
