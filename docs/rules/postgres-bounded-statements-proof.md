@@ -308,8 +308,8 @@ Every key element must have a finite pin. Supported index shapes include:
   catalog enum whose label is the literal. A quoted enum name keeps its case, so
   `'direct'::"SourceKinds"` matches the catalog key `"SourceKinds"`.
   `ANY (ARRAY[...]::type[])` applies that rule to each element.
-  A scalar cast to an array type drops the literal, including
-  `('pending'::text[])::text`, which PostgreSQL evaluates to `{pending}`.
+  A scalar cast to an array type drops the literal.
+  `('{"pending"}'::text[])::text` is the text `{pending}`, not `pending`.
   `varchar(n)` that truncates, `char(n)`, a cast of an array constructor to a
   scalar or to more than one array dimension, and any other cast stay unrecognized,
   so `'pending'::varchar(3)` does not match `'pending'`.
@@ -344,7 +344,7 @@ These do not prove one row:
   That includes a different `IN` or `ANY` literal set, a parameter standing
   in for a literal, and a cast that can change the literal
   (`'pending'::varchar(3)`, the same cast on an array, and
-  `('pending'::text[])::text`).
+  `('{"pending"}'::text[])::text`).
 - An enum label whose proving index is pinned only by an unbounded relation.
 - A catalog index with a placeholder anywhere in its parsed key or predicate.
   PostgreSQL index definitions cannot depend on query parameters; matching malformed

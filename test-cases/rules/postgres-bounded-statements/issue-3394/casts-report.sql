@@ -32,4 +32,4 @@ UPDATE flows
 SET rejected_at = now()
 WHERE device_id = $1
   AND session_id = $2
-  AND status IN (('pending'::text[])::text, 'ready');
+  AND status IN (('{"pending"}'::text[])::text, 'ready');

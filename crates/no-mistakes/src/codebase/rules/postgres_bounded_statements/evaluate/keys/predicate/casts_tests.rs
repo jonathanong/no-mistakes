@@ -41,6 +41,11 @@ fn value_preserving_casts_keep_the_literal() {
     assert!(atom(&parsed("status = true::varchar"), &catalog).is_none());
     assert!(atom(&parsed("kind = true::source_kinds"), &catalog).is_none());
     assert!(atom(&parsed("status = ('pending'::text[])::text"), &catalog).is_none());
+    assert!(atom(
+        &parsed("status = ('{\"pending\"}'::text[])::text"),
+        &catalog
+    )
+    .is_none());
     assert_eq!(
         atom(&parsed("kind = 'direct'::\"SourceKinds\""), &catalog),
         Some(Atom::Eq("kind".to_owned(), Lit::Str("direct".to_owned())))
