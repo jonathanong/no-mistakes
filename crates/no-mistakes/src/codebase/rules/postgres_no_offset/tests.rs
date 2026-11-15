@@ -88,6 +88,25 @@ fn compile_options_honor_overrides() {
 }
 
 #[test]
+fn invalid_utf8_executor_source_still_reports_offset() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/invalid-utf8");
+    let file = root.join("src/query.ts");
+    let findings = check_with_files(
+        &root,
+        &config_with_options("importSpecifier: '@example/db'"),
+        std::slice::from_ref(&file),
+    )
+    .expect("lossy read");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.target.as_deref() == Some("offset")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn compile_options_fill_defaults() {
     let compiled = compile_options(&Options::default()).unwrap();
     assert_eq!(
