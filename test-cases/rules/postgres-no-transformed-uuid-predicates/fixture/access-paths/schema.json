@@ -830,6 +830,39 @@
               "expression": "lower(CASE WHEN label = 'a' OR label = 'b' IN ('a') THEN id::text ELSE id::text END)"
             }
           ]
+        },
+        "distinct_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label IS DISTINCT FROM 'x' THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "case_no_else_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label = 'y' THEN id::text END)"
+            }
+          ]
+        },
+        "wildcard_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text, *)"
+            }
+          ]
         }
       }
     }

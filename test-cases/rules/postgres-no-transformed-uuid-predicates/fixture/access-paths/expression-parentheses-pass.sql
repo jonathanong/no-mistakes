@@ -20,3 +20,6 @@ SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label) IS NULL THEN id::
 SELECT * FROM grouping_functions WHERE lower(CASE WHEN label BETWEEN ('a') AND ('z') THEN id::text ELSE id::text END) = $1;
 SELECT * FROM grouping_functions WHERE lower(CASE WHEN label IN (('a'), ('b')) THEN id::text ELSE id::text END) = $1;
 SELECT * FROM cast_collations WHERE lower(((id)::text) COLLATE "C") = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label) IS DISTINCT FROM ('x') THEN id::text ELSE id::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'y') THEN (id)::text END) = $1;
+SELECT * FROM grouping_functions WHERE lower((id)::text, *) = $1;

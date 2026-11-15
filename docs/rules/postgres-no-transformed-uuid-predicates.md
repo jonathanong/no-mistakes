@@ -178,6 +178,10 @@ named arguments are ignored when they do not change grouping.
 `lower(label := (id)::text)` matches `lower(label := id::text)`,
 `lower(CASE WHEN (label) IS NULL THEN id::text ELSE id::text END)` matches
 `lower(CASE WHEN label IS NULL THEN id::text ELSE id::text END)`,
+`lower(CASE WHEN (label) IS DISTINCT FROM ('x') THEN id::text ELSE id::text END)`
+matches that `CASE` without the inner parentheses,
+`lower(CASE WHEN (label = 'y') THEN (id)::text END)` matches
+`lower(CASE WHEN label = 'y' THEN id::text END)`,
 `lower(CASE WHEN label BETWEEN ('a') AND ('z') THEN id::text ELSE id::text END)`
 matches that `CASE` without the bound parentheses,
 `lower(CASE WHEN label IN (('a'), ('b')) THEN id::text ELSE id::text END)`
