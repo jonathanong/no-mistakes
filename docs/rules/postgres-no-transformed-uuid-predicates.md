@@ -125,9 +125,10 @@ See PostgreSQL's [expression-index documentation](https://www.postgresql.org/doc
 
 ### Outer-join row filters
 
-The rule abstains on a qualified, multi-relation `num_nonnulls(...) = 1` filter
-in `WHERE` when at least one referenced relation is null-extended by an outer
-join. For example:
+After applying proven bare-key anchors and other catalog-backed exemptions,
+the rule classifies a remaining qualified, multi-relation `num_nonnulls(...) = 1`
+filter in `WHERE` as unanalyzable when at least one referenced relation is
+null-extended by an outer join. For example:
 
 ```sql
 SELECT * FROM a
@@ -136,11 +137,30 @@ LEFT JOIN c ON c.link = a.id
 WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;
 ```
 
-This is recorded as `outer-join-residual-filter`, because the rule cannot prove
-which table's access path the joined-row filter drives. Existing
-`unanalyzableSql` policy applies: `advise` emits an advisory, `ignore` suppresses
-it, and `fail` reports an unanalyzable predicate. It is not a proven UUID-transform
-violation. A separate driving conjunct such as `a.id::text = $1` still reports,
+The classification reason is `outer-join-residual-filter`: the rule cannot prove
+which table's access path the joined-row filter drives. Visible output follows
+the effective `unanalyzableSql` policy:
+
+| Policy | Output |
+| --- | --- |
+| `advise` | A non-failing `outer-join-residual-filter` advisory |
+| `ignore` | No finding and no advisory |
+| `fail` | An unanalyzable-predicate finding |
+
+With no rule or shared analysis-policy override, the default is `fail`/`report`.
+The example configuration at the top of this page explicitly selects `ignore`,
+so a newly unanalyzable filter is silent under that configuration. Use
+`unanalyzableSql: advise` to request its advisory. `check --include-sql-verdicts`
+exposes the `abstain` status and residual reason even when `ignore` suppresses
+visible diagnostics.
+
+The same policy applies to statically recovered TS embedded queries starting
+from `unnest($1::uuid[]) AS src(id)` with eight `LEFT JOIN`s and a nested
+`COALESCE` inside `num_nonnulls`. Neither the function source nor the nested call
+alone suppresses the advisory. Proven anchors can instead clear every transformed
+column before this classification, which also produces no diagnostic.
+
+A separate driving conjunct such as `a.id::text = $1` still reports,
 as does the null-rejecting `b.id::text = $1`. Inner joins, single-relation
 transforms, other functions, and other comparisons do not get this abstention.
 PostgreSQL explains the distinction between outer-join `ON` and `WHERE`
