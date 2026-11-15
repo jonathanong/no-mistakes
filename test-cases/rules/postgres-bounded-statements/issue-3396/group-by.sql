@@ -75,3 +75,14 @@ SELECT s9.k FROM s9 JOIN entry_signals signals ON TRUE GROUP BY s9.k;
 
 -- A list of two columns is not one peer value.
 SELECT a.id FROM flows a, flows b, flows c WHERE a.id IN (b.id, c.id);
+
+-- A positional alias list names the grouped output, not the inner select name.
+SELECT d.status
+FROM (SELECT status, id FROM flows WHERE status = 'pending') AS d(id, status)
+JOIN entry_signals signals ON TRUE
+GROUP BY d.status;
+
+-- The same list in select order still groups the one caller value.
+SELECT d.status
+FROM (SELECT status, id FROM flows WHERE status = 'pending') AS d(status, id)
+GROUP BY d.status;

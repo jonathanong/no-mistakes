@@ -106,7 +106,16 @@ fn column_single(items: &[SqlBoundItem], item: usize, column: &str, depth: usize
     let matched: Vec<_> = query
         .outputs
         .iter()
-        .filter(|output| output.name.as_deref() == Some(column))
+        .enumerate()
+        .filter(|(index, output)| {
+            current
+                .column_aliases
+                .get(*index)
+                .map(String::as_str)
+                .or(output.name.as_deref())
+                == Some(column)
+        })
+        .map(|(_, output)| output)
         .collect();
     !matched.is_empty()
         && matched

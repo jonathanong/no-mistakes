@@ -163,6 +163,8 @@ set operation). A statement is bounded when any of these holds:
   function in the select list or in `ORDER BY` can multiply the grouped rows, so those
   queries stay unbounded. `IN`, `ANY`, `OR`, and `IS NOT DISTINCT FROM` are not one caller
   value. A key that still comes from an unbounded item keeps that item reported.
+  A positional alias list is the grouped name, so `d(id, status)` makes `GROUP BY d.status`
+  follow the second output.
 - A row whose unique key is pinned to one caller value is one row, so every catalog
   column of that row is one value. Those values cross a direct column equality (`a.col = b.col`)
   when the equality is unconditional, not null-safe, and names both columns. A validated
@@ -173,7 +175,8 @@ set operation). A statement is bounded when any of these holds:
   still free does not prove the row. This fill-in uses plain unique keys, so a partial
   or expression unique index does not complete it. A positional
   column alias list does not let that alias satisfy a unique key of a different physical
-  column. Two columns that
+  column. A positional alias list is also the name a foreign-key equality uses, so an alias
+  that reuses a foreign-key column's spelling does not equate that physical column. Two columns that
   are each one value are not treated as equal unless the statement equates them. A `LIMIT`
   of more than one row is a bounded input, not one row, so it does not feed this proof.
 

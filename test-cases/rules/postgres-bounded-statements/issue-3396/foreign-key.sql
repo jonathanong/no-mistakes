@@ -51,3 +51,15 @@ JOIN lineages lineage ON lineage.id = operation.lineage_id
 WHERE membership.id = $1 AND operation.operation_kind = 'refund'
   AND operation.idempotency_key = $2 AND source.lineage_id = lineage.id
   AND operation.lineage_id = lineage.id;
+
+-- A positional alias that reuses a foreign-key name is not that physical column.
+SELECT o.id
+FROM operations AS o(id, lineage_id, source_id, context_id, operation_kind, idempotency_key)
+JOIN lineages l ON o.lineage_id = l.id
+WHERE l.id = $1 AND o.idempotency_key = $2;
+
+-- The same alias list in catalog order still completes the composite key.
+SELECT o.id
+FROM operations AS o(id, source_id, lineage_id, context_id, operation_kind, idempotency_key)
+JOIN lineages l ON o.lineage_id = l.id AND o.context_id = l.context_id
+WHERE l.id = $1 AND l.context_id = $2 AND o.idempotency_key = $3;

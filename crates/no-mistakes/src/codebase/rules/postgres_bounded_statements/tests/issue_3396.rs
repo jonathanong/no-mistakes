@@ -56,6 +56,8 @@ fn issue_3396_shapes_keep_their_negative_controls() {
             vec!["entry_signals".to_string(), "flows".to_string()],
             vec!["entry_signals".to_string(), "flows".to_string()],
             vec!["flows".to_string()],
+            vec!["entry_signals".to_string(), "flows".to_string()],
+            vec![],
         ]
     );
     assert_eq!(
@@ -68,6 +70,8 @@ fn issue_3396_shapes_keep_their_negative_controls() {
             vec!["lineages".to_string(), "operations".to_string()],
             vec!["operations".to_string()],
             vec!["draft_operations".to_string()],
+            vec!["operations".to_string()],
+            vec![],
         ]
     );
 }

@@ -1,6 +1,6 @@
 //! A validated all-NOT-NULL foreign key copies the remaining columns from one referenced row.
 use super::peer;
-use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundPin, SqlBoundQuery};
+use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
 use crate::codebase::postgres::SchemaCatalog;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -29,12 +29,31 @@ pub(super) fn imply(
             }
             let mut equated: BTreeMap<usize, BTreeSet<String>> = BTreeMap::new();
             for (local, remote) in key.columns.iter().zip(&key.referenced_columns) {
+                let Some(local_visible) = visible(table, &item.column_aliases, local) else {
+                    continue;
+                };
                 for pin in &item.pins {
-                    let Some(source) = equated_source(pin, local, remote) else {
+                    let Some((source, peer_column)) = peer(pin) else {
                         continue;
                     };
-                    if same_table(query, catalog, source, &key.referenced_table).is_some() {
-                        equated.entry(source).or_default().insert(remote.clone());
+                    if pin.column != local_visible {
+                        continue;
+                    }
+                    let Some(source_table) =
+                        same_table(query, catalog, source, &key.referenced_table)
+                    else {
+                        continue;
+                    };
+                    let Some(remote_visible) =
+                        visible(source_table, &query.items[source].column_aliases, remote)
+                    else {
+                        continue;
+                    };
+                    if peer_column == remote_visible {
+                        equated
+                            .entry(source)
+                            .or_default()
+                            .insert(remote_visible.to_owned());
                     }
                 }
             }
@@ -55,7 +74,9 @@ pub(super) fn imply(
                     );
                     if catalog.columns_pin_one_row(&source_table.name, &pinned) {
                         for column in &key.columns {
-                            columns[index].insert(column.clone());
+                            if let Some(name) = visible(table, &item.column_aliases, column) {
+                                columns[index].insert(name.to_owned());
+                            }
                         }
                     }
                 }
@@ -64,11 +85,12 @@ pub(super) fn imply(
     }
 }
 
-fn equated_source(pin: &SqlBoundPin, local: &str, remote: &str) -> Option<usize> {
-    if pin.column != local || pin.peer_column.as_deref() != Some(remote) {
-        return None;
-    }
-    peer(pin).map(|(source, _)| source)
+fn visible<'a>(
+    table: &'a crate::codebase::postgres::CatalogTable,
+    aliases: &'a [String],
+    column: &'a str,
+) -> Option<&'a str> {
+    super::super::super::arrays::key_visible(table, aliases, column)
 }
 
 fn same_table<'a>(

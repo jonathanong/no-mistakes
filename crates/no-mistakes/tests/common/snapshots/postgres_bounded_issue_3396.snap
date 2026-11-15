@@ -58,6 +58,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "JOIN draft_operations operation ON operation.source_id = membership.source_id",
           "target": "table:draft_operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 57,
+          "message": "foreign-key.sql:57: SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM operations AS o(id, lineage_id, source_id, context_id, operation_kind, idempotency_key)",
+          "target": "table:operations"
         }
       ],
       "warnings": []
@@ -143,6 +151,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT a.id FROM flows a, flows b, flows c WHERE a.id IN (b.id, c.id);",
           "target": "table:flows"
+        },
+        {
+          "file": "group-by.sql",
+          "line": 81,
+          "message": "group-by.sql:81: SELECT can return every row of entry_signals; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM (SELECT status, id FROM flows WHERE status = 'pending') AS d(id, status)",
+          "target": "table:entry_signals, table:flows"
         }
       ],
       "warnings": []
