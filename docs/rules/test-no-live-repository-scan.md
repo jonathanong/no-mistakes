@@ -588,7 +588,7 @@ A scanning function stored on an object stays an unresolved root when a selected
 
 Call the scanner directly and pass a const fixture path or an owned `mkdtemp` root from every test and setup caller. Keep that function out of object properties, arrays, and maps in any file a selected test, setup, or runner config can reach. Production dispatch can call a named function that takes the root as a parameter and calls the scanner directly.
 
-A `.then` or `.catch` callback that enumerates its own parameter stays unresolved. In `Promise.resolve(root).then((directory) => scan(directory))`, the advisory names `directory` as a value forwarded through another parameter. The owned root passed to the helper, including by a test that awaits the returned promise, does not become that callback parameter. Opt-in [`assertion-owner`](../graph-edges.md#assertion-owner) edges record that a proven `Promise` receiver runs the callback. Those edges are separate from `call` and carry no directory root.
+A `.then` or `.catch` callback that enumerates its own parameter stays unresolved. In `Promise.resolve(root).then((directory) => scan(directory))`, the advisory names `directory` as a value forwarded through another parameter. The owned root passed to the helper, including by a test that awaits the returned promise, does not become that callback parameter. Opt-in [`assertion-owner`](../graph-edges.md#assertion-owner) edges record that a proven `Promise` receiver runs the callback. Those edges are separate from `call` and carry no directory root. A configured `coverage-producer-assertion-owner` producer stays silent when that callback calls a configured assertion, and reports when the same callback does not. The scan advisory remains either way. The silent producer report is meaningful next to that reporting sibling: an empty `rules` list alone does not show that the producer rule ran.
 
 Await the promise in the test, then call the scanner with the owned root:
 
@@ -598,7 +598,7 @@ await produce(root);
 scan(root);
 ```
 
-An inline callback that only reads a root the enclosing helper already proved, and that the helper awaits before cleanup, remains the callback-root proof in [Test-originating callers](#test-originating-callers). Passing a named function to `.then`, `.catch`, `.finally`, or `.call` (`promise.then(scan)`) remains a reference other than a direct call.
+An inline callback that only reads a root the enclosing helper already proved, and that the helper awaits before cleanup, remains the callback-root proof in [Test-originating callers](#test-originating-callers). Passing a named function to `.then`, `.catch`, `.finally`, or `.call` (`promise.then(scan)` or `scan.call(null, root)`) remains a reference other than a direct call. `scan.call` is `Function.prototype.call`: it forwards the owned root, and the advisory names the `scan` reference.
 
 **Environment variables.** A getter such as
 `() => process.env.X ?? "./tmp/default"` (same file, no parameters, one returned

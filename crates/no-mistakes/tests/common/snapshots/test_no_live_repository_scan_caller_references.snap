@@ -406,6 +406,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "promise-assertion-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/scan.mts:8 passes `directory`, a value forwarded through another parameter. Fix: pass an owned root from the caller that supplies that parameter. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/scan.mts",
+          "line": 7,
+          "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/scan.mts#assertOwned",
+          "rule": "coverage-producer-assertion-owner",
+          "sourceLine": "export function assertOwned(root: string) {",
+          "target": "assertOwned"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "promise-assertion-owner": {
     "exitCode": 0,
     "report": {
@@ -640,6 +671,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-dispatch-only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
