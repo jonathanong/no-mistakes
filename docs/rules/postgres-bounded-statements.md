@@ -267,11 +267,11 @@ a non-null boolean, or a closed inclusive literal range in the query predicate,
 including a `date` column between two date literals. Several checks and query
 bounds intersect. An integer type's width is not a domain: `smallint` and
 `integer` stay reported unless a check or a literal range closes them. Nullable
-columns, unvalidated checks, `OR` checks, and open ranges are not domains. `OR`
-branches add their products and the sum must fit the cap. The finding for a
-product above the cap names that product. An accepted statement is reported as
-an advisory that names the product and the cap. `maxDomainRows: 0` accepts no
-extra statement.
+columns, checks that are not validated, `OR` checks, and open ranges are not
+domains. `OR` branches add their products and the sum must fit the cap. The
+finding for a product above the cap names that product. An accepted statement
+is reported as an advisory that names the product and the cap.
+`maxDomainRows: 0` accepts no extra statement.
 
 ### Executor configuration
 
