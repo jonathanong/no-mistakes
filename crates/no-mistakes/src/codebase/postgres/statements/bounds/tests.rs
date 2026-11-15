@@ -13,6 +13,7 @@ mod scalar_case;
 mod scalar_reducer_arrays;
 mod standalone_table;
 mod stored_array;
+mod strict_nonnull;
 mod table_only;
 mod typed_unnest;
 use crate::codebase::postgres::statements::{

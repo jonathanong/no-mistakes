@@ -522,8 +522,10 @@ type is `text` or `varchar`: `lower(username) = lower($1)` matches
 unquoted `upper` and one-argument `btrim`, unqualified or `pg_catalog`-qualified.
 `lower` of a user-defined type and `lower` of an integer stay findings, because
 that overload need not be strict. `coalesce`, `IS NOT DISTINCT FROM`, a quoted name,
-and another schema do not. Raw equality on any type still implies that column
-`IS NOT NULL`.
+and another schema do not. The call is recorded for a base table the condition
+restricts (`WHERE`, or the filtered side of a join). An outer join `ON` does not
+record the preserved table, and a derived item is not a base table. Raw equality
+on any type still implies that column `IS NOT NULL`.
 A literal cast counts only when it preserves the value
 (`text`, `boolean`, unlimited `varchar`, `varchar(n)` that fits, or a catalog
 enum label, including a quoted mixed-case enum name). An array constructor

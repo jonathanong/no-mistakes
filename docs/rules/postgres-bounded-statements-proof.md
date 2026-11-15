@@ -305,9 +305,11 @@ Every key element must have a finite pin. Supported index shapes include:
   therefore pins `UNIQUE (lower(username))` and proves `username IS NOT NULL` when
   `username` is `text`. `coalesce` is not strict. `IS NOT DISTINCT FROM` can match
   null, so it does not. A quoted name, another schema, a filter, a window, or an extra
-  argument stays unrecognized. Raw equality on any catalog type still implies that
-  column `IS NOT NULL`. It does not prove `f(col) IS NOT NULL` or a predicate on
-  another column.
+  argument stays unrecognized. The call is recorded for a base table the condition
+  restricts (`WHERE`, or the filtered side of a join). An outer join `ON` does not
+  record the preserved table, and a derived item is not a base table. Raw equality
+  on any catalog type still implies that column `IS NOT NULL`. It does not prove
+  `f(col) IS NOT NULL` or a predicate on another column.
   An outer join's `ON` for the preserved side does not establish the scan's
   predicate. Positional column alias lists keep expression and partial-index
   proofs conservative.
