@@ -1,13 +1,16 @@
 use std::path::PathBuf;
 
 const RULE: &str = "test-no-live-repository-scan";
-const CASES: [&str; 6] = [
+const CASES: [&str; 9] = [
     "helper-owned",
     "typed-call",
+    "it-owned",
+    "object-property",
     "helper-live",
     "exported-live",
     "argv-flag",
     "stdin-json",
+    "omitted-argument",
 ];
 
 #[test]
@@ -25,12 +28,18 @@ fn issue_3355_parameter_roots_check_json_snapshot() {
         &[],
         &[],
     );
-    for name in ["helper-owned", "typed-call"] {
+    for name in ["helper-owned", "typed-call", "it-owned", "object-property"] {
         let body = &report[name]["report"];
         assert!(body["rules"].as_array().unwrap().is_empty(), "{name}");
         assert!(body["advisories"].as_array().unwrap().is_empty(), "{name}");
     }
-    for name in ["helper-live", "exported-live", "argv-flag", "stdin-json"] {
+    for name in [
+        "helper-live",
+        "exported-live",
+        "argv-flag",
+        "stdin-json",
+        "omitted-argument",
+    ] {
         assert_eq!(
             report[name]["report"]["advisories"]
                 .as_array()

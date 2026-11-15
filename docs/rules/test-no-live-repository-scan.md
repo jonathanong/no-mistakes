@@ -572,7 +572,7 @@ reaches it.
 
 ### Registries and promise callbacks
 
-A scanning function stored on an object stays an unresolved root. `const workers = { sync: processSync }` references `processSync` other than as a direct call. A later `workers.sync(root)` or `workers[name](root)` is not a resolved call of `processSync`, so the analysis cannot prove which directory that dispatch enumerates. A test that also calls `processSync` with an owned `mkdtemp` root does not clear the advisory. The advisory names that property reference.
+A scanning function stored on an object stays an unresolved root when a selected caller reaches it. `const workers = { sync: processSync }` references `processSync` other than as a direct call. A later `workers.sync(root)` or `workers[name](root)` is not a resolved call of `processSync`. That dispatch does not prove the directory, and without a resolved call it is not reported as a caller. When a selected test does call `processSync`, neither an owned `mkdtemp` argument nor the dispatch clears the advisory. The advisory names that property reference.
 
 Call the scanner directly and pass a const fixture path or an owned `mkdtemp` root from every test and setup caller. Keep that function out of object properties, arrays, and maps in any file a selected test, setup, or runner config can reach. Production dispatch can call a named function that takes the root as a parameter and calls the scanner directly.
 
