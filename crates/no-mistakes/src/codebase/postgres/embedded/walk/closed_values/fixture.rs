@@ -22,16 +22,16 @@ pub(super) fn call(file: &str, index: usize) -> EmbeddedSqlCall {
 }
 
 pub(super) fn call_containing(file: &str, needle: &str) -> EmbeddedSqlCall {
-    let (path, source, calls) = load(file);
+    let (_, source, calls) = load(file);
     let line = source
         .lines()
         .position(|line| line.contains(needle))
-        .unwrap_or_else(|| panic!("missing {needle} in {}", path.display())) as u32
+        .expect("needle") as u32
         + 1;
     calls
         .into_iter()
         .find(|call| call.line == line)
-        .unwrap_or_else(|| panic!("no call on {needle}"))
+        .expect("call")
 }
 
 pub(super) fn texts(file: &str, index: usize) -> Vec<String> {
