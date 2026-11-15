@@ -1,43 +1,34 @@
-//! Close item bounds, then decide whether grouping makes the result bounded.
+//! Close item bounds, then collect offenders against the resulting row cap.
 use super::super::view_bounds::ViewBounds;
 use super::keys::Keys;
 use super::{propagation, reads, singleton, Evaluation, Offender};
 use crate::codebase::postgres::statements::SqlBoundQuery;
 use crate::codebase::postgres::SchemaCatalog;
 
-pub(super) fn finish(
-    query: &SqlBoundQuery,
-    keys: &[Keys],
-    nested: &[Option<Evaluation>],
-    pin_subqueries: &[Vec<Option<Evaluation>>],
-    bounded: &mut [bool],
-    catalog: &SchemaCatalog,
-    views: &ViewBounds,
-    precise_columns: bool,
-) -> (bool, Vec<Offender>) {
-    propagation::bound(keys, bounded);
-    singleton::finish(query, catalog, keys, bounded);
-    let capped = query.capped || query.group_constant || grouped(query, bounded);
-    let offenders = reads::collect(
-        query,
-        nested,
-        pin_subqueries,
-        bounded,
-        catalog,
-        views,
-        precise_columns,
-        capped,
-    );
-    (capped || bounded.iter().all(|state| *state), offenders)
+pub(super) struct Inputs<'a> {
+    pub query: &'a SqlBoundQuery,
+    pub keys: &'a [Keys],
+    pub nested: &'a [Option<Evaluation>],
+    pub pin_subqueries: &'a [Vec<Option<Evaluation>>],
+    pub catalog: &'a SchemaCatalog,
+    pub views: &'a ViewBounds,
+    pub precise_columns: bool,
 }
 
-/// Every plain GROUP BY key is one value or comes from an item already bounded.
-fn grouped(query: &SqlBoundQuery, bounded: &[bool]) -> bool {
-    !query.group_keys.is_empty()
-        && query.group_keys.iter().all(|key| {
-            key.constant
-                || key
-                    .item
-                    .is_some_and(|item| bounded.get(item).copied().unwrap_or(false))
-        })
+pub(super) fn finish(inputs: &Inputs<'_>, bounded: &mut [bool]) -> (bool, Vec<Offender>) {
+    propagation::bound(inputs.keys, bounded);
+    singleton::finish(inputs.query, inputs.catalog, inputs.keys, bounded);
+    let offenders = reads::collect(
+        inputs.query,
+        inputs.nested,
+        inputs.pin_subqueries,
+        bounded,
+        inputs.catalog,
+        inputs.views,
+        inputs.precise_columns,
+    );
+    (
+        reads::row_capped(inputs.query, bounded) || bounded.iter().all(|state| *state),
+        offenders,
+    )
 }

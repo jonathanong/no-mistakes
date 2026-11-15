@@ -170,14 +170,16 @@ fn evaluate(
         })
         .collect();
     let (result_bounded, offenders) = settle::finish(
-        query,
-        &keys,
-        &nested,
-        &pin_subqueries,
+        &settle::Inputs {
+            query,
+            keys: &keys,
+            nested: &nested,
+            pin_subqueries: &pin_subqueries,
+            catalog,
+            views,
+            precise_columns,
+        },
         &mut bounded,
-        catalog,
-        views,
-        precise_columns,
     );
     target::project(
         query,

@@ -14,8 +14,8 @@ pub(super) fn collect(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
     precise_columns: bool,
-    capped: bool,
 ) -> Vec<Offender> {
+    let capped = row_capped(query, bounded);
     let mut found = Vec::new();
     for (index, item) in query.items.iter().enumerate() {
         for inner in pin_subqueries[index]
@@ -88,6 +88,22 @@ pub(super) fn relation_offender(
         column,
         blocking_input: false,
     })
+}
+
+/// `LIMIT`, a pure aggregate, or a plain `GROUP BY` whose keys are already fixed.
+pub(super) fn row_capped(query: &SqlBoundQuery, bounded: &[bool]) -> bool {
+    query.capped || query.group_constant || grouped(query, bounded)
+}
+
+/// Every plain GROUP BY key is one value or comes from an item already bounded.
+fn grouped(query: &SqlBoundQuery, bounded: &[bool]) -> bool {
+    !query.group_keys.is_empty()
+        && query.group_keys.iter().all(|key| {
+            key.constant
+                || key
+                    .item
+                    .is_some_and(|item| bounded.get(item).copied().unwrap_or(false))
+        })
 }
 
 #[cfg(test)]
