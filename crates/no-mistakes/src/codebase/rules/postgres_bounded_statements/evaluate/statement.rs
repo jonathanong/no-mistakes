@@ -24,6 +24,32 @@ pub(in crate::codebase::rules::postgres_bounded_statements) fn variant_judgment_
     judgment(fact, catalog, views, true)
 }
 
+/// The relations that make `fact` unbounded. A relation the catalog does not know is not
+/// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub(in crate::codebase::rules::postgres_bounded_statements) fn offenders(
+    fact: &SqlBoundFact,
+    catalog: &SchemaCatalog,
+) -> Vec<Offender> {
+    judgment(fact, catalog, &ViewBounds::default(), false).offenders
+}
+
+pub(in crate::codebase::rules::postgres_bounded_statements) fn offenders_with_views(
+    fact: &SqlBoundFact,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+) -> Vec<Offender> {
+    judgment(fact, catalog, views, false).offenders
+}
+
+pub(in crate::codebase::rules::postgres_bounded_statements) fn variant_offenders_with_views(
+    fact: &SqlBoundFact,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+) -> Vec<Offender> {
+    judgment(fact, catalog, views, true).offenders
+}
+
 pub(super) fn judgment(
     fact: &SqlBoundFact,
     catalog: &SchemaCatalog,

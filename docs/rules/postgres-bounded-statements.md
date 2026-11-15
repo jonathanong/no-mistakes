@@ -174,7 +174,9 @@ defaults to `[select, update, delete]`; an empty list, an unknown kind or a dupl
 a configuration error. `allow` defaults to `[]`: each entry is `{object, reason}`
 with an object such as `table:currencies` or `view:public.small_codes`. An empty reason, an object that is not a
 catalog ref, or a duplicate is a configuration error, and an entry that suppresses
-nothing is reported as stale. The catalog's name for the table is the object ref.
+nothing is reported as stale at the catalog path. An entry whose every covered
+statement the domain proof accepts on its own is reported once, on that allow
+entry in the rules file. The catalog's name for the table is the object ref.
 
 ### Catalog views
 
@@ -271,8 +273,13 @@ Several checks and query bounds intersect. An integer type's width is not a doma
 `integer` stay reported unless a check or a literal range closes them. Nullable
 columns, checks that are not validated, `OR` checks, and open ranges are not
 domains. `OR` branches add their products and the sum must fit the cap. The
-finding for a product above the cap names that product. An accepted statement
-is reported as an advisory that names the product and the cap.
+finding for a product above the cap names that product. A product within the
+cap accepts the statement silently, the same way a `LIMIT` or a unique-key
+lookup does. The domain proof runs only for a statement that would otherwise
+be a finding, so a statement an allow entry, a `LIMIT`, or another bound
+already accepts keeps that result. When the domain proof alone accepts every
+statement an allow entry covers, that entry is reported once, on the allow
+entry in the rules file.
 `maxDomainRows: 0` accepts no extra statement.
 
 ### Executor configuration

@@ -25,6 +25,7 @@ pub(super) struct FileInput<'a, 'src> {
     pub(super) advice_groups: &'a mut Groups,
     pub(super) attribution: &'a mut VariantFindingDedup<'src>,
     pub(super) native_statement_count: usize,
+    pub(super) accepted: &'a mut std::collections::BTreeSet<String>,
 }
 
 pub(super) fn file(
@@ -45,6 +46,7 @@ pub(super) fn file(
         advice_groups,
         attribution,
         native_statement_count,
+        accepted,
     } = input;
     let anchors = statement_anchors(opts, catalog, files);
     let plan = declared::plan(source, &anchors);
@@ -98,7 +100,7 @@ pub(super) fn file(
                 (&mut *findings, &mut *groups)
             };
             let judged = judgment(facts, bound, catalog, views);
-            super::domain_note::record(prepared, opts, rel, source, &judged.accepts);
+            super::super::redundant_allow::note(accepted, &judged.accepts);
             super::emit::offenders(super::emit::Offenders {
                 output,
                 groups: selected_groups,

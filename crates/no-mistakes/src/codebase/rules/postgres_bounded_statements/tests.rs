@@ -14,6 +14,7 @@ mod ddl_compat_lifecycle;
 mod ddl_search_path;
 mod domain_rows;
 mod domain_rows_alias;
+mod domain_rows_precedence;
 mod domain_rows_tail;
 mod explicit_self_alias;
 mod fetch_expressions;

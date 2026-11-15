@@ -5,24 +5,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "rows_5000": {
     "exitCode": 0,
     "report": {
-      "advisories": [
-        {
-          "file": "sql/lookups.sql",
-          "line": 1,
-          "message": "sql/lookups.sql:1: accepted tail_consents by unique-key domain product 3, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id, user_id, consent_type, revoked_at FROM tail_consents WHERE user_id = $1 AND revoked_at IS NULL;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 4,
-          "message": "sql/lookups.sql:4: accepted tail_import_rows by unique-key domain product 500, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "LEFT JOIN tail_import_rows import_row ON import_row.batch_id = batch.id",
-          "target": "domain-product"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

@@ -32,7 +32,7 @@ pub(super) fn dependent_on(items: SourceItems) -> Keys {
 pub(super) fn prepare(
     item: &SqlBoundItem,
     item_index: usize,
-    (owners, domains): (&BTreeMap<String, usize>, Option<&Domains>),
+    (owners, domains, domain_rows): (&BTreeMap<String, usize>, Option<&Domains>, Option<u64>),
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
@@ -142,7 +142,7 @@ pub(super) fn prepare(
                 .collect()
         })
         .collect();
-    let mut widths = views.domain_rows.map(|_| {
+    let mut widths = domain_rows.map(|_| {
         (0..item.pin_alternatives.max(1))
             .map(|alternative| {
                 if item.rejected_alternatives.contains(&alternative) {
@@ -173,7 +173,7 @@ pub(super) fn prepare(
         &sources,
         catalog,
     );
-    let credit = views.domain_rows.and_then(|cap| {
+    let credit = domain_rows.and_then(|cap| {
         domain_apply::apply(
             &mut prepared,
             widths.as_deref().unwrap_or(&[]),

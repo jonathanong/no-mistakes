@@ -1,6 +1,7 @@
 use super::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::ts_source::SourceStore;
+use crate::config::v2::schema::RuleDef;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::de::DeserializeOwned;
@@ -17,6 +18,7 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
             &[PathBuf],
             &SourceStore,
             &dyn SqlFactContext,
+            &RuleDef,
         ) -> Result<super::PostgresFindings>
         + Sync,
 ) -> Result<Vec<RuleFinding>> {
@@ -75,6 +77,7 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
                     sources,
                     view.as_ref()
                         .map_or(facts as &dyn SqlFactContext, |view| view),
+                    rule,
                 )
             })
         })

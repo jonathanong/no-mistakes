@@ -30,7 +30,7 @@ pub(crate) fn bound(items: &mut [SqlBoundItem], bounded: &mut [bool], catalog: &
             keys::prepare(
                 item,
                 index,
-                (&owners, None),
+                (&owners, None, None),
                 &item.pins.iter().map(|_| None).collect::<Vec<_>>(),
                 &vec![true; item.pins.len()],
                 catalog,

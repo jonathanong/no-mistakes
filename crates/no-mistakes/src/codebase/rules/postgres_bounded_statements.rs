@@ -14,6 +14,7 @@ pub(in crate::codebase) use bodies::{body_advice_requested, body_bounds_requeste
 mod column_bounds;
 mod evaluate;
 pub(crate) use evaluate::lookup::bound as bound_lookup_items;
+mod redundant_allow;
 mod scan;
 mod view_bounds;
 use std::collections::BTreeMap;
@@ -74,8 +75,14 @@ pub(crate) fn check_with_files_sources_and_facts(
         RULE_ID,
         compile_options,
         |opts: &Options| (&opts.include, &opts.exclude),
-        |root, compiled, files, sources, facts| {
-            scan::scan(root, compiled, files, sources, Some(facts))
+        |root, compiled, files, sources, facts, rule| {
+            let anchor = crate::codebase::rules::config_diagnostic::ConfigAnchor::resolve(
+                root,
+                config,
+                Some(sources),
+                rule,
+            );
+            scan::scan(root, compiled, files, sources, Some(facts), &anchor)
         },
     )
 }

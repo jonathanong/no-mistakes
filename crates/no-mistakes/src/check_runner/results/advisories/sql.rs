@@ -71,17 +71,6 @@ fn finding(
         .into_iter()
         .collect::<Vec<_>>()
         .join(", ");
-    if rows.iter().all(|row| row.subcheck == "domain-product") {
-        return RuleFinding {
-            causes: Vec::new(),
-            rule: verdict.rule.clone(),
-            file: verdict.file.clone(),
-            line,
-            message: format!("{file}:{line}: {reasons}", file = verdict.file),
-            import: None,
-            target: Some("domain-product".into()),
-        };
-    }
     let checks = rows
         .iter()
         .map(|row| row.subcheck.as_str())

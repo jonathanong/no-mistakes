@@ -64,7 +64,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         RULE_ID,
         compile_options,
         |opts: &Options| (&opts.include, &opts.exclude),
-        |root, compiled, files, sources, facts| {
+        |root, compiled, files, sources, facts, _rule| {
             scan::scan(root, compiled, files, sources, Some(facts))
         },
     )

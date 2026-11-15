@@ -708,6 +708,8 @@ asynchronous `check()` →
 catalog validation and caller-bounded key proof. `maxDomainRows` accepts a
 unique-key remainder whose free columns have proven finite domains when their
 product is at most that cap. Leave it unset to keep those lookups reported.
+An accepted product is silent. A product above the cap stays a finding and
+names that product.
 No separate runtime export is
 needed.
 

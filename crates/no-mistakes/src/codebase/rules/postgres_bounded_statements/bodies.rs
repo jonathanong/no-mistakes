@@ -68,6 +68,7 @@ pub(super) fn finish(
     sources: &crate::codebase::ts_source::SourceStore,
     mut findings: crate::codebase::rules::PostgresFindings,
     advice: crate::codebase::rules::PostgresFindings,
+    redundant: super::redundant_allow::Plan,
 ) -> crate::codebase::rules::PostgresFindings {
     let advice_sites = (!advice.0.is_empty()).then(|| {
         advice
@@ -78,10 +79,11 @@ pub(super) fn finish(
     });
     findings.extend(advice);
     findings.sort();
-    let mut findings = opts
-        .allow
-        .clone()
-        .apply_located(&opts.schema_catalog_path, findings);
+    let mut findings = opts.allow.clone().apply_located_consumed(
+        &opts.schema_catalog_path,
+        findings,
+        &redundant.consumed,
+    );
     if let Some(advice_sites) = advice_sites {
         findings.0.retain(|located| {
             if !advice_sites.contains(located) {
@@ -105,6 +107,7 @@ pub(super) fn finish(
             false
         });
     }
+    findings.extend(redundant.findings);
     findings.sort();
     findings
 }

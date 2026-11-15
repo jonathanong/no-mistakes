@@ -52,29 +52,9 @@ struct Evaluation {
     accepts: Vec<accepts::DomainAccept>,
 }
 
-/// The relations that make `fact` unbounded. A relation the catalog does not know is not
-/// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
 #[cfg(any(test, feature = "test-instrumentation"))]
-pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
-    statement::judgment(fact, catalog, &ViewBounds::default(), false).offenders
-}
-
-pub(super) fn offenders_with_views(
-    fact: &SqlBoundFact,
-    catalog: &SchemaCatalog,
-    views: &ViewBounds,
-) -> Vec<Offender> {
-    statement::judgment(fact, catalog, views, false).offenders
-}
-
-pub(super) fn variant_offenders_with_views(
-    fact: &SqlBoundFact,
-    catalog: &SchemaCatalog,
-    views: &ViewBounds,
-) -> Vec<Offender> {
-    statement::judgment(fact, catalog, views, true).offenders
-}
-
+pub(super) use statement::offenders;
+pub(super) use statement::{offenders_with_views, variant_offenders_with_views};
 pub(in crate::codebase::rules::postgres_bounded_statements) use statement::{
     judgment_with_views, variant_judgment_with_views, Judgment,
 };
@@ -137,6 +117,7 @@ fn evaluate(
     } else {
         Default::default()
     };
+    let domain_rows = (!query.capped).then_some(views.domain_rows).flatten();
     let mut credits = Vec::new();
     let keys: Vec<_> = query
         .items
@@ -152,7 +133,11 @@ fn evaluate(
             let (prepared, credit) = keys::prepare(
                 item,
                 index,
-                (&owners, (write_target == Some(index)).then_some(&domains)),
+                (
+                    &owners,
+                    (write_target == Some(index)).then_some(&domains),
+                    domain_rows.filter(|_| !bounded[index]),
+                ),
                 &pin_subqueries[index],
                 &pin_arrays[index],
                 catalog,

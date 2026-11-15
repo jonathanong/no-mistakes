@@ -5,40 +5,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "rows_50": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "sql/lookups.sql",
-          "line": 14,
-          "message": "sql/lookups.sql:14: accepted flags by unique-key domain product 2, within maxDomainRows 50",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM flags WHERE owner_id = $1;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 15,
-          "message": "sql/lookups.sql:15: accepted ranks by unique-key domain product 10, within maxDomainRows 50",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 30,
-          "message": "sql/lookups.sql:30: accepted ranks by unique-key domain product 3, within maxDomainRows 50",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 8,
-          "message": "sql/lookups.sql:8: accepted participants by unique-key domain product 50, within maxDomainRows 50",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT actor_id FROM participants WHERE conversation_id = $1;",
-          "target": "domain-product"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -155,56 +122,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "rows_5000": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "sql/lookups.sql",
-          "line": 11,
-          "message": "sql/lookups.sql:11: accepted daily by unique-key domain product 1460, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT day, metric, category FROM daily WHERE owner_id = $1",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 14,
-          "message": "sql/lookups.sql:14: accepted flags by unique-key domain product 2, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM flags WHERE owner_id = $1;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 15,
-          "message": "sql/lookups.sql:15: accepted ranks by unique-key domain product 10, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 19,
-          "message": "sql/lookups.sql:19: accepted spans by unique-key domain product 80, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 30,
-          "message": "sql/lookups.sql:30: accepted ranks by unique-key domain product 3, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
-          "target": "domain-product"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 8,
-          "message": "sql/lookups.sql:8: accepted participants by unique-key domain product 50, within maxDomainRows 5000",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT actor_id FROM participants WHERE conversation_id = $1;",
-          "target": "domain-product"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
