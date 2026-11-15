@@ -91,10 +91,6 @@ pub(crate) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> Sc
     record_embedded_collection!("postgres.scoped.collections");
     let mut imports = classify(program, options);
     let candidates = std::mem::take(&mut imports.candidates);
-    // Negative-only preflight: every supported binding spells `let`. Comments
-    // and unrelated identifiers may enable extra work, but never prove a receiver.
-    // `sql_identifier_syntax/project.rs` uses this same `let` text gate before
-    // it records delayed receivers.
     let mut visitor = ScopeCollector::from_imports(imports, program.source_text.contains("let"));
     visitor.track_resource_transactions = options.track_transaction_helpers;
     if visitor.needs_walk() {
