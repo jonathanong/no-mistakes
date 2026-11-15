@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
-fn invalid_sql_encoding_is_file_local_and_obeys_all_schema_policies() {
+fn invalid_sql_encoding_is_decoded_lossily_and_keeps_the_valid_sibling() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-regress-sql/fixture/encoding");
     for policy in ["default", "report", "advise", "ignore"] {
@@ -24,25 +24,11 @@ fn invalid_sql_encoding_is_file_local_and_obeys_all_schema_policies() {
                 .filter(|item| item["file"] == "bad.sql")
                 .collect::<Vec<_>>()
         };
-        assert_eq!(
-            diagnostics("rules").len(),
-            if policy == "default" || policy == "report" {
-                11
-            } else {
-                0
-            },
-            "{policy}: {report}"
+        assert!(diagnostics("rules").is_empty(), "{policy} rules: {report}");
+        assert!(
+            diagnostics("advisories").is_empty(),
+            "{policy} advisories: {report}"
         );
-        assert_eq!(
-            diagnostics("advisories").len(),
-            if policy == "advise" { 11 } else { 0 },
-            "{policy}: {report}"
-        );
-        assert!(diagnostics("rules")
-            .iter()
-            .chain(diagnostics("advisories").iter())
-            .all(|item| item["line"] == 1
-                && item["message"].as_str().unwrap().contains("invalid UTF-8")));
         // A valid sibling still reaches the real ADD COLUMN policy finding.
         assert!(
             report["rules"]
