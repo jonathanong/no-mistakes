@@ -22,6 +22,12 @@ Two things it does that reading the HTML report does not:
     Claude number; Codex reads the same description but is never evaluated
     here (see `evals/HISTORY.md`, "Codex reads the same description").
 
+It also lists every case whose plugin arm scores below its baseline arm. The
+plugin must never make an answer worse, so `with < without` is a defect to
+explain even when it is within run-to-run noise, and the script exits 1 when
+one exists. Each row says how many with-arm runs fired the skill: an unfired
+loss is description or grader noise, a fired one is the skill's content.
+
 It also refuses to let a failed run pass as a result. A run that errors — a
 session limit, a timeout — scores 0 in **both** arms, so the case renders as a
 tidy `Δ +0.00` that is indistinguishable from "the skill made no difference".
@@ -75,7 +81,27 @@ def _mean_score(runs) -> float:
     return sum(per_run) / len(per_run) if per_run else 0.0
 
 
-def summarize(path: str) -> None:
+def _regressions(report) -> list:
+    """`(name, with, without, fired, runs)` for each case scoring below baseline.
+
+    Cases with an errored run are skipped; the table already marks them FAILED.
+    """
+    rows = []
+    for case in report["cases"]:
+        with_arm = case["arms"].get("with", [])
+        without_arm = case["arms"].get("without", [])
+        if not with_arm or not without_arm or _errors(with_arm) or _errors(without_arm):
+            continue
+        with_score, without_score = _mean_score(with_arm), _mean_score(without_arm)
+        if with_score < without_score:
+            rows.append(
+                (case["name"], with_score, without_score, _fired(with_arm), len(with_arm))
+            )
+    return rows
+
+
+def summarize(path: str) -> bool:
+    """Print the table; return True when some case scored below its baseline."""
     report = json.loads(pathlib.Path(path).read_text())
     suite = report.get("suite", {})
     plugins = ", ".join(p.get("path", "?") for p in suite.get("plugins", []))
@@ -169,6 +195,14 @@ def summarize(path: str) -> None:
             f"    should-fire aggregate trigger: "
             f"{fired_total}/{runs_total} ({pct:.0f}%){suffix}"
         )
+
+    regressions = _regressions(report)
+    for name, with_score, without_score, fired, runs in regressions:
+        print(
+            f"    !!  REGRESSION {name}: with {with_score:.2f} < without "
+            f"{without_score:.2f} (fired {fired}/{runs})"
+        )
+    return bool(regressions)
 
 
 def _evidence(run) -> str:
@@ -322,7 +356,32 @@ _REFERS_AS_CASES = (
 )
 
 
+def _run(score: float, fired: bool) -> dict:
+    return {
+        "graders": [
+            {"name": "skill-fired", "passed": fired},
+            {"name": "answer", "passed": score >= 1},
+        ]
+    }
+
+
+#: `(arms, want)` regression cases. Ties and wins never flag; an errored run
+#: never flags, since its 0 is missing data rather than a loss.
+_REGRESSION_CASES = (
+    ({"with": [_run(1, True)], "without": [_run(1, False)]}, []),
+    ({"with": [_run(1, False)], "without": [_run(0, False)]}, []),
+    ({"with": [_run(0, False)], "without": [_run(1, False)]}, [("c", 0.0, 1.0, 0, 1)]),
+    ({"with": [{"error": "timeout", "graders": []}], "without": [_run(1, False)]}, []),
+    ({"with": [_run(0, False)]}, []),
+)
+
+
 def _self_test() -> None:
+    for arms, want in _REGRESSION_CASES:
+        got = _regressions({"cases": [{"name": "c", "arms": arms}]})
+        if got != want:
+            raise SystemExit(f"regression case failed: {arms!r}: want {want!r}, got {got!r}")
+    print(f"regression self-test: {len(_REGRESSION_CASES)}/{len(_REGRESSION_CASES)} pass")
     bad = [
         (text, want, got)
         for text, want in _REFERS_AS_CASES
@@ -343,10 +402,13 @@ def main() -> None:
     want_mentions = "--mentions" in sys.argv[1:]
     if not paths:
         raise SystemExit(__doc__)
+    regressed = False
     for path in paths:
-        summarize(path)
+        regressed |= summarize(path)
         if want_mentions:
             mentions(path)
+    if regressed:
+        raise SystemExit("summarize: the plugin arm scored below baseline; see REGRESSION rows")
 
 
 if __name__ == "__main__":
