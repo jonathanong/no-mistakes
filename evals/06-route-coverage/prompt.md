@@ -1,5 +1,5 @@
 ---
-model: claude-opus-5
+model: claude-sonnet-5-5
 runs: 3
 max_turns: 10
 timeout_seconds: 300

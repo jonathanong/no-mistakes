@@ -23,7 +23,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT keep redundant tests; keep one failure-sensitive test per contract at the lowest realistic boundary.
 - SHOULD NOT recompute the production algorithm in the test; a shared bug cancels out.
 - SHOULD NOT assert what a dependency owns (its messages, markup, call order, exact versions or pins); assert your own outcome.
-- SHOULD NOT freeze documentation prose in tests unless a consumer parses that exact text.
+- SHOULD NOT freeze documentation prose in tests unless a consumer parses that exact text; when one does, keep the exact-text assertion and do not loosen it.
 
 ## Mocks and boundaries
 
