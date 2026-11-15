@@ -33,6 +33,8 @@ pub struct SqlBoundQuery {
     pub group_constant: bool,
     /// Plain `GROUP BY` keys that stay bounded only when their FROM items are bounded.
     pub group_keys: Vec<SqlGroupKey>,
+    /// Parent column named by `LIMIT`, counted only when the catalog proves it `NOT NULL`.
+    pub catalog_limit: Option<(String, String)>,
 }
 
 /// One plain `GROUP BY` key. `constant` is a single value; `item` is the FROM item it reads.

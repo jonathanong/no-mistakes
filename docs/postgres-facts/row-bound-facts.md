@@ -36,15 +36,30 @@ preceding driver; a bounded per-call result can size a join only after every suc
 driver is independently bounded. Unknown scopes, bare correlations, and cycles
 retain conservative behavior.
 A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
-fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
-taken from physical data or an unproven scalar subquery, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
+fixed count (a literal, a bind, a provably non-null qualified column of a visible
+parent relation, or an expression of those; `LIMIT NULL`, `LIMIT ALL`, a nullable
+parent column, a column of the same query, a subquery count, `FETCH … WITH TIES`,
+and `FETCH … PERCENT` do not cap) or
 is a pure aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not
 windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returning function
 in the select list), and lists its FROM `items`. Bare, unquoted `COALESCE`, `LEAST`,
 and `GREATEST` preserve a fixed count beside literal NULL arguments when every
-argument is known and at least one supplies a guaranteed non-NULL count; all-NULL
-or unknown inputs do not establish a cap. The separate limit-value classification
-remains unchanged. An item is a base `Table`, a `Query`
+argument is known and at least one supplies a guaranteed non-NULL count. A visible
+parent column is a known argument that may still be NULL, so those functions fold it,
+and `GREATEST` ignores NULL arguments. The column alone is a cap only when it is
+non-null: a `NOT NULL` catalog column, or a `VALUES` or `SELECT` column whose every
+row is a non-null literal or bind. Columns from the nullable side of a `LEFT`,
+`RIGHT`, or `FULL` join stay nullable. All-NULL or unknown inputs do not establish a cap.
+`catalog_limit` records the catalog table and column when that count is exactly one
+qualified column of a base table that is not on the null-extended side of an outer
+join, and only when that `LIMIT` bounds the input rows. Parentheses around
+that query keep the record. A parenthesized `FROM` call is a table function and
+does not inherit a same-named table or CTE proof. The rule accepts the record only when
+the catalog column is `NOT NULL`. `ctid` qualifies only for a catalog base table.
+`EXCEPT`, `INTERSECT`, and duplicate-eliminating `UNION` still report their input
+scans when that column caps the result. A column alias list on the reference, and a
+grouped column under `ROLLUP`, `CUBE`, or `GROUPING SETS`, do not count as non-null. The separate
+limit-value classification remains unchanged. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
 operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`
 over arguments the statement supplies, including nested bare, unquoted

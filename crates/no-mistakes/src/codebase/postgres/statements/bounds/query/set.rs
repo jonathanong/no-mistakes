@@ -29,6 +29,7 @@ pub(super) fn bound(
                 outputs,
                 group_constant: group.constant,
                 group_keys: group.keys,
+                catalog_limit: None,
             }
         }
         SetExpr::Query(query) => super::bound_query(query, scope, positions),
@@ -55,6 +56,7 @@ pub(super) fn bound(
                 outputs,
                 group_constant: false,
                 group_keys: Vec::new(),
+                catalog_limit: None,
             }
         }
         SetExpr::Table(table) => table::bound(table, scope, start(set.span())),

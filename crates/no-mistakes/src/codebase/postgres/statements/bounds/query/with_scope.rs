@@ -34,7 +34,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
         // A recursive WITH exposes every alias, including later declarations.
         // Until each body is projected, an unresolved reference remains opaque.
         for cte in &with.cte_tables {
-            scope.insert(ident_key(&cte.alias.name), opaque(start(cte.query.span())));
+            let name = ident_key(&cte.alias.name);
+            scope.insert(name.clone(), opaque(start(cte.query.span())));
+            scope.limit_columns.record(name, None);
         }
     }
     let order = if with.recursive {
@@ -108,8 +110,21 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
             scope.mark_pool(&name);
         }
         if let Some(counts) = counts {
-            scope.insert_counts(name, counts);
+            scope.insert_counts(name.clone(), counts);
         }
+        let columns = cte
+            .alias
+            .columns
+            .iter()
+            .map(|column| ident_key(&column.name))
+            .collect::<Vec<_>>();
+        let proof = super::super::limit_columns::of_query(
+            &cte.query,
+            positions,
+            &scope.limit_columns,
+            &columns,
+        );
+        scope.limit_columns.record(name, proof);
     }
     Cow::Owned(scope)
 }
@@ -123,5 +138,6 @@ fn opaque(at: (usize, usize)) -> SqlBoundQuery {
         items: vec![items::opaque(at)],
         group_constant: false,
         group_keys: Vec::new(),
+        catalog_limit: None,
     }
 }

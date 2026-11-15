@@ -9,13 +9,13 @@ pub(in crate::codebase::postgres::statements) fn is_fixed_at(
     expr: &Expr,
     positions: value::PlaceholderPositions<'_>,
 ) -> bool {
-    is_fixed_with_columns(expr, positions, &|_| false)
+    is_fixed_with_columns(expr, positions, &|_| None)
 }
 
 pub(in crate::codebase::postgres::statements) fn is_fixed_with_columns(
     expr: &Expr,
     positions: value::PlaceholderPositions<'_>,
-    column: &impl Fn(&Expr) -> bool,
+    column: &impl Fn(&Expr) -> Option<FixedCount>,
 ) -> bool {
     matches!(
         fixed_count_at(expr, positions, column),
@@ -24,17 +24,17 @@ pub(in crate::codebase::postgres::statements) fn is_fixed_with_columns(
 }
 
 #[derive(Clone, Copy, PartialEq)]
-enum FixedCount {
+pub(in crate::codebase::postgres::statements) enum FixedCount {
     Nullable,
     Caller,
     NonNull,
 }
 
 /// A bind retains its caller contract, but cannot guarantee a non-NULL conditional fallback.
-fn fixed_count_at(
+pub(in crate::codebase::postgres::statements) fn fixed_count_at(
     expr: &Expr,
     positions: value::PlaceholderPositions<'_>,
-    column: &impl Fn(&Expr) -> bool,
+    column: &impl Fn(&Expr) -> Option<FixedCount>,
 ) -> Option<FixedCount> {
     match expr {
         Expr::Nested(inner) => fixed_count_at(inner, positions, column),
@@ -43,10 +43,14 @@ fn fixed_count_at(
             Value::Placeholder(_) => FixedCount::Caller,
             _ => FixedCount::NonNull,
         }),
-        Expr::Identifier(ident) => (value::is_placeholder_ident_at(ident, positions)
-            || column(expr))
-        .then_some(FixedCount::Caller),
-        Expr::CompoundIdentifier(_) => column(expr).then_some(FixedCount::Caller),
+        Expr::Identifier(ident) => {
+            if value::is_placeholder_ident_at(ident, positions) {
+                Some(FixedCount::Caller)
+            } else {
+                column(expr)
+            }
+        }
+        Expr::CompoundIdentifier(_) => column(expr),
         Expr::Cast { expr, .. } | Expr::UnaryOp { expr, .. } => {
             is_fixed_with_columns(expr, positions, column).then_some(FixedCount::Caller)
         }

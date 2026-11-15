@@ -64,11 +64,15 @@ fn bound_body_observed(
     if let Some(capped) = super::aggregate::order_expansion_predicates_reject(query, positions) {
         bound.capped = capped;
     }
+    let (limited, catalog_limit) = super::limit_columns::examine(query, scope, positions);
+    // Parentheses keep an inner catalog column. Credit a new one only when LIMIT bounds input.
+    if bound.catalog_limit.is_none() && limit_bounds_input(query, scope) {
+        bound.catalog_limit = catalog_limit;
+    }
     if is_zero_limited(query) {
         bound.capped = true;
         bound.input_mode = SqlBoundInputMode::Skipped;
-    } else if (super::limit_columns::is_limited(query, scope, positions)
-        || super::scalar_limit::is_limited(query, scope, positions))
+    } else if (limited || super::scalar_limit::is_limited(query, scope, positions))
         && limit_bounds_input(query, scope)
     {
         if let Some(mut blocking) = blocking_statuses(&query.body) {
@@ -190,11 +194,7 @@ fn cap_streaming_arms(set: &SetExpr, bound: &mut SqlBoundQuery, blocking: &mut B
 /// A body whose size nothing in the statement text decides: it adds no unbounded relation.
 pub(super) fn sized_by_itself(at: (usize, usize)) -> SqlBoundQuery {
     SqlBoundQuery {
-        input_mode: Default::default(),
-        capped: false,
         items: vec![items::other(at)],
-        outputs: Vec::new(),
-        group_constant: false,
-        group_keys: Vec::new(),
+        ..Default::default()
     }
 }

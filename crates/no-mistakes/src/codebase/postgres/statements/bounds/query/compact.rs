@@ -110,6 +110,7 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
                     outputs: Vec::new(),
                     group_constant: false,
                     group_keys: Vec::new(),
+                    catalog_limit: None,
                 }),
                 None,
                 at,
@@ -139,5 +140,6 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
         group_constant: false,
         group_keys: Vec::new(),
         items,
+        catalog_limit: bound.catalog_limit.clone(),
     }
 }

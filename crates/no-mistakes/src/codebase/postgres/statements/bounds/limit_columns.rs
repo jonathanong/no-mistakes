@@ -1,145 +1,199 @@
 use super::super::value::PlaceholderPositions;
-use super::Scope;
-use crate::codebase::postgres::idents::{ident_key, object_name_ident, object_name_key};
-use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, Query, SetExpr, TableFactor, Value};
-use std::cell::OnceCell;
-use std::collections::{BTreeMap, BTreeSet};
+use crate::codebase::postgres::idents::ident_key;
+use crate::codebase::postgres::statements::limit::FixedCount;
+use sqlparser::ast::{Expr, TableFactor, TableWithJoins};
+use std::collections::BTreeMap;
+
+mod columns;
 mod context;
+mod examine;
+mod outputs;
+mod shape;
+pub(in crate::codebase::postgres::statements::bounds) use columns::null_extended_sides;
+use columns::{alias_names, relation_key};
 pub(super) use context::RelationContext;
+pub(in crate::codebase::postgres::statements::bounds) use examine::examine;
+pub(in crate::codebase::postgres::statements::bounds) use outputs::of_query;
 #[cfg(test)]
 pub(super) mod work;
 #[cfg(not(test))]
 #[path = "limit_columns/work_disabled.rs"]
 mod work;
 
+#[derive(Clone)]
+enum Columns {
+    Any {
+        table: Option<String>,
+        null_extended: bool,
+    },
+    Named(BTreeMap<String, Option<FixedCount>>),
+}
+
 #[derive(Clone, Default)]
 pub(super) struct Relations {
-    names: BTreeMap<String, BTreeSet<String>>,
+    names: BTreeMap<String, Columns>,
+    /// Snapshot taken before this `FROM` list. A non-`LATERAL` derived table sees it,
+    /// not same-level siblings added afterward.
+    outer: BTreeMap<String, Columns>,
+    outputs: BTreeMap<String, Option<BTreeMap<String, Option<FixedCount>>>>,
     opaque: bool,
+    outer_opaque: bool,
 }
 
 impl Relations {
-    pub(super) fn add(&mut self, factor: &TableFactor, positions: PlaceholderPositions<'_>) {
-        let (alias, name, columns) = match factor {
+    pub(super) fn add(
+        &mut self,
+        factor: &TableFactor,
+        positions: PlaceholderPositions<'_>,
+    ) -> Option<String> {
+        let columns = match factor {
             TableFactor::UNNEST {
                 alias, array_exprs, ..
-            } => {
-                let caller_arrays = array_exprs.iter().all(|expr| caller_input(expr, positions));
-                let columns = alias.as_ref().map_or_else(BTreeSet::new, |alias| {
-                    alias
-                        .columns
-                        .iter()
-                        .zip(array_exprs)
-                        .filter(|_| caller_arrays)
-                        .map(|(column, _)| ident_key(&column.name))
-                        .collect()
-                });
-                (alias, None, columns)
-            }
+            } => columns::named_caller(
+                alias,
+                array_exprs.len(),
+                array_exprs
+                    .iter()
+                    .all(|expr| columns::caller_input(expr, positions)),
+            ),
             TableFactor::Function {
                 alias, name, args, ..
-            } => {
-                let builtin = name.0.len() == 1
-                    && object_name_ident(name).is_some_and(|id| ident_key(id) == "unnest");
-                let caller_arrays = builtin
-                    && args.iter().all(|arg| match arg {
-                        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => {
-                            caller_input(expr, positions)
-                        }
-                        _ => false,
-                    });
-                let columns = alias.as_ref().map_or_else(BTreeSet::new, |alias| {
-                    alias
-                        .columns
-                        .iter()
-                        .take(args.len())
-                        .filter(|_| caller_arrays)
-                        .map(|column| ident_key(&column.name))
-                        .collect()
-                });
-                (alias, Some(object_name_key(name)), columns)
-            }
-            TableFactor::Table { alias, name, .. } => (
+            } => columns::named_caller(
                 alias,
-                object_name_ident(name).map(ident_key),
-                BTreeSet::new(),
+                args.len(),
+                columns::function_caller(name, args, positions),
             ),
-            TableFactor::Derived { alias, .. } => (alias, None, BTreeSet::new()),
+            TableFactor::Table {
+                name, alias, args, ..
+            } => {
+                // Alias lists rename by position. Parentheses are a table function.
+                if args.is_some()
+                    || alias
+                        .as_ref()
+                        .is_some_and(|alias| !alias.columns.is_empty())
+                {
+                    Columns::Named(BTreeMap::new())
+                } else {
+                    columns::table_columns(self, name)
+                }
+            }
+            TableFactor::Derived {
+                lateral,
+                alias,
+                subquery,
+                ..
+            } => {
+                let parent = self.proof_parent(*lateral);
+                match of_query(subquery, positions, &parent, &alias_names(alias)) {
+                    Some(map) => Columns::Named(map),
+                    None => Columns::Any {
+                        table: None,
+                        null_extended: false,
+                    },
+                }
+            }
             _ => {
                 self.names.clear();
                 self.opaque = true;
-                return;
+                return None;
             }
         };
-        if let Some(name) = alias.as_ref().map(|alias| ident_key(&alias.name)).or(name) {
-            self.names.insert(name, columns);
+        let key = relation_key(factor);
+        if let Some(key) = &key {
+            self.names.insert(key.clone(), columns);
         } else {
             self.opaque = true;
         }
+        key
     }
 
-    fn contains(&self, expr: &Expr) -> bool {
+    pub(super) fn record(
+        &mut self,
+        name: String,
+        columns: Option<BTreeMap<String, Option<FixedCount>>>,
+    ) {
+        self.outputs.insert(name, columns);
+    }
+
+    pub(super) fn contains(&self, expr: &Expr) -> Option<FixedCount> {
         match expr {
-            Expr::CompoundIdentifier(parts) if parts.len() == 2 => self
-                .names
-                .get(&ident_key(&parts[0]))
-                .is_some_and(|columns| columns.contains(&ident_key(&parts[1]))),
-            Expr::Identifier(id) if !self.opaque && self.names.len() == 1 => self
-                .names
-                .values()
-                .next()
-                .is_some_and(|columns| columns.contains(&ident_key(id))),
-            _ => false,
-        }
-    }
-}
-
-pub(super) fn is_limited(
-    query: &Query,
-    scope: &Scope,
-    positions: PlaceholderPositions<'_>,
-) -> bool {
-    let visible = OnceCell::new();
-    super::super::limit::is_limited_with_columns(query, positions, &|expr| {
-        visible
-            .get_or_init(|| {
-                work::visible_map_build();
-                let mut visible = scope.limit_columns.clone();
-                if let SetExpr::Select(select) = &*query.body {
-                    for table in &select.from {
-                        shadow(&mut visible, &table.relation, positions);
-                        for join in &table.joins {
-                            shadow(&mut visible, &join.relation, positions);
-                        }
-                    }
-                } else {
-                    visible = Relations::default();
+            Expr::CompoundIdentifier(parts) if parts.len() == 2 => {
+                self.lookup(&ident_key(&parts[0]), &ident_key(&parts[1]))
+            }
+            Expr::Identifier(id) if !self.opaque && self.names.len() == 1 => {
+                match self.names.values().next() {
+                    Some(Columns::Named(names)) => columns::named_kind(names, &ident_key(id)),
+                    Some(Columns::Any { .. }) | None => None,
                 }
-                visible
-            })
-            .contains(expr)
-    })
-}
-
-fn shadow(visible: &mut Relations, factor: &TableFactor, positions: PlaceholderPositions<'_>) {
-    let mut local = Relations::default();
-    local.add(factor, positions);
-    visible.opaque = true;
-    for name in local.names.into_keys() {
-        visible.names.insert(name, BTreeSet::new());
-    }
-    if local.opaque {
-        visible.names.clear();
-    }
-}
-
-fn caller_input(expr: &Expr, positions: PlaceholderPositions<'_>) -> bool {
-    match expr {
-        Expr::Cast { expr, .. } | Expr::Nested(expr) => caller_input(expr, positions),
-        Expr::Value(value) => matches!(value.value, Value::Placeholder(_)),
-        Expr::Identifier(ident) => {
-            positions.is_some() && super::super::value::is_placeholder_ident_at(ident, positions)
+            }
+            _ => None,
         }
-        _ => false,
+    }
+
+    pub(super) fn catalog_column(
+        &self,
+        parts: &[sqlparser::ast::Ident],
+    ) -> Option<(String, String)> {
+        if parts.len() != 2 {
+            return None;
+        }
+        match self.names.get(&ident_key(&parts[0])) {
+            Some(Columns::Any {
+                table: Some(table),
+                null_extended: false,
+            }) => Some((table.clone(), ident_key(&parts[1]))),
+            _ => None,
+        }
+    }
+
+    pub(super) fn null_extend(&mut self, keys: &[String]) {
+        for key in keys {
+            match self.names.get_mut(key) {
+                Some(Columns::Any { null_extended, .. }) => *null_extended = true,
+                Some(Columns::Named(columns)) => {
+                    for kind in columns.values_mut() {
+                        *kind = None;
+                    }
+                }
+                None => {}
+            }
+        }
+    }
+
+    pub(super) fn absorb(
+        &mut self,
+        tables: &[TableWithJoins],
+        positions: PlaceholderPositions<'_>,
+    ) {
+        self.begin_from();
+        for table in tables {
+            let mut keys = Vec::new();
+            if let Some(key) = self.add(&table.relation, positions) {
+                keys.push(key);
+            }
+            for join in &table.joins {
+                let (extend_left, extend_right) = columns::null_extended_sides(&join.join_operator);
+                if extend_left {
+                    self.null_extend(&keys);
+                }
+                let added = self.add(&join.relation, positions);
+                if extend_right {
+                    if let Some(key) = &added {
+                        self.null_extend(std::slice::from_ref(key));
+                    }
+                }
+                if let Some(key) = added {
+                    keys.push(key);
+                }
+            }
+        }
+    }
+
+    fn lookup(&self, relation: &str, column: &str) -> Option<FixedCount> {
+        match self.names.get(relation) {
+            Some(Columns::Any { .. }) => Some(FixedCount::Nullable),
+            Some(Columns::Named(names)) => columns::named_kind(names, column),
+            None => None,
+        }
     }
 }

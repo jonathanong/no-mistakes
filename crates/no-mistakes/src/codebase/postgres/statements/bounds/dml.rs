@@ -80,6 +80,7 @@ fn push(
             outputs: Vec::new(),
             group_constant: false,
             group_keys: Vec::new(),
+            catalog_limit: None,
         },
         target: Some(0),
         scalar_reads: None,

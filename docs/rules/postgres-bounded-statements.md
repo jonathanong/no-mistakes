@@ -136,7 +136,8 @@ supply a separate finite-key proof. For example,
 `columnBounds` declares `follows.follower_id` with a finite fan-out reason.
 Outer predicates do not supply that body-local proof. Findings name the body
 and its unbounded relations, at the CTE declaration or subquery start. A body
-LIMIT retains the rule's existing conservative LIMIT-expression proofs.
+LIMIT uses the same fixed-count proofs as any other LIMIT, including a provably
+non-null qualified column of a visible parent relation.
 
 ```yaml
 options:
@@ -385,8 +386,39 @@ CROSS JOIN LATERAL (
 
 The parameter arrays bound the outer relation, and each supplied limit bounds
 its corresponding subquery. Every `unnest` argument must be a parameter array.
-Literal arrays, mixed table/parameter inputs, and limits taken from table
-columns do not establish this bound.
+Literal arrays and mixed table/parameter inputs do not establish this unnest bound.
+
+A `LIMIT` or `FETCH FIRST` count may also name a qualified column of a relation
+visible from an enclosing query when that value is provably non-null. A
+`NOT NULL` catalog column counts. A `VALUES` or `SELECT` column counts when
+every row is a non-null literal or bind, so
+`WITH windows(row_limit) AS (VALUES (2))` and `LIMIT windows.row_limit` both
+count, the same way `LIMIT $2` does. Bare, unquoted `COALESCE`, `LEAST`, and
+`GREATEST` count when one argument is non-null: `GREATEST` ignores NULL
+arguments, so `GREATEST(windows.row_limit, 0)` is non-null even when the
+column can be NULL. A nested subquery keeps columns the enclosing query can
+see, even when that subquery is not `LATERAL`. A column from the nullable side
+of a `LEFT`, `RIGHT`, or `FULL` join stays unlimited unless one of those
+wrappers supplies a non-null value. `LIMIT NULL` is unlimited, so a nullable
+parent column, a `NULL` literal projected by `VALUES` or `SELECT`, and a
+null-extended outer-join column do not cap. A column of the same query, a bare
+name (including a bare name when the only visible relation is a table), an
+unknown qualifier, a same-level non-`LATERAL` sibling, a subquery, and an
+unknown function do not cap. A bare name counts only for one preceding
+`unnest` of parameter arrays. A reference that supplies its own column alias
+list is not that proof. `ROLLUP`, `CUBE`, and `GROUPING SETS` can emit NULL
+for a grouped column, so the column itself is not proof; a literal or
+`GREATEST`, `COALESCE`, or `LEAST` with a non-null argument still is. A set
+operation takes output names from its left arm. An alias list shorter than
+the output list renames that prefix and keeps the remaining names. Parentheses
+around a query do not drop an inner catalog column limit. A projected
+set-returning function can emit no rows, so that `LIMIT` does not cap the
+scan, including when it names a non-null catalog column. A parenthesized
+`FROM` item is a table function, not the table or CTE of that name, so its
+output does not inherit that nullability. `ctid` counts only on a catalog
+base table. `EXCEPT`, `INTERSECT`, and duplicate-eliminating `UNION` still
+report their input scans when the cap is a parent column; `UNION ALL` can
+stop at that cap.
 
 ## Counterexample
 

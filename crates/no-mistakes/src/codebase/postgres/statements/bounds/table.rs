@@ -63,5 +63,6 @@ pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoun
         items,
         group_constant: false,
         group_keys: Vec::new(),
+        catalog_limit: None,
     }
 }

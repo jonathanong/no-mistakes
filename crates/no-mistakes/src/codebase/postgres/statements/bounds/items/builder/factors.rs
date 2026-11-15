@@ -11,7 +11,7 @@ use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, ObjectName, Spanned, TableFactor};
 
 impl<'a> Builder<'a> {
-    pub(super) fn factor(&mut self, factor: &'a TableFactor) {
+    pub(super) fn factor(&mut self, factor: &'a TableFactor) -> Option<String> {
         let target = std::mem::take(&mut self.target_next);
         match factor {
             TableFactor::Table {
@@ -52,7 +52,7 @@ impl<'a> Builder<'a> {
                 scope.limit_columns = if *lateral {
                     self.limit_columns.visible(self.positions).clone()
                 } else {
-                    Default::default()
+                    self.scope.limit_columns.clone()
                 };
                 let bound = query::bound_query(subquery, &scope, self.positions);
                 let reads = lateral
@@ -109,7 +109,7 @@ impl<'a> Builder<'a> {
             }
             other => self.push(SqlBoundItemKind::Opaque, &None, start(other.span())),
         }
-        self.limit_columns.add(factor, self.positions);
+        self.limit_columns.add(factor, self.positions)
     }
 
     /// A CTE reference carries the CTE's bound; anything else is a base relation.

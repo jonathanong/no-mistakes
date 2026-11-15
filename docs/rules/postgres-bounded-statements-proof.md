@@ -7,18 +7,41 @@ in matching `.sql` files and in executor calls (`SELECT` is every query, includi
 set operation). A statement is bounded when any of these holds:
 
 - It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` whose count is fixed: a literal, a bind
-  (`$1`, `${size}`) or an expression of them using `COALESCE`, `LEAST` or `GREATEST`
-  (`LEAST($1, 100)`). Literal NULL arguments are allowed when another supported
-  argument supplies a guaranteed non-NULL count: `COALESCE(NULL, 100)`,
-  `LEAST(NULL, 100)`, and `GREATEST(100, NULL)` stay capped. An all-NULL result or
-  `COALESCE($1, NULL)` does not cap; unknown or data-derived arguments remain
+  (`$1`, `${size}`), a provably non-null qualified column of a relation visible from
+  an enclosing query, or an expression of those using `COALESCE`, `LEAST` or
+  `GREATEST` (`LEAST($1, 100)`, `GREATEST(parent.row_limit, 0)`). A visible relation
+  is a table, a CTE, or a derived table the `LIMIT` may legally reference: a
+  preceding `LATERAL` sibling, or a column of a query outside the one that owns the
+  `LIMIT`. A nested subquery keeps those enclosing columns even when it is not
+  itself `LATERAL`. A same-level non-`LATERAL` subquery does not see sibling `FROM`
+  items, including when proving that a projected column is non-null. A column of the query that owns the `LIMIT` does not count. A bare name
+  counts only when exactly one preceding `unnest` of parameter arrays declares that
+  column. A bare name over a single table does not count. A parent column is
+  non-null when it is a `NOT NULL` catalog column, or a `VALUES` or `SELECT` column
+  whose every row is a non-null literal or bind. A reference column-alias list is
+  not that proof. `ROLLUP`, `CUBE`, and `GROUPING SETS` can make a grouped column
+  NULL. A set operation uses the left arm's output names, and a short alias list
+  renames only that prefix. Parentheses keep an inner catalog column. A
+projected set-returning function can emit no rows, so that `LIMIT` does not
+cap the scan even when the column is non-null. A parenthesized `FROM` item is
+a table function and does not inherit a same-named table or CTE proof. `ctid`
+is non-null only for a catalog base table, not a view.
+  `GREATEST` ignores NULL arguments,
+  so `GREATEST(col, 0)` is non-null; `COALESCE(col, 0)` and `LEAST` with a non-null
+  literal are too. A column from the nullable side of a `LEFT`, `RIGHT`, or `FULL`
+  join stays reported unless wrapped that way. Literal NULL arguments are allowed
+  when another supported argument supplies a guaranteed non-NULL count:
+  `COALESCE(NULL, 100)`, `LEAST(NULL, 100)`, and `GREATEST(100, NULL)` stay capped.
+  An all-NULL result or `COALESCE($1, NULL)` does not cap. Unknown functions and
+  arguments that are not literals, binds, or those parent columns remain
   conservative even after a known fallback. These conditional constructs must
   be unqualified and unquoted;
   qualified or quoted function lookalikes may return NULL and are not fixed caps. `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
   a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
-  `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
-  caller's cap: a caller that passes NULL at run time gets `LIMIT ALL`, which no statement
-  text can rule out, so validate the number before the call, or write `COALESCE($1, 100)`.
+  `FETCH … PERCENT` do not cap: they can return every row. A bind is the
+  caller's cap. A parent column counts only when it is provably non-null: NULL at
+  run time means `LIMIT ALL`. Validate the number before the call, or write
+  `COALESCE($1, 100)` or `GREATEST(parent.row_limit, 0)`.
   An inner `LIMIT 0` or `FETCH FIRST 0 ROWS ONLY` stays empty when a surrounding
   parenthesized query later applies a set-returning `ORDER BY` expression. Positive,
   absent, and NULL inner caps do not establish an empty expanded result.
@@ -233,7 +256,8 @@ can supply a bounded driver while its anchor and step relations retain their
 ordinary key proofs. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
-INTERSECT or duplicate-eliminating UNION; UNION ALL can stream until its cap.
+INTERSECT or duplicate-eliminating UNION, including when that LIMIT is a
+non-null parent column; UNION ALL can stream until its cap.
 This also applies through derived tables and CTE wrappers: `SELECT * FROM
 (SELECT id FROM accounts EXCEPT SELECT account_id FROM orders) AS q LIMIT 1`
 still reports the uncapped `orders` input. Independently streaming siblings keep
