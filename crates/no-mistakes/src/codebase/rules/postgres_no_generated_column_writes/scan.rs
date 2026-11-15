@@ -87,14 +87,26 @@ pub(super) fn scan(
                 );
             }
             let source = crate::codebase::rules::read_language_source(sources, path);
+            let uncertainty = positional_uncertainty(opts, facts);
+            let anchors = match &uncertainty {
+                positional::PositionalUncertainty::Advise(_, _) => profile
+                    .and_then(|profile| prepared.embedded_sql(path, profile).ok())
+                    .map(|embedded| positional::call_anchors(embedded, statements.len()))
+                    .unwrap_or_default(),
+                positional::PositionalUncertainty::Report
+                | positional::PositionalUncertainty::Ignore => Vec::new(),
+            };
             extend_writes(
                 &mut findings,
                 &rel,
                 statements,
                 &mut dedup,
-                source.as_deref(),
                 &lookup,
-                &positional_uncertainty(opts, facts),
+                &positional::WriteScan {
+                    source: source.as_deref(),
+                    anchors: &anchors,
+                    uncertainty: &uncertainty,
+                },
             );
             if let Some(embedded) = profile
                 .filter(|_| opts.fail_unanalyzable)

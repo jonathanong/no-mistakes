@@ -27,14 +27,18 @@ fn combined_catalog_reports_both_column_kinds() {
     let source = sources.read_path(&paths[1]).unwrap();
     let statements = crate::codebase::postgres::extract_sql_statement_facts(&source);
     let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let uncertainty = super::positional::PositionalUncertainty::Ignore;
     extend_writes(
         &mut findings,
         "writes.sql",
         &[statements],
         &mut crate::codebase::rules::VariantFindingDedup::default(),
-        None,
         &|_, _| &catalogs,
-        &super::positional::PositionalUncertainty::Ignore,
+        &super::positional::WriteScan {
+            source: None,
+            anchors: &[],
+            uncertainty: &uncertainty,
+        },
     );
     let findings = findings.finish();
     assert_eq!(findings.len(), 2);
@@ -74,14 +78,18 @@ fn positional_messages(order: Option<Vec<String>>, width: Option<usize>) -> Vec<
             column_keys: None,
         });
     let mut findings = crate::codebase::rules::PostgresFindings::default();
+    let uncertainty = super::positional::PositionalUncertainty::Report;
     extend_writes(
         &mut findings,
         "writes.sql",
         &[statement],
         &mut crate::codebase::rules::VariantFindingDedup::default(),
-        None,
         &|_, _| &catalogs,
-        &super::positional::PositionalUncertainty::Report,
+        &super::positional::WriteScan {
+            source: None,
+            anchors: &[],
+            uncertainty: &uncertainty,
+        },
     );
     findings
         .finish()

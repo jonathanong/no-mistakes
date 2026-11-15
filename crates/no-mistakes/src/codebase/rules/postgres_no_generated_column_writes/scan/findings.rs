@@ -1,6 +1,6 @@
 use super::super::{finding, trigger_finding, unanalyzable_finding};
 use super::history::Catalogs;
-use super::positional::PositionalUncertainty;
+use super::positional::WriteScan;
 use crate::codebase::postgres::dml::writes::positional_insert_hits;
 use crate::codebase::postgres::{
     recovered_sql_may_write_columns, EmbeddedSqlFileFacts, SqlStatementFileFacts, SqlWriteColumns,
@@ -31,11 +31,10 @@ pub(super) fn extend_writes<'a>(
     file: &str,
     statements: &[SqlStatementFileFacts],
     dedup: &mut crate::codebase::rules::VariantFindingDedup,
-    source: Option<&str>,
     lookup: &dyn Fn(usize, usize) -> &'a Catalogs,
-    uncertainty: &PositionalUncertainty<'_>,
+    scan: &WriteScan<'_, '_>,
 ) {
-    for statement in statements {
+    for (index, statement) in statements.iter().enumerate() {
         let mut hits = Vec::new();
         let mut unproven = Vec::new();
         for (write_index, write) in statement.writes.iter().enumerate() {
@@ -113,19 +112,11 @@ pub(super) fn extend_writes<'a>(
                 findings,
                 statement,
                 write_site(statement, write_index, &column),
-                source,
+                scan.source,
                 render(file, line, table, &column),
             );
         }
-        super::positional::emit_unproven(
-            findings,
-            dedup,
-            statement,
-            source,
-            file,
-            &unproven,
-            uncertainty,
-        );
+        super::positional::emit_unproven(findings, dedup, statement, file, &unproven, scan, index);
     }
 }
 fn write_site(
