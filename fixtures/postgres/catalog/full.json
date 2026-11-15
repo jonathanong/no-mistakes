@@ -38,7 +38,8 @@
           "referencedColumns": ["id"],
           "onDelete": "SET NULL",
           "onUpdate": "NO ACTION",
-          "validated": false
+          "validated": false,
+          "deferrable": true
         }
       },
       "checkConstraints": {

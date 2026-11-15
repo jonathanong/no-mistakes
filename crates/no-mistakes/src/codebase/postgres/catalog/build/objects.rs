@@ -20,6 +20,7 @@ pub(super) fn foreign_keys(table: &SnapshotTable) -> Vec<CatalogForeignKey> {
             on_delete: key.on_delete.to_ascii_lowercase(),
             on_update: key.on_update.to_ascii_lowercase(),
             validated: key.validated,
+            deferrable: key.deferrable,
         })
         .collect()
 }

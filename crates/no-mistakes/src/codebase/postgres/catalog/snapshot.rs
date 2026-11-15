@@ -78,6 +78,7 @@ pub(super) struct SnapshotForeignKey {
     pub(super) on_delete: String,
     pub(super) on_update: String,
     pub(super) validated: bool,
+    pub(super) deferrable: bool,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

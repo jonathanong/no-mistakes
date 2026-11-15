@@ -491,6 +491,10 @@ every target key column against that returned row keeps the later write bounded.
 Names alone grant no caller-value, array-element or predicate-propagation proof.
 An `INSERT` source can bound the returned row count, but its finite key domain
 does not prove the domain of generated `RETURNING` values.
+A column past a short alias list stays visible under its own name. A name that
+the list already uses does not also name the later column. A foreign key the
+transaction can postpone still fills, because a postponed violation removes the
+child from an inner join and the bound cannot grow.
 Implicit labels for numeric literals and function calls, along with qualified
 projected column names, identify which relation owns a bare key beside a lock or
 `LIMIT 1` CTE. Ambiguous names,

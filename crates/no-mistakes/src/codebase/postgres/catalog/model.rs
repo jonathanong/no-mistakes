@@ -48,6 +48,8 @@ pub struct CatalogForeignKey {
     pub on_delete: String,
     pub on_update: String,
     pub validated: bool,
+    /// The transaction can postpone the check. Fill-in does not read this.
+    pub deferrable: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
