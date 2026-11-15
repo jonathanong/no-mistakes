@@ -10,7 +10,7 @@ mod transformed;
 mod writes;
 pub use bounds::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
-    SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlPinSource, SqlPossibleTemporary,
+    SqlBoundOutput, SqlBoundPin, SqlBoundQuery, SqlGroupKey, SqlPinSource, SqlPossibleTemporary,
     SqlQualifiedRead, SqlQualifiedScope, SqlScalarReads,
 };
 pub(crate) use grouping::SqlGroupingQuery;

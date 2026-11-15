@@ -14,6 +14,7 @@ pub(super) fn collect(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
     precise_columns: bool,
+    capped: bool,
 ) -> Vec<Offender> {
     let mut found = Vec::new();
     for (index, item) in query.items.iter().enumerate() {
@@ -26,11 +27,11 @@ pub(super) fn collect(
                 inner
                     .offenders
                     .iter()
-                    .filter(|offender| !query.capped || offender.blocking_input)
+                    .filter(|offender| !capped || offender.blocking_input)
                     .cloned(),
             );
         }
-        if !query.capped && !bounded[index] && nested[index].is_none() {
+        if !capped && !bounded[index] && nested[index].is_none() {
             if let SqlBoundItemKind::Table(name) = &item.kind {
                 found.extend(relation_offender(
                     name,

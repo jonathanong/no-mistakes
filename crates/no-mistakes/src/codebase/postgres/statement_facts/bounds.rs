@@ -29,6 +29,17 @@ pub struct SqlBoundQuery {
     pub items: Vec<SqlBoundItem>,
     /// Output columns in ordinal order; caller-sized values stay finite despite repeated rows.
     pub outputs: Vec<SqlBoundOutput>,
+    /// Plain `GROUP BY` of single-value keys. A set-returning `ORDER BY` clears it.
+    pub group_constant: bool,
+    /// Plain `GROUP BY` keys that stay bounded only when their FROM items are bounded.
+    pub group_keys: Vec<SqlGroupKey>,
+}
+
+/// One plain `GROUP BY` key. `constant` is a single value; `item` is the FROM item it reads.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct SqlGroupKey {
+    pub item: Option<usize>,
+    pub constant: bool,
 }
 
 /// Syntactic value provenance for one projected column, independent of query row cardinality.
@@ -159,6 +170,8 @@ pub struct SqlBoundPin {
     pub qualified_reads: Vec<SqlQualifiedRead>,
     /// When `source` is one other item, the column of that item this equality names.
     pub peer_column: Option<String>,
+    /// Unconditional `=` to one caller value. Lists, arrays, and null-safe matches are not one value.
+    pub single_value: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

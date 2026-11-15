@@ -36,6 +36,7 @@ pub(super) fn equate(
                     reads: sourced.reads,
                     qualified_reads: sourced.qualified_reads,
                     peer_column: None,
+                    single_value: false,
                 },
             ));
         }

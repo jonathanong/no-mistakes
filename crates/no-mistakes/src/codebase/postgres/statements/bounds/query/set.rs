@@ -15,6 +15,7 @@ pub(super) fn bound(
             let items = items::from_select(select, scope, positions);
             let outputs = super::outputs::select(select, &items, scope, positions);
             scope.expression_bodies(select, &items, positions);
+            let group = super::group_by::prove(select, &items, scope, positions);
             SqlBoundQuery {
                 input_mode: if super::super::predicate::rejects_all(select.selection.as_ref()) {
                     SqlBoundInputMode::Skipped
@@ -26,6 +27,8 @@ pub(super) fn bound(
                     || super::super::predicate::rejects_all(select.selection.as_ref()),
                 items,
                 outputs,
+                group_constant: group.constant,
+                group_keys: group.keys,
             }
         }
         SetExpr::Query(query) => super::bound_query(query, scope, positions),
@@ -50,6 +53,8 @@ pub(super) fn bound(
                 capped: false,
                 items,
                 outputs,
+                group_constant: false,
+                group_keys: Vec::new(),
             }
         }
         SetExpr::Table(table) => table::bound(table, scope, start(set.span())),

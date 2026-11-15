@@ -11,6 +11,7 @@ mod query_array;
 mod subquery;
 use subquery::subquery_source;
 mod resolver;
+mod single;
 mod source_merge;
 
 use super::Scope;
@@ -60,6 +61,7 @@ fn extract_conjunct(
                         reads,
                         qualified_reads,
                         peer_column: None,
+                        single_value: false,
                     },
                 ));
                 pinned.set(pinned.get() + 1);
@@ -84,6 +86,7 @@ fn extract_conjunct(
             equality::equate(left, right, false, resolver, &mut pin);
             let start = out.len() - (pinned.get() - before);
             equality::note_peers(left, right, resolver, &mut out[start..]);
+            single::mark(&mut out[start..]);
             candidate::equate(left, right, false, resolver, restricted, out);
             expression::equate(left, right, false, resolver, restricted, out);
         }

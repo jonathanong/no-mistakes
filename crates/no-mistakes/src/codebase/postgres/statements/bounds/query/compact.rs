@@ -108,6 +108,8 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
                     capped: false,
                     items: vec![item],
                     outputs: Vec::new(),
+                    group_constant: false,
+                    group_keys: Vec::new(),
                 }),
                 None,
                 at,
@@ -133,6 +135,9 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
             })
             .collect(),
         capped: bound.capped,
+        // Compaction renumbers FROM items, so item indexes in group keys no longer apply.
+        group_constant: false,
+        group_keys: Vec::new(),
         items,
     }
 }

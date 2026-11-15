@@ -148,7 +148,30 @@ set operation). A statement is bounded when any of these holds:
   and one bounded source cannot lend its bound to an unrelated unbounded
   sibling. A direct target-key predicate still bounds the target even when another source
   is unbounded. The target is always the physical relation, even when a CTE of the same
-  name exists.
+  name exists. Joining that limited set on a column that is not a unique key of the target
+  still reports the target.
+- A plain `GROUP BY` produces a bounded result when every key is one caller value, or
+  comes from an item that is already bounded, even when another input would otherwise fan
+  out. One caller value is an unconditional `=` to a literal or bind. A CTE output that
+  projects that column carries the same value, so `GROUP BY current.post_id` is one row
+  when every `post_id` equals one bind. `GROUP BY page.id` stays bounded when `page` itself
+  is a fixed `LIMIT`, including when the grouped query also joins an unbounded table: the
+  grouped result cannot grow past that input. `ROLLUP`, `CUBE`, `GROUPING SETS`, and any
+  other grouping modifier are not this proof, because they can add subtotal rows. An
+  integer `GROUP BY` literal is an output ordinal, not a constant. A set-returning
+  function in the select list or in `ORDER BY` can multiply the grouped rows, so those
+  queries stay unbounded. `IN`, `ANY`, `OR`, and `IS NOT DISTINCT FROM` are not one caller
+  value. A key that still comes from an unbounded item keeps that item reported.
+- A row whose unique key is pinned to one caller value is one row, so every catalog
+  column of that row is one value. Those values cross a direct column equality (`a.col = b.col`)
+  when the equality is unconditional, not null-safe, and names both columns. A validated
+  foreign key whose columns are all `NOT NULL` then fills the remaining foreign-key
+  columns when the equated referenced columns include a unique key of that one referenced
+  row. The filled columns can complete another composite unique key. A `NOT VALID`
+  foreign key, a nullable foreign-key column, a partial or expression unique index, or a
+  composite unique key with one column still free does not prove the row. Two columns that
+  are each one value are not treated as equal unless the statement equates them. A `LIMIT`
+  of more than one row is a bounded input, not one row, so it does not feed this proof.
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
 uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,
