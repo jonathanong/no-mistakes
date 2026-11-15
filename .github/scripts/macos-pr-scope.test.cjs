@@ -53,6 +53,7 @@ test("enumerated paths run macOS and platform-independent paths do not", () => {
     "crates/no-mistakes/src/codebase/rules/selected_files",
     "crates/no-mistakes/src/codebase/rules/suppression_absolute_paths_tests.rs",
     "crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file",
+    "crates/no-mistakes/src/postgres_catalog",
   ])
     assert.ok(TRIGGER_PREFIXES.includes(prefix), prefix);
   for (const prefix of [
@@ -100,8 +101,18 @@ test("enumerated paths run macOS and platform-independent paths do not", () => {
     "crates/no-mistakes/tests/cli_invocation/fsmonitor.rs",
     "crates/no-mistakes/src/lib.rs",
     "crates/no-mistakes/src/codebase/rules/agents_md_max_size.rs",
+    "crates/no-mistakes/src/postgres_catalog.rs",
+    "crates/no-mistakes/src/postgres_catalog/connection.rs",
   ])
     assert.equal(triggersMacos(file), true, file);
+  assert.ok(
+    "crates/no-mistakes/src/postgres_catalog.rs".startsWith("crates/no-mistakes/src/postgres"),
+  );
+  assert.ok(
+    "crates/no-mistakes/src/postgres_catalog/connection.rs".startsWith(
+      "crates/no-mistakes/src/postgres",
+    ),
+  );
 
   for (const file of [
     "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements.rs",
@@ -136,10 +147,7 @@ test("a postgres-rule-only diff skips macOS and any other path runs it", () => {
   assert.equal(macosRequired([]), true);
   assert.equal(
     macosRequired(
-      modified([
-        ...postgres.map(({ path: file }) => file),
-        ".github/workflows/ci.yml",
-      ]),
+      modified([...postgres.map(({ path: file }) => file), ".github/workflows/ci.yml"]),
     ),
     true,
   );
@@ -180,12 +188,7 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
       /if: \$\{\{ needs\.changes\.outputs\.macos == 'true' \}\}/,
     );
   }
-  for (const name of [
-    "native-build",
-    "native-test-build",
-    "native-rust-tests",
-    "native-api-tests",
-  ])
+  for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
     assert.doesNotMatch(workflowJob(source, name), /needs\.changes\.outputs\.macos/);
   assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /outputs\.macos/);
   assert.doesNotMatch(workflowJob(source, "tests-gate"), /MACOS_REQUIRED/);
@@ -218,8 +221,17 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
   assert.equal(runGate(skippedMacos, "false").status, 0);
   assert.equal(runGate(skippedMacos, "true").status, 1);
   assert.equal(runGate(skippedMacos, "").status, 1);
-  assert.equal(runGate({ ...skippedMacos, "native-build": { result: "skipped" } }, "false").status, 1);
-  assert.equal(runGate({ ...skippedMacos, "native-build-macos": { result: "failure" } }, "false").status, 1);
+  assert.equal(
+    runGate({ ...skippedMacos, "native-build": { result: "skipped" } }, "false").status,
+    1,
+  );
+  assert.equal(
+    runGate({ ...skippedMacos, "native-build-macos": { result: "failure" } }, "false").status,
+    1,
+  );
   assert.equal(runGate({ ...success, changes: { result: "skipped" } }, "false").status, 1);
-  assert.equal(runGate({ ...skippedMacos, "native-api-tests-macos": { result: "cancelled" } }, "false").status, 1);
+  assert.equal(
+    runGate({ ...skippedMacos, "native-api-tests-macos": { result: "cancelled" } }, "false").status,
+    1,
+  );
 });

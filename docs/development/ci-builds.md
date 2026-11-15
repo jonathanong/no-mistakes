@@ -43,7 +43,9 @@ The current validation graph is organized as follows:
   modules named in that script, or CI workflows and scripts. A path the script
   does not list as platform-independent also runs them. Postgres rule sources,
   their fixtures, and their docs are platform-independent, so a pull request that
-  only changes those paths skips the macOS jobs. `Native tests` accepts that
+  only changes those paths skips the macOS jobs. The catalog client in
+  `crates/no-mistakes/src/postgres_catalog` is not in that set: it spawns `psql`,
+  and the filter runs the macOS jobs for it. `Native tests` accepts that
   skip and still fails when a required macOS job did not succeed, or when any
   Windows job did not succeed. `Tests with coverage` keeps requiring `Native
   tests` to succeed. Pushes to `main`, manual dispatch, and the release workflow

@@ -32,6 +32,7 @@ const TRIGGER_PREFIXES = [
   "crates/no-mistakes/src/codebase/rules/selected_files",
   "crates/no-mistakes/src/codebase/rules/suppression_absolute_paths_tests.rs",
   "crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file",
+  "crates/no-mistakes/src/postgres_catalog",
 ];
 
 const INDEPENDENT_PREFIXES = [
