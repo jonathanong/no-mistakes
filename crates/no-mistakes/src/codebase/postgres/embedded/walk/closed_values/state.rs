@@ -14,6 +14,43 @@ impl ScopeVisitor<'_> {
         }
     }
 
+    /// Drops a helper-returned record object after a property write or a call
+    /// escape. `Object.hasOwn(record, key)` is not that object.
+    pub(in crate::codebase::postgres::embedded::walk) fn invalidate_record_object(
+        &mut self,
+        name: &str,
+    ) {
+        let Some(index) = self
+            .scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
+        else {
+            return;
+        };
+        let helper_object = self
+            .literal_objects
+            .closed
+            .frames
+            .get(index)
+            .and_then(|frame| frame.get(name))
+            .is_some_and(|arms| {
+                arms.iter().any(|arm| {
+                    matches!(arm.node, Node::Object(_))
+                        && arm.choices.iter().any(|(choice, _)| {
+                            // Same bit frozen_return uses to mark a helper object.
+                            choice & (1 << 62) != 0
+                        })
+                })
+            });
+        let alias = self
+            .frozen_aliases
+            .iter()
+            .any(|alias| alias.scope == index && alias.name == name);
+        if helper_object || alias {
+            self.forget_closed(name);
+        }
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn forget_closed_flat_export(
         &mut self,
         name: &str,
@@ -78,6 +115,9 @@ impl ScopeVisitor<'_> {
         scope: usize,
         name: &str,
     ) {
+        if let Expression::Identifier(id) = unwrap_ts_wrappers(init) {
+            self.invalidate_record_object(id.name.as_str());
+        }
         if matches!(unwrap_ts_wrappers(init), Expression::StringLiteral(_)) {
             return;
         }

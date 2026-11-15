@@ -95,6 +95,30 @@ function getTooMany(name: string) {
   return tooMany[name as keyof typeof tooMany];
 }
 
+const nested = Object.freeze({
+  vote: { table: 'users', column: 'user_id' },
+  tag: { table: 'posts', column: 'post_id' },
+} as const);
+const nestedKey = 'vote';
+const leaked = nested[nestedKey];
+leaked.table = 'accounts';
+function getLeaked(name: string) {
+  if (!Object.hasOwn(nested, name)) throw new Error('no');
+  return nested[name as keyof typeof nested];
+}
+
+const writable = Object.freeze({
+  vote: { table: 'users', column: 'user_id' },
+  tag: { table: 'posts', column: 'post_id' },
+} as const);
+function getWritable(name: string) {
+  if (!Object.hasOwn(writable, name)) throw new Error('no');
+  return writable[name as keyof typeof writable];
+}
+function touch(value: { table: string; column: string }) {
+  return value;
+}
+
 const clean = Object.freeze({ vote: 'users', tag: 'posts' } as const);
 function getClean(name: string) {
   if (!Object.hasOwn(clean, name)) throw new Error('no');
@@ -113,5 +137,17 @@ export function run(kind: string) {
   query(`/* mixed */ DELETE FROM ${getMixed(kind)} WHERE id = $1`);
   query(`/* shadowed */ DELETE FROM ${getShadowed(kind)} WHERE id = $1`);
   query(`/* many */ DELETE FROM ${getTooMany(kind)} WHERE id = $1`);
+  const leakedConfig = getLeaked(kind);
+  query(
+    `/* leaked-entry */ DELETE FROM ${leakedConfig.table} WHERE ${leakedConfig.column} = $1`,
+  );
+  const written = getWritable(kind);
+  written.table = 'accounts';
+  query(`/* written */ DELETE FROM ${written.table} WHERE ${written.column} = $1`);
+  const escapedConfig = getWritable(kind);
+  touch(escapedConfig);
+  query(
+    `/* escaped-config */ DELETE FROM ${escapedConfig.table} WHERE ${escapedConfig.column} = $1`,
+  );
   query(`/* clean */ DELETE FROM ${getClean(kind)} WHERE id = $1`);
 }

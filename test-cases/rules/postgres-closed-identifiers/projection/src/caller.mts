@@ -32,3 +32,13 @@ export function boolConfig() {
   const flagged = getConfig(true);
   query(`/* bool */ DELETE FROM ${flagged.table} WHERE id = $1`);
 }
+
+export function reusedParameter(config: string) {
+  query(`/* reused */ DELETE FROM ${config.table} WHERE id = $1`);
+}
+
+export function writtenConfig(kind: string) {
+  const config = getConfig(kind);
+  config.table = "accounts";
+  query(`/* written-import */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);
+}

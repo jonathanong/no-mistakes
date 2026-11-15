@@ -133,6 +133,9 @@ fn hasown_rejects_unfrozen_mutated_escaped_and_oversized_records() {
         "/* mixed */",
         "/* shadowed */",
         "/* many */",
+        "/* leaked-entry */",
+        "/* written */",
+        "/* escaped-config */",
     ] {
         let call = calls
             .iter()

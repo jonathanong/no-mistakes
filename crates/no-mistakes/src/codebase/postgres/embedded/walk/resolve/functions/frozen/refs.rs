@@ -16,6 +16,7 @@ pub(super) fn references_allowed(module: &ast::Program<'_>, record: &str) -> boo
         bindings: 0,
         valid: true,
         writing: false,
+        in_helper: false,
     };
     finder.visit_program(module);
     finder.valid && finder.bindings == 1
@@ -31,6 +32,7 @@ struct References<'a> {
     bindings: u32,
     valid: bool,
     writing: bool,
+    in_helper: bool,
 }
 
 impl<'a> Visit<'a> for ObjectBinding {
@@ -57,8 +59,15 @@ impl<'a> Visit<'a> for References<'a> {
         walk::walk_simple_assignment_target(self, target);
         self.writing = writing;
     }
+    fn visit_function(&mut self, func: &ast::Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
+        let previous = self.in_helper;
+        self.in_helper = helper_returns(func, self.record);
+        walk::walk_function(self, func, flags);
+        self.in_helper = previous;
+    }
     fn visit_computed_member_expression(&mut self, member: &ast::ComputedMemberExpression<'a>) {
-        if !self.writing
+        if self.in_helper
+            && !self.writing
             && !member.optional
             && matches!(
                 unwrap_ts_wrappers(&member.expression),
@@ -89,6 +98,27 @@ impl<'a> Visit<'a> for References<'a> {
         self.visit_expression(&expr.expression);
     }
     fn visit_ts_type(&mut self, _: &ast::TSType<'a>) {}
+}
+
+fn helper_returns(func: &ast::Function<'_>, record: &str) -> bool {
+    let Some(body) = func.body.as_ref() else {
+        return false;
+    };
+    let [ast::Statement::IfStatement(guard), ast::Statement::ReturnStatement(returned)] =
+        body.statements.as_slice()
+    else {
+        return false;
+    };
+    if guard.alternate.is_some() || !super::guard::throws(&guard.consequent) {
+        return false;
+    }
+    let Some((has_record, _)) = super::guard::has_own(&guard.test) else {
+        return false;
+    };
+    let Some((returned_record, _)) = super::guard::returned_record(returned) else {
+        return false;
+    };
+    has_record == record && returned_record == record
 }
 
 fn has_own_record(call: &ast::CallExpression<'_>, record: &str) -> Option<u32> {

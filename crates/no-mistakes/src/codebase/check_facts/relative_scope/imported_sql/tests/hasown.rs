@@ -132,6 +132,27 @@ fn imported_hasown_records_fill_string_holes_and_zip_nested_fields() {
         })
         .unwrap_or_else(|| panic!("missing bool call: {calls:#?}"));
     assert!(bool_key.is_unanalyzable(), "{bool_key:#?}");
+    for marker in ["/* reused */", "/* written-import */"] {
+        let call = calls
+            .iter()
+            .find(|call| {
+                call.sql_text
+                    .as_deref()
+                    .is_some_and(|sql| sql.contains(marker))
+                    || call
+                        .variants
+                        .iter()
+                        .any(|variant| variant.sql_text.contains(marker))
+            })
+            .unwrap_or_else(|| panic!("missing {marker}: {calls:#?}"));
+        assert!(call.is_unanalyzable(), "{marker}: {call:#?}");
+        assert!(
+            call.variants
+                .iter()
+                .all(|variant| !variant.sql_text.contains("user_id")),
+            "{marker}: {call:#?}"
+        );
+    }
     let self_file = files
         .iter()
         .find(|(path, _)| path.ends_with("src/self.mts"))
