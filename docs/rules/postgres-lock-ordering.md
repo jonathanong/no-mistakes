@@ -64,6 +64,14 @@ configuration error).
 `schemaCatalogPath` is optional; when present it must be a repository-relative
 catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md).
 
+A multi-row lock whose relations are all absent from that catalog does not
+fail the unique-key check. A placeholder or a closed set of names the catalog
+does not list is not evidence that the `ORDER BY` is wrong. Check each
+recovered name, and report only when a name the catalog does contain lacks
+the key order. A `FOR UPDATE OF` list that names both a catalog relation and
+an unknown relation still fails closed. A placeholder whose source position
+was recovered still reports the interpolated-relation finding.
+
 Counterexample: `query(\`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE\`)`without`ORDER BY`or`SKIP LOCKED`. Unparseable `FOR UPDATE` SQL is a
 separate diagnostic so lock statements stay parseable.
 
@@ -199,6 +207,11 @@ Executor calls without statically recovered SQL follow `options.unanalyzable`:
 
 The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore`
 keep their names.
+
+An appended fragment that stays unresolved is not recovered SQL. The call stays
+dynamic and follows `unanalyzableSql`. It is not rewritten into a
+`sql_placeholder_N` that then fails to parse, including when the same statement
+also has an identifier hole.
 
 Recovered SQL containing `FOR UPDATE` that fails to parse always produces an
 `unparseable` finding, including under `ignore` and `advise`. That SQL may hold

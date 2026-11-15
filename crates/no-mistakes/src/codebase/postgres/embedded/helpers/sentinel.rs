@@ -89,7 +89,26 @@ pub(crate) fn has_identifier_slot_hole(text: &str) -> bool {
 pub(crate) fn has_value_operand_hole(text: &str) -> bool {
     find_all(text)
         .iter()
-        .any(|(range, _)| text[..range.start].trim_end().ends_with('='))
+        .any(|(range, _)| value_operand(text, range.start))
+}
+
+/// A hole that is a whole fragment, not an identifier or a value operand.
+///
+/// Publishing it as `sql_placeholder_N` glues marker text into the statement.
+pub(crate) fn has_opaque_fragment_hole(text: &str) -> bool {
+    find_all(text)
+        .iter()
+        .any(|(range, _)| !restorable_hole(text, range.start))
+}
+
+fn restorable_hole(text: &str, hole_start: usize) -> bool {
+    identifier_slot(text, hole_start)
+        || value_operand(text, hole_start)
+        || text[..hole_start].trim_end().ends_with('(')
+}
+
+fn value_operand(text: &str, hole_start: usize) -> bool {
+    text[..hole_start].trim_end().ends_with('=')
 }
 
 /// Glued relation text, or a value operand, keeps a public placeholder

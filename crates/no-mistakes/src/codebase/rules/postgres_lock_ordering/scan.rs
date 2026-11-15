@@ -1,4 +1,4 @@
-use super::catalog_check::{locks_interpolated_relation, locks_single_row, orders_by_catalog_key};
+use super::catalog_check::{catalog_order, locks_single_row, orders_by_catalog_key, CatalogOrder};
 use super::directive::{contains_for_update, has_safe_directive, has_safe_variant_directive};
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
@@ -160,27 +160,25 @@ fn lock_findings(
         .filter(multi_row)
         .filter(|lock| !orders_by_catalog_key(lock, catalog))
         .collect();
-    if unordered.is_empty() {
-        return Vec::new();
-    }
-    if !call.recovered_placeholder_positions.is_empty()
-        && unordered
-            .iter()
-            .any(|lock| locks_interpolated_relation(lock))
-    {
-        return vec![finding(
+    match catalog_order(
+        !call.recovered_placeholder_positions.is_empty(),
+        &unordered,
+        catalog,
+    ) {
+        CatalogOrder::Abstain => Vec::new(),
+        CatalogOrder::Interpolated => vec![finding(
             file,
             call.line,
             interpolated_relation_message(file, call.line, directive),
             UNRESOLVED_RELATION_TARGET,
-        )];
+        )],
+        CatalogOrder::Canonical => vec![finding(
+            file,
+            call.line,
+            canonical_order_message(file, call.line, directive),
+            LOCK_ORDERING_TARGET,
+        )],
     }
-    vec![finding(
-        file,
-        call.line,
-        canonical_order_message(file, call.line, directive),
-        LOCK_ORDERING_TARGET,
-    )]
 }
 
 fn finding(file: &str, line: u32, message: String, target: &str) -> RuleFinding {

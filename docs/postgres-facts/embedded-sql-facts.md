@@ -67,7 +67,10 @@ identifier that is bound or assigned a fragment anywhere in the file. The
 binding lookup is file-wide and scope-insensitive, so a name reused for a
 plain value elsewhere in the file also fails closed. Rules with
 `unanalyzableSql: fail` report calls whose complete alternatives cannot be
-recovered instead of reading the fragment as a bind value.
+recovered instead of reading the fragment as a bind value. An unresolved
+fragment hole is not published as `sql_placeholder_N`, even when the same
+statement also has an identifier hole: the statement stays dynamic and the
+fragment text is dropped.
 
 Numeric literal alternatives inside untagged template holes are stringified using
 JavaScript number formatting, including radix and exponent literals. For example,

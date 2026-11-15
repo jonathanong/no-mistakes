@@ -97,3 +97,41 @@ pub(super) fn locks_interpolated_relation(lock: &LockingSelectMetadata) -> bool 
             .any(|table| table.starts_with(INTERPOLATION_MARKER))
     })
 }
+
+/// Which catalog-key finding a set of unordered locks produces.
+pub(super) enum CatalogOrder {
+    Interpolated,
+    Abstain,
+    Canonical,
+}
+
+/// Placeholder and unknown relations are not evidence of a bad key order.
+///
+/// A recovered placeholder position still reports the interpolated-relation
+/// finding. A lock that also names a catalog relation keeps the canonical
+/// finding, so `FOR UPDATE OF a, missing` stays fail-closed.
+pub(super) fn catalog_order(
+    positions_recovered: bool,
+    locks: &[&LockingSelectMetadata],
+    catalog: &SchemaCatalog,
+) -> CatalogOrder {
+    if locks.is_empty() {
+        return CatalogOrder::Abstain;
+    }
+    if positions_recovered && locks.iter().any(|lock| locks_interpolated_relation(lock)) {
+        return CatalogOrder::Interpolated;
+    }
+    if locks
+        .iter()
+        .all(|lock| locks_only_unknown_relations(lock, catalog))
+    {
+        return CatalogOrder::Abstain;
+    }
+    CatalogOrder::Canonical
+}
+
+fn locks_only_unknown_relations(lock: &LockingSelectMetadata, catalog: &SchemaCatalog) -> bool {
+    lock.tables.as_deref().is_some_and(|tables| {
+        !tables.is_empty() && tables.iter().all(|table| catalog.relation(table).is_none())
+    })
+}

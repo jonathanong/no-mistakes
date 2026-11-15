@@ -148,6 +148,8 @@ mod cli_postgres_snapshot_json_relation_ids;
 mod cli_postgres_snapshot_key_column_types;
 #[path = "cli_postgres_snapshot_lock_ordering.rs"]
 mod cli_postgres_snapshot_lock_ordering;
+#[path = "cli_postgres_snapshot_lock_ordering_abstain.rs"]
+mod cli_postgres_snapshot_lock_ordering_abstain;
 #[path = "cli_postgres_snapshot_named_constraints.rs"]
 mod cli_postgres_snapshot_named_constraints;
 #[path = "cli_postgres_snapshot_no_add_column.rs"]

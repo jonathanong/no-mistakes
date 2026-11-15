@@ -280,6 +280,16 @@ fn unresolved_fragment_hole_is_scrubbed_instead_of_a_placeholder() {
 }
 
 #[test]
+fn fragment_hole_beside_an_identifier_is_scrubbed() {
+    let fragment = sentinel::encode(0);
+    let table = sentinel::encode(1);
+    let sql = finalize_text(format!(
+        "WITH candidate AS (SELECT id FROM {table} t WHERE flag IS NULL{fragment} ORDER BY id FOR UPDATE SKIP LOCKED)"
+    ));
+    assert_eq!(sql, None);
+}
+
+#[test]
 fn lock_table_hole_keeps_an_identifier_placeholder() {
     let hole = sentinel::encode(0);
     let sql = finalize_text(format!(

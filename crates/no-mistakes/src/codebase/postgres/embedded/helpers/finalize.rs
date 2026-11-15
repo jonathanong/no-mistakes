@@ -126,6 +126,12 @@ fn keep_identifier_placeholders(call: &EmbeddedSqlCall, sites: &[ImportedSite]) 
         .iter()
         .chain(call.variants.iter().map(|variant| &variant.sql_text))
         .collect();
+    if texts
+        .iter()
+        .any(|text| sentinel::has_opaque_fragment_hole(text))
+    {
+        return false;
+    }
     texts.iter().any(|text| sentinel::keeps_placeholder(text))
         || texts.iter().any(|text| unfilled_statement(text))
         || (texts
