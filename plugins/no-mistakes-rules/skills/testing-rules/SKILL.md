@@ -1,6 +1,6 @@
 ---
 name: testing-rules
-description: "MUST NOT / SHOULD NOT rules for automated tests: assertions, mocks, fixtures, isolation, timing, snapshots, and coverage, for Vitest, Jest, backend integration, component, Swift, and .NET tests. Use when writing, reviewing, or fixing a test. Browser tests also load playwright-rules."
+description: "MUST NOT / SHOULD NOT rules for automated tests: assertions, mocks, fixtures, isolation, timing, snapshots, and coverage, for Vitest, Jest, backend integration, component, Swift, and .NET tests. Use when writing, reviewing, or fixing a test, and whenever a change or diff under review adds or edits a test file (`*.test.*`, `*.spec.*`, `__tests__/`, `tests/`), even if nothing else changes. Browser tests also load playwright-rules."
 ---
 
 # Testing rules
