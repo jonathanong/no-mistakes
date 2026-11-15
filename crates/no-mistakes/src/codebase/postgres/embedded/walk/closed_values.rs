@@ -10,6 +10,8 @@ mod assertions;
 mod controls_tests;
 #[cfg(test)]
 mod correlation_tests;
+#[cfg(test)]
+mod edge_tests;
 mod expression;
 #[cfg(test)]
 mod extra_escape_tests;
