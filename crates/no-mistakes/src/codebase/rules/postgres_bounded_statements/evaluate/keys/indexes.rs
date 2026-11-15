@@ -96,12 +96,15 @@ fn pinned_key(
                 .is_none()
                 .then(|| super::implied::source_column(expression, pins.table))
                 .flatten();
-            let not_null = physical.as_deref().or(implied.as_deref()).is_some_and(|name| {
-                pins.table
-                    .columns
-                    .iter()
-                    .any(|column| column.name == name && !column.nullable)
-            });
+            let not_null = physical
+                .as_deref()
+                .or(implied.as_deref())
+                .is_some_and(|name| {
+                    pins.table
+                        .columns
+                        .iter()
+                        .any(|column| column.name == name && !column.nullable)
+                });
             let matching = pins
                 .item
                 .pins
