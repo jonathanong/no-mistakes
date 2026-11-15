@@ -96,9 +96,7 @@ fn column_single(items: &[SqlBoundItem], item: usize, column: &str, depth: usize
     if depth > 8 {
         return false;
     }
-    let Some(current) = items.get(item) else {
-        return false;
-    };
+    let current = &items[item];
     if pin_single(&current.pins, column) {
         return true;
     }

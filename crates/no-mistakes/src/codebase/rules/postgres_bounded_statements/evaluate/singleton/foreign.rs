@@ -33,38 +33,31 @@ pub(super) fn imply(
                     let Some(source) = equated_source(pin, local, remote) else {
                         continue;
                     };
-                    if source == index || !same_table(query, catalog, source, &key.referenced_table)
-                    {
-                        continue;
+                    if same_table(query, catalog, source, &key.referenced_table).is_some() {
+                        equated.entry(source).or_default().insert(remote.clone());
                     }
-                    equated.entry(source).or_default().insert(remote.clone());
                 }
             }
             for (source, remote_columns) in equated {
-                let Some(known) = columns.get(source) else {
-                    continue;
-                };
-                let Some(source_item) = query.items.get(source) else {
-                    continue;
-                };
-                let SqlBoundItemKind::Table(source_name) = &source_item.kind else {
-                    continue;
-                };
-                let Some(source_table) = catalog.bounded_relation(source_name) else {
-                    continue;
-                };
-                let equated: BTreeSet<_> = remote_columns
-                    .iter()
-                    .filter(|column| known.contains(column.as_str()))
-                    .cloned()
-                    .collect();
-                let pinned =
-                    super::physical_pinned(source_table, &source_item.column_aliases, &equated);
-                if !catalog.columns_pin_one_row(source_name, &pinned) {
-                    continue;
-                }
-                for column in &key.columns {
-                    columns[index].insert(column.clone());
+                if let Some(source_table) =
+                    same_table(query, catalog, source, &key.referenced_table)
+                {
+                    let known = &columns[source];
+                    let equated_visible: BTreeSet<_> = remote_columns
+                        .iter()
+                        .filter(|column| known.contains(column.as_str()))
+                        .cloned()
+                        .collect();
+                    let pinned = super::physical_pinned(
+                        source_table,
+                        &query.items[source].column_aliases,
+                        &equated_visible,
+                    );
+                    if catalog.columns_pin_one_row(&source_table.name, &pinned) {
+                        for column in &key.columns {
+                            columns[index].insert(column.clone());
+                        }
+                    }
                 }
             }
         }
@@ -75,22 +68,23 @@ fn equated_source(pin: &SqlBoundPin, local: &str, remote: &str) -> Option<usize>
     if pin.column != local || pin.peer_column.as_deref() != Some(remote) {
         return None;
     }
-    peer(pin)
+    peer(pin).map(|(source, _)| source)
 }
 
-fn same_table(
-    query: &SqlBoundQuery,
-    catalog: &SchemaCatalog,
+fn same_table<'a>(
+    query: &'a SqlBoundQuery,
+    catalog: &'a SchemaCatalog,
     source: usize,
     referenced: &str,
-) -> bool {
+) -> Option<&'a crate::codebase::postgres::CatalogTable> {
     let Some(SqlBoundItemKind::Table(name)) = query.items.get(source).map(|item| &item.kind) else {
-        return false;
+        return None;
     };
     let Some(local) = catalog.bounded_relation(name) else {
-        return false;
+        return None;
     };
     catalog
         .bounded_relation(referenced)
         .is_some_and(|remote| remote.name == local.name)
+        .then_some(local)
 }

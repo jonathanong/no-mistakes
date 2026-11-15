@@ -53,3 +53,25 @@ SELECT flow.status FROM flows flow
 WHERE flow.status = 'pending'
 GROUP BY flow.status
 ORDER BY generate_series(1, 3);
+
+-- An expression output has no source column, so the group does not fix the other input.
+SELECT step.bucket
+FROM (SELECT id + 1 AS bucket FROM flows WHERE status = 'pending') step
+JOIN entry_signals signals ON TRUE
+GROUP BY step.bucket;
+
+-- Nine output renames do not carry one caller value into the group key.
+WITH s0 AS (SELECT status AS k FROM flows WHERE status = 'pending'),
+s1 AS (SELECT k AS k FROM s0),
+s2 AS (SELECT k AS k FROM s1),
+s3 AS (SELECT k AS k FROM s2),
+s4 AS (SELECT k AS k FROM s3),
+s5 AS (SELECT k AS k FROM s4),
+s6 AS (SELECT k AS k FROM s5),
+s7 AS (SELECT k AS k FROM s6),
+s8 AS (SELECT k AS k FROM s7),
+s9 AS (SELECT k AS k FROM s8)
+SELECT s9.k FROM s9 JOIN entry_signals signals ON TRUE GROUP BY s9.k;
+
+-- A list of two columns is not one peer value.
+SELECT a.id FROM flows a, flows b, flows c WHERE a.id IN (b.id, c.id);

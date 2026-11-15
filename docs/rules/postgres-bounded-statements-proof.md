@@ -154,7 +154,8 @@ set operation). A statement is bounded when any of these holds:
   comes from an item that is already bounded, even when another input would otherwise fan
   out. One caller value is an unconditional `=` to a literal or bind. A CTE output that
   projects that column carries the same value, so `GROUP BY current.post_id` is one row
-  when every `post_id` equals one bind. `GROUP BY page.id` stays bounded when `page` itself
+  when every `post_id` equals one bind. A chain of more than eight output renames does
+  not carry that value. An expression output has no source column to follow. `GROUP BY page.id` stays bounded when `page` itself
   is a fixed `LIMIT`, including when the grouped query also joins an unbounded table: the
   grouped result cannot grow past that input. `ROLLUP`, `CUBE`, `GROUPING SETS`, and any
   other grouping modifier are not this proof, because they can add subtotal rows. An

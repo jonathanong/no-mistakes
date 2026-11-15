@@ -49,18 +49,13 @@ fn single_columns(query: &SqlBoundQuery) -> Vec<BTreeSet<String>> {
 fn transfer(query: &SqlBoundQuery, columns: &mut [BTreeSet<String>]) {
     for (index, item) in query.items.iter().enumerate() {
         for pin in &item.pins {
-            let Some(source) = peer(pin) else {
+            let Some((source, peer_column)) = peer(pin) else {
                 continue;
             };
-            if source == index {
-                continue;
-            }
-            let Some(peer_column) = pin.peer_column.as_deref() else {
-                continue;
-            };
-            if columns
-                .get(source)
-                .is_some_and(|set| set.contains(peer_column))
+            if source != index
+                && columns
+                    .get(source)
+                    .is_some_and(|set| set.contains(peer_column))
             {
                 columns[index].insert(pin.column.clone());
             }
@@ -122,7 +117,7 @@ pub(super) fn unconditional(pin: &SqlBoundPin) -> bool {
         && pin.qualified_reads.is_empty()
 }
 
-fn peer(pin: &SqlBoundPin) -> Option<usize> {
+fn peer(pin: &SqlBoundPin) -> Option<(usize, &str)> {
     if !unconditional(pin) {
         return None;
     }
@@ -132,5 +127,5 @@ fn peer(pin: &SqlBoundPin) -> Option<usize> {
     let [source] = sources.as_slice() else {
         return None;
     };
-    pin.peer_column.is_some().then_some(*source)
+    pin.peer_column.as_deref().map(|column| (*source, column))
 }

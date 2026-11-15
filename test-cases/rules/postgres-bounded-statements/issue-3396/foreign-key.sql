@@ -30,6 +30,19 @@ WHERE membership.id = $1 AND operation.operation_kind = 'refund'
   AND operation.idempotency_key = $2 AND source.lineage_id = lineage.id
   AND operation.lineage_id = lineage.id;
 
+-- A CTE is not the referenced table, so the foreign key does not fill the key.
+WITH other AS (SELECT id, context_id FROM lineages)
+SELECT operation.id FROM other
+JOIN operations operation
+  ON operation.lineage_id = other.id AND operation.context_id = other.context_id
+WHERE operation.idempotency_key = $2;
+
+-- An unknown table does not supply the referenced row.
+SELECT operation.id FROM operations operation
+JOIN missing_lineages lineage
+  ON operation.lineage_id = lineage.id AND operation.context_id = lineage.context_id
+WHERE operation.idempotency_key = $2;
+
 -- A nullable foreign-key column does not fill the composite key.
 SELECT operation.id FROM memberships membership
 JOIN draft_operations operation ON operation.source_id = membership.source_id

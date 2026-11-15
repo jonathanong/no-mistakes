@@ -37,8 +37,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "foreign-key.sql",
-          "line": 35,
-          "message": "foreign-key.sql:35: SELECT can return every row of draft_operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "line": 34,
+          "message": "foreign-key.sql:34: SELECT can return every row of lineages; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH other AS (SELECT id, context_id FROM lineages)",
+          "target": "table:lineages, table:operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 41,
+          "message": "foreign-key.sql:41: SELECT can return every row of operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT operation.id FROM operations operation",
+          "target": "table:operations"
+        },
+        {
+          "file": "foreign-key.sql",
+          "line": 48,
+          "message": "foreign-key.sql:48: SELECT can return every row of draft_operations; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "JOIN draft_operations operation ON operation.source_id = membership.source_id",
           "target": "table:draft_operations"
@@ -102,6 +118,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "group-by.sql:52: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT flow.status FROM flows flow",
+          "target": "table:flows"
+        },
+        {
+          "file": "group-by.sql",
+          "line": 59,
+          "message": "group-by.sql:59: SELECT can return every row of entry_signals; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM (SELECT id + 1 AS bucket FROM flows WHERE status = 'pending') step",
+          "target": "table:entry_signals, table:flows"
+        },
+        {
+          "file": "group-by.sql",
+          "line": 64,
+          "message": "group-by.sql:64: SELECT can return every row of entry_signals; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH s0 AS (SELECT status AS k FROM flows WHERE status = 'pending'),",
+          "target": "table:entry_signals, table:flows"
+        },
+        {
+          "file": "group-by.sql",
+          "line": 77,
+          "message": "group-by.sql:77: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT a.id FROM flows a, flows b, flows c WHERE a.id IN (b.id, c.id);",
           "target": "table:flows"
         }
       ],
