@@ -76,7 +76,6 @@ fn named_call_argument(expr: &mut Expr) -> Option<FunctionArg> {
             operator: FunctionArgOperator::Assignment,
         }),
         Err(original) => {
-            // The take left a placeholder; put the original expression back.
             *expr = *original;
             None
         }
