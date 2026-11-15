@@ -323,7 +323,7 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     const runGate = (results) =>
       spawnSync("bash", ["-eu", "-c", script], {
         encoding: "utf8",
-        env: { ...process.env, RESULTS: JSON.stringify(results) },
+        env: { ...process.env, MACOS_REQUIRED: "", RESULTS: JSON.stringify(results) },
       });
     assert.equal(runGate(successful).status, 0);
     for (const dependency of needs)

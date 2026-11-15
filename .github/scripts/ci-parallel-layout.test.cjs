@@ -34,7 +34,7 @@ for (const name of [
         input[dependency].result = fixture.result;
         const child = spawnSync("bash", ["-eu", "-c", script], {
           encoding: "utf8",
-          env: { ...process.env, RESULTS: JSON.stringify(input) },
+          env: { ...process.env, MACOS_REQUIRED: "", RESULTS: JSON.stringify(input) },
         });
         assert.equal(
           child.status,
