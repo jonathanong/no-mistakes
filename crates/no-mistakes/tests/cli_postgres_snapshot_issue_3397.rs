@@ -14,6 +14,9 @@ fn postgres_bounded_statements_issue_3397_snapshot() {
     let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3397");
     assert_saved_fixture(
         "postgres_bounded_statements_issue_3397",
-        &[("function_calls", root.clone(), root.join("valid.yml"))],
+        &[
+            ("function_calls", root.clone(), root.join("valid.yml")),
+            ("named_assignment", root.clone(), root.join("uuid.yml")),
+        ],
     );
 }

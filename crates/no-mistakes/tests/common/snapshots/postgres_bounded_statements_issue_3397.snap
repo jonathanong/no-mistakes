@@ -3,6 +3,51 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "function_calls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "parser/recall.sql",
+          "line": 1,
+          "message": "parser/recall.sql:1: SELECT can return every row of entries; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT LEFT(title, 80) FROM entries;",
+          "target": "table:entries"
+        },
+        {
+          "file": "parser/recall.sql",
+          "line": 3,
+          "message": "parser/recall.sql:3: SELECT can return every row of entries; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT custom(title) FROM entries ORDER BY id LIMIT 26;",
+          "target": "table:entries"
+        },
+        {
+          "file": "parser/recall.sql",
+          "line": 5,
+          "message": "parser/recall.sql:5: SELECT can return every row of entries; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT app.left(title, 80) FROM entries ORDER BY id LIMIT 26;",
+          "target": "table:entries"
+        },
+        {
+          "file": "parser/recall.sql",
+          "line": 7,
+          "message": "parser/recall.sql:7: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT app.make_interval(secs => $1) FROM flows ORDER BY id LIMIT 1;",
+          "target": "table:flows"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "named_assignment": {
     "exitCode": 0,
     "report": {
       "advisories": [],

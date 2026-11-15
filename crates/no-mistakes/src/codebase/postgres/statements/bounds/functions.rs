@@ -1,14 +1,13 @@
 //! The built-in functions the bound facts reason about, by name.
 use super::super::value::PlaceholderPositions;
-use crate::codebase::postgres::idents::{
-    ident_key, object_name_ident, unwrap_expr, visit_function_args,
-};
+use crate::codebase::postgres::idents::{ident_key, object_name_ident};
 use crate::codebase::postgres::statements::SqlBoundItemKind;
-use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArg, FunctionArguments, ObjectName, TableFunctionArgs,
-};
+use sqlparser::ast::{Function, FunctionArguments, ObjectName, TableFunctionArgs};
+mod caller_arguments;
 mod inputs;
-use inputs::input_depends_on_data_at;
+use caller_arguments::caller_supplied_argument;
+
+pub(super) use caller_arguments::unnest_kind_at;
 
 /// The built-in aggregates, ordered-set and hypothetical-set aggregates included.
 #[rustfmt::skip]
@@ -185,40 +184,6 @@ pub(super) fn function_kind_at(
         SqlBoundItemKind::Other
     } else {
         SqlBoundItemKind::Opaque
-    }
-}
-
-/// Named argument labels are syntax rather than data inputs. PostgreSQL's `:=` notation
-/// is represented by sqlparser as an assignment expression instead of an ExprNamed argument.
-fn caller_supplied_argument(arg: &FunctionArg, positions: PlaceholderPositions<'_>) -> bool {
-    let mut supplied = false;
-    visit_function_args(std::slice::from_ref(arg), &mut |expr| {
-        let input = match unwrap_expr(expr) {
-            Expr::BinaryOp {
-                op: BinaryOperator::Assignment,
-                right,
-                ..
-            } => right,
-            _ => expr,
-        };
-        supplied = !input_depends_on_data_at(input, positions);
-    });
-    supplied
-}
-
-/// `unnest(…)` as a table factor is sized by its arrays, unless one is taken from a query or
-/// from another FROM item (the table factor is then evaluated per row of that item).
-pub(super) fn unnest_kind_at(
-    arrays: &[Expr],
-    positions: PlaceholderPositions<'_>,
-) -> SqlBoundItemKind {
-    if arrays
-        .iter()
-        .any(|expr| input_depends_on_data_at(expr, positions))
-    {
-        SqlBoundItemKind::Opaque
-    } else {
-        SqlBoundItemKind::Other
     }
 }
 

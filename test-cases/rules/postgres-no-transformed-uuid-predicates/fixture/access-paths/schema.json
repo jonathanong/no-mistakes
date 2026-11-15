@@ -488,6 +488,9 @@
         },
         "id": {
           "dataType": "uuid"
+        },
+        "other_col": {
+          "dataType": "text"
         }
       },
       "indexes": {

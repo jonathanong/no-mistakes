@@ -52,7 +52,7 @@ pub(super) fn mark(
 }
 fn constant(expression: &Expr, positions: PlaceholderPositions<'_>) -> bool {
     match unnest(expression) {
-        Expr::Value(_) => true,
+        Expr::Value(value) => !matches!(value.value, sqlparser::ast::Value::Null),
         Expr::Identifier(ident) => positions.is_some() && is_placeholder_ident_at(ident, positions),
         Expr::Tuple(values) => values.iter().all(|value| constant(value, positions)),
         Expr::Cast { expr, .. } => constant(expr, positions),

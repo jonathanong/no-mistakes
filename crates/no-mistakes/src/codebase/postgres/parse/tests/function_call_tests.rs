@@ -1,11 +1,11 @@
-use super::super::parse_postgres_sql;
+use super::super::{parse_postgres_sql, parse_postgres_sql_lenient};
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgOperator,
-    FunctionArguments, JoinOperator, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
+    Expr, Function, FunctionArg, FunctionArgOperator, FunctionArguments, JoinOperator, Select,
+    SelectItem, SetExpr, Statement, Visit, Visitor,
 };
 use std::ops::ControlFlow;
 
-fn fixture(name: &str) -> &'static str {
+pub(super) fn fixture(name: &str) -> &'static str {
     match name {
         "statements" => include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -15,15 +15,19 @@ fn fixture(name: &str) -> &'static str {
             env!("CARGO_MANIFEST_DIR"),
             "/../../test-cases/rules/postgres-bounded-statements/issue-3397/parser/invalid-left-join.sql"
         )),
+        "shape" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/postgres-bounded-statements/issue-3397/parser/assignment-shape.sql"
+        )),
         _ => unreachable!(),
     }
 }
 
-fn parsed(sql: &str) -> Vec<Statement> {
+pub(super) fn parsed(sql: &str) -> Vec<Statement> {
     parse_postgres_sql(sql).unwrap_or_else(|error| panic!("{error}"))
 }
 
-fn select_of(statement: &Statement) -> &Select {
+pub(super) fn select_of(statement: &Statement) -> &Select {
     let Statement::Query(query) = statement else {
         panic!("expected a query");
     };
@@ -33,7 +37,7 @@ fn select_of(statement: &Statement) -> &Select {
     select
 }
 
-fn projected_function(statement: &Statement) -> &Function {
+pub(super) fn projected_function(statement: &Statement) -> &Function {
     let expr = match &select_of(statement).projection[0] {
         SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => expr,
         _ => panic!("expected an expression projection"),
@@ -44,13 +48,13 @@ fn projected_function(statement: &Statement) -> &Function {
     function
 }
 
-fn bare_name(function: &Function) -> String {
+pub(super) fn bare_name(function: &Function) -> String {
     function.name.to_string()
 }
 
-struct NamedArguments {
-    arrow_secs: bool,
-    assignment_secs: bool,
+pub(super) struct NamedArguments {
+    pub(super) arrow_secs: bool,
+    pub(super) assignment_secs: bool,
 }
 
 impl Visitor for NamedArguments {
@@ -73,11 +77,11 @@ impl Visitor for NamedArguments {
                     operator: FunctionArgOperator::RightArrow,
                     ..
                 } if expr_is_secs(name) => self.arrow_secs = true,
-                FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::BinaryOp {
-                    left,
-                    op: BinaryOperator::Assignment,
+                FunctionArg::ExprNamed {
+                    name,
+                    operator: FunctionArgOperator::Assignment,
                     ..
-                })) if expr_is_secs(left) => self.assignment_secs = true,
+                } if expr_is_secs(name) => self.assignment_secs = true,
                 _ => {}
             }
         }
@@ -95,7 +99,7 @@ fn expr_is_secs(expr: &Expr) -> bool {
 #[test]
 fn issue_3397_left_and_right_calls_stay_functions_and_joins_stay_joins() {
     let statements = parsed(fixture("statements"));
-    assert_eq!(statements.len(), 8);
+    assert_eq!(statements.len(), 9);
     assert!(bare_name(projected_function(&statements[0])).eq_ignore_ascii_case("left"));
     assert!(select_of(&statements[0]).from[0].joins.is_empty());
     assert!(bare_name(projected_function(&statements[1])).eq_ignore_ascii_case("right"));
@@ -125,8 +129,17 @@ fn issue_3397_named_arguments_parse_inside_case() {
         let _ = statement.visit(&mut seen);
     }
     assert!(seen.arrow_secs, "secs => value is a named argument");
+    assert!(seen.assignment_secs, "secs := value is a named argument");
+    let lenient = parse_postgres_sql_lenient("SELECT make_interval(secs := $4);");
+    let mut lenient_seen = NamedArguments {
+        arrow_secs: false,
+        assignment_secs: false,
+    };
+    for statement in &lenient {
+        let _ = statement.visit(&mut lenient_seen);
+    }
     assert!(
-        seen.assignment_secs,
-        "secs := value stays an assignment expression"
+        lenient_seen.assignment_secs,
+        "lenient parse keeps secs := value as a named argument"
     );
 }
