@@ -1,14 +1,16 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
 #
-# Flags the identifiers `collect_routes`, `collect_routes_from_visible_paths`,
-# and `collect_routes_from_snapshot` under `codebase/dependencies/graph/**`.
+# Flags the names `collect_routes`, `collect_routes_from_visible_paths`, and
+# `collect_routes_from_snapshot` under `codebase/dependencies/graph/**`.
 # `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a no-key
 # shared cache: every caller within one `no-mistakes check` invocation wants
 # the exact same app-wide Playwright route scan, so an edge producer must not
-# name those scans directly. The match is the identifier, so a fully qualified
-# call, a `routes::` or `super::` path, a bare call, a `use` (including
-# `use ... as` and a grouped list), and an uncalled function reference all
-# count. See crates/AGENTS.md's "Edge producer smell" note for the historical
+# name those scans directly. The match is an `identifier` or a
+# `field_identifier`, so a fully qualified call, a `routes::` or `super::`
+# path, a bare call, a method or field form such as `receiver.collect_routes()`,
+# a `use` (including `use ... as` and a grouped list), and an uncalled function
+# reference all count. A string literal that only mentions the name does not.
+# See crates/AGENTS.md's "Edge producer smell" note for the historical
 # `collect_playwright_route_edges` bug.
 #
 # `edge_playwright_routes.rs` is the one producer that legitimately computes
@@ -27,7 +29,9 @@ message: >-
   must go through facts.get_or_compute_playwright_routes (see
   crates/AGENTS.md, "Edge producer smell") instead of being named directly.
 rule:
-  kind: identifier
+  any:
+    - kind: identifier
+    - kind: field_identifier
   regex: "^collect_routes(_from_visible_paths|_from_snapshot)?$"
 files:
   - "crates/no-mistakes/src/codebase/dependencies/graph/**"
