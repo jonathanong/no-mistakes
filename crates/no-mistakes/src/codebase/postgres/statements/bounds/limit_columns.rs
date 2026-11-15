@@ -63,12 +63,14 @@ impl Relations {
                 args.len(),
                 columns::function_caller(name, args, positions),
             ),
-            TableFactor::Table { name, alias, .. } => {
-                // A column alias list renames by position. The stored names are the
-                // relation's own outputs, so a renamed reference is not that proof.
-                if alias
-                    .as_ref()
-                    .is_some_and(|alias| !alias.columns.is_empty())
+            TableFactor::Table {
+                name, alias, args, ..
+            } => {
+                // Alias lists rename by position. Parentheses are a table function.
+                if args.is_some()
+                    || alias
+                        .as_ref()
+                        .is_some_and(|alias| !alias.columns.is_empty())
                 {
                     Columns::Named(BTreeMap::new())
                 } else {

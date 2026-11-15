@@ -232,6 +232,7 @@ fn limit_column_review_keeps_null_limits_uncapped() {
         (false, None),
         (true, None),
         (false, None),
+        (false, None),
     ];
     assert_eq!(statements.len(), expected.len());
     for (index, (statement, (capped, catalog))) in statements.iter().zip(expected).enumerate() {

@@ -413,7 +413,12 @@ operation takes output names from its left arm. An alias list shorter than
 the output list renames that prefix and keeps the remaining names. Parentheses
 around a query do not drop an inner catalog column limit. A projected
 set-returning function can emit no rows, so that `LIMIT` does not cap the
-scan, including when it names a non-null catalog column.
+scan, including when it names a non-null catalog column. A parenthesized
+`FROM` item is a table function, not the table or CTE of that name, so its
+output does not inherit that nullability. `ctid` counts only on a catalog
+base table. `EXCEPT`, `INTERSECT`, and duplicate-eliminating `UNION` still
+report their input scans when the cap is a parent column; `UNION ALL` can
+stop at that cap.
 
 ## Counterexample
 

@@ -5,6 +5,6 @@ rules:
     options:
       schemaCatalogPath: schema.json
       executorNames: []
-      sqlInclude: [queries.sql]
+      sqlInclude: [queries.sql, review-soundness.sql]
       include: []
       unanalyzableSql: fail

@@ -29,3 +29,4 @@ SELECT r.id FROM budgets CROSS JOIN LATERAL (SELECT id FROM probe LIMIT public.b
 SELECT r.id FROM (VALUES (1)) d(n) FULL JOIN (VALUES (2)) extra(n) ON true CROSS JOIN LATERAL (SELECT id FROM probe LIMIT d.n) r;
 SELECT r.id FROM (SELECT d.n FROM (VALUES (1)) d(n) LEFT JOIN (VALUES (2)) extra(n) ON true) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
 SELECT r.id FROM (SELECT d.n FROM (VALUES (1)) d(n) RIGHT JOIN ((VALUES (1)) a(n) JOIN (VALUES (2)) b(n) ON true) ON true RIGHT JOIN (VALUES (3)) e(n) ON true) p CROSS JOIN LATERAL (SELECT id FROM probe LIMIT p.n) r;
+SELECT r.id FROM (WITH quotas(n) AS (VALUES (1)) SELECT p.n FROM quotas() p) q CROSS JOIN LATERAL (SELECT id FROM probe LIMIT q.n) r;

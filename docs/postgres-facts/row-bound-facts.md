@@ -53,8 +53,11 @@ row is a non-null literal or bind. Columns from the nullable side of a `LEFT`,
 `catalog_limit` records the catalog table and column when that count is exactly one
 qualified column of a base table that is not on the null-extended side of an outer
 join, and only when that `LIMIT` bounds the input rows. Parentheses around
-that query keep the record. The rule accepts it only when
-the catalog column is `NOT NULL`. A column alias list on the reference, and a
+that query keep the record. A parenthesized `FROM` call is a table function and
+does not inherit a same-named table or CTE proof. The rule accepts the record only when
+the catalog column is `NOT NULL`. `ctid` qualifies only for a catalog base table.
+`EXCEPT`, `INTERSECT`, and duplicate-eliminating `UNION` still report their input
+scans when that column caps the result. A column alias list on the reference, and a
 grouped column under `ROLLUP`, `CUBE`, or `GROUPING SETS`, do not count as non-null. The separate
 limit-value classification remains unchanged. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set

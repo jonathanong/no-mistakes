@@ -58,5 +58,11 @@
         }
       }
     }
+  },
+  "views": {
+    "caps": {
+      "materialized": false,
+      "definition": "SELECT NULL::bigint AS ctid"
+    }
   }
 }

@@ -23,7 +23,9 @@ set operation). A statement is bounded when any of these holds:
   NULL. A set operation uses the left arm's output names, and a short alias list
   renames only that prefix. Parentheses keep an inner catalog column. A
 projected set-returning function can emit no rows, so that `LIMIT` does not
-cap the scan even when the column is non-null.
+cap the scan even when the column is non-null. A parenthesized `FROM` item is
+a table function and does not inherit a same-named table or CTE proof. `ctid`
+is non-null only for a catalog base table, not a view.
   `GREATEST` ignores NULL arguments,
   so `GREATEST(col, 0)` is non-null; `COALESCE(col, 0)` and `LEAST` with a non-null
   literal are too. A column from the nullable side of a `LEFT`, `RIGHT`, or `FULL`
@@ -254,7 +256,8 @@ can supply a bounded driver while its anchor and step relations retain their
 ordinary key proofs. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
-INTERSECT or duplicate-eliminating UNION; UNION ALL can stream until its cap.
+INTERSECT or duplicate-eliminating UNION, including when that LIMIT is a
+non-null parent column; UNION ALL can stream until its cap.
 This also applies through derived tables and CTE wrappers: `SELECT * FROM
 (SELECT id FROM accounts EXCEPT SELECT account_id FROM orders) AS q LIMIT 1`
 still reports the uncapped `orders` input. Independently streaming siblings keep
