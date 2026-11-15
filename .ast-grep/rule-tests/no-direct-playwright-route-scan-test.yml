@@ -1,11 +1,6 @@
 id: no-direct-playwright-route-scan
 valid:
   - |
-    fn build_playwright_setup(root: &Path) -> Result<PlaywrightSetup> {
-        let routes = routes::collect_routes(&route_root);
-        Ok(PlaywrightSetup { routes })
-    }
-  - |
     fn collect_route_edges(root: &Path, facts: Option<&dyn TsFactLookup>) -> Vec<Edge> {
         let routes = match facts {
             Some(facts) => facts.get_or_compute_playwright_routes(&compute_routes),
@@ -14,14 +9,23 @@ valid:
         Vec::new()
     }
   - |
-    fn collect_visible_elsewhere(root: &Path, paths: &[PathBuf]) -> Vec<Route> {
-        routes::collect_routes_from_visible_paths(&root, paths, &["page"])
+    /// `routes::collect_routes` and `collect_routes_from_snapshot` stay on the shared cache.
+    fn collect_route_edges() -> Vec<Edge> {
+        Vec::new()
+    }
+  - |
+    fn collect_routes_from_elsewhere(root: &Path) -> Vec<Edge> {
+        Vec::new()
+    }
+  - |
+    use crate::routes::Route;
+
+    fn collect_route_edges(routes: Vec<Route>) -> Vec<Edge> {
+        Vec::new()
     }
 invalid:
-  # Matches even inside the compute_routes closure that get_or_compute_playwright_routes
-  # eventually calls (ast-grep test doesn't apply the rule's file-level `ignores`, which
-  # only exempts edge_playwright_routes.rs during a real `ast-grep scan`) — this snippet
-  # exists to pin the raw pattern match itself, not the scan-level exemption.
+  # ast-grep test does not apply the rule's file-level `ignores`, which only
+  # exempts edge_playwright_routes.rs during a real `ast-grep scan`.
   - |
     fn collect_playwright_route_edges(root: &Path, facts: Option<&dyn TsFactLookup>) -> Vec<Edge> {
         let compute_routes = || crate::routes::collect_routes(&root, &["page"]);
@@ -36,4 +40,46 @@ invalid:
     fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
         let routes = crate::routes::collect_routes_from_visible_paths(&root, paths, &["page"]);
         Vec::new()
+    }
+  - |
+    fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        routes::collect_routes(&root, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        routes::collect_routes_from_visible_paths(&root, paths, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        collect_routes_from_visible_paths(&root, paths, &["page"]);
+        Vec::new()
+    }
+  - |
+    use crate::routes::collect_routes_from_visible_paths as scan_routes;
+
+    fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        scan_routes(&root, paths, &["page"]);
+        Vec::new()
+    }
+  - |
+    use crate::routes::{collect_routes, Route};
+
+    fn collect_visible_edges(root: &Path, routes: Vec<Route>) -> Vec<Edge> {
+        Vec::new()
+    }
+  - |
+    fn collect_visible_edges(root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        super::routes::collect_routes_from_visible_paths(&root, paths, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_from_snapshot(root: &Path, snapshot: &VisiblePathSnapshot) -> Vec<Route> {
+        crate::playwright::routes::collect_routes_from_snapshot(root, snapshot)
+    }
+  - |
+    fn bind_scan() {
+        let scan = crate::routes::collect_routes_from_visible_paths;
+        let _ = scan;
     }
