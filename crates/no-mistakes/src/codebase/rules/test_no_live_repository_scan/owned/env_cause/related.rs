@@ -4,6 +4,16 @@ use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
 use crate::fx::FxHashSet;
 use std::path::{Path, PathBuf};
 
+#[cfg(test)]
+thread_local! {
+    static RELATED_FILE_COLLECTIONS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+pub(super) fn take_related_file_collections() -> u32 {
+    RELATED_FILE_COLLECTIONS.with(|count| count.replace(0))
+}
+
 impl Owners<'_> {
     pub(super) fn related_files(&self, file: &Path) -> Vec<PathBuf> {
         if let Some(cached) = self.related_files_cache.borrow().get(file) {
@@ -17,6 +27,8 @@ impl Owners<'_> {
     }
 
     fn collect_related_files(&self, file: &Path) -> Vec<PathBuf> {
+        #[cfg(test)]
+        RELATED_FILE_COLLECTIONS.with(|count| count.set(count.get() + 1));
         let mut pending = vec![NodeId::file(file)];
         pending.extend(self.setups.setup_files_for(file).iter().map(NodeId::file));
         let mut seen = FxHashSet::default();
