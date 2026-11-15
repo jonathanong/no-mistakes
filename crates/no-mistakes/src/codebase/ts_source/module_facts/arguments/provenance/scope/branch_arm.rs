@@ -21,6 +21,7 @@ pub(super) fn in_named_branch(nodes: &oxc_semantic::AstNodes<'_>, node: NodeId) 
         match nodes.kind(parent) {
             AstKind::BlockStatement(_)
             | AstKind::Function(_)
+            | AstKind::FunctionBody(_)
             | AstKind::ArrowFunctionExpression(_)
             | AstKind::CallExpression(_)
             | AstKind::ExpressionStatement(_)
