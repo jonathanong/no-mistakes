@@ -11,7 +11,7 @@ fn postgres_closed_identifier_correlation_check_json_snapshot() {
     let report =
         assert_saved_fixture_report("postgres_closed_identifier_correlation", &cases, &[], &[]);
     let rows = report["correlation"]["report"]["rules"].as_array().unwrap();
-    assert_eq!(rows.len(), 4, "{rows:?}");
+    assert_eq!(rows.len(), 7, "{rows:?}");
     let row = |needle: &str| {
         rows.iter()
             .find(|row| {
@@ -25,4 +25,7 @@ fn postgres_closed_identifier_correlation_check_json_snapshot() {
     assert_eq!(row("kind === \"user\"")["target"], "unanalyzable");
     assert_eq!(row("column(k)")["target"], "unanalyzable");
     assert_eq!(row("column(\"missing\")")["target"], "unanalyzable");
+    assert_eq!(row("kind.trim()")["target"], "unanalyzable");
+    assert_eq!(row("`${kind}`")["target"], "unanalyzable");
+    assert_eq!(row("admitNone(kind)")["target"], "unanalyzable");
 }

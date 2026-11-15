@@ -32,7 +32,7 @@ pub(super) fn literal_set(declaration: &ast::VariableDeclaration<'_>) -> Option<
     else {
         return None;
     };
-    if array.elements.is_empty() || array.elements.len() > 16 {
+    if array.elements.len() > 16 {
         return None;
     }
     let mut unique = FxHashSet::default();

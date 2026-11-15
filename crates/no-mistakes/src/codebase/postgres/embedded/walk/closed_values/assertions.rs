@@ -108,6 +108,9 @@ fn helper_values(
             });
         }
     }
+    if arms.is_empty() {
+        return None;
+    }
     Some(arms)
 }
 
@@ -146,8 +149,7 @@ fn expand_argument(
             expanded.push(Expanded { args, choices });
         }
     }
-    // An empty expansion is not proof that the statement has no SQL.
-    if expanded.is_empty() || expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
+    if expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
         return None;
     }
     Some(expanded)

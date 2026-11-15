@@ -42,6 +42,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "return query(rawSql`DELETE FROM ${column(\"missing\")} WHERE id = $1`);",
           "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 78,
+          "message": "query.ts:78: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`DELETE FROM ${CONFIG[kind].table} WHERE ${pick(kind.trim())} = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 82,
+          "message": "query.ts:82: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`DELETE FROM ${CONFIG[kind].table} WHERE ${pick(`${kind}`)} = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 92,
+          "message": "query.ts:92: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`DELETE FROM ${CONFIG[kind].table} WHERE ${admitNone(kind)} = $1`);",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []
