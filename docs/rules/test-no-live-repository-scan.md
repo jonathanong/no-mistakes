@@ -421,6 +421,19 @@ that passes `process.argv` to the exported helper: colocated `*.test.mts` files
 can call that helper with a top-level `const` temporary root or a root assigned
 in `beforeEach`. Several test calls still require every test-origin argument to
 be bounded. Importing the CLI from a selected test makes its calls count again.
+Calls inside `test` and `it` count for a non-exported helper: when every one
+passes an owned temporary root, that parameter is owned. A live, unknown, or
+omitted argument keeps the finding.
+
+```ts
+function scanFixture(root: string) {
+  return readdirSync(root);
+}
+test("a", () => {
+  const root = mkdtempSync(join(tmpdir(), "a-"));
+  scanFixture(root);
+});
+```
 
 A guarded helper call is excluded from the caller proof when every visible
 selected-test caller supplies a literal argument array that contradicts a required
@@ -1018,7 +1031,12 @@ env roots). For a parameter the proof cannot close, fix the caller or the
 route the advisory names, and pass an owned root from that caller. Configured
 `fixtureDirs` apply to caller arguments and env writes too. A mixed or unknown
 caller, escaping function, unsafe env write, or unowned reassignment must be
-rewritten or isolated before that proof succeeds.
+rewritten or isolated before that proof succeeds. Finding a directory by
+scanning an argv array for `--output-root`, or by reading `JSON.parse` of
+stdin, is not that proof: production callers choose argv and stdin. Pass the
+root through a typed function the test calls directly, such as `scan(root)` or
+`main({ outputRoot: root })`, and keep the argv or JSON parser off the
+selected tests' call paths.
 
 An absolute literal below the invocation root matches `runtimeAssets` using the
 same root-relative containment test as a relative literal; paths outside that

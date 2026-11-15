@@ -299,6 +299,8 @@ mod cli_check_rules_test_no_live_repository_scan_forwarded;
 mod cli_check_rules_test_no_live_repository_scan_context;
 #[path = "cli_check_rules_test_no_live_repository_scan_issue_3286.rs"]
 mod cli_check_rules_test_no_live_repository_scan_issue_3286;
+#[path = "cli_check_rules_test_no_live_repository_scan_issue_3355.rs"]
+mod cli_check_rules_test_no_live_repository_scan_issue_3355;
 #[path = "cli_check_rules_test_no_live_repository_scan_test_origins.rs"]
 mod cli_check_rules_test_no_live_repository_scan_test_origins;
 
