@@ -11,7 +11,7 @@ mod reachable;
 mod requires;
 
 use super::analysis_policy::AnalysisDiagnostics;
-use super::forbidden_calls::{call_argument_values, expand_roots, site_source_node, SharedRoots};
+use super::forbidden_calls::{expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::ts_source::module_facts::arguments::PathAnchor;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
@@ -99,9 +99,7 @@ pub(crate) fn check_with_graph(
             {
                 continue;
             }
-            let origin = ts
-                .and_then(|ts| call_argument_values(ts, site.offset))
-                .and_then(|values| values.path.as_ref());
+            let origin = ts.and_then(|ts| provenance::scan_origin(ts, site));
             let verdict = match scan {
                 Scan::Unresolved => {
                     Verdict::Unresolved("the receiver of this call is not resolved")

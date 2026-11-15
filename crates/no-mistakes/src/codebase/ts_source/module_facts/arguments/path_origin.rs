@@ -11,6 +11,7 @@ mod destructure;
 mod forwarded;
 mod getters;
 mod identifier;
+mod loop_bindings;
 mod member_effects;
 mod member_mutations;
 mod members;

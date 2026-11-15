@@ -111,6 +111,12 @@ pub struct ResolvedCallTargets<'a> {
     alternatives: std::slice::Iter<'a, ResolvedCallCandidate>,
 }
 
+impl ResolvedCallTargets<'_> {
+    pub(crate) fn is_empty(&self) -> bool {
+        self.single.is_none() && self.alternatives.as_slice().is_empty()
+    }
+}
+
 impl<'a> Iterator for ResolvedCallTargets<'a> {
     type Item = ResolvedCallCandidateRef<'a>;
     fn next(&mut self) -> Option<Self::Item> {

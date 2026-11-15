@@ -42,10 +42,7 @@ pub(super) enum Scan {
 
 pub(super) fn scan_of(site: &ResolvedCallSite, extra: &[Enumerator]) -> Option<Scan> {
     // Only the language's import.meta receiver has this unshadowable spelling.
-    if matches!(
-        site.source_callee.as_str(),
-        "import.meta.glob" | "import.meta.globEager"
-    ) {
+    if is_import_meta_glob(site) {
         return Some(Scan::Resolved);
     }
     if site.targets().any(|candidate| match candidate.target {
@@ -60,6 +57,32 @@ pub(super) fn scan_of(site: &ResolvedCallSite, extra: &[Enumerator]) -> Option<S
     }
     let terminal = site.source_callee.rsplit('.').next().unwrap_or_default();
     (site.has_unknown_target() && UNRESOLVED_NAMES.contains(&terminal)).then_some(Scan::Unresolved)
+}
+
+pub(super) fn is_import_meta_glob(site: &ResolvedCallSite) -> bool {
+    matches!(
+        site.source_callee.as_str(),
+        "import.meta.glob" | "import.meta.globEager"
+    )
+}
+
+pub(super) fn uses_glob_cwd(site: &ResolvedCallSite) -> bool {
+    !site.has_unknown_target()
+        && !site.targets().is_empty()
+        && site.targets().all(|candidate| match candidate.target {
+            KnownCallTargetRef::ModuleExport {
+                specifier,
+                export_path,
+                ..
+            } => {
+                let module = specifier.strip_prefix("node:").unwrap_or(specifier);
+                let path = export_path.strip_prefix("default.").unwrap_or(export_path);
+                let path = path.strip_prefix("promises.").unwrap_or(path);
+                GLOB_MODULES.contains(&module)
+                    || FS_MODULES.contains(&module) && matches!(path, "glob" | "globSync")
+            }
+            _ => false,
+        })
 }
 
 /// A mocked method name that enumerates, so forwarding it is a pass-through.
