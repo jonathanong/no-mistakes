@@ -29,12 +29,12 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 ## Locks, transactions, connections
 
-- MUST NOT lock rows you neither write nor read to decide a write. Allowed: a parent row used as a mutex, or a lock-order anchor taken before a trigger or cascade locks in another order; name which one at the call site.
+- SHOULD NOT lock rows you neither write nor read to decide a write.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
 - MUST NOT scatter manual `BEGIN`/`COMMIT`/`ROLLBACK`; use one transaction helper that owns cleanup.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
-- MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it. Prefer a row lock; if none fits, use `pg_try_advisory_xact_lock`, check that it returned true, and do the protected work in the same transaction.
+- MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it.
 - MUST NOT read from a replica for read-after-write, locking, or lag-sensitive reads.
 - MUST NOT add `BEGIN`/`COMMIT` inside a migration whose runner already wraps it in a transaction.
 - MUST NOT run `EXPLAIN ANALYZE` on a write outside a rolled-back transaction.

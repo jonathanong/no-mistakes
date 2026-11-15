@@ -18,7 +18,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Deploys and contracts
 
-- MUST NOT deploy a producer of a new shape before every consumer accepts it; expand, migrate, then contract.
+- MUST NOT deploy a producer of a new shape while consumers or stored data of the old shape can exist; expand, migrate, then contract.
 - MUST NOT fail open on irreversible or money-moving actions; when unsure, stop and report.
 - SHOULD NOT conflate deployed with active; ship dark, then enable.
 - SHOULD NOT reference config, task names, or handlers by string without validating them at startup.

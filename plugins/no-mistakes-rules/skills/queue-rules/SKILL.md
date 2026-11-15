@@ -11,7 +11,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 - MUST NOT drop the promise of an enqueue or schedule call; `await` it, or mark deliberate fire-and-forget with `void` and a rejection handler.
 - MUST NOT enqueue inside a transaction that may roll back; enqueue after commit. Exception: when the enqueue is the only durable handoff (a consumer whose idempotency row is its only record), enqueue inside the transaction so a failed enqueue rolls the row back; the enqueue must tolerate collisions, and the worker must be idempotent and treat a missing row as a retry.
-- MUST NOT rename a job or change its payload in one step; ship worker support for both shapes, then switch producers, then drop the old once no old-shape jobs remain queued, delayed, or retrying.
+- MUST NOT rename a job or change its payload in one step while jobs of the old shape can exist (queued, delayed, retrying); ship worker support for both shapes, then switch producers, then drop the old once no old-shape jobs remain queued, delayed, or retrying.
 - MUST NOT assume a unique job id prevents duplicate runs; it only dedupes enqueues. Make the work idempotent.
 - MUST NOT key dedup ids by entity alone; include the triggering event, because retained jobs still hold the id.
 - MUST NOT put shared-queue jobs in no ordering lane or with implicit concurrency; one family starves the rest.

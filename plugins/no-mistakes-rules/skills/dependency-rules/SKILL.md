@@ -20,10 +20,11 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Publishing
 
-- MUST NOT publish from a laptop or with a long-lived token; use CI trusted publishing (OIDC).
+- MUST NOT publish from a laptop or with a long-lived token once trusted publishing (OIDC) is configured; the first publish that creates the package is the exception.
 - MUST NOT publish without a dry run that shows no secrets, env files, or stray files.
 - MUST NOT republish an existing version or replace a module with a stub.
-- MUST NOT retry auth or registry failures blindly, or pass OTPs on the command line.
+- MUST NOT retry auth or registry failures blindly.
+- MUST NOT ship a breaking change to a published package at or above 1.0 under a non-major version.
 
 ## Dependabot
 
