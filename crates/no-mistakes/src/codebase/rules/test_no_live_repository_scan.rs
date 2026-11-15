@@ -8,15 +8,15 @@ mod owned;
 pub(crate) use owned::Resolution;
 mod provenance;
 mod reachable;
+mod registry;
 mod requires;
-
 use super::analysis_policy::AnalysisDiagnostics;
 use super::forbidden_calls::{expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::ts_source::module_facts::arguments::PathAnchor;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
-use config::{Options, UnresolvedRoot};
+use config::Options;
 use enumerators::{scan_of, Scan};
 use provenance::{classify, Verdict};
 use std::path::{Path, PathBuf};
@@ -69,9 +69,16 @@ pub(crate) fn check_with_graph(
             target_roots: &target_roots,
         })?;
         let setups = owned::setups::ConfiguredSetups::new(&root, vitest, &root_files);
-        let scope = reachable::sources(graph, &roots, &root_files, graph_files, &setups)?;
-        let reachable = &scope.sources;
+        let mut scope = reachable::sources(graph, &roots, &root_files, graph_files, &setups)?;
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
+        for (site, expression) in
+            registry::apply(graph, facts, &mut scope, &filter, &options.enumerators)
+        {
+            findings::unresolved_findings(&mut diagnostics, options.unresolved_root).push(
+                findings::unresolved_dispatch(&root, application, site, &expression),
+            );
+        }
+        let reachable = &scope.sources;
         let fixture_dirs = options.fixture_dirs();
         let mut sites = requires::Sites::default();
         let owners = std::cell::OnceCell::new();
@@ -84,7 +91,7 @@ pub(crate) fn check_with_graph(
             }
             let loads =
                 node_loaders::findings(&root, application, site, facts, &options.enumerators);
-            unresolved_findings(&mut diagnostics, options.unresolved_root).extend(loads);
+            findings::unresolved_findings(&mut diagnostics, options.unresolved_root).extend(loads);
             sites.visit(site, &options.enumerators);
             let Some(scan) = scan_of(site, &options.enumerators) else {
                 continue;
@@ -167,12 +174,13 @@ pub(crate) fn check_with_graph(
                         }
                         _ => findings::unresolved(&root, application, site, why),
                     };
-                    unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
+                    findings::unresolved_findings(&mut diagnostics, options.unresolved_root)
+                        .push(finding);
                 }
             }
         }
         for finding in sites.unresolved_requires(&root, application, facts, &options.enumerators) {
-            unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
+            findings::unresolved_findings(&mut diagnostics, options.unresolved_root).push(finding);
         }
         if let Some(owners) = owners.get() {
             owners.report_scan_stats();
@@ -183,16 +191,6 @@ pub(crate) fn check_with_graph(
         list.dedup();
     }
     Ok(diagnostics)
-}
-
-fn unresolved_findings(
-    diagnostics: &mut AnalysisDiagnostics,
-    policy: UnresolvedRoot,
-) -> &mut Vec<super::RuleFinding> {
-    match policy {
-        UnresolvedRoot::Report => &mut diagnostics.findings,
-        UnresolvedRoot::Advise => &mut diagnostics.advisories,
-    }
 }
 #[cfg(test)]
 mod tests;

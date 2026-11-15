@@ -155,8 +155,8 @@ pub(crate) struct PathProvenance {
     pub(crate) arg_unproven: FxHashMap<u32, Vec<(usize, PathOrigin)>>,
     /// Imports and references that can make a callee's callers unknowable.
     pub(crate) route_sites: Vec<RouteSite>,
+    pub(crate) registry_dispatches: Vec<(u32, String, Option<String>, String)>,
 }
-
 /// One import or reference that blocks a parameter-root proof.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RouteSite {

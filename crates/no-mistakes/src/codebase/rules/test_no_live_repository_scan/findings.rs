@@ -1,5 +1,6 @@
+use super::super::analysis_policy::AnalysisDiagnostics;
 use super::super::RuleFinding;
-use super::config::RuntimeAsset;
+use super::config::{RuntimeAsset, UnresolvedRoot};
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::ResolvedCallSite;
 use crate::codebase::ts_source::relative_slash_path;
@@ -123,6 +124,37 @@ pub(super) fn unresolved_require(
             "unresolved root: `{expression}` {why}, so its roots cannot be shown to be bounded. Fix: use a statically named import and enumerate a path under a fixtures or owned temporary directory, or add `no-mistakes-disable-next-line {RULE_ID}` with a reason."
         )),
         import: Some(expression),
+        target: Some("unresolved root".to_string()),
+    }
+}
+
+pub(super) fn unresolved_findings(
+    diagnostics: &mut AnalysisDiagnostics,
+    policy: UnresolvedRoot,
+) -> &mut Vec<RuleFinding> {
+    match policy {
+        UnresolvedRoot::Report => &mut diagnostics.findings,
+        UnresolvedRoot::Advise => &mut diagnostics.advisories,
+    }
+}
+
+pub(super) fn unresolved_dispatch(
+    root: &Path,
+    application: &RuleDef,
+    site: &ResolvedCallSite,
+    expression: &str,
+) -> RuleFinding {
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.to_string(),
+        file: relative_slash_path(root, &site.file),
+        line: site.line as usize,
+        message: application.message.clone().unwrap_or_else(|| {
+            format!(
+                "unresolved root: `{expression}` dispatches a registry that holds a scanning function, but the key is not a static string, so the scanner cannot be named. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason."
+            )
+        }),
+        import: Some(expression.to_string()),
         target: Some("unresolved root".to_string()),
     }
 }
