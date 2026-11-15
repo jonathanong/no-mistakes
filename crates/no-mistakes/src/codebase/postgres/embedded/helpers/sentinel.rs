@@ -60,3 +60,80 @@ pub(crate) fn prefix(text: &str) -> &str {
         .first()
         .map_or(text, |(range, _)| &text[..range.start])
 }
+
+/// A marker glued to an identifier character, as in `` tmp_${expr} ``.
+pub(crate) fn splits_identifier(text: &str) -> bool {
+    find_all(text).iter().any(|(range, _)| {
+        text[..range.start]
+            .chars()
+            .next_back()
+            .is_some_and(|ch| ch.is_ascii_alphanumeric() || ch == '_')
+    })
+}
+
+/// A hole that is itself a relation or select-list identifier.
+///
+/// `` SELECT id FROM tmp_${expr} `` and `` SELECT ${name} `` qualify.
+/// `` WHERE id = ${expr} `` does not: a placeholder there is a new column.
+pub(crate) fn has_identifier_slot_hole(text: &str) -> bool {
+    find_all(text)
+        .iter()
+        .any(|(range, _)| identifier_slot(text, range.start))
+}
+
+/// A hole whose replacement stays a value, as in `` WHERE id = ${expr} ``.
+///
+/// Restoring `sql_placeholder_N` keeps the statement parseable. Scrubbing the
+/// hole leaves a trailing operator, and the identifier audit then treats the
+/// configured helper as used.
+pub(crate) fn has_value_operand_hole(text: &str) -> bool {
+    find_all(text)
+        .iter()
+        .any(|(range, _)| text[..range.start].trim_end().ends_with('='))
+}
+
+/// Glued relation text, or a value operand, keeps a public placeholder
+/// without a member site.
+pub(crate) fn keeps_placeholder(text: &str) -> bool {
+    has_value_operand_hole(text) || (splits_identifier(text) && has_identifier_slot_hole(text))
+}
+
+fn identifier_slot(text: &str, hole_start: usize) -> bool {
+    let before = &text[..hole_start];
+    let Some(ch) = before.chars().next_back() else {
+        return false;
+    };
+    let head = if ch.is_ascii_alphanumeric() || ch == '_' {
+        before.trim_end_matches(|c: char| c.is_ascii_alphanumeric() || c == '_')
+    } else if ch.is_whitespace() {
+        before
+    } else {
+        return false;
+    };
+    let word = head
+        .trim_end()
+        .rsplit(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+        .find(|word| !word.is_empty())
+        .unwrap_or("");
+    ["select", "from", "join", "update", "into", "table"]
+        .iter()
+        .any(|keyword| word.eq_ignore_ascii_case(keyword))
+}
+
+/// Put `sql_placeholder_N` back where each marker stood, in text order.
+pub(crate) fn restore_placeholders(text: &str) -> String {
+    let holes = find_all(text);
+    if holes.is_empty() {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut cursor = 0;
+    for (index, (range, _)) in holes.iter().enumerate() {
+        out.push_str(&text[cursor..range.start]);
+        out.push_str("sql_placeholder_");
+        out.push_str(&(index + 1).to_string());
+        cursor = range.end;
+    }
+    out.push_str(&text[cursor..]);
+    out
+}

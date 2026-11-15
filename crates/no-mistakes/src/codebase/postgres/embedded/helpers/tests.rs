@@ -55,6 +55,39 @@ fn sentinel_markers_round_trip_and_ignore_malformed_text() {
     assert_eq!(sentinel::prefix(&text), "a");
     assert_eq!(sentinel::prefix("no hole"), "no hole");
     assert!(sentinel::contains(&text));
+    assert_eq!(
+        sentinel::restore_placeholders(&text),
+        "asql_placeholder_1bsql_placeholder_2c"
+    );
+    let glued = format!("tmp_{}", sentinel::encode(1));
+    assert!(sentinel::splits_identifier(&glued));
+    assert!(!sentinel::has_identifier_slot_hole(&glued));
+    let relation = format!("SELECT id FROM tmp_{}", sentinel::encode(1));
+    assert!(sentinel::has_identifier_slot_hole(&relation));
+    assert!(sentinel::has_identifier_slot_hole(&format!(
+        "SELECT {}",
+        sentinel::encode(1)
+    )));
+    assert!(sentinel::has_identifier_slot_hole(&format!(
+        "SELECT id FROM {}",
+        sentinel::encode(1)
+    )));
+    let value = format!("SELECT id FROM items WHERE id = {}", sentinel::encode(1));
+    assert!(!sentinel::has_identifier_slot_hole(&value));
+    assert!(sentinel::has_value_operand_hole(&value));
+    assert!(sentinel::keeps_placeholder(&value));
+    assert!(!sentinel::has_value_operand_hole(&format!(
+        "SELECT 1 WHERE {}",
+        sentinel::encode(1)
+    )));
+    assert!(!sentinel::splits_identifier(&format!(
+        "FROM {}",
+        sentinel::encode(1)
+    )));
+    assert_eq!(
+        sentinel::restore_placeholders(&glued),
+        "tmp_sql_placeholder_1"
+    );
     for malformed in [
         format!("bare {MARK} marker"),
         format!("{MARK}12 never closed"),

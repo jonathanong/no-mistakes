@@ -1,9 +1,6 @@
 //! End-of-walk step: no hole marker may reach a public fact.
-//!
-//! A call that still holds markers is reduced to exactly what the walk
-//! produced before imported helpers were modeled: `Dynamic`, keeping only a
-//! verified leading statement. When the whole call could be complete, the
-//! marker-bearing form is kept aside for the projection step.
+//! Marker-bearing calls become `Dynamic` with a leading statement or an
+//! identifier placeholder. Complete calls keep markers for projection.
 
 use super::sentinel;
 use super::split::coordinate;
@@ -99,7 +96,11 @@ fn take_pending(
         template.sql_source_positions.clear();
         template.recovered_placeholder_positions.clear();
     }
-    scrub(call);
+    if keep_identifier_placeholders(call, sites) {
+        restore_member_placeholders(call);
+    } else {
+        scrub(call);
+    }
     if !complete {
         return None;
     }
@@ -119,6 +120,34 @@ fn take_pending(
         sites,
         correlation,
     })
+}
+
+fn keep_identifier_placeholders(call: &EmbeddedSqlCall, sites: &[ImportedSite]) -> bool {
+    let texts: Vec<&String> = call
+        .sql_text
+        .iter()
+        .chain(call.variants.iter().map(|variant| &variant.sql_text))
+        .collect();
+    texts.iter().any(|text| sentinel::keeps_placeholder(text))
+        || (texts
+            .iter()
+            .any(|text| sentinel::has_identifier_slot_hole(text))
+            && used_sites(texts.into_iter(), sites).is_some_and(|used| {
+                !used.is_empty() && used.iter().all(|(_, site)| site.member.is_some())
+            }))
+}
+
+fn restore_member_placeholders(call: &mut EmbeddedSqlCall) {
+    let source = call.sql_text.clone().or_else(|| {
+        call.variants
+            .first()
+            .map(|variant| variant.sql_text.clone())
+    });
+    call.variants.clear();
+    call.kind = EmbeddedSqlKind::Dynamic;
+    call.sql_source_positions.clear();
+    call.recovered_placeholder_positions.clear();
+    call.sql_text = source.map(|text| sentinel::restore_placeholders(&text));
 }
 
 fn used_sites<'a>(
