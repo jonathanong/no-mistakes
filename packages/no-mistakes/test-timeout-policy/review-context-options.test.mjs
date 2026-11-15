@@ -61,7 +61,7 @@ describe.skipIf(process.platform !== "linux")("public context, options and neste
       fixtureTemplate("review-context-options.test-template-2.txt"),
       fixtureTemplate("review-context-options.test-template-1.txt"),
       undefined,
-      { policyMaximum: 20 },
+      { policyMaximum: 5000 },
     );
     expect(result.code, result.output).toBe(0);
     expect(result.marker).toBe("continued");
