@@ -31,6 +31,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=50: page of ids"
         },
         {
+          "file": "sql/shared-anchor.sql",
+          "justification": "two statements share this line",
+          "line": 1,
+          "rows": 40,
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=40: two statements share this line"
+        },
+        {
           "file": "src/page.ts",
           "justification": "caller passes one page of ids",
           "line": 15,

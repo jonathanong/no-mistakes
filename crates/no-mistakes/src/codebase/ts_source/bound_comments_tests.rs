@@ -95,6 +95,26 @@ return query(`
 }
 
 #[test]
+fn reads_template_escapes_quotes_and_interpolation() {
+    let source = "\
+const q = `SELECT ${foo({ id })}
+  -- plain note
+  SELECT '\\n'
+  SELECT 'it''s'
+  -- no-mistakes-bound postgres-bounded-statements rows<=9: template edges
+`;
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 5,
+            rows: 9,
+            justification: "template edges".to_string(),
+        }]
+    );
+}
+
+#[test]
 fn ignores_other_rules_strings_and_lookalike_words() {
     let source = "\
 -- no-mistakes-bound postgres-explicit-columns rows<=10: not this rule

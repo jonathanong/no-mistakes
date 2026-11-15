@@ -1,0 +1,1 @@
+SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=40: two statements share this line
