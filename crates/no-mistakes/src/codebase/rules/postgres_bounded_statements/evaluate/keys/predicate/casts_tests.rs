@@ -115,5 +115,10 @@ fn value_preserving_casts_keep_the_literal() {
     )
     .is_some());
     let nvarchar = BTreeMap::from([("label".to_owned(), "nvarchar".to_owned())]);
-    assert!(atom_with(&parsed("(label)::text = 'pending'::text"), &catalog, &nvarchar).is_none());
+    assert!(atom_with(
+        &parsed("(label)::text = 'pending'::text"),
+        &catalog,
+        &nvarchar
+    )
+    .is_none());
 }

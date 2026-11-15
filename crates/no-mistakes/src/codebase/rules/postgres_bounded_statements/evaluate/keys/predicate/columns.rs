@@ -78,5 +78,3 @@ fn text_target(data_type: &DataType) -> bool {
             | DataType::CharVarying(_)
     )
 }
-
-

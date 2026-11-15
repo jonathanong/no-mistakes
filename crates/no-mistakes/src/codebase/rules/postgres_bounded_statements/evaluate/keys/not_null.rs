@@ -4,14 +4,8 @@ use super::implied::text_family_column;
 use crate::codebase::postgres::statements::SqlBoundItem;
 use crate::codebase::postgres::CatalogTable;
 
-pub(super) fn proves(column: &str, item: &SqlBoundItem, table: &CatalogTable) -> bool {
-    proves_arm(column, item, table, false)
-}
-
-/// `arm_equated` is a raw equality, `IN`, or parameter on this `OR` arm only.
-/// Raw equality proves `IS NOT NULL` for every catalog type. A strict-function
-/// equality still has to pass [`text_family_column`].
-pub(super) fn proves_arm(
+/// `arm_equated` is raw equality on this `OR` arm. It proves `IS NOT NULL` for every catalog type.
+pub(super) fn proves(
     column: &str,
     item: &SqlBoundItem,
     table: &CatalogTable,

@@ -1,4 +1,4 @@
-use super::{proves, proves_arm};
+use super::proves;
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use crate::codebase::postgres::{CatalogColumn, CatalogTable, RelationKind};
 
@@ -46,9 +46,9 @@ fn item(raw: &[&str], strict: &[&str]) -> SqlBoundItem {
 #[test]
 fn raw_equality_proves_not_null_for_every_catalog_type() {
     let columns = table(&[("n", "integer"), ("payload", "mytype")]);
-    assert!(proves("n", &item(&["n"], &[]), &columns));
-    assert!(proves("payload", &item(&["payload"], &[]), &columns));
-    assert!(!proves("n", &item(&[], &[]), &columns));
+    assert!(proves("n", &item(&["n"], &[]), &columns, false));
+    assert!(proves("payload", &item(&["payload"], &[]), &columns, false));
+    assert!(!proves("n", &item(&[], &[]), &columns, false));
 }
 
 #[test]
@@ -77,23 +77,23 @@ fn strict_function_equality_proves_not_null_only_for_the_text_family() {
             "missing",
         ],
     );
-    assert!(proves("username", &strict, &columns));
-    assert!(proves("name", &strict, &columns));
-    assert!(proves("plain", &strict, &columns));
-    assert!(proves("qualified", &strict, &columns));
-    assert!(!proves("payload", &strict, &columns));
-    assert!(!proves("n", &strict, &columns));
-    assert!(!proves("code", &strict, &columns));
-    assert!(!proves("custom", &strict, &columns));
-    assert!(!proves("missing", &strict, &columns));
+    assert!(proves("username", &strict, &columns, false));
+    assert!(proves("name", &strict, &columns, false));
+    assert!(proves("plain", &strict, &columns, false));
+    assert!(proves("qualified", &strict, &columns, false));
+    assert!(!proves("payload", &strict, &columns, false));
+    assert!(!proves("n", &strict, &columns, false));
+    assert!(!proves("code", &strict, &columns, false));
+    assert!(!proves("custom", &strict, &columns, false));
+    assert!(!proves("missing", &strict, &columns, false));
 }
 
 #[test]
 fn arm_equality_proves_not_null_for_every_catalog_type() {
     let columns = table(&[("code", "char"), ("folded", "citext"), ("n", "integer")]);
     let plain = item(&[], &[]);
-    assert!(proves_arm("code", &plain, &columns, true));
-    assert!(proves_arm("folded", &plain, &columns, true));
-    assert!(proves_arm("n", &plain, &columns, true));
-    assert!(!proves_arm("code", &plain, &columns, false));
+    assert!(proves("code", &plain, &columns, true));
+    assert!(proves("folded", &plain, &columns, true));
+    assert!(proves("n", &plain, &columns, true));
+    assert!(!proves("code", &plain, &columns, false));
 }

@@ -153,7 +153,7 @@ impl Evidence {
         }
         if let Expr::IsNotNull(column) = unwrap_expr(predicate) {
             if let Some(name) = plain_column(column) {
-                if super::not_null::proves_arm(&name, item, table, self.strict_not_null(&name)) {
+                if super::not_null::proves(&name, item, table, self.strict_not_null(&name)) {
                     return true;
                 }
             }
