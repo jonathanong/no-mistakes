@@ -40,7 +40,12 @@ fn prepared() -> (PathBuf, String, FileIdMap<CheckFileFacts>) {
                 None,
             );
             CheckFileFacts {
-                sql_identifier_syntax: super::super::collect(program, &ts, &source, &[profile()]),
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
                 ts: Arc::new(ts),
                 ..Default::default()
             }
@@ -189,7 +194,12 @@ fn invalidated_constructor_argument_retains_source_sql_effect() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::collect(program, &ts, &source, &[profile()]),
+            sql_identifier_syntax: super::super::tests::collect(
+                program,
+                &ts,
+                &source,
+                &[profile()],
+            ),
             ts: Arc::new(ts),
             ..Default::default()
         }

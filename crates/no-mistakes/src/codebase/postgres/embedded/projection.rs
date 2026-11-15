@@ -7,6 +7,18 @@ pub(crate) fn extract_embedded_sql_from_program_with_projections(
     options: &EmbeddedSqlOptions,
     demand: (bool, bool),
 ) -> EmbeddedSqlFileFacts {
+    let mut scoped = scoped_bindings::collect(program, options);
+    extract_with_scopes(path, program, source, options, demand, &mut scoped)
+}
+
+pub(crate) fn extract_with_scopes(
+    path: &Path,
+    program: &Program<'_>,
+    source: &str,
+    options: &EmbeddedSqlOptions,
+    demand: (bool, bool),
+    scoped: &mut scoped_bindings::ScopedCollection,
+) -> EmbeddedSqlFileFacts {
     record_embedded_collection!();
     let bindings = executor_bindings(program, options);
     let mut executor_bindings: Vec<String> = bindings
@@ -15,7 +27,6 @@ pub(crate) fn extract_embedded_sql_from_program_with_projections(
         .cloned()
         .collect();
     executor_bindings.sort();
-    let mut scoped = scoped_bindings::collect(program, options);
     let mut collected = walk::collect_calls(
         program,
         source,
@@ -62,8 +73,8 @@ pub(crate) fn extract_embedded_sql_from_program_with_projections(
         fragment_variants: collected.fragment_variants,
         fragment_sites: collected.fragment_sites,
         pending_relative: PendingRelativeScope {
-            candidates: scoped.candidates,
-            spans: scoped.spans,
+            candidates: std::mem::take(&mut scoped.candidates),
+            spans: std::mem::take(&mut scoped.spans),
             calls: std::mem::take(&mut collected.pending_calls),
             diagnostic_member_sequences: collected.diagnostic_member_sequences,
             confirmed_order: std::mem::take(&mut collected.confirmed_order),

@@ -31,7 +31,8 @@ fn variant_limits_keep_known_sql_and_debug_output_private() {
             None,
             None,
         );
-        let syntax = super::super::collect(program, &ts, &source, &[super::tests::profile()]);
+        let syntax =
+            super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
         CheckFileFacts {
             ts: Arc::new(ts),
             sql_identifier_syntax: syntax,

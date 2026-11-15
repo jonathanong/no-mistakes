@@ -10,6 +10,21 @@ pub(in crate::codebase::check_facts::file) fn prepared_embedded_sql(
     crate::codebase::postgres::EmbeddedSqlOptions,
     crate::codebase::postgres::EmbeddedSqlFileFacts,
 )> {
+    let mut scopes = Default::default();
+    prepared_with_scopes(root, path, source, program, plan, &mut scopes)
+}
+
+pub(super) fn prepared_with_scopes(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    plan: &CheckFactPlan,
+    scopes: &mut crate::codebase::postgres::embedded::scoped_bindings::PreparedScopes,
+) -> Vec<(
+    crate::codebase::postgres::EmbeddedSqlOptions,
+    crate::codebase::postgres::EmbeddedSqlFileFacts,
+)> {
     let mut profiles = plan.embedded_sql_options.clone();
     if plan.embedded_sql && profiles.is_empty() {
         profiles.push(crate::codebase::postgres::EmbeddedSqlOptions::default());
@@ -20,14 +35,19 @@ pub(in crate::codebase::check_facts::file) fn prepared_embedded_sql(
     profiles
         .into_iter()
         .map(|options| {
-            let mut facts =
-                crate::codebase::postgres::embedded::extract_embedded_sql_from_program_with_projections(
-                    path,
-                    program,
-                    source,
-                    &options,
-                    (plan.embedded_sql_head_calls_only.contains(&options), plan.postgres_grouping),
-                );
+            let mut facts = crate::codebase::postgres::embedded::extract_with_scopes(
+                path,
+                program,
+                source,
+                &options,
+                (
+                    plan.embedded_sql_head_calls_only.contains(&options),
+                    plan.postgres_grouping,
+                ),
+                scopes.entry(options.clone()).or_insert_with(|| {
+                    crate::codebase::postgres::embedded::scoped_bindings::collect(program, &options)
+                }),
+            );
             assign_unproven_rules(
                 &mut facts,
                 plan.embedded_sql_rule_ids.get(&options).map(Vec::as_slice),

@@ -177,6 +177,33 @@ file is inside the package `importSpecifier` resolves to; a same-named import ou
 that package does not. If the package root cannot be determined, relative imports do
 not match. `executorNames` still requires the exact module.
 
+A nullable typed local also selects each `.query` call after one unconditional
+assignment in the same executing block, at both `low` and `max` effort:
+
+```ts
+import type { PoolClient } from 'db-lib/types';
+let client: PoolClient | undefined;
+try {
+  client = await pool.connect();
+  await client.query('UPDATE items SET a=1 WHERE id=$1', [id]);
+} finally {
+  client?.release();
+}
+```
+
+Configure `importSpecifier: db-lib` and `executorTypeNames: [PoolClient]` for this
+example. `Pool | undefined` and nullable `null` unions work the same way when
+that imported type is configured. Every recovered query still undergoes the
+configured relation checks; the annotation does not waive a required predicate.
+An untyped local, a typed object initialized or assigned a fake `query` method
+(even through a TypeScript cast), literal or array assignments, competing
+assignments, a write from a nested function, and reads before assignment or outside
+the assigning block retain an unanalyzable result. Rewrite these as an immutable
+configured factory result or a configured typed parameter to make ownership
+explicit. The existing disable directives also apply to these calls. A configured
+callable executor type also accepts a delayed function or arrow assignment followed
+by direct calls such as `execute(sql, binds)`.
+
 Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error. Set `executorNames: []` without
 `importSpecifier` to explicitly skip executor calls (including `.query`).
 A configured module enables `.query` only for proven executor receivers.

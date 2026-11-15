@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 mod commonjs;
 mod delayed;
+mod nullable;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

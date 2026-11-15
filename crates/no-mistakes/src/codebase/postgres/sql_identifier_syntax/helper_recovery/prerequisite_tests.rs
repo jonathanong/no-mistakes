@@ -4,7 +4,7 @@ use crate::codebase::{
         sql_source_prerequisites::{source_failed, SqlProjection, SqlSourceKey},
         CheckFileFacts,
     },
-    postgres::{sql_identifier_syntax::collect as collect_sql_syntax, EmbeddedSqlOptions},
+    postgres::{sql_identifier_syntax::tests::collect as collect_sql_syntax, EmbeddedSqlOptions},
     ts_source::{
         facts::{collect_file_facts_from_program, TsFactContext, TsFactPlan},
         FileIdMap,
