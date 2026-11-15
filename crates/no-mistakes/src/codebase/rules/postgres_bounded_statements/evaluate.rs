@@ -1,7 +1,7 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use super::view_bounds::{ViewBoundMode, ViewBounds};
 use crate::codebase::postgres::statements::{
-    SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery,
+    SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
 mod accepts;
