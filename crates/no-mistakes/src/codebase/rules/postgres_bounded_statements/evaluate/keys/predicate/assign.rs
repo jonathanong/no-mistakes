@@ -90,9 +90,6 @@ fn splits(
         let Some(enum_type) = catalog.enum_type(data_type) else {
             continue;
         };
-        if enum_type.values.is_empty() {
-            continue;
-        }
         found.push(Split {
             column: column.clone(),
             placeholder: placeholder.clone(),

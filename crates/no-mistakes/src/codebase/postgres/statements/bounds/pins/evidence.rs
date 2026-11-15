@@ -60,9 +60,7 @@ pub(in super::super) fn item_predicates(
         found.push(canonical);
     }
     if let Some(binding) = placeholder_binding(expr) {
-        if !found.contains(&binding) {
-            found.push(binding);
-        }
+        found.push(binding);
     }
     found
 }

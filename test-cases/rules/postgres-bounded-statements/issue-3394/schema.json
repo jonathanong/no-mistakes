@@ -201,6 +201,28 @@
           ]
         }
       }
+    },
+    "notes": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "notes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX notes_pkey ON notes (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
     }
   }
 }

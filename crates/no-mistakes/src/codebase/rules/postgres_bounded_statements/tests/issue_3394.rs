@@ -47,6 +47,9 @@ fn partial_unique_indexes_prove_only_implied_predicates() {
         ("flows-any.sql", &[0]),
         ("bindings-direct.sql", &[0]),
         ("bindings-forward.sql", &[0]),
+        ("bindings-literal-left.sql", &[0]),
+        ("flows-expression-null.sql", &[0]),
+        ("flows-join.sql", &[0]),
         ("bindings-or.sql", &[0]),
         ("bindings-enum-both.sql", &[0]),
         ("controls.sql", &[0, 0]),
@@ -59,6 +62,7 @@ fn partial_unique_indexes_prove_only_implied_predicates() {
         ("text-or.sql", &[1]),
         ("text-both.sql", &[1]),
         ("enum-missing-user.sql", &[1]),
+        ("bindings-conflict.sql", &[1]),
     ] {
         let sql = std::fs::read_to_string(root.join(name)).unwrap();
         let facts = extract_sql_statement_facts(&sql);

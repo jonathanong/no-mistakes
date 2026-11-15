@@ -12,6 +12,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "bindings-conflict.sql",
+          "line": 2,
+          "message": "bindings-conflict.sql:2: SELECT can return every row of bindings; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM bindings",
+          "target": "table:bindings"
+        },
+        {
           "file": "enum-missing-user.sql",
           "line": 2,
           "message": "enum-missing-user.sql:2: SELECT can return every row of bindings; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",

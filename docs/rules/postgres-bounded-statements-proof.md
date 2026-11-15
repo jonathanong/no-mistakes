@@ -306,7 +306,9 @@ Every key element must have a finite pin. Supported index shapes include:
   same set of literals. PostgreSQL stores that list as `col = ANY (ARRAY[...])`,
   and the two spellings match. A longer list, a shorter list, or `col = one-literal`
   does not match a multi-value list. A bare parameter does not match a literal.
-  `col = $n` together with `$n = literal` in the same alternative does. Shared
+  `col = $n` together with `$n = literal` or `literal = $n` in the same alternative
+  does. Two different literals for that placeholder cancel the binding, so it
+  neither forwards nor chooses an enum label. Shared
   `AND` conjuncts count for every alternative. A conjunct that appears only in one
   `OR` arm counts only for that arm.
   When the catalog types a column as an enum and the alternative equates that
