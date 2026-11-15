@@ -1,0 +1,90 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "partial-indexes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "enum-missing-user.sql",
+          "line": 2,
+          "message": "enum-missing-user.sql:2: SELECT can return every row of bindings; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM bindings",
+          "target": "table:bindings"
+        },
+        {
+          "file": "equality-literal.sql",
+          "line": 1,
+          "message": "equality-literal.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "missing-conjunct.sql",
+          "line": 1,
+          "message": "missing-conjunct.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "narrower-in.sql",
+          "line": 1,
+          "message": "narrower-in.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "parameter-literal.sql",
+          "line": 1,
+          "message": "parameter-literal.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "parameter-one-literal.sql",
+          "line": 1,
+          "message": "parameter-one-literal.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "text-both.sql",
+          "line": 2,
+          "message": "text-both.sql:2: SELECT can return every row of bindings_text; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM bindings_text",
+          "target": "table:bindings_text"
+        },
+        {
+          "file": "text-or.sql",
+          "line": 2,
+          "message": "text-or.sql:2: SELECT can return every row of bindings_text; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM bindings_text",
+          "target": "table:bindings_text"
+        },
+        {
+          "file": "wider-in.sql",
+          "line": 1,
+          "message": "wider-in.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

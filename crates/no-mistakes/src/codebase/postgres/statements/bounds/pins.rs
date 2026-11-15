@@ -23,7 +23,7 @@ use sqlparser::ast::{BinaryOperator, Expr, Query};
 use std::cell::Cell;
 
 pub(super) use correlated::{projection_columns, Reads};
-pub(super) use evidence::collect as collect_evidence;
+pub(super) use evidence::{collect as collect_evidence, item_predicates};
 pub(super) use resolver::Resolver;
 
 /// Collect the pins that the conjuncts of `expr` impose on the `restricted` items.

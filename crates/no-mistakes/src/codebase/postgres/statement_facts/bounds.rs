@@ -75,6 +75,8 @@ pub struct SqlBoundItem {
     pub pins: Vec<SqlBoundPin>,
     /// Catalog-independent, table-local conjuncts from WHERE and restricting JOIN ON arms.
     pub predicate_conjuncts: Vec<Expr>,
+    /// Conjuncts that hold only inside one OR alternative, in alternative order.
+    pub alternative_predicates: Vec<Vec<Expr>>,
     /// Plain columns made non-NULL by strict equality in those same conjuncts.
     pub nonnull_columns: Vec<String>,
     /// Number of disjunctive alternatives; every alternative must complete a unique key.

@@ -286,8 +286,8 @@ Every key element must have a finite pin. Supported index shapes include:
   is not a bare column stay unrecognized.
 - Partial indexes when every predicate conjunct is proven for that relation's
   scan. For `UNIQUE (community_id, user_id) WHERE removed_at IS NULL`, both keys
-  and `removed_at IS NULL` must appear in applicable `AND` conjuncts. Reordered
-  conjuncts are accepted. Strict equality `col = $1` also implies `col IS NOT NULL`
+  and `removed_at IS NULL` must hold for the scan. Reordered conjuncts are
+  accepted. Strict equality `col = $1` also implies `col IS NOT NULL`
   on that same column, so `username = $1` proves
   `UNIQUE (lower(username)) WHERE username IS NOT NULL`.
   Equality of unquoted `lower`, `upper`, or one-argument `btrim` (unqualified or
@@ -298,9 +298,23 @@ Every key element must have a finite pin. Supported index shapes include:
   null, so it does not. A quoted name, another schema, a filter, a window, or an extra
   argument stays unrecognized. Raw equality does not prove `f(col) IS NOT NULL` or a
   predicate on another column.
-  A predicate present only in an `OR` alternative, or an outer join's `ON` for
-  the preserved side, does not establish the scan's predicate. Positional column
-  alias lists keep expression/partial-index proofs conservative.
+  An outer join's `ON` for the preserved side does not establish the scan's
+  predicate. Positional column alias lists keep expression and partial-index
+  proofs conservative.
+  A conjunct holds when the same alternative contains the same shape: `col IS NULL`;
+  `col = literal`, ignoring a cast on the literal; or `col IN (literals)` with the
+  same set of literals. PostgreSQL stores that list as `col = ANY (ARRAY[...])`,
+  and the two spellings match. A longer list, a shorter list, or `col = one-literal`
+  does not match a multi-value list. A bare parameter does not match a literal.
+  `col = $n` together with `$n = literal` in the same alternative does. Shared
+  `AND` conjuncts count for every alternative. A conjunct that appears only in one
+  `OR` arm counts only for that arm.
+  When the catalog types a column as an enum and the alternative equates that
+  column to a parameter, each catalog label is tried in its place, up to 32
+  combinations. Every label must pin some unique index using that alternative's
+  conjuncts. A label that contradicts a literal already bound to the parameter
+  matches no row. A type that is not a catalog enum stays opaque, so the same SQL
+  on `text` still reports. More than 32 combinations leave the scan unproven.
 - `UNIQUE ... NULLS NOT DISTINCT` keys also accept `IS NOT DISTINCT FROM`,
   including nullable columns and matching expression keys. `col IS NULL` also pins
   a nullable column of such a key; every other key element still needs a pin.
@@ -311,6 +325,8 @@ Every key element must have a finite pin. Supported index shapes include:
 These do not prove one row:
 
 - A partial unique index whose predicate is absent or only partly established.
+  That includes a different `IN` or `ANY` literal set, and a parameter standing
+  in for a literal.
 - A catalog index with a placeholder anywhere in its parsed key or predicate.
   PostgreSQL index definitions cannot depend on query parameters; matching malformed
   catalog text to a query does not establish uniqueness.
@@ -323,8 +339,14 @@ These do not prove one row:
 - Ranges and `LIKE`.
 
 Each `OR` alternative must independently pin a complete unique key, using shared
-`AND` conjuncts where present. The keys may differ between branches. More than
-32 expanded alternatives retain only unconditional pins.
+`AND` conjuncts where present. The keys may differ between branches. A partial
+index counts for an alternative only when that alternative proves its predicate.
+A catalog enum compared with a parameter can make one arm prove a different
+partial index for each label: `kind = $2 AND ($2 = 'direct' OR user_id = $3)`
+pins the `kind = 'direct'` index on the first arm, and the `kind = 'family'`
+index on the second arm only when `user_id` is pinned and `family` is a catalog
+label. The disjunction alone does not choose an index. More than 32 expanded
+alternatives retain only unconditional pins.
 
 ### Unqualified key columns
 

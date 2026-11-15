@@ -165,7 +165,7 @@ pub(crate) use on_conflict::{judge_file_with_prepared_triggers, InstalledTrigger
 
 pub use embedded::undeclared::summarize_unresolved_executor_receivers;
 
-pub(crate) use catalog::canonical_bound_expr;
+pub(crate) use catalog::{canonical_bound_expr, BoundedUniqueIndex};
 
 #[cfg(test)]
 mod collect_fixture_errors_tests;

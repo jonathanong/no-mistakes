@@ -151,6 +151,11 @@ Disjunctive bound evidence keeps `SqlBoundItem.pin_alternatives` and each
 `SqlBoundPin.alternative`: an absent alternative is an unconditional conjunct;
 every numbered alternative must independently complete a catalog unique key.
 Expansion above 32 branches falls back to unconditional evidence.
+Conjuncts that hold in every alternative stay on `predicate_conjuncts`.
+Conjuncts that hold in only one alternative are stored on
+`alternative_predicates`, in alternative order, including a placeholder equated
+to a literal. `postgres-bounded-statements` uses both when it proves a partial
+unique index.
 `SqlPinSource::ArrayQuery` retains an executed array input query independently
 of whether its elements are scalar. `SqlBoundOutput.scalar` records syntactically scalar
 outputs and `source_column` records an ordinal FROM-item/column lineage for

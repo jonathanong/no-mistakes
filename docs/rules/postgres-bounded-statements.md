@@ -505,7 +505,10 @@ A bare column such as `WHERE aside_type = $1` can pin a key in a multi-table
 query when the complete catalog identifies exactly one visible owner.
 An ambiguous bare column supplies no proof; qualify it with the intended
 relation alias. Catalog indexes include plain unique keys such as
-`receipt_id`, partial unique keys whose predicates the query establishes,
+`receipt_id`, partial unique keys whose predicates the query establishes
+(the same `IS NULL`, literal equality, or `IN` / `ANY` literal set, including
+a parameter bound to that literal in the same alternative, and a catalog enum
+parameter when every label hits a pinned unique index),
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
 A strict call also proves the argument is not null: `lower(username) = lower($1)`
 matches `UNIQUE (lower(username)) WHERE username IS NOT NULL`. The same holds for

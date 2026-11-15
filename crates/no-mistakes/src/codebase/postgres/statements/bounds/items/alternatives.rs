@@ -21,8 +21,12 @@ pub(super) fn collect(
         return;
     };
     let restricted: Vec<_> = (0..items.len()).collect();
-    for item in items.iter_mut() {
-        item.pin_alternatives = branches.len();
+    let count = branches.len();
+    for (index, item) in items.iter_mut().enumerate() {
+        item.pin_alternatives = count;
+        if resolver.is_table(index) {
+            item.alternative_predicates = vec![Vec::new(); count];
+        }
     }
     for (alternative, branch) in branches.into_iter().enumerate() {
         let mut found = Vec::new();
@@ -37,6 +41,19 @@ pub(super) fn collect(
             pin.alternative = Some(alternative);
             if !items[index].pins.contains(&pin) {
                 items[index].pins.push(pin);
+            }
+        }
+        for expr in &branch {
+            for (index, item) in items.iter_mut().enumerate() {
+                if !resolver.is_table(index) {
+                    continue;
+                }
+                for conjunct in pins::item_predicates(resolver, expr, index) {
+                    let slot = &mut item.alternative_predicates[alternative];
+                    if !slot.contains(&conjunct) {
+                        slot.push(conjunct);
+                    }
+                }
             }
         }
     }

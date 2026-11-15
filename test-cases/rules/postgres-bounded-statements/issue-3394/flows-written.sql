@@ -1,0 +1,5 @@
+UPDATE flows_written
+SET rejected_at = now()
+WHERE device_id = $1
+  AND session_id = $2
+  AND status IN ('pending', 'ready');
