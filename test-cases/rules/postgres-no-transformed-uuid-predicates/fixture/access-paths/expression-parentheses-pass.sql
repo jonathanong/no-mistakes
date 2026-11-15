@@ -1,0 +1,13 @@
+SELECT * FROM functions WHERE lower((id)::text) = $1;
+SELECT * FROM functions WHERE lower(((id)::text)) = $1;
+SELECT * FROM functions f WHERE lower((f.id)::text) = $1;
+SELECT * FROM wrapped_functions WHERE lower(id::text) = $1;
+SELECT * FROM wrapped_functions WHERE lower((id)::text) = $1;
+SELECT * FROM items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM items WHERE ((post_id, content_sha256, policy_revision))::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM wrapped_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM wrapped_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;
+SELECT * FROM wrapped_functions WHERE lower(((id) || (label))::text) = $1;
+SELECT * FROM single_row_items WHERE ROW((post_id))::uuid_single = $1::uuid_single;
+SELECT * FROM items WHERE ROW((post_id), (content_sha256), (policy_revision))::item_identity = ROW($1, $2, $3)::item_identity;
+SELECT * FROM quoted_row_items WHERE "ROW"((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;

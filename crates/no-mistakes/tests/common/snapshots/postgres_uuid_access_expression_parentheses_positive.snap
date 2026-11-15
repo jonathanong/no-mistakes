@@ -1,0 +1,239 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 1,
+          "message": "access-paths/expression-parentheses-positive.sql:1: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower((id::text) || 'x') = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 10,
+          "message": "access-paths/expression-parentheses-positive.sql:10: WHERE applies lower to UUID column wrapped_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM wrapped_functions WHERE lower(id::text || (label || 'x')) = $1;",
+          "target": "wrapped_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 11,
+          "message": "access-paths/expression-parentheses-positive.sql:11: WHERE applies lower to UUID column wrapped_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM wrapped_functions WHERE lower((id::text || label) || 'x') = $1;",
+          "target": "wrapped_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 12,
+          "message": "access-paths/expression-parentheses-positive.sql:12: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower((-id)::text) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 13,
+          "message": "access-paths/expression-parentheses-positive.sql:13: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id), (content_sha256), (policy_revision))::other_identity = ($1, $2, $3)::other_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 2,
+          "message": "access-paths/expression-parentheses-positive.sql:2: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE (lower((id)::text)) || 'x' = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 3,
+          "message": "access-paths/expression-parentheses-positive.sql:3: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST((id) AS text)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 4,
+          "message": "access-paths/expression-parentheses-positive.sql:4: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id), (policy_revision), (content_sha256))::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 5,
+          "message": "access-paths/expression-parentheses-positive.sql:5: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id, content_sha256), policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 6,
+          "message": "access-paths/expression-parentheses-positive.sql:6: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM swapped_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "swapped_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 7,
+          "message": "access-paths/expression-parentheses-positive.sql:7: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE ((post_id))::uuid_single = $1::uuid_single;",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 8,
+          "message": "access-paths/expression-parentheses-positive.sql:8: WHERE applies cast to UUID column quoted_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM quoted_row_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "quoted_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 9,
+          "message": "access-paths/expression-parentheses-positive.sql:9: WHERE applies lower to UUID column wrapped_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM wrapped_functions WHERE lower(id || (label)::text) = $1;",
+          "target": "wrapped_functions.id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 1,
+          "message": "access-paths/expression-parentheses-positive.sql:1: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower((id::text) || 'x') = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 10,
+          "message": "access-paths/expression-parentheses-positive.sql:10: WHERE applies lower to UUID column wrapped_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM wrapped_functions WHERE lower(id::text || (label || 'x')) = $1;",
+          "target": "wrapped_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 11,
+          "message": "access-paths/expression-parentheses-positive.sql:11: WHERE applies lower to UUID column wrapped_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM wrapped_functions WHERE lower((id::text || label) || 'x') = $1;",
+          "target": "wrapped_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 12,
+          "message": "access-paths/expression-parentheses-positive.sql:12: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower((-id)::text) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 13,
+          "message": "access-paths/expression-parentheses-positive.sql:13: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id), (content_sha256), (policy_revision))::other_identity = ($1, $2, $3)::other_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 2,
+          "message": "access-paths/expression-parentheses-positive.sql:2: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE (lower((id)::text)) || 'x' = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 3,
+          "message": "access-paths/expression-parentheses-positive.sql:3: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST((id) AS text)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 4,
+          "message": "access-paths/expression-parentheses-positive.sql:4: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id), (policy_revision), (content_sha256))::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 5,
+          "message": "access-paths/expression-parentheses-positive.sql:5: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id, content_sha256), policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 6,
+          "message": "access-paths/expression-parentheses-positive.sql:6: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM swapped_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "swapped_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 7,
+          "message": "access-paths/expression-parentheses-positive.sql:7: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE ((post_id))::uuid_single = $1::uuid_single;",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 8,
+          "message": "access-paths/expression-parentheses-positive.sql:8: WHERE applies cast to UUID column quoted_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM quoted_row_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "quoted_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 9,
+          "message": "access-paths/expression-parentheses-positive.sql:9: WHERE applies lower to UUID column wrapped_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM wrapped_functions WHERE lower(id || (label)::text) = $1;",
+          "target": "wrapped_functions.id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

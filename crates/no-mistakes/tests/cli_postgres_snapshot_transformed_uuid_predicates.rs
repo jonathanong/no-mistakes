@@ -23,6 +23,8 @@ fn postgres_uuid_access_paths_check_json_snapshot() {
     for shape in [
         "expression-pass",
         "expression-positive",
+        "expression-parentheses-pass",
+        "expression-parentheses-positive",
         "outer-residual",
         "outer-residual-fail",
         "outer-residual-ignore",

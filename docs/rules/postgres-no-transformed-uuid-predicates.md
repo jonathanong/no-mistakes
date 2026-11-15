@@ -152,6 +152,16 @@ WHERE post_id = NULL::uuid;
 
 The UUID column there stays bare, and the statement stays clean. A named argument label, including legacy `name := value`, is not a column, so `make_interval(secs := $4)` does not by itself make the statement unanalyzable.
 
+Parentheses that do not change operator grouping, tuple boundaries, or cast
+targets are ignored on both the prepared query operand and the catalog
+expression. `lower((id)::text)` matches an index on `lower(id::text)`, and
+`((post_id), (content_sha256), (policy_revision))::item_identity` matches that
+composite cast without the inner parentheses. A catalog expression with those
+same redundant parentheses matches the unparenthesized query. Grouping that
+changes the expression still reports: `lower((id::text) || 'x')` is not
+`lower(id::text)`, `lower(id || label::text)` is not `lower((id || label)::text)`,
+and `lower(id::text || (label || 'x'))` is not `lower(id::text || label || 'x')`.
+`CAST(id AS text)` stays distinct from `id::text`.
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.
 At effort max, recorded interpolation positions in configured trusted SQL
