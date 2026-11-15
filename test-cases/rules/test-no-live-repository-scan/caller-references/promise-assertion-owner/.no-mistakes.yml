@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{ file: src/scan.mts, symbol: assertOwned }]
+      assertions: [{ module: "node:assert", export: strictEqual }]
