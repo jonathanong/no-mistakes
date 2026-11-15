@@ -15,9 +15,9 @@ findings under the default policy.
 
 Schema SQL and standalone DML SQL that are not valid UTF-8 are decoded lossily
 and analyzed, so a stray byte does not replace the file with a line-1 encoding
-diagnostic. Other selected files still contribute schema facts, statement facts,
-and policy findings. A read that fails for another reason stays file-local and
-does not drop those siblings.
+diagnostic, and other selected files still contribute schema facts, statement
+facts, and policy findings. An unreadable selected file fails the rule and
+names that file. Only the prepared pass is per-file.
 
 A CREATE RULE action list can contain semicolons. The list remains part of that
 rule's statement, so a later action is not reported as an orphan statement.
