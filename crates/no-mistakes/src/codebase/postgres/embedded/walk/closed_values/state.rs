@@ -36,10 +36,10 @@ impl ScopeVisitor<'_> {
             .is_some_and(|arms| {
                 arms.iter().any(|arm| {
                     matches!(arm.node, Node::Object(_))
-                        && arm.choices.iter().any(|(choice, _)| {
-                            // Same bit frozen_return uses to mark a helper object.
-                            choice & (1 << 62) != 0
-                        })
+                        && arm
+                            .choices
+                            .iter()
+                            .any(|(choice, _)| choice & super::HELPER_OBJECT_CHOICE != 0)
                 })
             });
         let alias = self

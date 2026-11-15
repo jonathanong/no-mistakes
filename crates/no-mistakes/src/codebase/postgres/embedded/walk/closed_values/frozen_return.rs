@@ -21,7 +21,10 @@ pub(super) fn arms(
                 }
                 Arm {
                     node: Node::Object(fields),
-                    choices: vec![(call.span.start as u64 | (1 << 62), index as u32)],
+                    choices: vec![(
+                        call.span.start as u64 | super::HELPER_OBJECT_CHOICE,
+                        index as u32,
+                    )],
                     root: None,
                     provenance: None,
                     type_annotation: false,
