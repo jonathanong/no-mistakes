@@ -1,0 +1,104 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "emails": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "user_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "email": { "dataType": "text", "nullable": false, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "emails_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX emails_pkey ON emails (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "emails_user_id": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE INDEX emails_user_id ON emails (user_id)",
+          "keys": [{ "column": "user_id", "expression": "user_id" }]
+        }
+      }
+    },
+    "invites": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "community_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "invited_user_id": { "dataType": "uuid", "nullable": true, "ordinalPosition": 3 },
+        "invited_email": { "dataType": "text", "nullable": true, "ordinalPosition": 4 },
+        "accepted_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 5 },
+        "declined_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 6 },
+        "revoked_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 7 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "invites_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX invites_pkey ON invites (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "invites_user": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((invited_user_id IS NOT NULL) AND (accepted_at IS NULL) AND (declined_at IS NULL) AND (revoked_at IS NULL))",
+          "definition": "CREATE UNIQUE INDEX invites_user ON invites (community_id, invited_user_id) WHERE invited_user_id IS NOT NULL AND accepted_at IS NULL AND declined_at IS NULL AND revoked_at IS NULL",
+          "keys": [
+            { "column": "community_id", "expression": "community_id" },
+            { "column": "invited_user_id", "expression": "invited_user_id" }
+          ]
+        },
+        "invites_email": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((invited_email IS NOT NULL) AND (accepted_at IS NULL) AND (declined_at IS NULL) AND (revoked_at IS NULL))",
+          "definition": "CREATE UNIQUE INDEX invites_email ON invites (community_id, invited_email) WHERE invited_email IS NOT NULL AND accepted_at IS NULL AND declined_at IS NULL AND revoked_at IS NULL",
+          "keys": [
+            { "column": "community_id", "expression": "community_id" },
+            { "column": "invited_email", "expression": "invited_email" }
+          ]
+        }
+      }
+    }
+  }
+}

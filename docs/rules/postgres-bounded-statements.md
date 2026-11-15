@@ -556,6 +556,12 @@ column when the expression is recognized, or cap the query.
 Each `OR` arm proves `col IS NOT NULL` from its own strict equality or `IN`.
 Another arm does not inherit that proof, and `IS NOT DISTINCT FROM` does not
 supply it.
+Each `OR` arm is proved on its own against the shared conjuncts, so two arms may
+use different partial unique keys. An `IN` subquery counts only when the
+subquery is bounded. `LIKE`, an unbounded `IN`, and a missing shared predicate
+still report. The
+[issue 3436 fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3436/fixture/)
+lock that split.
 
 The [saved scalar-scope controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-scopes/)
 cover unqualified and LATERAL correlation, partial-index predicates, CTE limits,
