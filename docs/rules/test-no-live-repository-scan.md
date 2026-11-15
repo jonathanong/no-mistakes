@@ -570,6 +570,24 @@ through imported bindings or same-file named functions record their argument roo
 A function reached only through `import()` or a namespace is not scanned at all unless a resolved call
 reaches it.
 
+### Registries and promise callbacks
+
+A scanning function stored on an object stays an unresolved root. `const workers = { sync: processSync }` references `processSync` other than as a direct call. A later `workers.sync(root)` or `workers[name](root)` is not a resolved call of `processSync`, so the analysis cannot prove which directory that dispatch enumerates. A test that also calls `processSync` with an owned `mkdtemp` root does not clear the advisory. The advisory names that property reference.
+
+Call the scanner directly and pass a const fixture path or an owned `mkdtemp` root from every test and setup caller. Keep that function out of object properties, arrays, and maps in any file a selected test, setup, or runner config can reach. Production dispatch can call a named function that takes the root as a parameter and calls the scanner directly.
+
+A `.then` or `.catch` callback that enumerates its own parameter stays unresolved. In `Promise.resolve(root).then((directory) => scan(directory))`, the advisory names `directory` as a value forwarded through another parameter. The owned root passed to the helper, including by a test that awaits the returned promise, does not become that callback parameter. Opt-in [`assertion-owner`](../graph-edges.md#assertion-owner) edges record that a proven `Promise` receiver runs the callback. Those edges are separate from `call` and carry no directory root.
+
+Await the promise in the test, then call the scanner with the owned root:
+
+```ts
+const root = mkdtempSync(join(tmpdir(), "scan-"));
+await produce(root);
+scan(root);
+```
+
+An inline callback that only reads a root the enclosing helper already proved, and that the helper awaits before cleanup, remains the callback-root proof in [Test-originating callers](#test-originating-callers). Passing a named function to `.then`, `.catch`, `.finally`, or `.call` (`promise.then(scan)`) remains a reference other than a direct call.
+
 **Environment variables.** A getter such as
 `() => process.env.X ?? "./tmp/default"` (same file, no parameters, one returned
 expression), a `process.env.X` or `process.env["X"]` read, and `path.join`
@@ -1028,7 +1046,12 @@ check's evaluator. For an unresolved root that is not a parameter, build a
 `const` fixture path or owned `mkdtemp` root inside the enumerating function,
 or supply it through every statically resolved test caller (`vi.stubEnv` for
 env roots). For a parameter the proof cannot close, fix the caller or the
-route the advisory names, and pass an owned root from that caller. Configured
+route the advisory names, and pass an owned root from that caller. A function
+stored on a registry (`const workers = { sync: processSync }`) is rewritten by
+removing that property and calling the scanner directly with an owned root. A
+scan of a `.then` or `.catch` parameter is rewritten the same way: await the
+promise, then pass that owned root into a direct call. The callback parameter
+stays a separate forwarded value. Configured
 `fixtureDirs` apply to caller arguments and env writes too. A mixed or unknown
 caller, escaping function, unsafe env write, or unowned reassignment must be
 rewritten or isolated before that proof succeeds. Finding a directory by
