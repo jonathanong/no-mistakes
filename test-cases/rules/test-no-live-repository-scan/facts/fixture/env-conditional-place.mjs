@@ -7,3 +7,9 @@ function hidden(flag) {
 beforeEach(() => {
   if (enabled) vi.stubEnv("H", "owned");
 });
+function consume(value) {
+  return value;
+}
+if (enabled) consume(vi.stubEnv("X", "owned"));
+if (vi.stubEnv("Y", "owned")) {
+}

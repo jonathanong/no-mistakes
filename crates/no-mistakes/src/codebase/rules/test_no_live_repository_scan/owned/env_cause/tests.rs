@@ -272,6 +272,23 @@ fn an_expression_write_or_two_branches_are_not_named_as_the_unset_branch() {
         vec![],
     );
     assert!(matches!(covering_line(&doubled, "ROOT", 40), Cover::Many));
+    let doubled_facts = facts_for("/repo/test.mts", doubled);
+    let doubled_graph = empty_graph();
+    let doubled_owners = assemble(blank(&doubled_graph));
+    let (_, doubled_cause, _) = doubled_owners.rank_environment_entry(
+        Entry {
+            file: "/repo/test.mts".into(),
+            offset: Some(40),
+            line: 8,
+            concrete: true,
+        },
+        hint("ROOT"),
+        "has no proven assignment before reaching this scan",
+        &doubled_facts,
+    );
+    assert!(!doubled_cause
+        .message(Path::new("/repo"), "readdirSync")
+        .contains("only inside a conditional"));
     let unrelated = provenance(
         vec![env_write(
             "ROOT",
@@ -330,6 +347,16 @@ fn one_external_conditional_is_named_and_a_second_blocks_it() {
     ));
     let blocked = provenance(vec![env_write("ROOT", 1, 4, WriteScope::Program)], vec![]);
     assert!(matches!(file_hit(&blocked, "ROOT"), FileHit::Blocked));
+    let function_body = provenance(
+        vec![env_write(
+            "ROOT",
+            9,
+            20,
+            branch_place(true, None, Some((0, 40))),
+        )],
+        vec![],
+    );
+    assert!(matches!(file_hit(&function_body, "ROOT"), FileHit::Blocked));
     let mut facts = facts_for("/repo/setup.mts", setup);
     facts.0.insert("/repo/other.mts".into(), stored(other));
     facts.0.insert("/repo/blocked.mts".into(), stored(blocked));
@@ -346,6 +373,15 @@ fn one_external_conditional_is_named_and_a_second_blocks_it() {
     .is_none());
     assert!(external_branch(&[PathBuf::from("/repo/blocked.mts")], "ROOT", &facts).is_none());
     assert!(external_branch(&[PathBuf::from("/repo/missing.mts")], "ROOT", &facts).is_none());
+    assert!(external_branch(
+        &[
+            PathBuf::from("/repo/setup.mts"),
+            PathBuf::from("/repo/missing.mts")
+        ],
+        "ROOT",
+        &facts,
+    )
+    .is_none());
 }
 
 fn facts_for(file: &str, paths: PathProvenance) -> Facts {

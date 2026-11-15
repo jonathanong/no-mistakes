@@ -23,4 +23,12 @@ fn conditional_place_marks_an_if_or_ternary_and_the_enclosing_scope() {
         WriteScope::Conditional(place)
             if place.branch && place.hook.is_some() && place.function.is_none() && !place.program
     ));
+    assert!(matches!(
+        write(provenance, "X").scope,
+        WriteScope::Conditional(place) if !place.branch && place.program
+    ));
+    assert!(matches!(
+        write(provenance, "Y").scope,
+        WriteScope::Conditional(place) if !place.branch && place.program
+    ));
 }

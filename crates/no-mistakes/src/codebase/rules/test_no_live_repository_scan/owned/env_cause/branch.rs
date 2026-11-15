@@ -18,6 +18,12 @@ pub(super) enum FileHit {
     Blocked,
 }
 
+enum Candidate {
+    Absent,
+    One(PathBuf, u32),
+    Abstain,
+}
+
 impl Owners<'_> {
     pub(super) fn conditional_branch(
         &self,
@@ -26,16 +32,13 @@ impl Owners<'_> {
         offset: Option<u32>,
         facts: &dyn TsFactLookup,
     ) -> Option<(PathBuf, u32)> {
-        if let Some(offset) = offset {
-            if let Some(paths) = facts.get_ts_facts(file).and_then(diagnostic_paths) {
-                match covering_line(paths, name, offset) {
-                    Cover::One(line) => return Some((file.to_path_buf(), line)),
-                    Cover::Many => return None,
-                    Cover::None => {}
-                }
-            }
+        let local = local_candidate(file, name, offset, facts);
+        let external = external_candidate(&self.related_files(file), name, facts);
+        match (local, external) {
+            (Candidate::One(path, line), Candidate::Absent)
+            | (Candidate::Absent, Candidate::One(path, line)) => Some((path, line)),
+            _ => None,
         }
-        external_branch(&self.related_files(file), name, facts)
     }
 
     fn related_files(&self, file: &Path) -> Vec<PathBuf> {
@@ -58,6 +61,25 @@ impl Owners<'_> {
         files.sort();
         files.dedup();
         files
+    }
+}
+
+fn local_candidate(
+    file: &Path,
+    name: &str,
+    offset: Option<u32>,
+    facts: &dyn TsFactLookup,
+) -> Candidate {
+    let Some(offset) = offset else {
+        return Candidate::Absent;
+    };
+    let Some(paths) = facts.get_ts_facts(file).and_then(diagnostic_paths) else {
+        return Candidate::Absent;
+    };
+    match covering_line(paths, name, offset) {
+        Cover::None => Candidate::Absent,
+        Cover::One(line) => Candidate::One(file.to_path_buf(), line),
+        Cover::Many => Candidate::Abstain,
     }
 }
 
@@ -97,7 +119,12 @@ fn covers(write: &EnvWrite, paths: &PathProvenance, offset: u32) -> bool {
 pub(super) fn file_hit(paths: &PathProvenance, name: &str) -> FileHit {
     let mut line = None;
     for write in paths.env_writes.iter().filter(|write| write.name == name) {
-        let WriteScope::Conditional(ConditionalPlace { branch: true, .. }) = write.scope else {
+        let WriteScope::Conditional(ConditionalPlace {
+            branch: true,
+            function: None,
+            ..
+        }) = write.scope
+        else {
             return FileHit::Blocked;
         };
         if line.is_some() {
@@ -111,26 +138,37 @@ pub(super) fn file_hit(paths: &PathProvenance, name: &str) -> FileHit {
     }
 }
 
-pub(super) fn external_branch(
-    files: &[PathBuf],
-    name: &str,
-    facts: &dyn TsFactLookup,
-) -> Option<(PathBuf, u32)> {
+fn external_candidate(files: &[PathBuf], name: &str, facts: &dyn TsFactLookup) -> Candidate {
     let mut found = None;
     for file in files {
         let Some(paths) = facts.get_ts_facts(file).and_then(diagnostic_paths) else {
-            continue;
+            return Candidate::Abstain;
         };
         match file_hit(paths, name) {
             FileHit::Absent => {}
-            FileHit::Blocked => return None,
+            FileHit::Blocked => return Candidate::Abstain,
             FileHit::Branch(line) => {
                 if found.is_some() {
-                    return None;
+                    return Candidate::Abstain;
                 }
                 found = Some((file.clone(), line));
             }
         }
     }
-    found
+    match found {
+        Some((file, line)) => Candidate::One(file, line),
+        None => Candidate::Absent,
+    }
+}
+
+#[cfg(test)]
+pub(super) fn external_branch(
+    files: &[PathBuf],
+    name: &str,
+    facts: &dyn TsFactLookup,
+) -> Option<(PathBuf, u32)> {
+    match external_candidate(files, name, facts) {
+        Candidate::One(file, line) => Some((file, line)),
+        Candidate::Absent | Candidate::Abstain => None,
+    }
 }

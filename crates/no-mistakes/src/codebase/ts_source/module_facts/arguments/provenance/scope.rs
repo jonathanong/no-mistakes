@@ -100,24 +100,20 @@ pub(super) fn hook_name(
     }
 }
 
+mod branch_arm;
+
 pub(super) fn conditional_place(
     semantic: &oxc_semantic::Semantic<'_>,
     node: NodeId,
 ) -> ConditionalPlace {
     let nodes = semantic.nodes();
-    let mut branch = false;
+    let branch = branch_arm::in_named_branch(nodes, node);
     let mut hook = None;
     let mut function = None;
     let mut current = node;
     loop {
         current = nodes.parent_id(current);
         let kind = nodes.kind(current);
-        if matches!(
-            kind,
-            AstKind::IfStatement(_) | AstKind::ConditionalExpression(_)
-        ) {
-            branch = true;
-        }
         if hook.is_none() && function.is_none() {
             if let Some(span) = function_span(kind) {
                 if let Some(container) = before_hook_span(semantic, nodes, current) {

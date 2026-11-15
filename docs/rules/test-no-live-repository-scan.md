@@ -362,12 +362,16 @@ it("uses the fallback", async () => {
 The finding points to the enumeration, names `EXAMPLE_LOCAL_DIR` and the
 fallback `"./tmp/example"`, and identifies the `delete` in `tests/scan.test.mts`.
 When no owned write is proven before a selected test call, the message names
-that variable and call site. If that gap is one assignment inside an `if` or
-conditional expression, in the test, a covering `beforeEach` or `beforeAll`, a
-directly imported setup module, or a configured `setupFiles` module, the message
-also names that assignment. The finding stays. Two such assignments, or a route
-that is not one concrete test, stay on the generic explanation, which does not
-guess a line. It reports uncertainty when no concrete test or setup entry can
+that variable and call site. If that gap is exactly one assignment that is a
+statement in an `if` or conditional arm, the message also names that assignment.
+The condition itself does not count, and neither does a write passed as an
+argument. The assignment may sit in the test, a covering `beforeEach` or
+`beforeAll`, a directly imported setup module, or a configured `setupFiles`
+module. The finding stays. The generic explanation, which does not guess a line,
+stays when more than one such assignment exists, when one is in the test and
+another is in a setup or import, when the other write is inside a function that
+may not run, when a related file has no analyzable facts, or when the route is
+not one concrete test. It reports uncertainty when no concrete test or setup entry can
 be identified. Multiple possible environment roots retain the
 generic unresolved-root explanation. A computed fallback such as
 `join(process.cwd(), "tmp", "example")` remains unowned, but is not presented
