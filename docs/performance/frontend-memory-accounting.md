@@ -37,19 +37,30 @@ permission to bypass a download limit or silently select a smaller favorable run
 
 ## Run the validation
 
-Use Linux, Python 3.12 or newer, and the zstd CLI. Install the pinned MessagePack
-dependency into a temporary virtual environment:
+Use Linux, Python 3.12 or newer, and the zstd CLI. `install-wheels.sh` creates a
+temporary virtual environment, downloads the pinned MessagePack wheel only when
+the wheel directory is empty, and installs that wheel with `--no-index`. The
+download uses two retries and a 20-second socket timeout. The offline install
+does not retry, because a local install failure is not a registry error.
 
 ```sh
-python3 -m venv /tmp/frontend-accounting-venv
-/tmp/frontend-accounting-venv/bin/pip install --only-binary=:all: --no-deps \
-  -r .github/scripts/frontend-memory-accounting/requirements.txt
+bash .github/scripts/frontend-memory-accounting/install-wheels.sh \
+  .github/scripts/frontend-memory-accounting/requirements.txt \
+  /tmp/frontend-accounting-wheels \
+  /tmp/frontend-accounting-venv
 PYTHONDONTWRITEBYTECODE=1 /tmp/frontend-accounting-venv/bin/python \
   .github/scripts/frontend-memory-accounting/test_accounting.py
 /tmp/frontend-accounting-venv/bin/python \
   .github/scripts/frontend-memory-accounting/validate_capture.py CAPTURE \
   --producer-events COUNT
 ```
+
+The source-policy job restores that wheel directory from a cache before it runs
+the tests. The cache key is the requirements file, the runner operating system
+and architecture, and the Python major.minor version. A hit skips the download
+and does not contact the package index. The directory is saved from the default
+branch after the tests pass. A cache-service failure falls through to the
+retried download, and the tests still fail when accounting checks fail.
 
 Optional `--pid`, `--begin-index`, and `--end-index` select a half-open encoded
 record window. Derive those coordinates from independently recorded markers;
