@@ -16,12 +16,13 @@ pub(super) fn holds(
     item: &SqlBoundItem,
     alternative: usize,
     extra: &[Atom],
+    table: &CatalogTable,
     catalog: &SchemaCatalog,
 ) -> bool {
     let evidence = Evidence::collect(item, alternative, extra, catalog);
     predicates
         .iter()
-        .all(|predicate| evidence.implies(predicate, item, alternative, catalog))
+        .all(|predicate| evidence.implies(predicate, item, alternative, table, catalog))
 }
 
 pub(super) fn assignments(
@@ -128,6 +129,7 @@ impl Evidence {
         predicate: &Expr,
         item: &SqlBoundItem,
         alternative: usize,
+        table: &CatalogTable,
         catalog: &SchemaCatalog,
     ) -> bool {
         let branch = item
@@ -145,7 +147,7 @@ impl Evidence {
         }
         if let Expr::IsNotNull(column) = unwrap_expr(predicate) {
             if let Expr::Identifier(ident) = unwrap_expr(column) {
-                if item.nonnull_columns.contains(&ident_key(ident)) {
+                if super::not_null::proves(&ident_key(ident), item, table) {
                     return true;
                 }
             }

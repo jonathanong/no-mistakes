@@ -32,6 +32,7 @@ pub(super) fn keys(
                     pins.item,
                     alternative,
                     &assignment.extra,
+                    pins.table,
                     catalog,
                 )
                 .then(|| pinned_key(index, pins, alternative))

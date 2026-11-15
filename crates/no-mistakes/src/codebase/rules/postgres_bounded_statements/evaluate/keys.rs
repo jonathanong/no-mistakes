@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 mod domains;
 mod implied;
 mod indexes;
+mod not_null;
 mod predicate;
 pub(super) use domains::{output_domains, prepare as finite_domains, Domains};
 mod view;
