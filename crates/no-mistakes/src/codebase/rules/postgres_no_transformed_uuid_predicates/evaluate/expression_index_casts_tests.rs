@@ -32,6 +32,48 @@ fn equivalent_cast_spellings_share_expression_index_tokens() {
             "lower(CAST(id::text || label AS text))",
             "lower((id::text || label)::text)",
         ),
+        (
+            "CAST(id::double precision AS text)",
+            "id::double precision::text",
+        ),
+        ("CAST(id::double AS text)", "id::double::text"),
+        (
+            "CAST(id::character varying(32) AS text)",
+            "id::character varying(32)::text",
+        ),
+        ("CAST(id::character(8) AS text)", "id::character(8)::text"),
+        ("CAST(id::bit varying AS text)", "id::bit varying::text"),
+        (
+            "CAST(id::national character varying(2) AS text)",
+            "id::national character varying(2)::text",
+        ),
+        ("CAST(id::national AS text)", "id::national::text"),
+        (
+            "CAST(id::timestamp with time zone AS text)",
+            "id::timestamp with time zone::text",
+        ),
+        (
+            "CAST(id::time(3) without time zone AS text)",
+            "id::time(3) without time zone::text",
+        ),
+        ("CAST(id::timestamp AS text)", "id::timestamp::text"),
+        (
+            "CAST(id::pg_catalog.text AS uuid)",
+            "id::pg_catalog.text::uuid",
+        ),
+        (
+            "CAST(id::pg_catalog.text(4)[] AS uuid)",
+            "id::pg_catalog.text(4)[]::uuid",
+        ),
+        ("CAST(id::text[] AS uuid)", "id::text[]::uuid"),
+        ("CAST(id::varchar(32) AS text)", "id::varchar(32)::text"),
+        (
+            "CAST(id::timestamp with instant AS text)",
+            "(id::timestamp with instant)::text",
+        ),
+        ("CAST(id::schema.+1 AS text)", "(id::schema.+1)::text"),
+        ("CAST(id:: AS text)", "(id::)::text"),
+        ("CAST(id::(int) AS text)", "(id::(int))::text"),
     ] {
         assert_eq!(
             super::tokens(left),
@@ -60,6 +102,18 @@ fn distinct_cast_spellings_keep_expression_index_tokens() {
         ("CAST(-id AS text)", "-id::text"),
         ("CAST((id) AS text)", "id::text"),
         ("CAST(id AS text)::text", "id::text"),
+        (
+            "CAST(id::timestamp with time zone AS text)",
+            "(id::timestamp with time zone)::text",
+        ),
+        (
+            "CAST(id::double precision AS text)",
+            "(id::double precision)::text",
+        ),
+        (
+            "CAST(id::timestamp with instant AS text)",
+            "id::timestamp with instant::text",
+        ),
     ] {
         assert_ne!(
             super::tokens(left),
