@@ -31,5 +31,5 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT return fields a lower-privilege caller must not see; check each field against roles.
 - MUST NOT skip suspension, block, or quota guards on mutating routes.
 - MUST NOT gate backend behavior on frontend feature flags.
-- MUST NOT expose unbounded lists; paginate with opaque cursors and clamp limits.
+- MUST NOT expose unbounded lists; clamp page sizes.
 - MUST NOT let a schema drift from its handler, or widen it to hide drift.

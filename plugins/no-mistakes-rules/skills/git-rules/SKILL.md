@@ -31,8 +31,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT widen scope for a discovered follow-up; file it.
 - SHOULD NOT take on scope a ticket's technical design added beyond the reported problem without asking whether the fix needs it.
 - SHOULD NOT claim performance or cost wins without measurements.
-- SHOULD NOT list routine passing checks in PR descriptions; state the problem, the change, and the impact.
-- SHOULD NOT write a PR description without the blast radius and the paths each flag covers.
 
 ## Evidence
 
@@ -42,9 +40,3 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT repeat a number from a subagent's or tool's prose summary; read the raw output.
 - MUST NOT call a fix verified because a lower environment shows no error.
 - MUST NOT treat "rare in production" as "unreachable"; they need different proof.
-
-## Docs and agent instructions
-
-- SHOULD NOT restate code, config values, or numbers that drift; document why and unenforced invariants.
-- SHOULD NOT put history, plans, or private details in public docs.
-- SHOULD NOT let agent instruction files grow past their size budget, or duplicate a shared instruction file.

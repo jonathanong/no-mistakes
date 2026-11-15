@@ -9,7 +9,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Flags
 
-- MUST NOT ship a new feature flag with the new behavior active by default. Exception: a security or data-integrity fix may default to the safe behavior.
 - MUST NOT flag some paths and not others; every entry point that reaches the new behavior reads the flag.
 - MUST NOT assume flag-off is a no-op; test the off path, and handle work started under the other value.
 - MUST NOT assume a flag flip is instant in a service that caches it.
@@ -20,6 +19,4 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 - MUST NOT deploy a producer of a new shape while consumers or stored data of the old shape can exist; expand, migrate, then contract.
 - MUST NOT fail open on irreversible or money-moving actions; when unsure, stop and report.
-- SHOULD NOT conflate deployed with active; ship dark, then enable.
 - SHOULD NOT reference config, task names, or handlers by string without validating them at startup.
-- SHOULD NOT leave an implicit contract between services untested; add a contract test on the side you own.

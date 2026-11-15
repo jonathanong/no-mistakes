@@ -32,9 +32,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Static analysis and dead code
 
 - MUST NOT hide calls behind computed keys, runtime registries, or forwarding lambdas; static analysis cannot trace them. Call the target by name.
-- SHOULD NOT add const aliases, function aliases, export renames, re-exports, or shims that only forward another symbol; use the original and update callers.
-- SHOULD NOT leave "kept for compatibility" paths; delete them and update callers.
-- SHOULD NOT export placeholder types, error classes nothing throws, empty files, or code no entrypoint reaches.
 
 ## Process and IO
 
@@ -44,8 +41,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT buffer large bodies or files in memory; stream them.
 - MUST NOT do blocking or CPU-heavy work on the event loop; use worker threads or async native calls.
 - MUST NOT read disk, spawn processes, or reparse inside a hot loop; hoist and reuse.
-- MUST NOT walk a repository without `.gitignore` awareness.
-- MUST NOT call global `fetch` where the codebase has a transport helper that owns auth, retries, and policy.
+- SHOULD NOT walk a repository without `.gitignore` awareness.
 - MUST NOT add a second logger or error reporter; use the existing ones, and do not report expected 4xx as errors.
 
 ## Redis and Valkey
@@ -60,5 +56,4 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT import a package the owning `package.json` does not declare.
 - MUST NOT use relative imports that escape a package root.
 - MUST NOT use Node-only APIs in packages meant for other runtimes (Workers, browsers).
-- MUST NOT import across one-way layer boundaries (client to server, producer to worker).
 - MUST NOT leave tracked TS files outside every `tsconfig`, or create workspace dependency cycles.

@@ -20,10 +20,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Reliability
 
-- MUST NOT leave jobs or steps without `timeout-minutes`, or set one at or above the platform cap.
-- MUST NOT fix a slow job by raising its timeout; split it.
-- MUST NOT poll remote state (sleep loops, CLI waiters, re-dispatch loops); react to events with `needs`, `workflow_call`, `workflow_run`, or `repository_dispatch`.
-- MUST NOT gate on another workflow by reading its status through `gh` or the API, once or in a loop; call it with `workflow_call` and `needs`, or trigger on a validated `workflow_run`. Exception: a manually dispatched run (such as a promotion of an operator-chosen SHA) may look up a run that already completed, if it validates the workflow, repository, SHA, and successful conclusion.
+- SHOULD NOT leave jobs without `timeout-minutes`, or set one at or above the platform cap.
 - MUST NOT path-filter a required check; skipped jobs look missing. Use an always-reporting gate.
 - MUST NOT fake required checks with check runs or statuses.
 - MUST NOT rely on implicit success for jobs that must run after a failure; check `needs.<job>.result`.
@@ -33,8 +30,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT publish container ports to fixed host ports on hosted runners.
 - MUST NOT hide stderr, quiet output, or add retries that mask a root cause.
 - MUST NOT rerun CI to probe a flake; diagnose it.
-- SHOULD NOT embed long inline scripts; move them to tested files.
-- SHOULD NOT use sparse checkout where checks need the whole tree.
 - SHOULD NOT use large or extra-OS runners without a runtime reason.
 - SHOULD NOT assert exact action SHAs or versions in tests; assert identity and SHA shape.
 - SHOULD NOT parse workflow YAML with regexes; use a YAML parser.

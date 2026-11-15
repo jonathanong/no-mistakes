@@ -7,7 +7,7 @@ description: "MUST NOT / SHOULD NOT rules for Rust: lints, parallelism, hot loop
 
 MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
-- MUST NOT silence lints with inline `#[allow]`; fix the code. Warnings fail the build.
+- SHOULD NOT silence lints with inline `#[allow]`; fix the code. Warnings fail the build.
 - MUST NOT lock a global `Mutex<HashMap>` or other process-wide lock per item inside parallel iterators; shard or use concurrent maps.
 - MUST NOT read files, spawn processes, compile regexes, or reparse inside a hot loop; hoist them (`LazyLock`/`OnceLock` for regexes).
 - MUST NOT rebuild a repo-wide index or do linear scans per item; index once, then look up.

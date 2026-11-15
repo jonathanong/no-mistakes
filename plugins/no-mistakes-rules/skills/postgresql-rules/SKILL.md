@@ -20,18 +20,15 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT`.
 - MUST NOT write generated or trigger-maintained columns.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
-- SHOULD NOT use `SELECT *`, `alias.*`, or `RETURNING *`; list columns.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
 - SHOULD NOT cast or wrap an indexed column in a predicate (UUIDs, timestamps); compare the raw column to a bound.
 - SHOULD NOT add `MATERIALIZED` CTEs, `LATERAL`, `UNION`, `DISTINCT`, or candidate pools unless `EXPLAIN ANALYZE` at realistic size beats the plain query.
-- SHOULD NOT send SQL without an operation-name comment.
 - SHOULD NOT upsert by overwriting every column; it resets an existing row to the inserter's values. Use `DO UPDATE SET` on the columns you own, or `DO NOTHING` then read the row.
 
 ## Locks, transactions, connections
 
 - SHOULD NOT lock rows you neither write nor read to decide a write.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
-- MUST NOT scatter manual `BEGIN`/`COMMIT`/`ROLLBACK`; use one transaction helper that owns cleanup.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
 - MUST NOT use blocking or session-scoped advisory locks; they pin a pooled connection or outlive it.
@@ -47,12 +44,11 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT run logging or metrics code that queries the database on the transaction's connection; its failure aborts the transaction.
 - MUST NOT rely on `SERIALIZABLE` to stop a racing writer unless each transaction reads rows the other writes. A guard (hold, ban, cancel) must read the rows the writer would change; otherwise SSI orders the writer first with no `40001`.
 - SHOULD NOT add `FOR UPDATE` to a subquery or pre-select whose rows the same `UPDATE` or `DELETE` already locks and whose values you do not read; it only adds a second lock order. A `SKIP LOCKED` claim subquery is fine.
-- SHOULD NOT wait unboundedly on a row lock in a request path; use `NOWAIT` or `lock_timeout` and return 409.
 
 ## Schema and migrations
 
 - MUST NOT add a foreign key without an index on the referencing column; deleting or updating a parent row scans the child table under lock.
-- MUST NOT store relations as arrays, JSON ids, or type/id pairs; use foreign keys or child rows.
+- SHOULD NOT store relations as arrays, JSON ids, or type/id pairs; use foreign keys or child rows.
 - MUST NOT leave a `NOT VALID` constraint without a later `VALIDATE CONSTRAINT`.
 - MUST NOT exceed 63-byte identifiers; PostgreSQL truncates them silently.
 - MUST NOT put `now()` or `timestamptz + interval` in generated or index expressions; they are not immutable.
@@ -63,13 +59,9 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
 - SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
-- SHOULD NOT omit `ON DELETE`, constraint names, or `COMMENT ON` for tables and columns.
-- SHOULD NOT use free text for a finite set; use an enum or lookup table.
-- SHOULD NOT use natural text keys as primary or foreign keys.
 - SHOULD NOT add an index that is a prefix of another, or copy near-identical trigger functions.
 - SHOULD NOT add `updated_at` to rows that are only inserted and deleted.
 - SHOULD NOT repeat a column's value inside a JSON column on the same row.
-- SHOULD NOT keep durable rows without a retention window (user content excepted).
 
 ## Partitioning
 

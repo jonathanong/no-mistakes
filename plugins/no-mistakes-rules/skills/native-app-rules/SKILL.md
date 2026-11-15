@@ -12,7 +12,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT hardcode user-facing copy; use typed localization keys.
 - MUST NOT ship debug-only session or cookie loading in release builds, or default release endpoints to localhost.
 - MUST NOT store sessions outside secure storage.
-- MUST NOT fall back to a web view for a native feature without a documented blocker.
 
 ## Swift
 
