@@ -29,6 +29,8 @@ designed.
   mistake.
 - Do not encode one project's conventions (file-size budgets, comment policy,
   partitioning scheme, id format) as general rules.
+- Do not put numeric budgets (lines per file, script length) in rules. A
+  linter configured by the project sets those.
 - Add a short reason ("; NULLs silently drop rows") only when the failure is
   not obvious from the rule itself. Without the reason, an agent would either
   dismiss the rule or fix the wrong thing. Do not explain obvious rules.

@@ -20,17 +20,13 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT put high-volume work or dispatchers in the same lane as ordinary tasks.
 - MUST NOT ship a job whose only failure recovery is the dead-letter queue; add a reconciler or document the accepted loss.
 - MUST NOT put secrets or personal data in payloads; pass ids.
-- MUST NOT make producer code import worker code; producers enqueue, workers execute.
 - MUST NOT do slow external work on a request path or in an event-forwarding function; enqueue it.
 - MUST NOT treat a dedup id collision as a failure. If finished or failed jobs keep their ids, check that job's state before treating the work as queued.
 - MUST NOT trust a framework's retry counter without checking that no middleware resets it.
 - MUST NOT expect a code deploy to change concurrency or prefetch settings read at worker start; restart the workers.
 - SHOULD NOT put mutable state in a payload; pass ids and re-read when the job runs. Facts fixed when the event happened, such as the price charged, belong in the payload.
 - SHOULD NOT sleep inside a job; defer it through the queue.
-- SHOULD NOT do the work inside a message consumer; enqueue a job, then ack.
 - SHOULD NOT ship bulk work without sizing it against production volume.
-- SHOULD NOT put business logic in processors; call the service that owns the write.
-- SHOULD NOT add an outbox or lease table by default; use job id = row id, enqueue after commit, and a bounded re-enqueue sweep.
 
 ## Leases
 
@@ -48,7 +44,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT restart external listings from page one each run; carry the continuation token and stop on a repeat.
 - MUST NOT let a delayed repair overwrite a newer value; recompute from current source state or compare an existing timestamp instead of adding a version column for it.
 - MUST NOT resume a time window without overlap.
-- MUST NOT hardcode batch size, page size, or window as literals; bind validated config.
 - MUST NOT clear a "needs work" flag unconditionally when a run ends; compare-and-clear against the version you read, or a change that arrived mid-run is lost.
 - MUST NOT self-requeue without a no-progress guard.
 - MUST NOT leave a non-terminal state without a timeout exit, or pick work without an `ORDER BY`.

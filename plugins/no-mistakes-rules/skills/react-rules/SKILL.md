@@ -15,13 +15,10 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT use dynamic `fetch` URLs or methods in pages; use literals so page-to-API links stay traceable.
 - MUST NOT apply implicit caching (`force-cache`, cache directives) to request-time or authenticated routes.
 - MUST NOT rely on a layout alone to make an authenticated page dynamic.
-- SHOULD NOT scatter signed-out redirects across pages; centralize them in the layout.
 - MUST NOT pass the current user or secrets across the server/client boundary as props.
 - MUST NOT add API route handlers when endpoints belong to a separate backend.
 - MUST NOT point redirects or rewrites at routes that do not exist.
-- MUST NOT hand-build entity URLs; use the shared link helpers.
-- MUST NOT bake browser config into the build; load it at runtime.
-- MUST NOT render user-supplied image URLs directly; proxy them.
+- SHOULD NOT render user-supplied image URLs directly; the viewer's browser fetches them and leaks the viewer's IP address to that host.
 - MUST NOT nest interactive elements inside a clickable row or link.
 - MUST NOT disable accessibility checks to make stories or tests pass.
 - SHOULD NOT use IIFEs in JSX; extract a component or helper.

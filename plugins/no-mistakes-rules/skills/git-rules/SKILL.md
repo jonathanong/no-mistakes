@@ -30,7 +30,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - SHOULD NOT dismiss a review finding with less evidence than it took to raise it.
 - SHOULD NOT widen scope for a discovered follow-up; file it.
 - SHOULD NOT take on scope a ticket's technical design added beyond the reported problem without asking whether the fix needs it.
-- SHOULD NOT split related work across PRs without a risk reason.
 - SHOULD NOT claim performance or cost wins without measurements.
 - SHOULD NOT list routine passing checks in PR descriptions; state the problem, the change, and the impact.
 - SHOULD NOT write a PR description without the blast radius and the paths each flag covers.
