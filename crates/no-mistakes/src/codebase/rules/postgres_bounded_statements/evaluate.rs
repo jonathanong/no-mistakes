@@ -184,7 +184,7 @@ fn evaluate(
     target::project(
         query,
         Evaluation {
-            bounded: result_bounded,
+            bounded: result_bounded || reads::proven_capped(query, catalog),
             finite_outputs: keys::output_domains(query, &nested),
             items: bounded,
             offenders,

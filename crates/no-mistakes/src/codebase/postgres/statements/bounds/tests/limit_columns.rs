@@ -11,7 +11,7 @@ fn lateral_limits_follow_caller_array_columns_and_relation_scope() {
     let statements = parse_postgres_sql(sql).unwrap();
     let expected = [
         true, false, true, true, true, true, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, true, false, true, false, false, false, false,
+        false, false, true, false, false, false, true, false, false, false, false, false, false,
         true, false, false,
     ];
     assert_eq!(statements.len(), expected.len());
@@ -84,10 +84,10 @@ fn builder_relations_materialize_only_for_lateral_derived_queries() {
         (0, false, (0, 0)),
         (1, true, (1, 2)),
         (2, true, (1, 3)),
-        (3, false, (1, 1)),
-        (4, true, (1, 3)),
+        (3, true, (1, 3)),
+        (4, false, (1, 3)),
         (5, false, (1, 4)),
-        (10, false, (1, 4)),
+        (10, true, (1, 4)),
         (11, true, (0, 0)),
     ];
     assert_eq!(statements.len(), 12);
@@ -174,7 +174,10 @@ fn parent_column_limits_cap_nested_queries_and_keep_rejected_counts() {
         "/../../test-cases/rules/postgres-bounded-statements/issue-3389/fixture/queries.sql"
     ));
     let statements = parse_postgres_sql(sql).unwrap();
-    let expected = [true, true, true, false, false, false, false, false, false];
+    let expected = [
+        true, true, true, false, false, false, true, false, false, false, false, false, true, true,
+        false, false,
+    ];
     assert_eq!(statements.len(), expected.len());
     for (index, (statement, expected)) in statements.iter().zip(expected).enumerate() {
         let Statement::Query(ast) = statement else {

@@ -5,6 +5,14 @@ use crate::codebase::postgres::{
 };
 use std::collections::HashMap;
 
+pub(super) fn proven_capped(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool {
+    query.capped
+        || query
+            .catalog_limit
+            .as_ref()
+            .is_some_and(|(table, column)| catalog.column_is_not_null(table, column))
+}
+
 /// Row caps suppress streaming reads, while blocking set inputs remain mandatory.
 pub(super) fn collect(
     query: &SqlBoundQuery,
@@ -15,7 +23,7 @@ pub(super) fn collect(
     views: &ViewBounds,
     precise_columns: bool,
 ) -> Vec<Offender> {
-    let capped = row_capped(query, bounded);
+    let capped = row_capped(query, bounded) || proven_capped(query, catalog);
     let mut found = Vec::new();
     for (index, item) in query.items.iter().enumerate() {
         for inner in pin_subqueries[index]

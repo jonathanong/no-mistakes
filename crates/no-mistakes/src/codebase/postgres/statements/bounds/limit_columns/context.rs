@@ -1,11 +1,11 @@
-use super::{work, Relations};
+use super::{columns::relation_key, work, Relations};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::TableFactor;
 
 pub(in crate::codebase::postgres::statements::bounds) enum RelationContext<'a> {
     Pending {
         inherited: Option<&'a Relations>,
-        factors: Vec<&'a TableFactor>,
+        factors: Vec<(&'a TableFactor, Option<String>, bool)>,
     },
     Ready(Relations),
 }
@@ -22,23 +22,31 @@ impl<'a> RelationContext<'a> {
         &mut self,
         factor: &'a TableFactor,
         positions: PlaceholderPositions<'_>,
-    ) {
+    ) -> Option<String> {
+        let key = relation_key(factor);
         match self {
-            Self::Pending { factors, .. } => factors.push(factor),
+            Self::Pending { factors, .. } => factors.push((factor, key.clone(), false)),
             Self::Ready(relations) => {
                 work::builder_relation_add();
                 relations.add(factor, positions);
             }
         }
+        key
     }
 
-    pub(in crate::codebase::postgres::statements::bounds) fn reset(&mut self) {
+    pub(in crate::codebase::postgres::statements::bounds) fn null_extend_keys(
+        &mut self,
+        keys: &[String],
+    ) {
         match self {
-            Self::Pending { inherited, factors } => {
-                *inherited = None;
-                factors.clear();
+            Self::Pending { factors, .. } => {
+                for (_, key, null_extended) in factors.iter_mut() {
+                    if key.as_ref().is_some_and(|key| keys.contains(key)) {
+                        *null_extended = true;
+                    }
+                }
             }
-            Self::Ready(relations) => *relations = Relations::default(),
+            Self::Ready(relations) => relations.null_extend(keys),
         }
     }
 
@@ -53,10 +61,14 @@ impl<'a> RelationContext<'a> {
                     work::builder_materialization();
                     let mut relations =
                         (*inherited).map_or_else(Relations::default, |parent| parent.clone());
-                    // Builder uses one immutable positions slice for recording and replay.
-                    for factor in factors.drain(..) {
+                    for (factor, key, null_extended) in factors.drain(..) {
                         work::builder_relation_add();
                         relations.add(factor, positions);
+                        if null_extended {
+                            if let Some(key) = &key {
+                                relations.null_extend(std::slice::from_ref(key));
+                            }
+                        }
                     }
                     *self = Self::Ready(relations);
                 }

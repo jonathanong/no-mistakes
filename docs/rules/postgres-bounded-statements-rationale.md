@@ -132,8 +132,13 @@ lateral queries retain their ordinary global bound.
 A scalar CTE `LIMIT (SELECT page_size FROM cursor_cte)` must preserve a guaranteed
 single caller-owned count, such as `WITH cursor_cte AS (SELECT $1::int AS
 page_size)`. A physical data value read back through that subquery is not a
-caller-owned cap. A qualified column written directly in `LIMIT` counts like a
-bind. A potentially empty
+caller-owned cap. A qualified parent column written directly in `LIMIT` counts
+only when its value is provably non-null: a `NOT NULL` catalog column, a
+`VALUES` or `SELECT` column whose every row is a non-null literal or bind, or
+an expression such as `GREATEST(col, 0)` or `COALESCE(col, 0)`. `GREATEST`
+ignores NULL arguments, so the literal makes the result non-null. A nullable
+column, a `NULL` parent value, and a column from the nullable side of a
+`LEFT`, `RIGHT`, or `FULL` join do not count. A potentially empty
 CTE or a `NULL` count cannot supply this proof: a missing scalar row becomes
 `NULL`, and PostgreSQL interprets `LIMIT NULL` as unlimited.
 

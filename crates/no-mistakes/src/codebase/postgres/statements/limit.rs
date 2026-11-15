@@ -2,7 +2,7 @@
 mod empty;
 mod fetch;
 mod fixed_count;
-pub(super) use fixed_count::is_fixed_at;
+pub(super) use fixed_count::{fixed_count_at, is_fixed_at, FixedCount};
 mod zero;
 pub(super) use super::tokens::Tokens;
 use super::SqlLimitValue;
@@ -29,13 +29,13 @@ pub(super) fn is_limited_at(
     query: &Query,
     positions: super::value::PlaceholderPositions<'_>,
 ) -> bool {
-    is_limited_with_columns(query, positions, &|_| false)
+    is_limited_with_columns(query, positions, &|_| None)
 }
 
 pub(super) fn is_limited_with_columns(
     query: &Query,
     positions: super::value::PlaceholderPositions<'_>,
-    column: &impl Fn(&Expr) -> bool,
+    column: &impl Fn(&Expr) -> Option<FixedCount>,
 ) -> bool {
     if let Some(fetch) = &query.fetch {
         // `FETCH FIRST ROW ONLY` writes no count: it takes one row.

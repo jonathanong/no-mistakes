@@ -11,7 +11,7 @@ pub(super) fn offenders(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
 ) -> Vec<Offender> {
-    if query.capped || evaluation.items[target] {
+    if super::reads::proven_capped(query, catalog) || evaluation.items[target] {
         return Vec::new();
     }
     if let Some(roots) = driven::roots(query, target, &evaluation.offenders, catalog) {
@@ -35,7 +35,7 @@ pub(super) fn project(
     views: &ViewBounds,
 ) -> Evaluation {
     if query.input_mode == SqlBoundInputMode::Returning {
-        evaluation.bounded = query.capped || evaluation.items[0];
+        evaluation.bounded = super::reads::proven_capped(query, catalog) || evaluation.items[0];
         evaluation.offenders = offenders(query, 0, &evaluation, catalog, views);
     }
     evaluation

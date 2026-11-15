@@ -49,15 +49,26 @@ impl<'a> Builder<'a> {
     ) {
         for table in tables {
             let chain = self.items.len();
-            self.factor(&table.relation);
+            let mut keys = Vec::new();
+            if let Some(key) = self.factor(&table.relation) {
+                keys.push(key);
+            }
             for join in &table.joins {
                 let right = self.items.len();
-                self.factor(&join.relation);
-                if !matches!(
-                    join.join_operator,
-                    JoinOperator::Join(_) | JoinOperator::Inner(_) | JoinOperator::CrossJoin(_)
-                ) {
-                    self.limit_columns.reset();
+                let (extend_left, extend_right) =
+                    super::super::limit_columns::null_extended_sides(&join.join_operator);
+                if extend_left {
+                    self.limit_columns.null_extend_keys(&keys);
+                }
+                let added = self.factor(&join.relation);
+                if extend_right {
+                    if let Some(key) = &added {
+                        self.limit_columns
+                            .null_extend_keys(std::slice::from_ref(key));
+                    }
+                }
+                if let Some(key) = added {
+                    keys.push(key);
                 }
                 let end = self.items.len();
                 // ON restricts only the non-preserved side of an outer join.

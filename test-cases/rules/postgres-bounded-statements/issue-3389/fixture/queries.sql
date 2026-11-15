@@ -66,3 +66,65 @@ CROSS JOIN LATERAL (
   WHERE actor_id = $1
   LIMIT missing.capacity_limit
 ) latest;
+SELECT committed_at
+FROM quotas
+CROSS JOIN LATERAL (
+  SELECT committed_at
+  FROM consumptions
+  WHERE actor_id = $1
+  LIMIT quotas.cap
+) latest
+WHERE quotas.actor_id = $1;
+WITH missing(cap) AS (VALUES (NULL::int))
+SELECT committed_at
+FROM missing
+CROSS JOIN LATERAL (
+  SELECT committed_at
+  FROM consumptions
+  WHERE actor_id = $1
+  LIMIT missing.cap
+) latest;
+WITH windows(capacity_limit) AS (VALUES (2))
+SELECT committed_at
+FROM windows
+LEFT JOIN (SELECT 2 AS capacity_limit) extra ON false
+CROSS JOIN LATERAL (
+  SELECT committed_at
+  FROM consumptions
+  WHERE actor_id = $1
+  LIMIT extra.capacity_limit
+) latest;
+WITH missing(cap) AS (VALUES (NULL::int))
+SELECT committed_at
+FROM missing
+CROSS JOIN LATERAL (
+  SELECT committed_at
+  FROM consumptions
+  WHERE actor_id = $1
+  LIMIT GREATEST(missing.cap, 0)
+) latest;
+WITH missing(cap) AS (VALUES (NULL::int))
+SELECT committed_at
+FROM missing
+CROSS JOIN LATERAL (
+  SELECT committed_at
+  FROM consumptions
+  WHERE actor_id = $1
+  LIMIT COALESCE(missing.cap, 0)
+) latest;
+SELECT committed_at
+FROM consumptions
+CROSS JOIN LATERAL (
+  SELECT 1
+  LIMIT cap
+) marker
+WHERE actor_id = $1;
+SELECT committed_at
+FROM budgets
+CROSS JOIN LATERAL (
+  SELECT committed_at
+  FROM consumptions
+  WHERE actor_id = $1
+  LIMIT budgets.cap
+) latest
+WHERE budgets.actor_id = $1;

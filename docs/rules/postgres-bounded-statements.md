@@ -136,8 +136,8 @@ supply a separate finite-key proof. For example,
 `columnBounds` declares `follows.follower_id` with a finite fan-out reason.
 Outer predicates do not supply that body-local proof. Findings name the body
 and its unbounded relations, at the CTE declaration or subquery start. A body
-LIMIT uses the same fixed-count proofs as any other LIMIT, including a qualified
-column of a visible parent relation.
+LIMIT uses the same fixed-count proofs as any other LIMIT, including a provably
+non-null qualified column of a visible parent relation.
 
 ```yaml
 options:
@@ -389,14 +389,23 @@ its corresponding subquery. Every `unnest` argument must be a parameter array.
 Literal arrays and mixed table/parameter inputs do not establish this unnest bound.
 
 A `LIMIT` or `FETCH FIRST` count may also name a qualified column of a relation
-visible from an enclosing query: a table, a CTE, or a derived table. `WITH
-windows(row_limit) AS (VALUES (2))` and `LIMIT GREATEST(windows.row_limit, 0)`
-both count, the same way `LIMIT $2` does. A nested subquery keeps columns the
-enclosing query can see, even when that subquery is not `LATERAL`. The column
-can still be NULL at run time unless `COALESCE`, `LEAST`, or `GREATEST` also has
-a non-NULL literal argument. A column of the same query, a bare name when more
-than one relation is visible, an unknown qualifier, a same-level non-`LATERAL`
-sibling, a subquery, and an unknown function do not cap.
+visible from an enclosing query when that value is provably non-null. A
+`NOT NULL` catalog column counts. A `VALUES` or `SELECT` column counts when
+every row is a non-null literal or bind, so
+`WITH windows(row_limit) AS (VALUES (2))` and `LIMIT windows.row_limit` both
+count, the same way `LIMIT $2` does. Bare, unquoted `COALESCE`, `LEAST`, and
+`GREATEST` count when one argument is non-null: `GREATEST` ignores NULL
+arguments, so `GREATEST(windows.row_limit, 0)` is non-null even when the
+column can be NULL. A nested subquery keeps columns the enclosing query can
+see, even when that subquery is not `LATERAL`. A column from the nullable side
+of a `LEFT`, `RIGHT`, or `FULL` join stays unlimited unless one of those
+wrappers supplies a non-null value. `LIMIT NULL` is unlimited, so a nullable
+parent column, a `NULL` literal projected by `VALUES` or `SELECT`, and a
+null-extended outer-join column do not cap. A column of the same query, a bare
+name (including a bare name when the only visible relation is a table), an
+unknown qualifier, a same-level non-`LATERAL` sibling, a subquery, and an
+unknown function do not cap. A bare name counts only for one preceding
+`unnest` of parameter arrays.
 
 ## Counterexample
 

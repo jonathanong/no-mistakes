@@ -11,6 +11,52 @@
         "committed_at": { "dataType": "timestamptz", "nullable": false, "ordinalPosition": 3 }
       },
       "primaryKey": { "columns": ["reservation_id"] }
+    },
+    "quotas": {
+      "relationKind": "table",
+      "columns": {
+        "actor_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "cap": { "dataType": "int4", "nullable": true, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["actor_id"] },
+      "indexes": {
+        "quotas_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX quotas_pkey",
+          "keys": [{ "column": "actor_id", "expression": "actor_id" }]
+        }
+      }
+    },
+    "budgets": {
+      "relationKind": "table",
+      "columns": {
+        "actor_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "cap": { "dataType": "int4", "nullable": false, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["actor_id"] },
+      "indexes": {
+        "budgets_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX budgets_pkey",
+          "keys": [{ "column": "actor_id", "expression": "actor_id" }]
+        }
+      }
     }
   }
 }
