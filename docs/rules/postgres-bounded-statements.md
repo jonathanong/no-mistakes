@@ -136,7 +136,8 @@ supply a separate finite-key proof. For example,
 `columnBounds` declares `follows.follower_id` with a finite fan-out reason.
 Outer predicates do not supply that body-local proof. Findings name the body
 and its unbounded relations, at the CTE declaration or subquery start. A body
-LIMIT retains the rule's existing conservative LIMIT-expression proofs.
+LIMIT uses the same fixed-count proofs as any other LIMIT, including a qualified
+column of a visible parent relation.
 
 ```yaml
 options:
@@ -385,8 +386,17 @@ CROSS JOIN LATERAL (
 
 The parameter arrays bound the outer relation, and each supplied limit bounds
 its corresponding subquery. Every `unnest` argument must be a parameter array.
-Literal arrays, mixed table/parameter inputs, and limits taken from table
-columns do not establish this bound.
+Literal arrays and mixed table/parameter inputs do not establish this unnest bound.
+
+A `LIMIT` or `FETCH FIRST` count may also name a qualified column of a relation
+visible from an enclosing query: a table, a CTE, or a derived table. `WITH
+windows(row_limit) AS (VALUES (2))` and `LIMIT GREATEST(windows.row_limit, 0)`
+both count, the same way `LIMIT $2` does. A nested subquery keeps columns the
+enclosing query can see, even when that subquery is not `LATERAL`. The column
+can still be NULL at run time unless `COALESCE`, `LEAST`, or `GREATEST` also has
+a non-NULL literal argument. A column of the same query, a bare name when more
+than one relation is visible, an unknown qualifier, a same-level non-`LATERAL`
+sibling, a subquery, and an unknown function do not cap.
 
 ## Counterexample
 

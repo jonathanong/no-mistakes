@@ -36,14 +36,15 @@ preceding driver; a bounded per-call result can size a join only after every suc
 driver is independently bounded. Unknown scopes, bare correlations, and cycles
 retain conservative behavior.
 A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
-fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
-taken from physical data or an unproven scalar subquery, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
+fixed count (a literal, a bind, a qualified column of a visible parent relation, or an
+expression of those; `LIMIT NULL`, `LIMIT ALL`, a column of the same query, a subquery
+count, `FETCH … WITH TIES`, and `FETCH … PERCENT` do not cap) or
 is a pure aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not
 windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returning function
 in the select list), and lists its FROM `items`. Bare, unquoted `COALESCE`, `LEAST`,
 and `GREATEST` preserve a fixed count beside literal NULL arguments when every
-argument is known and at least one supplies a guaranteed non-NULL count; all-NULL
-or unknown inputs do not establish a cap. The separate limit-value classification
+argument is known and at least one supplies a guaranteed non-NULL count; a parent
+column is a known argument, like a bind. All-NULL or unknown inputs do not establish a cap. The separate limit-value classification
 remains unchanged. An item is a base `Table`, a `Query`
 (a CTE reference carrying that CTE's own query, a derived table, or one arm of a set
 operation), `Other` (a `VALUES` list, or a set-returning built-in such as `unnest($1)`

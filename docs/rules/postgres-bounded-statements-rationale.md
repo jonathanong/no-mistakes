@@ -131,7 +131,9 @@ lateral queries retain their ordinary global bound.
 
 A scalar CTE `LIMIT (SELECT page_size FROM cursor_cte)` must preserve a guaranteed
 single caller-owned count, such as `WITH cursor_cte AS (SELECT $1::int AS
-page_size)`. A physical data value is not a caller-owned cap. A potentially empty
+page_size)`. A physical data value read back through that subquery is not a
+caller-owned cap. A qualified column written directly in `LIMIT` counts like a
+bind. A potentially empty
 CTE or a `NULL` count cannot supply this proof: a missing scalar row becomes
 `NULL`, and PostgreSQL interprets `LIMIT NULL` as unlimited.
 

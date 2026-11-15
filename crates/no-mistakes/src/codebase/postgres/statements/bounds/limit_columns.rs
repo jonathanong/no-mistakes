@@ -12,9 +12,18 @@ pub(super) mod work;
 #[path = "limit_columns/work_disabled.rs"]
 mod work;
 
+/// Columns of one visible relation that a nested `LIMIT` may name.
+#[derive(Clone)]
+enum Columns {
+    /// A table, CTE, or derived relation: any qualified column counts like a bind.
+    Any,
+    /// An `unnest` of caller arrays. An empty set hides a shadowed name.
+    Named(BTreeSet<String>),
+}
+
 #[derive(Clone, Default)]
 pub(super) struct Relations {
-    names: BTreeMap<String, BTreeSet<String>>,
+    names: BTreeMap<String, Columns>,
     opaque: bool,
 }
 
@@ -34,7 +43,7 @@ impl Relations {
                         .map(|(column, _)| ident_key(&column.name))
                         .collect()
                 });
-                (alias, None, columns)
+                (alias, None, Columns::Named(columns))
             }
             TableFactor::Function {
                 alias, name, args, ..
@@ -57,14 +66,12 @@ impl Relations {
                         .map(|column| ident_key(&column.name))
                         .collect()
                 });
-                (alias, Some(object_name_key(name)), columns)
+                (alias, Some(object_name_key(name)), Columns::Named(columns))
             }
-            TableFactor::Table { alias, name, .. } => (
-                alias,
-                object_name_ident(name).map(ident_key),
-                BTreeSet::new(),
-            ),
-            TableFactor::Derived { alias, .. } => (alias, None, BTreeSet::new()),
+            TableFactor::Table { alias, name, .. } => {
+                (alias, object_name_ident(name).map(ident_key), Columns::Any)
+            }
+            TableFactor::Derived { alias, .. } => (alias, None, Columns::Any),
             _ => {
                 self.names.clear();
                 self.opaque = true;
@@ -83,12 +90,16 @@ impl Relations {
             Expr::CompoundIdentifier(parts) if parts.len() == 2 => self
                 .names
                 .get(&ident_key(&parts[0]))
-                .is_some_and(|columns| columns.contains(&ident_key(&parts[1]))),
-            Expr::Identifier(id) if !self.opaque && self.names.len() == 1 => self
-                .names
-                .values()
-                .next()
-                .is_some_and(|columns| columns.contains(&ident_key(id))),
+                .is_some_and(|columns| match columns {
+                    Columns::Any => true,
+                    Columns::Named(names) => names.contains(&ident_key(&parts[1])),
+                }),
+            // A bare name is an `unnest` output only. A single parent table does not
+            // make every identifier a cap.
+            Expr::Identifier(id) if !self.opaque && self.names.len() == 1 => matches!(
+                self.names.values().next(),
+                Some(Columns::Named(names)) if names.contains(&ident_key(id))
+            ),
             _ => false,
         }
     }
@@ -126,7 +137,7 @@ fn shadow(visible: &mut Relations, factor: &TableFactor, positions: PlaceholderP
     local.add(factor, positions);
     visible.opaque = true;
     for name in local.names.into_keys() {
-        visible.names.insert(name, BTreeSet::new());
+        visible.names.insert(name, Columns::Named(BTreeSet::new()));
     }
     if local.opaque {
         visible.names.clear();

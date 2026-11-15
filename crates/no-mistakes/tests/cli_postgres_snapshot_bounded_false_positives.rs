@@ -66,6 +66,15 @@ fn postgres_bounded_statements_issue_3100_snapshot() {
 }
 
 #[test]
+fn postgres_bounded_statements_issue_3389_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3389/fixture");
+    assert_saved_fixture(
+        "postgres_bounded_statements_issue_3389",
+        &[("issue_3389", root.clone(), root.join("check.yml"))],
+    );
+}
+
+#[test]
 fn issue_3116_recursive_check_json_snapshot() {
     let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3116/fixture");
     assert_saved_fixture(

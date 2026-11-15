@@ -7,18 +7,27 @@ in matching `.sql` files and in executor calls (`SELECT` is every query, includi
 set operation). A statement is bounded when any of these holds:
 
 - It has a `LIMIT` or `FETCH FIRST n ROWS ONLY` whose count is fixed: a literal, a bind
-  (`$1`, `${size}`) or an expression of them using `COALESCE`, `LEAST` or `GREATEST`
-  (`LEAST($1, 100)`). Literal NULL arguments are allowed when another supported
-  argument supplies a guaranteed non-NULL count: `COALESCE(NULL, 100)`,
-  `LEAST(NULL, 100)`, and `GREATEST(100, NULL)` stay capped. An all-NULL result or
-  `COALESCE($1, NULL)` does not cap; unknown or data-derived arguments remain
-  conservative even after a known fallback. These conditional constructs must
+  (`$1`, `${size}`), a qualified column of a relation visible from an enclosing query,
+  or an expression of those using `COALESCE`, `LEAST` or `GREATEST`
+  (`LEAST($1, 100)`, `GREATEST(parent.row_limit, 0)`). A visible relation is a table,
+  a CTE, or a derived table the `LIMIT` may legally reference: a preceding `LATERAL`
+  sibling, or a column of a query outside the one that owns the `LIMIT`. A nested
+  subquery keeps those enclosing columns even when it is not itself `LATERAL`. A
+  same-level non-`LATERAL` subquery does not see sibling `FROM` items. A column of
+  the query that owns the `LIMIT` does not count. A bare name counts only when
+  exactly one preceding `unnest` of parameter arrays declares that column. Literal
+  NULL arguments are allowed when another supported argument supplies a guaranteed
+  non-NULL count: `COALESCE(NULL, 100)`, `LEAST(NULL, 100)`, and `GREATEST(100, NULL)`
+  stay capped. An all-NULL result or `COALESCE($1, NULL)` does not cap. Unknown
+  functions and arguments that are not literals, binds, or those parent columns
+  remain conservative even after a known fallback. These conditional constructs must
   be unqualified and unquoted;
   qualified or quoted function lookalikes may return NULL and are not fixed caps. `LIMIT NULL`, `LIMIT ALL`, any other function (`NULLIF(1, 1)` is NULL),
   a count taken from the data (`LIMIT (SELECT count(*) …)`), `FETCH … WITH TIES` and
-  `FETCH … PERCENT` do not cap: they can return every row. A bind is taken as the
-  caller's cap: a caller that passes NULL at run time gets `LIMIT ALL`, which no statement
-  text can rule out, so validate the number before the call, or write `COALESCE($1, 100)`.
+  `FETCH … PERCENT` do not cap: they can return every row. A bind is the
+  caller's cap, and a parent column counts the same way: NULL at run time means
+  `LIMIT ALL`, which no statement text can rule out, so validate the number before
+  the call, or write `COALESCE($1, 100)` or `GREATEST(parent.row_limit, 0)`.
   An inner `LIMIT 0` or `FETCH FIRST 0 ROWS ONLY` stays empty when a surrounding
   parenthesized query later applies a set-returning `ORDER BY` expression. Positive,
   absent, and NULL inner caps do not establish an empty expanded result.

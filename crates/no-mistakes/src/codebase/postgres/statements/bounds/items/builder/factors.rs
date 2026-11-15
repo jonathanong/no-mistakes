@@ -49,10 +49,11 @@ impl<'a> Builder<'a> {
                 } else {
                     self.scope.clone()
                 };
+                // A nested subquery keeps enclosing columns. Same-level siblings stay lateral-only.
                 scope.limit_columns = if *lateral {
                     self.limit_columns.visible(self.positions).clone()
                 } else {
-                    Default::default()
+                    self.scope.limit_columns.clone()
                 };
                 let bound = query::bound_query(subquery, &scope, self.positions);
                 let reads = lateral

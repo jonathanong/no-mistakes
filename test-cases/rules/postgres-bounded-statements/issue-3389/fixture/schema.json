@@ -1,0 +1,16 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "consumptions": {
+      "relationKind": "table",
+      "columns": {
+        "reservation_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "actor_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "committed_at": { "dataType": "timestamptz", "nullable": false, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["reservation_id"] }
+    }
+  }
+}

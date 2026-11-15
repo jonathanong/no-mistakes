@@ -11,7 +11,7 @@ fn lateral_limits_follow_caller_array_columns_and_relation_scope() {
     let statements = parse_postgres_sql(sql).unwrap();
     let expected = [
         true, false, true, true, true, true, false, false, false, false, false, false, false, true,
-        false, false, false, false, false, false, true, false, false, false, false, false, false,
+        false, false, false, false, false, false, true, false, true, false, false, false, false,
         true, false, false,
     ];
     assert_eq!(statements.len(), expected.len());
@@ -85,7 +85,7 @@ fn builder_relations_materialize_only_for_lateral_derived_queries() {
         (1, true, (1, 2)),
         (2, true, (1, 3)),
         (3, false, (1, 1)),
-        (4, false, (1, 3)),
+        (4, true, (1, 3)),
         (5, false, (1, 4)),
         (10, false, (1, 4)),
         (11, true, (0, 0)),
@@ -165,4 +165,50 @@ fn builder_relations_materialize_only_for_lateral_derived_queries() {
     };
     assert!(inner.capped);
     assert_eq!(observed, (2, 3));
+}
+
+#[test]
+fn parent_column_limits_cap_nested_queries_and_keep_rejected_counts() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/issue-3389/fixture/queries.sql"
+    ));
+    let statements = parse_postgres_sql(sql).unwrap();
+    let expected = [true, true, true, false, false, false, false, false, false];
+    assert_eq!(statements.len(), expected.len());
+    for (index, (statement, expected)) in statements.iter().zip(expected).enumerate() {
+        let Statement::Query(ast) = statement else {
+            panic!("saved fixture must contain queries");
+        };
+        let bound = query::bound_query(ast, &Scope::default(), None);
+        let capped = consumptions_caps(&bound);
+        assert_eq!(
+            capped,
+            vec![expected],
+            "fixture SQL statement {}",
+            index + 1
+        );
+    }
+}
+
+fn consumptions_caps(query: &crate::codebase::postgres::SqlBoundQuery) -> Vec<bool> {
+    let mut found = Vec::new();
+    fn walk(query: &crate::codebase::postgres::SqlBoundQuery, found: &mut Vec<bool>) {
+        let direct = query.items.iter().any(|item| {
+            matches!(
+                &item.kind,
+                SqlBoundItemKind::Table(name) if name.contains("consumptions")
+            )
+        });
+        if direct {
+            found.push(query.capped);
+        }
+        for item in &query.items {
+            if let SqlBoundItemKind::Query(inner) = &item.kind {
+                walk(inner, found);
+            }
+        }
+    }
+    walk(query, &mut found);
+    found
 }
