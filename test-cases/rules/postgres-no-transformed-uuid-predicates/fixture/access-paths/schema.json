@@ -671,6 +671,9 @@
         },
         "policy_revision": {
           "dataType": "integer"
+        },
+        "n": {
+          "dataType": "integer"
         }
       },
       "indexes": {
@@ -704,6 +707,17 @@
           "keys": [
             {
               "expression": "lower(id::text || label BETWEEN 'a' AND 'z')"
+            }
+          ]
+        },
+        "abs_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || (@ n + 1)::text)"
             }
           ]
         }

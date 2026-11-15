@@ -14,3 +14,4 @@ SELECT * FROM items WHERE ((post_id), (content_sha256), (policy_revision))::othe
 SELECT * FROM grouping_functions WHERE lower(id::text || (label IS NULL)::text) = $1;
 SELECT * FROM grouping_functions WHERE (id, (NOT label) = policy_revision)::item_identity = ($1, $2)::item_identity;
 SELECT * FROM grouping_functions WHERE lower(id::text || (label BETWEEN 'a' AND 'z')) = $1;
+SELECT * FROM grouping_functions WHERE lower(id::text || ((@ n) + 1)::text) = $1;

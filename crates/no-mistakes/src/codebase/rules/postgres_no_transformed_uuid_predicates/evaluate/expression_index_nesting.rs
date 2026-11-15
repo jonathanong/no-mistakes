@@ -75,10 +75,10 @@ fn walk_function(function: &mut Function) {
 fn precedence(expression: &Expr) -> u8 {
     match expression {
         Expr::BinaryOp { .. } => OTHER,
-        Expr::UnaryOp { op, .. } => match op {
-            UnaryOperator::Not | UnaryOperator::BangNot => OTHER,
-            _ => UNARY,
-        },
+        Expr::UnaryOp {
+            op: UnaryOperator::Plus | UnaryOperator::Minus,
+            ..
+        } => UNARY,
         Expr::Cast {
             kind: CastKind::DoubleColon,
             ..
