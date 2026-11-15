@@ -4,8 +4,8 @@ use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
 fn postgres_closed_identifier_correlation_check_json_snapshot() {
     let root = rules_path(
         "postgres-bounded-statements",
-        "fixture",
         "closed-identifier-correlation",
+        "fixture",
     );
     let cases = [("correlation", root.clone(), root.join(".no-mistakes.yml"))];
     let report =

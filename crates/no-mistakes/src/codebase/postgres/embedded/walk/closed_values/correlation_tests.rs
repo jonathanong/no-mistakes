@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 fn fixture_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/postgres-bounded-statements/fixture/closed-identifier-correlation/query.ts",
+        "../../test-cases/rules/postgres-bounded-statements/closed-identifier-correlation/fixture/query.ts",
     )
 }
 
