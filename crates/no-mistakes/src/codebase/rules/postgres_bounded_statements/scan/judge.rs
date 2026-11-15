@@ -1,7 +1,5 @@
 use super::super::declared::{self, Gate};
-use super::super::evaluate::{
-    judgment_with_views, variant_judgment_with_views, Judgment,
-};
+use super::super::evaluate::{judgment_with_views, variant_judgment_with_views, Judgment};
 use super::super::view_bounds::ViewBounds;
 use super::super::CompiledOptions;
 use super::groups::Groups;

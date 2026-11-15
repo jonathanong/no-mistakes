@@ -54,10 +54,10 @@ struct Evaluation {
 
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub(super) use statement::offenders;
-pub(super) use statement::{offenders_with_views, variant_offenders_with_views};
 pub(in crate::codebase::rules::postgres_bounded_statements) use statement::{
     judgment_with_views, variant_judgment_with_views, Judgment,
 };
+pub(super) use statement::{offenders_with_views, variant_offenders_with_views};
 
 fn evaluate(
     query: &SqlBoundQuery,
