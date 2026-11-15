@@ -2,6 +2,10 @@
 SELECT id FROM custom WHERE lower(payload) = $1;
 -- Report: lower of an integer is not the text built-in.
 SELECT id FROM custom WHERE lower(n) = $1;
+-- Report: upper of an integer is not the text built-in.
+SELECT id FROM custom WHERE upper(n) = $1;
+-- Report: one-argument btrim of an integer is not the text built-in.
+SELECT id FROM custom WHERE btrim(n) = $1;
 -- Pass: varchar still uses the built-in.
 SELECT id FROM labels WHERE lower(name) = $1;
 -- Pass: raw equality on an integer still implies NOT NULL.

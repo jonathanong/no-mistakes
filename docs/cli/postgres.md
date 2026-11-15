@@ -69,7 +69,8 @@ partitioned table in the schema:
   (`stored`, or PostgreSQL 18 `virtual`) with its expression;
 - the primary key and unique constraints;
 - foreign keys, including composite ones: columns, referenced table and columns,
-  `ON DELETE` and `ON UPDATE` actions, and whether they are validated;
+  `ON DELETE` and `ON UPDATE` actions, whether they are validated, and whether
+  the constraint is deferrable (`pg_constraint.condeferrable`);
 - check constraints: name, `pg_get_constraintdef` text, and whether they are
   validated. The text of a not-validated constraint ends in `NOT VALID`;
 - every index: uniqueness, primary and constraint-backed flags (an index behind a

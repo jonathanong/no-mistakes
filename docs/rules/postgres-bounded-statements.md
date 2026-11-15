@@ -562,14 +562,17 @@ unquoted `upper` and one-argument `btrim`, unqualified or `pg_catalog`-qualified
 that overload need not be strict. `coalesce`, `IS NOT DISTINCT FROM`, a quoted name,
 and another schema do not. The call is recorded for a base table the condition
 restricts (`WHERE`, or the filtered side of a join). An outer join `ON` does not
-record the preserved table, and a derived item is not a base table. Raw equality
+record the preserved table. A `RIGHT JOIN` records only its left side, and a
+`FULL JOIN` records neither side. A derived item is not a base table. Raw equality
 on any type still implies that column `IS NOT NULL`.
 A literal cast counts only when it preserves the value and the column type
 compares the same way
 (`text`, `boolean`, unlimited `varchar`, `varchar(n)` that fits, or a catalog
 enum label, including a quoted mixed-case enum name). `citext` and
-`char` / `character` do not treat `'a'::text` as `'a'`. A `varchar` partial
-index stored as `(col)::text = ANY (ARRAY[...])` matches that literal set.
+`char` / `character` do not treat `'a'::text` as `'a'`. A stored `(col)::text`
+predicate matches only a text-family column, so a domain does not match it.
+A `varchar` partial index stored as `(col)::text = ANY (ARRAY[...])` matches
+that literal set, and it does not match `'pending'::citext`.
 An array constructor
 cast such as `ARRAY['pending', 'ready']::text[]` uses that rule on each element.
 A scalar cast through an array type does not, so `'pending'::varchar(3)` and

@@ -30,6 +30,7 @@ WITH selected AS (
   -- partitioned parents so their own keys remain visible to catalog rules. contype 'n'
   -- (PostgreSQL 18 NOT NULL) is not a check.
   SELECT c.conrelid, quote_ident(c.conname) AS name, c.contype, c.convalidated AS validated,
+    c.condeferrable AS deferrable,
     (SELECT jsonb_agg(a.attname ORDER BY k.ordinality)
      FROM unnest(c.conkey) WITH ORDINALITY k(attnum, ordinality)
      JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = k.attnum) AS columns,
@@ -105,7 +106,7 @@ WITH selected AS (
     'foreignKeys', COALESCE((SELECT jsonb_object_agg(c.name, jsonb_build_object(
       'columns', c.columns, 'referencedTable', c.referenced_table,
       'referencedColumns', c.referenced_columns, 'onDelete', c.on_delete,
-      'onUpdate', c.on_update, 'validated', c.validated)) FROM constraints c
+      'onUpdate', c.on_update, 'validated', c.validated, 'deferrable', c.deferrable)) FROM constraints c
       WHERE c.conrelid = r.oid AND c.contype = 'f'), '{}'::jsonb),
     'checkConstraints', COALESCE((SELECT jsonb_object_agg(c.name, jsonb_build_object(
       'definition', c.definition, 'validated', c.validated)) FROM constraints c

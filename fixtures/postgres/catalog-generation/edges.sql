@@ -36,6 +36,8 @@ CREATE TABLE "Order Items" (
 ALTER TABLE "Order Items" ADD CONSTRAINT "Odd.Check" CHECK ("Id" > 0) NOT VALID;
 ALTER TABLE "Order Items" ADD CONSTRAINT "Loose Parent" FOREIGN KEY ("Parent Id", mood)
   REFERENCES "Order Items" ("Id", mood) NOT VALID;
+ALTER TABLE "Order Items" ADD CONSTRAINT "Deferred Parent" FOREIGN KEY ("Parent Id")
+  REFERENCES "Order Items" ("Id") DEFERRABLE INITIALLY DEFERRED;
 COMMENT ON TABLE "Order Items" IS 'it''s quoted';
 COMMENT ON COLUMN "Order Items".note IS 'a note';
 CREATE INDEX "Mixed Index" ON "Order Items" (lower(note), "Parent Id" DESC);

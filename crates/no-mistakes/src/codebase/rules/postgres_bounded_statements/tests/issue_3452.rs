@@ -25,6 +25,8 @@ fn partial_index_gaps_follow_the_arm_and_the_column_type() {
         ("arm-null-safe.sql", 1),
         ("citext-text.sql", 1),
         ("citext-literal.sql", 1),
+        ("varchar-citext.sql", 1),
+        ("domain-text.sql", 1),
         ("char-text.sql", 1),
         ("char-literal.sql", 1),
     ] {

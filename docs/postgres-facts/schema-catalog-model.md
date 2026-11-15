@@ -74,7 +74,9 @@ table is not partitioned). Column objects carry `dataType` (verbatim, such
 as `timestamp with time zone` or `text[]`), `nullable`, `defaultExpression`,
 `generated` (`stored` or `virtual`), `generatedExpression`, `identity`,
 `comment`, and `ordinalPosition`. Columns are sorted by `ordinalPosition`,
-then name. Foreign-key `onDelete` and `onUpdate` are stored lowercased.
+then name. Foreign-key `onDelete` and `onUpdate` are stored lowercased. `deferrable` is
+true when PostgreSQL can postpone the check (`condeferrable`). An older snapshot
+that omits the field reads as false.
 `physicalPartition.key` is text such as `RANGE (id)`, `LIST (region)`,
 `HASH (id)`, or `RANGE (tenant_id, id)`. The first word is the strategy.
 Top-level commas split the parenthesized elements. A bare or double-quoted

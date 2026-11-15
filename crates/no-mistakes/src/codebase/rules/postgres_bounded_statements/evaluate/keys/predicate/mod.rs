@@ -51,6 +51,7 @@ struct Evidence {
     params: Vec<(String, String)>,
     bindings: BTreeMap<String, Lit>,
     conflicts: BTreeSet<String>,
+    types: BTreeMap<String, String>,
 }
 
 impl Evidence {
@@ -60,13 +61,14 @@ impl Evidence {
         extra: &[Atom],
         catalog: &SchemaCatalog,
     ) -> Self {
+        let types = column_types(item, catalog);
         let mut evidence = Self {
             atoms: Vec::new(),
             params: Vec::new(),
             bindings: BTreeMap::new(),
             conflicts: BTreeSet::new(),
+            types: BTreeMap::new(),
         };
-        let types = column_types(item, catalog);
         let branch = item
             .alternative_predicates
             .get(alternative)
@@ -75,6 +77,7 @@ impl Evidence {
         for expr in item.predicate_conjuncts.iter().chain(branch) {
             evidence.classify(expr, catalog, &types);
         }
+        evidence.types = types;
         evidence.forward();
         evidence.atoms.extend(extra.iter().cloned());
         evidence
@@ -158,8 +161,7 @@ impl Evidence {
                 }
             }
         }
-        let types = column_types(item, catalog);
-        let Some(need) = atom_with(predicate, catalog, &types) else {
+        let Some(need) = atom_with(predicate, catalog, &self.types) else {
             return false;
         };
         self.atoms.iter().any(|have| same(have, &need))

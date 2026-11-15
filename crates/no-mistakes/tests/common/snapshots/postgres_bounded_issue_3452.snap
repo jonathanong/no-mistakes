@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 108
 ---
 {
   "partial-index-gaps": {
@@ -58,6 +59,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "DELETE FROM folds",
           "target": "table:folds"
+        },
+        {
+          "file": "domain-text.sql",
+          "line": 1,
+          "message": "domain-text.sql:1: DELETE can remove every row of domains; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM domains",
+          "target": "table:domains"
+        },
+        {
+          "file": "varchar-citext.sql",
+          "line": 1,
+          "message": "varchar-citext.sql:1: DELETE can remove every row of labels; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM labels",
+          "target": "table:labels"
         }
       ],
       "warnings": []
