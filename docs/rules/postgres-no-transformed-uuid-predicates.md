@@ -112,8 +112,9 @@ The rule requires a valid, ready, live, non-partial B-tree index with supported
 ordering. It matches the entire cast or function operand against a literal or
 bind bound. Alias qualification can be resolved. `CAST(expr AS type)` and
 `expr::type` match when the target type is the same, on both the query operand
-and the catalog expression. Redundant inner parentheses, as in
-`CAST((id) AS text)`, are a separate case handled by #3363 and #3403.
+and the catalog expression. Redundant inner parentheses do not currently match:
+`lower(CAST((id) AS text))` does not match `lower(id::text)`. That spelling
+is a separate case handled by #3363 and #3403.
 Tuple order, identifier quoting, string values,
 collations, and cast targets remain significant. Parentheses that change which
 value is cast also remain significant: `CAST(a || b AS text)` matches
