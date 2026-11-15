@@ -15,15 +15,13 @@ pub(super) fn strip_redundant_nesting(expression: &mut Expr) {
 
 fn delimit(expression: &mut Expr) {
     walk(expression);
-    while matches!(expression, Expr::Nested(_)) {
-        unwrap_nested(expression);
-    }
+    while peel_outer(expression) {}
 }
 
 fn tighten(expression: &mut Expr, parent: u8) {
     walk(expression);
     while nested_child_precedence(expression).is_some_and(|child| child > parent) {
-        unwrap_nested(expression);
+        peel_outer(expression);
     }
 }
 
@@ -34,12 +32,13 @@ fn nested_child_precedence(expression: &Expr) -> Option<u8> {
     }
 }
 
-fn unwrap_nested(expression: &mut Expr) {
-    let current = std::mem::replace(expression, Expr::Identifier(Ident::new("_")));
-    *expression = match current {
-        Expr::Nested(inner) => *inner,
-        other => other,
+fn peel_outer(expression: &mut Expr) -> bool {
+    let Expr::Nested(inner) = expression else {
+        return false;
     };
+    let owned = std::mem::replace(inner.as_mut(), Expr::Identifier(Ident::new("_")));
+    *expression = owned;
+    true
 }
 
 fn walk(expression: &mut Expr) {

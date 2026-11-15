@@ -184,3 +184,7 @@ fn normalize_rows(tokens: &mut Vec<Token>) {
         keep
     });
 }
+
+#[cfg(test)]
+#[path = "expression_index_fallback_tests.rs"]
+mod expression_index_fallback_tests;

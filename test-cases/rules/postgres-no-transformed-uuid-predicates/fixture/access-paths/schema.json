@@ -341,6 +341,28 @@
               "expression": "lower(id::text)"
             }
           ]
+        },
+        "literal_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text"
+            }
+          ]
+        },
+        "printed_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id NOTNULL)"
+            }
+          ]
         }
       }
     },
