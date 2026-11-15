@@ -26,7 +26,7 @@ pub(super) fn collect(
     let rows: Vec<_> = paths
         .par_iter()
         .map(|path| {
-            let source = sources.read_path(path).map_err(|error| {
+            let source = sources.read_source_path(path).map_err(|error| {
                 Arc::new(PreparationError {
                     message: Arc::from(format!("failed to collect PostgreSQL facts: {error}")),
                     source_kind: Some(error.kind()),
@@ -72,13 +72,7 @@ pub(super) fn collect(
                         value.set_path(path.clone());
                         Arc::new(value)
                     })
-                    .or_else(|error| {
-                        if let Ok(facts) = super::super::collect::schema_file_facts(path, sources) {
-                            Ok(Arc::new(facts))
-                        } else {
-                            Err(Arc::clone(error))
-                        }
-                    })
+                    .map_err(|error| Arc::clone(*error))
             });
             let statements = plan.postgres_dml.then(|| {
                 parsed
@@ -108,11 +102,7 @@ pub(super) fn collect(
                         value.path = path.clone();
                         Arc::new(vec![value])
                     })
-                    .or_else(|error| {
-                        if error.source_kind == Some(std::io::ErrorKind::InvalidData) {
-                            Ok(Arc::new(vec![super::super::collect::encoding::statement_failure(path)]))
-                        } else { Err(Arc::clone(error)) }
-                    })
+                    .map_err(|error| Arc::clone(*error))
             });
             (path.clone(), schema, statements)
         })

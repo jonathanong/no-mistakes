@@ -338,4 +338,4 @@ See [statement coverage and locations](postgres-no-offset-coverage.md).
 
 ## Invalid UTF-8
 
-Executor source is decoded lossily at `max` and `low` effort, so a stray byte does not drop the file. A missing file remains a read error. Standalone SQL the statement pass cannot decode as UTF-8 stays an unanalyzable encoding failure. `unanalyzableSql` still applies to SQL the statement pass cannot parse.
+Executor source and standalone SQL are decoded lossily at `max` and `low` effort, so a stray byte does not drop the file or replace it with an encoding failure. A missing file remains a read error. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

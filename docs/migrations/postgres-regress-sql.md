@@ -13,10 +13,11 @@ complete command, including required names, clauses, and argument lists. These
 utility statements do not invent schema facts. Malformed near misses remain
 findings under the default policy.
 
-Schema SQL that is not valid UTF-8 is decoded lossily and analyzed, so a stray
-byte does not replace the file with a line-1 encoding diagnostic. Other selected
-files still contribute schema facts and policy findings. A read that fails for
-another reason stays file-local and does not drop those siblings.
+Schema SQL and standalone DML SQL that are not valid UTF-8 are decoded lossily
+and analyzed, so a stray byte does not replace the file with a line-1 encoding
+diagnostic. Other selected files still contribute schema facts, statement facts,
+and policy findings. A read that fails for another reason stays file-local and
+does not drop those siblings.
 
 A CREATE RULE action list can contain semicolons. The list remains part of that
 rule's statement, so a later action is not reported as an orphan statement.
