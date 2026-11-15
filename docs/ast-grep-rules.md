@@ -50,6 +50,19 @@ first revision that adds the baseline skips the shrink check because the file
 is absent at that base. An empty file is an existing baseline, not an absent
 one: after completion, any new baseline path fails the gate.
 
+## Suppression
+
+These rules have no inline suppression comment. `ignores:` on the rule is the
+suppression mechanism.
+
+Each entry is a repo-relative path or glob. `ast-grep scan` skips those files
+for that rule only. The same entry does not apply to `ast-grep test` snippets,
+which only check the structural match.
+
+Add an entry only for the documented owner of a fallback, or for a test-only
+helper the rule text already names. An ignored file hides every later match in
+that file, so review its diff for the regression the rule exists to catch.
+
 ## Rules
 
 ### `no-ungated-directory-walk`
@@ -94,26 +107,40 @@ effect performed indirectly (a helper method call, `std::mem::replace`,
 
 ### `no-direct-playwright-route-scan`
 
-Flags a direct call to `crate::routes::collect_routes(...)` or
-`crate::routes::collect_routes_from_visible_paths(...)` from
-`codebase/dependencies/graph/**` — the `DepGraph` edge-producer directory.
+Flags any identifier named `collect_routes`,
+`collect_routes_from_visible_paths`, or `collect_routes_from_snapshot` under
+`codebase/dependencies/graph/**`, the `DepGraph` edge-producer directory.
+The match is the name, so it covers a fully qualified call, a `routes::` or
+`super::` path, a bare call, a `use` (including `use ... as` and a grouped
+`use` list), and a function reference that is not called. A longer name such
+as `collect_route_edges` does not match. A comment that only mentions the
+name does not match.
+
 `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a _no-key_
 shared cache: every caller within one `no-mistakes check` invocation wants
 the exact same app-wide Playwright route scan, so there is never a
-legitimate reason for an edge producer to call either function directly
-instead of going through the shared cache. See `crates/AGENTS.md`'s "Edge
-producer smell" note — this is the exact shape of the historical
-`collect_playwright_route_edges` bug, which independently re-ran the entire
-app-wide route scan the `playwright` rule's own check pipeline already
-shares.
+legitimate reason for an edge producer to name those scans directly. See
+`crates/AGENTS.md`'s "Edge producer smell" note — this is the exact shape of
+the historical `collect_playwright_route_edges` bug, which independently
+re-ran the entire app-wide route scan the `playwright` rule's own check
+pipeline already shares.
 
-`edge_playwright_routes.rs` is allowlisted. Its scan calls
+`collect_routes_from_snapshot` is the Playwright snapshot entry point. Callers
+today live under `playwright/`. The rule still flags that name under `graph/**`
+so a later producer cannot bypass the shared cache.
+
+`edge_playwright_routes.rs` is the rule's `ignores:` entry. Its scan calls
 `collect_routes_from_visible_paths` inside the `compute_routes` closure
 passed to `facts.get_or_compute_playwright_routes`, with a `None`-facts
-fallback that calls the same closure. The file stays allowlisted because
-ast-grep cannot require a call to sit inside that closure, so a later direct
-call to either function anywhere else in the file would not be caught.
-Review that file's diffs by hand for this regression.
+fallback that calls the same closure. The whole file stays ignored because
+ast-grep cannot require the name to sit inside that closure, so a later use
+anywhere else in the file would not be caught. Review that file's diffs by
+hand for this regression.
+
+A scan function re-exported under a different name from outside `graph/**`
+never spells these identifiers, so this rule does not see that call. Keep the
+scan names on the shared cache path instead of aliasing them into an edge
+producer.
 
 ### One-pass gateway guards
 
@@ -269,8 +296,9 @@ now fails, and paths cannot be added back to that baseline.
    guess.
 3. Add `valid`/`invalid` cases to `.ast-grep/rule-tests/<id>-test.yml` and
    confirm with `ast-grep test --skip-snapshot-tests`.
-4. Only allowlist a file/call site via `ignores` when it's genuinely bounded
-   or is the documented fallback itself — leave everything else caught.
+4. Only allowlist a file via `ignores` when it is the documented fallback
+   itself. That list is the suppression mechanism. An ignored file hides every
+   later match, so leave every other call site caught.
 5. `ast-grep scan` is already wired into `.husky/pre-push` and into the
    `ast-analysis` job in `.github/workflows/ci.yml`. A new rule under
    `.ast-grep/rules/` is picked up by that scan. The inline fixture-write rules

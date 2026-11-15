@@ -1,43 +1,34 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
 #
-# Flags a direct call to `crate::routes::collect_routes(...)` or
-# `crate::routes::collect_routes_from_visible_paths(...)` from
-# `codebase/dependencies/graph/**` — the DepGraph edge-producer directory.
+# Flags the identifiers `collect_routes`, `collect_routes_from_visible_paths`,
+# and `collect_routes_from_snapshot` under `codebase/dependencies/graph/**`.
 # `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a no-key
 # shared cache: every caller within one `no-mistakes check` invocation wants
-# the exact same app-wide Playwright route scan, so there is never a
-# legitimate reason for an edge producer to call either function directly
-# instead of going through the shared cache. See crates/AGENTS.md's "Edge
-# producer smell" note (under "Duplicate full-repo work across independent
-# call paths") for the full explanation and the historical bug this catches:
-# `collect_playwright_route_edges` independently re-ran the entire app-wide
-# route scan the `playwright` rule's own check pipeline already shares.
+# the exact same app-wide Playwright route scan, so an edge producer must not
+# name those scans directly. The match is the identifier, so a fully qualified
+# call, a `routes::` or `super::` path, a bare call, a `use` (including
+# `use ... as` and a grouped list), and an uncalled function reference all
+# count. See crates/AGENTS.md's "Edge producer smell" note for the historical
+# `collect_playwright_route_edges` bug.
 #
-# `edge_playwright_routes.rs` is exempted below because it's the one producer
-# that legitimately needs to compute routes when no shared facts are
-# available at all (a standalone, facts-less graph build). Its call to
-# `collect_routes_from_visible_paths` lives inside the `compute_routes`
-# closure passed to `facts.get_or_compute_playwright_routes`, with a
-# `None`-facts fallback that calls the same closure directly. ast-grep's
-# structural matching can't express "this call must be inside a closure
-# passed to get_or_compute_playwright_routes", so the whole file is
-# allowlisted instead — a second, unguarded call added anywhere else in that
-# file would not be caught by this rule. Reviewers should read that file's
-# diff by hand for this specific regression class.
+# `edge_playwright_routes.rs` is the one producer that legitimately computes
+# routes when no shared facts are available. Its call lives inside the
+# `compute_routes` closure passed to `facts.get_or_compute_playwright_routes`,
+# with a `None`-facts fallback that calls the same closure. ast-grep cannot
+# require the name to sit inside that closure, so the whole file is
+# allowlisted. A second use anywhere else in that file is not caught. Review
+# that file's diff by hand for this regression.
 id: no-direct-playwright-route-scan
 language: rust
 severity: error
 message: >-
-  Direct crate::routes::collect_routes or
-  collect_routes_from_visible_paths call in a DepGraph edge producer.
-  Route through the shared facts.get_or_compute_playwright_routes cache
-  instead (see crates/AGENTS.md, "Duplicate full-repo work across
-  independent call paths" / "Edge producer smell") so this doesn't
-  duplicate the playwright rule's own app-wide route scan.
+  Route scan name in a DepGraph edge producer. collect_routes,
+  collect_routes_from_visible_paths, and collect_routes_from_snapshot
+  must go through facts.get_or_compute_playwright_routes (see
+  crates/AGENTS.md, "Edge producer smell") instead of being named directly.
 rule:
-  any:
-    - pattern: crate::routes::collect_routes($$$)
-    - pattern: crate::routes::collect_routes_from_visible_paths($$$)
+  kind: identifier
+  regex: "^collect_routes(_from_visible_paths|_from_snapshot)?$"
 files:
   - "crates/no-mistakes/src/codebase/dependencies/graph/**"
 ignores:
