@@ -660,6 +660,54 @@
           ]
         }
       }
+    },
+    "grouping_functions": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        }
+      },
+      "indexes": {
+        "null_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || label IS NULL::text)"
+            }
+          ]
+        },
+        "not_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(id, NOT label = policy_revision)::item_identity"
+            }
+          ]
+        },
+        "between_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || label BETWEEN 'a' AND 'z')"
+            }
+          ]
+        }
+      }
     }
   }
 }

@@ -85,33 +85,29 @@ test("diagnostics selectors cover public analyses and exclude utilities and raw 
   assert.deepEqual(actual, expected);
 });
 
-test(
-  "diagnostics collector overloads retain required arguments and correlated result types",
-  { timeout: 20_000 },
-  () => {
-    const fixture = join(
-      packageRoot,
-      "..",
-      "..",
-      "fixtures",
-      "node-api",
-      "diagnostics-types",
-      "public.mts",
-    );
-    const program = ts.createProgram([fixture], {
-      noEmit: true,
-      strict: true,
-      skipLibCheck: true,
-      types: [],
-      target: ts.ScriptTarget.ESNext,
-      module: ts.ModuleKind.NodeNext,
-      moduleResolution: ts.ModuleResolutionKind.NodeNext,
-    });
-    assert.deepEqual(
-      ts
-        .getPreEmitDiagnostics(program)
-        .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-      [],
-    );
-  },
-);
+test("diagnostics collector overloads retain required arguments and correlated result types", () => {
+  const fixture = join(
+    packageRoot,
+    "..",
+    "..",
+    "fixtures",
+    "node-api",
+    "diagnostics-types",
+    "public.mts",
+  );
+  const program = ts.createProgram([fixture], {
+    noEmit: true,
+    strict: true,
+    skipLibCheck: true,
+    types: [],
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.NodeNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeNext,
+  });
+  assert.deepEqual(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+  );
+});

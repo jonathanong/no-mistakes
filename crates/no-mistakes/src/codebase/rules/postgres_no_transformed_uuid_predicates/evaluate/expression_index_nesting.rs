@@ -1,7 +1,7 @@
 //! Drops parentheses PostgreSQL precedence makes redundant.
 //! Same-precedence grouping stays, so `(a OR b) AND c` does not become `a OR b AND c`.
 use sqlparser::ast::{
-    CastKind, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, Ident,
+    CastKind, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, Ident, UnaryOperator,
 };
 
 const OTHER: u8 = 7;
@@ -75,11 +75,29 @@ fn walk_function(function: &mut Function) {
 fn precedence(expression: &Expr) -> u8 {
     match expression {
         Expr::BinaryOp { .. } => OTHER,
-        Expr::UnaryOp { .. } => UNARY,
+        Expr::UnaryOp { op, .. } => match op {
+            UnaryOperator::Not | UnaryOperator::BangNot => OTHER,
+            _ => UNARY,
+        },
         Expr::Cast {
             kind: CastKind::DoubleColon,
             ..
         } => CAST,
-        _ => PRIMARY,
+        expr if primary(expr) => PRIMARY,
+        _ => OTHER,
     }
+}
+
+fn primary(expression: &Expr) -> bool {
+    matches!(
+        expression,
+        Expr::Identifier(_)
+            | Expr::CompoundIdentifier(_)
+            | Expr::Value(_)
+            | Expr::TypedString(_)
+            | Expr::Function(_)
+            | Expr::Nested(_)
+            | Expr::Tuple(_)
+            | Expr::Case { .. }
+    )
 }

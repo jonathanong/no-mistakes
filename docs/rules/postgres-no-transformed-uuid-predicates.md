@@ -162,6 +162,8 @@ changes the expression still reports: `lower((id::text) || 'x')` is not
 `lower(id::text)`, `lower(id || label::text)` is not `lower((id || label)::text)`,
 and `lower(id::text || (label || 'x'))` is not `lower(id::text || label || 'x')`.
 `CAST(id AS text)` stays distinct from `id::text`. An index expression that does not parse, or whose printed form changes a token other than parentheses, is compared as written.
+Parentheses around `IS`, `BETWEEN`, and `NOT` stay when removing them would change grouping: `(label IS NULL)::text` is not `label IS NULL::text`, `(NOT label) = policy_revision` is not `NOT label = policy_revision`, and `id::text || (label BETWEEN 'a' AND 'z')` is not `id::text || label BETWEEN 'a' AND 'z'`.
+
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.
 At effort max, recorded interpolation positions in configured trusted SQL
