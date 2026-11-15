@@ -22,6 +22,7 @@ mod fixture_function_contracts;
 mod function_body;
 mod model;
 mod names;
+mod not_null;
 mod order;
 mod parse;
 mod projection_cache;

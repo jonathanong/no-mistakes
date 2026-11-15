@@ -144,10 +144,11 @@ impl SchemaCatalog {
             .iter()
             .any(|key| !key.is_empty() && key.iter().all(|column| pinned.contains(column)))
     }
-    /// Whether `column` of `table` cannot hold NULL. Every row has a `ctid`.
+    /// Whether `column` of a base table cannot hold NULL. `ctid` never does.
+    /// Any other column uses the base-table identity, so a view that shares the name does not count.
     pub fn column_is_not_null(&self, table: &str, column: &str) -> bool {
         column == "ctid"
-            || self.relation(table).is_some_and(|table| {
+            || self.bounded_relation(table).is_some_and(|table| {
                 table
                     .columns
                     .iter()

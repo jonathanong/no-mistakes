@@ -89,7 +89,7 @@ impl Evidence {
             self.params.push((column, placeholder));
             return;
         }
-        if let Some((placeholder, literal)) = binding(expr, catalog) {
+        if let Some((placeholder, literal)) = binding(expr, catalog, types) {
             self.bind(placeholder, literal);
             return;
         }
