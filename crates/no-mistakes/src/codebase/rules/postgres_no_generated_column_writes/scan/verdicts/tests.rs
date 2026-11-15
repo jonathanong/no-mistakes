@@ -65,3 +65,28 @@ fn absent_width_abstains_and_a_counted_zero_clears() {
     );
     assert_eq!(covered.status, SqlVerdictStatus::Violation);
 }
+
+#[test]
+fn named_column_key_decides_the_generated_write() {
+    let mut statement = SqlStatementFileFacts::default();
+    statement.writes.push(SqlWriteFact {
+        table: "votes".to_string(),
+        columns: SqlWriteColumns::Named(vec!["label".to_string()]),
+        line: 1,
+        column: 1,
+        column_keys: Some(vec!["created_at".to_string()]),
+    });
+    let complete = catalogs(Some(vec!["id".to_string(), "created_at".to_string()]), true);
+    let hit = judge("generated-write", &statement, &|_, _| &complete);
+    assert_eq!(hit.status, SqlVerdictStatus::Violation);
+    statement.writes[0].column_keys = Some(vec!["id".to_string()]);
+    let clear = judge("generated-write", &statement, &|_, _| &complete);
+    assert_eq!(clear.status, SqlVerdictStatus::ProvenClear);
+    let incomplete = catalogs(
+        Some(vec!["id".to_string(), "created_at".to_string()]),
+        false,
+    );
+    let unknown = judge("generated-write", &statement, &|_, _| &incomplete);
+    assert_eq!(unknown.status, SqlVerdictStatus::Abstain);
+    assert_eq!(unknown.reason, Some("unknown-relation-or-write-width"));
+}
