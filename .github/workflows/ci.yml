@@ -1363,7 +1363,7 @@ jobs:
 
       - name: Precompile native Rust test targets
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 15
+        timeout-minutes: 22
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}

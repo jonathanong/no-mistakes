@@ -1,0 +1,13 @@
+{
+  "source": "Hosted CI job Native Rust compile (macOS ARM64) on a workspace-cache miss",
+  "runId": 43711101196,
+  "jobId": 132802753296,
+  "headSha": "d9be5ff215972115a0556b8425aa91ec13ed73c0",
+  "cache": "miss",
+  "stepLimitSeconds": 900,
+  "firstTargetCargoReportedSeconds": 859,
+  "targetsPlanned": 4,
+  "killedIn": "rust-objcopy",
+  "remainingTargetReserveSeconds": 180,
+  "postStepReserveSeconds": 120
+}
