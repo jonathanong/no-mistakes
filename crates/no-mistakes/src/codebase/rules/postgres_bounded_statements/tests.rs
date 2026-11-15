@@ -23,6 +23,7 @@ mod issue_3151_real;
 mod issue_3394;
 mod issue_3396;
 mod issue_3437;
+mod issue_3452;
 mod json_function_outputs;
 mod legacy_single_column;
 mod multi_table_arms;

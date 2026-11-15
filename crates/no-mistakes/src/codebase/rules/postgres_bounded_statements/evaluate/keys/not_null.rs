@@ -5,7 +5,20 @@ use crate::codebase::postgres::statements::SqlBoundItem;
 use crate::codebase::postgres::CatalogTable;
 
 pub(super) fn proves(column: &str, item: &SqlBoundItem, table: &CatalogTable) -> bool {
-    listed(&item.nonnull_columns, column)
+    proves_arm(column, item, table, false)
+}
+
+/// `arm_equated` is a raw equality, `IN`, or parameter on this `OR` arm only.
+/// Raw equality proves `IS NOT NULL` for every catalog type. A strict-function
+/// equality still has to pass [`text_family_column`].
+pub(super) fn proves_arm(
+    column: &str,
+    item: &SqlBoundItem,
+    table: &CatalogTable,
+    arm_equated: bool,
+) -> bool {
+    arm_equated
+        || listed(&item.nonnull_columns, column)
         || (listed(&item.strict_nonnull_columns, column) && text_family_column(table, column))
 }
 

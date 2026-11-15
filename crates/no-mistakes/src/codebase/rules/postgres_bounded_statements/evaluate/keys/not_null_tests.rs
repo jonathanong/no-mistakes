@@ -1,4 +1,4 @@
-use super::proves;
+use super::{proves, proves_arm};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind};
 use crate::codebase::postgres::{CatalogColumn, CatalogTable, RelationKind};
 
@@ -86,4 +86,14 @@ fn strict_function_equality_proves_not_null_only_for_the_text_family() {
     assert!(!proves("code", &strict, &columns));
     assert!(!proves("custom", &strict, &columns));
     assert!(!proves("missing", &strict, &columns));
+}
+
+#[test]
+fn arm_equality_proves_not_null_for_every_catalog_type() {
+    let columns = table(&[("code", "char"), ("folded", "citext"), ("n", "integer")]);
+    let plain = item(&[], &[]);
+    assert!(proves_arm("code", &plain, &columns, true));
+    assert!(proves_arm("folded", &plain, &columns, true));
+    assert!(proves_arm("n", &plain, &columns, true));
+    assert!(!proves_arm("code", &plain, &columns, false));
 }

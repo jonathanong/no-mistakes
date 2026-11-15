@@ -1,8 +1,9 @@
-use super::super::shape::{atom, membership, Atom, Lit};
+use super::super::shape::{atom, atom_with, membership, Atom, Lit};
 use super::preserves;
 use crate::codebase::postgres::parse_postgres_expression;
 use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::{CharLengthUnits, CharacterLength, DataType};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 fn catalog() -> SchemaCatalog {
@@ -85,4 +86,26 @@ fn value_preserving_casts_keep_the_literal() {
         &Lit::Str("true".to_owned()),
         &catalog
     ));
+    let varchar = BTreeMap::from([("label".to_owned(), "character varying".to_owned())]);
+    assert!(atom_with(
+        &parsed("(label)::text = ANY (ARRAY['pending'::text, 'ready'::text])"),
+        &catalog,
+        &varchar
+    )
+    .is_some());
+    let citext = BTreeMap::from([("folded".to_owned(), "citext".to_owned())]);
+    assert!(atom_with(&parsed("folded = 'a'::text"), &catalog, &citext).is_none());
+    assert!(atom_with(&parsed("(folded)::text = 'a'::text"), &catalog, &citext).is_none());
+    let character = BTreeMap::from([("code".to_owned(), "character".to_owned())]);
+    assert!(atom_with(&parsed("code = 'a'::text"), &catalog, &character).is_none());
+    assert!(atom_with(&parsed("(code)::text = 'a '::text"), &catalog, &character).is_none());
+    let qualified = BTreeMap::from([("label".to_owned(), "pg_catalog.text".to_owned())]);
+    assert!(atom_with(
+        &parsed("(label)::text = 'pending'::text"),
+        &catalog,
+        &qualified
+    )
+    .is_some());
+    let nvarchar = BTreeMap::from([("label".to_owned(), "nvarchar".to_owned())]);
+    assert!(atom_with(&parsed("(label)::text = 'pending'::text"), &catalog, &nvarchar).is_none());
 }

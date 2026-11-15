@@ -532,9 +532,13 @@ and another schema do not. The call is recorded for a base table the condition
 restricts (`WHERE`, or the filtered side of a join). An outer join `ON` does not
 record the preserved table, and a derived item is not a base table. Raw equality
 on any type still implies that column `IS NOT NULL`.
-A literal cast counts only when it preserves the value
+A literal cast counts only when it preserves the value and the column type
+compares the same way
 (`text`, `boolean`, unlimited `varchar`, `varchar(n)` that fits, or a catalog
-enum label, including a quoted mixed-case enum name). An array constructor
+enum label, including a quoted mixed-case enum name). `citext` and
+`char` / `character` do not treat `'a'::text` as `'a'`. A `varchar` partial
+index stored as `(col)::text = ANY (ARRAY[...])` matches that literal set.
+An array constructor
 cast such as `ARRAY['pending', 'ready']::text[]` uses that rule on each element.
 A scalar cast through an array type does not, so `'pending'::varchar(3)` and
 `('{"pending"}'::text[])::text` do not match `'pending'`.
@@ -549,6 +553,9 @@ same partial-index proof, including inside scalar closed-range lookups.
 A missing partial predicate or a different expression still reports;
 repeat the predicate and match the indexed expression, equate the underlying
 column when the expression is recognized, or cap the query.
+Each `OR` arm proves `col IS NOT NULL` from its own strict equality or `IN`.
+Another arm does not inherit that proof, and `IS NOT DISTINCT FROM` does not
+supply it.
 
 The [saved scalar-scope controls](../../test-cases/rules/postgres-bounded-statements/issue-3151-scopes/)
 cover unqualified and LATERAL correlation, partial-index predicates, CTE limits,
