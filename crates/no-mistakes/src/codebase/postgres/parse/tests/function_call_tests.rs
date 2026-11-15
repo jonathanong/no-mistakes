@@ -1,0 +1,132 @@
+use super::super::parse_postgres_sql;
+use sqlparser::ast::{
+    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgOperator,
+    FunctionArguments, JoinOperator, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
+};
+use std::ops::ControlFlow;
+
+fn fixture(name: &str) -> &'static str {
+    match name {
+        "statements" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/postgres-bounded-statements/issue-3397/statements.sql"
+        )),
+        "invalid" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/postgres-bounded-statements/issue-3397/parser/invalid-left-join.sql"
+        )),
+        _ => unreachable!(),
+    }
+}
+
+fn parsed(sql: &str) -> Vec<Statement> {
+    parse_postgres_sql(sql).unwrap_or_else(|error| panic!("{error}"))
+}
+
+fn select_of(statement: &Statement) -> &Select {
+    let Statement::Query(query) = statement else {
+        panic!("expected a query");
+    };
+    let SetExpr::Select(select) = query.body.as_ref() else {
+        panic!("expected a select");
+    };
+    select
+}
+
+fn projected_function(statement: &Statement) -> &Function {
+    let expr = match &select_of(statement).projection[0] {
+        SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => expr,
+        _ => panic!("expected an expression projection"),
+    };
+    let Expr::Function(function) = expr else {
+        panic!("expected a function call, got {expr}");
+    };
+    function
+}
+
+fn bare_name(function: &Function) -> String {
+    function.name.to_string()
+}
+
+struct NamedArguments {
+    arrow_secs: bool,
+    assignment_secs: bool,
+}
+
+impl Visitor for NamedArguments {
+    type Break = ();
+
+    fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<Self::Break> {
+        let Expr::Function(function) = expr else {
+            return ControlFlow::Continue(());
+        };
+        if !bare_name(function).eq_ignore_ascii_case("make_interval") {
+            return ControlFlow::Continue(());
+        }
+        let FunctionArguments::List(list) = &function.args else {
+            return ControlFlow::Continue(());
+        };
+        for arg in &list.args {
+            match arg {
+                FunctionArg::ExprNamed {
+                    name,
+                    operator: FunctionArgOperator::RightArrow,
+                    ..
+                } if expr_is_secs(name) => self.arrow_secs = true,
+                FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::BinaryOp {
+                    left,
+                    op: BinaryOperator::Assignment,
+                    ..
+                })) if expr_is_secs(left) => self.assignment_secs = true,
+                _ => {}
+            }
+        }
+        ControlFlow::Continue(())
+    }
+}
+
+fn expr_is_secs(expr: &Expr) -> bool {
+    match expr {
+        Expr::Identifier(ident) => ident.value.eq_ignore_ascii_case("secs"),
+        other => other.to_string().eq_ignore_ascii_case("secs"),
+    }
+}
+
+#[test]
+fn issue_3397_left_and_right_calls_stay_functions_and_joins_stay_joins() {
+    let statements = parsed(fixture("statements"));
+    assert_eq!(statements.len(), 8);
+    assert!(bare_name(projected_function(&statements[0])).eq_ignore_ascii_case("left"));
+    assert!(select_of(&statements[0]).from[0].joins.is_empty());
+    assert!(bare_name(projected_function(&statements[1])).eq_ignore_ascii_case("right"));
+    assert!(matches!(
+        select_of(&statements[6]).from[0].joins[0].join_operator,
+        JoinOperator::Left(_) | JoinOperator::LeftOuter(_)
+    ));
+    assert!(matches!(
+        select_of(&statements[7]).from[0].joins[0].join_operator,
+        JoinOperator::Right(_) | JoinOperator::RightOuter(_)
+    ));
+    let error = parse_postgres_sql(fixture("invalid")).expect_err("LEFT ( is a join keyword");
+    assert!(
+        error.message.contains("JOIN"),
+        "bare LEFT before a parenthesis stays a join keyword: {error}"
+    );
+}
+
+#[test]
+fn issue_3397_named_arguments_parse_inside_case() {
+    let statements = parsed(fixture("statements"));
+    let mut seen = NamedArguments {
+        arrow_secs: false,
+        assignment_secs: false,
+    };
+    for statement in &statements {
+        let _ = statement.visit(&mut seen);
+    }
+    assert!(seen.arrow_secs, "secs => value is a named argument");
+    assert!(
+        seen.assignment_secs,
+        "secs := value stays an assignment expression"
+    );
+}

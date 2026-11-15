@@ -1,0 +1,56 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "entries": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "title": { "dataType": "text", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "entries_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    },
+    "flows": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "provider": { "dataType": "text", "nullable": false },
+        "status": { "dataType": "text", "nullable": false },
+        "exchange_attempts": { "dataType": "integer", "nullable": false },
+        "callback_error": { "dataType": "text", "nullable": true },
+        "callback_received_at": { "dataType": "timestamptz", "nullable": true },
+        "updated_at": { "dataType": "timestamptz", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "flows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  }
+}

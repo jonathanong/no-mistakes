@@ -13,6 +13,7 @@ fn prepared_copy_source_keeps_lexical_errors_outside_copy_data() {
 
 mod derived_table_limit;
 mod fetch_expressions;
+mod function_call_tests;
 mod insert_table_only;
 mod multi_table_arms;
 mod table_boundaries;
