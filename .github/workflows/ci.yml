@@ -376,10 +376,10 @@ jobs:
         --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
         --exclude-path ^fixtures/
         README.md
-        docs/**/*.md
-        plugins/*/skills/**/*.md
-        packages/*/README.md
-        crates/*/README.md
+        'docs/**/*.md'
+        'plugins/*/skills/**/*.md'
+        'packages/*/README.md'
+        'crates/*/README.md'
         AGENTS.md
     steps:
       - name: Checkout

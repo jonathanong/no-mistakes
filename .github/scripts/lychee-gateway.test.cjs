@@ -27,6 +27,8 @@ test("documentation links retry the saved checker only for gateway failures", ()
   assert.match(job, /node \.github\/scripts\/lychee-gateway\.cjs/);
   assert.match(job, /args: \$\{\{ env\.LYCHEE_ARGS \}\}/);
   assert.match(job, /LYCHEE_ARGS:/);
+  assert.match(job, /'docs\/\*\*\/\*\.md'/);
+  assert.match(job, /'plugins\/\*\/skills\/\*\*\/\*\.md'/);
   assert.doesNotMatch(job, /--accept\b/);
 });
 
@@ -124,4 +126,16 @@ test("a gateway report without checker arguments is not retried", { skip: proces
   const result = run("gateway.md", { LYCHEE_ARGS: "" });
   assert.equal(result.status, 1);
   assert.equal(result.count, "");
+});
+
+test("a nested glob is not expanded by bash before lychee", { skip: process.platform === "win32" }, () => {
+  const pattern = path.join(saved, "nested/docs/**/*.md");
+  const result = run("gateway.md", {
+    LYCHEE_ARGS: `--no-progress ${pattern}`,
+    LYCHEE_FAKE_SUCCEED_ON: "1",
+  });
+  assert.equal(result.status, 0);
+  assert.equal(result.count, "1");
+  assert.match(result.argv, /nested\/docs\/\*\*\/\*\.md/);
+  assert.doesNotMatch(result.argv, /(?:top|mid|deep)\.md/);
 });

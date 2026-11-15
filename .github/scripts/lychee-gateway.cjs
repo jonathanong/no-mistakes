@@ -38,11 +38,12 @@ function readReport(reportPath) {
 }
 
 function rerun() {
+  // set -f: without globstar, bash rewrites docs/**/*.md to one directory level.
   const result = spawnSync(
     "bash",
     [
       "-c",
-      'eval "lychee --mode task --format markdown --output \\"$LYCHEE_REPORT\\" $LYCHEE_ARGS"',
+      'set -f; eval "lychee --mode task --format markdown --output \\"$LYCHEE_REPORT\\" $LYCHEE_ARGS"',
     ],
     { stdio: "inherit", env: process.env },
   );
