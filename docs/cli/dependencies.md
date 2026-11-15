@@ -82,8 +82,9 @@ import kinds, no `--symbols`).
 `roots`, `via`, `depth`, or `tsconfig_provenance`. It does not change which
 paths are walked. CLI `--format paths` remains the line-oriented listing.
 
-Without `--tsconfig`, the resolver automatically uses the config owning each
-importing file, including referenced workspace projects. `--tsconfig <FILE>`
+Without `--tsconfig`, the resolver uses the config that owns each importing
+file among the discovered configs; otherwise the root tsconfig. Referenced
+workspace projects that are discovered participate. `--tsconfig <FILE>`
 instead forces one config across the request; use it to reproduce a legacy
 single-config result or to debug an alias.
 

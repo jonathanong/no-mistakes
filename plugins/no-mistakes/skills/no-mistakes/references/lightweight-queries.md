@@ -110,7 +110,7 @@ is `resolved`, `external` (third-party/builtin/unknown package), or `unresolved`
 (a broken relative, aliased, or recognized workspace import). Workspace
 `exports`/`main` targets agree with dependency `workspace` edges; missing or blocked
 subpaths fail closed. Exits non-zero when any are unresolved. Omit `--tsconfig`
-for ordinary monorepo ownership; pass it only to force a resolver.
+to select the nearest tsconfig above the file; pass it only to force a resolver.
 
 ```bash
 no-mistakes resolve-check src/new-feature.test.ts --format json

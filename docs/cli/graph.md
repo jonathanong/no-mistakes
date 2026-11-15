@@ -4,11 +4,13 @@
 graph. They share root, tsconfig, depth, relationship, test, module, and output
 filters. Omitted `--format` is human when stdout is a terminal and JSON otherwise.
 
-When `--tsconfig` is omitted, graph commands select the TypeScript config that
-owns each importing file. This lets package-local aliases remain isolated while
-a traversal crosses workspace projects. Pass `--tsconfig <FILE>` only to force
-that one config for the entire request, for debugging or compatibility with an
-existing single-config workflow.
+When `--tsconfig` is omitted, graph commands select the config that owns each
+importing file among the discovered configs; otherwise the root tsconfig. A
+nested tsconfig that is not referenced and sits outside the workspace and
+runner roots is not in that catalog. This lets package-local aliases remain
+isolated while a traversal crosses workspace projects. Pass `--tsconfig <FILE>`
+only to force that one config for the entire request, for debugging or
+compatibility with an existing single-config workflow.
 
 | Need | Command |
 | --- | --- |

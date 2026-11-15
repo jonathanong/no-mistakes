@@ -68,8 +68,9 @@ facts are reused; each normalized graph or symbol-index plan is built at most
 once for its file universe. Distinct effective scopes are prepared independently.
 
 When a request omits `tsconfig`, TypeScript/JavaScript imports are resolved with
-the config that owns each importing file. Dependency graph and query APIs plus
-test planning use this behavior across referenced workspace projects. Set
+the config that owns each importing file among the discovered configs; otherwise
+the root tsconfig. Dependency graph and query APIs plus test planning use this
+behavior across referenced workspace projects that are discovered. Set
 `tsconfig` only to force that one config for the entire request; this preserves
 the previous single-config behavior for debugging and compatibility.
 

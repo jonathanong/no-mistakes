@@ -18,8 +18,10 @@ When a `tsconfig.json` is present, the binaries load `compilerOptions.paths` and
 ```
 
 **Automatic workspace resolution:** when `--tsconfig` is omitted, no-mistakes
-discovers visible workspace configs and selects the config that owns each
-importing source file. Referenced projects participate in ownership, and an
+selects the config that owns each importing source file among the discovered
+configs; otherwise the root tsconfig. A nested tsconfig that is not referenced
+and sits outside the workspace and runner roots is not discovered. Referenced
+projects that are discovered participate in ownership, and an
 import crossing a project boundary continues with the target file's own config.
 Conflicting aliases therefore do not leak between packages.
 

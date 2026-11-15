@@ -189,7 +189,8 @@ provide only a changed filename, or whose historical configuration cannot be
 reconstructed and parsed, conservatively retain the configured global fallback.
 
 For TypeScript and JavaScript workspaces, omitting `--tsconfig` resolves each
-import with the config that owns its importing file. A shared project change can
+import with the config that owns its importing file among the discovered
+configs; otherwise the root tsconfig. A shared project change can
 therefore select tests from every workspace that actually imports it, even when
 their path aliases conflict. Supplying `--tsconfig <FILE>` forces one config for
 the whole plan and is intended as a debugging or compatibility override.
