@@ -159,6 +159,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "FROM (SELECT status, id FROM flows WHERE status = 'pending') AS d(id, status)",
           "target": "table:entry_signals, table:flows"
+        },
+        {
+          "file": "group-by.sql",
+          "line": 92,
+          "message": "group-by.sql:92: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM flows flow",
+          "target": "table:flows"
         }
       ],
       "warnings": []

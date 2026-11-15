@@ -58,6 +58,8 @@ fn issue_3396_shapes_keep_their_negative_controls() {
             vec!["flows".to_string()],
             vec!["entry_signals".to_string(), "flows".to_string()],
             vec![],
+            vec!["flows".to_string()],
+            vec![],
         ]
     );
     assert_eq!(

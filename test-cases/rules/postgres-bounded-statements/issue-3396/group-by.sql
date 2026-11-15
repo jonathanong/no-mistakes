@@ -86,3 +86,15 @@ GROUP BY d.status;
 SELECT d.status
 FROM (SELECT status, id FROM flows WHERE status = 'pending') AS d(status, id)
 GROUP BY d.status;
+
+-- A set-returning DISTINCT ON can multiply the one group.
+SELECT DISTINCT ON (generate_series(1, 2)) flow.status
+FROM flows flow
+WHERE flow.status = 'pending'
+GROUP BY flow.status;
+
+-- DISTINCT ON of that same caller value is still one group.
+SELECT DISTINCT ON (flow.status) flow.status
+FROM flows flow
+WHERE flow.status = 'pending'
+GROUP BY flow.status;

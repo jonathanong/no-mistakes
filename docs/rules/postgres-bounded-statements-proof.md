@@ -160,8 +160,8 @@ set operation). A statement is bounded when any of these holds:
   grouped result cannot grow past that input. `ROLLUP`, `CUBE`, `GROUPING SETS`, and any
   other grouping modifier are not this proof, because they can add subtotal rows. An
   integer `GROUP BY` literal is an output ordinal, not a constant. A set-returning
-  function in the select list or in `ORDER BY` can multiply the grouped rows, so those
-  queries stay unbounded. `IN`, `ANY`, `OR`, and `IS NOT DISTINCT FROM` are not one caller
+  function in the select list, in `DISTINCT ON`, or in `ORDER BY` can multiply the grouped
+  rows, so those queries stay unbounded. `IN`, `ANY`, `OR`, and `IS NOT DISTINCT FROM` are not one caller
   value. A key that still comes from an unbounded item keeps that item reported.
   A positional alias list is the grouped name, so `d(id, status)` makes `GROUP BY d.status`
   follow the second output.

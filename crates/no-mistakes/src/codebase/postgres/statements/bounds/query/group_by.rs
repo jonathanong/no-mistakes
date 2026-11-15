@@ -29,6 +29,7 @@ pub(super) fn prove(
     if expressions.is_empty()
         || !modifiers.is_empty()
         || super::super::aggregate::projection_may_erase_input(select, scope)
+        || super::super::aggregate::distinct_on_expands(select)
     {
         return empty;
     }
