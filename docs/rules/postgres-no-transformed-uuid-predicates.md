@@ -137,6 +137,23 @@ LEFT JOIN c ON c.link = a.id
 WHERE num_nonnulls(COALESCE(a.id, b.id), c.id) = 1;
 ```
 
+Parentheses that group a join do not hide its null-extended side:
+
+```sql
+SELECT * FROM (a LEFT JOIN b ON b.link = a.id)
+WHERE num_nonnulls(a.id, b.id) = 1;
+```
+
+A grouped `RIGHT JOIN` or `FULL JOIN` uses the same classification, including
+when that join is nested inside another join. A grouped `INNER JOIN` has no
+null-extended side, so the same `num_nonnulls` comparison remains a finding.
+An independent driving predicate such as `a.id::text = $1` still reports when
+it is written next to the grouped outer join. An aliased join group, written
+`(a LEFT JOIN b ON b.link = a.id) AS pair`, stays unresolved and does not
+receive this residual classification until relation and column identity
+through the alias can be proven. A grouped join to a subquery keeps the
+finding on each catalog-resolved UUID column.
+
 The classification reason is `outer-join-residual-filter`: the rule cannot prove
 which table's access path the joined-row filter drives. Visible output follows
 the effective `unanalyzableSql` policy:

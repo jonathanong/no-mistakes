@@ -1,6 +1,23 @@
 use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 
 #[test]
+fn postgres_uuid_access_outer_grouped_check_json_snapshot() {
+    let rule = "postgres-no-transformed-uuid-predicates";
+    let cases = ["low", "max"].map(|effort| {
+        (
+            effort,
+            rules_path(rule, "fixture", "."),
+            rules_path(
+                rule,
+                "configs",
+                &format!("access-paths-outer-grouped-{effort}.yml"),
+            ),
+        )
+    });
+    assert_saved_fixture("postgres_uuid_access_outer_grouped", &cases);
+}
+
+#[test]
 fn postgres_uuid_access_paths_check_json_snapshot() {
     let rule = "postgres-no-transformed-uuid-predicates";
     for shape in [
