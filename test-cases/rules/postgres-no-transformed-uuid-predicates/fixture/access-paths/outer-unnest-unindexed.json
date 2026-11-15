@@ -1,0 +1,63 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "joined_a": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_b": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_c": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_d": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_e": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_f": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_g": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "joined_h": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

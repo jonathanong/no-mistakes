@@ -4,6 +4,7 @@ mod boolean;
 mod cast_sites;
 mod cte_scope;
 mod expressions;
+mod residual;
 mod scope;
 #[cfg(test)]
 mod tests;
@@ -65,6 +66,7 @@ impl Collector<'_, '_> {
     fn predicates(&mut self, tables: &[TableWithJoins], selection: Option<&Expr>, ctes: &[String]) {
         let anchors = anchors::collect(tables, selection, ctes, self.positions);
         if let Some(selection) = selection {
+            let start = self.out.len();
             expressions::collect(
                 selection,
                 Clause::Where,
@@ -74,6 +76,7 @@ impl Collector<'_, '_> {
                 self.tokens,
                 self.out,
             );
+            residual::mark(tables, selection, ctes, &mut self.out[start..]);
         }
         // ON sees preceding factors in its own join chain, never later joins.
         for table in tables {

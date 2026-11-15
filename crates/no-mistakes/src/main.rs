@@ -137,3 +137,7 @@ use dispatch::run_command;
 #[cfg(test)]
 #[path = "main/diagnostics_args_tests.rs"]
 mod diagnostics_args_tests;
+
+#[cfg(test)]
+#[path = "main/help_text_tests.rs"]
+mod help_text_tests;

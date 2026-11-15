@@ -98,7 +98,7 @@ impl Function {
 impl Import {
     pub fn matches(&self, site: &ResolvedCallSite) -> bool {
         !site.has_unknown_target()
-            && site.targets().len() > 0
+            && !site.targets().is_empty()
             && site
                 .targets()
                 .all(|candidate| self.matches_target(candidate.target))

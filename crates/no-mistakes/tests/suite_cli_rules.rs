@@ -301,3 +301,6 @@ mod cli_check_rules_test_no_live_repository_scan_context;
 mod cli_check_rules_test_no_live_repository_scan_issue_3286;
 #[path = "cli_check_rules_test_no_live_repository_scan_test_origins.rs"]
 mod cli_check_rules_test_no_live_repository_scan_test_origins;
+
+#[path = "cli_check_rules_test_no_live_repository_scan_issue_3354.rs"]
+mod cli_check_rules_test_no_live_repository_scan_issue_3354;

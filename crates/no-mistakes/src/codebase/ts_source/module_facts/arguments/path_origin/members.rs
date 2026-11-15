@@ -5,6 +5,8 @@ use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
 #[path = "disposable.rs"]
 mod disposable;
+#[path = "object_member.rs"]
+mod object_member;
 
 impl<'a> Projector<'a, '_> {
     pub(super) fn member_origin(
@@ -40,20 +42,8 @@ impl<'a> Projector<'a, '_> {
                 }
                 self.member_value(origin, object, key)
             }
-            Expression::ObjectExpression(object) => {
-                let mut value = None;
-                for property in &object.properties {
-                    let ObjectPropertyKind::ObjectProperty(property) = property else {
-                        return None;
-                    };
-                    if property.computed || property.method || property.kind != PropertyKind::Init {
-                        return None;
-                    }
-                    if crate::ast::property_key_name(&property.key).as_deref() == Some(key) {
-                        value = Some(&property.value);
-                    }
-                }
-                value.map(|value| self.origin(value, depth + 1))
+            Expression::ObjectExpression(literal) => {
+                self.object_member_origin(object, literal, key, depth)
             }
             Expression::StaticMemberExpression(_) => {
                 if !self.nested_reads_only(object) {

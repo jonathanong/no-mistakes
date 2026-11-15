@@ -1,7 +1,8 @@
-/// Output format shared across all no-mistakes tools.
+/// Output format shared across no-mistakes commands.
+/// Each command chooses its own default.
 #[derive(Debug, Clone, Copy, PartialEq, clap::ValueEnum)]
 pub enum Format {
-    /// JSON object. Default when stdout is not a TTY.
+    /// JSON object. Default is per command; `resolve_format` uses JSON when stdout is not a terminal.
     Json,
     /// Markdown nested bullet list.
     Md,
@@ -9,7 +10,7 @@ pub enum Format {
     Yml,
     /// One relative path per line (for shell `$()` substitution).
     Paths,
-    /// Indented tree (default on TTY).
+    /// Indented tree. Default is per command; `resolve_format` uses this on a terminal.
     Human,
 }
 

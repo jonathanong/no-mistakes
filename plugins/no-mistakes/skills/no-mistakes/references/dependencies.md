@@ -60,7 +60,7 @@ no-mistakes dependencies src/main.mts --root /path/to/project --filter 'backend/
 # Output as Markdown
 no-mistakes dependencies src/main.mts --root /path/to/project --format md
 
-# Force one tsconfig (omit it so each file uses its owning config)
+# Force one tsconfig (omit it to use the owning config among discovered configs, otherwise the root)
 no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfig.base.json
 ```
 
@@ -69,7 +69,7 @@ no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfi
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--root <PATH>` | cwd | Project root |
-| `--tsconfig <FILE>` | owning config | Force one tsconfig. Omit it so each file uses its owning config |
+| `--tsconfig <FILE>` | discovered config, else root | Force one tsconfig. Omit it to use the config that owns each file among the discovered configs; otherwise the root tsconfig |
 | `--depth <N>` | unlimited | Max traversal depth |
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR). Post-traversal. |
 | `--candidate-include <GLOB>` | all visible | Initial import-only inventory (repeatable, OR). Not `--filter`. |

@@ -18,7 +18,7 @@ Two things it does that reading the HTML report does not:
 2.  **A should-fire aggregate.** It counts trigger across every case except the
     `-neg-` slugs and the `neg-hard` flow, which are the cases where firing is
     the failure. That is the single number standing for "the description
-    carries the agent on its own". Every case runs `claude-opus-5`, so it is a
+    carries the agent on its own". Every case runs `claude-sonnet-5-5`, so it is a
     Claude number; Codex reads the same description but is never evaluated
     here (see `evals/HISTORY.md`, "Codex reads the same description").
 

@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+dependents.*--relationship|--relationship\s+python
+(?<![\w/.@-])no-mistakes\s+dependents\b(?:[^\n]|\\\n)*--relationship\s+python

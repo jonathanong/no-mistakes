@@ -1,0 +1,479 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 1,
+          "message": "access-paths/expression-positive.sql:1: WHERE applies cast to UUID column unindexed_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM unindexed_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "unindexed_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 10,
+          "message": "access-paths/expression-positive.sql:10: WHERE applies cast to UUID column trailing_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM trailing_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "trailing_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 11,
+          "message": "access-paths/expression-positive.sql:11: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::other_identity = ($1, $2, $3)::other_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 12,
+          "message": "access-paths/expression-positive.sql:12: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id, content_sha256, policy_revision)::item_identity)::text = $1;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 13,
+          "message": "access-paths/expression-positive.sql:13: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) || 'x' = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 14,
+          "message": "access-paths/expression-positive.sql:14: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) = label;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 15,
+          "message": "access-paths/expression-positive.sql:15: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items a JOIN items b ON b.id = a.id WHERE (a.post_id, b.content_sha256, a.policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 16,
+          "message": "access-paths/expression-positive.sql:16: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity <> ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 17,
+          "message": "access-paths/expression-positive.sql:17: WHERE applies cast to UUID columns paired_items.id, paired_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM paired_items a JOIN paired_items b ON b.id = a.id WHERE (a.post_id, b.id)::uuid_pair = ($1, $2)::uuid_pair;",
+          "target": "paired_items.id, paired_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 18,
+          "message": "access-paths/expression-positive.sql:18: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions f WHERE lower(f.id::text) || (SELECT CASE WHEN lower(f.id::text) = $1 THEN 'x' ELSE 'y' END) = $2;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 19,
+          "message": "access-paths/expression-positive.sql:19: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE (post_id)::uuid_single = $1::uuid_single;",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 2,
+          "message": "access-paths/expression-positive.sql:2: WHERE applies cast to UUID column different_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM different_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "different_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 20,
+          "message": "access-paths/expression-positive.sql:20: WHERE applies cast to UUID column quoted_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM quoted_row_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "quoted_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 21,
+          "message": "access-paths/expression-positive.sql:21: WHERE applies cast to UUID column qualified_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM qualified_row_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "qualified_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 22,
+          "message": "access-paths/expression-positive.sql:22: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 22:28 from access-paths/expression-positive.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(post_id, $1, $2)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 22,
+          "message": "access-paths/expression-positive.sql:22: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 22:87 from access-paths/expression-positive.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(post_id, $1, $2)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 23,
+          "message": "access-paths/expression-positive.sql:23: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = \"ROW\"($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 24,
+          "message": "access-paths/expression-positive.sql:24: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE NOT ((post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity);",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 25,
+          "message": "access-paths/expression-positive.sql:25: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE CASE WHEN (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity THEN true ELSE false END;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 26,
+          "message": "access-paths/expression-positive.sql:26: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 27,
+          "message": "access-paths/expression-positive.sql:27: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text || (SELECT 'x')) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 3,
+          "message": "access-paths/expression-positive.sql:3: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM swapped_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "swapped_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 4,
+          "message": "access-paths/expression-positive.sql:4: WHERE applies cast to UUID column invalid_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM invalid_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "invalid_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 5,
+          "message": "access-paths/expression-positive.sql:5: WHERE applies cast to UUID column unready_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM unready_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "unready_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 6,
+          "message": "access-paths/expression-positive.sql:6: WHERE applies cast to UUID column dead_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM dead_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "dead_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 7,
+          "message": "access-paths/expression-positive.sql:7: WHERE applies cast to UUID column hash_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM hash_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "hash_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 8,
+          "message": "access-paths/expression-positive.sql:8: WHERE applies cast to UUID column partial_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM partial_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "partial_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 9,
+          "message": "access-paths/expression-positive.sql:9: WHERE applies cast to UUID column opclass_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM opclass_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "opclass_items.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 1,
+          "message": "access-paths/expression-positive.sql:1: WHERE applies cast to UUID column unindexed_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM unindexed_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "unindexed_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 10,
+          "message": "access-paths/expression-positive.sql:10: WHERE applies cast to UUID column trailing_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM trailing_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "trailing_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 11,
+          "message": "access-paths/expression-positive.sql:11: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::other_identity = ($1, $2, $3)::other_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 12,
+          "message": "access-paths/expression-positive.sql:12: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE ((post_id, content_sha256, policy_revision)::item_identity)::text = $1;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 13,
+          "message": "access-paths/expression-positive.sql:13: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) || 'x' = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 14,
+          "message": "access-paths/expression-positive.sql:14: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) = label;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 15,
+          "message": "access-paths/expression-positive.sql:15: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items a JOIN items b ON b.id = a.id WHERE (a.post_id, b.content_sha256, a.policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 16,
+          "message": "access-paths/expression-positive.sql:16: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity <> ($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 17,
+          "message": "access-paths/expression-positive.sql:17: WHERE applies cast to UUID columns paired_items.id, paired_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM paired_items a JOIN paired_items b ON b.id = a.id WHERE (a.post_id, b.id)::uuid_pair = ($1, $2)::uuid_pair;",
+          "target": "paired_items.id, paired_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 18,
+          "message": "access-paths/expression-positive.sql:18: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions f WHERE lower(f.id::text) || (SELECT CASE WHEN lower(f.id::text) = $1 THEN 'x' ELSE 'y' END) = $2;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 19,
+          "message": "access-paths/expression-positive.sql:19: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE (post_id)::uuid_single = $1::uuid_single;",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 2,
+          "message": "access-paths/expression-positive.sql:2: WHERE applies cast to UUID column different_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM different_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "different_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 20,
+          "message": "access-paths/expression-positive.sql:20: WHERE applies cast to UUID column quoted_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM quoted_row_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "quoted_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 21,
+          "message": "access-paths/expression-positive.sql:21: WHERE applies cast to UUID column qualified_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM qualified_row_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "qualified_row_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 22,
+          "message": "access-paths/expression-positive.sql:22: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 22:28 from access-paths/expression-positive.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(post_id, $1, $2)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 22,
+          "message": "access-paths/expression-positive.sql:22: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics (expression at SQL 22:87 from access-paths/expression-positive.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = ROW(post_id, $1, $2)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 23,
+          "message": "access-paths/expression-positive.sql:23: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = \"ROW\"($1, $2, $3)::item_identity;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 24,
+          "message": "access-paths/expression-positive.sql:24: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE NOT ((post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity);",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 25,
+          "message": "access-paths/expression-positive.sql:25: WHERE applies cast to UUID column items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM items WHERE CASE WHEN (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity THEN true ELSE false END;",
+          "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 26,
+          "message": "access-paths/expression-positive.sql:26: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 27,
+          "message": "access-paths/expression-positive.sql:27: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(id::text || (SELECT 'x')) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 3,
+          "message": "access-paths/expression-positive.sql:3: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM swapped_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "swapped_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 4,
+          "message": "access-paths/expression-positive.sql:4: WHERE applies cast to UUID column invalid_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM invalid_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "invalid_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 5,
+          "message": "access-paths/expression-positive.sql:5: WHERE applies cast to UUID column unready_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM unready_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "unready_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 6,
+          "message": "access-paths/expression-positive.sql:6: WHERE applies cast to UUID column dead_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM dead_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "dead_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 7,
+          "message": "access-paths/expression-positive.sql:7: WHERE applies cast to UUID column hash_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM hash_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "hash_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 8,
+          "message": "access-paths/expression-positive.sql:8: WHERE applies cast to UUID column partial_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM partial_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "partial_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 9,
+          "message": "access-paths/expression-positive.sql:9: WHERE applies cast to UUID column opclass_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM opclass_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
+          "target": "opclass_items.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

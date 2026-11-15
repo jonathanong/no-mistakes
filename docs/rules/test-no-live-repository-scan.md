@@ -57,7 +57,8 @@ bounded:
   call wherever it lives.
 - Direct `import.meta.glob` and `import.meta.globEager` calls, including static
   bracket access such as `import.meta["glob"]`. Literal patterns are relative
-  to the module. Dynamic patterns and pattern arrays produce an unresolved-root
+  to the module; a `cwd` option does not relocate them or establish an owned root.
+  Dynamic patterns and pattern arrays produce an unresolved-root
   advisory when their boundedness cannot be established.
 
 The built-in matcher does not cover `fdir` builder chains or enumeration through
@@ -247,7 +248,25 @@ Provenance is syntactic. The rule follows `join`, `resolve`, `normalize`,
 `dirname`, `fileURLToPath`, `new URL(..., import.meta.url)`, `import.meta.dirname`,
 `__dirname`, `process.cwd()`, `tmpdir()`, `mkdtemp`, template literals, and
 immutable `const` aliases, including a `const` glob options object with a `cwd`.
-A relative literal glob pattern uses that bounded `cwd` proof. An unknown
+A `const` loop binding over a nonempty inline array of at most 16 string literals,
+optionally `as const`, preserves those alternatives in a derived path. Each entry
+must have at most 32 path components; longer entries remain unresolved. For example,
+`for (const name of ["a", "b"] as const) { readdirSync(join(root, name)); }`
+remains bounded when `root` is an owned temporary directory. Every alternative
+must stay within that root. A child that can escape through `..` or an absolute
+path, an unknown element, a spread, a mutable iterable, or reassignment of the
+loop binding keeps the finding.
+For unproven shapes, use direct literal child paths or separate direct calls
+whose roots the analysis can prove; a runtime validation helper does not establish
+this static proof.
+
+A relative literal glob pattern uses that bounded `cwd` proof for Node
+`fs`/`node:fs` glob functions and the supported glob packages, including
+`fast-glob`. This `cwd` is a glob option: passing `{ cwd: root }` to
+`readdirSync("./src", ...)` does not change its live relative root.
+The last `cwd` property wins: `{ ...options, cwd: root }` preserves the explicit
+owned root, while `{ cwd: root, ...options }` remains unresolved when the spread
+can replace it. An explicit later live `cwd` is reported too. An unknown
 pattern remains advisory even with an owned `cwd`: absolute glob patterns can
 ignore that directory. In `patterns.flatMap(pattern => globSync(pattern,
 { cwd: directory }))`, the callback parameter has no proven array-element
@@ -425,7 +444,12 @@ function keeps the finding.
 
 An object argument must expose the requested property in a literal object, without
 mutation or escape. A local `const` options object can carry that property into
-its single direct call. Keep the object inside the test callback that allocates
+its single direct call. An explicit property after a spread keeps its own
+provenance: `const options = { ...baseOptions, root }; scanMigrations(options)`
+can prove the helper's `options.root` when `root` is owned. Reversing the order to
+`{ root, ...baseOptions }` keeps the finding when that spread could replace
+`root`. Use a final explicit owned property or pass the root directly when the
+options are opaque. Keep the object inside the test callback that allocates
 it; mutation, another consumer, or sharing a carrier across test executions
 keeps the root unresolved. A direct env value captured inside the options object
 also stays unresolved; pass the proven root binding instead. For example:

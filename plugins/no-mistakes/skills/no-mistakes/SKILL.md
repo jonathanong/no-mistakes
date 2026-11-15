@@ -183,7 +183,8 @@ context, option propagation, and safe command execution.
   operation name) for `{ result, diagnostics }` with verbose observation and
   unchanged ordinary results. Errors may carry optional `.diagnostics`.
 - Pass `--root <workspace>` explicitly. In normal monorepos omit `--tsconfig`
-  so each importing file uses its owning config; pass a package tsconfig only
+  so each importing file uses the config that owns it among the discovered
+  configs; otherwise the root tsconfig. Pass a package tsconfig only
   to force one resolver for debugging or a deliberately scoped request.
 - Static literals produce the strongest results. `resolve-check` reports computed
   `import()` / `require()` specifiers as unresolved; graph traversal still skips

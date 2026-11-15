@@ -1,4 +1,83 @@
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
+
+#[test]
+fn postgres_uuid_access_paths_check_json_snapshot() {
+    let rule = "postgres-no-transformed-uuid-predicates";
+    for shape in [
+        "expression-pass",
+        "expression-positive",
+        "outer-residual",
+        "outer-residual-fail",
+        "outer-residual-ignore",
+        "outer-positive",
+        "embedded",
+    ] {
+        let cases = ["low", "max"].map(|effort| {
+            (
+                effort,
+                rules_path(rule, "fixture", "."),
+                rules_path(
+                    rule,
+                    "configs",
+                    &format!("access-paths-{shape}-{effort}.yml"),
+                ),
+            )
+        });
+        assert_saved_fixture(
+            &format!("postgres_uuid_access_{}", shape.replace('-', "_")),
+            &cases,
+        );
+    }
+}
+
+#[test]
+fn postgres_uuid_outer_unnest_policy_check_json_snapshot() {
+    let rule = "postgres-no-transformed-uuid-predicates";
+    for (mode, expected_advice, fails) in [
+        ("indexed", 1, false),
+        ("unindexed", 1, false),
+        ("ignore", 0, false),
+        ("default", 0, true),
+        ("fail", 0, true),
+    ] {
+        let cases = ["low", "max"].map(|effort| {
+            (
+                effort,
+                rules_path(rule, "fixture", "."),
+                rules_path(
+                    rule,
+                    "configs",
+                    &format!("access-paths-outer-unnest-{mode}-{effort}.yml"),
+                ),
+            )
+        });
+        let reports = assert_saved_fixture_report(
+            &format!("postgres_uuid_access_outer_unnest_{mode}"),
+            &cases,
+            &[],
+            &[],
+        );
+        for effort in ["low", "max"] {
+            let report = &reports[effort]["report"];
+            let rules = report["rules"].as_array().unwrap();
+            let advice = report["advisories"].as_array().unwrap();
+            assert_eq!(advice.len(), expected_advice, "{mode}/{effort}: {report}");
+            assert!(advice.iter().all(|finding| finding["message"]
+                .as_str()
+                .unwrap()
+                .contains("outer-join-residual-filter")));
+            if fails {
+                assert!(!rules.is_empty(), "{mode}/{effort}: {report}");
+                assert!(rules
+                    .iter()
+                    .all(|finding| finding["target"] == "unanalyzable"));
+            } else {
+                assert!(rules.is_empty(), "{mode}/{effort}: {report}");
+            }
+            assert_eq!(reports[effort]["exitCode"], i32::from(fails));
+        }
+    }
+}
 
 #[test]
 fn postgres_no_transformed_uuid_predicates_check_json_snapshot() {

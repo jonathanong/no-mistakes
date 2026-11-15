@@ -22,10 +22,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "anchored-left-join.sql",
           "line": 2,
-          "message": "anchored-left-join.sql:2: WHERE applies num_nonnulls to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "anchored-left-join.sql:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM accounts e LEFT JOIN accounts a ON a.id::text = e.email WHERE num_nonnulls(a.id, e.token) = 1;",
-          "target": "accounts.id, accounts.token"
+          "target": "unanalyzable"
         },
         {
           "file": "anchored-left-join.sql",
@@ -59,10 +59,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "anchored-left-join.sql",
           "line": 2,
-          "message": "anchored-left-join.sql:2: WHERE applies num_nonnulls to UUID columns accounts.id, accounts.token; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "anchored-left-join.sql:2: cannot determine whether this predicate transforms a UUID column; use statically recoverable SQL and an unambiguous catalog-backed column reference, or set unanalyzableSql: ignore",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM accounts e LEFT JOIN accounts a ON a.id::text = e.email WHERE num_nonnulls(a.id, e.token) = 1;",
-          "target": "accounts.id, accounts.token"
+          "target": "unanalyzable"
         },
         {
           "file": "anchored-left-join.sql",

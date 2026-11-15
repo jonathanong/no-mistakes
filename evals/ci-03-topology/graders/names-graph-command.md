@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+ci\s+topology(?![\w-])
+(?<![\w/.@-])no-mistakes\s+ci\s+topology(?![\w-])

@@ -1,0 +1,12 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: [access-paths/outer-unnest.mts, access-paths/outer-unnest-indexed.json]
+    options:
+      schemaCatalogPath: access-paths/outer-unnest-indexed.json
+      sqlInclude: ["access-paths/*.sql"]
+      importSpecifier: db
+      executorNames: [query]
+      unanalyzableSql: advise

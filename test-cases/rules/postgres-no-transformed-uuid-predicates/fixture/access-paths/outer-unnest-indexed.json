@@ -1,0 +1,175 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "joined_a": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_b": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_c": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_d": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_e": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_f": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_g": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "joined_h": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

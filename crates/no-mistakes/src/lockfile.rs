@@ -22,7 +22,7 @@ pub(crate) struct LockfileDiffArgs {
     /// Base git ref (e.g. main, HEAD~1).
     #[arg(long)]
     pub base: String,
-    /// Head git ref (defaults to HEAD).
+    /// Head git ref (defaults to the working-tree file).
     #[arg(long)]
     pub head: Option<String>,
     /// Path to lockfile (relative to root). Auto-detected if omitted.

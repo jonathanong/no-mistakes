@@ -1,0 +1,12 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: [access-paths/outer-positive.sql, access-paths/schema.json]
+    options:
+      schemaCatalogPath: access-paths/schema.json
+      sqlInclude: ["access-paths/*.sql"]
+      importSpecifier: db
+      executorNames: [query]
+      unanalyzableSql: advise

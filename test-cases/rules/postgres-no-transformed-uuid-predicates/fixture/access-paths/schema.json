@@ -1,0 +1,503 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        },
+        "sql_placeholder_1": {
+          "dataType": "text"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(ROW(post_id, content_sha256, policy_revision)::item_identity)"
+            }
+          ]
+        }
+      }
+    },
+    "unindexed_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "invalid_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": false,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "unready_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": false,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "dead_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": false,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "hash_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "hash",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "partial_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+            }
+          ],
+          "predicate": "policy_revision > 0"
+        }
+      }
+    },
+    "different_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::other_identity"
+            }
+          ]
+        }
+      }
+    },
+    "swapped_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, policy_revision, content_sha256)::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "opclass_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity",
+              "orderingSupported": false
+            }
+          ]
+        }
+      }
+    },
+    "trailing_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "column": "content_sha256",
+              "expression": "content_sha256"
+            },
+            {
+              "expression": "(post_id, content_sha256, policy_revision)::item_identity"
+            }
+          ]
+        }
+      }
+    },
+    "functions": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        },
+        "sql_placeholder_0": {
+          "dataType": "text"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text)"
+            }
+          ]
+        }
+      }
+    },
+    "a": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "link": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        }
+      }
+    },
+    "b": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "link": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        }
+      }
+    },
+    "c": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "link": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        }
+      }
+    },
+    "paired_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(post_id, id)::uuid_pair"
+            }
+          ]
+        }
+      }
+    },
+    "single_row_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(ROW(post_id)::uuid_single)"
+            }
+          ]
+        }
+      }
+    },
+    "quoted_row_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(\"ROW\"(post_id, content_sha256, policy_revision)::item_identity)"
+            }
+          ]
+        }
+      }
+    },
+    "qualified_row_items": {
+      "columns": {
+        "post_id": {
+          "dataType": "uuid"
+        },
+        "content_sha256": {
+          "dataType": "text"
+        },
+        "policy_revision": {
+          "dataType": "integer"
+        },
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "identity_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "(custom.row(post_id, content_sha256, policy_revision)::item_identity)"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
