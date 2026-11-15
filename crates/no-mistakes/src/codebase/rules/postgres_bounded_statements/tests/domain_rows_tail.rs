@@ -47,23 +47,18 @@ fn summary(cap: Option<u64>) -> BTreeMap<String, usize> {
 }
 
 #[test]
-fn unset_reports_each_tail_lookup() {
+fn unset_reports_the_consent_scan() {
+    // GROUP BY batch.id, with batch.id = $1, already bounds the joined rows.
     assert_eq!(
         summary(None),
-        BTreeMap::from([
-            ("report tail_consents".to_string(), 1),
-            ("report tail_import_rows".to_string(), 1),
-        ])
+        BTreeMap::from([("report tail_consents".to_string(), 1)])
     );
 }
 
 #[test]
-fn cap_5000_accepts_the_enum_suffix_and_the_joined_check_suffix() {
+fn cap_5000_accepts_the_enum_suffix() {
     assert_eq!(
         summary(Some(5000)),
-        BTreeMap::from([
-            ("accept tail_consents 3 5000".to_string(), 1),
-            ("accept tail_import_rows 500 5000".to_string(), 1),
-        ])
+        BTreeMap::from([("accept tail_consents 3 5000".to_string(), 1)])
     );
 }

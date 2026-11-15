@@ -16,7 +16,10 @@ pub(super) struct Inputs<'a> {
     pub credits: &'a [Option<super::keys::Credit>],
 }
 
-pub(super) fn finish(inputs: &Inputs<'_>, bounded: &mut [bool]) -> (bool, Vec<Offender>) {
+pub(super) fn finish(
+    inputs: &Inputs<'_>,
+    bounded: &mut [bool],
+) -> (bool, Vec<Offender>, Vec<super::accepts::DomainAccept>) {
     propagation::bound(inputs.keys, bounded);
     singleton::finish(inputs.query, inputs.catalog, inputs.keys, bounded);
     let offenders = reads::collect(
@@ -28,8 +31,18 @@ pub(super) fn finish(inputs: &Inputs<'_>, bounded: &mut [bool]) -> (bool, Vec<Of
         inputs.views,
         inputs.precise_columns,
     );
+    let accepts = super::accepts::collect(
+        inputs.query,
+        bounded,
+        inputs.credits,
+        inputs.nested,
+        inputs.pin_subqueries,
+        inputs.catalog,
+        inputs.views.domain_rows,
+    );
     (
         reads::row_capped(inputs.query, bounded) || bounded.iter().all(|state| *state),
         offenders,
+        accepts,
     )
 }

@@ -147,7 +147,7 @@ fn evaluate(
             prepared
         })
         .collect();
-    let (result_bounded, offenders) = settle::finish(
+    let (result_bounded, offenders, accepts) = settle::finish(
         &settle::Inputs {
             query,
             keys: &keys,
@@ -159,15 +159,6 @@ fn evaluate(
             credits: &credits,
         },
         &mut bounded,
-    );
-    let accepts = accepts::collect(
-        query,
-        &bounded,
-        &credits,
-        &nested,
-        &pin_subqueries,
-        catalog,
-        views.domain_rows,
     );
     target::project(
         query,

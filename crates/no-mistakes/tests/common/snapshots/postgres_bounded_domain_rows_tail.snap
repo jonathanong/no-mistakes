@@ -30,14 +30,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT id, user_id, consent_type, revoked_at FROM tail_consents WHERE user_id = $1 AND revoked_at IS NULL;",
           "target": "table:tail_consents"
-        },
-        {
-          "file": "sql/lookups.sql",
-          "line": 4,
-          "message": "sql/lookups.sql:4: SELECT can return every row of tail_import_rows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "LEFT JOIN tail_import_rows import_row ON import_row.batch_id = batch.id",
-          "target": "table:tail_import_rows"
         }
       ],
       "warnings": []
