@@ -1,4 +1,6 @@
+use super::expression::compatible;
 use super::*;
+use crate::codebase::postgres::embedded::helpers::{LiteralArg, SiteArg};
 
 pub(super) fn recover(
     visitor: &ScopeVisitor<'_>,
@@ -78,52 +80,77 @@ fn helper_values(
         return None;
     }
     let args = super::super::imported::clause_args(visitor, call)?;
-    let mut alternatives = vec![args];
+    let mut alternatives = vec![Expanded {
+        args,
+        choices: Vec::new(),
+    }];
     for (index, argument) in call.arguments.iter().enumerate() {
         let argument = argument.as_expression()?;
         let Some(values) = expression(visitor, argument, depth - 1) else {
             continue;
         };
-        let mut expanded = Vec::new();
-        for args in alternatives {
-            for value in &values {
-                if value.root.is_some() {
-                    return None;
-                }
-                let Node::Text(text) = &value.node else {
-                    return None;
-                };
-                let mut args = args.clone();
-                args[index] = crate::codebase::postgres::embedded::helpers::SiteArg::Literal(
-                    crate::codebase::postgres::embedded::helpers::LiteralArg {
-                        text: text.clone(),
-                        line: byte_offset_to_line(visitor.source, argument.span().start as usize),
-                        origin: argument.span().start,
-                    },
-                );
-                expanded.push(args);
-            }
-        }
-        if expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
-            return None;
-        }
-        alternatives = expanded;
+        alternatives = expand_argument(visitor, argument, index, alternatives, &values)?;
     }
-    let mut strings = Vec::new();
-    for args in alternatives {
-        strings.extend(visitor.functions.identifier_clause_values(name, &args)?);
-    }
-    Some(
-        strings
-            .into_iter()
-            .enumerate()
-            .map(|(i, (text, provenance))| Arm {
+    let mut arms = Vec::new();
+    for alternative in &alternatives {
+        for (text, provenance) in visitor
+            .functions
+            .identifier_clause_values(name, &alternative.args)?
+        {
+            let mut choices = alternative.choices.clone();
+            choices.push((call.span.start as u64 | (1 << 63), arms.len() as u32));
+            arms.push(Arm {
                 node: Node::Text(text),
-                choices: vec![(call.span.start as u64 | (1 << 63), i as u32)],
+                choices,
                 root: None,
                 provenance,
                 type_annotation: false,
-            })
-            .collect(),
-    )
+            });
+        }
+    }
+    Some(arms)
+}
+
+struct Expanded {
+    args: Vec<SiteArg>,
+    choices: Vec<(u64, u32)>,
+}
+
+fn expand_argument(
+    visitor: &ScopeVisitor<'_>,
+    argument: &Expression<'_>,
+    index: usize,
+    alternatives: Vec<Expanded>,
+    values: &[Arm],
+) -> Option<Vec<Expanded>> {
+    let mut expanded = Vec::new();
+    for alternative in &alternatives {
+        for value in values {
+            if value.root.is_some() {
+                return None;
+            }
+            let Node::Text(text) = &value.node else {
+                return None;
+            };
+            if !compatible(&alternative.choices, &value.choices) {
+                continue;
+            }
+            let mut args = alternative.args.clone();
+            args[index] = SiteArg::Literal(LiteralArg {
+                text: text.clone(),
+                line: byte_offset_to_line(visitor.source, argument.span().start as usize),
+                origin: argument.span().start,
+            });
+            let mut choices = alternative.choices.clone();
+            choices.extend(&value.choices);
+            expanded.push(Expanded { args, choices });
+        }
+    }
+    if expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
+        return None;
+    }
+    if !values.is_empty() && expanded.is_empty() {
+        return None;
+    }
+    Some(expanded)
 }

@@ -38,8 +38,11 @@ rules:
 
 At max effort, [closed identifier values](../postgres-facts/closed-identifiers.md)
 can expand raw SQL construction into at most 16 alternatives. Correlated record
-fields keep the same key choice. Each statement must independently satisfy its
-catalog/key bounds; one bounded variant does not exempt another unbounded one.
+fields keep the same key choice. A helper return keeps the choices of the
+arguments that selected it, so a record field and a helper selected by the same
+literal-union argument do not publish the cross pairs. Each statement must
+independently satisfy its catalog/key bounds; one bounded variant does not
+exempt another unbounded one.
 Unknown branches, mutation, escaped collections, or budget overflow retain the
 configured unanalyzable policy.
 

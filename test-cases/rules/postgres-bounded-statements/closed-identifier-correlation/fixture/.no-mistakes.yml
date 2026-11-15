@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include:
+      - query.ts
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      rawSqlTags:
+        - { module: "@example/raw-sql", name: sql }
+      unanalyzable: report
