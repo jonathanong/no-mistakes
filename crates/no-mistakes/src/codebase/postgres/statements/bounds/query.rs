@@ -65,8 +65,8 @@ fn bound_body_observed(
         bound.capped = capped;
     }
     let (limited, catalog_limit) = super::limit_columns::examine(query, scope, positions);
-    // Parentheses reuse this bound. An absent wrapper catalog column must not clear it.
-    if bound.catalog_limit.is_none() {
+    // Parentheses keep an inner catalog column. Credit a new one only when LIMIT bounds input.
+    if bound.catalog_limit.is_none() && limit_bounds_input(query, scope) {
         bound.catalog_limit = catalog_limit;
     }
     if is_zero_limited(query) {

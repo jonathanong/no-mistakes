@@ -21,7 +21,9 @@ set operation). A statement is bounded when any of these holds:
   whose every row is a non-null literal or bind. A reference column-alias list is
   not that proof. `ROLLUP`, `CUBE`, and `GROUPING SETS` can make a grouped column
   NULL. A set operation uses the left arm's output names, and a short alias list
-  renames only that prefix. Parentheses keep an inner catalog column.
+  renames only that prefix. Parentheses keep an inner catalog column. A
+projected set-returning function can emit no rows, so that `LIMIT` does not
+cap the scan even when the column is non-null.
   `GREATEST` ignores NULL arguments,
   so `GREATEST(col, 0)` is non-null; `COALESCE(col, 0)` and `LEAST` with a non-null
   literal are too. A column from the nullable side of a `LEFT`, `RIGHT`, or `FULL`

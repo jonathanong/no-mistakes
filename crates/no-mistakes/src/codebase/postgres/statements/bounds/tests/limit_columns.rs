@@ -176,7 +176,7 @@ fn parent_column_limits_cap_nested_queries_and_keep_rejected_counts() {
     let statements = parse_postgres_sql(sql).unwrap();
     let expected = [
         true, true, true, false, false, false, true, false, false, false, false, false, true, true,
-        false, false,
+        false, false, false,
     ];
     assert_eq!(statements.len(), expected.len());
     for (index, (statement, expected)) in statements.iter().zip(expected).enumerate() {
@@ -220,6 +220,7 @@ fn limit_column_review_keeps_null_limits_uncapped() {
         (false, None),
         (true, None),
         (true, None),
+        (false, None),
     ];
     assert_eq!(statements.len(), expected.len());
     for (index, (statement, (capped, catalog))) in statements.iter().zip(expected).enumerate() {

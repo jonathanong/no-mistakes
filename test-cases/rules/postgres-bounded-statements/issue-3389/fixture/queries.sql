@@ -128,3 +128,11 @@ CROSS JOIN LATERAL (
   LIMIT budgets.cap
 ) latest
 WHERE budgets.actor_id = $1;
+SELECT budgets.actor_id
+FROM budgets
+CROSS JOIN LATERAL (
+  SELECT generate_series(1, 0)
+  FROM consumptions
+  LIMIT budgets.cap
+) AS series
+WHERE budgets.actor_id = $1;

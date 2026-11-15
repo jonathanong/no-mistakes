@@ -17,3 +17,4 @@ SELECT q.id FROM budgets CROSS JOIN LATERAL (((SELECT id FROM probe LIMIT budget
 SELECT r.id FROM LATERAL (SELECT 1 AS n) d RIGHT JOIN (VALUES (NULL::int)) extra(n) ON true CROSS JOIN LATERAL (SELECT id FROM probe LIMIT d.n) r;
 SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM probe LIMIT f.row_limit::int) x;
 SELECT x.id FROM unnest($1::int[]) f(row_limit) CROSS JOIN LATERAL (SELECT id FROM (probe JOIN probe AS p2 ON true) LIMIT f.row_limit) x;
+SELECT q.n FROM budgets CROSS JOIN LATERAL (SELECT generate_series(1, 0) AS n FROM probe LIMIT budgets.cap) q;

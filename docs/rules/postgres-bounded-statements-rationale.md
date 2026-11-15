@@ -138,7 +138,8 @@ only when its value is provably non-null: a `NOT NULL` catalog column, a
 an expression such as `GREATEST(col, 0)` or `COALESCE(col, 0)`. `GREATEST`
 ignores NULL arguments, so the literal makes the result non-null. A renamed
 reference, a same-level non-`LATERAL` sibling, and a `ROLLUP`, `CUBE`, or
-`GROUPING SETS` column stay nullable. A nullable
+`GROUPING SETS` column stay nullable. A projected set-returning function can
+emit no rows, so the `LIMIT` does not cap that scan. A nullable
 column, a `NULL` parent value, and a column from the nullable side of a
 `LEFT`, `RIGHT`, or `FULL` join do not count. A potentially empty
 CTE or a `NULL` count cannot supply this proof: a missing scalar row becomes

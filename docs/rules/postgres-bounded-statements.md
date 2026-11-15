@@ -411,7 +411,9 @@ for a grouped column, so the column itself is not proof; a literal or
 `GREATEST`, `COALESCE`, or `LEAST` with a non-null argument still is. A set
 operation takes output names from its left arm. An alias list shorter than
 the output list renames that prefix and keeps the remaining names. Parentheses
-around a query do not drop an inner catalog column limit.
+around a query do not drop an inner catalog column limit. A projected
+set-returning function can emit no rows, so that `LIMIT` does not cap the
+scan, including when it names a non-null catalog column.
 
 ## Counterexample
 
