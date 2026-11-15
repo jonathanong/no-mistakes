@@ -53,6 +53,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 14,
+          "message": "access-paths/expression-parentheses-positive.sql:14: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(id::text || (label IS NULL)::text) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 15,
+          "message": "access-paths/expression-parentheses-positive.sql:15: WHERE applies cast to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE (id, (NOT label) = policy_revision)::item_identity = ($1, $2)::item_identity;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 16,
+          "message": "access-paths/expression-parentheses-positive.sql:16: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(id::text || (label BETWEEN 'a' AND 'z')) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
           "line": 2,
           "message": "access-paths/expression-parentheses-positive.sql:2: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -167,6 +191,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM items WHERE ((post_id), (content_sha256), (policy_revision))::other_identity = ($1, $2, $3)::other_identity;",
           "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 14,
+          "message": "access-paths/expression-parentheses-positive.sql:14: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(id::text || (label IS NULL)::text) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 15,
+          "message": "access-paths/expression-parentheses-positive.sql:15: WHERE applies cast to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE (id, (NOT label) = policy_revision)::item_identity = ($1, $2)::item_identity;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 16,
+          "message": "access-paths/expression-parentheses-positive.sql:16: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(id::text || (label BETWEEN 'a' AND 'z')) = $1;",
+          "target": "grouping_functions.id"
         },
         {
           "file": "access-paths/expression-parentheses-positive.sql",
