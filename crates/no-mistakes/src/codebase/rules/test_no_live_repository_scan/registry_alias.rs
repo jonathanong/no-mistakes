@@ -17,23 +17,13 @@ pub(super) fn function_node(
     object: &str,
     key: &str,
 ) -> Option<NodeId> {
-    let mut found = None;
-    for (file, local) in homes(graph, facts, site, object) {
-        let Some(ts) = facts.get_ts_facts(&file) else {
-            continue;
-        };
-        let Some(name) = terminal_alias(ts, &format!("{local}.{key}")) else {
-            continue;
-        };
-        let Some(node) = callable(graph, &file, ts, &name) else {
-            continue;
-        };
-        if found.is_some() {
-            return None;
-        }
-        found = Some(node);
-    }
-    found
+    homes(graph, facts, site, object)
+        .into_iter()
+        .find_map(|(file, local)| {
+            let ts = facts.get_ts_facts(&file)?;
+            let name = terminal_alias(ts, &format!("{local}.{key}"))?;
+            callable(graph, &file, ts, &name)
+        })
 }
 
 pub(super) fn registry_scans(
@@ -46,19 +36,28 @@ pub(super) fn registry_scans(
     homes(graph, facts, site, object)
         .into_iter()
         .any(|(file, local)| {
-            let Some(ts) = facts.get_ts_facts(&file) else {
-                return false;
-            };
-            let prefix = format!("{local}.");
-            ts.callable_aliases.iter().any(|alias| {
-                alias.scope_id.is_none()
-                    && alias.invalidated_at.is_none()
-                    && alias.local.starts_with(&prefix)
-                    && terminal_alias(ts, &alias.local)
-                        .and_then(|name| callable(graph, &file, ts, &name))
-                        .is_some_and(|node| reaches_scan(graph, enumerators, &node))
-            })
+            facts
+                .get_ts_facts(&file)
+                .is_some_and(|ts| scans_member(graph, ts, &file, &local, enumerators))
         })
+}
+
+fn scans_member(
+    graph: &DepGraph,
+    ts: &TsFileFacts,
+    file: &Path,
+    local: &str,
+    enumerators: &[Enumerator],
+) -> bool {
+    let prefix = format!("{local}.");
+    ts.callable_aliases.iter().any(|alias| {
+        alias.scope_id.is_none()
+            && alias.invalidated_at.is_none()
+            && alias.local.starts_with(&prefix)
+            && terminal_alias(ts, &alias.local)
+                .and_then(|name| callable(graph, file, ts, &name))
+                .is_some_and(|node| reaches_scan(graph, enumerators, &node))
+    })
 }
 
 fn reaches_scan(graph: &DepGraph, enumerators: &[Enumerator], node: &NodeId) -> bool {
@@ -76,62 +75,68 @@ fn homes(
     site: &ResolvedCallSite,
     object: &str,
 ) -> Vec<(PathBuf, String)> {
-    let mut homes = Vec::new();
-    let Some(caller) = facts.get_ts_facts(&site.file) else {
-        return homes;
-    };
+    facts
+        .get_ts_facts(&site.file)
+        .map(|caller| {
+            let mut found = Vec::new();
+            if local_registry(caller, object) {
+                found.push((site.file.clone(), object.to_string()));
+            }
+            if let Some(imported) = imported_name(caller, object) {
+                found.extend(
+                    direct_imports(graph, &site.file)
+                        .into_iter()
+                        .filter_map(|file| export_local(facts, &file, &imported)),
+                );
+            }
+            found
+        })
+        .unwrap_or_default()
+}
+
+fn local_registry(caller: &TsFileFacts, object: &str) -> bool {
     let prefix = format!("{object}.");
-    if caller.callable_aliases.iter().any(|alias| {
+    caller.callable_aliases.iter().any(|alias| {
         alias.scope_id.is_none()
             && alias.invalidated_at.is_none()
             && alias.local.starts_with(&prefix)
-    }) {
-        homes.push((site.file.clone(), object.to_string()));
-    }
-    let Some(imported) = caller.imported_bindings.iter().find(|binding| {
-        binding.local == object
-            && !binding.is_type_only
-            && binding.kind == ImportedBindingKind::Named
-    }) else {
-        return homes;
-    };
-    for file in direct_imports(graph, &site.file) {
-        let Some(home) = facts.get_ts_facts(&file) else {
-            continue;
-        };
-        let Some(local) = home
-            .exported_bindings
-            .iter()
-            .find(|export| export.exported == imported.imported && export.specifier.is_none())
-            .map(|export| export.local.clone())
-        else {
-            continue;
-        };
-        homes.push((file, local));
-    }
-    homes
+    })
+}
+
+fn imported_name(caller: &TsFileFacts, object: &str) -> Option<String> {
+    caller
+        .imported_bindings
+        .iter()
+        .find(|binding| {
+            binding.local == object
+                && !binding.is_type_only
+                && binding.kind == ImportedBindingKind::Named
+        })
+        .map(|binding| binding.imported.clone())
+}
+
+fn export_local(
+    facts: &dyn TsFactLookup,
+    file: &Path,
+    imported: &str,
+) -> Option<(PathBuf, String)> {
+    let home = facts.get_ts_facts(file)?;
+    home.exported_bindings.iter().find_map(|export| {
+        (export.exported == imported && export.specifier.is_none())
+            .then(|| (file.to_path_buf(), export.local.clone()))
+    })
 }
 
 fn terminal_alias(ts: &TsFileFacts, local: &str) -> Option<String> {
-    let mut name = local.to_string();
-    for _ in 0..8 {
-        let alias = ts.callable_aliases.iter().find(|alias| {
-            alias.scope_id.is_none() && alias.invalidated_at.is_none() && alias.local == name
-        })?;
-        if !alias.target.contains('.')
-            && ts
-                .callable_scope_ids
-                .iter()
-                .any(|(_, scope)| scope == &alias.target)
-        {
-            return Some(alias.target.clone());
-        }
-        if alias.target == name {
-            return None;
-        }
-        name = alias.target.clone();
-    }
-    None
+    let alias = ts.callable_aliases.iter().find(|alias| {
+        alias.scope_id.is_none() && alias.invalidated_at.is_none() && alias.local == local
+    })?;
+    (!alias.target.contains('.')
+        && ts
+            .callable_scope_ids
+            .iter()
+            .any(|(_, scope)| scope == &alias.target))
+    .then(|| alias.target.clone())
 }
 
 fn callable(graph: &DepGraph, file: &Path, ts: &TsFileFacts, name: &str) -> Option<NodeId> {
@@ -140,15 +145,9 @@ fn callable(graph: &DepGraph, file: &Path, ts: &TsFileFacts, name: &str) -> Opti
         .iter()
         .find(|(_, scope)| scope == name)
         .map(|(id, _)| *id)?;
-    Some(
-        graph
-            .resolved_call_sites()
-            .iter()
-            .find_map(|site| {
-                (site.file == file && site.caller_id == Some(id)).then(|| site_source_node(site))
-            })
-            .unwrap_or_else(|| NodeId::callable(file, name, id)),
-    )
+    graph.resolved_call_sites().iter().find_map(|site| {
+        (site.file == file && site.caller_id == Some(id)).then(|| site_source_node(site))
+    })
 }
 
 fn direct_imports(graph: &DepGraph, file: &Path) -> Vec<PathBuf> {

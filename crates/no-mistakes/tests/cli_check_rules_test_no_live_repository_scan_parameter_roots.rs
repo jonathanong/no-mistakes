@@ -93,6 +93,7 @@ fn caller_references_check_json_snapshot() {
         "registry-computed-dispatch",
         "registry-dispatch-only",
         "registry-dynamic-dispatch",
+        "registry-dynamic-local",
         "registry-reference",
         "registry-member",
         "registry-computed",
