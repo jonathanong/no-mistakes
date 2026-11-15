@@ -49,12 +49,19 @@ pub(super) fn append(
                         Some(value) => Some(value?),
                         None => None,
                     };
-                    let not_null = physical.as_deref().is_some_and(|physical| {
-                        table
-                            .columns
-                            .iter()
-                            .any(|column| column.name == physical && !column.nullable)
-                    });
+                    let implied = physical
+                        .is_none()
+                        .then(|| super::implied::source_column(expression, table))
+                        .flatten();
+                    let not_null = physical
+                        .as_deref()
+                        .or(implied.as_deref())
+                        .is_some_and(|name| {
+                            table
+                                .columns
+                                .iter()
+                                .any(|column| column.name == name && !column.nullable)
+                        });
                     let matching = item
                         .pins
                         .iter()
@@ -62,7 +69,12 @@ pub(super) fn append(
                         .filter_map(|(pin, source)| {
                             let matches = match &visible {
                                 Some(visible) => pin.expression.is_none() && pin.column == *visible,
-                                None => pin.expression.as_ref() == Some(expression),
+                                None => {
+                                    pin.expression.as_ref() == Some(expression)
+                                        || implied.as_ref().is_some_and(|column| {
+                                            pin.expression.is_none() && &pin.column == column
+                                        })
+                                }
                             };
                             (matches
                                 && (!pin.unqualified_candidate

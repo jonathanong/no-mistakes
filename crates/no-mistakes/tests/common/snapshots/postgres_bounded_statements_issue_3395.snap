@@ -1,0 +1,154 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "issue_3395": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "statements.sql",
+          "line": 24,
+          "message": "statements.sql:24: SELECT can return every row of actors; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM actors WHERE username IS NOT DISTINCT FROM $1;",
+          "target": "table:actors"
+        },
+        {
+          "file": "statements.sql",
+          "line": 26,
+          "message": "statements.sql:26: SELECT can return every row of actors; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM actors WHERE lower(username) = $1;",
+          "target": "table:actors"
+        },
+        {
+          "file": "statements.sql",
+          "line": 28,
+          "message": "statements.sql:28: SELECT can return every row of raw_names; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT name FROM raw_names WHERE lower(name) = $1;",
+          "target": "table:raw_names"
+        },
+        {
+          "file": "statements.sql",
+          "line": 30,
+          "message": "statements.sql:30: SELECT can return every row of sized; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT name FROM sized WHERE name = $1;",
+          "target": "table:sized"
+        },
+        {
+          "file": "statements.sql",
+          "line": 32,
+          "message": "statements.sql:32: SELECT can return every row of active_names; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT username FROM active_names WHERE username = $1;",
+          "target": "table:active_names"
+        },
+        {
+          "file": "statements.sql",
+          "line": 34,
+          "message": "statements.sql:34: SELECT can return every row of strict_names; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT username FROM strict_names WHERE username = $1;",
+          "target": "table:strict_names"
+        },
+        {
+          "file": "statements.sql",
+          "line": 36,
+          "message": "statements.sql:36: SELECT can return every row of trimmed; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT name FROM trimmed WHERE name = $1;",
+          "target": "table:trimmed"
+        },
+        {
+          "file": "statements.sql",
+          "line": 38,
+          "message": "statements.sql:38: SELECT can return every row of quoted_names; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT name FROM quoted_names WHERE name = $1;",
+          "target": "table:quoted_names"
+        },
+        {
+          "file": "statements.sql",
+          "line": 40,
+          "message": "statements.sql:40: SELECT can return every row of custom_names; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT name FROM custom_names WHERE name = $1;",
+          "target": "table:custom_names"
+        },
+        {
+          "file": "statements.sql",
+          "line": 42,
+          "message": "statements.sql:42: SELECT can return every row of codes; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT code FROM codes WHERE code = $1;",
+          "target": "table:codes"
+        },
+        {
+          "file": "statements.sql",
+          "line": 44,
+          "message": "statements.sql:44: SELECT can return every row of token_text; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT token FROM token_text WHERE token = $1;",
+          "target": "table:token_text"
+        },
+        {
+          "file": "statements.sql",
+          "line": 46,
+          "message": "statements.sql:46: SELECT can return every row of memberships; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT tenant_id FROM memberships WHERE tenant_id = $1;",
+          "target": "table:memberships"
+        },
+        {
+          "file": "statements.sql",
+          "line": 47,
+          "message": "statements.sql:47: SELECT can return every row of memberships; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT email FROM memberships WHERE email = $1;",
+          "target": "table:memberships"
+        },
+        {
+          "file": "statements.sql",
+          "line": 49,
+          "message": "statements.sql:49: SELECT can return every row of wrapped; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT name FROM wrapped WHERE name = $1;",
+          "target": "table:wrapped"
+        },
+        {
+          "file": "statements.sql",
+          "line": 51,
+          "message": "statements.sql:51: SELECT can return every row of labels; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT label FROM labels AS renamed(label) WHERE label = $1;",
+          "target": "table:labels"
+        },
+        {
+          "file": "statements.sql",
+          "line": 53,
+          "message": "statements.sql:53: SELECT can return every row of directories; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of normalized; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT 1 FROM directories AS d JOIN normalized AS e ON e.email = d.email;",
+          "target": "table:directories, table:normalized"
+        },
+        {
+          "file": "statements.sql",
+          "line": 55,
+          "message": "statements.sql:55: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT span FROM spans WHERE span = $1;",
+          "target": "table:spans"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -4,6 +4,7 @@ use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlP
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 use std::collections::BTreeMap;
 mod domains;
+mod implied;
 mod indexes;
 pub(super) use domains::{output_domains, prepare as finite_domains, Domains};
 mod view;

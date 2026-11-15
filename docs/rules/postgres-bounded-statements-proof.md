@@ -231,14 +231,35 @@ Every key element must have a finite pin. Supported index shapes include:
 - Plain columns, including all columns of a composite key.
 - Expression keys when the statement equates the same expression to a value or
   a bounded relation's value: `lower(t.name) = $1` matches `UNIQUE (lower(name))`.
-  Relation aliases are resolved before matching; changed expressions or casts
-  do not inherit the original expression's uniqueness.
+  Relation aliases are resolved before matching. A changed expression does not
+  inherit another expression's uniqueness.
+  Raw equality on a column also fixes an allowlisted function of that column.
+  Equal inputs produce one result, so a unique index on the function admits at
+  most one row. Recognized functions are unquoted `lower`, `upper`, and
+  one-argument `btrim`, unqualified or `pg_catalog`-qualified. The column's
+  catalog type must be `text`, `varchar`, `character varying`, or `char varying`.
+  `lower` and `upper` of a range are different functions: a non-null empty or
+  unbounded range can have a null bound, and a unique index still admits many
+  null keys.
+  `username = $1` matches `UNIQUE (lower(username))`. The reverse does not:
+  `lower(col) = $1` against a unique index on raw `col` can match many inputs.
+  A cast of one bare column is recognized when the catalog column type and the
+  cast target share an equality family. The families are `text`, `varchar`,
+  `character varying`, and `char varying`; `smallint`, `integer`, `bigint`,
+  `int2`, `int4`, and `int8`; `uuid` with `uuid`; `boolean` with `bool`.
+  Length and precision modifiers stay in the family. `char`, `character`,
+  `numeric`, floats, timestamps, and a cast into another family (`uuid::text`)
+  do not. Quoted names, other schemas, extra arguments, and an argument that
+  is not a bare column stay unrecognized.
 - Partial indexes when every predicate conjunct is proven for that relation's
   scan. For `UNIQUE (community_id, user_id) WHERE removed_at IS NULL`, both keys
   and `removed_at IS NULL` must appear in applicable `AND` conjuncts. Reordered
-  conjuncts are accepted. Strict equality `col = $1` also implies `col IS NOT NULL`.
+  conjuncts are accepted. Strict equality `col = $1` also implies `col IS NOT NULL`
+  on that same column, so `username = $1` proves
+  `UNIQUE (lower(username)) WHERE username IS NOT NULL`.
   A function expression's equality does not prove its argument non-null, so
-  `UNIQUE (lower(username)) WHERE username IS NOT NULL` needs that explicit guard.
+  `lower(username) = $1` still needs `username IS NOT NULL` written in the query.
+  Raw equality does not prove `f(col) IS NOT NULL` or a predicate on another column.
   A predicate present only in an `OR` alternative, or an outer join's `ON` for
   the preserved side, does not establish the scan's predicate. Positional column
   alias lists keep expression/partial-index proofs conservative.
@@ -257,7 +278,7 @@ These do not prove one row:
   catalog text to a query does not establish uniqueness.
 - An invalid or not-ready index (a failed concurrent build), or a deferrable
   constraint, which may hold duplicates inside a transaction.
-- Column equality used in place of an expression key.
+- Column equality used in place of an expression key the allowlist does not recognize.
 - An index whose operator class or collation is not the column's default (the
   catalog's `orderingSupported` is false), because its equality may differ.
 - Only part of a composite key.
