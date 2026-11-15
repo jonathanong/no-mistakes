@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
+const { createHash } = require("node:crypto");
 const { mkdirSync, mkdtempSync, readFileSync, symlinkSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const path = require("node:path");
@@ -29,7 +30,39 @@ test("documentation links retry the saved checker only for gateway failures", ()
   assert.match(job, /LYCHEE_ARGS:/);
   assert.match(job, /'docs\/\*\*\/\*\.md'/);
   assert.match(job, /'plugins\/\*\/skills\/\*\*\/\*\.md'/);
+  assert.match(job, /--exclude-path 'docs\/performance\/2238\/39488578982\/\(README\|tables\)\\.md\$'/);
   assert.doesNotMatch(job, /--accept\b/);
+  const guide = readFileSync(path.join(root, "docs/README.md"), "utf8");
+  assert.match(guide, /--exclude-path 'docs\/performance\/2238\/39488578982\/\(README\|tables\)\\.md\$'/);
+});
+
+test("hash-locked arm notes keep their recorded actions url", () => {
+  const dir = path.join(root, "docs/performance/2238/39488578982");
+  const checksums = JSON.parse(readFileSync(path.join(dir, "checksums.json"), "utf8"));
+  for (const name of ["README.md", "tables.md"]) {
+    const bytes = readFileSync(path.join(dir, name));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), checksums[name]);
+    assert.match(bytes.toString("utf8"), /actions\/runs\/39488578982/);
+  }
+});
+
+test("narrative performance notes name expired actions runs without linking them", () => {
+  const notes = [
+    "docs/performance/2238/shepherd-follow-up.md",
+    "docs/performance/receiver-native-hosted-evidence-2012/README.md",
+  ];
+  for (const note of notes) {
+    const text = readFileSync(path.join(root, note), "utf8");
+    assert.doesNotMatch(text, /actions\/runs\//);
+  }
+  const followUp = readFileSync(path.join(root, "docs/performance/2238/shepherd-follow-up.md"), "utf8");
+  assert.match(followUp, /39495941623/);
+  assert.match(followUp, /39511999832/);
+  const receiver = readFileSync(
+    path.join(root, "docs/performance/receiver-native-hosted-evidence-2012/README.md"),
+    "utf8",
+  );
+  assert.match(receiver, /38654992458/);
 });
 
 function optionalRead(file) {

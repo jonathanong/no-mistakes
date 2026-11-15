@@ -2,7 +2,7 @@
 
 # Hosted historical receiver evidence preservation
 
-Refs #1972 and #2012. This package preserves the exact readable artifact from [run 38654992458](https://github.com/jonathanong/no-mistakes/actions/runs/38654992458), experiment source `b1a348178fe3282663b7198e08f36bdcd60817e1`. It compares historical `57c927df4c09f450f67248277d49070f9576ba3b` against `8d81aa148eb2e62773919a290dd21439a1616f42`, not current main or the merged integration comparison.
+Refs #1972 and #2012. This package preserves the exact readable artifact from run 38654992458. GitHub no longer serves that Actions page. Experiment source `b1a348178fe3282663b7198e08f36bdcd60817e1`. It compares historical `57c927df4c09f450f67248277d49070f9576ba3b` against `8d81aa148eb2e62773919a290dd21439a1616f42`, not current main or the merged integration comparison.
 
 The artifact ZIP is retained privately byte for byte: 21,798 bytes, SHA-256 `3848786698e7834b61b1a40fcf32450d4710c5e0918d8b87fee8619df2ece808`. Its API expiry is 2026-10-21T23:35:14Z. The public copy contains only the 17 original readable JSON/Markdown files, including the checksum manifest; no ZIP, executables, libraries, raw build/cache logs or profiler payloads. All 16 manifest entries match their exact byte counts and SHA-256 hashes. No source measurement record was transformed.
 
