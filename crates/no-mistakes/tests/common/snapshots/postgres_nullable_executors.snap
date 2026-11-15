@@ -242,6 +242,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "items"
         },
         {
+          "file": "optional-query.ts",
+          "import": "items.account_id",
+          "line": 17,
+          "message": "optional-query.ts:17: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await opened?.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "optional-query.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "optional-query.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client?.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
           "file": "pool-subpath.ts",
           "import": "items.account_id",
           "line": 8,
@@ -637,6 +655,126 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
             360
           ],
           "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            301,
+            356
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            368,
+            445
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            599,
+            654
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            666,
+            743
+          ],
+          "status": "proven-clear",
           "subcheck": "relation:items:column:account_id"
         },
         {
@@ -2058,6 +2196,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "items"
         },
         {
+          "file": "optional-query.ts",
+          "import": "items.account_id",
+          "line": 17,
+          "message": "optional-query.ts:17: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await opened?.query('UPDATE items SET a=2 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
+          "file": "optional-query.ts",
+          "import": "items.account_id",
+          "line": 9,
+          "message": "optional-query.ts:9: UPDATE on items does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "await client?.query('UPDATE items SET a=1 WHERE id=$1', [id]);",
+          "target": "items"
+        },
+        {
           "file": "pool-subpath.ts",
           "import": "items.account_id",
           "line": 8,
@@ -2453,6 +2609,126 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
             360
           ],
           "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            301,
+            356
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            368,
+            445
+          ],
+          "status": "proven-clear",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            599,
+            654
+          ],
+          "status": "violation",
+          "subcheck": "relation:items:column:account_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "optional-query.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "Execute",
+              "Pool",
+              "PoolClient"
+            ],
+            "importSpecifier": "db-lib",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            666,
+            743
+          ],
+          "status": "proven-clear",
           "subcheck": "relation:items:column:account_id"
         },
         {

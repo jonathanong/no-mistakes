@@ -28,6 +28,7 @@ fn collect_prepared(
             let types = declared_types.get(profile).map_or(&[][..], Vec::as_slice);
             let (typed, unsupported, runtime, transports) =
                 typed::collect(program, module, profile, &selection, types);
+            // Same `let` text preflight as `scoped_bindings::collect`.
             if !profile.executor_type_names.is_empty() && source.contains("let") {
                 let scoped = scopes.entry(profile.clone()).or_insert_with(|| {
                     super::super::embedded::scoped_bindings::collect(program, profile)
