@@ -40,6 +40,12 @@ fn partial_unique_indexes_prove_only_implied_predicates() {
             .map(|enum_type| enum_type.values.clone()),
         Some(vec!["direct".to_string(), "family".to_string()])
     );
+    assert_eq!(
+        catalog
+            .enum_type("\"SourceKinds\"")
+            .map(|enum_type| enum_type.values.clone()),
+        Some(vec!["direct".to_string(), "family".to_string()])
+    );
     for (name, expected) in [
         ("flows-in.sql", &[0][..]),
         ("flows-written.sql", &[0]),
@@ -54,7 +60,8 @@ fn partial_unique_indexes_prove_only_implied_predicates() {
         ("bindings-enum-both.sql", &[0]),
         ("bindings-enum-join.sql", &[1, 0]),
         ("casts-pass.sql", &[0, 0, 0, 0, 0, 0]),
-        ("casts-report.sql", &[1, 1, 1, 1, 1, 1]),
+        ("casts-report.sql", &[1, 1, 1, 1, 1, 1, 1]),
+        ("quoted-enum.sql", &[0, 1]),
         ("controls.sql", &[0, 0]),
         ("wider-in.sql", &[1]),
         ("narrower-in.sql", &[1]),

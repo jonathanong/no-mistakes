@@ -5,6 +5,9 @@
   "enums": {
     "source_kinds": {
       "values": ["direct", "family"]
+    },
+    "\"SourceKinds\"": {
+      "values": ["direct", "family"]
     }
   },
   "tables": {
@@ -221,6 +224,44 @@
           "predicate": null,
           "definition": "CREATE UNIQUE INDEX notes_pkey ON notes (id)",
           "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    },
+    "quoted_kinds": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "lineage_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "kind": { "dataType": "\"SourceKinds\"", "ordinalPosition": 3 },
+        "released_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "quoted_kinds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX quoted_kinds_pkey ON quoted_kinds (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "quoted_kinds_direct": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((released_at IS NULL) AND (kind = 'direct'::\"SourceKinds\"))",
+          "definition": "CREATE UNIQUE INDEX quoted_kinds_direct ON quoted_kinds (lineage_id) WHERE released_at IS NULL AND kind = 'direct'::\"SourceKinds\"",
+          "keys": [{ "column": "lineage_id", "expression": "lineage_id" }]
         }
       }
     }

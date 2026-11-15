@@ -303,11 +303,16 @@ Every key element must have a finite pin. Supported index shapes include:
   proofs conservative.
   A conjunct holds when the same alternative contains the same shape: `col IS NULL`;
   `col = literal`; or `col IN (literals)` with the same set of literals. A cast
-  stays on the literal unless it preserves the value: `text`, `boolean`, unlimited
+  stays on the literal only when it preserves the value: `text`, `boolean`, unlimited
   `varchar` / `character varying`, `varchar(n)` when every character fits, and a
-  catalog enum whose label is the literal. The same rule applies to an array cast
-  around `ANY (ARRAY[...])`. `varchar(n)` that truncates, `char(n)`, and any other
-  cast stay unrecognized, so `'pending'::varchar(3)` does not match `'pending'`.
+  catalog enum whose label is the literal. A quoted enum name keeps its case, so
+  `'direct'::"SourceKinds"` matches the catalog key `"SourceKinds"`.
+  `ANY (ARRAY[...]::type[])` applies that rule to each element.
+  A scalar cast to an array type drops the literal, including
+  `('pending'::text[])::text`, which PostgreSQL evaluates to `{pending}`.
+  `varchar(n)` that truncates, `char(n)`, a cast of an array constructor to a
+  scalar or to more than one array dimension, and any other cast stay unrecognized,
+  so `'pending'::varchar(3)` does not match `'pending'`.
   PostgreSQL stores that list as `col = ANY (ARRAY[...])`,
   and the two spellings match. A longer list, a shorter list, or `col = one-literal`
   does not match a multi-value list. A bare parameter does not match a literal.
@@ -338,7 +343,8 @@ These do not prove one row:
 - A partial unique index whose predicate is absent or only partly established.
   That includes a different `IN` or `ANY` literal set, a parameter standing
   in for a literal, and a cast that can change the literal
-  (`'pending'::varchar(3)`, including the same cast on an array).
+  (`'pending'::varchar(3)`, the same cast on an array, and
+  `('pending'::text[])::text`).
 - An enum label whose proving index is pinned only by an unbounded relation.
 - A catalog index with a placeholder anywhere in its parsed key or predicate.
   PostgreSQL index definitions cannot depend on query parameters; matching malformed

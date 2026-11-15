@@ -517,7 +517,10 @@ unquoted `upper` and one-argument `btrim`, unqualified or `pg_catalog`-qualified
 `coalesce`, `IS NOT DISTINCT FROM`, a quoted name, and another schema do not.
 A literal cast counts only when it preserves the value
 (`text`, `boolean`, unlimited `varchar`, `varchar(n)` that fits, or a catalog
-enum label), so `'pending'::varchar(3)` does not match `'pending'`.
+enum label, including a quoted mixed-case enum name). An array constructor
+cast such as `ARRAY['pending', 'ready']::text[]` uses that rule on each element.
+A scalar cast through an array type does not, so `'pending'::varchar(3)` and
+`('pending'::text[])::text` do not match `'pending'`.
 Raw equality also fixes a recognized function of that column: `username = $1`
 matches `UNIQUE (lower(username))` for unquoted `lower`, `upper`, and
 one-argument `btrim` when the column type is `text` or `varchar`. Range

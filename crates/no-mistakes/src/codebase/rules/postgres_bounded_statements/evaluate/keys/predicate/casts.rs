@@ -1,14 +1,12 @@
 //! A cast matches a partial-index literal only when the value cannot change.
 use super::shape::Lit;
-use crate::codebase::postgres::idents::object_name_key;
+use crate::codebase::postgres::idents::object_name_identity;
 use crate::codebase::postgres::SchemaCatalog;
-use sqlparser::ast::{ArrayElemTypeDef, CharLengthUnits, CharacterLength, DataType, ObjectName};
+use sqlparser::ast::{CharLengthUnits, CharacterLength, DataType, ObjectName};
 
 pub(super) fn preserves(data_type: &DataType, lit: &Lit, catalog: &SchemaCatalog) -> bool {
     match data_type {
-        DataType::Array(
-            ArrayElemTypeDef::SquareBracket(inner, _) | ArrayElemTypeDef::Qualified(inner, _),
-        ) => preserves(inner, lit, catalog),
+        DataType::Array(_) => false,
         DataType::Text => matches!(lit, Lit::Str(_)),
         DataType::Boolean => matches!(lit, Lit::Bool(_)),
         DataType::Varchar(length)
@@ -50,7 +48,7 @@ fn enum_label(name: &ObjectName, lit: &Lit, catalog: &SchemaCatalog) -> bool {
         return false;
     };
     catalog
-        .enum_type(&object_name_key(name))
+        .enum_type(&object_name_identity(name))
         .is_some_and(|enum_type| enum_type.values.iter().any(|label| label == text))
 }
 

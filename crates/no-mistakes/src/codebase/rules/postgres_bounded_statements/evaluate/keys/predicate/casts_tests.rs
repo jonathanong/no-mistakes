@@ -40,6 +40,12 @@ fn value_preserving_casts_keep_the_literal() {
     assert!(atom(&parsed("status = 'pending'::char(7)"), &catalog).is_none());
     assert!(atom(&parsed("status = true::varchar"), &catalog).is_none());
     assert!(atom(&parsed("kind = true::source_kinds"), &catalog).is_none());
+    assert!(atom(&parsed("status = ('pending'::text[])::text"), &catalog).is_none());
+    assert_eq!(
+        atom(&parsed("kind = 'direct'::\"SourceKinds\""), &catalog),
+        Some(Atom::Eq("kind".to_owned(), Lit::Str("direct".to_owned())))
+    );
+    assert!(atom(&parsed("kind = 'nope'::\"SourceKinds\""), &catalog).is_none());
     assert!(membership(
         &parsed("status = ANY (ARRAY['pending', 'ready']::text[])"),
         &catalog
@@ -50,6 +56,12 @@ fn value_preserving_casts_keep_the_literal() {
         &catalog
     )
     .is_none());
+    assert!(membership(
+        &parsed("status = ANY (ARRAY['pending', 'ready']::text[][])"),
+        &catalog
+    )
+    .is_none());
+    assert!(membership(&parsed("status = ANY (ARRAY['pending']::text)"), &catalog).is_none());
     assert!(preserves(
         &DataType::Varchar(Some(CharacterLength::Max)),
         &Lit::Str("ready".to_owned()),

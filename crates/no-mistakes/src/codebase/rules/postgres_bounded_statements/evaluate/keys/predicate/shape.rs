@@ -2,7 +2,7 @@
 use super::casts::preserves;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::SchemaCatalog;
-use sqlparser::ast::{BinaryOperator, Expr, Value};
+use sqlparser::ast::{ArrayElemTypeDef, BinaryOperator, DataType, Expr, Value};
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -100,6 +100,15 @@ fn eq_pair(expr: &Expr) -> Option<(&Expr, &Expr)> {
     }
 }
 
+fn array_element(data_type: &DataType) -> Option<&DataType> {
+    match data_type {
+        DataType::Array(
+            ArrayElemTypeDef::SquareBracket(inner, _) | ArrayElemTypeDef::Qualified(inner, _),
+        ) => Some(inner),
+        _ => None,
+    }
+}
+
 fn literals(list: &[Expr], catalog: &SchemaCatalog) -> Option<BTreeSet<Lit>> {
     list.iter().map(|expr| literal(expr, catalog)).collect()
 }
@@ -111,9 +120,10 @@ fn array_literals(expr: &Expr, catalog: &SchemaCatalog) -> Option<BTreeSet<Lit>>
             expr, data_type, ..
         } => {
             let values = array_literals(expr, catalog)?;
+            let element = array_element(data_type)?;
             values
                 .iter()
-                .all(|value| preserves(data_type, value, catalog))
+                .all(|value| preserves(element, value, catalog))
                 .then_some(values)
         }
         _ => None,
