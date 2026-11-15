@@ -32,7 +32,9 @@ remain ignored by source discovery while their committed files are copied intact
    diffs like code. Rust `check --format json` snapshots use
    `crates/no-mistakes/tests/common/check_json_snapshot.rs`, which compares `--jobs 1`
    with `--jobs 2` and rewrites absolute paths, temp directories, process ids, and
-   timings so the file is stable on Linux, macOS, and Windows. Each finding with a
+   timings so the file is stable on Linux, macOS, and Windows. The helper passes
+   `--lock-timeout 0` and waits for the machine-wide invocation lock. An exit 75
+   lock report fails that helper instead of reading as a snapshot difference. Each finding with a
    `file` and `line` also gets `sourceLine`, the trimmed text of that fixture line
    (LF, no absolute paths; absent when the file is not a readable fixture file), so a
    finding on the wrong line shows up in the snapshot diff. CI sets `INSTA_UPDATE=no`

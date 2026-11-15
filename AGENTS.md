@@ -84,8 +84,10 @@ graph. Details:
   Rust `check --format json` goes through
   `crates/no-mistakes/tests/common/check_json_snapshot.rs`. The helper runs a
   saved fixture at `--jobs 1` and `--jobs 2`, then stores one normalized
-  report. Normalization rewrites absolute paths to `<root>`, temporary
-  directories to `<temp>`, process ids to `<pid>`, and timings to `<timing>`,
+  report. The helper passes `--lock-timeout 0` and rejects an exit 75 lock
+  report instead of treating it as a snapshot difference. Normalization
+  rewrites absolute paths to `<root>`, temporary directories to `<temp>`,
+  process ids to `<pid>`, and timings to `<timing>`,
   uses `/` separators, and sorts arrays so Linux, macOS, and Windows agree.
   Each finding with a `file` and `line` also carries `sourceLine`, the trimmed
   text of that line read from the saved fixture, so a finding on the wrong line

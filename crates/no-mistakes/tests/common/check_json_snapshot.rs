@@ -7,7 +7,10 @@
 //! the fixture root and inside the checkout become `<repo>`. Arrays are sorted
 //! so `--jobs` cannot change the committed file. Each finding with a file and
 //! line also gets `sourceLine`, the trimmed text of that fixture line, so a
-//! finding on the wrong line shows up in a snapshot diff. The redaction tokens are part
+//! finding on the wrong line shows up in a snapshot diff. The child passes
+//! `--lock-timeout 0` and waits for the machine-wide invocation lock. A report
+//! whose `error.exitCode` is 75 fails the helper: a lock timeout is not a
+//! snapshot difference. The redaction tokens are part
 //! of the contract: dropping them would make Linux, macOS, and Windows
 //! snapshots diverge.
 
@@ -120,7 +123,7 @@ fn run_normalized(
         .current_dir(root)
         .env_remove("RAYON_NUM_THREADS")
         .envs(envs.iter().copied())
-        .args(["--jobs", &jobs_arg, "check", "--root"])
+        .args(snapshot_command_args(&jobs_arg))
         .arg(root)
         .args(args);
     if !config.as_os_str().is_empty() {
@@ -132,6 +135,7 @@ fn run_normalized(
         .unwrap_or_else(|error| panic!("run check: {error}"));
     let stdout = String::from_utf8_lossy(&output.stdout);
     let exit_code = output.status.code().unwrap_or(-1);
+    reject_lock_timeout(&stdout, exit_code, root, jobs);
     let report = serde_json::from_str::<Value>(&stdout).unwrap_or_else(|error| {
         panic!(
             "check JSON ({error}), exit {exit_code}\nstdout: {stdout}\nstderr: {}",
@@ -150,6 +154,22 @@ fn run_normalized(
     value
 }
 
+fn snapshot_command_args(jobs: &str) -> Vec<&str> {
+    vec!["--lock-timeout", "0", "--jobs", jobs, "check", "--root"]
+}
+
+fn reject_lock_timeout(stdout: &str, exit_code: i32, root: &Path, jobs: usize) {
+    let reported = serde_json::from_str::<Value>(stdout)
+        .ok()
+        .and_then(|value| value["error"]["exitCode"].as_i64());
+    if exit_code == 75 || reported == Some(75) {
+        panic!(
+            "invocation lock timed out (exit 75) for {} at --jobs {jobs}; this is not a snapshot difference\n{stdout}",
+            root.display()
+        );
+    }
+}
+
 pub fn rules_path(rule: &str, kind: &str, name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -158,6 +178,41 @@ pub fn rules_path(rule: &str, kind: &str, name: &str) -> PathBuf {
             .join(kind)
             .join(name),
     )
+}
+
+#[test]
+fn snapshot_check_waits_unbounded_for_the_invocation_lock() {
+    assert_eq!(
+        snapshot_command_args("2"),
+        ["--lock-timeout", "0", "--jobs", "2", "check", "--root"]
+    );
+}
+
+#[test]
+#[should_panic(expected = "at --jobs 2; this is not a snapshot difference")]
+fn lock_timeout_report_is_not_a_snapshot_difference() {
+    reject_lock_timeout(
+        r#"{"error":{"exitCode":75,"kind":"lock_timeout","holder":{"command":"no-mistakes","ageSeconds":1}}}"#,
+        1,
+        Path::new("fixture"),
+        2,
+    );
+}
+
+#[test]
+#[should_panic(expected = "at --jobs 1; this is not a snapshot difference")]
+fn process_exit_75_is_not_a_snapshot_difference() {
+    reject_lock_timeout("", 75, Path::new("fixture"), 1);
+}
+
+#[test]
+fn ordinary_check_report_is_not_a_lock_timeout() {
+    reject_lock_timeout(
+        r#"{"exitCode":1,"rules":[],"advisories":[{"message":"live root"}]}"#,
+        1,
+        Path::new("fixture"),
+        1,
+    );
 }
 
 #[test]
