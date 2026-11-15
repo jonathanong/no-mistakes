@@ -73,8 +73,8 @@ pub(super) fn collect(
                         Arc::new(value)
                     })
                     .or_else(|error| {
-                        if error.source_kind == Some(std::io::ErrorKind::InvalidData) {
-                            Ok(Arc::new(super::super::collect::encoding::failure(path)))
+                        if let Ok(facts) = super::super::collect::schema_file_facts(path, sources) {
+                            Ok(Arc::new(facts))
                         } else {
                             Err(Arc::clone(error))
                         }

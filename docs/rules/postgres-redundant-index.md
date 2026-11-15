@@ -173,3 +173,7 @@ Stale allow reporting retains this rule's established diagnostic messages and
 severity for checked inputs. Entries outside the checked scope stay silent;
 uncertain or partial selector coverage cannot prove staleness. See
 [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+## Invalid UTF-8
+
+Schema SQL is decoded lossily through the source store, so a stray byte does not drop the file's indexes. Allow-directive text uses that same decode. A read that still fails is an unanalyzable finding.

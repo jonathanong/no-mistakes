@@ -36,7 +36,7 @@ pub(super) fn scan(
             Err(_) if profile.is_none() && facts.postgres.sql_source_not_found(path) => continue,
             Err(error) => return Err(error),
         };
-        let source = sources.read_path(path)?;
+        let source = sources.read_source_path(path)?;
         for statement in statements {
             for (index, write) in statement.json_writes.iter().enumerate() {
                 if let Some(finding) = json_finding(&rel, opts, catalog, write, allows) {

@@ -13,12 +13,16 @@ fn c(label: &'static str, rule: &str) -> Case {
 }
 
 fn assert_definite(report: &Value, label: &str, rule: &str) {
-    let findings = report
+    let entry = report
         .get(label)
         .and_then(|entry| entry.get("report"))
-        .and_then(|entry| entry.get("rules"))
-        .and_then(Value::as_array)
-        .unwrap_or_else(|| panic!("{label} has no rules array: {report}"));
+        .unwrap_or_else(|| panic!("{label} has no report: {report}"));
+    let mut findings = Vec::new();
+    for key in ["rules", "advisories"] {
+        if let Some(items) = entry.get(key).and_then(Value::as_array) {
+            findings.extend(items);
+        }
+    }
     assert!(
         findings.iter().any(|finding| {
             finding.get("rule").and_then(Value::as_str) == Some(rule)
@@ -213,6 +217,24 @@ fn invalid_utf8_postgres() {
                 "postgres_required_predicates",
                 "postgres-required-predicates",
             ),
+            c("postgres_fk_index", "postgres-fk-index"),
+            c("postgres_redundant_index", "postgres-redundant-index"),
+            c("postgres_json_relation_ids", "postgres-json-relation-ids"),
+            c(
+                "postgres_grouping_not_aggregation",
+                "postgres-grouping-not-aggregation",
+            ),
+            c("postgres_no_offset", "postgres-no-offset"),
+            case(
+                "postgres_no_offset_low",
+                "test-cases/rules/postgres-no-offset/invalid-utf8-low",
+                ".no-mistakes.yml",
+            ),
+            case(
+                "postgres_no_transformed_uuid_predicates_low",
+                "test-cases/rules/postgres-no-transformed-uuid-predicates/invalid-utf8-low",
+                ".no-mistakes.yml",
+            ),
         ],
         &[],
         &[],
@@ -282,5 +304,28 @@ fn invalid_utf8_postgres() {
         &report,
         "postgres_required_predicates",
         "postgres-required-predicates",
+    );
+    assert_definite(&report, "postgres_fk_index", "postgres-fk-index");
+    assert_definite(
+        &report,
+        "postgres_redundant_index",
+        "postgres-redundant-index",
+    );
+    assert_definite(
+        &report,
+        "postgres_json_relation_ids",
+        "postgres-json-relation-ids",
+    );
+    assert_definite(
+        &report,
+        "postgres_grouping_not_aggregation",
+        "postgres-grouping-not-aggregation",
+    );
+    assert_definite(&report, "postgres_no_offset", "postgres-no-offset");
+    assert_definite(&report, "postgres_no_offset_low", "postgres-no-offset");
+    assert_definite(
+        &report,
+        "postgres_no_transformed_uuid_predicates_low",
+        "postgres-no-transformed-uuid-predicates",
     );
 }

@@ -15,7 +15,11 @@ test("each platform retains identical native steps without sharing a producer ba
       windows,
       macos
         .replaceAll("-cgu64-", "-")
-        .replaceAll("-macos.outputs.artifact-run-id", ".outputs.artifact-run-id"),
+        .replaceAll("-macos.outputs.artifact-run-id", ".outputs.artifact-run-id")
+        .replace(
+          "- name: Precompile native Rust test targets\n        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}\n        timeout-minutes: 22",
+          "- name: Precompile native Rust test targets\n        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}\n        timeout-minutes: 15",
+        ),
     );
     for (const [suffix, os] of [
       ["", "windows-2025"],

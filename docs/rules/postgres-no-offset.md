@@ -335,3 +335,7 @@ keeps executed SQL identifiable in logs.
 ## Statement coverage and locations
 
 See [statement coverage and locations](postgres-no-offset-coverage.md).
+
+## Invalid UTF-8
+
+Executor source is decoded lossily at `max` and `low` effort, so a stray byte does not drop the file. A missing file remains a read error. Standalone SQL the statement pass cannot decode as UTF-8 stays an unanalyzable encoding failure. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

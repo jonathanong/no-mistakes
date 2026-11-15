@@ -550,4 +550,4 @@ executor SQL. See [suppression hygiene](../configuration/suppressions.md).
 
 ## Invalid UTF-8
 
-Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.
+Source text this rule reads is decoded lossily at `max` and `low` effort. Other read errors contribute no source text at `max`. A missing file at `low` effort remains a read error. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

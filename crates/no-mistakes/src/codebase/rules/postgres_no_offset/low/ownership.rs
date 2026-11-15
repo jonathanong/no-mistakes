@@ -36,7 +36,7 @@ impl<'a> Owners<'a> {
             let Some(calls) = file.sql_identifier_syntax.calls_for(application) else {
                 continue;
             };
-            let source = sources.read_path(path)?;
+            let source = sources.read_source_path(path)?;
             let literals = super::cache::literals(file, facts, path, &source);
             for call in calls {
                 let site = ExecutionSite {

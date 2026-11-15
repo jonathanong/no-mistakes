@@ -37,7 +37,7 @@ fn scan_file(
         }
         Err(error) => return Err(error),
     };
-    let source = sources.read_path(path)?;
+    let source = sources.read_source_path(path)?;
     for statement in statements {
         for (query_index, query) in statement.grouping_queries.iter().enumerate() {
             for finding in analyze::query(&query.query, catalog, &query.parameter_sites) {

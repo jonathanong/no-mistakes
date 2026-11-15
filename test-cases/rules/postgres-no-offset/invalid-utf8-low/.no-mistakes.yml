@@ -1,0 +1,7 @@
+effort: low
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"

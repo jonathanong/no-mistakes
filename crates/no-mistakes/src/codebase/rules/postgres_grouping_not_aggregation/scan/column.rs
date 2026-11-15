@@ -18,7 +18,7 @@ pub(super) fn label(
                 .source_path
                 .as_ref()
                 .filter(|origin| origin.as_path() != path)
-                .map(|origin| sources.read_path(origin))
+                .map(|origin| sources.read_source_path(origin))
                 .transpose()?;
             if let Some(prefix) = foreign.as_deref().unwrap_or(source).get(..offset) {
                 let column = prefix

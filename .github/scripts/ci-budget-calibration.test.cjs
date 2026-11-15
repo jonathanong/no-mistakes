@@ -321,3 +321,19 @@ test("native build and test precompile deadlines use measured censored progress"
     status: "Initial provisional caps used for the first Windows and macOS precompile runs",
   });
 });
+
+test("macOS cold test precompile keeps the four-target archive inside the job", () => {
+  const data = observed("macos-native-test-precompile-cold-cache");
+  const body = job("native-test-build-macos");
+  const precompile = stepBudget(body, precompileName);
+  assert.equal(data.cache, "miss");
+  assert.equal(data.stepLimitSeconds, 900);
+  assert.equal(data.firstTargetCargoReportedSeconds, 859);
+  assert.equal(data.targetsPlanned, 4);
+  assert.equal(data.killedIn, "rust-objcopy");
+  assert.ok(precompile > data.stepLimitSeconds);
+  assert.ok(
+    precompile >= data.firstTargetCargoReportedSeconds + data.remainingTargetReserveSeconds,
+  );
+  assert.ok(precompile + data.postStepReserveSeconds <= jobBudget(body));
+});

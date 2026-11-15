@@ -1,16 +1,6 @@
 //! An invalid SQL encoding is file-local uncertainty, never a failed invocation.
-use crate::codebase::postgres::{
-    SqlSchemaFileFacts, SqlStatementFileFacts, SqlUnanalyzableStatement,
-};
+use crate::codebase::postgres::{SqlStatementFileFacts, SqlUnanalyzableStatement};
 use std::path::Path;
-
-pub(in crate::codebase::postgres) fn failure(path: &Path) -> SqlSchemaFileFacts {
-    SqlSchemaFileFacts {
-        path: path.to_path_buf(),
-        unanalyzable_statements: vec![marker()],
-        ..Default::default()
-    }
-}
 
 pub(in crate::codebase::postgres) fn statement_failure(path: &Path) -> SqlStatementFileFacts {
     SqlStatementFileFacts {

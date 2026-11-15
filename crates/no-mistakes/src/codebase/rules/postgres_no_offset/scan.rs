@@ -70,7 +70,11 @@ pub(super) fn scan(
             );
         }
         let mut calls = all_calls.filter(|(_, _, call)| call.sql_text.is_some());
-        let source = profile.map(|_| sources.read_path(path)).transpose()?;
+        let source = if profile.is_some() {
+            Some(sources.read_source_path(path)?)
+        } else {
+            None
+        };
         let mut ordinal = 0;
         let mut variant_ordinals = FxHashMap::default();
         for statement in statements {

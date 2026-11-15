@@ -55,7 +55,7 @@ function opaqueFindings(scenario) {
 
 for (const policy of ["default", "report", "advise", "ignore"]) {
   test(
-    `compiled schema checks isolate invalid SQL encoding under ${policy}`,
+    `compiled schema checks decode invalid SQL and keep the valid sibling under ${policy}`,
     { skip: !compiled },
     async () => {
       const cjs = require("../index.js");
@@ -69,12 +69,8 @@ for (const policy of ["default", "report", "advise", "ignore"]) {
       const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
       assert.deepEqual(prepared.reports[0].result, report);
       const bad = (field) => report[field].filter(({ file }) => file === "bad.sql");
-      assert.equal(bad("rules").length, ["default", "report"].includes(policy) ? 11 : 0);
-      assert.equal(bad("advisories").length, policy === "advise" ? 11 : 0);
-      for (const item of [...bad("rules"), ...bad("advisories")]) {
-        assert.equal(item.line, 1);
-        assert.match(item.message, /invalid UTF-8/);
-      }
+      assert.deepEqual(bad("rules"), []);
+      assert.deepEqual(bad("advisories"), []);
       assert.ok(
         report.rules.some(
           ({ file, rule, line }) =>
