@@ -73,8 +73,8 @@ fn trimmed_fragment_drops_placeholder_positions_past_the_hole() {
 
 #[test]
 fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
+    use super::splice;
     use super::{extract, plain, Marker};
-    use crate::codebase::postgres::embedded::helpers::splice::splice;
     let facts = extract("singleton-append.ts");
     assert!(facts.calls.iter().all(|call| {
         call.sql_text

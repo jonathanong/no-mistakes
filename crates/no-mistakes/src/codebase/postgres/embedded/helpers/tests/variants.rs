@@ -29,7 +29,7 @@ fn filled(facts: &EmbeddedSqlFileFacts, index: usize, hole_text: &str) -> Embedd
             (*site, vec![plain(hole_text.to_string(), marker)])
         })
         .collect::<FxHashMap<_, _>>();
-    super::super::splice::splice(&pending.template, &holes).expect("spliced")
+    super::splice(&pending.template, &holes).expect("spliced")
 }
 
 #[test]

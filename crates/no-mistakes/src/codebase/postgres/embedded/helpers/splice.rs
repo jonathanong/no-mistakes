@@ -12,11 +12,6 @@ use fill::fill_all;
 /// Every alternative text of each hole, by the site index the walk gave it.
 type Holes = FxHashMap<usize, Vec<RecoveredSql>>;
 
-#[cfg(test)]
-pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<EmbeddedSqlCall> {
-    splice_grouped(template, holes, &FxHashMap::default())
-}
-
 /// Fills every hole of `template` and republishes it. A call whose own text
 /// holds holes becomes a complete `Composed` call when every hole has one
 /// text, and a call with finite alternatives otherwise; a call whose holes

@@ -182,6 +182,13 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
         .all(|position| position.source_path.as_deref() == Some(owner)));
 }
 
+fn splice(
+    template: &crate::codebase::postgres::EmbeddedSqlCall,
+    holes: &crate::fx::FxHashMap<usize, Vec<RecoveredSql>>,
+) -> Option<crate::codebase::postgres::EmbeddedSqlCall> {
+    super::splice::splice_grouped(template, holes, &crate::fx::FxHashMap::default())
+}
+
 fn template_call(internal: String) -> crate::codebase::postgres::EmbeddedSqlCall {
     let (published, positions) = publish_placeholders_with_positions(internal);
     crate::codebase::postgres::EmbeddedSqlCall {
@@ -213,7 +220,7 @@ fn splicing_fills_every_hole_and_renumbers_the_generated_binds() {
     );
     let mut holes = crate::fx::FxHashMap::default();
     holes.insert(0, vec![hole]);
-    let call = super::splice::splice(&template, &holes).expect("complete");
+    let call = splice(&template, &holes).expect("complete");
     assert_eq!(
         call.sql_text.as_deref(),
         Some(
@@ -227,16 +234,16 @@ fn splicing_fills_every_hole_and_renumbers_the_generated_binds() {
         .iter()
         .any(|position| position.source_path == owner && position.source_line == 3));
     // Any gap leaves the call as the walk published it.
-    assert!(super::splice::splice(&template, &Default::default()).is_none());
+    assert!(splice(&template, &Default::default()).is_none());
     let mut no_text = template.clone();
     no_text.sql_text = None;
-    assert!(super::splice::splice(&no_text, &holes).is_none());
+    assert!(splice(&no_text, &holes).is_none());
     let mut drifted = template.clone();
     drifted.recovered_placeholder_positions = vec![(1, 2)];
-    assert!(super::splice::splice(&drifted, &holes).is_none());
+    assert!(splice(&drifted, &holes).is_none());
     // A template holding no hole at all has nothing to compose from.
     let empty = template_call(String::new());
-    assert!(super::splice::splice(&empty, &holes).is_none());
+    assert!(splice(&empty, &holes).is_none());
 }
 
 #[test]
