@@ -159,6 +159,47 @@ fn missing_embedded_projections_and_independent_sql_demands_are_recorded() {
         .contains("prepared facts are missing"));
 }
 
+#[test]
+fn prepared_schema_decodes_invalid_utf8_and_keeps_keys_and_indexes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/rules");
+    let fk = root.join("postgres-fk-index/invalid-utf8/migrations/001.sql");
+    let redundant = root.join("postgres-redundant-index/invalid-utf8/migrations/001.sql");
+    let files = vec![fk.clone(), redundant.clone()];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let facts = prepare(
+        &root,
+        &files,
+        &sources,
+        &CheckFactPlan {
+            postgres_schema: true,
+            postgres_sql_include: vec!["**/*.sql".into()],
+            ..Default::default()
+        },
+        &CheckFactMap::default(),
+    );
+    let fk_facts = facts.schema(&fk).unwrap();
+    assert!(fk_facts.unanalyzable_statements.is_empty(), "{fk_facts:?}");
+    assert!(fk_facts
+        .foreign_keys
+        .iter()
+        .any(|key| { key.table_name == "comments" && key.column_names == ["post_id"] }));
+    let index_facts = facts.schema(&redundant).unwrap();
+    assert!(
+        index_facts.unanalyzable_statements.is_empty(),
+        "{index_facts:?}"
+    );
+    let names: Vec<_> = index_facts
+        .indexes
+        .iter()
+        .filter_map(|index| index.name.as_deref())
+        .collect();
+    assert!(names.contains(&"idx_events__topic_id"), "{names:?}");
+    assert!(
+        names.contains(&"idx_events__topic_id__created_at"),
+        "{names:?}"
+    );
+}
+
 mod bound_demand;
 mod variant_demand;
 
