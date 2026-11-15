@@ -1,0 +1,80 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/single-row-embedded.mts",
+          "line": 5,
+          "message": "access-paths/single-row-embedded.mts:5: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(${postId})::uuid_single;`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/single-row-embedded.mts",
+          "line": 6,
+          "message": "access-paths/single-row-embedded.mts:6: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM single_row_items WHERE (post_id)::uuid_single = ${postId}::uuid_single;`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/single-row-embedded.mts",
+          "line": 7,
+          "message": "access-paths/single-row-embedded.mts:7: postgres-no-transformed-uuid-predicates application #0 proved a violation, but remaining SQL is unresolved for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;`);",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/single-row-embedded.mts",
+          "line": 7,
+          "message": "access-paths/single-row-embedded.mts:7: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;`);",
+          "target": "single_row_items.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/single-row-embedded.mts",
+          "line": 6,
+          "message": "access-paths/single-row-embedded.mts:6: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM single_row_items WHERE (post_id)::uuid_single = ${postId}::uuid_single;`);",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/single-row-embedded.mts",
+          "line": 7,
+          "message": "access-paths/single-row-embedded.mts:7: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;`);",
+          "target": "single_row_items.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

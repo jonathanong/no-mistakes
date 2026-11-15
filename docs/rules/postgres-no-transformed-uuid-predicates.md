@@ -114,12 +114,22 @@ bind bound. Alias qualification can be resolved, but casts, tuple order,
 identifier quoting, string values, and collations remain significant. A matching
 expression on another table or another self-join occurrence provides no proof.
 PostgreSQL's catalog spelling `ROW(a, b)` matches the equivalent implicit tuple
-`(a, b)`. A one-field `ROW(a)` remains distinct from the scalar expression `(a)`.
+`(a, b)`. A one-field `ROW(column)` remains distinct from the scalar `(column)`:
+an index on `ROW(post_id)::uuid_single` does not clear
+`(post_id)::uuid_single = $1::uuid_single`.
+A single proven constant or bind does clear the indexed form:
+
+```sql
+SELECT * FROM single_row_items
+WHERE ROW(post_id)::uuid_single = ROW($1)::uuid_single;
+```
+
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.
 At effort max, recorded interpolation positions in configured trusted SQL
-templates also prove bind bounds. An authored `sql_placeholder_0` column is still
-a column; effort low retains its existing unanalyzable policy for interpolations.
+templates also prove bind bounds, including one recovered value inside
+`ROW(${value})`. An authored `sql_placeholder_0` column is still a column;
+effort low retains its existing unanalyzable policy for interpolations.
 An index on `lower(id::text)` does not exempt `lower(id::text) || 'suffix'`.
 See PostgreSQL's [expression-index documentation](https://www.postgresql.org/docs/current/indexes-expressional.html).
 
