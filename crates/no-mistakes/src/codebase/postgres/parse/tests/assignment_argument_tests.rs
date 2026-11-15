@@ -64,6 +64,26 @@ fn legacy_assignment_keeps_non_identifier_assignments() {
         ),
         "table-function := arguments are named"
     );
+    let TableFactor::Function {
+        lateral,
+        args: lateral_args,
+        ..
+    } = &select_of(&statements[6]).from[0].relation
+    else {
+        panic!("expected a lateral function table factor");
+    };
+    assert!(*lateral);
+    assert!(
+        lateral_args.len() == 2
+            && lateral_args.iter().all(|arg| matches!(
+                arg,
+                FunctionArg::ExprNamed {
+                    operator: FunctionArgOperator::Assignment,
+                    ..
+                }
+            )),
+        "LATERAL function := arguments are named"
+    );
 }
 
 struct AssignmentNames {
