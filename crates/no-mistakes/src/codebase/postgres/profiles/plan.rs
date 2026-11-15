@@ -51,6 +51,7 @@ pub fn configure_prepared_postgres_plan(
             )
             .with_executor_option_properties(&options.executor_option_properties)
             .with_trusted_sql_tags(&options.trusted_sql_tags);
+            let profile = super::collect::with_identifier_options(profile, &rule.rule, &options);
             let postgres_effects = config.effects.get("postgres");
             let typed_executor_types = postgres_effects
                 .map(|effects| effects.typed_executors.as_slice())

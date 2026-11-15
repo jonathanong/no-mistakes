@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: ["src/query.ts"]
+      effort: max
+      importSpecifier: "@example/db"

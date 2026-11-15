@@ -94,6 +94,8 @@ impl ScopeVisitor<'_> {
             positions: hole.positions.clone(),
             fragment: false,
             enumerated: false,
+            closed_domain: false,
+            type_annotation: false,
             choices: Vec::new(),
             append_sites: Vec::new(),
             first_append_offset: None,

@@ -49,7 +49,7 @@ pub(super) fn aligned(call: &EmbeddedSqlCall) -> Option<(BTreeSet<u32>, usize)> 
 }
 
 fn texts(call: &EmbeddedSqlCall) -> Vec<String> {
-    if call.variants.is_empty() {
+    if call.variants.is_empty() || call.variants.iter().any(|variant| variant.type_annotation) {
         call.sql_text
             .iter()
             .map(|sql| delimit_markers(sql))

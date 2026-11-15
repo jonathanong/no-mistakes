@@ -1,0 +1,704 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "assertions_not_configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/assertions.test.ts",
+          "line": 10,
+          "message": "tests/assertions.test.ts:10: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/assertions.test.ts",
+          "line": 10,
+          "message": "tests/assertions.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assertions.test.ts",
+          "line": 19,
+          "message": "tests/assertions.test.ts:19: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/assertions.test.ts",
+          "line": 19,
+          "message": "tests/assertions.test.ts:19: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/assertions.test.ts",
+          "line": 6,
+          "message": "tests/assertions.test.ts:6: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* inlineSet */ SELECT 1 FROM `.append(safe).append(sql` WHERE id = $1`));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/assertions.test.ts",
+          "line": 6,
+          "message": "tests/assertions.test.ts:6: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* inlineSet */ SELECT 1 FROM `.append(safe).append(sql` WHERE id = $1`));",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mutations_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 53,
+          "message": "tests/mutations.test.ts:53: postgres-bounded-statements application #0 has unresolved SQL for delete, select, update: sql-variants-truncated, unknown-relation",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(mixedPoisonedStatement);",
+          "target": "delete, select, update"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 53,
+          "message": "tests/mutations.test.ts:53: postgres-no-test-state-mutation application #0 proved a violation, but remaining SQL is unresolved for test-state-mutation: sql-variants-truncated",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(mixedPoisonedStatement);",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 13,
+          "message": "tests/mutations.test.ts:13: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "sql`/* assertedDrop */ DROP TABLE `.append(allowed(table, new Set([\"users\", \"posts\"]))),",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 22,
+          "message": "tests/mutations.test.ts:22: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return \"DROP TABLE posts\";",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 31,
+          "message": "tests/mutations.test.ts:31: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* rawFunction */ SELECT ${expression}`);",
+          "target": "pg_sleep"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 35,
+          "message": "tests/mutations.test.ts:35: UPDATE can change every row of users; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* unboundedColumn */ UPDATE users SET status = $1 WHERE ${column} = $2`);",
+          "target": "table:users"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 39,
+          "message": "tests/mutations.test.ts:39: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* unboundedTables */ SELECT 1 FROM ${table}`);",
+          "target": "table:posts, table:users"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 51,
+          "message": "tests/mutations.test.ts:51: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "? sql`/* mixedPoisoned */ DROP TABLE users`",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 8,
+          "message": "tests/mutations.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* typedDrop */ DROP TABLE `.append(table));",
+          "target": "DROP TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mutations_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 13,
+          "message": "tests/mutations.test.ts:13: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "sql`/* assertedDrop */ DROP TABLE `.append(allowed(table, new Set([\"users\", \"posts\"]))),",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 22,
+          "message": "tests/mutations.test.ts:22: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return \"DROP TABLE posts\";",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 31,
+          "message": "tests/mutations.test.ts:31: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* rawFunction */ SELECT ${expression}`);",
+          "target": "pg_sleep"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 35,
+          "message": "tests/mutations.test.ts:35: UPDATE can change every row of users; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* unboundedColumn */ UPDATE users SET status = $1 WHERE ${column} = $2`);",
+          "target": "table:users"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 39,
+          "message": "tests/mutations.test.ts:39: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* unboundedTables */ SELECT 1 FROM ${table}`);",
+          "target": "table:posts, table:users"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 51,
+          "message": "tests/mutations.test.ts:51: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "? sql`/* mixedPoisoned */ DROP TABLE users`",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 8,
+          "message": "tests/mutations.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* typedDrop */ DROP TABLE `.append(table));",
+          "target": "DROP TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mutations_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 13,
+          "message": "tests/mutations.test.ts:13: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "sql`/* assertedDrop */ DROP TABLE `.append(allowed(table, new Set([\"users\", \"posts\"]))),",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 22,
+          "message": "tests/mutations.test.ts:22: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return \"DROP TABLE posts\";",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 31,
+          "message": "tests/mutations.test.ts:31: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* rawFunction */ SELECT ${expression}`);",
+          "target": "pg_sleep"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 35,
+          "message": "tests/mutations.test.ts:35: UPDATE can change every row of users; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* unboundedColumn */ UPDATE users SET status = $1 WHERE ${column} = $2`);",
+          "target": "table:users"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 39,
+          "message": "tests/mutations.test.ts:39: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; SELECT can return every row of users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* unboundedTables */ SELECT 1 FROM ${table}`);",
+          "target": "table:posts, table:users"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 51,
+          "message": "tests/mutations.test.ts:51: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "? sql`/* mixedPoisoned */ DROP TABLE users`",
+          "target": "DROP TABLE"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 53,
+          "message": "tests/mutations.test.ts:53: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(mixedPoisonedStatement);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/mutations.test.ts",
+          "line": 8,
+          "message": "tests/mutations.test.ts:8: executed test SQL uses DROP TABLE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* typedDrop */ DROP TABLE `.append(table));",
+          "target": "DROP TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "opaque": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 106,
+          "message": "tests/opaque.test.ts:106: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* oversized */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 106,
+          "message": "tests/opaque.test.ts:106: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* oversized */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 116,
+          "message": "tests/opaque.test.ts:116: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* escapedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 116,
+          "message": "tests/opaque.test.ts:116: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* escapedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 126,
+          "message": "tests/opaque.test.ts:126: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* assignedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 126,
+          "message": "tests/opaque.test.ts:126: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* assignedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 136,
+          "message": "tests/opaque.test.ts:136: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* yieldedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 136,
+          "message": "tests/opaque.test.ts:136: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* yieldedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 157,
+          "message": "tests/opaque.test.ts:157: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* caughtChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 157,
+          "message": "tests/opaque.test.ts:157: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* caughtChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 168,
+          "message": "tests/opaque.test.ts:168: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* wrappedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 168,
+          "message": "tests/opaque.test.ts:168: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* wrappedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 17,
+          "message": "tests/opaque.test.ts:17: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* mixedBranch */ SELECT 1 FROM `.append(mixed(kind)));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 17,
+          "message": "tests/opaque.test.ts:17: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* mixedBranch */ SELECT 1 FROM `.append(mixed(kind)));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 178,
+          "message": "tests/opaque.test.ts:178: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* iteratedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 178,
+          "message": "tests/opaque.test.ts:178: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* iteratedChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 191,
+          "message": "tests/opaque.test.ts:191: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* classChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 191,
+          "message": "tests/opaque.test.ts:191: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* classChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 204,
+          "message": "tests/opaque.test.ts:204: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* defaultChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 204,
+          "message": "tests/opaque.test.ts:204: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* defaultChild */ SELECT 1 FROM ${config.child.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 28,
+          "message": "tests/opaque.test.ts:28: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* missingBranch */ SELECT 1 FROM `.append(incomplete(kind)));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 28,
+          "message": "tests/opaque.test.ts:28: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* missingBranch */ SELECT 1 FROM `.append(incomplete(kind)));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 32,
+          "message": "tests/opaque.test.ts:32: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 32,
+          "message": "tests/opaque.test.ts:32: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 38,
+          "message": "tests/opaque.test.ts:38: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* noAllowlist */ LOCK TABLE ${assertSafeSqlIdentifier(table)}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 38,
+          "message": "tests/opaque.test.ts:38: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* noAllowlist */ LOCK TABLE ${assertSafeSqlIdentifier(table)}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 42,
+          "message": "tests/opaque.test.ts:42: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* wrongModule */ SELECT 1 FROM `.append(other(table, [\"users\", \"posts\"])));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 42,
+          "message": "tests/opaque.test.ts:42: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* wrongModule */ SELECT 1 FROM `.append(other(table, [\"users\", \"posts\"])));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 49,
+          "message": "tests/opaque.test.ts:49: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* shadowedHelper */ SELECT 1 FROM `.append(allowed(table, [\"users\", \"posts\"])));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 49,
+          "message": "tests/opaque.test.ts:49: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* shadowedHelper */ SELECT 1 FROM `.append(allowed(table, [\"users\", \"posts\"])));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 54,
+          "message": "tests/opaque.test.ts:54: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* reassigned */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 54,
+          "message": "tests/opaque.test.ts:54: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* reassigned */ SELECT 1 FROM `.append(table));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 59,
+          "message": "tests/opaque.test.ts:59: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* castOnly */ SELECT 1 FROM `.append(narrowed));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 59,
+          "message": "tests/opaque.test.ts:59: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* castOnly */ SELECT 1 FROM `.append(narrowed));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 65,
+          "message": "tests/opaque.test.ts:65: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* escapedSet */ SELECT 1 FROM `.append(allowed(table, names)));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 65,
+          "message": "tests/opaque.test.ts:65: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* escapedSet */ SELECT 1 FROM `.append(allowed(table, names)));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 71,
+          "message": "tests/opaque.test.ts:71: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(sql`/* mutatedSet */ SELECT 1 FROM `.append(allowed(table, names)));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 71,
+          "message": "tests/opaque.test.ts:71: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(sql`/* mutatedSet */ SELECT 1 FROM `.append(allowed(table, names)));",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 78,
+          "message": "tests/opaque.test.ts:78: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* changedRecord */ SELECT 1 FROM ${config.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 78,
+          "message": "tests/opaque.test.ts:78: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* changedRecord */ SELECT 1 FROM ${config.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 83,
+          "message": "tests/opaque.test.ts:83: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`/* missingRecordKey */ SELECT 1 FROM ${CONFIG[kind].table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/opaque.test.ts",
+          "line": 83,
+          "message": "tests/opaque.test.ts:83: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`/* missingRecordKey */ SELECT 1 FROM ${CONFIG[kind].table}`);",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "positive": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "raw_tags_not_configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/records.test.ts",
+          "line": 10,
+          "message": "tests/records.test.ts:10: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/records.test.ts",
+          "line": 10,
+          "message": "tests/records.test.ts:10: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/records.test.ts",
+          "line": 16,
+          "message": "tests/records.test.ts:16: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/records.test.ts",
+          "line": 16,
+          "message": "tests/records.test.ts:16: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

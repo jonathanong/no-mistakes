@@ -1,3 +1,5 @@
+import type { PostgresRawSqlTag } from "./postgres-raw-sql-tag-types";
+import type { PostgresSqlIdentifierAssertion } from "./postgres-sql-identifier-assertion-types";
 import type { Effort, Unanalyzable } from "./traversal-types";
 
 export type PostgresMaterializedBodyPolicy = "ignore" | "advise" | "report" | "require-bound";
@@ -25,6 +27,8 @@ export interface PostgresBoundedStatementsOptions {
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: { module: string; name: string }[];
+  sqlIdentifierAssertions?: PostgresSqlIdentifierAssertion[];
+  rawSqlTags?: PostgresRawSqlTag[];
   statements?: ("select" | "update" | "delete")[];
   allow?: { object: string; reason: string }[];
   viewBounds?: Record<string, PostgresViewBoundMode>;

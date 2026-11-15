@@ -50,6 +50,10 @@ See also [builder versions and conservative recovery](postgres-facts/builder-ver
 
 See [Imported and literal-identifier helpers](postgres-facts/imported-and-literal-identifier-helpers.md).
 
+See [closed identifier values](postgres-facts/closed-identifiers.md) for stable
+literal unions, correlated lookup records, configured allowlist assertions, and
+explicit raw SQL tags.
+
 #### Helper control flow and nested composition
 
 See [Imported and literal-identifier helpers](postgres-facts/imported-and-literal-identifier-helpers.md).

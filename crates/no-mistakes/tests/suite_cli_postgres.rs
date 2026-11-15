@@ -45,6 +45,8 @@ mod cli_postgres_snapshot_bounded_statements;
 mod cli_postgres_snapshot_bounded_statements_more;
 #[path = "cli_postgres_snapshot_closed_candidates.rs"]
 mod cli_postgres_snapshot_closed_candidates;
+#[path = "cli_postgres_snapshot_closed_identifiers.rs"]
+mod cli_postgres_snapshot_closed_identifiers;
 #[path = "cli_postgres_snapshot_column_naming.rs"]
 mod cli_postgres_snapshot_column_naming;
 #[path = "cli_postgres_snapshot_column_naming_more.rs"]

@@ -1,3 +1,5 @@
+import type { PostgresRawSqlTag } from "./postgres-raw-sql-tag-types";
+import type { PostgresSqlIdentifierAssertion } from "./postgres-sql-identifier-assertion-types";
 import type { Effort, Unanalyzable } from "./traversal-types";
 
 /** Configuration for the `postgres-no-test-state-mutation` check rule. */
@@ -16,6 +18,8 @@ export interface PostgresNoTestStateMutationOptions {
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
   trustedSqlTags?: { module: string; name: string }[];
+  sqlIdentifierAssertions?: PostgresSqlIdentifierAssertion[];
+  rawSqlTags?: PostgresRawSqlTag[];
   /** `low` checks direct SQL syntax and one local const; `max` is the default. */
   effort?: Effort;
   unanalyzable?: Unanalyzable;

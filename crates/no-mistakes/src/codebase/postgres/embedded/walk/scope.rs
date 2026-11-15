@@ -125,6 +125,7 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn mark_dynamic(&mut self, name: &str) {
+        self.forget_closed(name);
         self.invalidate_query_capture(name);
         self.clear_undeclared_binding(name);
         self.forget_receiver_alias(name);
@@ -165,6 +166,7 @@ impl ScopeVisitor<'_> {
         }
         for param in &params.items {
             self.note_executor_parameter(param);
+            self.note_closed_parameter(param);
         }
         if let Some(rest) = &params.rest {
             self.bind_param(&rest.rest.argument, false);

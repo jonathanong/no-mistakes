@@ -214,9 +214,9 @@ fn caller_directives_still_suppress_sql_reported_in_the_helper() {
 
 #[test]
 fn module_level_string_constants_are_judged_and_computed_forms_stay_unanalyzable() {
-    let unknown = [
-        69, 86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
-    ];
+    // `nameOfTable` returns only the literal `orders`, so line 100 is judged.
+    // That query already constrains `account_id`.
+    let unknown = [69, 86, 92, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151];
     let mut rows = vec![("src/caller.mts", 74, "orders")];
     rows.extend(
         unknown
@@ -407,17 +407,17 @@ fn one_function_appending_one_helper_twice_merges_and_one_directive_suppresses_i
 #[test]
 fn proven_throw_switches_are_judged_and_unproven_defaults_abstain() {
     // `owned` satisfies account_id, so it is absent. `member` and the `all`
-    // arm's second SELECT do not. The orders identifier is judged; accounts
-    // is not a required relation. An inherited key, a non-throwing
-    // `assertNever`, an unknown fragment, and a statement spliced as an
-    // identifier publish nothing. An opaque method-call guard stays unknown
-    // at its caller; only the bound `??` case is judged.
+    // arm's second SELECT do not. The orders identifier is the literal
+    // returned at line 26; accounts is not a required relation. An inherited
+    // key, a non-throwing `assertNever`, an unknown fragment, and a statement
+    // spliced as an identifier publish nothing. An opaque method-call guard
+    // stays unknown at its caller; only the bound `??` case is judged.
     assert_eq!(
         required("proven-throw-switch"),
         expect(&[
             ("src/queries.mts", 10, "orders"),
             ("src/queries.mts", 12, "orders"),
-            ("src/queries.mts", 35, "orders"),
+            ("src/queries.mts", 26, "orders"),
             ("src/queries.mts", 40, UNANALYZABLE),
             ("src/queries.mts", 58, UNANALYZABLE),
             ("src/queries.mts", 67, UNANALYZABLE),

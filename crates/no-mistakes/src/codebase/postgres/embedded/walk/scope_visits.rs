@@ -57,13 +57,18 @@ impl<'a> ScopeVisitor<'a> {
             }
         }
         self.enter_function();
+        let set_shadow = function
+            .body
+            .as_ref()
+            .is_some_and(|body| super::guarded_sql::shadows_set(&function.params, body));
         let guarded = (!self.head_calls_only
             && self.set_intrinsic_safe
-            && self.lookup("Set").is_none())
-        .then(|| {
-            super::guarded_sql::GuardedCase::from_function(function, self.function_scopes.len())
-        })
-        .flatten();
+            && self.lookup("Set").is_none()
+            && !set_shadow)
+            .then(|| {
+                super::guarded_sql::GuardedCase::from_function(function, self.function_scopes.len())
+            })
+            .flatten();
         let inserted = guarded.is_some();
         if let Some(guarded) = guarded {
             self.guarded_cases.push(guarded);

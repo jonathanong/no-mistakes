@@ -115,7 +115,14 @@ fn module_const_sql_inlines_literals_and_leaves_computed_dynamic() {
         assert!(sql.contains("orders"), "{call:?}");
         analyzed.push(sql);
     }
-    assert_eq!(unknown, 14, "{calls:#?}");
+    assert_eq!(unknown, 13, "{calls:#?}");
+    let computed = calls.iter().find(|call| call.line == 100).unwrap();
+    assert!(!computed.is_unanalyzable(), "{computed:#?}");
+    assert_eq!(computed.variants.len(), 1);
+    assert_eq!(
+        computed.sql_text.as_deref(),
+        Some(computed.variants[0].sql_text.as_str())
+    );
     assert!(analyzed
         .iter()
         .any(|sql| sql == "SELECT id FROM orders WHERE account_id = $1"));

@@ -15,6 +15,7 @@ pub(crate) struct SqlTagNames {
     /// Default imports from `sql-template-strings`, or configured named
     /// `trustedSqlTags` imports, under the file's local names.
     imported: HashSet<String>,
+    raw: HashSet<String>,
     template_strings: HashSet<String>,
     fragments: crate::fx::FxHashSet<String>,
     fragment_functions: crate::fx::FxHashSet<String>,
@@ -26,6 +27,14 @@ impl SqlTagNames {
     }
     pub(crate) fn insert_template_strings(&mut self, name: String) {
         self.template_strings.insert(name.clone());
+        self.insert_imported(name);
+    }
+    pub(crate) fn raw(&self, tag: &Expression<'_>) -> bool {
+        matches!(unwrap_ts_wrappers(tag), Expression::Identifier(name) if self.raw.contains(name.name.as_str()))
+    }
+    pub(crate) fn insert_raw(&mut self, name: String) {
+        self.raw.insert(name.clone());
+        self.template_strings.remove(&name);
         self.insert_imported(name);
     }
     pub(crate) fn parameterizes_all(&self, tag: &Expression<'_>) -> bool {
@@ -86,6 +95,7 @@ pub(super) fn interpolating_untrusted_tag(
             && !is_string_raw_tag(&tagged.tag, is_shadowed);
     }
     !is_sql_tag(&tagged.tag, is_shadowed, imported_sql_tags)
+        || imported_sql_tags.raw(&tagged.tag)
         || !imported_sql_tags.parameterizes_all(&tagged.tag)
             && interpolates_sql_fragment(&tagged.quasi, is_shadowed, imported_sql_tags)
 }

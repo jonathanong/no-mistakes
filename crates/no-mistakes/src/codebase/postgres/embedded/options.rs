@@ -13,6 +13,14 @@ pub struct TrustedSqlTag {
     pub name: String,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SqlIdentifierAssertion {
+    pub module: String,
+    pub name: String,
+    pub allowlist_argument: usize,
+}
+
 /// Configurable executor import matching. Empty defaults select no executors.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,6 +37,10 @@ pub struct EmbeddedSqlOptions {
     pub executor_option_properties: Vec<String>,
     /// Named imports trusted as parameterized SQL tags. Empty trusts none.
     pub trusted_sql_tags: Vec<TrustedSqlTag>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub raw_sql_tags: Vec<TrustedSqlTag>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub sql_identifier_assertions: Vec<SqlIdentifierAssertion>,
     /// Exact module#export identities of annotation-only literal wrappers.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sql_literal_helpers: Vec<String>,
@@ -80,6 +92,8 @@ impl EmbeddedSqlOptions {
             executor_type_names: Vec::new(),
             executor_option_properties: Vec::new(),
             trusted_sql_tags: Vec::new(),
+            raw_sql_tags: Vec::new(),
+            sql_identifier_assertions: Vec::new(),
             sql_literal_helpers: Vec::new(),
             track_transaction_helpers: false,
         }
@@ -121,6 +135,20 @@ impl EmbeddedSqlOptions {
     /// Configure annotation-only wrappers; argument syntax is checked separately.
     pub fn with_sql_literal_helpers(mut self, helpers: &[String]) -> Self {
         self.sql_literal_helpers = sorted_unique(helpers);
+        self
+    }
+
+    pub fn with_sql_identifier_assertions(mut self, assertions: &[SqlIdentifierAssertion]) -> Self {
+        self.sql_identifier_assertions = assertions.to_vec();
+        self.sql_identifier_assertions.sort();
+        self.sql_identifier_assertions.dedup();
+        self
+    }
+
+    pub fn with_raw_sql_tags(mut self, tags: &[TrustedSqlTag]) -> Self {
+        self.raw_sql_tags = tags.to_vec();
+        self.raw_sql_tags.sort();
+        self.raw_sql_tags.dedup();
         self
     }
 

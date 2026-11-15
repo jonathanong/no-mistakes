@@ -23,7 +23,6 @@ pub(super) mod clause_args_test_counter;
 mod clause_args_test_counter;
 pub(super) mod constants;
 use args::classify;
-
 /// Local value imports, split into callable names and namespace constant owners.
 pub(super) fn value_import_names(program: &Program<'_>) -> (FxHashSet<String>, FxHashSet<String>) {
     let mut names = FxHashSet::default();
@@ -54,7 +53,6 @@ pub(super) fn value_import_names(program: &Program<'_>) -> (FxHashSet<String>, F
     }
     (names, namespaces)
 }
-
 impl ScopeVisitor<'_> {
     /// Whether a call to `name` becomes a hole the projection fills: a value
     /// import, or a same-file helper that only a lowered program can recover
@@ -72,7 +70,6 @@ impl ScopeVisitor<'_> {
             && !self.functions.is_parameter_builder(name)
     }
 }
-
 /// Whether the call hands a SQL builder to an imported helper, which may then
 /// return that same (mutable) builder.
 pub(super) fn passes_builder(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> bool {
@@ -86,7 +83,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn recover_call(
     call: &CallExpression<'_>,
     name: &str,
 ) -> Option<RecoveredSql> {
-    if call.optional || !visitor.is_hole_helper(name) {
+    if call.optional
+        || !visitor.is_hole_helper(name)
+        || super::closed_values::closed_call(visitor, call)
+    {
         return None;
     }
     let (args, builder) = classify(visitor, call)?;

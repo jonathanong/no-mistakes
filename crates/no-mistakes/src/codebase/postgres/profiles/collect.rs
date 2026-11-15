@@ -38,6 +38,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
             if *rule_id == "postgres-require-query-annotation" {
                 profile = profile.with_sql_literal_helpers(&options.sql_literal_helpers);
             }
+            profile = with_identifier_options(profile, rule_id, &options);
             profile.track_transaction_helpers = *rule_id == "postgres-lock-written-rows-only";
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.
@@ -55,4 +56,23 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
     annotation_profiles.dedup();
     let profiles = grouped.keys().cloned().collect();
     Ok((profiles, annotation_profiles, grouped))
+}
+
+pub(super) fn with_identifier_options(
+    profile: EmbeddedSqlOptions,
+    rule_id: &str,
+    options: &EmbeddedSqlRuleOptions,
+) -> EmbeddedSqlOptions {
+    if [
+        "postgres-no-test-state-mutation",
+        "postgres-bounded-statements",
+    ]
+    .contains(&rule_id)
+    {
+        profile
+            .with_sql_identifier_assertions(&options.sql_identifier_assertions)
+            .with_raw_sql_tags(&options.raw_sql_tags)
+    } else {
+        profile
+    }
 }

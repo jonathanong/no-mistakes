@@ -28,5 +28,7 @@ pub(super) fn quasi(visitor: &ScopeVisitor<'_>, quasi: &TemplateElement<'_>) -> 
         decision_offs: Vec::new(),
         variants_truncated: false,
         enumerated: false,
+        closed_domain: false,
+        type_annotation: false,
     }
 }

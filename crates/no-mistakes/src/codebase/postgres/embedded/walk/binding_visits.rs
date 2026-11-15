@@ -3,52 +3,6 @@ use oxc_ast::ast;
 use oxc_ast_visit::walk;
 
 impl<'a> ScopeVisitor<'a> {
-    pub(super) fn walk_variable_declaration_bindings(
-        &mut self,
-        declaration: &oxc_ast::ast::VariableDeclaration<'a>,
-    ) {
-        let previous = self.declaring_const;
-        let previous_plain = self.declaring_plain_const;
-        self.declaring_plain_const = declaration.kind == ast::VariableDeclarationKind::Const;
-        self.declaring_const = declaration.kind == ast::VariableDeclarationKind::Const
-            || (self.executor_options.track_transaction_helpers
-                && matches!(
-                    declaration.kind,
-                    ast::VariableDeclarationKind::Using | ast::VariableDeclarationKind::AwaitUsing
-                ));
-        for declarator in &declaration.declarations {
-            if let Some(init) = &declarator.init {
-                // A mutable alias or mixed const result can expose `.query`.
-                let tracked_alias =
-                    matches!(declarator.id, ast::BindingPattern::BindingIdentifier(_))
-                        && matches!(
-                            crate::codebase::ts_source::unwrap_ts_wrappers(init),
-                            ast::Expression::Identifier(_)
-                        )
-                        && !self.receiver_origins(init).is_empty();
-                let copied_query =
-                    !crate::codebase::postgres::executor_detachment::executor_bindings(
-                        &declarator.id,
-                        &self.executor_options.executor_names,
-                    )
-                    .is_empty()
-                        && self.detached_query_receiver(init);
-                if !copied_query
-                    && ((!tracked_alias && !self.declaring_const)
-                        || (self.stable_executor_category(init).is_none()
-                            && self.relative_executor_proof(init).is_none()
-                            && !tracked_alias))
-                {
-                    self.revoke_query_receiver(init);
-                }
-            }
-        }
-        resolve::initialize_vars(declaration, self);
-        walk::walk_variable_declaration(self, declaration);
-        self.declaring_const = previous;
-        self.declaring_plain_const = previous_plain;
-    }
-
     pub(super) fn walk_assignment_target_reference(
         &mut self,
         target: &ast::SimpleAssignmentTarget<'a>,
@@ -132,6 +86,7 @@ impl<'a> ScopeVisitor<'a> {
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclarator<'a>,
     ) {
+        let tracked_closed = matches!(&declaration.id,ast::BindingPattern::BindingIdentifier(name) if self.literal_objects.closed.has(&self.scopes,name.name.as_str()));
         let forwarded = declaration
             .init
             .as_ref()
@@ -160,11 +115,20 @@ impl<'a> ScopeVisitor<'a> {
                 self.allow_builder_value(init);
             }
         }
+        let literal_reads = self.literal_objects.read_spans.len();
+        let member_reads = self.literal_objects.member_uses.len();
+        if self.declaring_const && tracked_closed {
+            if let Some(init) = &declaration.init {
+                self.exempt_closed_const_alias(init);
+            }
+        }
         let outer = self.enter_iife(declaration);
         let saved_plain = self.arm_plain_binding(declaration);
         self.record_forwarded_body(declaration, forwarded);
         walk::walk_variable_declarator(self, declaration);
         self.restore_plain_binding(saved_plain);
+        self.literal_objects.read_spans.truncate(literal_reads);
+        self.literal_objects.member_uses.truncate(member_reads);
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor, namespace);

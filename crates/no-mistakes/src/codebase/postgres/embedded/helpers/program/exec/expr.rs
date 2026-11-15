@@ -15,6 +15,19 @@ impl Machine<'_> {
             | Expr::Num
             | Expr::Ident(_) => return self.eval_leaf(expr, path),
             Expr::Template(pieces, holes) => self.eval_template(pieces, holes, path),
+            Expr::RawSql(pieces, holes) => {
+                let mut values = self.eval_template(pieces, holes, path)?;
+                for (path, value) in &mut values {
+                    let Val::Str(Text {
+                        prov: Some(text), ..
+                    }) = value
+                    else {
+                        return None;
+                    };
+                    *value = path.new_builder(text.clone(), None);
+                }
+                Some(values)
+            }
             Expr::Sql(pieces, holes, parameterizes_all) => {
                 self.eval_sql(pieces, holes, path, *parameterizes_all)
             }

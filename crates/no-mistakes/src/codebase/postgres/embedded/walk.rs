@@ -4,6 +4,7 @@ use oxc_syntax::scope::ScopeFlags;
 mod assignments;
 mod binding_visits;
 mod calls;
+mod closed_values;
 mod const_literals;
 mod executor_arguments;
 mod executor_references;
@@ -90,32 +91,20 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.note_statement_call(statement);
         walk::walk_expression_statement(self, statement);
     }
-
     fn visit_await_expression(&mut self, awaited: &ast::AwaitExpression<'a>) {
-        if self.executor_options.track_transaction_helpers {
-            if let ast::Expression::CallExpression(call) =
-                crate::codebase::ts_source::unwrap_ts_wrappers(&awaited.argument)
-            {
-                self.awaited_lock_helper_calls.insert(call.span.start);
-            }
-        }
-        walk::walk_await_expression(self, awaited);
+        self.walk_closed_await(awaited);
     }
-
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        self.visit_finite_call(call);
+        self.walk_closed_call(call);
     }
     fn visit_simple_assignment_target(&mut self, target: &ast::SimpleAssignmentTarget<'a>) {
         self.walk_assignment_target_reference(target);
     }
-
     fn visit_unary_expression(&mut self, unary: &ast::UnaryExpression<'a>) {
         self.walk_unary_write_expression(unary);
     }
-
     fn visit_new_expression(&mut self, expression: &ast::NewExpression<'a>) {
-        walk::walk_new_expression(self, expression);
-        self.revoke_namespace_arguments(&expression.callee, &expression.arguments);
+        self.walk_closed_new(expression);
     }
 
     fn visit_tagged_template_expression(&mut self, template: &ast::TaggedTemplateExpression<'a>) {
@@ -155,11 +144,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
-        resolve::enter_classic_for(statement, self);
-        self.with_append_loop(statement.span.start, |visitor| {
-            walk::walk_for_statement(visitor, statement)
-        });
-        resolve::leave_classic_for(statement, self);
+        self.walk_classic_for_scope(statement);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {

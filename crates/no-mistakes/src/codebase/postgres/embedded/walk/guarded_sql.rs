@@ -3,9 +3,11 @@ use oxc_ast::ast::{self, Statement};
 use oxc_ast_visit::Visit;
 mod intrinsics;
 mod parse;
+mod shadow;
 mod uses;
 pub(super) use intrinsics::intrinsic_safe;
 use oxc_span::GetSpan;
+pub(in crate::codebase::postgres::embedded::walk) use shadow::shadows_set;
 
 pub(super) struct GuardedCase {
     name: String,
@@ -16,9 +18,18 @@ pub(super) struct GuardedCase {
 }
 impl GuardedCase {
     pub(super) fn from_function(function: &ast::Function<'_>, depth: usize) -> Option<Self> {
-        if function.generator
-            || function.params.rest.is_some()
-            || function.params.items.iter().any(|parameter| {
+        if function.generator {
+            return None;
+        }
+        Self::from_parts(&function.params, function.body.as_ref()?, depth)
+    }
+    fn from_parts(
+        params: &ast::FormalParameters<'_>,
+        body: &ast::FunctionBody<'_>,
+        depth: usize,
+    ) -> Option<Self> {
+        if params.rest.is_some()
+            || params.items.iter().any(|parameter| {
                 parameter.initializer.is_some()
                     || !parameter.decorators.is_empty()
                     || !matches!(parameter.pattern, ast::BindingPattern::BindingIdentifier(_))
@@ -26,7 +37,6 @@ impl GuardedCase {
         {
             return None;
         }
-        let body = function.body.as_ref()?;
         let [Statement::VariableDeclaration(declaration), Statement::IfStatement(guard), sink, tail @ ..] =
             body.statements.as_slice()
         else {
@@ -48,7 +58,7 @@ impl GuardedCase {
             return None;
         }
         let set = parse::literal_set(declaration)?;
-        let membership = parse::throwing_membership(function, guard, &set.name)?;
+        let membership = parse::throwing_membership(params, guard, &set.name)?;
         let mut uses = Uses {
             set: &set.name,
             value: &membership.argument,
@@ -66,6 +76,22 @@ impl GuardedCase {
             depth,
             decision: u64::from(guard.span.start) | (1u64 << 61),
         })
+    }
+    pub(in crate::codebase::postgres::embedded::walk) fn returned_values(
+        params: &ast::FormalParameters<'_>,
+        body: &ast::FunctionBody<'_>,
+    ) -> Option<Vec<String>> {
+        let proof = Self::from_parts(params, body, 0)?;
+        let Some(Statement::ReturnStatement(returned)) = body.statements.last() else {
+            return None;
+        };
+        let Some(ast::Expression::Identifier(id)) = returned.argument.as_ref() else {
+            return None;
+        };
+        (id.name.as_str() == proof.name
+            && proof.sink.0 <= id.span.start
+            && id.span.start < proof.sink.1)
+            .then_some(proof.values)
     }
     pub(super) fn values(&self, name: &str, depth: usize, span: u32) -> Option<(&[String], u64)> {
         (self.name == name && self.depth == depth && self.sink.0 <= span && span < self.sink.1)

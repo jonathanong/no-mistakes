@@ -37,6 +37,8 @@ fn variant(sql: &str) -> EmbeddedSqlVariant {
     EmbeddedSqlVariant {
         invocations: Default::default(),
         variants_truncated: false,
+        closed_domain: false,
+        type_annotation: false,
         sql_text: sql.to_string(),
         sql_source_offsets: Default::default(),
         line: 1,

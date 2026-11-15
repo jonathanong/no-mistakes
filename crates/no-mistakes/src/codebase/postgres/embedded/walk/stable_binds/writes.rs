@@ -100,6 +100,12 @@ pub(in crate::codebase::postgres::embedded::walk) struct ParameterFields {
 }
 
 fn primitive(ty: &TSType<'_>) -> bool {
+    if let TSType::TSUnionType(union) = ty {
+        return union.types.iter().all(primitive);
+    }
+    if let TSType::TSLiteralType(literal) = ty {
+        return matches!(literal.literal, TSLiteral::StringLiteral(_));
+    }
     matches!(
         ty,
         TSType::TSStringKeyword(_)

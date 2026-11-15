@@ -60,3 +60,16 @@ fn postgres_identifier_validator_return_repro_check_json_snapshot() {
         }
     }
 }
+
+#[test]
+fn postgres_shadowed_set_guard_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "fail-shadowed-set-guard",
+    );
+    assert_saved_fixture(
+        "postgres_shadowed_set_guard",
+        &[("max", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}

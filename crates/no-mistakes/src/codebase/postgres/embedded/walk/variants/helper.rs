@@ -48,6 +48,8 @@ pub(super) fn recover(
                 positions: fragment.positions.clone(),
                 fragment: true,
                 enumerated: false,
+                closed_domain: false,
+                type_annotation: false,
                 choices: Vec::new(),
                 append_sites: vec![fragment.append_site],
                 first_append_offset: Some(0),

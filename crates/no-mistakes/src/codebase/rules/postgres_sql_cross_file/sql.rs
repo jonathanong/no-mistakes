@@ -55,14 +55,7 @@ pub(crate) fn identifier_placeholder(call: &EmbeddedSqlCall) -> Option<bool> {
     {
         return None;
     }
-    let mut texts: Vec<&str> = call
-        .variants
-        .iter()
-        .map(|variant| variant.sql_text.as_str())
-        .collect();
-    if texts.is_empty() {
-        texts.extend(call.sql_text.as_deref());
-    }
+    let texts = scanned_sql(call);
     if texts.is_empty() {
         return None;
     }
@@ -81,6 +74,24 @@ pub(crate) fn identifier_placeholder(call: &EmbeddedSqlCall) -> Option<bool> {
         None
     } else {
         Some(false)
+    }
+}
+
+/// Type-annotation variants are substituted text, not a runtime proof. Scan the
+/// placeholder form so a literal-union parameter stays an identifier hole.
+fn scanned_sql(call: &EmbeddedSqlCall) -> Vec<&str> {
+    if call.variants.iter().any(|variant| variant.type_annotation) {
+        return call.sql_text.iter().map(String::as_str).collect();
+    }
+    let texts: Vec<&str> = call
+        .variants
+        .iter()
+        .map(|variant| variant.sql_text.as_str())
+        .collect();
+    if texts.is_empty() {
+        call.sql_text.iter().map(String::as_str).collect()
+    } else {
+        texts
     }
 }
 

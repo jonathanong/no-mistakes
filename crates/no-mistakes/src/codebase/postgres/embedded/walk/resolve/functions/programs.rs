@@ -114,46 +114,16 @@ impl super::LocalFunctions {
     }
 
     pub(crate) fn has_program(&self, name: &str) -> bool {
-        self.programs.contains_key(name)
-    }
-
-    /// Literal strings a same-file helper returns for these arguments.
-    /// A failed run, or any result that is not a string, abstains.
-    pub(crate) fn identifier_clauses(
-        &self,
-        name: &str,
-        args: &[crate::codebase::postgres::embedded::helpers::SiteArg],
-    ) -> Option<Vec<String>> {
-        use crate::codebase::postgres::embedded::helpers::program::exec::{run, Ret};
-        use crate::codebase::postgres::embedded::helpers::sentinel;
-        let program = self.programs.get(name).cloned()?;
-        let mut callees = SameFile {
-            programs: &self.programs,
-            depth: 0,
-        };
-        let outcomes = run(&program, args, None, &mut callees)?;
-        let mut texts = Vec::new();
-        for outcome in outcomes {
-            let Ret::Str(text, _) = outcome.ret else {
-                return None;
-            };
-            if text.contains('\0') || sentinel::contains(&text) {
-                return None;
-            }
-            if !texts.contains(&text) {
-                texts.push(text);
-            }
-        }
-        (!texts.is_empty()).then_some(texts)
+        self.programs.contains_key(name) || self.guarded_identifiers.contains_key(name)
     }
 }
 
-struct SameFile<'a> {
-    programs: &'a crate::fx::FxHashMap<
+pub(super) struct SameFile<'a> {
+    pub(super) programs: &'a crate::fx::FxHashMap<
         String,
         std::sync::Arc<crate::codebase::postgres::embedded::helpers::program::Program>,
     >,
-    depth: u8,
+    pub(super) depth: u8,
 }
 
 impl crate::codebase::postgres::embedded::helpers::program::exec::Callees for SameFile<'_> {

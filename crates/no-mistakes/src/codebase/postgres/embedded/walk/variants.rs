@@ -44,6 +44,9 @@ pub(super) struct Recovered {
     pub positions: Vec<EmbeddedSqlSourcePosition>,
     pub fragment: bool,
     pub enumerated: bool,
+    pub closed_domain: bool,
+    /// Filled from a parameter type annotation, not a runtime value.
+    pub type_annotation: bool,
     pub choices: Vec<(u64, u32)>,
     pub append_sites: Vec<u32>,
     pub first_append_offset: Option<usize>,
@@ -53,7 +56,7 @@ pub(super) struct Recovered {
 }
 
 impl Recovered {
-    fn empty(line: u32) -> Self {
+    pub(in crate::codebase::postgres::embedded::walk) fn empty(line: u32) -> Self {
         Self {
             value: ValueKind::Sql,
             sql: String::new(),
@@ -63,6 +66,8 @@ impl Recovered {
             positions: Vec::new(),
             fragment: false,
             enumerated: false,
+            closed_domain: false,
+            type_annotation: false,
             choices: Vec::new(),
             append_sites: Vec::new(),
             first_append_offset: None,
@@ -96,6 +101,8 @@ impl Recovered {
         }
     }
     pub(super) fn merge_alternative(&mut self, other: &Self) {
+        self.closed_domain &= other.closed_domain;
+        self.type_annotation |= other.type_annotation;
         self.first_append_offset = self
             .first_append_offset
             .zip(other.first_append_offset)
@@ -115,6 +122,10 @@ impl Recovered {
         right.append_decisions.clear();
         left.decision_offs.clear();
         right.decision_offs.clear();
+        left.closed_domain = false;
+        right.closed_domain = false;
+        left.type_annotation = false;
+        right.type_annotation = false;
         left.variants_truncated = false;
         right.variants_truncated = false;
         left == right
@@ -138,6 +149,8 @@ impl Recovered {
             append_sites: self.append_sites,
             first_append_offset,
             variants_truncated: self.variants_truncated,
+            closed_domain: self.closed_domain,
+            type_annotation: self.type_annotation,
         }
     }
 }

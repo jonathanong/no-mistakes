@@ -38,7 +38,14 @@ fn exact_literal_set_guard_bounds_only_its_identical_parameter() {
             "/* guardedTemplate */ SELECT 1 FROM safe_two",
         ]
     );
-    for call in &facts.calls[3..] {
+    assert_eq!(
+        super::texts(&facts.calls[3]),
+        [
+            "/* typeOnly */ SELECT 1 FROM safe_one",
+            "/* typeOnly */ SELECT 1 FROM safe_two"
+        ]
+    );
+    for call in &facts.calls[4..] {
         assert!(call.variants.is_empty(), "unproven guard: {call:?}");
     }
 }

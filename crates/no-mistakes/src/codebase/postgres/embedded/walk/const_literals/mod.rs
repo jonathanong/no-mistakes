@@ -7,39 +7,39 @@ use oxc_ast::ast::{
 };
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-
 mod apply;
 mod stable_members;
-
 type Members = HashMap<String, String>;
-
 pub(super) struct Splice {
     name: String,
     literal: String,
     fallback: String,
 }
-
 #[derive(Default)]
 pub(super) struct LiteralObjects {
     frames: Vec<HashMap<String, Members>>,
+    pub(super) closed: super::closed_values::ClosedValues,
     stable_members: stable_members::StableMembers,
     text_consts: Vec<HashSet<String>>,
     pub(in crate::codebase::postgres::embedded::walk) fragment_consts: Vec<HashSet<String>>,
     poisoned: HashSet<String>,
     literals: RefCell<Vec<Splice>>,
     pub(super) read_spans: Vec<u32>,
+    pub(super) member_uses: Vec<oxc_span::Span>,
 }
 
 #[rustfmt::skip]
 impl LiteralObjects {
     pub(super) fn push_frame(&mut self) {
         self.frames.push(HashMap::new());
+        self.closed.push();
         self.stable_members.push_frame();
         self.text_consts.push(HashSet::new());
         self.fragment_consts.push(HashSet::new());
     }
     pub(super) fn pop_frame(&mut self) {
         self.frames.pop();
+        self.closed.pop();
         self.stable_members.pop_frame();
         self.text_consts.pop();
         self.fragment_consts.pop();
@@ -58,7 +58,8 @@ impl LiteralObjects {
     }
     fn poison_id(&mut self, scopes: &[HashMap<String, BindingState>], name: &str) {
         self.stable_members.poison(scopes, name);
-        if self.object(scopes, name).is_some() { self.poisoned.insert(name.to_string()); }
+        self.poisoned.extend(self.closed.roots(scopes,name));
+        if self.object(scopes, name).is_some() || self.closed.has(scopes, name) { self.poisoned.insert(name.to_string()); }
     }
 }
 
@@ -84,6 +85,7 @@ fn object_members(expr: &Expression<'_>) -> Option<Members> {
 #[rustfmt::skip]
 impl ScopeVisitor<'_> {
     pub(super) fn note_const_object(&mut self, init: &Expression<'_>, scope_index: usize, name: &str) {
+        self.note_closed_const(init, scope_index, name);
         self.note_stable_members(init, scope_index, name);
         let Some(members) = object_members(init) else { return };
         if let Some(frame) = self.literal_objects.frames.get_mut(scope_index) {
@@ -106,6 +108,7 @@ impl ScopeVisitor<'_> {
         let oxc_ast::ast::Declaration::VariableDeclaration(var) = &decl.declaration else { return };
         for declarator in &var.declarations {
             let oxc_ast::ast::BindingPattern::BindingIdentifier(ident) = &declarator.id else { continue };
+            if let Some(init)=&declarator.init { self.forget_closed_flat_export(ident.name.as_str(),init); }
             self.literal_objects.poison_id(&self.scopes, ident.name.as_str());
         }
     }
@@ -147,6 +150,13 @@ impl ScopeVisitor<'_> {
         literals.push(Splice { name, literal, fallback: format!("sql_placeholder_{placeholder}") });
         Some(format!("\u{0}{id}\u{0}"))
     }
+    pub(super) fn poison_closed_roots(&mut self, roots:Vec<String>) { self.literal_objects.poisoned.extend(roots); }
+    pub(super) fn closed_splice(&self, name:String, literal:String) -> Option<String> {
+        let mut literals=self.literal_objects.literals.borrow_mut();
+        let id=literals.len();
+        literals.push(Splice {name,literal,fallback:"sql_placeholder_1".into()});
+        Some(format!("\u{0}{id}\u{0}"))
+    }
     pub(super) fn classified_const_template(&self, expr: &Expression<'_>, is_const: bool) -> (Option<String>, EmbeddedSqlKind) {
         if is_const {
             if let Some(text) = super::resolve::compose::static_fragment(expr, self) {
@@ -157,7 +167,7 @@ impl ScopeVisitor<'_> {
     }
     pub(super) fn exempt_literal_read(&mut self, object: &Expression<'_>) {
         let Expression::Identifier(ident) = unwrap_ts_wrappers(object) else { return };
-        if self.literal_objects.object(&self.scopes, ident.name.as_str()).is_some() || self.literal_objects.stable_members.has(&self.scopes, ident.name.as_str()) {
+        if self.literal_objects.object(&self.scopes, ident.name.as_str()).is_some() || self.literal_objects.stable_members.has(&self.scopes, ident.name.as_str()) || self.literal_objects.closed.has(&self.scopes, ident.name.as_str()) {
             self.literal_objects.read_spans.push(ident.span.start);
         }
     }
