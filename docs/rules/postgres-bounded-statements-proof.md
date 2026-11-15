@@ -169,7 +169,9 @@ set operation). A statement is bounded when any of these holds:
   columns when the equated referenced columns include a unique key of that one referenced
   row. The filled columns can complete another composite unique key. A `NOT VALID`
   foreign key, a nullable foreign-key column, a partial or expression unique index, or a
-  composite unique key with one column still free does not prove the row. Two columns that
+  composite unique key with one column still free does not prove the row. A positional
+  column alias list does not let that alias satisfy a unique key of a different physical
+  column. Two columns that
   are each one value are not treated as equal unless the statement equates them. A `LIMIT`
   of more than one row is a bounded input, not one row, so it does not feed this proof.
 

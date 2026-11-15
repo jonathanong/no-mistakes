@@ -81,15 +81,36 @@ fn rows(
         let Some(table) = catalog.bounded_relation(name) else {
             continue;
         };
-        let pinned: Vec<_> = columns[index].iter().cloned().collect();
+        let pinned = physical_pinned(table, &item.column_aliases, &columns[index]);
         if !catalog.columns_pin_one_row(name, &pinned) {
             continue;
         }
         bounded[index] = true;
         for column in &table.columns {
-            columns[index].insert(column.name.clone());
+            if let Some(visible) =
+                super::super::arrays::key_visible(table, &item.column_aliases, &column.name)
+            {
+                columns[index].insert(visible.to_owned());
+            }
         }
     }
+}
+
+/// Visible names that still denote these physical columns. A positional alias that
+/// renames another column to a key's spelling does not satisfy that key.
+pub(super) fn physical_pinned(
+    table: &crate::codebase::postgres::CatalogTable,
+    aliases: &[String],
+    visible: &BTreeSet<String>,
+) -> Vec<String> {
+    table
+        .columns
+        .iter()
+        .filter_map(|column| {
+            let name = super::super::arrays::key_visible(table, aliases, &column.name)?;
+            visible.contains(name).then(|| column.name.clone())
+        })
+        .collect()
 }
 
 pub(super) fn unconditional(pin: &SqlBoundPin) -> bool {

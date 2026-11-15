@@ -44,16 +44,22 @@ pub(super) fn imply(
                 let Some(known) = columns.get(source) else {
                     continue;
                 };
-                let pinned: Vec<_> = remote_columns
+                let Some(source_item) = query.items.get(source) else {
+                    continue;
+                };
+                let SqlBoundItemKind::Table(source_name) = &source_item.kind else {
+                    continue;
+                };
+                let Some(source_table) = catalog.bounded_relation(source_name) else {
+                    continue;
+                };
+                let equated: BTreeSet<_> = remote_columns
                     .iter()
                     .filter(|column| known.contains(column.as_str()))
                     .cloned()
                     .collect();
-                let Some(SqlBoundItemKind::Table(source_name)) =
-                    query.items.get(source).map(|item| &item.kind)
-                else {
-                    continue;
-                };
+                let pinned =
+                    super::physical_pinned(source_table, &source_item.column_aliases, &equated);
                 if !catalog.columns_pin_one_row(source_name, &pinned) {
                     continue;
                 }
