@@ -223,12 +223,49 @@ jobs:
       - name: Test resource sampling wrapper
         timeout-minutes: 2
         run: node --test .github/scripts/with-resource-samples.test.cjs
-      - name: Test frontend memory accounting
-        timeout-minutes: 2
+      - name: Read Python version for frontend memory accounting
+        id: accounting-python
+        timeout-minutes: 1
+        shell: bash
         run: |
-          python3 -m venv "$RUNNER_TEMP/frontend-memory-accounting-venv"
-          "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/pip" install --disable-pip-version-check --only-binary=:all: --no-deps --retries 0 --timeout 20 -r .github/scripts/frontend-memory-accounting/requirements.txt
-          PYTHONDONTWRITEBYTECODE=1 "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/python" .github/scripts/frontend-memory-accounting/test_accounting.py
+          set -euo pipefail
+          version="$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+          requirements_hash="${{ hashFiles('.github/scripts/frontend-memory-accounting/requirements.txt') }}"
+          {
+            echo "version=${version}"
+            echo "cache-primary-key=frontend-memory-accounting-wheels-v1-${RUNNER_OS}-${RUNNER_ARCH}-py${version}-${requirements_hash}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Restore frontend memory accounting wheels
+        id: accounting-wheels
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: ${{ steps.accounting-python.outputs.cache-primary-key }}
+          path: ${{ runner.temp }}/frontend-memory-accounting-wheels
+      - name: Test frontend memory accounting
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test \
+            .github/scripts/frontend-memory-accounting/install-wheels.test.cjs \
+            .github/scripts/frontend-memory-accounting-workflow.test.cjs
+          bash .github/scripts/frontend-memory-accounting/install-wheels.sh \
+            .github/scripts/frontend-memory-accounting/requirements.txt \
+            "$RUNNER_TEMP/frontend-memory-accounting-wheels" \
+            "$RUNNER_TEMP/frontend-memory-accounting-venv"
+          PYTHONDONTWRITEBYTECODE=1 \
+            "$RUNNER_TEMP/frontend-memory-accounting-venv/bin/python" \
+            .github/scripts/frontend-memory-accounting/test_accounting.py
+      - name: Save frontend memory accounting wheels
+        if: ${{ success() && github.ref == 'refs/heads/main' && steps.accounting-wheels.outputs.cache-hit != 'true' }}
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          key: ${{ steps.accounting-python.outputs.cache-primary-key }}
+          path: ${{ runner.temp }}/frontend-memory-accounting-wheels
       - name: Test benchmark handoff guards
         timeout-minutes: 2
         run: node --test .github/scripts/benchmark-handoff.test.cjs
