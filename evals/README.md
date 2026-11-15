@@ -187,9 +187,14 @@ Other flags the numbers depend on:
 Then summarize, and check the result before believing it:
 
 ```sh
-python3 evals/summarize.py "$OUT"/*.json   # trigger, per-arm score, Δ; refuses errored runs
+python3 evals/summarize.py "$OUT"/*.json   # trigger, per-arm score, Δ; refuses errored runs; exits 1 if with < without
 python3 evals/power.py "$OUT"/<flow>.json  # what this run can resolve
 ```
+
+The plugin arm must never score below the baseline arm. `summarize.py` prints a
+`REGRESSION` row for each such case with its with-arm fire count and exits 1.
+Explain every row before merging: an unfired loss points at the description or
+a grader, a fired one at the skill's content.
 
 **Cost:** ~$0.15 per case × run × arm at `-j 4`, judge included (2026-11-14
 smoke: 8 `before-edit` cases, `--runs 1`, both arms, 16 runs, $2.38). A
