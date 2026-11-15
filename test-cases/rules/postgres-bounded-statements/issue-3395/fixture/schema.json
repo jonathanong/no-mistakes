@@ -1,0 +1,719 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "actors": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "username": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "id_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX id_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "actor_username": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "username IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX actor_username",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(username)"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "labels": {
+      "relationKind": "table",
+      "columns": {
+        "label": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "labels_upper": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX labels_upper",
+          "keys": [
+            {
+              "column": null,
+              "expression": "upper(label)"
+            }
+          ]
+        }
+      }
+    },
+    "titles": {
+      "relationKind": "table",
+      "columns": {
+        "title": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "titles_btrim": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX titles_btrim",
+          "keys": [
+            {
+              "column": null,
+              "expression": "btrim(title)"
+            }
+          ]
+        }
+      }
+    },
+    "handles": {
+      "relationKind": "table",
+      "columns": {
+        "handle": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "handles_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX handles_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "pg_catalog.lower(handle)"
+            }
+          ]
+        }
+      }
+    },
+    "memberships": {
+      "relationKind": "table",
+      "columns": {
+        "tenant_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "memberships_email": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX memberships_email",
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": null,
+              "expression": "lower(email)"
+            }
+          ]
+        }
+      }
+    },
+    "emails": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "character varying(64)",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "emails_text": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX emails_text",
+          "keys": [
+            {
+              "column": null,
+              "expression": "email::pg_catalog.text"
+            }
+          ]
+        }
+      }
+    },
+    "counters": {
+      "relationKind": "table",
+      "columns": {
+        "n": {
+          "dataType": "integer",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "counters_bigint": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX counters_bigint",
+          "keys": [
+            {
+              "column": null,
+              "expression": "CAST(n AS bigint)"
+            }
+          ]
+        }
+      }
+    },
+    "flags": {
+      "relationKind": "table",
+      "columns": {
+        "flag": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "flags_boolean": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX flags_boolean",
+          "keys": [
+            {
+              "column": null,
+              "expression": "flag::boolean"
+            }
+          ]
+        }
+      }
+    },
+    "tokens": {
+      "relationKind": "table",
+      "columns": {
+        "token": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "tokens_uuid": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX tokens_uuid",
+          "keys": [
+            {
+              "column": null,
+              "expression": "token::uuid"
+            }
+          ]
+        }
+      }
+    },
+    "required_names": {
+      "relationKind": "table",
+      "columns": {
+        "username": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "required_names_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX required_names_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(username)"
+            }
+          ]
+        }
+      }
+    },
+    "raw_names": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "raw_names_name": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX raw_names_name",
+          "keys": [
+            {
+              "column": "name",
+              "expression": "name"
+            }
+          ]
+        }
+      }
+    },
+    "sized": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "sized_length": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX sized_length",
+          "keys": [
+            {
+              "column": null,
+              "expression": "length(name)"
+            }
+          ]
+        }
+      }
+    },
+    "active_names": {
+      "relationKind": "table",
+      "columns": {
+        "username": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "active_names_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "active = true",
+          "definition": "CREATE UNIQUE INDEX active_names_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(username)"
+            }
+          ]
+        }
+      }
+    },
+    "strict_names": {
+      "relationKind": "table",
+      "columns": {
+        "username": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "strict_names_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "lower(username) IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX strict_names_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(username)"
+            }
+          ]
+        }
+      }
+    },
+    "trimmed": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "trimmed_btrim": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX trimmed_btrim",
+          "keys": [
+            {
+              "column": null,
+              "expression": "btrim(name, 'x')"
+            }
+          ]
+        }
+      }
+    },
+    "quoted_names": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "quoted_names_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX quoted_names_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "\"lower\"(name)"
+            }
+          ]
+        }
+      }
+    },
+    "custom_names": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "custom_names_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX custom_names_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "app.lower(name)"
+            }
+          ]
+        }
+      }
+    },
+    "codes": {
+      "relationKind": "table",
+      "columns": {
+        "code": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "codes_char": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX codes_char",
+          "keys": [
+            {
+              "column": null,
+              "expression": "code::char"
+            }
+          ]
+        }
+      }
+    },
+    "token_text": {
+      "relationKind": "table",
+      "columns": {
+        "token": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "token_text_text": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX token_text_text",
+          "keys": [
+            {
+              "column": null,
+              "expression": "token::text"
+            }
+          ]
+        }
+      }
+    },
+    "wrapped": {
+      "relationKind": "table",
+      "columns": {
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "wrapped_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX wrapped_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(name || '')"
+            }
+          ]
+        }
+      }
+    },
+    "directories": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "id_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX id_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "normalized": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "normalized_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX normalized_lower",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(email)"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
