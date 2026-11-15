@@ -150,6 +150,8 @@ words:
   - subpaths
   - tablesample
   - tokei
+  - localtime
+  - localtimestamp
   - timestamptz
   - typmod
   - typmods

@@ -1,0 +1,44 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "flows": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "provider": { "dataType": "text", "nullable": false },
+        "status": { "dataType": "text", "nullable": false },
+        "exchange_attempts": { "dataType": "integer", "nullable": false },
+        "callback_error": { "dataType": "text", "nullable": true },
+        "callback_received_at": { "dataType": "timestamptz", "nullable": true },
+        "updated_at": { "dataType": "timestamptz", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "flows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  },
+  "views": {
+    "view_current_flows": {
+      "materialized": false,
+      "definition": "SELECT id, provider, status, exchange_attempts, callback_error, callback_received_at, updated_at FROM flows"
+    },
+    "view_flow_pairs": {
+      "materialized": false,
+      "definition": "SELECT a.id, b.provider, b.status, b.exchange_attempts, b.callback_error, b.callback_received_at, b.updated_at FROM flows a JOIN flows b ON true"
+    }
+  }
+}

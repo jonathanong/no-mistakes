@@ -53,6 +53,8 @@ trusted scalar names by bare name, like `lower` or `now`.
 See the [PostgreSQL 13 release notes](https://www.postgresql.org/docs/release/13.0/)
 and [PostgreSQL 15 release notes](https://www.postgresql.org/docs/15/release-15.htm).
 
+Bare `clock_timestamp`, `statement_timestamp`, and `transaction_timestamp` are scalar builtins in that inventory. Unquoted `current_date`, `current_time`, `current_timestamp`, `localtime`, and `localtimestamp` are SQL datetime keywords with the same scalar cardinality, including inside `CASE` and with a precision argument, so a result `LIMIT` stays trusted. A quoted or schema-qualified spelling such as `"current_timestamp"()` or `pg_catalog.current_timestamp()`, and `app.current_timestamp`, stays unknown.
+
 Each set-operation arm owns its relation aliases. An alias declared in a sibling
 arm cannot turn an outer column reference into a local reference.
 
