@@ -148,7 +148,7 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
   - `advise`: a non-failing advisory `{file}:{line}: postgres-no-generated-column-writes has unresolved SQL for {checks}: {reasons}` (for example `unresolved-sql-fragment` or `opaque-sql-tail`). The target is the subcheck (`generated-write`, or `trigger-maintained-write` when trigger columns are configured), not the report sentence.
   - `ignore`: omitted.
 
-A positional `INSERT` or `MERGE` that omits its column list and supplies values into a catalogued table whose column order is unknown follows the same policy. `report` fails with target `unanalyzable` and asks for an explicit column list. `advise` uses subcheck `positional-column-order`. When SQL verdicts are collected, that insert still abstains on `generated-write` with `unknown-relation-or-write-width`, and `advise` records `positional-column-order` as well. For embedded SQL, generated-write and positional-column-order share the executor call span, so they are one advisory. `no-mistakes-disable-next-line` on that call suppresses it, including when the SQL text is a finite variant or an import declared on another line. The finding does not name a generated column. A named column list that omits those columns stays clean, as does a known order whose known value width stops before them. `INSERT ... DEFAULT VALUES` assigns no columns and stays clean. `INSERT ... TABLE` is unsupported SQL and keeps the generic unanalyzable diagnostic.
+A positional `INSERT` or `MERGE` that omits its column list and supplies values into a catalogued table whose column order is unknown follows the same policy. `report` fails with target `unanalyzable` and asks for an explicit column list. `advise` uses subcheck `positional-column-order`. When SQL verdicts are collected, that insert still abstains on `generated-write` with `unknown-relation-or-write-width`, and `advise` records `positional-column-order` as well. For embedded SQL, generated-write and positional-column-order share the executor call span, so they are one advisory. `no-mistakes-disable-next-line` on that call suppresses it, including when the SQL text is a finite variant or an import declared on another line. The finding does not name a generated column. A named column list that omits those columns stays clean, as does a known order whose known value width stops before them. `INSERT ... DEFAULT VALUES` has no counted value width. Findings stay clean, because no generated column is named, and a collected SQL verdict abstains on `generated-write` with `unknown-relation-or-write-width`, including when the column order is known. A value list of width zero assigns no column, so findings stay clean and the SQL verdict clears even when that table's column order is unknown. A counted width above zero with an unknown order still abstains on `generated-write` with `unknown-relation-or-write-width`. `INSERT ... SELECT *` covers every column, so an unknown order follows `unanalyzableSql` and a known order is a definite finding when that width covers a generated or trigger-maintained column. `INSERT ... TABLE` does not parse as a supported source, so it keeps the generic unsupported-statement diagnostic, which follows `options.unanalyzable`. A `WITH` query whose body or CTE is `INSERT`, `UPDATE`, or `MERGE` is checked as that inner statement.
 
 Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
@@ -274,7 +274,12 @@ not attributed to later `ALTER ... ADD COLUMN` generated columns.
 `INSERT` into one of those tables is not attributed to a later
 `ALTER ... ADD COLUMN` generated column. It follows `unanalyzableSql` and asks
 for an explicit column list, because the column order is unknown. `INSERT ...
-DEFAULT VALUES` assigns no columns and stays clean. Quoted and unquoted column
+DEFAULT VALUES` names no generated column, so the finding stays clean, and its
+SQL verdict abstains because the write width is uncounted. A value list of
+width zero stays clean, including its SQL verdict.
+`SELECT *` covers every column. `INSERT ... TABLE` keeps the generic
+unsupported-statement diagnostic, which follows `unanalyzableSql`. A `WITH`
+wrapper does not hide the inner `INSERT`, `UPDATE`, or `MERGE`. Quoted and unquoted column
 names that differ in case are distinct during `ALTER` replay.
 
 ## Invalid UTF-8

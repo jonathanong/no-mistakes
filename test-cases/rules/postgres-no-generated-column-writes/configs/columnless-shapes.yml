@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    include:
+      - schema.sql
+      - writes.sql
+    options:
+      importSpecifier: "@example/db"
+      extraGeneratedColumns:
+        - table: votes
+          column: created_at

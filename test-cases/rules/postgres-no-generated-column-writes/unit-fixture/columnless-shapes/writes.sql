@@ -1,0 +1,17 @@
+INSERT INTO votes VALUES (1, now()), (2, now());
+INSERT INTO votes SELECT 1, now();
+INSERT INTO votes SELECT * FROM source_rows;
+WITH seed AS (SELECT 1) INSERT INTO votes VALUES (1, now());
+WITH written AS (INSERT INTO votes VALUES (1, now()) RETURNING id) SELECT id FROM written;
+INSERT INTO votes VALUES (1, now()) ON CONFLICT (id) DO NOTHING;
+MERGE INTO votes USING source_rows ON true WHEN NOT MATCHED THEN INSERT VALUES (1, now());
+INSERT INTO votes DEFAULT VALUES;
+INSERT INTO items VALUES (1, 'n');
+INSERT INTO items VALUES (1, 'n', now());
+INSERT INTO items SELECT * FROM source_rows;
+INSERT INTO items DEFAULT VALUES;
+INSERT INTO votes (id) VALUES (1);
+WITH edited AS (UPDATE items SET created_at = now() RETURNING id) SELECT id FROM edited;
+WITH noted AS (UPDATE items SET note = 'n' RETURNING id) SELECT id FROM noted;
+INSERT INTO votes TABLE source_rows;
+INSERT INTO items TABLE source_rows;

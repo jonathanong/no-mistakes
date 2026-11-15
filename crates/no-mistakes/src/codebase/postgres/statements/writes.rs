@@ -5,7 +5,14 @@ use sqlparser::ast::{
     MergeAction, MergeInsertKind, MergeUpdateKind, OnConflictAction, OnInsert, Statement,
 };
 
+mod query;
+
 pub(super) fn collect(statement: &Statement, out: &mut Vec<SqlWriteFact>) {
+    collect_statement(statement, out);
+    query::walk(statement, out);
+}
+
+fn collect_statement(statement: &Statement, out: &mut Vec<SqlWriteFact>) {
     let line = statement.span().start.line.max(1) as usize;
     let column = statement.span().start.column.max(1) as usize;
     match statement {

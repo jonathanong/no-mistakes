@@ -77,6 +77,8 @@ mod cli_postgres_snapshot_generated_column_predicates;
 mod cli_postgres_snapshot_generated_column_writes;
 #[path = "cli_postgres_snapshot_generated_column_writes_positional.rs"]
 mod cli_postgres_snapshot_generated_column_writes_positional;
+#[path = "cli_postgres_snapshot_generated_column_writes_shapes.rs"]
+mod cli_postgres_snapshot_generated_column_writes_shapes;
 #[path = "cli_postgres_snapshot_generated_identifier_returns.rs"]
 mod cli_postgres_snapshot_generated_identifier_returns;
 #[path = "cli_postgres_snapshot_generated_identifiers.rs"]
