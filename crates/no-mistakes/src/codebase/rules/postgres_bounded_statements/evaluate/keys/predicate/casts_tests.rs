@@ -1,4 +1,4 @@
-use super::super::shape::{atom, atom_with, membership, Atom, Lit};
+use super::super::shape::{atom_with, membership_with, Atom, Lit};
 use super::preserves;
 use crate::codebase::postgres::parse_postgres_expression;
 use crate::codebase::postgres::SchemaCatalog;
@@ -11,6 +11,14 @@ fn catalog() -> SchemaCatalog {
         .join("../../test-cases/rules/postgres-bounded-statements/issue-3394");
     let sources = crate::codebase::rules::source_store_for_files(&[root.join("schema.json")]);
     SchemaCatalog::load(&root, "schema.json", &sources).unwrap()
+}
+
+fn atom(expr: &sqlparser::ast::Expr, catalog: &SchemaCatalog) -> Option<Atom> {
+    atom_with(expr, catalog, &BTreeMap::new())
+}
+
+fn membership(expr: &sqlparser::ast::Expr, catalog: &SchemaCatalog) -> Option<Atom> {
+    membership_with(expr, catalog, &BTreeMap::new())
 }
 
 fn parsed(sql: &str) -> sqlparser::ast::Expr {

@@ -24,11 +24,6 @@ pub(super) fn same(have: &Atom, need: &Atom) -> bool {
     }
 }
 
-#[cfg(test)]
-pub(super) fn atom(expr: &Expr, catalog: &SchemaCatalog) -> Option<Atom> {
-    atom_with(expr, catalog, &BTreeMap::new())
-}
-
 pub(super) fn atom_with(
     expr: &Expr,
     catalog: &SchemaCatalog,
@@ -41,11 +36,6 @@ pub(super) fn atom_with(
         return plain_column(column).map(Atom::Null);
     }
     membership_with(expr, catalog, types)
-}
-
-#[cfg(test)]
-pub(super) fn membership(expr: &Expr, catalog: &SchemaCatalog) -> Option<Atom> {
-    membership_with(expr, catalog, &BTreeMap::new())
 }
 
 pub(super) fn membership_with(
