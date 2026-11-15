@@ -43,17 +43,29 @@ impl Owners<'_> {
 
     fn related_files(&self, file: &Path) -> Vec<PathBuf> {
         let mut files = self.setups.setup_files_for(file);
-        for (node, kind) in self
-            .graph
-            .dependencies_of_node(&NodeId::file(file))
-            .into_iter()
-            .flatten()
-        {
-            if *kind == EdgeKind::Import {
-                if let Some(path) = node.as_file() {
-                    if path != file {
-                        files.push(path.to_path_buf());
-                    }
+        let mut pending: Vec<NodeId> = files.iter().map(|path| NodeId::file(path)).collect();
+        pending.push(NodeId::file(file));
+        let mut seen = pending.clone();
+        while let Some(current) = pending.pop() {
+            for (node, kind) in self
+                .graph
+                .dependencies_of_node(&current)
+                .into_iter()
+                .flatten()
+            {
+                if *kind != EdgeKind::Import {
+                    continue;
+                }
+                let NodeId::File(path) = node else {
+                    continue;
+                };
+                if seen.iter().any(|seen| seen == node) {
+                    continue;
+                }
+                seen.push(node.clone());
+                pending.push(node.clone());
+                if path.as_ref() != file {
+                    files.push(path.as_ref().to_path_buf());
                 }
             }
         }
@@ -86,8 +98,14 @@ fn local_candidate(
 pub(super) fn covering_line(paths: &PathProvenance, name: &str, offset: u32) -> Cover {
     let mut found = Cover::None;
     for write in &paths.env_writes {
-        if write.name != name || !covers(write, paths, offset) {
+        let WriteScope::Conditional(place) = write.scope else {
             continue;
+        };
+        if write.name != name || !reaches(place, write, paths, offset) {
+            continue;
+        }
+        if !place.branch {
+            return Cover::Many;
         }
         found = match found {
             Cover::None => Cover::One(write.line),
@@ -97,13 +115,7 @@ pub(super) fn covering_line(paths: &PathProvenance, name: &str, offset: u32) -> 
     found
 }
 
-fn covers(write: &EnvWrite, paths: &PathProvenance, offset: u32) -> bool {
-    let WriteScope::Conditional(place) = write.scope else {
-        return false;
-    };
-    if !place.branch {
-        return false;
-    }
+fn reaches(place: ConditionalPlace, write: &EnvWrite, paths: &PathProvenance, offset: u32) -> bool {
     if let Some((start, end)) = place.hook {
         return paths
             .test_callbacks

@@ -261,8 +261,16 @@ fn an_expression_write_or_two_branches_are_not_named_as_the_unset_branch() {
     );
     assert!(matches!(
         covering_line(&expression, "ROOT", 30),
-        Cover::None
+        Cover::Many
     ));
+    let mixed = provenance(
+        vec![
+            env_write("ROOT", 4, 12, branch_place(true, None, None)),
+            env_write("ROOT", 8, 24, branch_place(false, None, None)),
+        ],
+        vec![],
+    );
+    assert!(matches!(covering_line(&mixed, "ROOT", 30), Cover::Many));
     assert!(matches!(file_hit(&expression, "ROOT"), FileHit::Blocked));
     let doubled = provenance(
         vec![

@@ -55,8 +55,28 @@ fn skip_wrappers(nodes: &oxc_semantic::AstNodes<'_>, mut current: NodeId) -> Nod
 fn direct_arm(nodes: &oxc_semantic::AstNodes<'_>, current: NodeId) -> bool {
     match nodes.kind(nodes.parent_id(current)) {
         AstKind::IfStatement(stmt) => is_if_arm(nodes, stmt, current),
-        AstKind::ConditionalExpression(expr) => is_conditional_arm(nodes, expr, current),
+        AstKind::ConditionalExpression(_) => named_ternary_arm(nodes, current),
         _ => false,
+    }
+}
+
+/// A ternary arm counts only when the ternary itself is a statement.
+fn named_ternary_arm(nodes: &oxc_semantic::AstNodes<'_>, arm: NodeId) -> bool {
+    let mut child = arm;
+    let mut node = nodes.parent_id(arm);
+    loop {
+        match nodes.kind(node) {
+            AstKind::ParenthesizedExpression(_) => {
+                child = node;
+                node = nodes.parent_id(node);
+            }
+            AstKind::ConditionalExpression(expr) if is_conditional_arm(nodes, expr, child) => {
+                child = node;
+                node = nodes.parent_id(node);
+            }
+            AstKind::ExpressionStatement(_) => return true,
+            _ => return false,
+        }
     }
 }
 

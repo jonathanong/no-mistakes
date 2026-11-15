@@ -13,3 +13,4 @@ function consume(value) {
 if (enabled) consume(vi.stubEnv("X", "owned"));
 if (vi.stubEnv("Y", "owned")) {
 }
+consume(enabled ? vi.stubEnv("Z", "owned") : undefined);

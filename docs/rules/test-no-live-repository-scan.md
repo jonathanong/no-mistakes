@@ -366,12 +366,13 @@ that variable and call site. If that gap is exactly one assignment that is a
 statement in an `if` or conditional arm, the message also names that assignment.
 The condition itself does not count, and neither does a write passed as an
 argument. The assignment may sit in the test, a covering `beforeEach` or
-`beforeAll`, a directly imported setup module, or a configured `setupFiles`
-module. The finding stays. The generic explanation, which does not guess a line,
-stays when more than one such assignment exists, when one is in the test and
-another is in a setup or import, when the other write is inside a function that
-may not run, when a related file has no analyzable facts, or when the route is
-not one concrete test. It reports uncertainty when no concrete test or setup entry can
+`beforeAll`, a directly imported setup module, a module imported through one
+of those, or a configured `setupFiles` module. The finding stays. The generic
+explanation, which does not guess a line, stays when more than one such
+assignment exists, when one is in the test and another is in a setup or import,
+when the other write is inside a function that may not run, when a related file
+has no analyzable facts, when the write is a ternary inside a call, or when the
+route is not one concrete test. It reports uncertainty when no concrete test or setup entry can
 be identified. Multiple possible environment roots retain the
 generic unresolved-root explanation. A computed fallback such as
 `join(process.cwd(), "tmp", "example")` remains unowned, but is not presented
