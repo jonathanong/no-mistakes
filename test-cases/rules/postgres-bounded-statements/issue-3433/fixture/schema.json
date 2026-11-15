@@ -1,0 +1,127 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "repro_posts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "archived_at": {
+          "dataType": "timestamptz",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "repro_posts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX repro_posts_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    },
+    "repro_batches": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "payload": {
+          "dataType": "jsonb",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "repro_batches_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX repro_batches_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    },
+    "repro_successions": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "predecessor_post_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "predecessor_archived_at": {
+          "dataType": "timestamptz",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "repro_successions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX repro_successions_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "repro_successions_predecessor_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX repro_successions_predecessor_key",
+          "keys": [
+            {
+              "column": "predecessor_post_id",
+              "expression": "predecessor_post_id"
+            },
+            {
+              "column": "predecessor_archived_at",
+              "expression": "predecessor_archived_at"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

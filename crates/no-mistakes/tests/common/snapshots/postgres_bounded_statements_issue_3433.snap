@@ -1,0 +1,58 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "issue_3433": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "statements.sql",
+          "line": 33,
+          "message": "statements.sql:33: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
+          "line": 49,
+          "message": "statements.sql:49: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
+          "line": 66,
+          "message": "statements.sql:66: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
+          "line": 83,
+          "message": "statements.sql:83: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
+          "line": 91,
+          "message": "statements.sql:91: UPDATE can change every row of repro_batches; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM repro_batches b",
+          "target": "table:repro_batches"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -298,7 +298,11 @@ including `WITH page AS MATERIALIZED (... LIMIT $n FOR UPDATE)` joined through
 `ANY(ARRAY[page.column])` on each primary-key column. An uncapped sibling is
 dropped and does not supply the proof. A primary-key join against that bounded
 `RETURNING` source can bound a later mutation; an unbounded data-modifying CTE
-does not supply this proof.
+does not supply this proof. An `INSERT ... RETURNING` source that is itself
+caller-bounded supplies the same proof, even when the returned column name
+differs from the later unique key. A recordset read from a table column does
+not. Datetime-keyword cardinality is the
+[statement reference](postgres-bounded-statements.md).
 
 A **unique key** is a primary key, unique constraint, or unique index in the catalog
 that is valid, ready, live and immediate, using the default equality semantics.
