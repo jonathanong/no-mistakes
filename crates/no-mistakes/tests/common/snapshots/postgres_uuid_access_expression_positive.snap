@@ -181,11 +181,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/expression-positive.sql",
+          "line": 28,
+          "message": "access-paths/expression-positive.sql:28: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(id AS uuid)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 29,
+          "message": "access-paths/expression-positive.sql:29: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(\"id\" AS text)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
           "line": 3,
           "message": "access-paths/expression-positive.sql:3: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM swapped_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
           "target": "swapped_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 30,
+          "message": "access-paths/expression-positive.sql:30: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(id AS text) COLLATE \"C\") = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 31,
+          "message": "access-paths/expression-positive.sql:31: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(CAST(id AS text) AS text)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 32,
+          "message": "access-paths/expression-positive.sql:32: WHERE applies lower to UUID column cast_groups.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_groups WHERE lower(id::text || label::text) = $1;",
+          "target": "cast_groups.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 33,
+          "message": "access-paths/expression-positive.sql:33: WHERE applies lower to UUID column cast_groups.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_groups WHERE lower(CAST(id AS text) || label) = $1;",
+          "target": "cast_groups.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 34,
+          "message": "access-paths/expression-positive.sql:34: WHERE applies lower to UUID column cast_collations.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_collations WHERE lower(CAST(id AS text) COLLATE \"POSIX\") = $1;",
+          "target": "cast_collations.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 35,
+          "message": "access-paths/expression-positive.sql:35: WHERE applies lower to UUID column cast_collations.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_collations WHERE lower(id::text) = $1;",
+          "target": "cast_collations.id"
         },
         {
           "file": "access-paths/expression-positive.sql",
@@ -418,11 +482,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/expression-positive.sql",
+          "line": 28,
+          "message": "access-paths/expression-positive.sql:28: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(id AS uuid)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 29,
+          "message": "access-paths/expression-positive.sql:29: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(\"id\" AS text)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
           "line": 3,
           "message": "access-paths/expression-positive.sql:3: WHERE applies cast to UUID column swapped_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM swapped_items WHERE (post_id, content_sha256, policy_revision)::item_identity = ($1, $2, $3)::item_identity;",
           "target": "swapped_items.post_id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 30,
+          "message": "access-paths/expression-positive.sql:30: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(id AS text) COLLATE \"C\") = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 31,
+          "message": "access-paths/expression-positive.sql:31: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM functions WHERE lower(CAST(CAST(id AS text) AS text)) = $1;",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 32,
+          "message": "access-paths/expression-positive.sql:32: WHERE applies lower to UUID column cast_groups.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_groups WHERE lower(id::text || label::text) = $1;",
+          "target": "cast_groups.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 33,
+          "message": "access-paths/expression-positive.sql:33: WHERE applies lower to UUID column cast_groups.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_groups WHERE lower(CAST(id AS text) || label) = $1;",
+          "target": "cast_groups.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 34,
+          "message": "access-paths/expression-positive.sql:34: WHERE applies lower to UUID column cast_collations.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_collations WHERE lower(CAST(id AS text) COLLATE \"POSIX\") = $1;",
+          "target": "cast_collations.id"
+        },
+        {
+          "file": "access-paths/expression-positive.sql",
+          "line": 35,
+          "message": "access-paths/expression-positive.sql:35: WHERE applies lower to UUID column cast_collations.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_collations WHERE lower(id::text) = $1;",
+          "target": "cast_collations.id"
         },
         {
           "file": "access-paths/expression-positive.sql",

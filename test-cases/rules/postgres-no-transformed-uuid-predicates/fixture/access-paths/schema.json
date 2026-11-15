@@ -344,6 +344,69 @@
         }
       }
     },
+    "cast_catalog": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "id_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CAST(id AS text))"
+            }
+          ]
+        }
+      }
+    },
+    "cast_groups": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "label": {
+          "dataType": "text"
+        }
+      },
+      "indexes": {
+        "wrapped_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower((id::text || label)::text)"
+            }
+          ]
+        }
+      }
+    },
+    "cast_collations": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {
+        "collated_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text COLLATE \"C\")"
+            }
+          ]
+        }
+      }
+    },
     "a": {
       "columns": {
         "id": {

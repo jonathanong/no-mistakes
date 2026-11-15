@@ -40,6 +40,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/embedded.mts",
+          "line": 16,
+          "message": "access-paths/embedded.mts:16: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(sql`SELECT * FROM functions WHERE lower(CAST(id AS text)) = ${postId};`);",
+          "target": "uuid-predicates"
+        },
+        {
+          "file": "access-paths/embedded.mts",
           "line": 3,
           "message": "access-paths/embedded.mts:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: outer-join-residual-filter",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -66,6 +74,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "access-paths/embedded.mts:14: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "query(`SELECT * FROM functions WHERE lower(id::text) = sql_placeholder_0;`);",
+          "target": "functions.id"
+        },
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 18,
+          "message": "access-paths/embedded.mts:18: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM functions WHERE lower(CAST(id AS uuid)) = $1;`);",
           "target": "functions.id"
         },
         {
@@ -137,6 +153,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "query(sql`SELECT * FROM items WHERE (post_id, content_sha256, policy_revision)::item_identity = (sql_placeholder_1, ${contentSha256}, ${policyRevision})::item_identity;`);",
           "target": "items.post_id"
+        },
+        {
+          "file": "access-paths/embedded.mts",
+          "line": 18,
+          "message": "access-paths/embedded.mts:18: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "query(`SELECT * FROM functions WHERE lower(CAST(id AS uuid)) = $1;`);",
+          "target": "functions.id"
         },
         {
           "file": "access-paths/embedded.mts",
