@@ -19,7 +19,7 @@ pub(super) fn caller_supplied_argument(
 
 /// `unnest(…)` as a table factor is sized by its arrays, unless one is taken from a query or
 /// from another FROM item (the table factor is then evaluated per row of that item).
-pub(super) fn unnest_kind_at(
+pub(in crate::codebase::postgres::statements::bounds) fn unnest_kind_at(
     arrays: &[Expr],
     positions: PlaceholderPositions<'_>,
 ) -> SqlBoundItemKind {

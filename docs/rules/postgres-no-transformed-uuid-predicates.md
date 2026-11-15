@@ -135,7 +135,14 @@ SELECT * FROM single_row_items
 WHERE ROW(post_id)::uuid_single = ROW($1, other_col)::uuid_single;
 ```
 
-`NULL` is not a proven constant: the comparison is unknown, so it does not show that an expression index can satisfy the predicate. A named argument label, including legacy `name := value`, is not a column, so `make_interval(secs := $4)` does not by itself make the statement unanalyzable.
+`NULL` is not a proven constant anywhere, not only inside `ROW`. The comparison is unknown, so it cannot show that an index satisfies the predicate. A plain comparison has the same bound:
+
+```sql
+SELECT * FROM single_row_items
+WHERE post_id = NULL::uuid;
+```
+
+The UUID column there stays bare, and the statement stays clean. A named argument label, including legacy `name := value`, is not a column, so `make_interval(secs := $4)` does not by itself make the statement unanalyzable.
 
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.

@@ -61,19 +61,24 @@ fn rewrite_argument(arg: &mut FunctionArg) {
     let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = arg else {
         return;
     };
+    let Some(rewritten) = named_call_argument(expr) else {
+        return;
+    };
+    *arg = rewritten;
+}
+
+fn named_call_argument(expr: &mut Expr) -> Option<FunctionArg> {
     let taken = std::mem::replace(expr, Expr::Value(Value::Null.into()));
     match named_assignment(taken) {
-        Ok((name, value)) => {
-            *arg = FunctionArg::ExprNamed {
-                name: Expr::Identifier(name),
-                arg: FunctionArgExpr::Expr(value),
-                operator: FunctionArgOperator::Assignment,
-            };
-        }
+        Ok((name, value)) => Some(FunctionArg::ExprNamed {
+            name: Expr::Identifier(name),
+            arg: FunctionArgExpr::Expr(value),
+            operator: FunctionArgOperator::Assignment,
+        }),
         Err(original) => {
-            if let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = arg {
-                *expr = *original;
-            }
+            // The take left a placeholder; put the original expression back.
+            *expr = *original;
+            None
         }
     }
 }

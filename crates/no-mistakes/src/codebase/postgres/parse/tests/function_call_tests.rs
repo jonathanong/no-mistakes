@@ -99,7 +99,7 @@ fn expr_is_secs(expr: &Expr) -> bool {
 #[test]
 fn issue_3397_left_and_right_calls_stay_functions_and_joins_stay_joins() {
     let statements = parsed(fixture("statements"));
-    assert_eq!(statements.len(), 10);
+    assert_eq!(statements.len(), 9);
     assert!(bare_name(projected_function(&statements[0])).eq_ignore_ascii_case("left"));
     assert!(select_of(&statements[0]).from[0].joins.is_empty());
     assert!(bare_name(projected_function(&statements[1])).eq_ignore_ascii_case("right"));

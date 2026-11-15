@@ -5,14 +5,9 @@ use crate::codebase::postgres::statements::SqlBoundItemKind;
 use sqlparser::ast::{Function, FunctionArguments, ObjectName, TableFunctionArgs};
 mod caller_arguments;
 mod inputs;
-use caller_arguments::{caller_supplied_argument, unnest_kind_at as unnest_arrays};
+use caller_arguments::caller_supplied_argument;
 
-pub(super) fn unnest_kind_at(
-    arrays: &[sqlparser::ast::Expr],
-    positions: PlaceholderPositions<'_>,
-) -> SqlBoundItemKind {
-    unnest_arrays(arrays, positions)
-}
+pub(super) use caller_arguments::unnest_kind_at;
 
 /// The built-in aggregates, ordered-set and hypothetical-set aggregates included.
 #[rustfmt::skip]
@@ -45,7 +40,7 @@ const LATER_SCALAR: &[&str] = &[
 const POSTGRES_18_SCALAR: &[&str] = &["uuidv4", "uuidv7"];
 
 mod scalar;
-use scalar::{DATETIME_KEYWORDS, SCALAR};
+use scalar::SCALAR;
 
 /// Functions whose result row count follows caller-provided argument values.
 #[rustfmt::skip]
@@ -106,7 +101,6 @@ pub(super) fn projection_can_expand(function: &Function) -> bool {
     }
     is_set_returning(name)
         || !(builtin(name, SCALAR) && (!builtin(name, LATER_SCALAR) || pg_catalog_qualified(name))
-            || builtin(name, DATETIME_KEYWORDS)
             || (builtin(name, POSTGRES_18_SCALAR) && pg_catalog_qualified(name)))
 }
 

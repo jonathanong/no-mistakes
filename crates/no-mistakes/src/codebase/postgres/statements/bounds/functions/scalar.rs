@@ -98,14 +98,3 @@ pub(super) const SCALAR: &[&str] = &[
     "uuid_extract_timestamp",
     "uuid_extract_version",
 ];
-
-/// SQL datetime keywords. They are scalar, including with a precision argument,
-/// and they are not `pg_proc` rows.
-#[rustfmt::skip]
-pub(super) const DATETIME_KEYWORDS: &[&str] = &[
-    "current_date",
-    "current_time",
-    "current_timestamp",
-    "localtime",
-    "localtimestamp",
-];
