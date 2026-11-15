@@ -21,6 +21,8 @@ pub struct EmbeddedSqlVariant {
     /// Feasible outcomes remain beyond a site cap, sampled loop, or opaque interpolation.
     pub(crate) variants_truncated: bool,
     pub(crate) closed_domain: bool,
+    /// Filled from a parameter type annotation, not a runtime value.
+    pub(crate) type_annotation: bool,
 }
 
 impl EmbeddedSqlVariant {
@@ -45,6 +47,7 @@ impl EmbeddedSqlVariant {
             .map(|(left, right)| left.max(right));
         values[index].variants_truncated |= value.variants_truncated;
         values[index].closed_domain &= value.closed_domain;
+        values[index].type_annotation |= value.type_annotation;
         for site in value.append_sites {
             if !values[index].append_sites.contains(&site) {
                 values[index].append_sites.push(site);

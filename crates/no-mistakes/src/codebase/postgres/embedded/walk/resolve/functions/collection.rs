@@ -17,6 +17,12 @@ pub(super) fn collect(
     let guarded_identifiers = raw
         .iter()
         .filter(|_| set_safe)
+        .filter(|(_, function)| {
+            !crate::codebase::postgres::embedded::walk::guarded_sql::shadows_set(
+                function.params,
+                function.body,
+            )
+        })
         .filter_map(|(name, function)| {
             crate::codebase::postgres::embedded::walk::guarded_sql::GuardedCase::returned_values(
                 function.params,

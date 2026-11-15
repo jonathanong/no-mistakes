@@ -180,5 +180,6 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
         variants_truncated: false,
         enumerated: false,
         closed_domain: false,
+        type_annotation: false,
     }])
 }

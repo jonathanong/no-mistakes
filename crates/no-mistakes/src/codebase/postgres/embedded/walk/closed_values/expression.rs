@@ -54,6 +54,7 @@ pub(super) fn expression(
             choices: vec![],
             root: None,
             provenance: None,
+            type_annotation: false,
         }]);
     }
     match expr {
@@ -65,6 +66,7 @@ pub(super) fn expression(
                 choices: vec![],
                 root: None,
                 provenance: None,
+                type_annotation: false,
             }],
         ),
         Expression::ComputedMemberExpression(member) if !member.optional => select(
@@ -98,6 +100,8 @@ pub(super) fn select(objects: Vec<Arm>, keys: Vec<Arm>) -> Option<Vec<Arm>> {
             }
             let mut arm = object.clone();
             arm.node = fields.get(key_name)?.clone();
+            // A record field is a runtime value. The key's type is not.
+            arm.type_annotation = false;
             arm.choices.extend(&key.choices);
             result.push(arm);
         }

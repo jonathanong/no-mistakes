@@ -67,6 +67,7 @@ pub(super) fn recovered(call: &SqlCall, proof: &Recovered) -> EmbeddedSqlCall {
                 first_append_offset: None,
                 variants_truncated: !proof.complete(),
                 closed_domain: false,
+                type_annotation: false,
             })
             .collect(),
         ..Default::default()

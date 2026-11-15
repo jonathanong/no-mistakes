@@ -10,6 +10,7 @@ impl ScopeVisitor<'_> {
             choices: Vec::new(),
             root: None,
             provenance: None,
+            type_annotation: false,
         };
         self.use_closed_member(member.span, &member.object, Some(vec![key]));
     }

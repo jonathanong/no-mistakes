@@ -48,6 +48,7 @@ impl ScopeVisitor<'_> {
                 choices: vec![(id.span.start as u64 | (1 << 62), i as u32)],
                 root: None,
                 provenance: None,
+                type_annotation: true,
             })
             .collect();
         if let Some(frame) = self.literal_objects.closed.frames.last_mut() {

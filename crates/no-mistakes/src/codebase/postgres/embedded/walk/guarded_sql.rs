@@ -3,9 +3,11 @@ use oxc_ast::ast::{self, Statement};
 use oxc_ast_visit::Visit;
 mod intrinsics;
 mod parse;
+mod shadow;
 mod uses;
 pub(super) use intrinsics::intrinsic_safe;
 use oxc_span::GetSpan;
+pub(in crate::codebase::postgres::embedded::walk) use shadow::shadows_set;
 
 pub(super) struct GuardedCase {
     name: String,

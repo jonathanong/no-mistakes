@@ -35,6 +35,7 @@ impl Recovered {
         self.fragment |= suffix.fragment;
         self.enumerated |= suffix.enumerated;
         self.closed_domain |= suffix.closed_domain;
+        self.type_annotation |= suffix.type_annotation;
         self.variants_truncated |= suffix.variants_truncated;
         for choice in &suffix.choices {
             if !self.choices.contains(choice) {

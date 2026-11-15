@@ -36,6 +36,8 @@ struct Arm {
     choices: Vec<(u64, u32)>,
     root: Option<String>,
     provenance: Option<super::resolve::functions::provenance::RecoveredSql>,
+    /// The text is a parameter's type annotation, not a runtime value.
+    type_annotation: bool,
 }
 #[derive(Default)]
 pub(super) struct ClosedValues {
@@ -138,6 +140,7 @@ pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Opti
             value.invocations.record(value.sql.len(), call.span.start);
         }
         value.choices = arm.choices;
+        value.type_annotation = arm.type_annotation;
         value.enumerated = true;
         value.closed_domain = true;
         result.push(value);

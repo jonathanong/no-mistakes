@@ -62,6 +62,7 @@ fn assertion_values(
                 choices,
                 root: arm.root.clone(),
                 provenance: None,
+                type_annotation: false,
             });
         }
     }
@@ -121,6 +122,7 @@ fn helper_values(
                 choices: vec![(call.span.start as u64 | (1 << 63), i as u32)],
                 root: None,
                 provenance,
+                type_annotation: false,
             })
             .collect(),
     )

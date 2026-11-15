@@ -29,5 +29,6 @@ pub(super) fn quasi(visitor: &ScopeVisitor<'_>, quasi: &TemplateElement<'_>) -> 
         variants_truncated: false,
         enumerated: false,
         closed_domain: false,
+        type_annotation: false,
     }
 }
