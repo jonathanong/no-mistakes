@@ -1,0 +1,27 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "post_topics": {
+      "columns": {
+        "post_id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "topic_id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 2}
+      },
+      "primaryKey": {"columns": ["post_id", "topic_id"]},
+      "indexes": {
+        "post_topics_pkey": {
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "immediate": true,
+          "accessMethod": "btree",
+          "keys": [
+            {"expression": "post_id", "column": "post_id"},
+            {"expression": "topic_id", "column": "topic_id"}
+          ]
+        }
+      }
+    }
+  }
+}

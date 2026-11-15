@@ -433,3 +433,7 @@ and use ordinary location-scoped directives for source exceptions.
 - [`postgres-bounded-statements`](postgres-bounded-statements.md) checks row bounds.
 - [`postgres-required-predicates`](postgres-required-predicates.md) checks required predicates.
 - [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) configures structural SQL policies.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily, so a stray byte next to an executor call does not drop the file. A missing file remains a read error. Standalone SQL the statement pass cannot decode as UTF-8 stays an unanalyzable encoding failure.

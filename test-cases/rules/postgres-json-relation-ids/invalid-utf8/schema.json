@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {"dataType": "uuid", "ordinalPosition": 1},
+        "details": {"dataType": "jsonb", "ordinalPosition": 2}
+      }
+    }
+  }
+}

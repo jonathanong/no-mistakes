@@ -24,10 +24,15 @@ pub(super) fn scan(
     let mut findings = Vec::new();
     for file in &facts {
         let rel = sql_rel(root, &file.path);
-        let source = sources
-            .read_path(&file.path)
-            .map(|source| source.to_string())
-            .unwrap_or_default();
+        let source = match sources.read_source_path(&file.path) {
+            Ok(source) => source.to_string(),
+            Err(error) => {
+                findings.push(super::super::source_access::read_failure(
+                    root, &file.path, RULE_ID, &error,
+                ));
+                continue;
+            }
+        };
         for fk in &file.foreign_keys {
             findings.extend(scan_fk(
                 &rel,

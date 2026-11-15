@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-redundant-index
+    scope: repository
+    options:
+      sqlInclude: ["migrations/**/*.sql"]

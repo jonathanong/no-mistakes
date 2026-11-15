@@ -255,3 +255,7 @@ Unused `allow` entries become non-failing `unused-allow-entry` advisories only w
 
 Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
 `ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily, so a stray byte next to an executor call does not drop the file. A missing file remains a read error. Standalone SQL the statement pass cannot decode as UTF-8 stays an unanalyzable encoding failure.

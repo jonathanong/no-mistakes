@@ -62,6 +62,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "postgres_fk_index": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: SQL statement `invalid UTF-8 SQL file; save the file as UTF-8` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-fk-index",
+          "target": "invalid UTF-8 SQL file; save the file as UTF-8"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "postgres_generated_column_predicates": {
     "exitCode": 1,
     "report": {
@@ -82,6 +102,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "postgres_grouping_not_aggregation": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 10)",
+          "rule": "postgres-grouping-not-aggregation",
+          "target": "distinct-over-unique-key"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "postgres_idempotent_insert": {
     "exitCode": 1,
     "report": {
@@ -99,6 +139,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "insert"
         }
       ],
+      "warnings": []
+    }
+  },
+  "postgres_json_relation_ids": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: key \"accountId\" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason",
+          "rule": "postgres-json-relation-ids",
+          "target": "column:orders.details"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
       "warnings": []
     }
   },
@@ -163,6 +223,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "postgres_no_offset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_no_offset_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "postgres_no_test_state_mutation": {
     "exitCode": 1,
     "report": {
@@ -198,6 +298,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.ts:3: WHERE applies lower to UUID column accounts.email; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "target": "accounts.email"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_no_transformed_uuid_predicates_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: WHERE applies lower to UUID column accounts.email; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.email"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_redundant_index": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001.sql",
+          "line": 1,
+          "message": "migrations/001.sql:1: SQL statement `invalid UTF-8 SQL file; save the file as UTF-8` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-redundant-index",
+          "target": "invalid UTF-8 SQL file; save the file as UTF-8"
         }
       ],
       "warnings": []

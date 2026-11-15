@@ -36,7 +36,7 @@ pub(super) fn scan(
     let mut used = BTreeSet::new();
     let mut findings = Vec::new();
     for table_indexes in indexes.values() {
-        findings.extend(scan_table(table_indexes, opts, sources, &mut used));
+        findings.extend(scan_table(root, table_indexes, opts, sources, &mut used));
     }
     let checked = facts
         .iter()
@@ -57,6 +57,7 @@ pub(super) fn scan(
 }
 
 fn scan_table(
+    root: &Path,
     table_indexes: &[LiveIndex<'_>],
     opts: &CompiledOptions,
     sources: &SourceStore,
@@ -73,10 +74,18 @@ fn scan_table(
         else {
             continue;
         };
-        let source = sources
-            .read_path(shorter.path)
-            .map(|source| source.to_string())
-            .unwrap_or_default();
+        let source = match sources.read_source_path(shorter.path) {
+            Ok(source) => source.to_string(),
+            Err(error) => {
+                findings.push(super::super::source_access::read_failure(
+                    root,
+                    shorter.path,
+                    RULE_ID,
+                    &error,
+                ));
+                continue;
+            }
+        };
         if directive_on_line(&source, shorter.index.line, &opts.allow_directive) {
             continue;
         }

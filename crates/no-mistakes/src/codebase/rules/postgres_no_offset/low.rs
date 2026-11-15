@@ -56,7 +56,7 @@ pub(super) fn scan(
             }
             anyhow::bail!("{RULE_ID}: prepared low-effort SQL syntax projection missing for {rel}");
         };
-        let source = sources.read_path(path)?;
+        let source = sources.read_source_path(path)?;
         let mut ordinal = 0;
         let literals = cache::literals(file, facts, path, &source);
         for call in calls {

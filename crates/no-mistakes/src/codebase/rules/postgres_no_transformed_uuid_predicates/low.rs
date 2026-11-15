@@ -48,7 +48,7 @@ pub(super) fn scan(
             }
             anyhow::bail!("{RULE_ID}: prepared low-effort SQL syntax projection missing for {rel}");
         };
-        let source = sources.read_path(path)?;
+        let source = sources.read_source_path(path)?;
         let literals = cache::literals(file, facts, path, &source);
         for call in calls {
             let suppressed_call = crate::codebase::ts_source::matching_disable_directive(

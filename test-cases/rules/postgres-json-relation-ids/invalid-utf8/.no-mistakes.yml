@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      idKeyPattern: '(^id$|Id$|_id$)'
+      keyColumnMap: {accountId: account_id}
