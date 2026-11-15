@@ -43,7 +43,7 @@ impl Owners<'_> {
 
     fn related_files(&self, file: &Path) -> Vec<PathBuf> {
         let mut files = self.setups.setup_files_for(file);
-        let mut pending: Vec<NodeId> = files.iter().map(|path| NodeId::file(path)).collect();
+        let mut pending: Vec<NodeId> = files.iter().map(NodeId::file).collect();
         pending.push(NodeId::file(file));
         let mut seen = pending.clone();
         while let Some(current) = pending.pop() {
