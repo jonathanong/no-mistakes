@@ -18,7 +18,13 @@ impl EnvCause {
             })
             .unwrap_or_default();
         let variable = serde_json::to_string(name).unwrap_or_default();
-        let (problem, fix) = if self.concrete {
+        let (problem, fix) = if let Some((branch_file, branch_line)) = &self.branch {
+            let branch_place = format!("{}:{branch_line}", relative_slash_path(root, branch_file));
+            (
+                format!("{place} reaches this scan, but {branch_place} assigns `process.env.{name}` only inside a conditional, so a path leaves it unset"),
+                format!("at {branch_place}, assign {variable} on every path with vi.stubEnv({variable}, fixturePath) using a fixture or owned mkdtemp root before the call or dynamic import"),
+            )
+        } else if self.concrete {
             (format!("{place} {}", self.reason), format!("at {place}, use vi.stubEnv({variable}, fixturePath) with a fixture or owned mkdtemp root before the call or dynamic import; do not clear it until the scan has finished"))
         } else {
             ("a concrete test or setup entry cannot be identified, so environment ownership cannot be established".to_string(), format!("make the test-to-scan call or import route explicit, then use vi.stubEnv({variable}, fixturePath) with a fixture or owned mkdtemp root in that test or setup before the scan"))

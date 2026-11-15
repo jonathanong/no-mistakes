@@ -1,6 +1,7 @@
 mod array_guard;
 mod path_default;
 pub(crate) use super::path_value::{MemberEffect, PathValueKind};
+use super::ConditionalPlace;
 use crate::fx::FxHashMap;
 pub(crate) use array_guard::ArrayGuard;
 pub(crate) use path_default::PathDefault;
@@ -87,8 +88,7 @@ pub(crate) enum WriteScope {
     BeforeEach(u32, u32),
     AfterEach(u32, u32),
     AfterAll(u32, u32),
-    /// Nested in a branch, loop, or handler, so it may not have run.
-    Conditional,
+    Conditional(ConditionalPlace),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

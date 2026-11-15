@@ -1,5 +1,5 @@
 //! Where a `process.env` write sits in its enclosing code.
-use super::super::WriteScope;
+use super::super::{ConditionalPlace, WriteScope};
 use oxc_ast::{ast::*, AstKind};
 use oxc_span::GetSpan;
 use oxc_syntax::node::NodeId;
@@ -26,7 +26,7 @@ fn unconditional_body(nodes: &oxc_semantic::AstNodes<'_>, node: NodeId) -> Optio
 pub(super) fn write_scope(semantic: &oxc_semantic::Semantic<'_>, node: NodeId) -> WriteScope {
     let nodes = semantic.nodes();
     let Some(body) = unconditional_body(nodes, node) else {
-        return WriteScope::Conditional;
+        return WriteScope::Conditional(conditional_place(semantic, node));
     };
     if matches!(nodes.kind(body), AstKind::Program(_)) {
         return WriteScope::Program;
@@ -41,7 +41,7 @@ pub(super) fn write_scope(semantic: &oxc_semantic::Semantic<'_>, node: NodeId) -
     };
     // A hook registered inside a branch may never run.
     if unconditional_body(nodes, nodes.parent_id(function)).is_none() {
-        return WriteScope::Conditional;
+        return WriteScope::Conditional(conditional_place(semantic, node));
     }
     let container = nodes
         .ancestors(function)
@@ -98,4 +98,81 @@ pub(super) fn hook_name(
         "afterAll" => Some("afterAll"),
         _ => None,
     }
+}
+
+mod branch_arm;
+
+pub(super) fn conditional_place(
+    semantic: &oxc_semantic::Semantic<'_>,
+    node: NodeId,
+) -> ConditionalPlace {
+    let nodes = semantic.nodes();
+    let branch = branch_arm::in_named_branch(nodes, node);
+    let mut hook = None;
+    let mut function = None;
+    let mut current = node;
+    loop {
+        current = nodes.parent_id(current);
+        let kind = nodes.kind(current);
+        if hook.is_none() && function.is_none() {
+            if let Some(span) = function_span(kind) {
+                if let Some(container) = before_hook_span(semantic, nodes, current) {
+                    hook = Some(container);
+                } else {
+                    function = Some(span);
+                }
+            }
+        }
+        if matches!(kind, AstKind::Program(_)) {
+            break;
+        }
+    }
+    ConditionalPlace {
+        hook,
+        function: if hook.is_some() { None } else { function },
+        program: hook.is_none() && function.is_none(),
+        branch,
+    }
+}
+
+fn function_span(kind: AstKind<'_>) -> Option<(u32, u32)> {
+    match kind {
+        AstKind::Function(function) => Some((function.span.start, function.span.end)),
+        AstKind::ArrowFunctionExpression(function) => {
+            Some((function.span.start, function.span.end))
+        }
+        _ => None,
+    }
+}
+
+fn before_hook_span(
+    semantic: &oxc_semantic::Semantic<'_>,
+    nodes: &oxc_semantic::AstNodes<'_>,
+    function: NodeId,
+) -> Option<(u32, u32)> {
+    let AstKind::CallExpression(registration) = nodes.parent_kind(function) else {
+        return None;
+    };
+    if !matches!(
+        hook_name(semantic, &registration.callee),
+        Some("beforeEach" | "beforeAll")
+    ) {
+        return None;
+    }
+    Some(
+        nodes
+            .ancestors(function)
+            .find(|ancestor| {
+                matches!(
+                    ancestor.kind(),
+                    AstKind::Function(_)
+                        | AstKind::ArrowFunctionExpression(_)
+                        | AstKind::Program(_)
+                )
+            })
+            .map_or((0, u32::MAX), |ancestor| {
+                let span = ancestor.kind().span();
+                (span.start, span.end)
+            }),
+    )
 }

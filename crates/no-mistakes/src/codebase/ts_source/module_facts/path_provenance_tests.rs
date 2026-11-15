@@ -84,10 +84,18 @@ fn env_writes_record_the_scope_that_must_dominate_a_call() {
     ));
     assert!(matches!(write(provenance, "I").scope, WriteScope::Hook(..)));
     // A branch, or a write used as an expression, may not have run.
-    assert_eq!(write(provenance, "F").scope, WriteScope::Conditional);
-    assert_eq!(write(provenance, "K").scope, WriteScope::Conditional);
+    assert!(matches!(
+        write(provenance, "F").scope,
+        WriteScope::Conditional(place) if place.branch && place.program
+    ));
+    assert!(matches!(
+        write(provenance, "K").scope,
+        WriteScope::Conditional(place) if !place.branch && place.program
+    ));
     assert_eq!(provenance.test_callbacks.len(), 2);
 }
+
+mod conditional_place;
 
 #[test]
 fn unattributable_env_mutations_are_marked_unknown() {

@@ -30,7 +30,6 @@ pub(in super::super) struct ConfiguredSetups {
     projects: Vec<Project>,
     known: bool,
     configs_known: bool,
-    /// Why test roots could not be named. Absent when `known` is true.
     gap: Option<SetupGap>,
 }
 
@@ -62,6 +61,15 @@ impl ConfiguredSetups {
 
     pub(super) fn root(&self) -> &Path {
         &self.root
+    }
+
+    pub(super) fn setup_files_for(&self, file: &Path) -> Vec<PathBuf> {
+        let relative = crate::codebase::ts_source::relative_slash_path(&self.root, file);
+        self.projects
+            .iter()
+            .filter(|project| project.filter.is_match(&relative))
+            .flat_map(|project| project.setups.clone())
+            .collect()
     }
 
     pub(super) fn gap(&self) -> Option<&SetupGap> {

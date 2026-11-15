@@ -16,6 +16,8 @@ pub(crate) use transparent_writes::{
 };
 mod captured_env;
 pub(crate) use captured_env::CapturedEnv;
+mod conditional_place;
+pub(crate) use conditional_place::ConditionalPlace;
 mod env_diagnostic;
 pub(crate) use env_diagnostic::EnvDiagnostic;
 mod types;

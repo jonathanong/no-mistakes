@@ -1,3 +1,4 @@
+mod branch;
 mod entries;
 mod selection;
 use entries::diagnostic_paths;
@@ -22,6 +23,7 @@ pub(in super::super) struct EnvCause {
     pub(super) line: u32,
     pub(super) reason: &'static str,
     pub(super) concrete: bool,
+    pub(super) branch: Option<(PathBuf, u32)>,
 }
 
 impl Owners<'_> {
