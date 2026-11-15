@@ -1,16 +1,18 @@
 //! Shapes a partial-index predicate can share with a query conjunct.
+use super::casts::preserves;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
+use crate::codebase::postgres::SchemaCatalog;
 use sqlparser::ast::{BinaryOperator, Expr, Value};
 use std::collections::BTreeSet;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(in super::super) enum Atom {
     Null(String),
     Eq(String, Lit),
     In(String, BTreeSet<Lit>),
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(in super::super) enum Lit {
     Str(String),
     Bool(bool),
@@ -26,37 +28,40 @@ pub(super) fn same(have: &Atom, need: &Atom) -> bool {
     }
 }
 
-pub(super) fn atom(expr: &Expr) -> Option<Atom> {
-    if let Some((column, literal)) = eq_literal(expr) {
+pub(super) fn atom(expr: &Expr, catalog: &SchemaCatalog) -> Option<Atom> {
+    if let Some((column, literal)) = eq_literal(expr, catalog) {
         return Some(Atom::Eq(column, literal));
     }
     if let Expr::IsNull(column) = unwrap_expr(expr) {
         return plain_column(column).map(Atom::Null);
     }
-    membership(expr)
+    membership(expr, catalog)
 }
 
-pub(super) fn membership(expr: &Expr) -> Option<Atom> {
+pub(super) fn membership(expr: &Expr, catalog: &SchemaCatalog) -> Option<Atom> {
     match unwrap_expr(expr) {
         Expr::InList {
             expr,
             list,
             negated: false,
-        } => Some(Atom::In(plain_column(expr)?, literals(list)?)),
+        } => Some(Atom::In(plain_column(expr)?, literals(list, catalog)?)),
         Expr::AnyOp {
             left,
             compare_op: BinaryOperator::Eq,
             right,
             ..
-        } => Some(Atom::In(plain_column(left)?, array_literals(right)?)),
+        } => Some(Atom::In(
+            plain_column(left)?,
+            array_literals(right, catalog)?,
+        )),
         _ => None,
     }
 }
 
-pub(super) fn eq_literal(expr: &Expr) -> Option<(String, Lit)> {
+pub(super) fn eq_literal(expr: &Expr, catalog: &SchemaCatalog) -> Option<(String, Lit)> {
     let (left, right) = eq_pair(expr)?;
     let (column, value) = column_and_other(left, right)?;
-    Some((column, literal(value)?))
+    Some((column, literal(value, catalog)?))
 }
 
 pub(super) fn eq_placeholder(expr: &Expr) -> Option<(String, String)> {
@@ -65,12 +70,12 @@ pub(super) fn eq_placeholder(expr: &Expr) -> Option<(String, String)> {
     Some((column, placeholder(value)?))
 }
 
-pub(super) fn binding(expr: &Expr) -> Option<(String, Lit)> {
+pub(super) fn binding(expr: &Expr, catalog: &SchemaCatalog) -> Option<(String, Lit)> {
     let (left, right) = eq_pair(expr)?;
-    if let (Some(name), Some(value)) = (placeholder(left), literal(right)) {
+    if let (Some(name), Some(value)) = (placeholder(left), literal(right, catalog)) {
         return Some((name, value));
     }
-    if let (Some(name), Some(value)) = (placeholder(right), literal(left)) {
+    if let (Some(name), Some(value)) = (placeholder(right), literal(left, catalog)) {
         return Some((name, value));
     }
     None
@@ -95,14 +100,22 @@ fn eq_pair(expr: &Expr) -> Option<(&Expr, &Expr)> {
     }
 }
 
-fn literals(list: &[Expr]) -> Option<BTreeSet<Lit>> {
-    list.iter().map(literal).collect()
+fn literals(list: &[Expr], catalog: &SchemaCatalog) -> Option<BTreeSet<Lit>> {
+    list.iter().map(|expr| literal(expr, catalog)).collect()
 }
 
-fn array_literals(expr: &Expr) -> Option<BTreeSet<Lit>> {
+fn array_literals(expr: &Expr, catalog: &SchemaCatalog) -> Option<BTreeSet<Lit>> {
     match unwrap_expr(expr) {
-        Expr::Array(array) => literals(&array.elem),
-        Expr::Cast { expr, .. } => array_literals(expr),
+        Expr::Array(array) => literals(&array.elem, catalog),
+        Expr::Cast {
+            expr, data_type, ..
+        } => {
+            let values = array_literals(expr, catalog)?;
+            values
+                .iter()
+                .all(|value| preserves(data_type, value, catalog))
+                .then_some(values)
+        }
         _ => None,
     }
 }
@@ -114,7 +127,7 @@ pub(super) fn plain_column(expr: &Expr) -> Option<String> {
     }
 }
 
-fn literal(expr: &Expr) -> Option<Lit> {
+fn literal(expr: &Expr, catalog: &SchemaCatalog) -> Option<Lit> {
     match unwrap_expr(expr) {
         Expr::Value(value) => match &value.value {
             Value::SingleQuotedString(text) => Some(Lit::Str(text.clone())),
@@ -122,7 +135,12 @@ fn literal(expr: &Expr) -> Option<Lit> {
             Value::Number(text, _) => Some(Lit::Num(text.clone())),
             _ => None,
         },
-        Expr::Cast { expr, .. } => literal(expr),
+        Expr::Cast {
+            expr, data_type, ..
+        } => {
+            let inner = literal(expr, catalog)?;
+            preserves(data_type, &inner, catalog).then_some(inner)
+        }
         _ => None,
     }
 }

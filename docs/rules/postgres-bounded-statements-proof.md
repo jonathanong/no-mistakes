@@ -302,8 +302,13 @@ Every key element must have a finite pin. Supported index shapes include:
   predicate. Positional column alias lists keep expression and partial-index
   proofs conservative.
   A conjunct holds when the same alternative contains the same shape: `col IS NULL`;
-  `col = literal`, ignoring a cast on the literal; or `col IN (literals)` with the
-  same set of literals. PostgreSQL stores that list as `col = ANY (ARRAY[...])`,
+  `col = literal`; or `col IN (literals)` with the same set of literals. A cast
+  stays on the literal unless it preserves the value: `text`, `boolean`, unlimited
+  `varchar` / `character varying`, `varchar(n)` when every character fits, and a
+  catalog enum whose label is the literal. The same rule applies to an array cast
+  around `ANY (ARRAY[...])`. `varchar(n)` that truncates, `char(n)`, and any other
+  cast stay unrecognized, so `'pending'::varchar(3)` does not match `'pending'`.
+  PostgreSQL stores that list as `col = ANY (ARRAY[...])`,
   and the two spellings match. A longer list, a shorter list, or `col = one-literal`
   does not match a multi-value list. A bare parameter does not match a literal.
   `col = $n` together with `$n = literal` or `literal = $n` in the same alternative
@@ -314,9 +319,13 @@ Every key element must have a finite pin. Supported index shapes include:
   When the catalog types a column as an enum and the alternative equates that
   column to a parameter, each catalog label is tried in its place, up to 32
   combinations. Every label must pin some unique index using that alternative's
-  conjuncts. A label that contradicts a literal already bound to the parameter
-  matches no row. A type that is not a catalog enum stays opaque, so the same SQL
-  on `text` still reports. More than 32 combinations leave the scan unproven.
+  conjuncts. Those pins keep their source dependencies, so a label reached only
+  through another relation is proven when that relation is bounded. The product
+  of proving indexes across labels also stays within 32; a larger product leaves
+  the scan unproven. A label that contradicts a literal already bound to the
+  parameter matches no row. A type that is not a catalog enum stays opaque, so
+  the same SQL on `text` still reports. More than 32 combinations leave the scan
+  unproven.
 - `UNIQUE ... NULLS NOT DISTINCT` keys also accept `IS NOT DISTINCT FROM`,
   including nullable columns and matching expression keys. `col IS NULL` also pins
   a nullable column of such a key; every other key element still needs a pin.
@@ -327,8 +336,10 @@ Every key element must have a finite pin. Supported index shapes include:
 These do not prove one row:
 
 - A partial unique index whose predicate is absent or only partly established.
-  That includes a different `IN` or `ANY` literal set, and a parameter standing
-  in for a literal.
+  That includes a different `IN` or `ANY` literal set, a parameter standing
+  in for a literal, and a cast that can change the literal
+  (`'pending'::varchar(3)`, including the same cast on an array).
+- An enum label whose proving index is pinned only by an unbounded relation.
 - A catalog index with a placeholder anywhere in its parsed key or predicate.
   PostgreSQL index definitions cannot depend on query parameters; matching malformed
   catalog text to a query does not establish uniqueness.

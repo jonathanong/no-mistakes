@@ -6,6 +6,7 @@ use sqlparser::ast::Expr;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod assign;
+mod casts;
 mod shape;
 
 use shape::{atom, binding, eq_literal, eq_placeholder, membership, plain_column, same, Atom, Lit};
@@ -15,11 +16,12 @@ pub(super) fn holds(
     item: &SqlBoundItem,
     alternative: usize,
     extra: &[Atom],
+    catalog: &SchemaCatalog,
 ) -> bool {
-    let evidence = Evidence::collect(item, alternative, extra);
+    let evidence = Evidence::collect(item, alternative, extra, catalog);
     predicates
         .iter()
-        .all(|predicate| evidence.implies(predicate, item, alternative))
+        .all(|predicate| evidence.implies(predicate, item, alternative, catalog))
 }
 
 pub(super) fn assignments(
@@ -28,7 +30,7 @@ pub(super) fn assignments(
     table: &CatalogTable,
     catalog: &SchemaCatalog,
 ) -> Option<Vec<assign::Assignment>> {
-    let evidence = Evidence::collect(item, alternative, &[]);
+    let evidence = Evidence::collect(item, alternative, &[], catalog);
     assign::expand(
         &evidence.params,
         &evidence.bindings,
@@ -46,7 +48,12 @@ struct Evidence {
 }
 
 impl Evidence {
-    fn collect(item: &SqlBoundItem, alternative: usize, extra: &[Atom]) -> Self {
+    fn collect(
+        item: &SqlBoundItem,
+        alternative: usize,
+        extra: &[Atom],
+        catalog: &SchemaCatalog,
+    ) -> Self {
         let mut evidence = Self {
             atoms: Vec::new(),
             params: Vec::new(),
@@ -59,15 +66,15 @@ impl Evidence {
             .map(Vec::as_slice)
             .unwrap_or(&[]);
         for expr in item.predicate_conjuncts.iter().chain(branch) {
-            evidence.classify(expr);
+            evidence.classify(expr, catalog);
         }
         evidence.forward();
         evidence.atoms.extend(extra.iter().cloned());
         evidence
     }
 
-    fn classify(&mut self, expr: &Expr) {
-        if let Some((column, literal)) = eq_literal(expr) {
+    fn classify(&mut self, expr: &Expr, catalog: &SchemaCatalog) {
+        if let Some((column, literal)) = eq_literal(expr, catalog) {
             self.atoms.push(Atom::Eq(column, literal));
             return;
         }
@@ -75,7 +82,7 @@ impl Evidence {
             self.params.push((column, placeholder));
             return;
         }
-        if let Some((placeholder, literal)) = binding(expr) {
+        if let Some((placeholder, literal)) = binding(expr, catalog) {
             self.bind(placeholder, literal);
             return;
         }
@@ -85,7 +92,7 @@ impl Evidence {
             }
             return;
         }
-        if let Some(atom) = membership(expr) {
+        if let Some(atom) = membership(expr, catalog) {
             self.atoms.push(atom);
         }
     }
@@ -116,7 +123,13 @@ impl Evidence {
         }
     }
 
-    fn implies(&self, predicate: &Expr, item: &SqlBoundItem, alternative: usize) -> bool {
+    fn implies(
+        &self,
+        predicate: &Expr,
+        item: &SqlBoundItem,
+        alternative: usize,
+        catalog: &SchemaCatalog,
+    ) -> bool {
         let branch = item
             .alternative_predicates
             .get(alternative)
@@ -137,7 +150,7 @@ impl Evidence {
                 }
             }
         }
-        let Some(need) = atom(predicate) else {
+        let Some(need) = atom(predicate, catalog) else {
             return false;
         };
         self.atoms.iter().any(|have| same(have, &need))

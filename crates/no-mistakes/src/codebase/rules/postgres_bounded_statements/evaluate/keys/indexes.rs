@@ -7,6 +7,9 @@ use crate::codebase::postgres::{CatalogTable, SchemaCatalog};
 use sqlparser::ast::Expr;
 use std::collections::BTreeMap;
 
+#[path = "enum_cover.rs"]
+mod enum_cover;
+
 struct Pins<'a> {
     item: &'a SqlBoundItem,
     item_index: usize,
@@ -38,7 +41,7 @@ pub(super) fn append(
             continue;
         }
         for (alternative, branch) in prepared.iter_mut().enumerate() {
-            if !predicate::holds(&index.predicate, item, alternative, &[]) {
+            if !predicate::holds(&index.predicate, item, alternative, &[], catalog) {
                 continue;
             }
             if let Some(key) = pinned_key(index, &pins, alternative) {
@@ -46,36 +49,11 @@ pub(super) fn append(
             }
         }
     }
-    // See docs/rules/postgres-bounded-statements-proof.md for the enum label cap.
     for (alternative, branch) in prepared.iter_mut().enumerate() {
-        if enum_covers(name, &pins, alternative, catalog) {
-            branch.push(vec![vec![vec![]]]);
+        if let Some(keys) = enum_cover::keys(name, &pins, alternative, catalog) {
+            branch.extend(keys);
         }
     }
-}
-
-fn enum_covers(name: &str, pins: &Pins<'_>, alternative: usize, catalog: &SchemaCatalog) -> bool {
-    let Some(assignments) = predicate::assignments(pins.item, alternative, pins.table, catalog)
-    else {
-        return false;
-    };
-    let indexes: Vec<_> = catalog
-        .bounded_unique_indexes(name)
-        .iter()
-        .filter(|index| index.predicate.is_empty() || pins.item.column_aliases.is_empty())
-        .collect();
-    assignments.iter().all(|assignment| {
-        assignment.proven_empty
-            || indexes.iter().any(|index| {
-                predicate::holds(&index.predicate, pins.item, alternative, &assignment.extra)
-                    && fully_pinned(index, pins, alternative)
-            })
-    })
-}
-
-fn fully_pinned(index: &BoundedUniqueIndex, pins: &Pins<'_>, alternative: usize) -> bool {
-    pinned_key(index, pins, alternative)
-        .is_some_and(|key| key.iter().all(|column| !column.is_empty()))
 }
 
 fn pinned_key(

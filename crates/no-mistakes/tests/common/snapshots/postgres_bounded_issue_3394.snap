@@ -20,6 +20,62 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "table:bindings"
         },
         {
+          "file": "bindings-enum-join.sql",
+          "line": 1,
+          "message": "bindings-enum-join.sql:1: DELETE can remove every row of bindings; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM bindings AS b",
+          "target": "table:bindings"
+        },
+        {
+          "file": "casts-report.sql",
+          "line": 1,
+          "message": "casts-report.sql:1: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "casts-report.sql",
+          "line": 11,
+          "message": "casts-report.sql:11: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "casts-report.sql",
+          "line": 16,
+          "message": "casts-report.sql:16: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "casts-report.sql",
+          "line": 22,
+          "message": "casts-report.sql:22: SELECT can return every row of bindings; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM bindings",
+          "target": "table:bindings"
+        },
+        {
+          "file": "casts-report.sql",
+          "line": 27,
+          "message": "casts-report.sql:27: SELECT can return every row of bindings; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM bindings",
+          "target": "table:bindings"
+        },
+        {
+          "file": "casts-report.sql",
+          "line": 6,
+          "message": "casts-report.sql:6: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
           "file": "enum-missing-user.sql",
           "line": 2,
           "message": "enum-missing-user.sql:2: SELECT can return every row of bindings; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
