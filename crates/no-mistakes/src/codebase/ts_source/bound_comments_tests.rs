@@ -24,10 +24,9 @@ fn parses_sql_typescript_and_hash_comments() {
                 rows: 25,
                 justification: "page of ids".to_string(),
             },
-            BoundComment::Valid {
+            BoundComment::Invalid {
                 line: 3,
-                rows: 0,
-                justification: "empty page".to_string(),
+                error: BoundCommentError::NonPositive,
             },
         ]
     );
@@ -110,6 +109,46 @@ const q = `SELECT ${foo({ id })}
             line: 5,
             rows: 9,
             justification: "template edges".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn ignores_a_backtick_inside_a_string_or_comment() {
+    let source = "\
+const note = \"` -- no-mistakes-bound postgres-bounded-statements rows<=1: example\";
+const single = '` -- no-mistakes-bound postgres-bounded-statements rows<=1: example';
+// ` -- no-mistakes-bound postgres-bounded-statements rows<=1: example
+/*
+` -- no-mistakes-bound postgres-bounded-statements rows<=1: example
+*/
+return query(`
+  -- no-mistakes-bound postgres-bounded-statements rows<=7: still a template
+  SELECT id FROM orders
+`);
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 8,
+            rows: 7,
+            justification: "still a template".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn a_same_line_template_close_does_not_keep_template_mode() {
+    let source = "\
+const orphan = `SELECT 1 -- no-mistakes-bound postgres-bounded-statements rows<=3: inside`;
+// -- no-mistakes-bound postgres-bounded-statements rows<=4: host comment
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 1,
+            rows: 3,
+            justification: "inside`;".to_string(),
         }]
     );
 }

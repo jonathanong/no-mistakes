@@ -31,14 +31,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=50: page of ids"
         },
         {
-          "file": "sql/shared-anchor.sql",
-          "justification": "two statements share this line",
-          "line": 1,
-          "rows": 40,
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=40: two statements share this line"
-        },
-        {
           "file": "src/page.ts",
           "justification": "caller passes one page of ids",
           "line": 15,
@@ -61,6 +53,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "sql/disable-next-line.sql",
+          "line": 3,
+          "message": "sql/disable-next-line.sql:3: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]);",
+          "target": "table:orders"
+        },
         {
           "file": "sql/duplicate.sql",
           "line": 1,
@@ -134,6 +134,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "candidates"
         },
         {
+          "file": "sql/shared-anchor.sql",
+          "line": 1,
+          "message": "sql/shared-anchor.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from sql/shared-anchor.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=40: two statements share this line",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/shared-anchor.sql",
+          "line": 1,
+          "message": "sql/shared-anchor.sql:1: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:61 from sql/shared-anchor.sql)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=40: two statements share this line",
+          "target": "table:orders"
+        },
+        {
+          "file": "sql/shared-anchor.sql",
+          "line": 1,
+          "message": "sql/shared-anchor.sql:1: declared bound is ambiguous because this line has more than one checked statement; put each statement on its own line with its own rows<=N declaration",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=40: two statements share this line",
+          "target": "declared-bound"
+        },
+        {
           "file": "sql/stale.sql",
           "line": 1,
           "message": "sql/stale.sql:1: declared bound rows<=1 is stale because this statement is already provably bounded; remove the declaration",
@@ -163,6 +187,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "sql/unmatched.sql:3: declared bound does not cover a checked statement; put it on the statement line or the line immediately above the outer SQL keyword",
           "rule": "postgres-bounded-statements",
           "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=10: this comment is not on a statement",
+          "target": "declared-bound"
+        },
+        {
+          "file": "src/backtick-host.ts",
+          "line": 9,
+          "message": "src/backtick-host.ts:9: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT id FROM orders\");",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/disable-line.ts",
+          "line": 8,
+          "message": "src/disable-line.ts:8: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(\"SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[])\");",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/shared-variant.ts",
+          "line": 4,
+          "message": "src/shared-variant.ts:4: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from src/shared-variant.ts; site 1)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(flag ? `SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[])` : `SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[])`); // no-mistakes-bound postgres-bounded-statements rows<=40: two recovered statements share this line",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/shared-variant.ts",
+          "line": 4,
+          "message": "src/shared-variant.ts:4: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason (statement at SQL 1:1 from src/shared-variant.ts; site 2)",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(flag ? `SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[])` : `SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[])`); // no-mistakes-bound postgres-bounded-statements rows<=40: two recovered statements share this line",
+          "target": "table:orders"
+        },
+        {
+          "file": "src/shared-variant.ts",
+          "line": 4,
+          "message": "src/shared-variant.ts:4: declared bound is ambiguous because this line has more than one checked statement; put each statement on its own line with its own rows<=N declaration",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(flag ? `SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[])` : `SELECT id FROM orders WHERE candidate_id = ANY($2::uuid[])`); // no-mistakes-bound postgres-bounded-statements rows<=40: two recovered statements share this line",
           "target": "declared-bound"
         }
       ],

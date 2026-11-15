@@ -1,13 +1,16 @@
 use super::super::declared::{self, Gate};
 use super::super::evaluate::{offenders_with_views, variant_offenders_with_views};
 use super::super::view_bounds::ViewBounds;
-use super::super::{CompiledOptions, RULE_ID};
+use super::super::CompiledOptions;
 use super::groups::Groups;
 use super::messages::finding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{SchemaCatalog, SqlBoundFact, SqlStatementFileFacts};
 use crate::codebase::rules::{PostgresFindings, VariantFindingDedup};
 use std::collections::HashSet;
+
+#[path = "judge_declared.rs"]
+mod declared_gate;
 
 pub(super) struct FileInput<'a, 'src> {
     pub(super) prepared: &'a dyn SqlFactContext,
@@ -41,16 +44,7 @@ pub(super) fn file(
         attribution,
         native_statement_count,
     } = input;
-    let mut anchors = Vec::new();
-    for facts in files {
-        let projected = crate::codebase::postgres::project_sql_bounds(facts, catalog);
-        anchors.extend(
-            projected
-                .iter()
-                .filter(|bound| checked(opts, bound))
-                .map(anchor_line),
-        );
-    }
+    let anchors = statement_anchors(opts, catalog, files);
     let plan = declared::plan(source, &anchors);
     let mut offender_anchors = HashSet::new();
     if !plan.is_empty() {
@@ -80,15 +74,17 @@ pub(super) fn file(
             let anchor = anchor_line(bound);
             if let Some(gate) = plan.gate(anchor) {
                 if settled.insert(anchor) {
-                    apply_gate(
+                    declared_gate::apply(
                         prepared,
                         findings,
+                        source,
                         rel,
+                        anchor,
                         gate,
                         offender_anchors.contains(&anchor),
                     );
                 }
-                if matches!(gate, Gate::Valid { .. }) {
+                if declared_gate::clears(source, anchor, gate) {
                     continue;
                 }
             }
@@ -116,32 +112,26 @@ pub(super) fn file(
     }
 }
 
-fn apply_gate(
-    prepared: &dyn SqlFactContext,
-    findings: &mut PostgresFindings,
-    rel: &str,
-    gate: &Gate,
-    offenders_present: bool,
-) {
-    match gate {
-        Gate::Valid {
-            line,
-            rows,
-            justification,
-        } => {
-            if offenders_present {
-                prepared.record_accepted_statement_bound(RULE_ID, rel, *line, *rows, justification);
-            } else {
-                findings.push(diagnostic(rel, *line, &declared::stale_message(*rows)));
-            }
-        }
-        Gate::Invalid { line, message } => findings.push(diagnostic(rel, *line, message)),
-        Gate::Blocked { findings: blocked } => {
-            for (line, message) in blocked {
-                findings.push(diagnostic(rel, *line, message));
+fn statement_anchors(
+    opts: &CompiledOptions,
+    catalog: &SchemaCatalog,
+    files: &[&SqlStatementFileFacts],
+) -> Vec<usize> {
+    let mut anchors = Vec::new();
+    let mut seen = HashSet::new();
+    for (index, facts) in files.iter().enumerate() {
+        let projected = crate::codebase::postgres::project_sql_bounds(facts, catalog);
+        for bound in projected.iter().filter(|bound| checked(opts, bound)) {
+            let identity = (
+                index,
+                bound.statement_start.unwrap_or((bound.line, bound.column)),
+            );
+            if seen.insert(identity) {
+                anchors.push(anchor_line(bound));
             }
         }
     }
+    anchors
 }
 
 fn offenders(
@@ -171,6 +161,6 @@ fn anchor_line(bound: &SqlBoundFact) -> usize {
         .max(1)
 }
 
-fn diagnostic(rel: &str, line: usize, message: &str) -> super::super::RuleFinding {
+pub(super) fn diagnostic(rel: &str, line: usize, message: &str) -> super::super::RuleFinding {
     finding(rel, line, message, "declared-bound")
 }

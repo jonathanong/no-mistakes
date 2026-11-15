@@ -1,7 +1,10 @@
 //! `no-mistakes-bound <rule> rows<=N: <justification>` line comments.
 //!
-//! The scanner is the disable-directive scanner, so a copy of the directive
-//! inside a string or template is not a declaration.
+//! The first pass is the disable-directive scanner, so a copy inside a string
+//! or comment is not a declaration. `--` inside a template literal is SQL.
+
+#[path = "bound_comments_template.rs"]
+mod template;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum BoundComment {
@@ -20,6 +23,7 @@ pub(crate) enum BoundComment {
 pub(crate) enum BoundCommentError {
     MissingBound,
     MissingJustification,
+    NonPositive,
 }
 
 pub(crate) fn bound_comments(source: &str, rule_id: &str) -> Vec<BoundComment> {
@@ -41,7 +45,7 @@ pub(crate) fn bound_comments(source: &str, rule_id: &str) -> Vec<BoundComment> {
         };
         found.push(parse_payload((index + 1) as u32, payload));
     }
-    found.extend(template_sql_comments(source, rule_id));
+    found.extend(template::template_sql_comments(source, rule_id));
     found.sort_by_key(comment_line);
     found
 }
@@ -50,91 +54,6 @@ fn comment_line(comment: &BoundComment) -> u32 {
     match comment {
         BoundComment::Valid { line, .. } | BoundComment::Invalid { line, .. } => *line,
     }
-}
-
-/// `--` inside a template is SQL, so quote tracking must not hide it.
-/// A copy inside `'` or `"` stays hidden.
-fn template_sql_comments(source: &str, rule_id: &str) -> Vec<BoundComment> {
-    let mut found = Vec::new();
-    let mut template = false;
-    let mut braces = 0u32;
-    let mut sql_string = false;
-    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
-        let Some(body) = template_directive(line, &mut template, &mut braces, &mut sql_string)
-        else {
-            continue;
-        };
-        let Some(payload) = directive_payload(body, rule_id) else {
-            continue;
-        };
-        found.push(parse_payload((index + 1) as u32, payload));
-    }
-    found
-}
-
-fn template_directive<'a>(
-    line: &'a str,
-    template: &mut bool,
-    braces: &mut u32,
-    sql_string: &mut bool,
-) -> Option<&'a str> {
-    let mut escaped = false;
-    let mut chars = line.char_indices().peekable();
-    while let Some((idx, ch)) = chars.next() {
-        if *braces > 0 {
-            if ch == '{' {
-                *braces += 1;
-            } else if ch == '}' {
-                *braces -= 1;
-                if *braces == 0 {
-                    *template = true;
-                }
-            }
-            continue;
-        }
-        if !*template {
-            if ch == '`' {
-                *template = true;
-            }
-            continue;
-        }
-        if escaped {
-            escaped = false;
-            continue;
-        }
-        if ch == '\\' {
-            escaped = true;
-            continue;
-        }
-        if *sql_string {
-            if ch == '\'' {
-                if chars.peek().is_some_and(|(_, next)| *next == '\'') {
-                    chars.next();
-                } else {
-                    *sql_string = false;
-                }
-            }
-            continue;
-        }
-        if ch == '\'' {
-            *sql_string = true;
-            continue;
-        }
-        if ch == '`' {
-            *template = false;
-            continue;
-        }
-        if ch == '$' && chars.peek().is_some_and(|(_, next)| *next == '{') {
-            chars.next();
-            *braces = 1;
-            *template = false;
-            continue;
-        }
-        if ch == '-' && super::dash_comment_can_start(line, idx) {
-            return Some(line[idx + 2..].trim());
-        }
-    }
-    None
 }
 
 fn directive_payload<'a>(body: &'a str, rule_id: &str) -> Option<&'a str> {
@@ -161,6 +80,9 @@ fn parse_payload(line: u32, payload: &str) -> BoundComment {
     let Ok(rows) = number.parse::<u64>() else {
         return invalid(line, BoundCommentError::MissingBound);
     };
+    if rows == 0 {
+        return invalid(line, BoundCommentError::NonPositive);
+    }
     let Some(justification) = after.trim_start().strip_prefix(':') else {
         return invalid(line, BoundCommentError::MissingJustification);
     };

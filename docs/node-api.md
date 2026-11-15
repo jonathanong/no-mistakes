@@ -155,7 +155,8 @@ ledger of hidden findings. See [suppression hygiene](configuration/suppressions.
 `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) when a
 `no-mistakes-bound` declaration suppresses `postgres-bounded-statements` for one
 statement. Each entry has `rule`, `file`, `line` (the comment), `rows`, and
-`justification`. The field is omitted when empty and is not a failure. A
+`justification`. A disable directive that covers the declaration or that
+statement omits the entry. The field is omitted when empty and is not a failure. A
 declaration missing `rows<=N` or its justification, or placed on a statement
 the rule can already prove bounded, remains a finding. See
 [declared statement bounds](rules/postgres-bounded-statements.md#declared-statement-bounds).

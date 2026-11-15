@@ -821,7 +821,7 @@ JOIN orders o ON o.candidate_id = c.id
 WHERE c.id = ANY($1::uuid[]);
 ```
 
-`orders.candidate_id` is not unique, so a page of candidate ids does not prove how many order rows the join returns. The declaration records that cap. `rows<=N` is a non-negative integer and the justification after the colon is required. This declaration has no justification, so it is a finding and the unbounded read is still reported:
+`orders.candidate_id` is not unique, so a page of candidate ids does not prove how many order rows the join returns. The declaration records that cap. `rows<=N` is a positive integer and the justification after the colon is required. `rows<=0` is a finding and does not hide the read. This declaration has no justification, so it is a finding and the unbounded read is still reported:
 
 ```sql
 -- no-mistakes-bound postgres-bounded-statements rows<=100
@@ -829,6 +829,8 @@ SELECT id, email FROM candidates;
 ```
 
 A missing `rows<=N` limit is the same kind of finding. A declaration that does not sit on a checked statement, and more than one declaration on one statement, are also findings. None of those hide the underlying unbounded read.
+
+A line with more than one checked statement makes its declaration ambiguous. That includes two SQL statements written on one line and query-builder alternatives that share a line. The declaration is a finding and clears none of them. Put each statement on its own line with its own `rows<=N` declaration.
 
 A declaration on a statement the rule can already prove bounded is stale. Primary-key equality and `id = ANY($1::uuid[])` on that key are already proved, because the parameter list cannot return more rows than it contains. Remove the declaration:
 
@@ -839,7 +841,7 @@ SELECT id, email FROM candidates WHERE id = $1;
 
 Accepted declarations are omitted from `rules`. `check --format json` and YAML list them in `acceptedBounds` (`rule`, `file`, `line`, `rows`, `justification`). `line` is the comment. The field is omitted when empty and does not by itself fail the check.
 
-This does not replace `allow`, which exempts a relation everywhere, or a disable directive, which hides every later finding on that line and records neither the bound nor the reason.
+This does not replace `allow`, which exempts a relation everywhere. `no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and `no-mistakes-disable-file` suppress declared-bound findings on the lines they cover. A directive that covers the declaration or the statement omits `acceptedBounds` for that declaration. A directive that covers only the declaration does not hide an unbounded read on another line.
 
 ## Suppression
 

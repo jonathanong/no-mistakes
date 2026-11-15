@@ -1,7 +1,8 @@
 //! Bind `no-mistakes-bound` comments to checked statement anchors.
 //!
 //! A declaration matches the statement's outer keyword line, or the line
-//! immediately above it. One statement keeps one declaration.
+//! immediately above it. One statement keeps one declaration. Two checked
+//! statements on that line make the declaration ambiguous.
 
 use crate::codebase::ts_source::bound_comments::{bound_comments, BoundComment, BoundCommentError};
 use std::collections::{BTreeMap, BTreeSet};
@@ -10,6 +11,9 @@ pub(super) const MISSING_BOUND: &str = "declared bound is missing a numeric rows
 pub(super) const MISSING_JUSTIFICATION: &str = "declared bound is missing a non-empty justification after rows<=N; write `-- no-mistakes-bound postgres-bounded-statements rows<=100: why these rows are finite`";
 pub(super) const UNMATCHED: &str = "declared bound does not cover a checked statement; put it on the statement line or the line immediately above the outer SQL keyword";
 pub(super) const DUPLICATE: &str = "a statement has more than one declared bound; keep a single rows<=N declaration with one justification";
+pub(super) const AMBIGUOUS: &str = "declared bound is ambiguous because this line has more than one checked statement; put each statement on its own line with its own rows<=N declaration";
+pub(super) const NON_POSITIVE: &str =
+    "declared bound rows<=N must be a positive integer; rows<=0 does not limit the read";
 
 #[derive(Debug)]
 pub(super) enum Gate {
@@ -60,7 +64,11 @@ pub(super) fn plan(source: Option<&str>, anchors: &[usize]) -> DeclarationPlan {
             unmatched: Vec::new(),
         };
     }
-    let anchors: BTreeSet<usize> = anchors.iter().copied().collect();
+    let mut counts = BTreeMap::<usize, usize>::new();
+    for anchor in anchors {
+        *counts.entry(*anchor).or_default() += 1;
+    }
+    let anchors: BTreeSet<usize> = counts.keys().copied().collect();
     let mut same: BTreeMap<usize, Vec<BoundComment>> = BTreeMap::new();
     let mut previous: BTreeMap<usize, Vec<BoundComment>> = BTreeMap::new();
     let mut unmatched = Vec::new();
@@ -80,7 +88,8 @@ pub(super) fn plan(source: Option<&str>, anchors: &[usize]) -> DeclarationPlan {
     for anchor in keys {
         let mut decls = same.remove(&anchor).unwrap_or_default();
         decls.extend(previous.remove(&anchor).unwrap_or_default());
-        gates.insert(anchor, gate_for(decls));
+        let shared = counts.get(&anchor).is_some_and(|count| *count > 1);
+        gates.insert(anchor, gate_for(decls, shared));
     }
     DeclarationPlan { gates, unmatched }
 }
@@ -91,9 +100,15 @@ fn comment_line(comment: &BoundComment) -> usize {
     }
 }
 
-fn gate_for(decls: Vec<BoundComment>) -> Gate {
+fn gate_for(decls: Vec<BoundComment>, shared: bool) -> Gate {
     if decls.len() == 1 {
-        return single(decls.into_iter().next().unwrap());
+        return match single(decls.into_iter().next().unwrap()) {
+            Gate::Valid { line, .. } if shared => Gate::Invalid {
+                line,
+                message: AMBIGUOUS,
+            },
+            gate => gate,
+        };
     }
     let mut findings: Vec<_> = decls
         .iter()
@@ -139,6 +154,7 @@ fn error_message(error: BoundCommentError) -> &'static str {
     match error {
         BoundCommentError::MissingBound => MISSING_BOUND,
         BoundCommentError::MissingJustification => MISSING_JUSTIFICATION,
+        BoundCommentError::NonPositive => NON_POSITIVE,
     }
 }
 
