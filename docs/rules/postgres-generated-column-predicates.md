@@ -292,3 +292,7 @@ includes `candidate_tables` for its expression scope. Schema facts expose
 ordered `SqlTableSchemaEvent` entries through `table_events`; existing
 unqualified schema metadata retains its prior meaning. Aggregate and
 standalone checks borrow these projections from one request fact pass.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

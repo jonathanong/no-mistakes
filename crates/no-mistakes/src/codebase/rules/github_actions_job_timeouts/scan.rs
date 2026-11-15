@@ -11,7 +11,7 @@ pub(super) fn check_file(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
-    let Some(source) = super::super::read_source(sources, path) else {
+    let Some(source) = super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
     if !opts.defer_suppression

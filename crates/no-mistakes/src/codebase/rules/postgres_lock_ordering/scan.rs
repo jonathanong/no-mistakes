@@ -52,7 +52,8 @@ pub(super) fn scan_with_sources(
                 )
             })?;
         let rel = relative_slash_path(root, &file.path);
-        let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
+        let source =
+            crate::codebase::rules::read_language_source(sources, &file.path).unwrap_or_default();
         let statements = prepared.postgres_statements(path, Some(&opts.embedded))?;
         if facts.wants_sql_verdicts() {
             verdicts::record(&rel, &source, file, opts, catalog, Some(statements), facts);

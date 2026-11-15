@@ -1,0 +1,145 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "github_actions_action_timeout_pair": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"deploy\" step \"Configure credentials\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "target": "deploy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_composite_step_schema": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/my-action/action.yml",
+          "line": 8,
+          "message": "composite action step \"Do something\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_docker_host_ports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/compact.yml",
+          "line": 8,
+          "message": ".github/workflows/compact.yml:8: job `a` step 1 pins host port `5432` in `5432:5432`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "target": "a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_download_integrity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/compact.yml",
+          "line": 8,
+          "message": ".github/workflows/compact.yml:8: job `a` step 1 downloads `https://example.invalid/compact.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "target": "a"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_job_timeouts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml: job \"test\" has no timeout-minutes (defaults to GitHub's 6-hour ceiling); add a literal number",
+          "rule": "github-actions-job-timeouts",
+          "target": "test"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_step_timeouts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_test_timeout_literals": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 2,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "target": "expect(workflowSource).toContain('timeout-minutes: 15')"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

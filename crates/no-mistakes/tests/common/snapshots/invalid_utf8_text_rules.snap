@@ -1,0 +1,173 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "agents_md_max_size": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "AGENTS.md",
+          "line": 1,
+          "message": "2 lines (max 1) - trim to keep agent context lean",
+          "rule": "agents-md-max-size"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "doc_consistency": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": ".no-mistakes.yml: contains banned substring \"legacy API\"",
+          "rule": "doc-consistency",
+          "sourceLine": "rules:"
+        },
+        {
+          "file": "GUIDE.md",
+          "line": 1,
+          "message": "GUIDE.md: contains banned substring \"legacy API\"",
+          "rule": "doc-consistency"
+        },
+        {
+          "file": "GUIDE.md",
+          "line": 1,
+          "message": "GUIDE.md: missing required heading \"## Perf\"",
+          "rule": "doc-consistency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "integration_test_no_mocks": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "integration-tests/web-api/mocked.test.mts",
+          "import": "msw",
+          "line": 2,
+          "message": "integration-tests/web-api/mocked.test.mts: integration tests must not use mocking libraries (`msw`); use real dependencies and test helpers instead",
+          "rule": "integration-test-no-mocks"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "markdown_eval_tests": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "slow.test.mts",
+          "line": 1,
+          "message": "slow.test.mts reads a markdown file and evals a shell block inside a spawned bash/sh/zsh process. Port content assertions to a spawn-free test, or add this exact relative path to options.allow with a rationale.",
+          "rule": "markdown-eval-tests",
+          "target": "slow.test.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_git_identity_mutation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "setup.sh",
+          "line": 3,
+          "message": "setup.sh:3: git config user.name/email is banned — use GIT_AUTHOR_*/GIT_COMMITTER_* env vars instead",
+          "rule": "no-git-identity-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_sparse_checkout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml:8: job \"build\" passes `sparse-checkout` to actions/checkout; remove partial-checkout inputs so CI sees the full repository",
+          "rule": "no-sparse-checkout",
+          "target": "sparse-checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_test_git_sha": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/example.test.ts",
+          "line": 2,
+          "message": "tests/example.test.ts:2: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead",
+          "rule": "no-test-git-sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shellcheck_runner": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "scripts/deploy",
+          "line": 1,
+          "message": "scripts/deploy: shellcheck found issues (run shellcheck manually for details)",
+          "rule": "shellcheck-runner"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

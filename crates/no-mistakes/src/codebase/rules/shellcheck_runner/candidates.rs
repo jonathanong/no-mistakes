@@ -82,7 +82,7 @@ pub(crate) fn collect_shell_files_with_sources(
             if !path.starts_with(&dir) || sh(path) {
                 continue;
             }
-            if crate::codebase::rules::read_source(sources, path)
+            if crate::codebase::rules::read_language_source(sources, path)
                 .is_some_and(|source| has_bash_shebang_source(&source))
             {
                 candidates.push(path.clone());

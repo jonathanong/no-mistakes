@@ -84,3 +84,7 @@ Fix: use the real dependency, move the behavior behind a test helper, or narrow
 Suppression caveat: suppress only a specific line when the mock is intentional
 and unavoidable. Prefer tightening the rule config or moving the exception into
 a dedicated helper instead of disabling the whole file.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

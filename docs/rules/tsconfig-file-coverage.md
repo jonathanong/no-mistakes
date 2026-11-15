@@ -175,3 +175,7 @@ request inventory and disk, within the application's configured scope. Remove
 the entry or fix its path. Existing excluded or ignored files and empty glob
 matches stay silent; narrowed runs do not audit paths outside their scope.
 See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+## Invalid UTF-8
+
+An auxiliary tsconfig is decoded lossily, so a program key next to a stray byte is still reported. A file that cannot be read for any other reason is reported as not a JSON object.

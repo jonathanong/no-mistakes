@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"

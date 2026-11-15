@@ -206,6 +206,19 @@ fn allow_audit_counts_findings_before_inline_suppression() {
 }
 
 #[test]
+fn invalid_utf8_still_reports_async_delegate() {
+    let findings = run(&fixture("invalid-utf8"), "{}");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        vec![("SessionBinding.cs", 2)],
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn allow_audit_is_silent_for_failed_reads() {
     let root = fixture("allow-audit");
     let files = vec![root.join("missing.cs")];

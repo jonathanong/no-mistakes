@@ -169,3 +169,7 @@ include:
   "@acme/pnpm-policy":
     - catalog
 ```
+
+## Invalid UTF-8
+
+Workspace package versions read for alias ranges are decoded lossily. Package manifests and the lockfile are still parsed strictly, so an invalid UTF-8 `package.json` is not a parsed manifest.

@@ -259,3 +259,7 @@ location. Auditing requires the shape to be enabled and the whole applicable fil
 scope to be analyzed. Partial file requests, unresolved low-effort analysis, SQL parse failures,
 and unrecoverable executed or builder SQL cannot prove an entry stale. A requested
 low effort that falls back to the full `max` analysis can establish complete scope.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

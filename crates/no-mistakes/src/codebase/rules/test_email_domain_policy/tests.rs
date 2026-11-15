@@ -154,7 +154,7 @@ fn prefilter_preserves_fixture_findings() {
                 assert!(filtered.is_empty(), "{}", path.display());
                 continue;
             }
-            let Some(content) = super::super::read_source(&sources, path) else {
+            let Some(content) = super::super::read_language_source(&sources, path) else {
                 assert!(filtered.is_empty(), "{}", path.display());
                 continue;
             };
@@ -162,6 +162,16 @@ fn prefilter_preserves_fixture_findings() {
             assert_eq!(filtered, unfiltered, "{}", path.display());
         }
     }
+}
+
+#[test]
+fn invalid_utf8_still_reports_banned_domain() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/test-email-domain-policy/invalid-utf8");
+    let findings = check_file(&root, &root.join("send.test.ts"), &compiled());
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 2);
+    assert_eq!(findings[0].target.as_deref(), Some("example.com"));
 }
 
 #[test]

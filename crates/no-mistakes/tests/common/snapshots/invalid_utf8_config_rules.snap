@@ -1,0 +1,116 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "config_path_references": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".oxlintrc.json",
+          "line": 1,
+          "message": ".oxlintrc.json: config path `./missing-plugin.js` from `jsPlugins[0].specifier` does not exist",
+          "rule": "config-path-references",
+          "target": "./missing-plugin.js"
+        },
+        {
+          "file": "app.yml",
+          "line": 1,
+          "message": "app.yml: config path `missing.json` from `schema` does not exist",
+          "rule": "config-path-references",
+          "target": "missing.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "require_storybook_stories": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "web/components/Child.tsx",
+          "line": 1,
+          "message": "React component `Child` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+          "rule": "require-storybook-stories",
+          "sourceLine": "export function Child() {",
+          "target": "components/Child.tsx#Child"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "structured_config_policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "drift/.oxlintrc.json",
+          "line": 1,
+          "message": "drift/.oxlintrc.json: config value `plugins` must equal `plugins` from `.oxlintrc.json`",
+          "rule": "structured-config-policy",
+          "sourceLine": "{\"extends\":[\"../.oxlintrc.json\"],\"plugins\":[\"unicorn\"]}",
+          "target": "plugins"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_no_unmocked_dynamic_imports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/load.test.mts",
+          "import": "./value.mts",
+          "line": 4,
+          "message": "dynamic import dependency `src/value.mts` must be mocked",
+          "rule": "test-no-unmocked-dynamic-imports",
+          "sourceLine": "await import('./value.mts')",
+          "target": "src/value.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tsconfig_file_coverage": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tools/tsconfig.json",
+          "line": 1,
+          "message": "tools/tsconfig.json: auxiliary tsconfig must not declare files, include, exclude, or references",
+          "rule": "tsconfig-file-coverage",
+          "target": "tools/tsconfig.json"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -147,3 +147,7 @@ also apply to the flagged key line. A `timeout-minutes:` mention inside a
 YAML `|` / `>` block scalar is documentation, not a step key.
 
 **Scope:** Checks `.github/actions/**/action.{yml,yaml}` by default.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

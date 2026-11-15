@@ -1,0 +1,5 @@
+rules:
+  - rule: integration-test-no-mocks
+    scope: repository
+    include:
+      - integration-tests/**/*.mts

@@ -190,9 +190,13 @@ violations remain failures under every policy, including when `effort: low`
 falls back to `max`.
 
 Configured scope, includes, excludes, and rule-specific exemptions still
-select the inputs. Suppressions apply to both channels, including directives
-retained in an invalid UTF-8 read error; source bytes are never reinterpreted
-as analyzable code. Rule-level custom messages apply to these diagnostics.
+select the inputs. Suppressions apply to both channels. Directives retained
+in an invalid UTF-8 read error on a selected file are not reinterpreted as
+analyzable code. Equals-file targets and ancestor-override documents are
+decoded lossily and compared, so a value next to a stray byte is still
+checked. A secondary document that cannot be read for any other reason is
+still reported as missing. Rule-level custom messages apply to these
+diagnostics.
 
 Structured-data parse errors remain definite findings under every policy.
 Only a source read failure is routed as uncertainty; the rule never treats

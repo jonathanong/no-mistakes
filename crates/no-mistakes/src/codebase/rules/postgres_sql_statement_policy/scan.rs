@@ -100,7 +100,7 @@ pub(super) fn scan(
                 }
             }
         }
-        let source = crate::codebase::rules::read_source(sources, path);
+        let source = crate::codebase::rules::read_language_source(sources, path);
         for file in statements {
             if file.parse_failed && opts.fail_unanalyzable {
                 for (site, line) in file.parse_failure_sites() {

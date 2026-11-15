@@ -58,7 +58,7 @@ pub fn diagnostics_with_files_and_sources(
                 if gha_kind(&rel).is_none() {
                     return AnalysisDiagnostics::default();
                 }
-                let Some(content) = super::super::read_source(sources, path) else {
+                let Some(content) = super::super::read_language_source(sources, path) else {
                     return AnalysisDiagnostics::default();
                 };
                 runs::check_source_low(&rel, &content, &hosts, &helpers, policy.unanalyzable)

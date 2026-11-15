@@ -1,0 +1,287 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "postgres_bounded_statements": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "target": "table:orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_conflict_ordering": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "ON CONFLICT target does not resolve to one valid, ready btree unique index in schemaCatalogPath",
+          "rule": "postgres-conflict-ordering",
+          "target": "unresolved-arbiter"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_explicit_columns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: SELECT * reads all columns of orders, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_generated_column_predicates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id); consider using id directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index",
+          "rule": "postgres-generated-column-predicates",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_idempotent_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_lock_ordering": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_lock_written_rows_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "target": "table-lock"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_no_generated_column_writes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "items.created_at",
+          "line": 3,
+          "message": "src/query.ts:3: do not write generated column `items.created_at`; PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead",
+          "rule": "postgres-no-generated-column-writes",
+          "target": "created_at"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_no_test_state_mutation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/known.test.ts",
+          "line": 3,
+          "message": "tests/known.test.ts:3: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_no_transformed_uuid_predicates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: WHERE applies lower to UUID column accounts.email; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "target": "accounts.email"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_require_query_annotation": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_required_predicates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "orders.account_id",
+          "line": 3,
+          "message": "src/query.ts:3: SELECT on orders does not constrain required column account_id",
+          "rule": "postgres-required-predicates",
+          "target": "orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_sql_shape_policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: uuidv7() is banned in WHERE",
+          "rule": "postgres-sql-shape-policy",
+          "target": "banned-function-call"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "postgres_sql_statement_policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 3,
+          "message": "src/query.ts:3: executed SQL must not use TRUNCATE",
+          "rule": "postgres-sql-statement-policy",
+          "target": "TRUNCATE"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

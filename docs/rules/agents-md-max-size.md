@@ -84,3 +84,7 @@ Use suppression sparingly and prefer reducing document size where possible.
 [`markdown-structure-budget`](markdown-structure-budget.md) can
 keep large Markdown documents readable after detailed material moves out of an
 agent instruction file.
+
+## Invalid UTF-8
+
+`AGENTS.md` and `CLAUDE.md` are decoded lossily, so a file over its line or character budget next to a stray byte is still reported. A file that cannot be read for any other reason is skipped.

@@ -17,7 +17,7 @@ fn check_file(
     patterns: &[regex::Regex; 3],
 ) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    super::super::read_source(&sources, path).map_or_else(Vec::new, |source| {
+    super::super::read_language_source(&sources, path).map_or_else(Vec::new, |source| {
         super::scan::check_source(path, root, exclude_set, cond_set, patterns, &source)
     })
 }

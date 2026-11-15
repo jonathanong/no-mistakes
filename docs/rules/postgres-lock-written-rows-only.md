@@ -316,3 +316,7 @@ When the statement becomes accepted, remove its stale directive; otherwise
 `unused-disable-directive` identifies the physical comment line. A directive
 that still suppresses a finding remains used. Unexecuted SQL examples are not
 executor SQL. See [suppression hygiene](../configuration/suppressions.md).
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

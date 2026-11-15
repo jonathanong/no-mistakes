@@ -177,7 +177,7 @@ impl Walk<'_> {
     }
 
     fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
-        let Some(source) = crate::codebase::rules::read_source(self.sources, resolved) else {
+        let Some(source) = super::super::super::read_language_source(self.sources, resolved) else {
             self.findings.push(finding(
                 self.nested_rel,
                 self.assertion,

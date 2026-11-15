@@ -10,7 +10,7 @@ pub(super) fn check_file_with_sources(
     if !opts.extensions.iter().any(|ext| rel.ends_with(ext)) {
         return Vec::new();
     }
-    let Some(content) = super::super::read_source(sources, path) else {
+    let Some(content) = super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
     if let Some(audit) = &opts.audit {

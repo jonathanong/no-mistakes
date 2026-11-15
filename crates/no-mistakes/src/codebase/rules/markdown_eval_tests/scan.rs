@@ -15,7 +15,7 @@ pub(super) fn scan(
     let mut findings = Vec::new();
     for path in files {
         let rel = relative_slash_path(root, path);
-        let Some(source) = super::super::read_source(sources, path) else {
+        let Some(source) = super::super::read_language_source(sources, path) else {
             continue;
         };
         checked.insert(rel.clone());

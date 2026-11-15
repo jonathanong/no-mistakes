@@ -154,3 +154,7 @@ rejects untrusted expressions inside `run` scripts.
 flags a checkout that persists a write token. This rule judges literal host
 ports on `docker`, `podman`, and `nerdctl` `run` and `create` publish
 mappings, and on job `services:` and `container:` `ports:`.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

@@ -64,7 +64,7 @@ pub(crate) fn scan_masked_file(
         defer_suppression,
     } = context;
     let rel = relative_slash_path(root, path);
-    let Some(source) = super::read_source(sources, path) else {
+    let Some(source) = super::read_language_source(sources, path) else {
         return Vec::new();
     };
     let code = mask(&source);

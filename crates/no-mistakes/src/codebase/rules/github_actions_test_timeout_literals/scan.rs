@@ -32,7 +32,7 @@ pub(super) fn check_file(
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
-    let Some(source) = super::super::read_source(sources, path) else {
+    let Some(source) = super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
     check_source(&rel, &source, opts, defer_suppression)

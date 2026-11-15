@@ -65,7 +65,7 @@ fn scan_file(
     rel: &str,
     matched: &[&str],
 ) -> Result<()> {
-    let Some(source) = super::super::read_source(context.sources, path) else {
+    let Some(source) = super::super::read_language_source(context.sources, path) else {
         return Ok(());
     };
     for extracted in matched

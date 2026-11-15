@@ -10,8 +10,17 @@ pub(crate) fn complete_source_store_for_files(files: &[PathBuf]) -> Arc<SourceSt
     Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(files))).with_complete_inventory())
 }
 
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "strict reads stay available to tests")
+)]
 pub(crate) fn read_source(sources: &SourceStore, path: &Path) -> Option<Arc<str>> {
     sources.read_path(path).ok()
+}
+
+/// Invalid UTF-8 is decoded lossily. Other read errors stay absent so a missing path is not a finding.
+pub(crate) fn read_language_source(sources: &SourceStore, path: &Path) -> Option<Arc<str>> {
+    sources.read_source_path(path).ok()
 }
 
 /// Required rule inputs must retain their read failure rather than become absent facts.

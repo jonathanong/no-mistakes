@@ -159,7 +159,7 @@ fn check_file_with_sources(
     if !opts.includes(&rel) {
         return Vec::new();
     }
-    let Some(content) = super::read_source(sources, path) else {
+    let Some(content) = super::read_language_source(sources, path) else {
         return Vec::new();
     };
     check_source(&rel, &content, opts)

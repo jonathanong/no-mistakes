@@ -64,7 +64,7 @@ pub(super) fn suppress_rule_findings_inner(
                 ),
             }?;
             match request_sources {
-                Some(sources) => super::read_source(sources, &path),
+                Some(sources) => super::read_language_source(sources, &path),
                 None => std::fs::read_to_string(path)
                     .ok()
                     .map(std::sync::Arc::<str>::from),
@@ -165,3 +165,6 @@ fn matching_directive(
         }),
     }
 }
+
+#[cfg(test)]
+mod invalid_utf8_tests;

@@ -86,7 +86,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-A glob match that cannot be read is skipped and produces no finding. Heading checks on readable Markdown do not consult `options.unanalyzable`.
+A glob match with invalid UTF-8 is decoded lossily and the heading is still checked, so a missing heading next to a stray byte is reported. A file that cannot be read for any other reason is skipped and produces no finding. Heading checks do not consult `options.unanalyzable`.
 
 ## Suppression
 

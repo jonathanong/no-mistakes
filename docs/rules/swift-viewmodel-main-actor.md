@@ -73,7 +73,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-A selected Swift file that cannot be read as UTF-8 is skipped and produces no finding. `options.unanalyzable` does not change that. Class declarations and attributes in parsed Swift source are ordinary findings.
+A selected Swift file with invalid UTF-8 is decoded lossily and scanned, so a view-model class next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding. `options.unanalyzable` does not change either result. Class declarations and attributes in parsed Swift source are ordinary findings.
 
 ## Suppression
 

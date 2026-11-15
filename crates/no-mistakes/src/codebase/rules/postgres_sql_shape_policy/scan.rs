@@ -55,7 +55,7 @@ pub(super) fn scan(
                 ));
             }
         }
-        let source = crate::codebase::rules::read_source(sources, path);
+        let source = crate::codebase::rules::read_language_source(sources, path);
         super::audit::observe_source(opts, source.as_deref());
         for fragment in prepared.postgres_fragments(path, &opts.embedded)? {
             let statements = &fragment.statements;
@@ -123,7 +123,7 @@ pub(super) fn scan(
         for file in prepared.postgres_statements(path, profile)? {
             super::audit::observe_statements(opts, file);
             let rel = relative_slash_path(root, &file.path);
-            let source = crate::codebase::rules::read_source(sources, path);
+            let source = crate::codebase::rules::read_language_source(sources, path);
             super::audit::observe_source(opts, source.as_deref());
             for (index, finding) in super::functions::located_findings(
                 &rel,

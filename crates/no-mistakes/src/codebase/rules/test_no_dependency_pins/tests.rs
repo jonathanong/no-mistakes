@@ -444,6 +444,15 @@ fn missing_file_and_action_ref_lookbehind() {
 }
 
 #[test]
+fn invalid_utf8_still_reports_a_pin() {
+    let root = fixture("invalid-utf8");
+    let findings = scan(&root, &Options::default(), &[root.join("pin.test.ts")]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "pin.test.ts");
+    assert_eq!(findings[0].line, 2);
+}
+
+#[test]
 fn check_entry_point_uses_discovery() {
     let root = fixture("pass");
     let findings = super::check(&root, &config_with_options("{}")).unwrap();

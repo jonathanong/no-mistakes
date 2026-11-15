@@ -56,7 +56,7 @@ pub(super) fn scan(
     }
     for (file_index, file) in statements.into_iter().enumerate() {
         let rel = relative_slash_path(root, &file.path);
-        let source = crate::codebase::rules::read_source(sources, &file.path);
+        let source = crate::codebase::rules::read_language_source(sources, &file.path);
         if opts.advise_unanalyzable && file_index < native_statement_count {
             crate::codebase::rules::native_sql_advice::record_parse_failures(
                 prepared,

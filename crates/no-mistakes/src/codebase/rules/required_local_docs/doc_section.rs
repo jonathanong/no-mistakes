@@ -91,7 +91,7 @@ pub(super) fn scan_doc_section_with_sources(
         if !glob_set.is_match(&rel) {
             continue;
         }
-        let Some(content) = crate::codebase::rules::read_source(sources, file) else {
+        let Some(content) = crate::codebase::rules::read_language_source(sources, file) else {
             continue;
         };
         if !crate::codebase::markdown_sections::has_required_heading(

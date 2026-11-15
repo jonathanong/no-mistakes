@@ -74,7 +74,7 @@ pub(super) fn scan(
         .filter(|file| queries.contains(&file.path))
     {
         let rel = relative_slash_path(root, &file.path);
-        let source = crate::codebase::rules::read_source(sources, &file.path);
+        let source = crate::codebase::rules::read_language_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
             for (site, line) in file.parse_failure_sites() {
                 dedup.push(

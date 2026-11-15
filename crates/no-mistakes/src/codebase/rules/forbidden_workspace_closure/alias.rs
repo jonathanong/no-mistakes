@@ -104,7 +104,8 @@ fn workspace_package_version_with_sources(
     package_dir: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<String> {
-    let content = crate::codebase::rules::read_source(sources, &package_dir.join("package.json"))?;
+    let content =
+        crate::codebase::rules::read_language_source(sources, &package_dir.join("package.json"))?;
     serde_json::from_str::<PackageVersion>(&content)
         .ok()
         .and_then(|package| package.version)
@@ -173,3 +174,6 @@ pub(super) fn resolve_workspace_path(
         .package_by_dir(&target_dir)
         .map(|package| package.name.clone())
 }
+
+#[cfg(test)]
+mod invalid_utf8_tests;

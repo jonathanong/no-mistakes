@@ -56,6 +56,25 @@ fn test_no_dependency_pins_json_matches_snapshot() {
 }
 
 #[test]
+fn invalid_utf8_test_file_rules_json_matches_snapshot() {
+    assert_saved_fixture(
+        "invalid_utf8_test_file_rules",
+        &[
+            c(
+                "email",
+                "test-email-domain-policy/invalid-utf8",
+                ".no-mistakes.yml",
+            ),
+            c(
+                "pins",
+                "test-no-dependency-pins/fixture/invalid-utf8",
+                ".no-mistakes.yml",
+            ),
+        ],
+    );
+}
+
+#[test]
 fn test_no_unmocked_dynamic_imports_json_matches_snapshot() {
     let dir = "test-no-unmocked-dynamic-imports/fixture/effort-low";
     assert_saved_fixture(

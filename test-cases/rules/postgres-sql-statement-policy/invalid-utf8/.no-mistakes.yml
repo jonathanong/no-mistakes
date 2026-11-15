@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      bannedStatements: [TRUNCATE]

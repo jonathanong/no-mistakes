@@ -1,0 +1,24 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "missing_heading": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "agents/demo/README.md",
+          "line": 1,
+          "message": "agents/demo/README.md: missing required heading \"## Perf\"",
+          "rule": "required-doc-section"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

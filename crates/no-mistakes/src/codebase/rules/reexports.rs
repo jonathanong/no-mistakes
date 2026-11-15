@@ -29,7 +29,12 @@ pub use super::vitest_project_catalog::{
 
 pub(crate) use super::file_matching::matching_files;
 pub(crate) use super::selected_files::selected_rule_files;
-pub(crate) use super::source_access::{read_source, source_store_for_files};
+#[cfg_attr(
+    not(test),
+    expect(unused_imports, reason = "tests call the strict read helper")
+)]
+pub(crate) use super::source_access::read_source;
+pub(crate) use super::source_access::{read_language_source, source_store_for_files};
 #[doc(hidden)]
 pub use super::suppression::{
     suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,

@@ -1,0 +1,7 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      requiredFiles: [GUIDE.md]
+      requiredHeading: "## Perf"
+      bannedSubstrings: ["legacy API"]

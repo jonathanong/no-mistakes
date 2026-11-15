@@ -97,7 +97,7 @@ fn collect_findings<'a>(
         } else {
             judge_file_with_prepared_triggers(file, catalog, installed)
         };
-        let source = crate::codebase::rules::read_source(sources, &file.path);
+        let source = crate::codebase::rules::read_language_source(sources, &file.path);
         for (site, line, message) in judged {
             dedup.push(
                 &mut findings,

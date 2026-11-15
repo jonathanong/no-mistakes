@@ -269,3 +269,7 @@ configured statement kinds in broader SQL scopes.
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) can ban configured
 function calls in executable SQL. This rule provides a focused test entry and
 helper scope for schema mutation, server settings, and `pg_sleep`.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

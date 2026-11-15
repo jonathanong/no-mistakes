@@ -251,3 +251,7 @@ relation filters; [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md)
 bans correlated `EXISTS` set operations;
 [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md)
 bans writing generated columns in DML.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

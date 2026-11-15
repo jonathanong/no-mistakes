@@ -54,7 +54,7 @@ pub(super) fn scan(
                 }
             }
         }
-        let source = super::super::read_source(sources, path);
+        let source = super::super::read_language_source(sources, path);
         for statement in statements {
             if options.fail_unanalyzable && !violates(statement) {
                 for (site, line) in statement.parse_failure_sites() {

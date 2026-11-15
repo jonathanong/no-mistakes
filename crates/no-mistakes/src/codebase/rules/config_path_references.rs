@@ -121,7 +121,7 @@ fn scan(
     let mut findings = Vec::new();
     for path in &config_files {
         let rel = relative_slash_path(root, path);
-        let Some(source) = super::read_source(sources, path) else {
+        let Some(source) = super::read_language_source(sources, path) else {
             continue;
         };
         let value = match crate::codebase::structured_value::parse_structured_value(path, &source) {

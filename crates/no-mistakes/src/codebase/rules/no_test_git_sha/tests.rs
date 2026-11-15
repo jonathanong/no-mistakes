@@ -78,7 +78,7 @@ fn prefilter_preserves_fixture_findings() {
         let options = compile_options(rule.try_rule_options().unwrap()).unwrap();
         for path in &files {
             let filtered = check_file(&root, path, &options, &sources);
-            let Some(content) = super::super::read_source(&sources, path) else {
+            let Some(content) = super::super::read_language_source(&sources, path) else {
                 assert!(filtered.is_empty(), "{}", path.display());
                 continue;
             };

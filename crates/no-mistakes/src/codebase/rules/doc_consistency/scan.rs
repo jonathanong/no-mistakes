@@ -70,7 +70,7 @@ fn required_file_findings(
     if !rel_set.contains(req_file) {
         return vec![missing_file(req_file)];
     }
-    let Some(content) = super::super::read_source(sources, &root.join(req_file)) else {
+    let Some(content) = super::super::read_language_source(sources, &root.join(req_file)) else {
         return Vec::new();
     };
     let mut local = Vec::new();
@@ -133,7 +133,7 @@ fn ban_findings(
     files
         .par_iter()
         .flat_map(|path| {
-            let Some(content) = super::super::read_source(sources, path) else {
+            let Some(content) = super::super::read_language_source(sources, path) else {
                 return Vec::new();
             };
             let rel = relative_slash_path(root, path);

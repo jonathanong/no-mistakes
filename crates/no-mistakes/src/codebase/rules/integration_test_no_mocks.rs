@@ -142,7 +142,7 @@ fn check_file_with_sources(
     compiled: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let Some(content) = super::read_source(sources, path) else {
+    let Some(content) = super::read_language_source(sources, path) else {
         return Vec::new();
     };
     let rel = relative_slash_path(root, path);

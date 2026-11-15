@@ -1,0 +1,62 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "csharp_async_void": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "SessionBinding.cs",
+          "line": 2,
+          "message": "do not pass an async lambda to a void Action API; wrap as () => _ = FooAsync()",
+          "rule": "csharp-no-async-void-delegate"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "swift_print": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "FeedView.swift",
+          "line": 2,
+          "message": "use a logger instead of raw print()",
+          "rule": "swift-no-raw-print"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "swift_viewmodel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "ProfileViewModel.swift",
+          "line": 2,
+          "message": "ViewModel classes must be @MainActor so UI state is not mutated off the main actor",
+          "rule": "swift-viewmodel-main-actor"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
