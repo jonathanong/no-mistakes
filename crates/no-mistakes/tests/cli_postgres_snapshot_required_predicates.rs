@@ -302,6 +302,7 @@ fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
             "top-subpath.ts",
             "top-pool.ts",
             "top-pool-subpath.ts",
+            "optional-query.ts",
         ] {
             let rows = report["rules"]
                 .as_array()
@@ -315,7 +316,7 @@ fn nullable_executor_queries_are_checked_at_each_call_in_both_efforts() {
                 "{effort}/{file}: {report}"
             );
         }
-        for file in ["direct.ts", "pool.ts", "callable.ts"] {
+        for file in ["direct.ts", "pool.ts", "callable.ts", "optional-query.ts"] {
             let verdicts = report["sqlVerdicts"]
                 .as_array()
                 .unwrap()

@@ -193,8 +193,12 @@ try {
 
 Configure `importSpecifier: db-lib` and `executorTypeNames: [PoolClient]` for this
 example. `Pool | undefined` and nullable `null` unions work the same way when
-that imported type is configured. Every recovered query still undergoes the
-configured relation checks; the annotation does not waive a required predicate.
+that imported type is configured. An optional call on that receiver,
+`client?.query(...)` or `pool?.query(...)`, is checked the same way after the
+assignment: a missing required column is a finding, and a query that names the
+column is clear. `client?.release()` is not a query. Every recovered query
+still undergoes the configured relation checks; the annotation does not waive a
+required predicate.
 An untyped local, a typed object initialized or assigned a fake `query` method
 (even through a TypeScript cast), literal or array assignments, competing
 assignments, a write from a nested function, and reads before assignment or outside
