@@ -13,6 +13,7 @@ pub(crate) fn bound(items: &mut [SqlBoundItem], bounded: &mut [bool], catalog: &
                 && pin.qualified_reads.is_empty()
         });
         item.predicate_conjuncts.clear();
+        item.alternative_predicates.clear();
         item.nonnull_columns.clear();
         item.rejected_alternatives.clear();
         if !matches!(item.kind, SqlBoundItemKind::Table(_)) {

@@ -16,6 +16,7 @@ impl SqlBoundItem {
             column,
             pins: Vec::new(),
             predicate_conjuncts: Vec::new(),
+            alternative_predicates: Vec::new(),
             nonnull_columns: Vec::new(),
             pin_alternatives: 0,
             rejected_alternatives: Vec::new(),

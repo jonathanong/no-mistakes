@@ -505,12 +505,22 @@ A bare column such as `WHERE aside_type = $1` can pin a key in a multi-table
 query when the complete catalog identifies exactly one visible owner.
 An ambiguous bare column supplies no proof; qualify it with the intended
 relation alias. Catalog indexes include plain unique keys such as
-`receipt_id`, partial unique keys whose predicates the query establishes,
+`receipt_id`, partial unique keys whose predicates the query establishes
+(the same `IS NULL`, literal equality, or `IN` / `ANY` literal set, including
+a parameter bound to that literal in the same alternative, and a catalog enum
+parameter when every label hits a pinned unique index whose source rows are
+themselves bounded),
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
 A strict call also proves the argument is not null: `lower(username) = lower($1)`
 matches `UNIQUE (lower(username)) WHERE username IS NOT NULL`. The same holds for
 unquoted `upper` and one-argument `btrim`, unqualified or `pg_catalog`-qualified.
 `coalesce`, `IS NOT DISTINCT FROM`, a quoted name, and another schema do not.
+A literal cast counts only when it preserves the value
+(`text`, `boolean`, unlimited `varchar`, `varchar(n)` that fits, or a catalog
+enum label, including a quoted mixed-case enum name). An array constructor
+cast such as `ARRAY['pending', 'ready']::text[]` uses that rule on each element.
+A scalar cast through an array type does not, so `'pending'::varchar(3)` and
+`('{"pending"}'::text[])::text` do not match `'pending'`.
 Raw equality also fixes a recognized function of that column: `username = $1`
 matches `UNIQUE (lower(username))` for unquoted `lower`, `upper`, and
 one-argument `btrim` when the column type is `text` or `varchar`. Range

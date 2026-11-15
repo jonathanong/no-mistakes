@@ -1,0 +1,269 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "enums": {
+    "source_kinds": {
+      "values": ["direct", "family"]
+    },
+    "\"SourceKinds\"": {
+      "values": ["direct", "family"]
+    }
+  },
+  "tables": {
+    "flows": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "device_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "session_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "status": { "dataType": "text", "ordinalPosition": 4 },
+        "rejected_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "flows_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX flows_pkey ON flows (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "active_flow": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(status = ANY (ARRAY['pending'::text, 'ready'::text]))",
+          "definition": "CREATE UNIQUE INDEX active_flow ON flows (device_id, session_id) WHERE (status = ANY (ARRAY['pending'::text, 'ready'::text]))",
+          "keys": [
+            { "column": "device_id", "expression": "device_id" },
+            { "column": "session_id", "expression": "session_id" }
+          ]
+        }
+      }
+    },
+    "flows_written": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "device_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "session_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "status": { "dataType": "text", "ordinalPosition": 4 },
+        "rejected_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "flows_written_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX flows_written_pkey ON flows_written (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "active_flow_written": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "status IN ('pending', 'ready')",
+          "definition": "CREATE UNIQUE INDEX active_flow_written ON flows_written (device_id, session_id) WHERE status IN ('pending', 'ready')",
+          "keys": [
+            { "column": "device_id", "expression": "device_id" },
+            { "column": "session_id", "expression": "session_id" }
+          ]
+        }
+      }
+    },
+    "bindings": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "lineage_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "user_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "kind": { "dataType": "source_kinds", "ordinalPosition": 4 },
+        "released_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "bindings_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX bindings_pkey ON bindings (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "bindings_direct": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((released_at IS NULL) AND (kind = 'direct'::source_kinds))",
+          "definition": "CREATE UNIQUE INDEX bindings_direct ON bindings (lineage_id) WHERE released_at IS NULL AND kind = 'direct'",
+          "keys": [{ "column": "lineage_id", "expression": "lineage_id" }]
+        },
+        "bindings_family": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((released_at IS NULL) AND (kind = 'family'::source_kinds))",
+          "definition": "CREATE UNIQUE INDEX bindings_family ON bindings (lineage_id, user_id) WHERE released_at IS NULL AND kind = 'family'",
+          "keys": [
+            { "column": "lineage_id", "expression": "lineage_id" },
+            { "column": "user_id", "expression": "user_id" }
+          ]
+        }
+      }
+    },
+    "bindings_text": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "lineage_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "user_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "kind": { "dataType": "text", "ordinalPosition": 4 },
+        "released_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "bindings_text_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX bindings_text_pkey ON bindings_text (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "bindings_text_direct": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((released_at IS NULL) AND (kind = 'direct'::text))",
+          "definition": "CREATE UNIQUE INDEX bindings_text_direct ON bindings_text (lineage_id) WHERE released_at IS NULL AND kind = 'direct'",
+          "keys": [{ "column": "lineage_id", "expression": "lineage_id" }]
+        },
+        "bindings_text_family": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((released_at IS NULL) AND (kind = 'family'::text))",
+          "definition": "CREATE UNIQUE INDEX bindings_text_family ON bindings_text (lineage_id, user_id) WHERE released_at IS NULL AND kind = 'family'",
+          "keys": [
+            { "column": "lineage_id", "expression": "lineage_id" },
+            { "column": "user_id", "expression": "user_id" }
+          ]
+        }
+      }
+    },
+    "notes": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "notes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX notes_pkey ON notes (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    },
+    "quoted_kinds": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "lineage_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "kind": { "dataType": "\"SourceKinds\"", "ordinalPosition": 3 },
+        "released_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "quoted_kinds_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX quoted_kinds_pkey ON quoted_kinds (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "quoted_kinds_direct": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((released_at IS NULL) AND (kind = 'direct'::\"SourceKinds\"))",
+          "definition": "CREATE UNIQUE INDEX quoted_kinds_direct ON quoted_kinds (lineage_id) WHERE released_at IS NULL AND kind = 'direct'::\"SourceKinds\"",
+          "keys": [{ "column": "lineage_id", "expression": "lineage_id" }]
+        }
+      }
+    }
+  }
+}

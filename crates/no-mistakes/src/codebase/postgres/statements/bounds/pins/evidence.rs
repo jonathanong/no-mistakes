@@ -1,7 +1,8 @@
 use super::Resolver;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, ObjectNamePart,
+    BinaryOperator, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments,
+    ObjectNamePart, Value,
 };
 
 pub(in super::super) fn collect(
@@ -24,8 +25,8 @@ pub(in super::super) fn collect(
     }
     for &item in restricted {
         if resolver.is_table(item) {
-            if let Some(canonical) = resolver.canonical_for_item(expr, item) {
-                conjuncts.push((item, canonical));
+            for conjunct in item_predicates(resolver, expr, item) {
+                conjuncts.push((item, conjunct));
             }
         }
     }
@@ -45,6 +46,58 @@ pub(in super::super) fn collect(
                 }
             }
         }
+    }
+}
+
+/// Column conjuncts of `expr` for `item`, plus a placeholder-to-literal binding.
+pub(in super::super) fn item_predicates(
+    resolver: &Resolver,
+    expr: &Expr,
+    item: usize,
+) -> Vec<Expr> {
+    let mut found = Vec::new();
+    if let Some(canonical) = resolver.canonical_for_item(expr, item) {
+        found.push(canonical);
+    }
+    if let Some(binding) = placeholder_binding(expr) {
+        found.push(binding);
+    }
+    found
+}
+
+fn placeholder_binding(expr: &Expr) -> Option<Expr> {
+    let Expr::BinaryOp {
+        left,
+        op: BinaryOperator::Eq,
+        right,
+    } = unwrap_expr(expr)
+    else {
+        return None;
+    };
+    let matched = [
+        (left.as_ref(), right.as_ref()),
+        (right.as_ref(), left.as_ref()),
+    ]
+    .into_iter()
+    .any(|(placeholder, literal)| is_placeholder(placeholder) && is_literal(literal));
+    matched.then(|| crate::codebase::postgres::canonical_bound_expr(unwrap_expr(expr)))
+}
+
+fn is_placeholder(expr: &Expr) -> bool {
+    matches!(
+        unwrap_expr(expr),
+        Expr::Value(value) if matches!(value.value, Value::Placeholder(_))
+    )
+}
+
+fn is_literal(expr: &Expr) -> bool {
+    match unwrap_expr(expr) {
+        Expr::Value(value) => matches!(
+            value.value,
+            Value::SingleQuotedString(_) | Value::Boolean(_) | Value::Number(_, _)
+        ),
+        Expr::Cast { expr, .. } => is_literal(expr),
+        _ => false,
     }
 }
 
