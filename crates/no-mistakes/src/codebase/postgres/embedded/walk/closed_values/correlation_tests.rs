@@ -1,28 +1,5 @@
-use crate::codebase::postgres::embedded::{
-    extract_embedded_sql_from_source, EmbeddedSqlOptions, TrustedSqlTag,
-};
-use std::path::PathBuf;
-
-fn fixture_path() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/rules/postgres-bounded-statements/closed-identifier-correlation/fixture/query.ts",
-    )
-}
-
 fn texts(index: usize) -> Vec<String> {
-    let path = fixture_path();
-    let source = std::fs::read_to_string(&path).expect("fixture");
-    let options =
-        EmbeddedSqlOptions::configured("@example/db", &[]).with_raw_sql_tags(&[TrustedSqlTag {
-            module: "@example/raw-sql".into(),
-            name: "sql".into(),
-        }]);
-    let facts = extract_embedded_sql_from_source(&path, &source, &options);
-    facts.calls[index]
-        .variants
-        .iter()
-        .map(|variant| variant.sql_text.clone())
-        .collect()
+    super::fixture::texts("query.ts", index)
 }
 
 #[test]
@@ -43,6 +20,55 @@ fn two_helpers_keep_the_same_argument_choice() {
         [
             "DELETE FROM users WHERE user_id = $1",
             "DELETE FROM posts WHERE post_id = $1"
+        ]
+    );
+}
+
+fn stays_unresolved(needle: &str) {
+    let call = super::fixture::call_containing("query.ts", needle);
+    assert!(call.variants.is_empty(), "{needle} {call:#?}");
+    assert!(call.is_unanalyzable(), "{needle} {call:#?}");
+}
+
+#[test]
+fn transformed_argument_stays_unresolved() {
+    stays_unresolved("kind === \"user\"");
+}
+
+#[test]
+fn reassigned_argument_stays_unresolved() {
+    stays_unresolved("column(k)}");
+}
+
+#[test]
+fn unmatched_literal_does_not_clear_the_statement() {
+    stays_unresolved("column(\"missing\")");
+}
+
+#[test]
+fn trimmed_argument_stays_unresolved() {
+    stays_unresolved("kind.trim()");
+}
+
+#[test]
+fn template_argument_stays_unresolved() {
+    stays_unresolved("`${kind}`");
+}
+
+#[test]
+fn empty_guard_does_not_clear_the_statement() {
+    stays_unresolved("admitNone(kind)");
+}
+
+#[test]
+fn type_assertion_keeps_the_argument_choice() {
+    let mut values = super::fixture::texts_containing("query.ts", "kind as Key");
+    values.sort();
+    assert_eq!(
+        values,
+        [
+            "DELETE FROM posts WHERE post_id = $1",
+            "DELETE FROM users WHERE user_id = $1"
         ]
     );
 }

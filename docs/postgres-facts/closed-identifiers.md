@@ -27,8 +27,16 @@ non-key column can still be unbounded.
 - A source-visible same-file helper whose local literal membership guard throws
   before returning a permitted value.
 
-Casts alone do not establish a domain. Widened, optional, defaulted, reassigned,
-or otherwise unstable parameters remain opaque. An unresolved helper body,
+Casts alone do not establish a domain. A type assertion on a closed parameter
+is erased before the argument is read, so `pick(kind as Key)` stays on the same
+arms as `pick(kind)`. Widened, optional, defaulted, reassigned, or otherwise
+unstable parameters remain opaque. A transformed argument, such as a
+conditional, does not keep the parameter's choices, and neither does a `let`
+binding after a later assignment. A method call or template around the
+parameter is not a closed value, so `pick(kind.trim())` and `` pick(`${kind}`) ``
+stay reported. A helper call that produces no arm stays opaque as well. An
+empty literal `Set` admits no identifier. An empty result does not clear the
+statement. An unresolved helper body,
 non-literal return, missing record key, spread, getter, escaped collection, or
 record mutation also prevents a complete proof. Recovery retains the existing
 16-alternative budget and bounded expression depth. It does not keep a subset

@@ -43,8 +43,10 @@ arguments that selected it, so a record field and a helper selected by the same
 literal-union argument do not publish the cross pairs. Each statement must
 independently satisfy its catalog/key bounds; one bounded variant does not
 exempt another unbounded one.
-Unknown branches, mutation, escaped collections, or budget overflow retain the
-configured unanalyzable policy.
+Unknown branches, a transformed or reassigned argument, a helper call that
+produces no arm, mutation, escaped collections, or budget overflow retain the
+configured unanalyzable policy. An empty helper result does not clear the
+statement.
 
 The rule accepts optional `sqlIdentifierAssertions` entries
 `{module, name, allowlistArgument}` and `rawSqlTags` entries `{module, name}`,

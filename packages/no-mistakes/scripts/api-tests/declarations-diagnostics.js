@@ -85,6 +85,7 @@ test("diagnostics selectors cover public analyses and exclude utilities and raw 
   assert.deepEqual(actual, expected);
 });
 
+// no-mistakes-timeout-reason: typechecks the public diagnostics fixture through the TypeScript program API
 test("diagnostics collector overloads retain required arguments and correlated result types", () => {
   const fixture = join(
     packageRoot,
@@ -110,4 +111,4 @@ test("diagnostics collector overloads retain required arguments and correlated r
       .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
     [],
   );
-});
+}, 20_000);

@@ -108,6 +108,9 @@ fn helper_values(
             });
         }
     }
+    if arms.is_empty() {
+        return None;
+    }
     Some(arms)
 }
 
@@ -147,9 +150,6 @@ fn expand_argument(
         }
     }
     if expanded.len() > MAX_EMBEDDED_SQL_VARIANTS {
-        return None;
-    }
-    if !values.is_empty() && expanded.is_empty() {
         return None;
     }
     Some(expanded)
