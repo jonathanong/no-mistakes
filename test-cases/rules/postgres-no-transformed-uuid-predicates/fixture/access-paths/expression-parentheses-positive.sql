@@ -1,6 +1,5 @@
 SELECT * FROM functions WHERE lower((id::text) || 'x') = $1;
 SELECT * FROM functions WHERE (lower((id)::text)) || 'x' = $1;
-SELECT * FROM functions WHERE lower(CAST((id) AS text)) = $1;
 SELECT * FROM items WHERE ((post_id), (policy_revision), (content_sha256))::item_identity = ($1, $2, $3)::item_identity;
 SELECT * FROM items WHERE ((post_id, content_sha256), policy_revision)::item_identity = ($1, $2, $3)::item_identity;
 SELECT * FROM swapped_items WHERE ((post_id), (content_sha256), (policy_revision))::item_identity = ($1, $2, $3)::item_identity;
