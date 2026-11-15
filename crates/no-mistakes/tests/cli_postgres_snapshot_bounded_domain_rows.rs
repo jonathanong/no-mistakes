@@ -29,6 +29,21 @@ fn group_order() -> PathBuf {
 }
 
 #[test]
+fn postgres_bounded_domain_rows_tail_check_json_snapshot() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-bounded-statements/domain-rows-tail"),
+    );
+    assert_saved_fixture(
+        "postgres_bounded_domain_rows_tail",
+        &[
+            ("unset", root.clone(), root.join("tail-unset.yml")),
+            ("rows_5000", root.clone(), root.join("tail-5000.yml")),
+        ],
+    );
+}
+
+#[test]
 fn postgres_bounded_domain_rows_group_order_check_json_snapshot() {
     let root = group_order();
     assert_saved_fixture(
