@@ -21,6 +21,14 @@ pub(super) fn offenders(
     match &item.kind {
         SqlBoundItemKind::Table(name) => {
             relation_offender(name, item.line, item.column, catalog, views)
+                .map(|mut offender| {
+                    if let Some(super::keys::Credit::Over(product)) =
+                        evaluation.credits.get(target).copied().flatten()
+                    {
+                        offender.domain_over = Some(product);
+                    }
+                    offender
+                })
                 .into_iter()
                 .collect()
         }

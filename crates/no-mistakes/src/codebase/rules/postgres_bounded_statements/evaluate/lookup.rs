@@ -36,6 +36,7 @@ pub(crate) fn bound(items: &mut [SqlBoundItem], bounded: &mut [bool], catalog: &
                 catalog,
                 &views,
             )
+            .0
         })
         .collect();
     // Require a driver per key; see docs/rules/postgres-materialized-view-shape.md.

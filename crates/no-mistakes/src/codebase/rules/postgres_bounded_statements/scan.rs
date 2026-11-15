@@ -3,6 +3,7 @@ use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
+mod domain_note;
 mod emit;
 mod groups;
 mod judge;
@@ -30,6 +31,7 @@ pub(super) fn scan(
     let catalog = inputs.catalog;
     let mut views = ViewBounds::compile(&opts.view_bounds, catalog)?;
     views.keys = super::column_bounds::ColumnBounds::compile(&opts.column_bounds, catalog)?;
+    views.domain_rows = opts.max_domain_rows;
     let native_statement_count = inputs.native_statement_count;
     let statements = inputs.statements;
     let embedded = inputs.embedded;

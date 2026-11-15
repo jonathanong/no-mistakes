@@ -43,6 +43,7 @@ pub(super) struct Options {
     view_bounds: BTreeMap<String, ViewBoundMode>,
     column_bounds: BTreeMap<String, column_bounds::ColumnBound>,
     materialized_bodies: bodies::Policy,
+    max_domain_rows: Option<u64>,
 }
 
 pub(crate) struct CompiledOptions {
@@ -56,6 +57,7 @@ pub(crate) struct CompiledOptions {
     view_bounds: BTreeMap<String, ViewBoundMode>,
     column_bounds: BTreeMap<String, column_bounds::ColumnBound>,
     materialized_bodies: bodies::Policy,
+    max_domain_rows: Option<u64>,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
@@ -102,6 +104,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         view_bounds: opts.view_bounds.clone(),
         column_bounds: opts.column_bounds.clone(),
         materialized_bodies: opts.materialized_bodies,
+        max_domain_rows: opts.max_domain_rows,
     })
 }
 

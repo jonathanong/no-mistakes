@@ -1,3 +1,4 @@
+use super::domain_rows::StatementWidths;
 use super::predicate;
 use super::Keys;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
@@ -23,7 +24,7 @@ pub(super) fn append(
     item: &SqlBoundItem,
     item_index: usize,
     owners: &BTreeMap<String, usize>,
-    (name, table): (&str, &CatalogTable),
+    (name, table, mut widths): (&str, &CatalogTable, Option<&mut StatementWidths>),
     sources: &[Option<Vec<usize>>],
     catalog: &SchemaCatalog,
 ) {
@@ -45,6 +46,17 @@ pub(super) fn append(
                 continue;
             }
             if let Some(key) = pinned_key(index, &pins, alternative) {
+                if let Some(widths) = widths.as_deref_mut() {
+                    if let Some(row) = widths.get_mut(alternative) {
+                        row.push(column_widths(
+                            &index.keys,
+                            table,
+                            catalog,
+                            item,
+                            alternative,
+                        ));
+                    }
+                }
                 branch.push(key);
             }
         }
@@ -86,15 +98,12 @@ fn pinned_key(
                 .is_none()
                 .then(|| super::implied::source_column(expression, pins.table))
                 .flatten();
-            let not_null = physical
-                .as_deref()
-                .or(implied.as_deref())
-                .is_some_and(|name| {
-                    pins.table
-                        .columns
-                        .iter()
-                        .any(|column| column.name == name && !column.nullable)
-                });
+            let not_null = physical.as_deref().or(implied.as_deref()).is_some_and(|name| {
+                pins.table
+                    .columns
+                    .iter()
+                    .any(|column| column.name == name && !column.nullable)
+            });
             let matching = pins
                 .item
                 .pins
@@ -120,6 +129,23 @@ fn pinned_key(
                 })
                 .collect();
             Some(matching)
+        })
+        .collect()
+}
+
+fn column_widths(
+    keys: &[Expr],
+    table: &CatalogTable,
+    catalog: &SchemaCatalog,
+    item: &SqlBoundItem,
+    alternative: usize,
+) -> Vec<Option<u64>> {
+    keys.iter()
+        .map(|expression| {
+            let Expr::Identifier(ident) = unwrap_expr(expression) else {
+                return None;
+            };
+            super::domain_rows::column_domain(table, catalog, item, &ident_key(ident), alternative)
         })
         .collect()
 }

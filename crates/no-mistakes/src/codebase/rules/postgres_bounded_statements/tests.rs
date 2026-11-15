@@ -12,6 +12,7 @@ mod copy_quoted_table;
 mod current_database;
 mod ddl_compat_lifecycle;
 mod ddl_search_path;
+mod domain_rows;
 mod explicit_self_alias;
 mod fetch_expressions;
 mod fixture_configs;

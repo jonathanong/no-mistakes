@@ -15,6 +15,7 @@ pub(super) struct Offenders<'a, 'src> {
     pub(super) file_index: usize,
     pub(super) native_statement_count: usize,
     pub(super) offenders: Vec<super::super::evaluate::Offender>,
+    pub(super) domain_rows: Option<u64>,
 }
 
 pub(super) fn offenders(input: Offenders<'_, '_>) {
@@ -30,6 +31,7 @@ pub(super) fn offenders(input: Offenders<'_, '_>) {
         file_index,
         native_statement_count,
         offenders,
+        domain_rows,
     } = input;
     let group_start = output.len();
     for offender in offenders {
@@ -76,7 +78,13 @@ pub(super) fn offenders(input: Offenders<'_, '_>) {
                     } else {
                         bound.kind
                     };
-                    message(kind, &offender.table, &offender.object)
+                    message(
+                        kind,
+                        &offender.table,
+                        &offender.object,
+                        offender.domain_over,
+                        domain_rows,
+                    )
                 }),
                 &offender.object.to_string(),
             ),

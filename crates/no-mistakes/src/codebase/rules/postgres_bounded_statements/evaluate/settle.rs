@@ -13,6 +13,7 @@ pub(super) struct Inputs<'a> {
     pub catalog: &'a SchemaCatalog,
     pub views: &'a ViewBounds,
     pub precise_columns: bool,
+    pub credits: &'a [Option<super::keys::Credit>],
 }
 
 pub(super) fn finish(inputs: &Inputs<'_>, bounded: &mut [bool]) -> (bool, Vec<Offender>) {
@@ -22,7 +23,7 @@ pub(super) fn finish(inputs: &Inputs<'_>, bounded: &mut [bool]) -> (bool, Vec<Of
         inputs.query,
         inputs.nested,
         inputs.pin_subqueries,
-        bounded,
+        (bounded, inputs.credits),
         inputs.catalog,
         inputs.views,
         inputs.precise_columns,

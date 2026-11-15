@@ -1,9 +1,11 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use super::view_bounds::{ViewBoundMode, ViewBounds};
 use crate::codebase::postgres::statements::{
-    SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
+    SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
+mod accepts;
+pub(in crate::codebase::rules::postgres_bounded_statements) use accepts::DomainAccept;
 mod body_reads;
 mod correlated;
 mod driven;
@@ -21,7 +23,6 @@ mod scalar_reads;
 mod settle;
 mod singleton;
 mod statement;
-use statement::offenders_with_columns;
 mod target;
 mod view_key;
 use outer_reads::reads_outer;
@@ -36,6 +37,8 @@ pub(super) struct Offender {
     pub(super) line: usize,
     pub(super) column: usize,
     blocking_input: bool,
+    /// Unique-key domain product that exceeded `maxDomainRows`.
+    pub(super) domain_over: Option<u64>,
 }
 
 struct Evaluation {
@@ -45,13 +48,15 @@ struct Evaluation {
     items: Vec<bool>,
     finite_outputs: Option<Vec<bool>>,
     offenders: Vec<Offender>,
+    credits: Vec<Option<keys::Credit>>,
+    accepts: Vec<accepts::DomainAccept>,
 }
 
 /// The relations that make `fact` unbounded. A relation the catalog does not know is not
 /// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
-    offenders_with_columns(fact, catalog, &ViewBounds::default(), false)
+    statement::judgment(fact, catalog, &ViewBounds::default(), false).offenders
 }
 
 pub(super) fn offenders_with_views(
@@ -59,7 +64,7 @@ pub(super) fn offenders_with_views(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
 ) -> Vec<Offender> {
-    offenders_with_columns(fact, catalog, views, false)
+    statement::judgment(fact, catalog, views, false).offenders
 }
 
 pub(super) fn variant_offenders_with_views(
@@ -67,8 +72,12 @@ pub(super) fn variant_offenders_with_views(
     catalog: &SchemaCatalog,
     views: &ViewBounds,
 ) -> Vec<Offender> {
-    offenders_with_columns(fact, catalog, views, true)
+    statement::judgment(fact, catalog, views, true).offenders
 }
+
+pub(in crate::codebase::rules::postgres_bounded_statements) use statement::{
+    judgment_with_views, variant_judgment_with_views, Judgment,
+};
 
 fn evaluate(
     query: &SqlBoundQuery,
@@ -83,6 +92,8 @@ fn evaluate(
             items: vec![true; query.items.len()],
             finite_outputs: None,
             offenders: Vec::new(),
+            credits: vec![None; query.items.len()],
+            accepts: Vec::new(),
         };
     }
     let nested: Vec<Option<Evaluation>> = query
@@ -93,29 +104,7 @@ fn evaluate(
             correlated::nested(item, &query.items[..index], catalog, views, precise_columns)
         })
         .collect();
-    // Whether each IN-subquery pin is itself bounded; the other pin sources need no evaluation.
-    let pin_subqueries: Vec<Vec<Option<Evaluation>>> = query
-        .items
-        .iter()
-        .map(|item| {
-            item.pins
-                .iter()
-                .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner)
-                    | SqlPinSource::ReadQuery(inner)
-                    | SqlPinSource::ArrayQuery(inner) => Some(correlated::pin_query(
-                        inner,
-                        pin,
-                        &query.items,
-                        catalog,
-                        views,
-                        precise_columns,
-                    )),
-                    _ => None,
-                })
-                .collect()
-        })
-        .collect();
+    let pin_subqueries = correlated::pin_queries(query, catalog, views, precise_columns);
     let pin_arrays = super::arrays::pin_sources(query, catalog);
     let owners = ownership::owners(&query.items, catalog);
     let mut bounded: Vec<bool> = query
@@ -148,6 +137,7 @@ fn evaluate(
     } else {
         Default::default()
     };
+    let mut credits = Vec::new();
     let keys: Vec<_> = query
         .items
         .iter()
@@ -155,10 +145,11 @@ fn evaluate(
         .map(|(index, item)| {
             if nested[index].as_ref().is_some_and(|inner| inner.bounded) {
                 if let Some(drivers) = lateral::dependencies(item, &query.items[..index], catalog) {
+                    credits.push(None);
                     return keys::dependent_on(drivers);
                 }
             }
-            keys::prepare(
+            let (prepared, credit) = keys::prepare(
                 item,
                 index,
                 (&owners, (write_target == Some(index)).then_some(&domains)),
@@ -166,7 +157,9 @@ fn evaluate(
                 &pin_arrays[index],
                 catalog,
                 views,
-            )
+            );
+            credits.push(credit);
+            prepared
         })
         .collect();
     let (result_bounded, offenders) = settle::finish(
@@ -178,8 +171,18 @@ fn evaluate(
             catalog,
             views,
             precise_columns,
+            credits: &credits,
         },
         &mut bounded,
+    );
+    let accepts = accepts::collect(
+        query,
+        &bounded,
+        &credits,
+        &nested,
+        &pin_subqueries,
+        catalog,
+        views.domain_rows,
     );
     target::project(
         query,
@@ -188,6 +191,8 @@ fn evaluate(
             finite_outputs: keys::output_domains(query, &nested),
             items: bounded,
             offenders,
+            credits,
+            accepts,
         },
         catalog,
         views,

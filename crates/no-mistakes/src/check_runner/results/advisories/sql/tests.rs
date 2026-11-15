@@ -294,3 +294,31 @@ fn body_policy_wording_does_not_change_legacy_bounded_statement_advice() {
         assert!(advice[0].message.contains(expected), "{:?}", advice[0]);
     }
 }
+
+#[test]
+fn domain_product_advice_keeps_the_audit_sentence() {
+    let mut verdict = row();
+    verdict.rule = no_mistakes::codebase::rules::postgres_bounded_statements::RULE_ID.into();
+    verdict.subcheck = "domain-product".into();
+    verdict.status = SqlVerdictStatus::Violation;
+    verdict.file = "sql/lookups.sql".into();
+    verdict.residual_reasons = vec![
+        "accepted participants by unique-key domain product 50, within maxDomainRows 5000".into(),
+    ];
+    let sources = SourceStore::new(std::sync::Arc::new(
+        no_mistakes::codebase::ts_source::FileInventory::from_paths(&[]),
+    ));
+    let mut advice = Vec::new();
+    merge_sql(
+        &mut advice,
+        Path::new("/missing"),
+        &sources,
+        &CheckFactMap::default(),
+        &[verdict],
+    );
+    assert_eq!(
+        advice[0].message,
+        "sql/lookups.sql:1: accepted participants by unique-key domain product 50, within maxDomainRows 5000"
+    );
+    assert_eq!(advice[0].target.as_deref(), Some("domain-product"));
+}

@@ -1,5 +1,7 @@
 use super::super::declared::{self, Gate};
-use super::super::evaluate::{offenders_with_views, variant_offenders_with_views};
+use super::super::evaluate::{
+    judgment_with_views, variant_judgment_with_views, Judgment,
+};
 use super::super::view_bounds::ViewBounds;
 use super::super::CompiledOptions;
 use super::groups::Groups;
@@ -53,7 +55,7 @@ pub(super) fn file(
             for bound in projected.iter().filter(|bound| checked(opts, bound)) {
                 let anchor = anchor_line(bound);
                 if matches!(plan.gate(anchor), Some(Gate::Valid { .. }))
-                    && !offenders(facts, bound, catalog, views).is_empty()
+                    && !judgment(facts, bound, catalog, views).offenders.is_empty()
                 {
                     offender_anchors.insert(anchor);
                 }
@@ -95,6 +97,8 @@ pub(super) fn file(
             } else {
                 (&mut *findings, &mut *groups)
             };
+            let judged = judgment(facts, bound, catalog, views);
+            super::domain_note::record(prepared, opts, rel, source, &judged.accepts);
             super::emit::offenders(super::emit::Offenders {
                 output,
                 groups: selected_groups,
@@ -106,7 +110,8 @@ pub(super) fn file(
                 bound,
                 file_index: start_index + offset,
                 native_statement_count,
-                offenders: offenders(facts, bound, catalog, views),
+                offenders: judged.offenders,
+                domain_rows: views.domain_rows,
             });
         }
     }
@@ -134,16 +139,16 @@ fn statement_anchors(
     anchors
 }
 
-fn offenders(
+fn judgment(
     facts: &SqlStatementFileFacts,
     bound: &SqlBoundFact,
     catalog: &SchemaCatalog,
     views: &ViewBounds,
-) -> Vec<super::super::evaluate::Offender> {
+) -> Judgment {
     if facts.variant_locations.is_some() {
-        variant_offenders_with_views(bound, catalog, views)
+        variant_judgment_with_views(bound, catalog, views)
     } else {
-        offenders_with_views(bound, catalog, views)
+        judgment_with_views(bound, catalog, views)
     }
 }
 

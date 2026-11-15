@@ -255,6 +255,24 @@ missing columns, and duplicate aliases for the same column are configuration
 errors. Use a qualified table name when a bare name is ambiguous. These are
 rule-local assertions, separate from schema uniqueness and `viewBounds`.
 
+### Finite unique-key domains
+
+`maxDomainRows` defaults to unset. Leave it unset to keep the current findings.
+Set it to a non-negative integer to accept a lookup whose free unique-key
+columns each have a provable finite domain, when the product of those domain
+sizes is at most `maxDomainRows`. Equality-pinned columns do not multiply. A
+domain is a validated `CHECK (col BETWEEN a AND b)` or
+`CHECK (col >= a AND col <= b)` on a non-null integer column, a non-null enum,
+a non-null boolean, or a closed inclusive literal range in the query predicate,
+including a `date` column between two date literals. Several checks and query
+bounds intersect. An integer type's width is not a domain: `smallint` and
+`integer` stay reported unless a check or a literal range closes them. Nullable
+columns, unvalidated checks, `OR` checks, and open ranges are not domains. `OR`
+branches add their products and the sum must fit the cap. The finding for a
+product above the cap names that product. An accepted statement is reported as
+an advisory that names the product and the cap. `maxDomainRows: 0` accepts no
+extra statement.
+
 ### Executor configuration
 
 Omitting `importSpecifier`, `executorNames`, and `extraExecutorNames` is a configuration error.

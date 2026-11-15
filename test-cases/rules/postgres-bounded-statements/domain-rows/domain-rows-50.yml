@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema.json
+      sqlInclude: [sql/lookups.sql]
+      include: [sql/lookups.sql]
+      maxDomainRows: 50

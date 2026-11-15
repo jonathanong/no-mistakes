@@ -88,7 +88,13 @@ set operation). A statement is bounded when any of these holds:
   `LIMIT`; an unbounded driver, a missing predicate, or a non-unique partial index
   still reports. `ARRAY(SELECT ...)` in a select list is one array value per row and
   is not treated as an expanding call, while an unknown function still is.
-  The relations inside it are still judged. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
+  The relations inside it are still judged. A configured `maxDomainRows` also
+  accepts a lookup when every column left free on one unique key has a proven
+  finite domain and the product of those domains is at most the cap. Equality
+  pins are not multiplied. A domain is a validated integer check, a non-null
+  enum, a non-null boolean, or a closed inclusive literal range. An integer
+  type's width is not a domain. `OR` arms add their products. The advisory or
+  the finding names the product used. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
   LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
   only preceding FROM sources; a later source with the same column name cannot hide that
