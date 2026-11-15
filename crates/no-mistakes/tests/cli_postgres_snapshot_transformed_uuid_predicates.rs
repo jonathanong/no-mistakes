@@ -48,6 +48,28 @@ fn postgres_uuid_access_paths_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_uuid_access_single_row_check_json_snapshot() {
+    let rule = "postgres-no-transformed-uuid-predicates";
+    for shape in ["single-row", "single-row-embedded"] {
+        let cases = ["low", "max"].map(|effort| {
+            (
+                effort,
+                rules_path(rule, "fixture", "."),
+                rules_path(
+                    rule,
+                    "configs",
+                    &format!("access-paths-{shape}-{effort}.yml"),
+                ),
+            )
+        });
+        assert_saved_fixture(
+            &format!("postgres_uuid_access_{}", shape.replace('-', "_")),
+            &cases,
+        );
+    }
+}
+
+#[test]
 fn postgres_uuid_outer_unnest_policy_check_json_snapshot() {
     let rule = "postgres-no-transformed-uuid-predicates";
     for (mode, expected_advice, fails) in [

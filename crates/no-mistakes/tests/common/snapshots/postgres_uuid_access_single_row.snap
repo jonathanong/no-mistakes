@@ -1,0 +1,81 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/single-row.sql",
+          "line": 3,
+          "message": "access-paths/single-row.sql:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/single-row.sql",
+          "line": 2,
+          "message": "access-paths/single-row.sql:2: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE (post_id)::uuid_single = $1::uuid_single;",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/single-row.sql",
+          "line": 3,
+          "message": "access-paths/single-row.sql:3: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;",
+          "target": "single_row_items.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "access-paths/single-row.sql",
+          "line": 3,
+          "message": "access-paths/single-row.sql:3: postgres-no-transformed-uuid-predicates application #0 has unresolved SQL for uuid-predicates: unresolved-column-owner",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;",
+          "target": "uuid-predicates"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "access-paths/single-row.sql",
+          "line": 2,
+          "message": "access-paths/single-row.sql:2: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE (post_id)::uuid_single = $1::uuid_single;",
+          "target": "single_row_items.post_id"
+        },
+        {
+          "file": "access-paths/single-row.sql",
+          "line": 3,
+          "message": "access-paths/single-row.sql:3: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;",
+          "target": "single_row_items.post_id"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

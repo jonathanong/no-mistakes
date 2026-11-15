@@ -89,7 +89,7 @@ fn constant_row(function: &sqlparser::ast::Function, positions: PlaceholderPosit
         && function.filter.is_none()
         && function.over.is_none()
         && function.within_group.is_empty()
-        && matches!(&function.args, FunctionArguments::List(list) if list.args.len() > 1
+        && matches!(&function.args, FunctionArguments::List(list) if !list.args.is_empty()
             && list.clauses.is_empty()
             && list.duplicate_treatment.is_none()
             && list.args.iter().all(|arg| matches!(arg, FunctionArg::Unnamed(FunctionArgExpr::Expr(value)) if constant(value, positions))))
