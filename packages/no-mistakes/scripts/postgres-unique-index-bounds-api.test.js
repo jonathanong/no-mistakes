@@ -20,7 +20,7 @@ test(
     const project = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
     assert.deepEqual(project.reports[0].result, standalone);
     assert.deepEqual(standalone.warnings, []);
-    assert.equal(standalone.rules.length, 24);
+    assert.equal(standalone.rules.length, 23);
     assert.ok(
       standalone.rules.some(
         (finding) => finding.file === "partial-unique.sql" && finding.line === 3,
@@ -29,6 +29,16 @@ test(
     assert.ok(
       !standalone.rules.some(
         (finding) => finding.file === "partial-unique.sql" && finding.line === 2,
+      ),
+    );
+    assert.ok(
+      standalone.rules.some(
+        (finding) => finding.file === "partial-expression-unique.sql" && finding.line === 4,
+      ),
+    );
+    assert.ok(
+      !standalone.rules.some(
+        (finding) => finding.file === "partial-expression-unique.sql" && finding.line === 2,
       ),
     );
   },

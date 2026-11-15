@@ -247,13 +247,19 @@ fn embedded_wrapped_statement_directives_keep_recovery_fixtures_isolated() {
 fn unique_index_shape_guards_survive_cli_preparation() {
     let root = fixture().join("unique-index-shapes");
     let actual = findings_of(check_in(&root, ".no-mistakes.yml"));
-    assert_eq!(actual.len(), 24, "{actual:?}");
+    assert_eq!(actual.len(), 23, "{actual:?}");
     assert!(actual
         .iter()
         .any(|(file, line, _)| file == "partial-unique.sql" && *line == 3));
     assert!(!actual
         .iter()
         .any(|(file, line, _)| file == "partial-unique.sql" && *line == 2));
+    assert!(actual
+        .iter()
+        .any(|(file, line, _)| { file == "partial-expression-unique.sql" && *line == 4 }));
+    assert!(!actual
+        .iter()
+        .any(|(file, line, _)| { file == "partial-expression-unique.sql" && *line == 2 }));
 }
 
 #[test]

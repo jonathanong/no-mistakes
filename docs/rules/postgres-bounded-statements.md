@@ -507,6 +507,10 @@ An ambiguous bare column supplies no proof; qualify it with the intended
 relation alias. Catalog indexes include plain unique keys such as
 `receipt_id`, partial unique keys whose predicates the query establishes,
 and matching functional keys such as `LOWER(username) = LOWER($1)`.
+A strict call also proves the argument is not null: `lower(username) = lower($1)`
+matches `UNIQUE (lower(username)) WHERE username IS NOT NULL`. The same holds for
+unquoted `upper` and one-argument `btrim`, unqualified or `pg_catalog`-qualified.
+`coalesce`, `IS NOT DISTINCT FROM`, a quoted name, and another schema do not.
 Raw equality also fixes a recognized function of that column: `username = $1`
 matches `UNIQUE (lower(username))` for unquoted `lower`, `upper`, and
 one-argument `btrim` when the column type is `text` or `varchar`. Range

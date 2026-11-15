@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "issue_3432": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "statements.sql",
+          "line": 13,
+          "message": "statements.sql:13: SELECT can return every row of tail_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM tail_users WHERE coalesce(username, '') = $1;",
+          "target": "table:tail_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 15,
+          "message": "statements.sql:15: SELECT can return every row of kind_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM kind_users WHERE lower(username) = lower($1);",
+          "target": "table:kind_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 17,
+          "message": "statements.sql:17: SELECT can return every row of tail_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM tail_users WHERE upper(username) = upper($1);",
+          "target": "table:tail_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 19,
+          "message": "statements.sql:19: SELECT can return every row of tail_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM tail_users WHERE lower(username) IS NOT DISTINCT FROM lower($1);",
+          "target": "table:tail_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 21,
+          "message": "statements.sql:21: SELECT can return every row of trimmed_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT username FROM trimmed_users WHERE btrim(username, 'x') = $1;",
+          "target": "table:trimmed_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 23,
+          "message": "statements.sql:23: SELECT can return every row of tail_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM tail_users WHERE \"lower\"(username) = $1;",
+          "target": "table:tail_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 24,
+          "message": "statements.sql:24: SELECT can return every row of tail_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM tail_users WHERE app.lower(username) = $1;",
+          "target": "table:tail_users"
+        },
+        {
+          "file": "statements.sql",
+          "line": 26,
+          "message": "statements.sql:26: SELECT can return every row of tail_users; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM tail_users WHERE lower(username) FILTER (WHERE true) = $1;",
+          "target": "table:tail_users"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
