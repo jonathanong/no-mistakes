@@ -23,7 +23,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT leave jobs or steps without `timeout-minutes`, or set one at or above the platform cap.
 - MUST NOT fix a slow job by raising its timeout; split it.
 - MUST NOT poll remote state (sleep loops, CLI waiters, re-dispatch loops); react to events with `needs`, `workflow_call`, `workflow_run`, or `repository_dispatch`.
-- MUST NOT gate on another workflow by reading its status through `gh` or the API, once or in a loop; call it with `workflow_call` and `needs`, or trigger on a validated `workflow_run`.
+- MUST NOT gate on another workflow by reading its status through `gh` or the API, once or in a loop; call it with `workflow_call` and `needs`, or trigger on a validated `workflow_run`. Exception: a manually dispatched run (such as a promotion of an operator-chosen SHA) may look up a run that already completed, if it validates the workflow, repository, SHA, and successful conclusion.
 - MUST NOT path-filter a required check; skipped jobs look missing. Use an always-reporting gate.
 - MUST NOT fake required checks with check runs or statuses.
 - MUST NOT rely on implicit success for jobs that must run after a failure; check `needs.<job>.result`.
