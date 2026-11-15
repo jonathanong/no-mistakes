@@ -246,3 +246,48 @@ fn describe_index_falls_back_to_columns_for_unnamed_indexes() {
     assert!(described.contains("implicit index"));
     assert!(described.contains("<expr>"));
 }
+
+#[test]
+fn missing_overlay_source_is_unanalyzable() {
+    let root = std::env::temp_dir().join("nm-3387-redundant-absent");
+    let path = root.join("migrations").join("001.sql");
+    let shorter = idx("idx_events__topic_id", vec![param("topic_id", None, None)]);
+    let mut longer = idx(
+        "idx_events__topic_id__created_at",
+        vec![
+            param("topic_id", None, None),
+            param("created_at", None, None),
+        ],
+    );
+    longer.line = 2;
+    longer.source_order = 1;
+    let mut facts = crate::codebase::check_facts::CheckFactMap::default();
+    facts.postgres.schema.insert(
+        path.clone(),
+        Ok(std::sync::Arc::new(
+            crate::codebase::postgres::SqlSchemaFileFacts {
+                path: path.clone(),
+                indexes: vec![shorter, longer],
+                ..Default::default()
+            },
+        )),
+    );
+    let sources = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(&[]),
+    ));
+    let findings = scan::scan(
+        &root,
+        &compile_options(&Options::default()),
+        &[path],
+        &sources,
+        &facts,
+    )
+    .expect("prepared schema facts");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.target.as_deref() == Some("unanalyzable")
+                && finding.message.contains("cannot read source")
+        }),
+        "{findings:?}"
+    );
+}

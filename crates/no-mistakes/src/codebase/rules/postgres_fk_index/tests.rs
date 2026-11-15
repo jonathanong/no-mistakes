@@ -1,6 +1,9 @@
 use super::*;
-use crate::codebase::postgres::SqlForeignKeyMetadata;
+use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::postgres::{SqlForeignKeyMetadata, SqlSchemaFileFacts};
+use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 #[test]
 fn empty_fk_columns_are_skipped() {
@@ -37,4 +40,34 @@ fn option_defaults_use_empty_includes() {
     let compiled = compile_options(&Options::default());
     assert!(compiled.allowed_columns.is_empty());
     assert!(compiled.allowed_tables.is_empty());
+}
+
+#[test]
+fn missing_overlay_source_is_unanalyzable() {
+    let root = std::env::temp_dir().join("nm-3387-fk-absent");
+    let path = root.join("migrations").join("001.sql");
+    let mut facts = CheckFactMap::default();
+    facts.postgres.schema.insert(
+        path.clone(),
+        Ok(Arc::new(SqlSchemaFileFacts {
+            path: path.clone(),
+            ..Default::default()
+        })),
+    );
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[])));
+    let findings = scan::scan(
+        &root,
+        &compile_options(&Options::default()),
+        &[path],
+        &sources,
+        &facts,
+    )
+    .expect("prepared schema facts");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.target.as_deref() == Some("unanalyzable")
+                && finding.message.contains("cannot read source")
+        }),
+        "{findings:?}"
+    );
 }
