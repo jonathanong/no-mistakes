@@ -269,3 +269,7 @@ order even when the body and an outer write share a line. `CREATE TABLE ... AS`,
 order, so positional `INSERT` values are
 not attributed to later `ALTER ... ADD COLUMN` generated columns. Quoted and
 unquoted column names that differ in case are distinct during `ALTER` replay.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

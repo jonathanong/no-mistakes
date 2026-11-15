@@ -112,7 +112,8 @@ fn merge(
     let mut active = Vec::new();
     for located in members {
         let finding = &located.finding;
-        let source = crate::codebase::rules::read_source(sources, &root.join(&finding.file));
+        let source =
+            crate::codebase::rules::read_language_source(sources, &root.join(&finding.file));
         let disabled = source.as_deref().is_some_and(|source| {
             matching_disable_directive(source, u32::try_from(finding.line).ok(), RULE_ID).is_some()
         });

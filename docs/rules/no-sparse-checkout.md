@@ -84,3 +84,7 @@ exception, or `no-mistakes-disable-file` for an intentionally exceptional file.
 [`github-actions-pinned-hash`](github-actions-pinned-hash.md) and
 [`github-actions-job-timeouts`](github-actions-job-timeouts.md) enforce other
 workflow reliability constraints.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

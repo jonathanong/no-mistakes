@@ -605,3 +605,7 @@ are proven append-only effects followed by its sole terminal return. Consume tha
 result in one `const` immediately passed as the configured executor's sole
 argument. Missing awaits, extra uses, unresolved effects and alternate return
 paths remain unanalyzable; see [awaited return origins](../postgres-query-annotation/low-effort.md#awaited-fresh-native-return-origins).
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

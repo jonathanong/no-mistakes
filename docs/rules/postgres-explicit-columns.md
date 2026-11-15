@@ -363,3 +363,7 @@ see [suppression hygiene](../configuration/suppressions.md).
 `postgres-required-predicates` requires predicates on named columns.
 `postgres-sql-shape-policy` bans selected query shapes. This rule only cares
 about star projections and `RETURNING *`.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

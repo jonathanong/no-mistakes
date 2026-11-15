@@ -83,12 +83,14 @@ fn precompute_setup_data_from_config_files_inner(
             }
         }
         let source = match sources {
-            Some(sources) => crate::codebase::rules::read_source(sources, &config_file.path)
-                .ok_or(anyhow::anyhow!(
-                    "failed to read {}",
-                    config_file.path.display()
-                ))?
-                .to_string(),
+            Some(sources) => {
+                crate::codebase::rules::read_language_source(sources, &config_file.path)
+                    .ok_or(anyhow::anyhow!(
+                        "failed to read {}",
+                        config_file.path.display()
+                    ))?
+                    .to_string()
+            }
             None => std::fs::read_to_string(&config_file.path)?,
         };
         let base = config_file.path.parent().unwrap_or(root);
@@ -153,7 +155,7 @@ fn setup_files_from_configs_inner(
     let mut files = Vec::new();
     for config_file in config_files {
         let source = match sources {
-            Some(sources) => crate::codebase::rules::read_source(sources, &config_file)
+            Some(sources) => crate::codebase::rules::read_language_source(sources, &config_file)
                 .ok_or(anyhow::anyhow!("failed to read {}", config_file.display()))?
                 .to_string(),
             None => std::fs::read_to_string(&config_file)?,

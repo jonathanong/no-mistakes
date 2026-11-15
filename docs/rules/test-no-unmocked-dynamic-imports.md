@@ -266,3 +266,7 @@ known integration test. Prefer a mock or explicit test-project scope.
 [`test-no-dependency-pins`](test-no-dependency-pins.md) avoids brittle version
 assertions; [`vitest-project-mapping`](vitest-project-mapping.md) ensures each
 selected test has one Vitest owner.
+
+## Invalid UTF-8
+
+Vitest and Playwright config text this rule reads is decoded lossily, so include patterns next to a stray byte are still applied. A config that cannot be read for any other reason fails the check as a read error.

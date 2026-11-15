@@ -143,3 +143,7 @@ directives apply to that reported line, not the original ShellCheck location.
 
 [`workflow-topology-policy`](workflow-topology-policy.md) checks CI structure;
 this rule checks the shell implementation invoked by that workflow.
+
+## Invalid UTF-8
+
+A non-`.sh` file selected through `shebangDirs` is decoded lossily before its shebang is checked, so a shellcheck finding next to a stray byte is still reported. A file that cannot be read for any other reason is skipped. A missing `shellcheck` binary stays an unanalyzable result.

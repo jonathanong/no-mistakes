@@ -19,7 +19,8 @@ pub(super) fn scan(
     if let Some(sql_sources) = &opts.sql_sources {
         for path in postgres_sql_paths(root, files, sql_sources)? {
             let rel = relative_slash_path(root, &path);
-            let source = crate::codebase::rules::read_source(sources, &path).unwrap_or_default();
+            let source =
+                crate::codebase::rules::read_language_source(sources, &path).unwrap_or_default();
             let advice = opts
                 .advise_unanalyzable
                 .then(|| crate::codebase::rules::native_sql_advice::NativeSqlAdvice::new(&source));

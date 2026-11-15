@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-explicit-columns
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      maxColumns: 0
+      relations: [orders]

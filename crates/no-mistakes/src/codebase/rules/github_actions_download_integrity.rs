@@ -91,7 +91,7 @@ fn check_file(
     if gha_kind(&rel).is_none() {
         return Vec::new();
     }
-    let Some(content) = super::read_source(sources, path) else {
+    let Some(content) = super::read_language_source(sources, path) else {
         return Vec::new();
     };
     runs::check_source(&rel, &content, hosts, helpers)

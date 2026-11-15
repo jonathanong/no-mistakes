@@ -141,3 +141,7 @@ jobs:
 
 Use `no-mistakes-disable-next-line github-actions-action-timeout-pair` or
 `no-mistakes-disable-file` for a one-off exception.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

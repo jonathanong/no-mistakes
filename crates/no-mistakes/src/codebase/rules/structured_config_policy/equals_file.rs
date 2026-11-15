@@ -46,7 +46,7 @@ pub(super) fn check_equals_file(
         )];
     }
     let other_rel = relative_slash_path(root, &other_path);
-    let Some(source) = super::super::read_source(sources, &other_path) else {
+    let Some(source) = super::super::read_language_source(sources, &other_path) else {
         return vec![finding(
             rel,
             assertion,

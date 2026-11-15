@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      checkArbiter: false

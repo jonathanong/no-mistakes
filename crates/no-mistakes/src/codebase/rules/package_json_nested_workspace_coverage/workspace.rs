@@ -82,7 +82,7 @@ pub(super) fn wildcard_targets_dependency<'a>(
 }
 
 pub(super) fn line(path: &Path, sources: &SourceStore) -> usize {
-    super::super::read_source(sources, path)
+    super::super::read_language_source(sources, path)
         .and_then(|source| {
             source
                 .lines()
@@ -91,3 +91,6 @@ pub(super) fn line(path: &Path, sources: &SourceStore) -> usize {
         })
         .unwrap_or(1)
 }
+
+#[cfg(test)]
+mod invalid_utf8_tests;

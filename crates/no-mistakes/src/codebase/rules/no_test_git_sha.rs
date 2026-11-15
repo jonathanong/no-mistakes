@@ -109,7 +109,7 @@ fn check_file(
     options: &CompiledOptions,
     sources: &SourceStore,
 ) -> Vec<RuleFinding> {
-    let Some(content) = super::read_source(sources, path) else {
+    let Some(content) = super::read_language_source(sources, path) else {
         return Vec::new();
     };
     if let Some(audit) = &options.audit {

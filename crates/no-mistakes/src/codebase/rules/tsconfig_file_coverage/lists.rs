@@ -112,7 +112,7 @@ fn program_key_findings(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let path = root.join(&entry.path);
-    let Some(source) = crate::codebase::rules::read_source(sources, &path) else {
+    let Some(source) = crate::codebase::rules::read_language_source(sources, &path) else {
         return vec![finding(
             &entry.path,
             format!("{}: auxiliary tsconfig is not a JSON object", entry.path),

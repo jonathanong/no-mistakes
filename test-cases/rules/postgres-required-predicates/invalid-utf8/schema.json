@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {"columns": {
+      "id": {"dataType": "integer", "ordinalPosition": 1},
+      "note": {"dataType": "text", "ordinalPosition": 2},
+      "email": {"dataType": "uuid", "ordinalPosition": 3},
+      "account_id": {"dataType": "integer", "ordinalPosition": 4}
+    }},
+    "accounts": {"columns": {
+      "id": {"dataType": "uuid", "ordinalPosition": 1},
+      "email": {"dataType": "uuid", "ordinalPosition": 2}
+    }},
+    "items": {"columns": {
+      "id": {"dataType": "uuid", "ordinalPosition": 1}
+    }},
+    "t": {"columns": {
+      "id": {"dataType": "integer", "ordinalPosition": 1}
+    }}
+  },
+  "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

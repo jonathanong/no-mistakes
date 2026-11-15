@@ -40,7 +40,7 @@ pub(super) fn scan_files(
             if gha_kind(&rel).is_none() {
                 return Vec::new();
             }
-            let Some(content) = super::read_source(sources, path) else {
+            let Some(content) = super::read_language_source(sources, path) else {
                 return Vec::new();
             };
             judge(&rel, &content)

@@ -155,3 +155,7 @@ UUID bans stay on [`forbidden-calls`](forbidden-calls.md) through a
 `moduleExport` target. Parent and child links stay on
 [`markdown-child-links`](markdown-child-links.md), including `requireWholeFile`
 and `countCanonicalHtmlListItems`.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

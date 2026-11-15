@@ -262,3 +262,7 @@ rejects untrusted expressions inside scripts.
 [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
 rejects a persisted write token. This rule only judges http(s) downloads in
 `run` bodies.
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

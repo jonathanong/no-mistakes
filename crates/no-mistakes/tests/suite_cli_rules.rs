@@ -205,6 +205,8 @@ mod cli_rra_snapshot_strict_package_layout;
 mod cli_rra_snapshot_structured_config_policy;
 #[path = "cli_rra_snapshot_unconstructed_error_class.rs"]
 mod cli_rra_snapshot_unconstructed_error_class;
+#[path = "cli_rrb_snapshot_invalid_utf8.rs"]
+mod cli_rrb_snapshot_invalid_utf8;
 #[path = "cli_rrb_snapshot_nextjs.rs"]
 mod cli_rrb_snapshot_nextjs;
 #[path = "cli_rrb_snapshot_policy.rs"]

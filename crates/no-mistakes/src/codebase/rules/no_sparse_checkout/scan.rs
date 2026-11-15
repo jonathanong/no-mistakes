@@ -11,7 +11,7 @@ pub(super) fn check_file(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    let Some(source) = super::super::read_source(sources, path) else {
+    let Some(source) = super::super::read_language_source(sources, path) else {
         return Vec::new();
     };
     let file = relative_slash_path(root, path);

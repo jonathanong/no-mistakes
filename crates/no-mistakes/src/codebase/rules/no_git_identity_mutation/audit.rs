@@ -34,7 +34,7 @@ pub(crate) fn check_with_files_and_sources(
         let raw: Vec<_> = files
             .par_iter()
             .flat_map(|path| {
-                let Some(content) = super::super::read_source(sources, path) else {
+                let Some(content) = super::super::read_language_source(sources, path) else {
                     return Vec::new();
                 };
                 let rel = relative_slash_path(root, path);

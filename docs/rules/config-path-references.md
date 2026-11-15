@@ -148,3 +148,7 @@ use a normal `no-mistakes` directive.
 [`no-mistakes-config`](no-mistakes-config.md) validates the active project
 configuration; [`structured-config-policy`](structured-config-policy.md)
 enforces required config shape and values.
+
+## Invalid UTF-8
+
+Config files and preset documents are decoded lossily, so a missing path next to a stray byte is still reported. A file that cannot be read for any other reason is skipped.

@@ -1,0 +1,9 @@
+# stray ÿ
+name: ci
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Configure credentials
+        uses: ./.github/actions/setup-aws

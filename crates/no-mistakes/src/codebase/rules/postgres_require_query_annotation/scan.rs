@@ -51,7 +51,8 @@ pub(super) fn scan_with_sources(
             .embedded_sql(path, &opts.embedded)
             .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
         let rel = relative_slash_path(root, &file.path);
-        let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
+        let source =
+            crate::codebase::rules::read_language_source(sources, &file.path).unwrap_or_default();
         let statements = file
             .calls
             .iter()

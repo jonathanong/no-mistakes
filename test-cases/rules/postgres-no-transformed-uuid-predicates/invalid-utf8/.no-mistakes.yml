@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json

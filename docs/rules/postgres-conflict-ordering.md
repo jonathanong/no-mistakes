@@ -339,3 +339,7 @@ in the JSON but fail closed for canonical proof. Deferrable unique indexes canno
 be conflict arbiters, although supported valid keys can still prove lock order.
 An ordering catalog declares its coverage and cannot satisfy rules requiring
 complete schema metadata; a complete catalog satisfies every catalog rule.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

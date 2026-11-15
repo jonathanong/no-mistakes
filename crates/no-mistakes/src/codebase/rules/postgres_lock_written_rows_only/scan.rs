@@ -48,7 +48,7 @@ fn scan_file(
         .prepared()
         .postgres_statements(path, Some(&options.embedded))?;
     let file = relative_slash_path(root, path);
-    let source = super::super::read_source(sources, path).unwrap_or_default();
+    let source = super::super::read_language_source(sources, path).unwrap_or_default();
     options.checked_files.insert(file.clone());
     let enabled =
         |check: &str| options.checks.get(check).copied().unwrap_or_default() != Mode::Ignore;

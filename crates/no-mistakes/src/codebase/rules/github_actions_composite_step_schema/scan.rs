@@ -16,7 +16,7 @@ pub(super) fn check_file(
 ) -> Vec<RuleFinding> {
     crate::perf_trace::trace("github-actions-composite-step-schema.scan", || {
         let rel = relative_slash_path(root, path);
-        let Some(source) = super::super::read_source(sources, path) else {
+        let Some(source) = super::super::read_language_source(sources, path) else {
             return Vec::new();
         };
         check_source(&rel, &source, opts)

@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions:
+            - name: uuidv7
+              clauses: [where]

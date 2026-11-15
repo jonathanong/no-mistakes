@@ -324,3 +324,7 @@ advisory per executor call and configured application, including all unresolved
 statement kinds/settings. The advisory uses the executor call line, and its
 `target` lists sorted unresolved checks. Proven violations retain their SQL
 origin lines. The optional SQL verdict ledger still records every obligation.
+
+## Invalid UTF-8
+
+Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: fail
+      checks:
+        table-lock: fail

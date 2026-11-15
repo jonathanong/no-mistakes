@@ -29,7 +29,7 @@ impl<'a> VariantFindingDedup<'a> {
         rule: &str,
     ) -> Option<(String, usize)> {
         let (root, sources) = (self.root.as_deref()?, self.sources?);
-        let source = crate::codebase::rules::read_source(sources, &facts.path)?;
+        let source = crate::codebase::rules::read_language_source(sources, &facts.path)?;
         let lines = std::iter::once(locations.original_call_line)
             .chain(locations.caller_lines.iter().copied());
         let line = lines.into_iter().find(|line| {
@@ -66,3 +66,6 @@ pub(super) fn move_line(finding: &mut RuleFinding, file: Option<String>, line: u
     finding.file = file;
     finding.line = line;
 }
+
+#[cfg(test)]
+mod invalid_utf8_tests;

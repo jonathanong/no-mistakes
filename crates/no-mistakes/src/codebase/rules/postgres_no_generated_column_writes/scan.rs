@@ -86,7 +86,7 @@ pub(super) fn scan(
                     opts.advise_unanalyzable,
                 );
             }
-            let source = crate::codebase::rules::read_source(sources, path);
+            let source = crate::codebase::rules::read_language_source(sources, path);
             extend_writes(
                 &mut findings,
                 &rel,

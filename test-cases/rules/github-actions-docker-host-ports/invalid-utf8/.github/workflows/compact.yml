@@ -1,0 +1,8 @@
+# stray ÿ
+name: compact
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+    - run: docker run -p 5432:5432 postgres

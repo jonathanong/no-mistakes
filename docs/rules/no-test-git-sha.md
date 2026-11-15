@@ -77,3 +77,7 @@ Partial scopes and failed reads or parses do not prove an entry stale.
 
 Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
 `ignore` omits them. See [allow-entry hygiene](../configuration/suppressions.md#allow-entry-hygiene).
+
+## Invalid UTF-8
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.

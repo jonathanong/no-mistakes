@@ -113,3 +113,7 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 
 Manifest findings are file-level. Narrow `roots`, dependency fields, or package
 selection for an intentional exception instead of suppressing generated JSON.
+
+## Invalid UTF-8
+
+The `workspaces` line number is taken from a lossy decode, so a stray byte does not hide that line. Package manifests are still parsed as strict JSON, so an invalid UTF-8 `package.json` is not a parsed manifest and `check` does not report this rule for that file.

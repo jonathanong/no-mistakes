@@ -1,0 +1,7 @@
+rules:
+  - rule: config-path-references
+    scope: repository
+    options:
+      files: [app.yml, .oxlintrc.json]
+      keys: [schema]
+      presets: [oxlintrc]

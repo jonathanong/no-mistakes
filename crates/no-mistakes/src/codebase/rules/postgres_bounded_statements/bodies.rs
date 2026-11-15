@@ -88,7 +88,8 @@ pub(super) fn finish(
                 return true;
             }
             let finding = &located.finding;
-            let source = crate::codebase::rules::read_source(sources, &root.join(&finding.file));
+            let source =
+                crate::codebase::rules::read_language_source(sources, &root.join(&finding.file));
             let prefix = format!("{}:{}: ", finding.file, finding.line);
             advise(
                 facts,
