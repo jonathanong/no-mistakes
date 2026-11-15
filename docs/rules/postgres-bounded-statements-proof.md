@@ -170,7 +170,12 @@ set operation). A statement is bounded when any of these holds:
   when the equality is unconditional, not null-safe, and names both columns. A validated
   foreign key whose columns are all `NOT NULL` then fills the remaining foreign-key
   columns when the equated referenced columns include a unique key of that one referenced
-  row. The filled columns can complete another composite unique key. A `NOT VALID`
+  row. That unique key may be the referenced primary key alone, so equating only the
+  referencing column that maps to it fills the other foreign-key column. The statement
+  does not name that other column. The same join does not fill it when the referenced
+  columns are not a unique key, or when the column that maps to the unique key is not
+  pinned. A nullable referencing column stays out of this proof; `MATCH FULL` is not
+  modeled. The filled columns can complete another composite unique key. A `NOT VALID`
   foreign key, a nullable foreign-key column, or a composite unique key with one column
   still free does not prove the row. This fill-in uses plain unique keys, so a partial
   or expression unique index does not complete it. A positional

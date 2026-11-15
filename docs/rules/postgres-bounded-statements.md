@@ -477,6 +477,11 @@ joined relation when the join fixes its complete primary or unique key.
 For example, `JOIN profiles p ON p.account_id = a.id` stays bounded when
 `profiles.account_id` is unique. Joining on a non-unique column or leaving
 the driver unbounded still reports; pin the driver or select a capped batch.
+A validated composite foreign key whose referencing columns are all `NOT NULL`
+also fills the column that the statement never equates, when the equated
+referencing column maps to the referenced primary key or another plain unique
+key. A nullable referencing column, a referenced column set that is not a
+unique key, and an unpinned unique-key column stay findings.
 
 The same proof applies to `UPDATE accounts t SET name = 'x' FROM picked
 WHERE t.id = picked.id` and `DELETE FROM accounts t USING picked

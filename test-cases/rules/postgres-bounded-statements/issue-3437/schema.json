@@ -1,0 +1,598 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "contexts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "contexts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX contexts_pkey ON public.contexts USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "lineages": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "context_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "lineages_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX lineages_pkey ON public.lineages USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "lineages_id_context_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX lineages_id_context_key ON public.lineages USING btree (id, context_id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            },
+            {
+              "column": "context_id",
+              "expression": "context_id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "lineages_context_fkey": {
+          "columns": [
+            "context_id"
+          ],
+          "referencedTable": "contexts",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    },
+    "sources": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "lineage_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "sources_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX sources_pkey ON public.sources USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "sources_lineage_fkey": {
+          "columns": [
+            "lineage_id"
+          ],
+          "referencedTable": "lineages",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    },
+    "memberships": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "source_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "memberships_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX memberships_pkey ON public.memberships USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "memberships_source_fkey": {
+          "columns": [
+            "source_id"
+          ],
+          "referencedTable": "sources",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    },
+    "operations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "source_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "lineage_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "context_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "idempotency_key": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "indexes": {
+        "operations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX operations_pkey ON public.operations USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "operations_context_idempotency_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX operations_context_idempotency_key ON public.operations USING btree (context_id, idempotency_key)",
+          "keys": [
+            {
+              "column": "context_id",
+              "expression": "context_id"
+            },
+            {
+              "column": "idempotency_key",
+              "expression": "idempotency_key"
+            }
+          ]
+        },
+        "operations_source_idx": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE INDEX operations_source_idx ON public.operations USING btree (source_id)",
+          "keys": [
+            {
+              "column": "source_id",
+              "expression": "source_id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "lineage_context_fkey": {
+          "columns": [
+            "lineage_id",
+            "context_id"
+          ],
+          "referencedTable": "lineages",
+          "referencedColumns": [
+            "id",
+            "context_id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        },
+        "operations_source_fkey": {
+          "columns": [
+            "source_id"
+          ],
+          "referencedTable": "sources",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    },
+    "nullable_operations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "source_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "lineage_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "context_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "idempotency_key": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "indexes": {
+        "nullable_operations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX nullable_operations_pkey ON public.nullable_operations USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "nullable_operations_context_idempotency_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX nullable_operations_context_idempotency_key ON public.nullable_operations USING btree (context_id, idempotency_key)",
+          "keys": [
+            {
+              "column": "context_id",
+              "expression": "context_id"
+            },
+            {
+              "column": "idempotency_key",
+              "expression": "idempotency_key"
+            }
+          ]
+        },
+        "nullable_operations_source_idx": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE INDEX nullable_operations_source_idx ON public.nullable_operations USING btree (source_id)",
+          "keys": [
+            {
+              "column": "source_id",
+              "expression": "source_id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "lineage_context_fkey": {
+          "columns": [
+            "lineage_id",
+            "context_id"
+          ],
+          "referencedTable": "lineages",
+          "referencedColumns": [
+            "id",
+            "context_id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        },
+        "nullable_operations_source_fkey": {
+          "columns": [
+            "source_id"
+          ],
+          "referencedTable": "sources",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    },
+    "tag_pairs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 1
+        },
+        "name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {}
+    },
+    "loose_operations": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "source_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "lineage_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "context_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 5
+        },
+        "idempotency_key": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 6
+        }
+      },
+      "indexes": {
+        "loose_operations_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX loose_operations_pkey ON public.loose_operations USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "loose_operations_context_idempotency_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX loose_operations_context_idempotency_key ON public.loose_operations USING btree (context_id, idempotency_key)",
+          "keys": [
+            {
+              "column": "context_id",
+              "expression": "context_id"
+            },
+            {
+              "column": "idempotency_key",
+              "expression": "idempotency_key"
+            }
+          ]
+        },
+        "loose_operations_source_idx": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "predicate": null,
+          "definition": "CREATE INDEX loose_operations_source_idx ON public.loose_operations USING btree (source_id)",
+          "keys": [
+            {
+              "column": "source_id",
+              "expression": "source_id"
+            }
+          ]
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "foreignKeys": {
+        "lineage_context_fkey": {
+          "columns": [
+            "lineage_id",
+            "context_id"
+          ],
+          "referencedTable": "tag_pairs",
+          "referencedColumns": [
+            "id",
+            "name"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        },
+        "loose_operations_source_fkey": {
+          "columns": [
+            "source_id"
+          ],
+          "referencedTable": "sources",
+          "referencedColumns": [
+            "id"
+          ],
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "validated": true
+        }
+      }
+    }
+  }
+}
