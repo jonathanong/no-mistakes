@@ -204,3 +204,38 @@ fn incomplete_or_mismatched_singleton_helper_mirrors_stay_unknown() {
             .is_none_or(|sql| !sentinel::contains(sql)));
     }
 }
+
+#[test]
+fn variant_only_value_hole_keeps_a_placeholder() {
+    use super::extract;
+    use crate::codebase::postgres::embedded::EmbeddedSqlKind;
+    let facts = extract("singleton-append.ts");
+    let pending = facts.pending_imported.first().expect("singleton pending");
+    let mut call = pending.template.clone();
+    call.sql_text = None;
+    call.variants.truncate(1);
+    call.variants[0].sql_text = format!("SELECT id FROM items WHERE id = {}", sentinel::encode(0));
+    let mut calls = [call];
+    let mut relative = [];
+    let mut fragments = [];
+    let mut variants = [];
+    let sites = vec![pending.sites[0].1.clone()];
+    let _ = finalize(
+        Walked {
+            calls: &mut calls,
+            call_spans: &[pending.span],
+            pending_calls: &mut relative,
+            pending_spans: &BTreeMap::new(),
+            fragments: &mut fragments,
+            fragment_variants: &mut variants,
+        },
+        &sites,
+        &crate::fx::FxHashMap::default(),
+    );
+    assert_eq!(calls[0].kind, EmbeddedSqlKind::Dynamic);
+    assert!(calls[0].variants.is_empty());
+    assert_eq!(
+        calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM items WHERE id = sql_placeholder_1")
+    );
+}

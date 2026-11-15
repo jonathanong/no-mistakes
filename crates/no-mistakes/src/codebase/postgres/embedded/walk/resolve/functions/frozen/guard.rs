@@ -47,18 +47,14 @@ pub(super) fn throws(statement: &Statement<'_>) -> bool {
     }
 }
 
-pub(super) fn returned_record<'a>(statement: &'a Statement<'a>) -> Option<(&'a str, &'a str)> {
-    let Statement::ReturnStatement(returned) = statement else {
-        return None;
-    };
+pub(super) fn returned_record<'a>(
+    returned: &'a ast::ReturnStatement<'a>,
+) -> Option<(&'a str, &'a str)> {
     let Expression::ComputedMemberExpression(member) =
         unwrap_ts_wrappers(returned.argument.as_ref()?)
     else {
         return None;
     };
-    if member.optional {
-        return None;
-    }
     let Expression::Identifier(object) = unwrap_ts_wrappers(&member.object) else {
         return None;
     };

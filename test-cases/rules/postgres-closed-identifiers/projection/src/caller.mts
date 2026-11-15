@@ -22,3 +22,13 @@ export function loose(kind: string) {
 export function rawRemove(kind: string) {
   query(rawSql`/* raw */ DELETE FROM ${getRelationTable(kind)} WHERE id = $1`);
 }
+
+export function literalConfig() {
+  const config = getConfig("vote");
+  query(`/* lit */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);
+}
+
+export function boolConfig() {
+  const flagged = getConfig(true);
+  query(`/* bool */ DELETE FROM ${flagged.table} WHERE id = $1`);
+}

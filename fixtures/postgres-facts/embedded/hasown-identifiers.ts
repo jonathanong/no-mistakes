@@ -27,8 +27,30 @@ export function run(kind: string) {
   query(`/* corr */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);
   query(`/* one */ DELETE FROM ${getRelationTable('vote')} WHERE id = $1`);
   query(`/* miss */ DELETE FROM ${getRelationTable('missing')} WHERE id = $1`);
+  const one = getRelationConfig('vote');
+  query(`/* one-config */ DELETE FROM ${one.table} WHERE ${one.column} = $1`);
   const statement = sql`/* append */ DELETE FROM `;
   statement.append(getRelationTable(kind));
   statement.append(' WHERE id = $1');
   query(statement);
+}
+
+export function unionConfig(kind: 'vote' | 'tag') {
+  const config = getRelationConfig(kind);
+  query(`/* union-config */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);
+}
+
+export function partialConfig(kind: 'vote' | 'missing') {
+  const config = getRelationConfig(kind);
+  query(`/* partial-config */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);
+}
+
+export function objectKey() {
+  const config = getRelationConfig({ vote: 'vote' });
+  query(`/* object-key */ DELETE FROM ${config.table} WHERE id = $1`);
+}
+
+export function optionalField(kind: string) {
+  const config = getRelationConfig(kind);
+  query(`/* optional */ DELETE FROM ${config?.table} WHERE id = $1`);
 }

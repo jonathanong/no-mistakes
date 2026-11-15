@@ -181,7 +181,7 @@ fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast
     let oxc_ast::ast::Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else { return None };
     if call.optional || visitor.shadowed_locally(name.name.as_str()) { return None; }
     if visitor.imported_names.contains(name.name.as_str()) {
-        return super::super::super::super::frozen_alias::call_hole(visitor, call);
+        return super::super::super::super::frozen_alias::call_hole(visitor, call, name.name.as_str());
     }
     let args = super::known_helper_args(&visitor.functions, name.name.as_str(), || super::super::super::super::imported::clause_args(visitor, call))?;
     let strings = visitor.functions.identifier_clauses(name.name.as_str(), &args)?;

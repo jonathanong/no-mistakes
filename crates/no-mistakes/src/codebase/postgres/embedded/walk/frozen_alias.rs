@@ -55,18 +55,13 @@ pub(super) fn member_hole(
 pub(super) fn call_hole(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
+    local: &str,
 ) -> Option<Vec<Recovered>> {
-    let Expression::Identifier(id) = unwrap_ts_wrappers(&call.callee) else {
-        return None;
-    };
-    if call.optional || !visitor.imported_names.contains(id.name.as_str()) {
-        return None;
-    }
     let args = imported::clause_args(visitor, call)?;
     let index = visitor.imported_sites.borrow_mut().intern(
         call.span.start,
         ImportedSite {
-            local: id.name.to_string(),
+            local: local.to_string(),
             member: None,
             kind: SiteKind::PlainClause,
             args,
@@ -98,9 +93,6 @@ fn marker(visitor: &ScopeVisitor<'_>, index: usize, origin: u32) -> Option<Vec<R
 }
 
 fn member_index(visitor: &ScopeVisitor<'_>, member: &StaticMemberExpression<'_>) -> Option<usize> {
-    if member.optional {
-        return None;
-    }
     let Expression::Identifier(object) = unwrap_ts_wrappers(&member.object) else {
         return None;
     };
@@ -129,5 +121,5 @@ fn alias<'a>(visitor: &'a ScopeVisitor<'_>, name: &str) -> Option<&'a FrozenAlia
     visitor
         .frozen_aliases
         .iter()
-        .find(|alias| alias.scope == scope && alias.name == name)
+        .rfind(|alias| alias.scope == scope && alias.name == name)
 }

@@ -8,14 +8,8 @@ pub(super) fn arms(
     name: &str,
     depth: u8,
 ) -> Option<Vec<Arm>> {
-    if depth == 0 {
-        return None;
-    }
     let (key_index, entries) = visitor.functions.frozen_object(name)?;
     let selected = selected(visitor, call, key_index, entries, depth)?;
-    if selected.is_empty() || selected.len() > MAX_EMBEDDED_SQL_VARIANTS {
-        return None;
-    }
     Some(
         selected
             .into_iter()

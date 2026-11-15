@@ -40,7 +40,8 @@ fn helper(
     body: &ast::FunctionBody<'_>,
     records: &[(String, Values)],
 ) -> Option<HelperProgram> {
-    let [Statement::IfStatement(guard), Statement::ReturnStatement(_)] = body.statements.as_slice()
+    let [Statement::IfStatement(guard), Statement::ReturnStatement(returned)] =
+        body.statements.as_slice()
     else {
         return None;
     };
@@ -48,8 +49,8 @@ fn helper(
         return None;
     }
     let (record, key) = has_own(&guard.test)?;
-    let (returned, returned_key) = returned_record(body.statements.last()?)?;
-    if record != returned || key != returned_key {
+    let (returned_name, returned_key) = returned_record(returned)?;
+    if record != returned_name || key != returned_key {
         return None;
     }
     let values = records.iter().find(|(name, _)| name == record)?.1.clone();

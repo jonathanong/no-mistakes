@@ -28,6 +28,8 @@ mod parent_fields_tests;
 mod state;
 use expression::expression;
 #[cfg(test)]
+mod hasown_edge_tests;
+#[cfg(test)]
 mod hasown_tests;
 #[cfg(test)]
 mod tests;

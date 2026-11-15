@@ -3,7 +3,7 @@ use crate::codebase::postgres::embedded::{
     extract_embedded_sql_from_source, EmbeddedSqlCall, EmbeddedSqlOptions,
 };
 
-fn calls(name: &str) -> Vec<EmbeddedSqlCall> {
+pub(super) fn calls(name: &str) -> Vec<EmbeddedSqlCall> {
     extract_embedded_sql_from_source(
         &fixture(name),
         &read_fixture(name),
@@ -12,7 +12,7 @@ fn calls(name: &str) -> Vec<EmbeddedSqlCall> {
     .calls
 }
 
-fn sqls(calls: &[EmbeddedSqlCall], marker: &str) -> Vec<String> {
+pub(super) fn sqls(calls: &[EmbeddedSqlCall], marker: &str) -> Vec<String> {
     let call = calls
         .iter()
         .find(|call| {
@@ -76,6 +76,32 @@ fn hasown_frozen_records_enumerate_strings_and_keep_nested_fields_together() {
         })
         .unwrap_or_else(|| panic!("missing miss call: {calls:#?}"));
     assert!(missing.is_unanalyzable(), "{missing:#?}");
+    assert_eq!(
+        sqls(&calls, "/* one-config */"),
+        ["/* one-config */ DELETE FROM users WHERE user_id = $1"]
+    );
+    assert_eq!(
+        sqls(&calls, "/* union-config */"),
+        [
+            "/* union-config */ DELETE FROM users WHERE user_id = $1",
+            "/* union-config */ DELETE FROM posts WHERE post_id = $1",
+        ]
+    );
+    for marker in ["/* partial-config */", "/* object-key */", "/* optional */"] {
+        let call = calls
+            .iter()
+            .find(|call| {
+                call.sql_text
+                    .as_deref()
+                    .is_some_and(|sql| sql.contains(marker))
+                    || call
+                        .variants
+                        .iter()
+                        .any(|variant| variant.sql_text.contains(marker))
+            })
+            .unwrap_or_else(|| panic!("missing {marker}: {calls:#?}"));
+        assert!(call.is_unanalyzable(), "{marker}: {call:#?}");
+    }
 }
 
 #[test]

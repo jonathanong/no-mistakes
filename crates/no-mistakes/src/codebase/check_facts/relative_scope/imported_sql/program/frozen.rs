@@ -18,9 +18,6 @@ pub(super) fn member<R: FnMut(&str, &Path) -> Option<PathBuf>>(
     }
     let program = helper_program(shared, options, &origin, &local)?;
     let index = program.frozen_key?;
-    if program.frozen_entries.is_empty() {
-        return None;
-    }
     let entries: Vec<_> = match site.args.get(index)? {
         SiteArg::Literal(literal) => vec![program
             .frozen_entries

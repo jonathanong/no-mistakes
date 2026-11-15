@@ -115,4 +115,40 @@ fn imported_hasown_records_fill_string_holes_and_zip_nested_fields() {
         })
         .unwrap_or_else(|| panic!("missing loose call: {calls:#?}"));
     assert!(loose.is_unanalyzable(), "{loose:#?}");
+    assert_eq!(
+        sqls(&calls, "/* lit */"),
+        ["/* lit */ DELETE FROM users WHERE user_id = $1"]
+    );
+    let bool_key = calls
+        .iter()
+        .find(|call| {
+            call.sql_text
+                .as_deref()
+                .is_some_and(|sql| sql.contains("/* bool */"))
+                || call
+                    .variants
+                    .iter()
+                    .any(|variant| variant.sql_text.contains("/* bool */"))
+        })
+        .unwrap_or_else(|| panic!("missing bool call: {calls:#?}"));
+    assert!(bool_key.is_unanalyzable(), "{bool_key:#?}");
+    let self_file = files
+        .iter()
+        .find(|(path, _)| path.ends_with("src/self.mts"))
+        .expect("self")
+        .1;
+    let self_calls = &self_file.embedded_sql[0].1.calls;
+    let same_file = self_calls
+        .iter()
+        .find(|call| {
+            call.sql_text
+                .as_deref()
+                .is_some_and(|sql| sql.contains("/* self */"))
+                || call
+                    .variants
+                    .iter()
+                    .any(|variant| variant.sql_text.contains("/* self */"))
+        })
+        .unwrap_or_else(|| panic!("missing self call: {self_calls:#?}"));
+    assert!(same_file.is_unanalyzable(), "{same_file:#?}");
 }

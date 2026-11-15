@@ -71,9 +71,6 @@ fn object_entries(objects: Vec<(String, Vec<(String, RecoveredSql)>)>) -> Option
         .iter()
         .map(|(name, _)| name.clone())
         .collect();
-    if names.is_empty() {
-        return None;
-    }
     let mut entries = Vec::new();
     for (key, fields) in objects {
         if fields.len() != names.len() {
