@@ -40,8 +40,10 @@ objects: the schema catalog and embedded-SQL matcher. There are no direct
   checked instead of reporting it. The same policy covers a positional insert
   that omits its column list and supplies values into a catalogued table whose column order
   is unknown: `fail` reports it, `advise` records a non-failing advisory, and
-  `ignore` omits it. `INSERT ... DEFAULT VALUES` and a zero-width value list stay
-  clean, and a collected SQL verdict clears. `INSERT ... SELECT *` covers every
+  `ignore` omits it. `INSERT ... DEFAULT VALUES` stays a clean finding, and its
+  collected SQL verdict abstains with `unknown-relation-or-write-width`. A
+  zero-width value list stays clean, and a collected SQL verdict clears.
+  `INSERT ... SELECT *` covers every
   column, so an unknown order follows this policy and a known order stays a
   definite finding. `INSERT ... TABLE` does not parse as a supported source, so
   it keeps the generic unsupported-statement diagnostic, and that diagnostic

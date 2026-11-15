@@ -39,19 +39,21 @@ fn judgment(order: Option<Vec<String>>, complete: bool, width: Option<usize>) ->
 }
 
 #[test]
-fn absent_width_clears_and_a_counted_unknown_order_abstains() {
+fn absent_width_abstains_and_a_counted_zero_clears() {
     let order = Some(vec!["id".to_string(), "created_at".to_string()]);
     for complete in [true, false] {
         let absent = judgment(None, complete, None);
-        assert_eq!(absent.status, SqlVerdictStatus::ProvenClear, "{complete}");
-        assert_eq!(absent.reason, None);
+        assert_eq!(absent.status, SqlVerdictStatus::Abstain, "{complete}");
+        assert_eq!(absent.reason, Some("unknown-relation-or-write-width"));
         let zero = judgment(None, complete, Some(0));
         assert_eq!(zero.status, SqlVerdictStatus::ProvenClear, "{complete}");
+        assert_eq!(zero.reason, None);
         let counted = judgment(None, complete, Some(2));
         assert_eq!(counted.status, SqlVerdictStatus::Abstain, "{complete}");
         assert_eq!(counted.reason, Some("unknown-relation-or-write-width"));
         let defaults = judgment(order.clone(), complete, None);
-        assert_eq!(defaults.status, SqlVerdictStatus::ProvenClear, "{complete}");
+        assert_eq!(defaults.status, SqlVerdictStatus::Abstain, "{complete}");
+        assert_eq!(defaults.reason, Some("unknown-relation-or-write-width"));
     }
     let hit = judgment(order, true, Some(2));
     assert_eq!(hit.status, SqlVerdictStatus::Violation);
