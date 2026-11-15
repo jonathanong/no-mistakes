@@ -147,11 +147,18 @@ try {
 ```
 
 The assignment must belong to the declaration's executing
-function and precede the call in the same statement list. Calls before the
-assignment or after that block remain unresolved. Competing writes, including
-destructuring and updates, do not gain executor proof from the annotation.
+function and precede the call in the same statement list. Optional calls such
+as `client?.query(sql)` and `pool?.query(sql)` inside that block are proved the
+same way. Calls before the assignment or after that block remain unresolved.
+Competing writes, including destructuring and updates, do not gain executor
+proof from the annotation.
 These guards apply to both low and maximum annotation effort; unresolved
 receivers retain the normal report/advise/ignore policy.
+
+The scoped-binding collector and delayed-receiver recording share one text
+check. Every supported binding is a `let` declaration, so a file whose text
+has no `let` skips that walk. A `let` in a comment or an unrelated identifier
+can only make the walk run. It does not prove a receiver.
 
 A configured module's `withTransaction` and `withTransactionOptions` imports
 also bind `query`. Member calls named `query` are collected when a module is configured or `query`
