@@ -45,28 +45,37 @@ fn judge<'a>(
             unknown |= !snapshot.known_complete(&write.table);
             continue;
         };
-        let violation = match &write.columns {
-            SqlWriteColumns::Named(columns) => columns.iter().enumerate().any(|(index, column)| {
-                let key = write.column_keys.as_ref().and_then(|keys| keys.get(index));
-                key.map_or_else(
-                    || meta.generated.contains(&column.to_ascii_lowercase()),
-                    |key| meta.generated.contains(key),
-                )
-            }),
+        let (violation, supplies_values) = match &write.columns {
+            SqlWriteColumns::Named(columns) => (
+                columns.iter().enumerate().any(|(index, column)| {
+                    let key = write.column_keys.as_ref().and_then(|keys| keys.get(index));
+                    key.map_or_else(
+                        || meta.generated.contains(&column.to_ascii_lowercase()),
+                        |key| meta.generated.contains(key),
+                    )
+                }),
+                true,
+            ),
             SqlWriteColumns::Positional(width) => {
-                if width.is_none() || meta.column_order.is_none() {
+                let supplies = width.is_some_and(|count| count > 0);
+                let violation = if !supplies {
+                    false
+                } else if meta.column_order.is_none() {
                     unknown = true;
                     false
                 } else {
                     !positional_insert_hits(&write.table, meta, *width).is_empty()
-                }
+                };
+                (violation, supplies)
             }
-            SqlWriteColumns::All => !meta.generated.is_empty(),
+            SqlWriteColumns::All => (!meta.generated.is_empty(), true),
         };
         if violation {
             return SqlBranchJudgment::violation(true);
         }
-        unknown |= !snapshot.known_complete(&write.table);
+        if supplies_values {
+            unknown |= !snapshot.known_complete(&write.table);
+        }
     }
     if unknown {
         SqlBranchJudgment::abstain("unknown-relation-or-write-width")
@@ -74,3 +83,6 @@ fn judge<'a>(
         SqlBranchJudgment::clear()
     }
 }
+
+#[cfg(test)]
+mod tests;

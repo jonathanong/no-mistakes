@@ -80,3 +80,45 @@ fn query_targets_are_not_base_relation_write_facts() {
     }
     assert!(out.is_empty());
 }
+
+#[test]
+fn columnless_shapes_keep_one_write_fact_per_statement() {
+    let sql = include_str!("../../../../../../../test-cases/rules/postgres-no-generated-column-writes/unit-fixture/columnless-shapes/writes.sql");
+    let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(sql);
+    let mut out = Vec::new();
+    for statement in &statements {
+        collect(statement, &mut out);
+    }
+    let facts: Vec<_> = out
+        .iter()
+        .map(|fact| (fact.line, fact.table.as_str(), fact.columns.clone()))
+        .collect();
+    assert_eq!(
+        facts,
+        vec![
+            (1, "votes", SqlWriteColumns::Positional(Some(2))),
+            (2, "votes", SqlWriteColumns::Positional(Some(2))),
+            (3, "votes", SqlWriteColumns::Positional(Some(usize::MAX))),
+            (4, "votes", SqlWriteColumns::Positional(Some(2))),
+            (5, "votes", SqlWriteColumns::Positional(Some(2))),
+            (6, "votes", SqlWriteColumns::Positional(Some(2))),
+            (7, "votes", SqlWriteColumns::Positional(Some(2))),
+            (8, "votes", SqlWriteColumns::Positional(None)),
+            (9, "items", SqlWriteColumns::Positional(Some(2))),
+            (10, "items", SqlWriteColumns::Positional(Some(3))),
+            (11, "items", SqlWriteColumns::Positional(Some(usize::MAX))),
+            (12, "items", SqlWriteColumns::Positional(None)),
+            (13, "votes", SqlWriteColumns::Named(vec!["id".to_string()])),
+            (
+                14,
+                "items",
+                SqlWriteColumns::Named(vec!["created_at".to_string()]),
+            ),
+            (
+                15,
+                "items",
+                SqlWriteColumns::Named(vec!["note".to_string()]),
+            ),
+        ]
+    );
+}
