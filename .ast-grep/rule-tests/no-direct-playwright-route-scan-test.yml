@@ -23,6 +23,16 @@ valid:
     fn collect_route_edges(routes: Vec<Route>) -> Vec<Edge> {
         Vec::new()
     }
+  - |
+    fn describe_scan() {
+        let _note = "collect_routes";
+        let _raw = r#"collect_routes_from_visible_paths"#;
+        let _bytes = b"collect_routes_from_snapshot";
+    }
+  - |
+    fn collect_route_edges(scanner: &Scanner) -> Vec<Edge> {
+        scanner.collect_route_edges()
+    }
 invalid:
   # ast-grep test does not apply the rule's file-level `ignores`, which only
   # exempts edge_playwright_routes.rs during a real `ast-grep scan`.
@@ -82,4 +92,26 @@ invalid:
     fn bind_scan() {
         let scan = crate::routes::collect_routes_from_visible_paths;
         let _ = scan;
+    }
+  - |
+    fn collect_method_edges(scanner: &Scanner, root: &Path) -> Vec<Edge> {
+        scanner.collect_routes(root, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_method_edges(scanner: &Scanner, root: &Path, paths: &[PathBuf]) -> Vec<Edge> {
+        scanner.collect_routes_from_visible_paths(root, paths, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_method_edges(
+        scanner: &Scanner,
+        root: &Path,
+        snapshot: &VisiblePathSnapshot,
+    ) -> Vec<Route> {
+        scanner.collect_routes_from_snapshot(root, snapshot)
+    }
+  - |
+    fn read_scan_field(scanner: &Scanner) {
+        let _routes = scanner.collect_routes;
     }

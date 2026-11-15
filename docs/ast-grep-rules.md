@@ -107,14 +107,15 @@ effect performed indirectly (a helper method call, `std::mem::replace`,
 
 ### `no-direct-playwright-route-scan`
 
-Flags any identifier named `collect_routes`,
+Flags any identifier or field name `collect_routes`,
 `collect_routes_from_visible_paths`, or `collect_routes_from_snapshot` under
 `codebase/dependencies/graph/**`, the `DepGraph` edge-producer directory.
 The match is the name, so it covers a fully qualified call, a `routes::` or
-`super::` path, a bare call, a `use` (including `use ... as` and a grouped
+`super::` path, a bare call, a method or field form such as
+`receiver.collect_routes()`, a `use` (including `use ... as` and a grouped
 `use` list), and a function reference that is not called. A longer name such
-as `collect_route_edges` does not match. A comment that only mentions the
-name does not match.
+as `collect_route_edges` does not match. A comment or a string literal that
+only mentions the name does not match.
 
 `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a _no-key_
 shared cache: every caller within one `no-mistakes check` invocation wants
