@@ -169,8 +169,9 @@ set operation). A statement is bounded when any of these holds:
   foreign key whose columns are all `NOT NULL` then fills the remaining foreign-key
   columns when the equated referenced columns include a unique key of that one referenced
   row. The filled columns can complete another composite unique key. A `NOT VALID`
-  foreign key, a nullable foreign-key column, a partial or expression unique index, or a
-  composite unique key with one column still free does not prove the row. A positional
+  foreign key, a nullable foreign-key column, or a composite unique key with one column
+  still free does not prove the row. This fill-in uses plain unique keys, so a partial
+  or expression unique index does not complete it. A positional
   column alias list does not let that alias satisfy a unique key of a different physical
   column. Two columns that
   are each one value are not treated as equal unless the statement equates them. A `LIMIT`
