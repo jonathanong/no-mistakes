@@ -87,6 +87,24 @@ fn hasown_frozen_records_enumerate_strings_and_keep_nested_fields_together() {
             "/* union-config */ DELETE FROM posts WHERE post_id = $1",
         ]
     );
+    assert_eq!(
+        sqls(&calls, "/* two-configs */"),
+        [
+            "/* two-configs */ DELETE FROM users WHERE user_id = $1",
+            "/* two-configs */ DELETE FROM posts WHERE post_id = $1",
+        ]
+    );
+    let mut crossed = sqls(&calls, "/* two-keys */");
+    crossed.sort();
+    assert_eq!(
+        crossed,
+        [
+            "/* two-keys */ DELETE FROM posts WHERE post_id = $1",
+            "/* two-keys */ DELETE FROM posts WHERE user_id = $1",
+            "/* two-keys */ DELETE FROM users WHERE post_id = $1",
+            "/* two-keys */ DELETE FROM users WHERE user_id = $1",
+        ]
+    );
     for marker in ["/* partial-config */", "/* object-key */", "/* optional */"] {
         let call = calls
             .iter()

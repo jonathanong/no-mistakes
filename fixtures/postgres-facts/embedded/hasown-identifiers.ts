@@ -40,6 +40,18 @@ export function unionConfig(kind: 'vote' | 'tag') {
   query(`/* union-config */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);
 }
 
+export function twoConfigs(kind: 'vote' | 'tag') {
+  const left = getRelationConfig(kind);
+  const right = getRelationConfig(kind);
+  query(`/* two-configs */ DELETE FROM ${left.table} WHERE ${right.column} = $1`);
+}
+
+export function twoKeys(kind: 'vote' | 'tag', other: 'vote' | 'tag') {
+  const left = getRelationConfig(kind);
+  const right = getRelationConfig(other);
+  query(`/* two-keys */ DELETE FROM ${left.table} WHERE ${right.column} = $1`);
+}
+
 export function partialConfig(kind: 'vote' | 'missing') {
   const config = getRelationConfig(kind);
   query(`/* partial-config */ DELETE FROM ${config.table} WHERE ${config.column} = $1`);

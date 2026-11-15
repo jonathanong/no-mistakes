@@ -31,8 +31,12 @@ non-key column can still be unbounded.
   record and key. String values enumerate like a switch. Nested records,
   including a field that is itself `Object.freeze` of literal fields, keep one
   choice for every field when the caller binds the helper result to a const,
-  including across imports. A `record[key]` read outside that helper, a
-  property write on the returned object, or passing that object into a call
+  including across imports. A second call with the same closed key keeps that
+  key's choices, so a field from one call does not pair with another entry
+  from the second call. Distinct keys still cross. A key union that includes
+  a missing member stays opaque instead of publishing the matches. A
+  `record[key]` read outside that helper, a property write on the returned
+  object, or passing that object into a call
   stays opaque. The binding is dropped when its scope exits, so a later
   parameter of the same name is not the earlier record. A literal or
   literal-union argument selects the matching entries, and a no-substitution
