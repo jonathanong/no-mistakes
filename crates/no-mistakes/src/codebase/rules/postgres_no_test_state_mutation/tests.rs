@@ -1,5 +1,7 @@
 use super::*;
 
+mod appended_fragment;
+mod closed_record_getter;
 mod closed_record_prefix;
 mod factory;
 mod iterator;

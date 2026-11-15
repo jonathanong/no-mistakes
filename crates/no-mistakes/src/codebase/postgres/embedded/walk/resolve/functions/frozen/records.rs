@@ -11,8 +11,13 @@ pub(super) enum Values {
     Objects(Vec<FrozenEntry>),
 }
 
+/// String records share the 16-variant budget. Nested object records may be
+/// larger; a closed key still publishes at most 16 entries.
+const MAX_FROZEN_STRING_ENTRIES: usize = 16;
+const MAX_FROZEN_OBJECT_ENTRIES: usize = 64;
+
 pub(super) fn record_values(object: &ObjectExpression<'_>, source: &str) -> Option<Values> {
-    if object.properties.is_empty() || object.properties.len() > 16 {
+    if object.properties.is_empty() {
         return None;
     }
     let mut strings = Vec::new();
@@ -29,7 +34,13 @@ pub(super) fn record_values(object: &ObjectExpression<'_>, source: &str) -> Opti
         return None;
     }
     if !strings.is_empty() {
+        if strings.len() > MAX_FROZEN_STRING_ENTRIES {
+            return None;
+        }
         return unique_keys(&strings).then_some(Values::Strings(strings));
+    }
+    if objects.len() > MAX_FROZEN_OBJECT_ENTRIES {
+        return None;
     }
     object_entries(objects)
 }

@@ -2,13 +2,14 @@
 //! Unfilled calls stay dynamic, with a leading statement or `sql_placeholder_N`.
 
 use super::sentinel;
-use super::split::coordinate;
 use super::summary::{ImportedSite, PendingImportedSql};
 use crate::codebase::postgres::embedded::relative::PendingRelativeCall;
-use crate::codebase::postgres::embedded::walk::resolve::has_known_leading_statement;
 use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use std::collections::BTreeMap;
+
+mod policy;
+use policy::{trimmed_prefix, unfilled_statement};
 
 pub(crate) struct Walked<'a> {
     pub(crate) calls: &'a mut [EmbeddedSqlCall],
@@ -180,21 +181,4 @@ fn scrub(call: &mut EmbeddedSqlCall) {
     call.recovered_placeholder_positions
         .retain(|position| *position < cut);
     call.sql_text = Some(kept);
-}
-
-/// Prefix before the first hole, plus the SQL coordinate where that prefix ends.
-fn trimmed_prefix(text: &str) -> Option<(String, (u32, u32))> {
-    let prefix = sentinel::prefix(text);
-    let kept = keep_prefix(text)?;
-    Some((kept, coordinate(text, prefix.len())))
-}
-
-fn unfilled_statement(text: &str) -> bool {
-    sentinel::contains(text) && !sentinel::is_bare(text) && keep_prefix(text).is_none()
-}
-
-/// The prefix before the first hole, when it is a known statement.
-fn keep_prefix(text: &str) -> Option<String> {
-    let prefix = sentinel::prefix(text);
-    has_known_leading_statement(prefix).then(|| prefix.to_string())
 }

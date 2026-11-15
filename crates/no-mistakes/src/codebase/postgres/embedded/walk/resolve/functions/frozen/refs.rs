@@ -101,24 +101,9 @@ impl<'a> Visit<'a> for References<'a> {
 }
 
 fn helper_returns(func: &ast::Function<'_>, record: &str) -> bool {
-    let Some(body) = func.body.as_ref() else {
-        return false;
-    };
-    let [ast::Statement::IfStatement(guard), ast::Statement::ReturnStatement(returned)] =
-        body.statements.as_slice()
-    else {
-        return false;
-    };
-    if guard.alternate.is_some() || !super::guard::throws(&guard.consequent) {
-        return false;
-    }
-    let Some((has_record, _)) = super::guard::has_own(&guard.test) else {
-        return false;
-    };
-    let Some((returned_record, _)) = super::guard::returned_record(returned) else {
-        return false;
-    };
-    has_record == record && returned_record == record
+    func.body.as_ref().is_some_and(|body| {
+        super::guard::guarded_record(body).is_some_and(|(name, _)| name == record)
+    })
 }
 
 fn has_own_record(call: &ast::CallExpression<'_>, record: &str) -> Option<u32> {

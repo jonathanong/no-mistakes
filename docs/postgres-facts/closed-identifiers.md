@@ -23,19 +23,26 @@ non-key column can still be unbounded.
   immutable aliases and scalar field reads. An untracked object-valued read
   invalidates the owning record, even when no write is visible.
 - A module-private `Object.freeze` of a closed literal record, returned by a
-  helper whose body is exactly `if (!Object.hasOwn(record, key)) throw ...`
-  and then `return record[key]`. String values enumerate like a switch. Nested
-  records, including a field that is itself `Object.freeze` of literal fields,
-  keep one choice for every field when the caller binds the helper result to a
-  const, including across imports. A `record[key]` read outside that helper,
-  a property write on the returned object, or passing that object into a call
+  helper whose body is one or more guards and then `return record[key]`. Each
+  guard is `if (!Object.hasOwn(record, key))`, `if (typeof key !== 'string')`
+  (`!=` counts), or `if` of those tests combined with `||`. A guard throws or
+  returns early (`return`, `return null`, `return undefined`, or `void`); it
+  does not return SQL text. At least one `Object.hasOwn` check names that
+  record and key. String values enumerate like a switch. Nested records,
+  including a field that is itself `Object.freeze` of literal fields, keep one
+  choice for every field when the caller binds the helper result to a const,
+  including across imports. A `record[key]` read outside that helper, a
+  property write on the returned object, or passing that object into a call
   stays opaque. The binding is dropped when its scope exits, so a later
-  parameter of the same name is not the earlier record. A literal or literal-union
-  argument selects the matching entries, and a no-substitution template counts
-  as a literal value. A type-only union is not this proof. Extra statements, an
-  exported, mutated, or escaped record, a shadowed `Object`, a getter, an empty
-  or mixed value, a boolean or null argument, a helper imported from its own
-  file, or more than 16 entries stay opaque.
+  parameter of the same name is not the earlier record. A literal or
+  literal-union argument selects the matching entries, and a no-substitution
+  template counts as a literal value. A type-only union is not this proof.
+  Extra statements, an exported, mutated, or escaped record, a shadowed
+  `Object`, a getter, an empty or mixed value, a boolean or null argument, or
+  a helper imported from its own file stay opaque. A string record with more
+  than 16 entries stays opaque. A nested object record may hold up to 64
+  entries; a closed key that selects at most 16 of them is enumerated, and a
+  dynamic key does not publish a partial set.
 - Configured assertion calls with a literal string array or intrinsic `Set`
   allowlist, including a local unmodified collection or const alias.
 - A source-visible same-file helper whose local literal membership guard throws

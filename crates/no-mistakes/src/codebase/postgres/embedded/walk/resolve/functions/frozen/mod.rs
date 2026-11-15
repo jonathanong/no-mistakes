@@ -11,7 +11,6 @@ use std::sync::Arc;
 mod guard;
 mod records;
 mod refs;
-use guard::{has_own, returned_record, throws};
 use records::Values;
 
 pub(super) fn install<'a>(
@@ -39,19 +38,7 @@ fn helper(
     body: &ast::FunctionBody<'_>,
     records: &[(String, Values)],
 ) -> Option<HelperProgram> {
-    let [Statement::IfStatement(guard), Statement::ReturnStatement(returned)] =
-        body.statements.as_slice()
-    else {
-        return None;
-    };
-    if guard.alternate.is_some() || !throws(&guard.consequent) {
-        return None;
-    }
-    let (record, key) = has_own(&guard.test)?;
-    let (returned_name, returned_key) = returned_record(returned)?;
-    if record != returned_name || key != returned_key {
-        return None;
-    }
+    let (record, key) = guard::guarded_record(body)?;
     let values = records.iter().find(|(name, _)| name == record)?.1.clone();
     let lowered = simple_params(params)?;
     let index = lowered.iter().position(|param| param.name == key)?;

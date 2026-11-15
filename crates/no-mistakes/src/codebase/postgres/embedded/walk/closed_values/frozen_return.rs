@@ -43,6 +43,9 @@ fn selected<'a>(
 ) -> Option<Vec<&'a FrozenEntry>> {
     let argument = call.arguments.get(key_index)?.as_expression()?;
     let Some(keys) = expression(visitor, argument, depth - 1) else {
+        if entries.len() > super::MAX_EMBEDDED_SQL_VARIANTS {
+            return None;
+        }
         return Some(entries.iter().collect());
     };
     let mut chosen = Vec::new();
@@ -57,6 +60,9 @@ fn selected<'a>(
         {
             chosen.push(entry);
         }
+    }
+    if chosen.is_empty() || chosen.len() > super::MAX_EMBEDDED_SQL_VARIANTS {
+        return None;
     }
     Some(chosen)
 }

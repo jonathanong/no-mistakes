@@ -34,6 +34,8 @@ mod cli_postgres_detached_executors;
 mod cli_postgres_executor_obligations;
 #[path = "cli_postgres_non_call_references.rs"]
 mod cli_postgres_non_call_references;
+#[path = "cli_postgres_snapshot_appended_fragment.rs"]
+mod cli_postgres_snapshot_appended_fragment;
 #[path = "cli_postgres_snapshot_array_columns.rs"]
 mod cli_postgres_snapshot_array_columns;
 #[path = "cli_postgres_snapshot_bounded_chains.rs"]
@@ -66,6 +68,8 @@ mod cli_postgres_snapshot_closed_candidates;
 mod cli_postgres_snapshot_closed_identifier_correlation;
 #[path = "cli_postgres_snapshot_closed_identifiers.rs"]
 mod cli_postgres_snapshot_closed_identifiers;
+#[path = "cli_postgres_snapshot_closed_record_getter.rs"]
+mod cli_postgres_snapshot_closed_record_getter;
 #[path = "cli_postgres_snapshot_closed_record_prefix.rs"]
 mod cli_postgres_snapshot_closed_record_prefix;
 #[path = "cli_postgres_snapshot_column_naming.rs"]

@@ -51,8 +51,12 @@ At max effort, [closed identifier values](../postgres-facts/closed-identifiers.m
 can supply finite SQL alternatives through raw append operations and untagged
 templates. Direct stable literal-union parameters, complete literal-return
 switches, immutable lookup records, and a module-private frozen literal record
-returned through an `Object.hasOwn` throw-guard are supported, including a nested
-`Object.freeze` of literal fields. A `record[key]` read outside that helper, a
+returned through an `Object.hasOwn` guard are supported, including a nested
+`Object.freeze` of literal fields. The guard may also test `typeof key !== 'string'`
+and may throw or return early. A string record with more than 16 entries stays
+opaque. A nested object record may hold up to 64 entries; a closed key that
+selects at most 16 of them is enumerated, and a dynamic key does not publish a
+partial set. A `record[key]` read outside that helper, a
 property write on the returned object, or passing that object into a call stays
 opaque, and the binding does not outlive its scope. Rule-local
 `sqlIdentifierAssertions` selects named imports with a literal allowlist argument;
