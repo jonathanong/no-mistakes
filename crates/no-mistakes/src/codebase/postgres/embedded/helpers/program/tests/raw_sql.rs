@@ -1,10 +1,10 @@
 use super::*;
+use crate::codebase::postgres::embedded::tests::{fixture, read_fixture};
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 
 fn programs() -> Programs {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/postgres-facts/embedded/programs/raw-sql.ts");
-    let source = std::fs::read_to_string(&path).unwrap();
+    let path = fixture("programs/raw-sql.ts");
+    let source = read_fixture("programs/raw-sql.ts");
     extract_embedded_sql_from_source(
         &path,
         &source,
