@@ -80,9 +80,7 @@ fn same_table<'a>(
     let Some(SqlBoundItemKind::Table(name)) = query.items.get(source).map(|item| &item.kind) else {
         return None;
     };
-    let Some(local) = catalog.bounded_relation(name) else {
-        return None;
-    };
+    let local = catalog.bounded_relation(name)?;
     catalog
         .bounded_relation(referenced)
         .is_some_and(|remote| remote.name == local.name)
