@@ -8,6 +8,7 @@ pub mod facts;
 pub mod jsx;
 pub mod module_facts;
 
+pub(crate) mod bound_comments;
 pub(crate) mod builtin_receivers;
 
 mod file_id_map;

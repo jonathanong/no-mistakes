@@ -245,3 +245,16 @@ Existence and scalar subquery probes are excluded from pool diagnostics.
 Unbounded uncorrelated scalar reads remain ordinary findings with every policy.
 Keep IN, array and derived pools bounded. An already materialized pool is reported at its source;
 only new unbounded scans add a consumer diagnostic.
+
+A page size or other limit the schema cannot show is a line comment on the
+statement, or on the line immediately above its outer SQL keyword:
+`-- no-mistakes-bound postgres-bounded-statements rows<=100: caller passes one page of ids`.
+The comment needs a positive `rows<=N` limit and a non-empty justification. It
+suppresses only this rule for that one statement. A line with more than one
+checked statement is ambiguous and clears none of them. Other rules still run,
+and unanalyzable SQL stays reported. Accepted declarations appear in check JSON
+as `acceptedBounds` (`rule`, `file`, `line`, `rows`, `justification`) and do not
+fail the check. A disable directive that covers the declaration or the statement
+omits that entry. A missing limit, `rows<=0`, a missing justification, or a
+declaration on an already bounded statement is a finding. See
+[declared statement bounds](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-bounded-statements.md#declared-statement-bounds).

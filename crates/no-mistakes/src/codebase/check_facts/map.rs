@@ -51,6 +51,8 @@ pub struct CheckFactMap {
         Option<Arc<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
     pub(crate) sql_advisories:
         Arc<OnceLock<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
+    pub(crate) accepted_statement_bounds:
+        Arc<Mutex<Vec<super::accepted_bounds::AcceptedStatementBound>>>,
     pub(crate) companion_import_plans: Arc<
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
     >,

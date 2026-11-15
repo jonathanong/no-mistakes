@@ -262,6 +262,14 @@ test("signature impact exposes scoped unanalyzed files", () => {
   assert.match(readFileSync(join(packageRoot, "types.d.ts"), "utf8"), /traversal-types/);
 });
 
+test("accepted statement bounds are an exported check report field", () => {
+  const report = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
+  assert.match(report, /export interface AcceptedStatementBound \{/);
+  assert.match(report, /acceptedBounds\?: AcceptedStatementBound\[\];/);
+  assert.match(report, /rows: number;/);
+  assert.match(report, /justification: string;/);
+});
+
 test("check timings have named public types", () => {
   const report = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
   const options = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");

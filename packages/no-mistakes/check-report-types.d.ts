@@ -30,6 +30,19 @@ export interface CheckFailure {
   message: string;
 }
 
+/**
+ * A reviewed per-statement row limit that suppressed `postgres-bounded-statements`
+ * findings for one statement. `line` is the declaration comment.
+ */
+export interface AcceptedStatementBound {
+  rule: string;
+  file: string;
+  line: number;
+  /** Declared maximum rows, from `rows<=N`. */
+  rows: number;
+  justification: string;
+}
+
 export interface CheckReport {
   /** Present only when timings are requested. */
   timings?: CheckTiming[];
@@ -59,6 +72,11 @@ export interface CheckReport {
   sqlVerdicts?: SqlObligationVerdict[];
   /** Present when `includeSuppressed` is requested; empty when no directives matched. */
   suppressed?: SuppressedFinding[];
+  /**
+   * Reviewed `postgres-bounded-statements` declarations that suppressed that rule
+   * for one statement. Omitted when empty. Not a failure.
+   */
+  acceptedBounds?: AcceptedStatementBound[];
 }
 
 export type SqlVerdictStatus = "violation" | "proven-clear" | "abstain";

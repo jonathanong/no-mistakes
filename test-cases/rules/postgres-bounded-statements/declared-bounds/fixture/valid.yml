@@ -1,0 +1,19 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      sqlInclude: ["sql/*.sql"]
+      include: ["src/**", "sql/**"]
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      sqlInclude: ["sql/other-rule.sql"]
+      include: ["src/**", "sql/other-rule.sql"]
+      relations: [candidates]

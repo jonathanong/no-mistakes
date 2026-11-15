@@ -1,3 +1,5 @@
+mod accepted_bounds;
+pub use accepted_bounds::AcceptedStatementBound;
 mod aggregate;
 mod batch;
 mod collect;

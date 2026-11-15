@@ -95,6 +95,7 @@ impl CheckFactMap {
             sql_application: self.sql_application.clone(),
             sql_verdicts: self.sql_verdicts.clone(),
             sql_advisories: Arc::clone(&self.sql_advisories),
+            accepted_statement_bounds: Arc::clone(&self.accepted_statement_bounds),
             companion_import_plans: crate::codebase::rules::required_companion_imports::merge_plans(
                 &self.companion_import_plans,
                 &supplemental.companion_import_plans,

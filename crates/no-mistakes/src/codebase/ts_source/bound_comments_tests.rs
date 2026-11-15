@@ -1,0 +1,172 @@
+use super::{bound_comments, BoundComment, BoundCommentError};
+
+fn comments(source: &str) -> Vec<BoundComment> {
+    bound_comments(source, "postgres-bounded-statements")
+}
+
+#[test]
+fn parses_sql_typescript_and_hash_comments() {
+    let source = "\
+-- no-mistakes-bound postgres-bounded-statements rows<=100: caller passes one page of ids
+// no-mistakes-bound postgres-bounded-statements rows<=25:page of ids
+# no-mistakes-bound postgres-bounded-statements rows<=0: empty page
+";
+    assert_eq!(
+        comments(source),
+        vec![
+            BoundComment::Valid {
+                line: 1,
+                rows: 100,
+                justification: "caller passes one page of ids".to_string(),
+            },
+            BoundComment::Valid {
+                line: 2,
+                rows: 25,
+                justification: "page of ids".to_string(),
+            },
+            BoundComment::Invalid {
+                line: 3,
+                error: BoundCommentError::NonPositive,
+            },
+        ]
+    );
+}
+
+#[test]
+fn rejects_a_missing_bound_or_justification() {
+    let source = "\
+-- no-mistakes-bound postgres-bounded-statements: caller passes one page of ids
+-- no-mistakes-bound postgres-bounded-statements rows<=
+-- no-mistakes-bound postgres-bounded-statements rows<=100
+-- no-mistakes-bound postgres-bounded-statements rows<=100:
+-- no-mistakes-bound postgres-bounded-statements rows<=100 extra: reason
+-- no-mistakes-bound postgres-bounded-statements rows<=18446744073709551616: too big
+";
+    assert_eq!(
+        comments(source),
+        vec![
+            BoundComment::Invalid {
+                line: 1,
+                error: BoundCommentError::MissingBound,
+            },
+            BoundComment::Invalid {
+                line: 2,
+                error: BoundCommentError::MissingBound,
+            },
+            BoundComment::Invalid {
+                line: 3,
+                error: BoundCommentError::MissingJustification,
+            },
+            BoundComment::Invalid {
+                line: 4,
+                error: BoundCommentError::MissingJustification,
+            },
+            BoundComment::Invalid {
+                line: 5,
+                error: BoundCommentError::MissingJustification,
+            },
+            BoundComment::Invalid {
+                line: 6,
+                error: BoundCommentError::MissingBound,
+            },
+        ]
+    );
+}
+
+#[test]
+fn reads_a_directive_inside_a_sql_template() {
+    let source = "\
+const hidden = \"-- no-mistakes-bound postgres-bounded-statements rows<=1: hidden\";
+return query(`SELECT '-- no-mistakes-bound postgres-bounded-statements rows<=2: quoted'`);
+return query(`
+  -- no-mistakes-bound postgres-bounded-statements rows<=25: page of ids
+  SELECT id FROM candidates WHERE id = ANY($1::uuid[])
+`);
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 4,
+            rows: 25,
+            justification: "page of ids".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn reads_template_escapes_quotes_and_interpolation() {
+    let source = "\
+const q = `SELECT ${foo({ id })}
+  -- plain note
+  SELECT '\\n'
+  SELECT 'it''s'
+  -- no-mistakes-bound postgres-bounded-statements rows<=9: template edges
+`;
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 5,
+            rows: 9,
+            justification: "template edges".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn ignores_a_backtick_inside_a_string_or_comment() {
+    let source = "\
+const note = \"` -- no-mistakes-bound postgres-bounded-statements rows<=1: example\";
+const single = '` -- no-mistakes-bound postgres-bounded-statements rows<=1: example';
+// ` -- no-mistakes-bound postgres-bounded-statements rows<=1: example
+/*
+` -- no-mistakes-bound postgres-bounded-statements rows<=1: example
+*/
+return query(`
+  -- no-mistakes-bound postgres-bounded-statements rows<=7: still a template
+  SELECT id FROM orders
+`);
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 8,
+            rows: 7,
+            justification: "still a template".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn a_same_line_template_close_does_not_keep_template_mode() {
+    let source = "\
+const orphan = `SELECT 1 -- no-mistakes-bound postgres-bounded-statements rows<=3: inside`;
+// -- no-mistakes-bound postgres-bounded-statements rows<=4: host comment
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 1,
+            rows: 3,
+            justification: "inside`;".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn ignores_other_rules_strings_and_lookalike_words() {
+    let source = "\
+-- no-mistakes-bound postgres-explicit-columns rows<=10: not this rule
+-- no-mistakes-boundary postgres-bounded-statements rows<=10: not a directive
+const hidden = \"-- no-mistakes-bound postgres-bounded-statements rows<=1: hidden\";
+-- no-mistakes-bound postgres-bounded-statements rows<=4: visible
+";
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 4,
+            rows: 4,
+            justification: "visible".to_string(),
+        }]
+    );
+}

@@ -19,6 +19,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         include_suppressed,
         timings,
         unproven_member_query_sql,
+        accepted_bounds,
     } = results;
     let _ = timings;
     let mut value = serde_json::json!({
@@ -50,6 +51,10 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
     }
     if *unproven_member_query_sql > 0 {
         value["unprovenMemberQuerySql"] = serde_json::json!(unproven_member_query_sql);
+    }
+    if !accepted_bounds.is_empty() {
+        value["acceptedBounds"] = serde_json::to_value(accepted_bounds)
+            .expect("accepted statement bounds contain only serializable fields");
     }
     // Dependency feature unification can switch serde_json maps from sorted
     // storage to insertion-ordered storage. Keep the public report stable in

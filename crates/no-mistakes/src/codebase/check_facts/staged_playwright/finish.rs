@@ -63,6 +63,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         sql_application: None,
         sql_verdicts: None,
         sql_advisories: Arc::default(),
+        accepted_statement_bounds: super::super::accepted_bounds::empty_sink(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
         call_site_paths: Arc::clone(&plan.call_site_paths),
         postgres: Default::default(),

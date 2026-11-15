@@ -108,6 +108,7 @@ entry is a configuration error.
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.
+`acceptedBounds` lists reviewed `postgres-bounded-statements` declarations that suppressed that rule for one statement. Each entry has the rule, file, comment line, numeric `rows` limit, and justification. A disable directive that covers the declaration or that statement omits the entry. The field is omitted when empty and does not by itself change the exit code. See [declared statement bounds](../rules/postgres-bounded-statements.md#declared-statement-bounds).
 `--include-sql-verdicts` is opt-in and adds `sqlVerdicts` to JSON/YAML output.
 Each entry names the configured executor profile, source file and byte span,
 rule subcheck, proof status (`violation`, `proven-clear`, or `abstain`), and any
