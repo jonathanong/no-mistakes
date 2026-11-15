@@ -109,6 +109,8 @@ pub(in super::super::super) fn dominated(
                 .test_callbacks
                 .iter()
                 .any(|(from, to)| start <= *from && *to <= end && *from <= offset && offset < *to),
-            WriteScope::Conditional | WriteScope::AfterEach(..) | WriteScope::AfterAll(..) => false,
+            WriteScope::Conditional(_) | WriteScope::AfterEach(..) | WriteScope::AfterAll(..) => {
+                false
+            }
         })
 }

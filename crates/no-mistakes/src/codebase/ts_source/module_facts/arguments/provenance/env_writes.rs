@@ -160,7 +160,7 @@ fn record(
             scope,
             super::super::WriteScope::AfterEach(..) | super::super::WriteScope::AfterAll(..)
         ) {
-        super::super::WriteScope::Conditional
+        super::super::WriteScope::Conditional(super::super::ConditionalPlace::unmarked())
     } else {
         scope
     };

@@ -1406,6 +1406,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "sync-hook-beforeeach-stub-conditional": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "sync-hook-beforeeach-tmpdir-child": {
     "exitCode": 0,
     "report": {
@@ -1767,6 +1779,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "sync-hook-unknown-concurrent-options-cleanup": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sync-hook-unrelated-conditional": {
     "exitCode": 0,
     "report": {
       "advisories": [],

@@ -53,6 +53,8 @@ const CASES: &[(&str, usize, usize)] = &[
     ("sync-hook-beforeall-aftereach-unstub", 0, 1),
     ("sync-hook-beforeeach-cleanup-live-write", 0, 1),
     ("sync-hook-beforeeach-cleanup-conditional", 0, 1),
+    ("sync-hook-beforeeach-stub-conditional", 0, 1),
+    ("sync-hook-unrelated-conditional", 0, 1),
     ("sync-hook-beforeeach-cleanup-arbitrary-reset", 0, 1),
     ("sync-hook-beforeeach-cleanup-read", 0, 1),
     ("sync-hook-beforeall-cleanup-read", 0, 1),

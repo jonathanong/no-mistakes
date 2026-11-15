@@ -362,8 +362,13 @@ it("uses the fallback", async () => {
 The finding points to the enumeration, names `EXAMPLE_LOCAL_DIR` and the
 fallback `"./tmp/example"`, and identifies the `delete` in `tests/scan.test.mts`.
 When no owned write is proven before a selected test call, the message names
-that variable and call site. It reports uncertainty when no concrete test or
-setup entry can be identified. Multiple possible environment roots retain the
+that variable and call site. If that gap is one assignment inside an `if` or
+conditional expression, in the test, a covering `beforeEach` or `beforeAll`, a
+directly imported setup module, or a configured `setupFiles` module, the message
+also names that assignment. The finding stays. Two such assignments, or a route
+that is not one concrete test, stay on the generic explanation, which does not
+guess a line. It reports uncertainty when no concrete test or setup entry can
+be identified. Multiple possible environment roots retain the
 generic unresolved-root explanation. A computed fallback such as
 `join(process.cwd(), "tmp", "example")` remains unowned, but is not presented
 as a literal fallback. An unconditional owned `beforeEach` write followed by
@@ -685,16 +690,16 @@ setup writes an owned root. Keep root setup independent of the module under test
 Naming an environment variable or fallback in a diagnostic does not establish
 ownership; the captured value still needs an owned write before its initialization.
 
-A hook setup-and-restore pair remains unresolved: assigning an owned root in
-`beforeAll` and restoring the prior value (or deleting the variable) in
-`afterAll` does not establish that every write is owned. The analysis does not
-prove a lifecycle interval for every imported caller, concurrent test, and hook;
-it cannot discard the restore write merely because a visible caller is in an
-`it` callback. Pass the owned root as an argument to a statically named helper
-instead. The unresolved-root hint names two supported rewrites: build a `const` fixture
-path or owned `mkdtemp` root inside the enumerating function, or supply it through
-every statically resolved test caller (`vi.stubEnv` for env roots). A reasoned
-suppression is the last option.
+An unconditional owned `beforeEach`/`afterEach` or `beforeAll`/`afterAll` pair
+is the lifecycle proof above. These shapes stay unresolved: a conditional
+assignment, a `beforeAll` write followed by an `afterEach` reset, concurrent
+callbacks whose cleanup can overlap, a scan inside a cleanup callback, an
+arbitrary reset reference, `globalSetup`, and a call reached by more than one
+import route. Make the assignment unconditional in the test, a covering
+`beforeEach` or `beforeAll`, or a configured `setupFiles` module, or pass the
+owned root as an argument to a statically named helper. Build a `const` fixture
+path or owned `mkdtemp` root inside the enumerating function when the scan
+should not read the environment at all. A reasoned suppression is the last option.
 
 The finding is kept when the write comes after the call, sits in an `if`, loop,
 or `try`, or another relevant write is live. The proof includes selected test roots,

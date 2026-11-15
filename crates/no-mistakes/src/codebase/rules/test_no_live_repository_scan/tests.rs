@@ -168,7 +168,7 @@ fn runtime_assets_match_whole_segments_of_literal_paths_only() {
 fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
     use super::owned::env::{dominated, owned_origin};
     use crate::codebase::ts_source::module_facts::arguments::{
-        EnvWrite, PathProvenance, WriteScope,
+        ConditionalPlace, EnvWrite, PathProvenance, WriteScope,
     };
     let write = |name: &str, anchor, scope, end| EnvWrite {
         line: 1,
@@ -184,7 +184,12 @@ fn only_unconditional_owned_writes_that_precede_the_call_dominate_it() {
             write("LIVE", PathAnchor::Relative, WriteScope::Program, 10),
             write("BODY", PathAnchor::Temp, WriteScope::Function(20, 60), 30),
             write("HOOK", PathAnchor::Temp, WriteScope::Hook(0, 200), 50),
-            write("COND", PathAnchor::Temp, WriteScope::Conditional, 10),
+            write(
+                "COND",
+                PathAnchor::Temp,
+                WriteScope::Conditional(ConditionalPlace::unmarked()),
+                10,
+            ),
         ],
         test_callbacks: vec![(100, 150)],
         ..PathProvenance::default()

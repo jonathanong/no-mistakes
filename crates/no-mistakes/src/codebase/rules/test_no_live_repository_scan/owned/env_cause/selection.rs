@@ -18,14 +18,17 @@ impl Owners<'_> {
             line: entry.line,
             reason,
             concrete: entry.concrete,
+            branch: None,
         };
         if !entry.concrete {
             return (6, cause, entry.offset);
         }
         let Some(offset) = entry.offset else {
+            self.attach_branch(&mut cause, None, facts);
             return (4, cause, entry.offset);
         };
         let Some(paths) = facts.get_ts_facts(&entry.file).and_then(diagnostic_paths) else {
+            self.attach_branch(&mut cause, Some(offset), facts);
             return (4, cause, entry.offset);
         };
         let name = &cause.hint.name;
@@ -86,6 +89,11 @@ impl Owners<'_> {
             cause.reason = "does not prove the captured or derived environment read used the configured owned root";
             return (5, cause, entry.offset);
         }
+        self.attach_branch(&mut cause, Some(offset), facts);
         (4, cause, entry.offset)
+    }
+
+    fn attach_branch(&self, cause: &mut EnvCause, offset: Option<u32>, facts: &dyn TsFactLookup) {
+        cause.branch = self.conditional_branch(&cause.file, &cause.hint.name, offset, facts);
     }
 }
