@@ -77,11 +77,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 17,
+          "message": "access-paths/expression-parentheses-positive.sql:17: WHERE applies lower to UUID column cast_collations.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_collations WHERE lower((id::text || 'x') COLLATE \"C\") = $1;",
+          "target": "cast_collations.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 18,
+          "message": "access-paths/expression-parentheses-positive.sql:18: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'a' OR label = 'b') IS NULL THEN id::text ELSE id::text END) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 19,
+          "message": "access-paths/expression-parentheses-positive.sql:19: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(CASE WHEN label BETWEEN (label = 'a' OR label = 'b') AND 'z' THEN id::text ELSE id::text END) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
           "line": 2,
           "message": "access-paths/expression-parentheses-positive.sql:2: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM functions WHERE (lower((id)::text)) || 'x' = $1;",
           "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 20,
+          "message": "access-paths/expression-parentheses-positive.sql:20: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'a' OR label = 'b') IN ('a') THEN id::text ELSE id::text END) = $1;",
+          "target": "grouping_functions.id"
         },
         {
           "file": "access-paths/expression-parentheses-positive.sql",
@@ -218,11 +250,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 17,
+          "message": "access-paths/expression-parentheses-positive.sql:17: WHERE applies lower to UUID column cast_collations.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM cast_collations WHERE lower((id::text || 'x') COLLATE \"C\") = $1;",
+          "target": "cast_collations.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 18,
+          "message": "access-paths/expression-parentheses-positive.sql:18: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'a' OR label = 'b') IS NULL THEN id::text ELSE id::text END) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 19,
+          "message": "access-paths/expression-parentheses-positive.sql:19: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(CASE WHEN label BETWEEN (label = 'a' OR label = 'b') AND 'z' THEN id::text ELSE id::text END) = $1;",
+          "target": "grouping_functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
           "line": 2,
           "message": "access-paths/expression-parentheses-positive.sql:2: WHERE applies lower to UUID column functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM functions WHERE (lower((id)::text)) || 'x' = $1;",
           "target": "functions.id"
+        },
+        {
+          "file": "access-paths/expression-parentheses-positive.sql",
+          "line": 20,
+          "message": "access-paths/expression-parentheses-positive.sql:20: WHERE applies lower to UUID column grouping_functions.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT * FROM grouping_functions WHERE lower(CASE WHEN (label = 'a' OR label = 'b') IN ('a') THEN id::text ELSE id::text END) = $1;",
+          "target": "grouping_functions.id"
         },
         {
           "file": "access-paths/expression-parentheses-positive.sql",

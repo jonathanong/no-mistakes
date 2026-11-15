@@ -169,6 +169,33 @@ unary `+` and `-` stay when removing them would change grouping:
 `id::text || (label BETWEEN 'a' AND 'z')` is not
 `id::text || label BETWEEN 'a' AND 'z'`, and
 `id::text || ((@ n) + 1)::text` is not `id::text || (@ n + 1)::text`.
+Redundant parentheses inside `CASE`, `IS`, `BETWEEN`, `IN`, `COLLATE`, and
+named arguments are ignored when they do not change grouping.
+`lower(CASE WHEN (label = 'x') THEN (id)::text ELSE id::text END)` matches
+`lower(CASE WHEN label = 'x' THEN id::text ELSE id::text END)`,
+`lower(CASE (label) WHEN 'x' THEN id::text ELSE id::text END)` matches
+`lower(CASE label WHEN 'x' THEN id::text ELSE id::text END)`,
+`lower(label := (id)::text)` matches `lower(label := id::text)`,
+`lower(CASE WHEN (label) IS NULL THEN id::text ELSE id::text END)` matches
+`lower(CASE WHEN label IS NULL THEN id::text ELSE id::text END)`,
+`lower(CASE WHEN label BETWEEN ('a') AND ('z') THEN id::text ELSE id::text END)`
+matches that `CASE` without the bound parentheses,
+`lower(CASE WHEN label IN (('a'), ('b')) THEN id::text ELSE id::text END)`
+matches that `CASE` without the list parentheses, and
+`lower(((id)::text) COLLATE "C")` matches `lower(id::text COLLATE "C")`.
+A keyword cast and `::` share precedence, so
+`lower((CAST(id AS text)) || label || 'x')` matches
+`lower(id::text || label || 'x')`.
+Grouping that is still required stays:
+`lower((id::text || 'x') COLLATE "C")` is not
+`lower(id::text || 'x' COLLATE "C")`,
+`lower(CASE WHEN (label = 'a' OR label = 'b') IS NULL THEN id::text ELSE id::text END)`
+is not
+`lower(CASE WHEN label = 'a' OR label = 'b' IS NULL THEN id::text ELSE id::text END)`,
+`lower(CASE WHEN label BETWEEN (label = 'a' OR label = 'b') AND 'z' THEN id::text
+ELSE id::text END)` is not that `BETWEEN` without the bound parentheses, and
+`lower(CASE WHEN (label = 'a' OR label = 'b') IN ('a') THEN id::text ELSE id::text END)`
+is not that `IN` without the left parentheses.
 
 In `WHERE` and `JOIN ON`, comparisons combined with `AND` or `OR` can establish
 this proof; a comparison inside `NOT` or `CASE` cannot.

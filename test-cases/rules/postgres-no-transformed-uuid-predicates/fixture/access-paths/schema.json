@@ -426,6 +426,17 @@
               "expression": "lower(id::text COLLATE \"C\")"
             }
           ]
+        },
+        "loose_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(id::text || 'x' COLLATE \"C\")"
+            }
+          ]
         }
       }
     },
@@ -718,6 +729,105 @@
           "keys": [
             {
               "expression": "lower(id::text || (@ n + 1)::text)"
+            }
+          ]
+        },
+        "case_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label = 'x' THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "case_operand_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE label WHEN 'x' THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "named_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(label := id::text)"
+            }
+          ]
+        },
+        "is_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label IS NULL THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "between_inner_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label BETWEEN 'a' AND 'z' THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "in_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label IN ('a', 'b') THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "is_group_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label = 'a' OR label = 'b' IS NULL THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "between_group_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label BETWEEN label = 'a' OR label = 'b' AND 'z' THEN id::text ELSE id::text END)"
+            }
+          ]
+        },
+        "in_group_idx": {
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "accessMethod": "btree",
+          "keys": [
+            {
+              "expression": "lower(CASE WHEN label = 'a' OR label = 'b' IN ('a') THEN id::text ELSE id::text END)"
             }
           ]
         }

@@ -1,7 +1,6 @@
-//! Drops parentheses PostgreSQL precedence makes redundant.
-//! Same-precedence grouping stays, so `(a OR b) AND c` does not become `a OR b AND c`.
 use sqlparser::ast::{
-    CastKind, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, Ident, UnaryOperator,
+    CaseWhen, CastKind, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, Ident,
+    UnaryOperator,
 };
 
 const OTHER: u8 = 7;
@@ -55,7 +54,54 @@ fn walk(expression: &mut Expr) {
         },
         Expr::Function(function) => walk_function(function),
         Expr::Tuple(items) => items.iter_mut().for_each(delimit),
+        Expr::IsNull(expr)
+        | Expr::IsNotNull(expr)
+        | Expr::IsTrue(expr)
+        | Expr::IsNotTrue(expr)
+        | Expr::IsFalse(expr)
+        | Expr::IsNotFalse(expr)
+        | Expr::IsUnknown(expr)
+        | Expr::IsNotUnknown(expr) => tighten(expr, OTHER),
+        Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
+            tighten(left, OTHER);
+            tighten(right, OTHER);
+        }
+        Expr::Between {
+            expr, low, high, ..
+        } => {
+            tighten(expr, OTHER);
+            tighten(low, OTHER);
+            tighten(high, OTHER);
+        }
+        Expr::InList { expr, list, .. } => {
+            tighten(expr, OTHER);
+            list.iter_mut().for_each(delimit);
+        }
+        Expr::Collate { expr, .. } => tighten(expr, OTHER),
+        Expr::Case {
+            operand,
+            conditions,
+            else_result,
+            ..
+        } => walk_case(operand, conditions, else_result),
         _ => {}
+    }
+}
+
+fn walk_case(
+    operand: &mut Option<Box<Expr>>,
+    conditions: &mut [CaseWhen],
+    else_result: &mut Option<Box<Expr>>,
+) {
+    if let Some(operand) = operand {
+        delimit(operand);
+    }
+    for when in conditions {
+        delimit(&mut when.condition);
+        delimit(&mut when.result);
+    }
+    if let Some(result) = else_result {
+        delimit(result);
     }
 }
 
@@ -65,10 +111,25 @@ fn walk_function(function: &mut Function) {
             continue;
         };
         for argument in &mut list.args {
-            if let FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) = argument {
+            if let Some(expr) = argument_expr(argument) {
                 delimit(expr);
             }
         }
+    }
+}
+
+fn argument_expr(argument: &mut FunctionArg) -> Option<&mut Expr> {
+    match argument {
+        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr))
+        | FunctionArg::Named {
+            arg: FunctionArgExpr::Expr(expr),
+            ..
+        }
+        | FunctionArg::ExprNamed {
+            arg: FunctionArgExpr::Expr(expr),
+            ..
+        } => Some(expr),
+        _ => None,
     }
 }
 
@@ -79,10 +140,7 @@ fn precedence(expression: &Expr) -> u8 {
             op: UnaryOperator::Plus | UnaryOperator::Minus,
             ..
         } => UNARY,
-        Expr::Cast {
-            kind: CastKind::DoubleColon,
-            ..
-        } => CAST,
+        Expr::Cast { .. } => CAST,
         expr if primary(expr) => PRIMARY,
         _ => OTHER,
     }
