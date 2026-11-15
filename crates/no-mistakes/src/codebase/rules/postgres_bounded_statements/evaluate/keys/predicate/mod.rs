@@ -153,7 +153,9 @@ impl Evidence {
         }
         if let Expr::IsNotNull(column) = unwrap_expr(predicate) {
             if let Some(name) = plain_column(column) {
-                if super::not_null::proves(&name, item, table, self.strict_not_null(&name)) {
+                let equated =
+                    self.strict_not_null(&name) || arm_rejects_null(item, &name, alternative);
+                if super::not_null::proves(&name, item, table, equated) {
                     return true;
                 }
             }
@@ -171,4 +173,14 @@ impl Evidence {
             Atom::Null(_) => false,
         }) || self.params.iter().any(|(column, _)| column == name)
     }
+}
+
+fn arm_rejects_null(item: &SqlBoundItem, column: &str, alternative: usize) -> bool {
+    item.pins.iter().any(|pin| {
+        !pin.unqualified_candidate
+            && pin.column == column
+            && pin.expression.is_none()
+            && !pin.null_safe
+            && pin.alternative.is_none_or(|owner| owner == alternative)
+    })
 }

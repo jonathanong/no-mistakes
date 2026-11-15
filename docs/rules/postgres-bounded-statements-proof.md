@@ -375,6 +375,11 @@ Every key element must have a finite pin. Supported index shapes include:
   holds for `state = 'x' OR state IN ('y', 'z')` and for `state = $2 OR state = $3`.
   The other arm does not inherit it: `state = 'x' OR state IS NULL` stays unproven.
   `IS NOT DISTINCT FROM` does not imply the column is not null.
+  A strict bare-column pin on that arm, equality or a non-negated `IN`, implies
+  `col IS NOT NULL` for that arm only. `invited_user_id = $2` therefore proves
+  `UNIQUE (community_id, invited_user_id) WHERE invited_user_id IS NOT NULL`,
+  and `invited_email IN (SELECT email FROM emails WHERE user_id = $2 LIMIT 10)`
+  proves the matching email index. `LIKE` does not.
   When the catalog types a column as an enum and the alternative equates that
   column to a parameter, each catalog label is tried in its place, up to 32
   combinations. Every label must pin some unique index using that alternative's
@@ -414,6 +419,10 @@ These do not prove one row:
 Each `OR` alternative must independently pin a complete unique key, using shared
 `AND` conjuncts where present. The keys may differ between branches. A partial
 index counts for an alternative only when that alternative proves its predicate.
+A value equality on a unique key is one row. An `IN` over a bounded subquery
+contributes that bound, so `LIMIT 10` is at most 10 rows on that arm and the
+arms add. An arm without a unique key, an unbounded `IN`, or a missing shared
+predicate leaves the scan unproven.
 A catalog enum compared with a parameter can make one arm prove a different
 partial index for each label: `kind = $2 AND ($2 = 'direct' OR user_id = $3)`
 pins the `kind = 'direct'` index on the first arm, and the `kind = 'family'`

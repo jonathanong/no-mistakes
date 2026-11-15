@@ -1,0 +1,50 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "issue_3436": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "like-arm.sql",
+          "line": 1,
+          "message": "like-arm.sql:1: DELETE can remove every row of invites; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM invites",
+          "target": "table:invites"
+        },
+        {
+          "file": "missing-revoked.sql",
+          "line": 1,
+          "message": "missing-revoked.sql:1: DELETE can remove every row of invites; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM invites",
+          "target": "table:invites"
+        },
+        {
+          "file": "null-safe-arm.sql",
+          "line": 1,
+          "message": "null-safe-arm.sql:1: DELETE can remove every row of invites; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM invites",
+          "target": "table:invites"
+        },
+        {
+          "file": "unlimited-in.sql",
+          "line": 1,
+          "message": "unlimited-in.sql:1: DELETE can remove every row of invites; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "DELETE FROM invites",
+          "target": "table:invites"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
