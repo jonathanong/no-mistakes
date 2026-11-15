@@ -121,10 +121,13 @@ fn non_script_imports_do_not_hide_the_one_script_assignment() {
     let linked = graph(edges);
     let owners = assemble(blank(&linked));
     let test = Path::new("/repo/test.mts");
-    let _ = super::super::related::take_related_file_collections();
+    let _ = super::super::related::note::take_related_file_collections();
     let first = owners.related_files(test);
     assert_eq!(owners.related_files(test), first);
-    assert_eq!(super::super::related::take_related_file_collections(), 1);
+    assert_eq!(
+        super::super::related::note::take_related_file_collections(),
+        1
+    );
     assert_eq!(
         first,
         vec![
