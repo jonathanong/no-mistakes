@@ -1,0 +1,164 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "declared-bounds": {
+    "exitCode": 1,
+    "report": {
+      "acceptedBounds": [
+        {
+          "file": "sql/accepted.sql",
+          "justification": "caller passes one page of ids",
+          "line": 1,
+          "rows": 100,
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=100: caller passes one page of ids"
+        },
+        {
+          "file": "sql/other-rule.sql",
+          "justification": "caller passes one page of ids",
+          "line": 1,
+          "rows": 20,
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=20: caller passes one page of ids"
+        },
+        {
+          "file": "sql/same-line.sql",
+          "justification": "page of ids",
+          "line": 1,
+          "rows": 50,
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM orders WHERE candidate_id = ANY($1::uuid[]); -- no-mistakes-bound postgres-bounded-statements rows<=50: page of ids"
+        },
+        {
+          "file": "src/page.ts",
+          "justification": "caller passes one page of ids",
+          "line": 15,
+          "rows": 30,
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "// no-mistakes-bound postgres-bounded-statements rows<=30: caller passes one page of ids"
+        },
+        {
+          "file": "src/page.ts",
+          "justification": "caller passes one page of ids",
+          "line": 9,
+          "rows": 25,
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=25: caller passes one page of ids"
+        }
+      ],
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/duplicate.sql",
+          "line": 1,
+          "message": "sql/duplicate.sql:1: a statement has more than one declared bound; keep a single rows<=N declaration with one justification",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=10: above the statement",
+          "target": "declared-bound"
+        },
+        {
+          "file": "sql/duplicate.sql",
+          "line": 2,
+          "message": "sql/duplicate.sql:2: SELECT can return every row of candidates; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, email FROM candidates; -- no-mistakes-bound postgres-bounded-statements rows<=11: trailing",
+          "target": "table:candidates"
+        },
+        {
+          "file": "sql/duplicate.sql",
+          "line": 2,
+          "message": "sql/duplicate.sql:2: a statement has more than one declared bound; keep a single rows<=N declaration with one justification",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, email FROM candidates; -- no-mistakes-bound postgres-bounded-statements rows<=11: trailing",
+          "target": "declared-bound"
+        },
+        {
+          "file": "sql/ignored-directive.sql",
+          "line": 2,
+          "message": "sql/ignored-directive.sql:2: SELECT can return every row of candidates; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, email FROM candidates;",
+          "target": "table:candidates"
+        },
+        {
+          "file": "sql/missing-bound.sql",
+          "line": 1,
+          "message": "sql/missing-bound.sql:1: declared bound is missing a numeric rows<=N limit; write `-- no-mistakes-bound postgres-bounded-statements rows<=100: why these rows are finite`",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements: caller passes one page of ids",
+          "target": "declared-bound"
+        },
+        {
+          "file": "sql/missing-bound.sql",
+          "line": 2,
+          "message": "sql/missing-bound.sql:2: SELECT can return every row of candidates; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, email FROM candidates;",
+          "target": "table:candidates"
+        },
+        {
+          "file": "sql/missing-justification.sql",
+          "line": 1,
+          "message": "sql/missing-justification.sql:1: declared bound is missing a non-empty justification after rows<=N; write `-- no-mistakes-bound postgres-bounded-statements rows<=100: why these rows are finite`",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=100",
+          "target": "declared-bound"
+        },
+        {
+          "file": "sql/missing-justification.sql",
+          "line": 2,
+          "message": "sql/missing-justification.sql:2: SELECT can return every row of candidates; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, email FROM candidates;",
+          "target": "table:candidates"
+        },
+        {
+          "file": "sql/other-rule.sql",
+          "line": 2,
+          "message": "sql/other-rule.sql:2: SELECT * reads all columns of candidates, which is configured in relations; list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "SELECT * FROM candidates;",
+          "target": "candidates"
+        },
+        {
+          "file": "sql/stale.sql",
+          "line": 1,
+          "message": "sql/stale.sql:1: declared bound rows<=1 is stale because this statement is already provably bounded; remove the declaration",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=1: id is the primary key",
+          "target": "declared-bound"
+        },
+        {
+          "file": "sql/unanalyzable.sql",
+          "line": 1,
+          "message": "sql/unanalyzable.sql:1: declared bound does not cover a checked statement; put it on the statement line or the line immediately above the outer SQL keyword",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=10: parse failure stays visible",
+          "target": "declared-bound"
+        },
+        {
+          "file": "sql/unanalyzable.sql",
+          "line": 2,
+          "message": "sql/unanalyzable.sql:2: SQL could not be analyzed for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT FROM ;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "sql/unmatched.sql",
+          "line": 3,
+          "message": "sql/unmatched.sql:3: declared bound does not cover a checked statement; put it on the statement line or the line immediately above the outer SQL keyword",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "-- no-mistakes-bound postgres-bounded-statements rows<=10: this comment is not on a statement",
+          "target": "declared-bound"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

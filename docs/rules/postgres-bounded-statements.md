@@ -807,6 +807,40 @@ Native SQL parse failures selected by this rule remain visible as non-failing
 advisories under `unanalyzableSql: advise`, including when no executor calls
 are selected. Valid sibling statements still receive ordinary rule findings.
 
+## Declared statement bounds
+
+A statement can be bounded by something the schema cannot show, such as an application page size on a join the catalog cannot cap. A reviewed declaration names that limit and why it is finite. It suppresses only `postgres-bounded-statements` findings for that one statement. Other rules still run, and SQL this rule cannot analyze stays reported.
+
+Put the declaration in a line comment on the statement's outer keyword line, or on the line immediately above it. That keyword is `SELECT`, `UPDATE`, `DELETE`, `WITH`, or an executing wrapper such as `EXPLAIN ANALYZE`. `--`, `//`, and `#` comments all work, in a `.sql` file or in SQL embedded in an executor call. A `--` comment inside a template literal counts; a directive inside a string does not.
+
+```sql
+-- no-mistakes-bound postgres-bounded-statements rows<=100: caller passes one page of ids
+SELECT c.id, o.id
+FROM candidates c
+JOIN orders o ON o.candidate_id = c.id
+WHERE c.id = ANY($1::uuid[]);
+```
+
+`orders.candidate_id` is not unique, so a page of candidate ids does not prove how many order rows the join returns. The declaration records that cap. `rows<=N` is a non-negative integer and the justification after the colon is required. This declaration has no justification, so it is a finding and the unbounded read is still reported:
+
+```sql
+-- no-mistakes-bound postgres-bounded-statements rows<=100
+SELECT id, email FROM candidates;
+```
+
+A missing `rows<=N` limit is the same kind of finding. A declaration that does not sit on a checked statement, and more than one declaration on one statement, are also findings. None of those hide the underlying unbounded read.
+
+A declaration on a statement the rule can already prove bounded is stale. Primary-key equality and `id = ANY($1::uuid[])` on that key are already proved, because the parameter list cannot return more rows than it contains. Remove the declaration:
+
+```sql
+-- no-mistakes-bound postgres-bounded-statements rows<=1: id is the primary key
+SELECT id, email FROM candidates WHERE id = $1;
+```
+
+Accepted declarations are omitted from `rules`. `check --format json` and YAML list them in `acceptedBounds` (`rule`, `file`, `line`, `rows`, `justification`). `line` is the comment. The field is omitted when empty and does not by itself fail the check.
+
+This does not replace `allow`, which exempts a relation everywhere, or a disable directive, which hides every later finding on that line and records neither the bound nor the reason.
+
 ## Suppression
 
 SQL and TypeScript honor `-- no-mistakes-disable-line`, `-- no-mistakes-disable-next-line`

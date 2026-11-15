@@ -1,0 +1,51 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "candidates": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "email": { "dataType": "text", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "candidates_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "candidate_id": { "dataType": "uuid", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  }
+}

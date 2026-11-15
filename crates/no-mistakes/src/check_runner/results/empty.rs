@@ -20,6 +20,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         suppressed: Vec::new(),
         include_suppressed: false,
         unproven_member_query_sql: 0,
+        accepted_bounds: Vec::new(),
         timings: vec![
             ("discover", Duration::ZERO),
             ("parse_extract", Duration::ZERO),

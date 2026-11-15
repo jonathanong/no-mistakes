@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 mod arrays;
 mod bodies;
+mod declared;
 pub(in crate::codebase) use bodies::{body_advice_requested, body_bounds_requested};
 mod column_bounds;
 mod evaluate;

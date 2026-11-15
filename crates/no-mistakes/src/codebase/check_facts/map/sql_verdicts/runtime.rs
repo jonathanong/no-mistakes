@@ -55,6 +55,25 @@ pub trait SqlFactContext: Sync {
     fn record_sql_advisory(&self, advisory: SqlObligationVerdict) {
         self.prepared().record_sql_advisory(advisory);
     }
+    #[doc(hidden)]
+    fn record_accepted_statement_bound(
+        &self,
+        rule: &str,
+        file: &str,
+        line: usize,
+        rows: u64,
+        justification: &str,
+    ) {
+        self.prepared().record_accepted_statement_bound(
+            crate::codebase::check_facts::AcceptedStatementBound {
+                rule: rule.to_string(),
+                file: file.to_string(),
+                line,
+                rows,
+                justification: justification.to_string(),
+            },
+        );
+    }
     /// Explain the low tier's static rewrite while preserving maximum-effort messages.
     fn sql_unanalyzable_message(&self, message: &str) -> String {
         if self.is_low_sql() {

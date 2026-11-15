@@ -1,4 +1,6 @@
-use super::{RuleFinding, SqlBoundKind, RULE_ID};
+use super::RULE_ID;
+use crate::codebase::postgres::SqlBoundKind;
+use crate::codebase::rules::RuleFinding;
 
 pub(super) fn message(
     kind: SqlBoundKind,

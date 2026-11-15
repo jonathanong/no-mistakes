@@ -59,6 +59,7 @@ pub(crate) struct CheckResults {
     pub(crate) include_suppressed: bool,
     pub(crate) timings: Vec<(&'static str, Duration)>,
     pub(crate) unproven_member_query_sql: u32,
+    pub(crate) accepted_bounds: Vec<no_mistakes::codebase::check_facts::AcceptedStatementBound>,
 }
 
 pub(crate) struct CompletedDomainChecks {
@@ -194,5 +195,6 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         suppressed,
         include_suppressed,
         unproven_member_query_sql,
+        accepted_bounds: facts.accepted_statement_bounds(),
     })
 }

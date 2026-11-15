@@ -151,6 +151,15 @@ no-mistakes disable comments using the selected configuration's
 IDs have distinct messages. `includeSuppressed` controls only the optional
 ledger of hidden findings. See [suppression hygiene](configuration/suppressions.md).
 
+`check()` and `analyzeProject()` check reports include optional
+`CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) when a
+`no-mistakes-bound` declaration suppresses `postgres-bounded-statements` for one
+statement. Each entry has `rule`, `file`, `line` (the comment), `rows`, and
+`justification`. The field is omitted when empty and is not a failure. A
+declaration missing `rows<=N` or its justification, or placed on a statement
+the rule can already prove bounded, remains a finding. See
+[declared statement bounds](rules/postgres-bounded-statements.md#declared-statement-bounds).
+
 Suppression hygiene in `check()` and `analyzeProject()` check reports includes
 stale next-line directives inside statically recovered PostgreSQL executor SQL.
 It follows `reportUnusedDisableDirectives` and uses the same physical comment
@@ -419,7 +428,7 @@ remain failures. See
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `forbidden-lint-suppressions` and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) |
+| `check` | `check(options)`; configured `forbidden-lint-suppressions` and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
