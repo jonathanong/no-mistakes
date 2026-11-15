@@ -47,15 +47,13 @@ pub(super) fn append(
             }
             if let Some(key) = pinned_key(index, &pins, alternative) {
                 if let Some(widths) = widths.as_deref_mut() {
-                    if let Some(row) = widths.get_mut(alternative) {
-                        row.push(column_widths(
-                            &index.keys,
-                            table,
-                            catalog,
-                            item,
-                            alternative,
-                        ));
-                    }
+                    widths[alternative].push(column_widths(
+                        &index.keys,
+                        table,
+                        catalog,
+                        item,
+                        alternative,
+                    ));
                 }
                 branch.push(key);
             }

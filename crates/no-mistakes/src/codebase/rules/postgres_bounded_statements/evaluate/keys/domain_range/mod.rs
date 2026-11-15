@@ -80,11 +80,12 @@ pub(super) fn days_from_civil(year: i32, month: u32, day: u32) -> Option<i64> {
     if !(1..=9999).contains(&year) || !(1..=12).contains(&month) {
         return None;
     }
-    let max_day = match month {
-        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
-        4 | 6 | 9 | 11 => 30,
-        2 => 28 + u32::from(year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)),
-        _ => return None,
+    let max_day = if matches!(month, 1 | 3 | 5 | 7 | 8 | 10 | 12) {
+        31
+    } else if month == 2 {
+        28 + u32::from(year % 4 == 0 && (year % 100 != 0 || year % 400 == 0))
+    } else {
+        30
     };
     if day == 0 || day > max_day {
         return None;

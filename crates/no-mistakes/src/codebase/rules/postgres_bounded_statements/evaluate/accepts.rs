@@ -34,16 +34,16 @@ pub(super) fn collect(
         return accepts;
     };
     for (index, item) in query.items.iter().enumerate() {
-        if !bounded.get(index).copied().unwrap_or(false) {
-            continue;
-        }
-        let Some(Credit::Accept(product)) = credits.get(index).copied().flatten() else {
-            continue;
-        };
         let SqlBoundItemKind::Table(name) = &item.kind else {
             continue;
         };
         let Some(table) = catalog.bounded_relation(name) else {
+            continue;
+        };
+        if !bounded.get(index).copied().unwrap_or(false) {
+            continue;
+        }
+        let Some(Credit::Accept(product)) = credits.get(index).copied().flatten() else {
             continue;
         };
         accepts.push(DomainAccept {

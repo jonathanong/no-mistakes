@@ -150,6 +150,9 @@
       "checkConstraints": {
         "participants_slot_check": {
           "definition": "CHECK (slot BETWEEN 1 AND 50)"
+        },
+        "participants_actor_check": {
+          "definition": "CHECK (actor_id IS NOT NULL)"
         }
       }
     },
@@ -734,6 +737,36 @@
           "definition": "CHECK (bucket BETWEEN 1 AND 5)"
         }
       }
+    },
+    "slugs": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "slugs_lower_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX slugs_lower_idx ON public.slugs USING btree (lower(slug))",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(slug)"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {}
     }
   }
 }

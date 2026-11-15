@@ -24,3 +24,12 @@ SELECT day FROM spans WHERE owner_id = $1 AND (
   day >= DATE '2026-01-01' AND day <= DATE '2034-03-19'
   OR day >= DATE '2035-01-01' AND day <= DATE '2043-03-19'
 );
+SELECT id FROM participants WHERE conversation_id = $1 AND slot = 1;
+SELECT id FROM (SELECT actor_id AS id FROM participants WHERE conversation_id = $1 AND slot = 1) s;
+SELECT id FROM not_a_table;
+SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;
+SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;
+UPDATE wide_slots SET id = id WHERE owner_id = $1;
+SELECT slug FROM slugs WHERE slug = $1;
+SELECT actor_id FROM participants
+WHERE conversation_id = $1 AND (slot = 1 OR slot = (SELECT NULL::integer));

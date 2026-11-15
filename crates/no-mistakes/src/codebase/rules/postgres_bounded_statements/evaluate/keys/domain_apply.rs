@@ -69,9 +69,6 @@ pub(super) fn apply(
             }
         })
         .collect();
-    if arms.iter().any(|arm| matches!(arm, Arm::Incomplete)) {
-        return None;
-    }
     let mut sum = 0u64;
     let mut used = false;
     for arm in &arms {
@@ -196,3 +193,7 @@ fn fill(prepared: &mut Keys, keys: &[Vec<Key>]) {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "domain_apply_tests.rs"]
+mod tests;

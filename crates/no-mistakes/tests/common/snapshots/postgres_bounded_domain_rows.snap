@@ -24,6 +24,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
+          "line": 30,
+          "message": "sql/lookups.sql:30: accepted ranks by unique-key domain product 3, within maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
+          "target": "domain-product"
+        },
+        {
+          "file": "sql/lookups.sql",
           "line": 8,
           "message": "sql/lookups.sql:8: accepted participants by unique-key domain product 50, within maxDomainRows 50",
           "rule": "postgres-bounded-statements",
@@ -110,6 +118,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
+          "line": 31,
+          "message": "sql/lookups.sql:31: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 32,
+          "message": "sql/lookups.sql:32: UPDATE can change every row of wide_slots; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; unique-key domain product is 5001, above maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 33,
+          "message": "sql/lookups.sql:33: SELECT can return every row of slugs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT slug FROM slugs WHERE slug = $1;",
+          "target": "table:slugs"
+        },
+        {
+          "file": "sql/lookups.sql",
           "line": 4,
           "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -162,6 +194,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "sql/lookups.sql:19: accepted spans by unique-key domain product 80, within maxDomainRows 5000",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
+          "target": "domain-product"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 30,
+          "message": "sql/lookups.sql:30: accepted ranks by unique-key domain product 3, within maxDomainRows 5000",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
           "target": "domain-product"
         },
         {
@@ -233,6 +273,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
           "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 31,
+          "message": "sql/lookups.sql:31: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 32,
+          "message": "sql/lookups.sql:32: UPDATE can change every row of wide_slots; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; unique-key domain product is 5001, above maxDomainRows 5000",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 33,
+          "message": "sql/lookups.sql:33: SELECT can return every row of slugs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT slug FROM slugs WHERE slug = $1;",
+          "target": "table:slugs"
         },
         {
           "file": "sql/lookups.sql",
@@ -350,6 +414,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
           "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 30,
+          "message": "sql/lookups.sql:30: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 31,
+          "message": "sql/lookups.sql:31: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 32,
+          "message": "sql/lookups.sql:32: UPDATE can change every row of wide_slots; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 33,
+          "message": "sql/lookups.sql:33: SELECT can return every row of slugs; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT slug FROM slugs WHERE slug = $1;",
+          "target": "table:slugs"
         },
         {
           "file": "sql/lookups.sql",
