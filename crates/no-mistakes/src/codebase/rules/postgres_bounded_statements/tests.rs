@@ -26,6 +26,7 @@ mod issue_3151;
 mod issue_3151_real;
 mod issue_3394;
 mod issue_3396;
+mod issue_3397_reopen;
 mod issue_3436;
 mod issue_3437;
 mod issue_3452;

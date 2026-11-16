@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "reopen": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "statements.sql",
+          "line": 104,
+          "message": "statements.sql:104: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 117,
+          "message": "statements.sql:117: UPDATE can change every row of flows; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE flows",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 123,
+          "message": "statements.sql:123: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT not_a_builtin(id) FROM flows LIMIT 1;",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 126,
+          "message": "statements.sql:126: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT CASE WHEN true THEN not_a_builtin($1) END FROM flows LIMIT 1;",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 129,
+          "message": "statements.sql:129: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT app.current_timestamp() FROM flows LIMIT 1;",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 132,
+          "message": "statements.sql:132: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT CURRENT_TIMESTAMP FROM flows;",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 135,
+          "message": "statements.sql:135: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT \"current_timestamp\"(id) FROM flows LIMIT 1;",
+          "target": "table:flows"
+        },
+        {
+          "file": "statements.sql",
+          "line": 138,
+          "message": "statements.sql:138: SELECT can return every row of flows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT pg_catalog.current_timestamp() FROM flows LIMIT 1;",
+          "target": "table:flows"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

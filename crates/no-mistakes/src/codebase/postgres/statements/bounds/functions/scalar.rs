@@ -1,3 +1,6 @@
+use crate::codebase::postgres::idents::ident_key;
+use sqlparser::ast::ObjectName;
+
 /// Common PostgreSQL builtins with scalar return cardinality. Unknown names stay opaque;
 /// this is an explicit semantic inventory, not a naming convention or catalog fallback.
 #[rustfmt::skip]
@@ -23,6 +26,7 @@ pub(super) const SCALAR: &[&str] = &[
     "ceiling",
     "char_length",
     "character_length",
+    "clock_timestamp",
     "concat",
     "concat_ws",
     "cos",
@@ -81,6 +85,7 @@ pub(super) const SCALAR: &[&str] = &[
     "split_part",
     "sqrt",
     "starts_with",
+    "statement_timestamp",
     "string_to_array",
     "strpos",
     "substr",
@@ -92,9 +97,28 @@ pub(super) const SCALAR: &[&str] = &[
     "to_jsonb",
     "to_number",
     "to_timestamp",
+    "transaction_timestamp",
     "translate",
     "trunc",
     "upper",
     "uuid_extract_timestamp",
     "uuid_extract_version",
 ];
+
+/// SQL datetime keywords. PostgreSQL parses them as calls, and they are absent from pg_proc.
+#[rustfmt::skip]
+const DATETIME_KEYWORDS: &[&str] = &[
+    "current_date",
+    "current_time",
+    "current_timestamp",
+    "localtime",
+    "localtimestamp",
+];
+
+/// Unquoted unqualified keyword. A quoted or schema-qualified spelling is an ordinary call.
+pub(super) fn is_datetime_keyword(name: &ObjectName) -> bool {
+    let [sqlparser::ast::ObjectNamePart::Identifier(ident)] = name.0.as_slice() else {
+        return false;
+    };
+    ident.quote_style.is_none() && DATETIME_KEYWORDS.contains(&ident_key(ident).as_str())
+}

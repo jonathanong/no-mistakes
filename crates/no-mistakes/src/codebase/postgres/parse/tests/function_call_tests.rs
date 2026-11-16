@@ -19,6 +19,10 @@ pub(super) fn fixture(name: &str) -> &'static str {
             env!("CARGO_MANIFEST_DIR"),
             "/../../test-cases/rules/postgres-bounded-statements/issue-3397/parser/assignment-shape.sql"
         )),
+        "reopen" => include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/postgres-bounded-statements/issue-3397-reopen/statements.sql"
+        )),
         _ => unreachable!(),
     }
 }
@@ -142,4 +146,32 @@ fn issue_3397_named_arguments_parse_inside_case() {
         lenient_seen.assignment_secs,
         "lenient parse keeps secs := value as a named argument"
     );
+}
+
+#[test]
+fn issue_3397_current_timestamp_inside_case_is_a_function_call() {
+    let statements = parsed(fixture("reopen"));
+    let mut calls = 0;
+    let mut visitor = CurrentTimestamp { calls: &mut calls };
+    for statement in &statements {
+        let _ = statement.visit(&mut visitor);
+    }
+    assert!(calls > 0, "CURRENT_TIMESTAMP parses as a function call");
+}
+
+struct CurrentTimestamp<'a> {
+    calls: &'a mut usize,
+}
+
+impl Visitor for CurrentTimestamp<'_> {
+    type Break = ();
+
+    fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<Self::Break> {
+        if let Expr::Function(function) = expr {
+            if bare_name(function).eq_ignore_ascii_case("current_timestamp") {
+                *self.calls += 1;
+            }
+        }
+        ControlFlow::Continue(())
+    }
 }

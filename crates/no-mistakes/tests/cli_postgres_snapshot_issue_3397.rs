@@ -20,3 +20,12 @@ fn postgres_bounded_statements_issue_3397_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_bounded_statements_issue_3397_reopen_snapshot() {
+    let root = repo_rel("test-cases/rules/postgres-bounded-statements/issue-3397-reopen");
+    assert_saved_fixture(
+        "postgres_bounded_statements_issue_3397_reopen",
+        &[("reopen", root.clone(), root.join("valid.yml"))],
+    );
+}

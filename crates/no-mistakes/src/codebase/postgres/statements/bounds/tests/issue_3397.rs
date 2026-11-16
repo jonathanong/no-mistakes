@@ -57,6 +57,29 @@ fn issue_3397_scalar_calls_keep_explicit_limits() {
 }
 
 #[test]
+fn datetime_scalars_keep_a_limit_unknown_calls_do_not() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/issue-3397-reopen/bounds.sql"
+    ));
+    let extracted = extract_sql_statement_facts(sql);
+    assert!(!extracted.parse_failed, "{:?}", extracted.parse_failures);
+    let capped: Vec<bool> = extracted
+        .bounds
+        .iter()
+        .map(|fact| fact.query.capped)
+        .collect();
+    assert_eq!(
+        capped,
+        vec![
+            true, true, true, true, true, true, true, true, true, true, true, true, true, false,
+            false, false, false, false, false,
+        ],
+        "actual caps: {capped:?}"
+    );
+}
+
+#[test]
 fn issue_3397_unknown_calls_and_unlimited_scalars_stay_open() {
     let lines = rendered(fixture("recall"));
     assert_eq!(
