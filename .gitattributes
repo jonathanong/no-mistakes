@@ -1,4 +1,9 @@
 *.snap text eol=lf
+test-cases/rules/postgres-lock-ordering/cross-module-claim/src/** text eol=lf
+test-cases/rules/postgres-lock-ordering/statement-append/src/** text eol=lf
+test-cases/rules/postgres-required-predicates/raw-column-append/src/** text eol=lf
+test-cases/rules/postgres-conflict-ordering/imported-limit/src/** text eol=lf
+fixtures/postgres-facts/embedded/parameterized-imported-values/*.mts text eol=lf
 test-cases/rule-recall-audit/fixture/storybook/required-props-malformed/src/Card.tsx text eol=lf
 # Bytes from these fixtures are span-counted or quoted into check JSON.
 # Windows autocrlf would move the span and embed CR in the TOML error.
