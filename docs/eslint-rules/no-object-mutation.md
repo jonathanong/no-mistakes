@@ -176,18 +176,61 @@ function forwardToLocal(sharedRows, row) {
 }
 ```
 
+Computed member receivers keep the ownership of their possible children. A local
+literal containing fresh arrays can be filled through either a computed or static
+key before it escapes:
+
+```ts
+export function group(items: { kind: "a" | "b"; v: number }[]) {
+  const out: Record<"a" | "b", number[]> = { a: [], b: [] };
+  for (const item of items) out[item.kind].push(item.v);
+  return out;
+}
+```
+
+A computed read of a parameter, import, or module binding stays shared. A shared
+or escaped child inside a local literal also stays shared through a computed
+read; selecting a child does not create a fresh copy.
+
 The local object is created in that function and the writes finish before it
 is returned, passed to a call, stored on a shared object, or captured by a
 closure that itself escapes. Calling that closure does not escape the builder
 unless the call passes the object out. `Map` and `Set` are allowed. A value
 read back from a module-level map, from `Object.values`, or from `.get` is
-shared. Class `this` writes are allowed unless `allowThis` is `false`.
-`this` in a plain function is reported. `this` in an object method is reported
+shared. Class `this` writes and functions with a declared receiver are allowed unless
+`allowThis` is `false`. A receiver is declared by a TypeScript `this: T` parameter
+or an attached JSDoc `@this {T}` tag. Arrows inherit the enclosing receiver; a
+nested regular function must declare its own. `this` in a plain function without
+a declared receiver is reported. `this` in an undeclared object method is reported
 when that object escapes, including a module-level object, and allowed while
 the object stays a local builder. A class that stays local is allowed, including
 `new` and a method call. Returning the class, `new` of it, or `fn.bind(...)`
 is an escape. A namespace's exported bindings are shared; a const that stays
 inside the namespace is still a local builder.
+
+A declared receiver also supports object methods supplied to extension APIs:
+
+```ts
+interface Context { data?: string }
+
+const extensions = {
+  update(this: Context) {
+    this.data = "ready";
+    (() => { this.data = "done"; })();
+  },
+};
+
+export function apply(app: { extend(value: object): void }) {
+  app.extend(extensions);
+}
+```
+
+```js
+/** @this {{ data?: string }} */
+export function update() {
+  this.data = "ready";
+}
+```
 
 ## Options
 
@@ -197,7 +240,7 @@ inside the namespace is still a local builder.
 | `imported`   | `true`  | The same for imported bindings and their members.                                                                                                                                                                                                                         |
 | `parameters` | `true`  | The same for parameters and values reached from them.                                                                                                                                                                                                                     |
 | `calls`      | `true`  | `Object.assign`, `Object.defineProperty`, `Object.defineProperties`, and `Object.setPrototypeOf`, including those `Object` methods via `.call`, `.apply`, and `.bind`. `Reflect.set` and `Reflect.defineProperty`. `push`, `pop`, `shift`, `unshift`, `splice`, `sort`, `reverse`, `fill`, and `copyWithin`, including those array methods via `.call` and `.apply`. |
-| `allowThis`  | `true`  | Allow `this` writes inside a class body. Plain-function `this` stays reported.                                                                                                                                                                                            |
+| `allowThis`  | `true`  | Allow `this` writes inside a class body, or in functions and methods declaring a TypeScript `this: T` parameter or attached JSDoc `@this {T}`. Arrows inherit that receiver; nested regular functions need their own declaration.                                                                                                                                                                                            |
 | `allow`      | `[]`    | Root names or dotted paths. `tables` allows `tables[key]`. `tables.users` allows `tables.users.id` but not a computed `tables[key]`.                                                                                                                                      |
 
 ## Fix

@@ -69,31 +69,21 @@ function readMember(tag, key, objectNode) {
       }
     }
   } else {
-    // A computed key can name any field. Only an unescaped fresh tag reaches
-    // here. Prefer a shared or already-escaped candidate over that object.
+    let joined = unknown();
     for (const field of tag.fields.values()) {
-      if (reportableMember(field)) {
-        return field;
-      }
+      joined = joinValues(joined, field);
     }
-    if (reportableMember(tag.dynamic)) {
-      return tag.dynamic;
+    if (tag.dynamic) {
+      joined = joinValues(joined, tag.dynamic);
+    }
+    if (joined.type !== "unknown") {
+      return joined;
     }
   }
   if (tag.dynamic) {
     return tag.dynamic;
   }
   return tag;
-}
-
-function reportableMember(tag) {
-  if (tag == null) {
-    return false;
-  }
-  if (tag.type === "shared" || tag.type === "this") {
-    return true;
-  }
-  return tag.type === "fresh" && tag.escaped;
 }
 
 function iteratedContents(tag) {

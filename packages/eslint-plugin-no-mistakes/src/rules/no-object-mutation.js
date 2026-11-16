@@ -50,7 +50,11 @@ module.exports = {
     const suppressed = ruleSuppression(context, "no-object-mutation");
     return {
       Program(program) {
-        for (const node of scanMutations(program, { suppressed }, options)) {
+        for (const node of scanMutations(
+          program,
+          { suppressed, sourceCode: context.sourceCode },
+          options,
+        )) {
           context.report({ node, messageId: "mutation" });
         }
       },

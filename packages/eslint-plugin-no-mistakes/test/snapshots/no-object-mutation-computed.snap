@@ -1,0 +1,103 @@
+[
+  {
+    "file": "no-object-mutation-computed-local.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-computed-shared.ts",
+    "findings": [
+      {
+        "column": 27,
+        "endColumn": 50,
+        "endLine": 5,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 5,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 27,
+        "endColumn": 55,
+        "endLine": 9,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 9,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 27,
+        "endColumn": 57,
+        "endLine": 13,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 13,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 19,
+        "endLine": 18,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 18,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 19,
+        "endLine": 24,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 24,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 16,
+        "endLine": 30,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 30,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 16,
+        "endLine": 31,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 31,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 19,
+        "endLine": 36,
+        "file": "no-object-mutation-computed-shared.ts",
+        "line": 36,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  }
+]

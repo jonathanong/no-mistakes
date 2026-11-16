@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { functionEnvironment } = require("./no-object-mutation-receiver");
 const { bindName, bindPattern } = require("./no-object-mutation-bind");
 const {
   functionStatements,
@@ -62,20 +63,7 @@ function visitFunction(state, node, scope, role) {
 
 function walkFunctionBody(state, node, scope, tag) {
   tag.walked = true;
-  const fnEnv = child(scope);
-  fnEnv.ownerEnv = fnEnv;
-  fnEnv.functionEnv = fnEnv;
-  fnEnv.fnTag = tag;
-  fnEnv.pending = [];
-  // Arrows keep the enclosing `this`. A nested function has its own.
-  const arrow = node.type === "ArrowFunctionExpression";
-  const classMethod =
-    !arrow &&
-    (node.parent?.type === "MethodDefinition" ||
-      node.parent?.type === "TSAbstractMethodDefinition");
-  fnEnv.inClass = arrow ? Boolean(scope.inClass) : classMethod;
-  fnEnv.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
-  fnEnv.receiver = arrow ? scope.receiver || null : tag.receiver || null;
+  const fnEnv = functionEnvironment(state, node, scope, tag);
   if (tag.reduceSeed) tag.reduceSeed.ownerEnv = fnEnv;
   for (const [index, param] of node.params.entries()) {
     if (index === 0 && tag.reduceSeed) {

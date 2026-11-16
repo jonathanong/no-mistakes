@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-receiver.ts",
+    "line": 21,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  }
+]
