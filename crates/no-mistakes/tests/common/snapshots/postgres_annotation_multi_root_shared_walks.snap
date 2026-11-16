@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry-00.mts",
+          "line": 5,
+          "message": "src/entry-00.mts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(sql`SELECT id FROM items`);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry-00.mts",
+          "line": 5,
+          "message": "src/entry-00.mts:5: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "await query(sql`SELECT id FROM items`);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
