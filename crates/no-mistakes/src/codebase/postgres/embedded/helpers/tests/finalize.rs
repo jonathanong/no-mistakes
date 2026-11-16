@@ -1,7 +1,7 @@
 //! A trimmed fragment must not keep placeholder positions from text that was cut.
 
-use super::{INTERNAL_PLACEHOLDER, coordinate, sentinel};
-use crate::codebase::postgres::embedded::helpers::finalize::{Walked, finalize};
+use super::{coordinate, sentinel, INTERNAL_PLACEHOLDER};
+use crate::codebase::postgres::embedded::helpers::finalize::{finalize, Walked};
 use crate::codebase::postgres::embedded::relative::PendingRelativeCall;
 use crate::codebase::postgres::embedded::{
     EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlVariant,

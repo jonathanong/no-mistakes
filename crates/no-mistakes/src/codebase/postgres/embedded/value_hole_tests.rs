@@ -1,4 +1,4 @@
-use super::{EmbeddedSqlOptions, TrustedSqlTag, extract_embedded_sql_from_source};
+use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions, TrustedSqlTag};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {

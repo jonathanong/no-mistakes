@@ -136,8 +136,3 @@ pub(super) fn bound_names(pattern: &oxc_ast::ast::BindingPattern<'_>) -> Vec<Str
 pub(super) fn array_prototype_exposed(program: &Program<'_>) -> bool {
     array_intrinsics::exposed(program)
 }
-
-#[cfg(test)]
-fn collect(program: &Program<'_>, options: &super::super::EmbeddedSqlOptions) -> BTreeSet<String> {
-    collect_tags(program, options).0
-}

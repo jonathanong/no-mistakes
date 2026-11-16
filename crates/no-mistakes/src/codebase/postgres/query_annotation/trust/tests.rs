@@ -1,6 +1,13 @@
 use super::*;
 use std::path::PathBuf;
 
+fn collect(
+    program: &Program<'_>,
+    options: &super::super::super::EmbeddedSqlOptions,
+) -> BTreeSet<String> {
+    collect_tags(program, options).0
+}
+
 #[test]
 fn imported_tag_trust_and_module_writes_respect_lexical_bindings() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

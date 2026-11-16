@@ -82,14 +82,12 @@ fn only_sqlstatement_annotated_parameters_take_a_builder() {
     let programs = load("lower.ts");
     let builder = SiteArg::Builder;
     let scalar = SiteArg::Scalar;
-    assert!(
-        exec(
-            &programs,
-            "withBuilderTypes",
-            &[builder.clone(), scalar.clone(), scalar.clone()]
-        )
-        .is_some()
-    );
+    assert!(exec(
+        &programs,
+        "withBuilderTypes",
+        &[builder.clone(), scalar.clone(), scalar.clone()]
+    )
+    .is_some());
     // An array of builders and a string are not builder parameters.
     assert_eq!(
         exec(

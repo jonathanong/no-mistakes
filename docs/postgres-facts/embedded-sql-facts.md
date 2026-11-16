@@ -25,7 +25,7 @@ Supported argument shapes:
 - template literals
 - identifiers bound in scope (`const q = \`SELECT ...\`; query(q)`)
 
-Value interpolations in a parameterizing tag become `$N` binds, in the same
+Value interpolations in a parameterized tag become `$N` binds, in the same
 order as the driver parameters. Untagged interpolations and unresolved
 identifier holes use `sql_placeholder_N` instead. Generated markers retain
 their provenance when fragments are joined; authored `$N` and
@@ -72,7 +72,7 @@ as `sql_placeholder_N`. The hole is removed and the rest of the statement
 stays; a space is inserted only when the neighboring tokens would otherwise
 glue into one word. An unresolved identifier interpolation, including a
 frozen-record field, stays `sql_placeholder_N` until its alternatives are
-known. Every value interpolation in a parameterizing tag is a `$N` bind,
+known. Every value interpolation in a parameterized tag is a `$N` bind,
 including numeric and string constants and arguments to a table-valued
 function after `FROM`. One sequence covers the entire statement, including
 appended local and imported helper fragments. Identifier holes and raw SQL

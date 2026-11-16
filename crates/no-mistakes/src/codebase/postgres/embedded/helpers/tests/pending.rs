@@ -1,8 +1,8 @@
 //! What the walk records for calls built from imported helpers.
 
 use super::*;
-use crate::codebase::postgres::EmbeddedSqlCall;
 use crate::codebase::postgres::embedded::helpers::PendingImportedSql;
+use crate::codebase::postgres::EmbeddedSqlCall;
 
 fn pending_for(facts: &EmbeddedSqlFileFacts, index: usize) -> Option<&PendingImportedSql> {
     let span = facts.call_spans[index];

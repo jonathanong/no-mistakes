@@ -38,8 +38,8 @@ pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
 mod text;
 pub(crate) use tags::matches_trusted_sql_import;
-pub(super) use text::{positional_digits, unpublished_sql_text};
 pub use text::{executed_query_text, sql_text};
+pub(super) use text::{positional_digits, unpublished_sql_text};
 pub(crate) mod walk;
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::{

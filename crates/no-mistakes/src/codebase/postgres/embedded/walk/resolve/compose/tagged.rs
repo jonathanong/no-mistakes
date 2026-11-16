@@ -6,7 +6,9 @@ use super::untrusted_tag;
 use crate::codebase::postgres::embedded::helpers::sentinel;
 use crate::codebase::postgres::embedded::tags::{self, quasi_text};
 use crate::codebase::postgres::embedded::{
-    placeholders::internal_bind, text::positional_digits, unpublished_sql_text,
+    placeholders::{internal_bind, internal_placeholder},
+    text::positional_digits,
+    unpublished_sql_text,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TaggedTemplateExpression};
@@ -42,6 +44,8 @@ fn splice(visitor: &ScopeVisitor<'_>, tagged: &TaggedTemplateExpression<'_>) -> 
             out.push_str(&positional_digits(hole, index + 1));
         } else if let Some(piece) = piece(visitor, hole, index as u32 + 1, &out) {
             out.push_str(&piece);
+        } else if sentinel::in_relation_slot(&out, out.len()) {
+            out.push_str(&internal_placeholder(index + 1));
         } else {
             binds += 1;
             if !out.is_empty() && before.is_empty() {

@@ -1,4 +1,4 @@
-use super::{EmbeddedSqlKind, EmbeddedSqlOptions, extract_embedded_sql_from_source};
+use super::{extract_embedded_sql_from_source, EmbeddedSqlKind, EmbeddedSqlOptions};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {

@@ -165,12 +165,10 @@ fn a_builder_fragment_that_held_a_hole_keeps_only_its_leading_statement() {
         call(&facts, 8).sql_text.as_deref(),
         Some("SELECT 2 SELECT 1 WHERE ")
     );
-    assert!(
-        facts
-            .fragments
-            .iter()
-            .any(|fragment| fragment.sql_text.as_deref() == Some("SELECT 1 WHERE "))
-    );
+    assert!(facts
+        .fragments
+        .iter()
+        .any(|fragment| fragment.sql_text.as_deref() == Some("SELECT 1 WHERE ")));
 }
 
 #[test]
@@ -184,10 +182,8 @@ fn a_trimmed_fragment_publishes_only_the_binds_that_remain() {
     // The suffix `AND ${id} = ${id}` is its own fragment. If the trimmed
     // fragment kept positions from before the cut, those binds would still be here.
     assert_eq!(trimmed.recovered_placeholder_positions, [(1, 8)]);
-    assert!(
-        facts
-            .fragments
-            .iter()
-            .any(|fragment| { fragment.sql_text.as_deref() == Some(" AND $1 = $2") })
-    );
+    assert!(facts
+        .fragments
+        .iter()
+        .any(|fragment| { fragment.sql_text.as_deref() == Some(" AND $1 = $2") }));
 }

@@ -1,6 +1,6 @@
 use super::*;
-use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::codebase::postgres::embedded::tests::{fixture, read_fixture};
+use crate::codebase::postgres::embedded::TrustedSqlTag;
 
 fn programs() -> Programs {
     let path = fixture("programs/raw-sql.ts");

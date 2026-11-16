@@ -39,13 +39,11 @@ fn a_hole_after_a_conditional_is_kept_for_every_alternative() {
     assert!(facts.calls[0].variants.is_empty());
     let pending = pending_for(&facts, 0).expect("pending");
     assert_eq!(pending.template.variants.len(), 2);
-    assert!(
-        pending
-            .template
-            .variants
-            .iter()
-            .all(|variant| sentinel::contains(&variant.sql_text))
-    );
+    assert!(pending
+        .template
+        .variants
+        .iter()
+        .all(|variant| sentinel::contains(&variant.sql_text)));
     let call = filled(&facts, 0, " AND h = 1");
     assert_eq!(call.kind, facts.calls[0].kind);
     let texts = call
@@ -66,12 +64,10 @@ fn a_hole_after_a_conditional_is_kept_for_every_alternative() {
         // The helper's bytes keep the helper's origin, the caller's keep theirs.
         let at = variant.sql_text.find(" AND h").expect("hole text");
         assert_eq!(variant.sql_source_offsets.at(at), 1000);
-        assert!(
-            variant
-                .sql_source_positions
-                .iter()
-                .any(|position| position.source_path.as_deref() == Some(Path::new("/helper.ts")))
-        );
+        assert!(variant
+            .sql_source_positions
+            .iter()
+            .any(|position| position.source_path.as_deref() == Some(Path::new("/helper.ts"))));
     }
 }
 
@@ -115,11 +111,10 @@ fn a_statement_level_builder_helper_extends_the_builder() {
     );
     let call = filled(&facts, 1, " AND f = 1");
     assert_eq!(call.variants.len(), 2);
-    assert!(
-        call.variants
-            .iter()
-            .all(|variant| variant.sql_text.ends_with(" AND f = 1"))
-    );
+    assert!(call
+        .variants
+        .iter()
+        .all(|variant| variant.sql_text.ends_with(" AND f = 1")));
 }
 
 #[test]

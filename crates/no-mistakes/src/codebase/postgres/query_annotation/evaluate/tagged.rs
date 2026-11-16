@@ -73,13 +73,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     || effects
                         .get(1 + index / 2)
                         .is_some_and(|effect| self.tag_helper(effect, path, *env)));
+            let relation = matches!(&prefix, Value::Prefix(text, _, _)
+                if crate::codebase::postgres::embedded::helpers::sentinel::in_relation_slot(text, text.len()));
             let value = if fragment {
                 Value::Unknown
             } else if parameterized && index % 2 == 1 {
                 match part {
                     Expr::Text(text) => Value::Prefix(
-                        if text
-                            .starts_with(crate::codebase::postgres::embedded::INTERNAL_PLACEHOLDER)
+                        if !relation
+                            && text.starts_with(
+                                crate::codebase::postgres::embedded::INTERNAL_PLACEHOLDER,
+                            )
                         {
                             format!("{}1", crate::codebase::postgres::embedded::INTERNAL_BIND)
                         } else {

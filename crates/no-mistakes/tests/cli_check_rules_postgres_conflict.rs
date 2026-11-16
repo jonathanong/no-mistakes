@@ -114,6 +114,10 @@ fn postgres_conflict_ordering_cli_treats_template_interpolations_as_bound_values
 fn postgres_conflict_ordering_cli_does_not_bind_user_authored_placeholder_names() {
     let output = check(&fixture("fail-template-lookalikes"));
     let body = stdout(&output);
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap();
+    let lines: Vec<_> = report["rules"].as_array().unwrap().iter()
+        .map(|finding| finding["line"].as_u64().unwrap()).collect();
+    assert_eq!(lines, [6, 17, 27], "{body}");
     assert!(!output.status.success(), "expected exit 1: {body}");
     assert_eq!(
         body.matches("\"target\":\"missing-canonical-order\"")

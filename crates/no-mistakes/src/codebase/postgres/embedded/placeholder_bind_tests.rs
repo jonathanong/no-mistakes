@@ -37,3 +37,19 @@ fn identifier_holes_do_not_advance_appended_value_bind_ordinals() {
         "SELECT $1 FROM sql_placeholder_1 WHERE owner = $2"
     );
 }
+
+#[test]
+fn value_rendering_preserves_relation_holes_and_function_argument_binds() {
+    let sql = format!(
+        "SELECT {} FROM {} JOIN generate_series(1, {}) series ON true WHERE id = {}",
+        super::placeholders::internal_placeholder(1),
+        super::placeholders::internal_placeholder(2),
+        super::placeholders::internal_placeholder(3),
+        super::placeholders::internal_placeholder(4)
+    );
+    let rendered = super::placeholders::parameterize_values(&sql);
+    assert_eq!(
+        publish_placeholders(rendered),
+        "SELECT $1 FROM sql_placeholder_2 JOIN generate_series(1, $2) series ON true WHERE id = $3"
+    );
+}

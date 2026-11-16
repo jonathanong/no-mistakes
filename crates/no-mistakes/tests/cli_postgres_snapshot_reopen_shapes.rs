@@ -1,6 +1,9 @@
 use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
 use std::path::PathBuf;
 
+#[path = "cli_postgres_snapshot_reopen_shapes/bind_sequence.rs"]
+mod bind_sequence;
+
 fn case_root(rule: &str, name: &str) -> PathBuf {
     let mut path = rules_path(rule, name, "src");
     path.pop();

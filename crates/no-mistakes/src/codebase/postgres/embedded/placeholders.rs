@@ -133,3 +133,26 @@ pub(crate) fn renumber_placeholders(text: &str, offset: impl Into<Counts>) -> St
     out.push_str(rest);
     out
 }
+
+pub(crate) fn parameterize_values(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let (mut cursor, mut binds) = (0, 0);
+    for (at, internal, _) in markers(text) {
+        let end = at
+            + internal.len()
+            + text[at + internal.len()..]
+                .bytes()
+                .take_while(u8::is_ascii_digit)
+                .count();
+        out.push_str(&text[cursor..at]);
+        if super::helpers::sentinel::in_relation_slot(text, at) {
+            out.push_str(&text[at..end]);
+        } else {
+            binds += 1;
+            out.push_str(&internal_bind(binds));
+        }
+        cursor = end;
+    }
+    out.push_str(&text[cursor..]);
+    out
+}

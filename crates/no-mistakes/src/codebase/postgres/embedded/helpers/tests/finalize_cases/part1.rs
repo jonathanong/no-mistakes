@@ -35,12 +35,10 @@ fn trimmed_fragment_drops_placeholder_positions_past_the_hole() {
         Some(format!("SELECT {INTERNAL_PLACEHOLDER}1 WHERE ").as_str())
     );
     assert_eq!(fragments[0].recovered_placeholder_positions, vec![before]);
-    assert!(
-        fragments[0]
-            .recovered_placeholder_positions
-            .iter()
-            .all(|position| *position < cut)
-    );
+    assert!(fragments[0]
+        .recovered_placeholder_positions
+        .iter()
+        .all(|position| *position < cut));
     assert_eq!(fragments[1].sql_text, None);
     assert!(fragments[1].recovered_placeholder_positions.is_empty());
     assert_eq!(fragments[2], untouched);
@@ -49,7 +47,7 @@ fn trimmed_fragment_drops_placeholder_positions_past_the_hole() {
 #[test]
 fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
     use super::super::splice;
-    use super::super::{Marker, extract, plain};
+    use super::super::{extract, plain, Marker};
     let facts = extract("singleton-append.ts");
     assert!(facts.calls.iter().all(|call| {
         call.sql_text
@@ -96,14 +94,12 @@ fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
     assert!(!sentinel::contains(&variant.sql_text));
     let helper_at = variant.sql_text.find("helper").expect("helper");
     assert_eq!(variant.sql_source_offsets.at(helper_at), 700);
-    assert!(
-        variant
-            .sql_source_positions
-            .iter()
-            .any(|position| position.source_path.as_deref()
-                == Some(std::path::Path::new("/helper.ts"))
-                && position.source_line == 30)
-    );
+    assert!(variant
+        .sql_source_positions
+        .iter()
+        .any(|position| position.source_path.as_deref()
+            == Some(std::path::Path::new("/helper.ts"))
+            && position.source_line == 30));
     let suffix_at = variant.sql_text.find("suffix").expect("suffix");
     assert_ne!(variant.sql_source_offsets.at(suffix_at), 700);
     assert_eq!(
@@ -131,12 +127,10 @@ fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
     assert!(fanout.sql_source_positions.is_empty());
     assert!(fanout.recovered_placeholder_positions.is_empty());
     assert!(fanout.declaration_line.is_none());
-    assert!(
-        fanout
-            .variants
-            .iter()
-            .all(|variant| !sentinel::contains(&variant.sql_text))
-    );
+    assert!(fanout
+        .variants
+        .iter()
+        .all(|variant| !sentinel::contains(&variant.sql_text)));
 }
 
 #[test]
@@ -177,11 +171,9 @@ fn incomplete_or_mismatched_singleton_helper_mirrors_stay_unknown() {
         assert!(recovered.is_empty(), "invalid shape {invalid}");
         assert_eq!(calls[0].kind, EmbeddedSqlKind::Dynamic);
         assert!(calls[0].variants.is_empty());
-        assert!(
-            calls[0]
-                .sql_text
-                .as_deref()
-                .is_none_or(|sql| !sentinel::contains(sql))
-        );
+        assert!(calls[0]
+            .sql_text
+            .as_deref()
+            .is_none_or(|sql| !sentinel::contains(sql)));
     }
 }

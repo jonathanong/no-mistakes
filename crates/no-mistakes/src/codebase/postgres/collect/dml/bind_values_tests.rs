@@ -1,6 +1,6 @@
 use crate::codebase::postgres::{
-    EmbeddedSqlOptions, SqlBoundItemKind, SqlPinSource, TrustedSqlTag,
-    extract_embedded_sql_from_source,
+    extract_embedded_sql_from_source, EmbeddedSqlOptions, SqlBoundItemKind, SqlPinSource,
+    TrustedSqlTag,
 };
 
 #[test]
@@ -20,11 +20,10 @@ fn repeated_primitive_bindings_keep_private_identity_through_bound_extraction() 
     };
     assert_eq!(call.bound_value_origins.len(), 2, "{call:#?}");
     let declaration = source.find("userId: number").unwrap() as u32;
-    assert!(
-        call.bound_value_origins
-            .iter()
-            .all(|(_, _, id)| *id == declaration)
-    );
+    assert!(call
+        .bound_value_origins
+        .iter()
+        .all(|(_, _, id)| *id == declaration));
     assert_eq!(call.bound_value_sql, call.sql_text);
     let sql = call.sql_text.as_deref().unwrap();
     assert!(sql.contains("m.user_id >= sql_placeholder_2"));
@@ -47,12 +46,10 @@ fn repeated_primitive_bindings_keep_private_identity_through_bound_extraction() 
         .flat_map(|bound| &bound.query.items)
         .find(|item| matches!(&item.kind, SqlBoundItemKind::Table(name) if name == "members"))
         .expect("saved scalar relation");
-    assert!(
-        member
-            .pins
-            .iter()
-            .any(|pin| pin.column == "group_id" && matches!(pin.source, SqlPinSource::Value))
-    );
+    assert!(member
+        .pins
+        .iter()
+        .any(|pin| pin.column == "group_id" && matches!(pin.source, SqlPinSource::Value)));
     assert!(
         member
             .pins

@@ -87,10 +87,7 @@ pub(super) fn tagged_sql(
             Expression::TaggedTemplateExpression(tagged)
                 if imported_sql_tags.parameterizes_all(&tagged.tag) =>
             {
-                sql.replace(
-                    super::super::super::placeholders::INTERNAL_PLACEHOLDER,
-                    super::super::super::placeholders::INTERNAL_BIND,
-                )
+                super::super::super::placeholders::parameterize_values(&sql)
             }
             _ => sql,
         })

@@ -62,7 +62,11 @@ pub(crate) fn prefix(text: &str) -> &str {
 }
 
 pub(crate) fn in_identifier_slot(text: &str, hole_start: usize) -> bool {
-    identifier_slot(text, hole_start)
+    identifier_slot(text, hole_start, true)
+}
+
+pub(crate) fn in_relation_slot(text: &str, hole_start: usize) -> bool {
+    identifier_slot(text, hole_start, false)
 }
 
 /// The two sides of a removed fragment splice would form one token.
@@ -135,7 +139,7 @@ fn ident_before<'a>(text: &'a str, word: &str) -> &'a str {
     )
 }
 
-fn identifier_slot(text: &str, hole_start: usize) -> bool {
+fn identifier_slot(text: &str, hole_start: usize, columns: bool) -> bool {
     let before = &text[..hole_start];
     let Some(ch) = before.chars().next_back() else {
         return false;
@@ -152,7 +156,8 @@ fn identifier_slot(text: &str, hole_start: usize) -> bool {
         .rsplit(|c: char| !c.is_ascii_alphanumeric() && c != '_')
         .find(|word| !word.is_empty())
         .unwrap_or("");
-    ["select", "from", "join", "update", "into", "table"]
-        .iter()
-        .any(|keyword| word.eq_ignore_ascii_case(keyword))
+    (columns && word.eq_ignore_ascii_case("select"))
+        || ["from", "join", "update", "into", "table"]
+            .iter()
+            .any(|keyword| word.eq_ignore_ascii_case(keyword))
 }

@@ -38,11 +38,9 @@ fn append_budget_keeps_all_singletons_then_pairs_and_an_unknown_residual() {
     let prepared =
         crate::codebase::postgres::collect::dml::embedded_call_facts(&file, false, false);
     assert_eq!(prepared.len(), 39);
-    assert!(
-        prepared
-            .iter()
-            .all(|facts| facts.variant_locations.is_some())
-    );
+    assert!(prepared
+        .iter()
+        .all(|facts| facts.variant_locations.is_some()));
     assert_eq!(
         prepared.iter().filter(|facts| facts.parse_failed).count(),
         1

@@ -54,7 +54,7 @@ fn appended_helper_keeps_statement_text_without_invalid_sql() {
         .collect::<Vec<_>>();
     assert_eq!(
         sql,
-        ["/* q */WITH k AS (SELECT id FROM t WHERE flag = sql_placeholder_1)  SELECT id FROM k WHERE id = ANY(sql_placeholder_2::uuid[]) ORDER BY id LIMIT 3"
+        ["/* q */WITH k AS (SELECT id FROM t WHERE flag = $1)  SELECT id FROM k WHERE id = ANY($2::uuid[]) ORDER BY id LIMIT 3"
             .to_string()]
     );
     assert!(

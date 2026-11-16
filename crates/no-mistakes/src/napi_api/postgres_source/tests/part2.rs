@@ -41,7 +41,7 @@ fn supplied_import_projection_keeps_authored_text_and_effects_distinct() {
     let two_binds = by_annotation("two binds");
     assert_eq!(two_binds["onlyValuePlaceholders"], true);
     let sql = two_binds["sqlText"].as_str().unwrap();
-    assert!(sql.contains("sql_placeholder_1::text || sql_placeholder_2::text"));
+    assert!(sql.contains("$1::text || $2::text"));
     for (name, expected_kind) in [("bound read", None), ("bound write", Some("update"))] {
         let row = by_annotation(name);
         assert_eq!(row["onlyValuePlaceholders"], true);

@@ -1,10 +1,10 @@
 //! Executes lowered helper programs from saved fixtures.
 
+use super::exec::{run, Callee, Callees, Outcome, Ret, MAX_CALL_DEPTH};
 use super::Program;
-use super::exec::{Callee, Callees, MAX_CALL_DEPTH, Outcome, Ret, run};
 use crate::codebase::postgres::embedded::helpers::SiteArg;
 use crate::codebase::postgres::embedded::{
-    EmbeddedSqlOptions, INTERNAL_PLACEHOLDER, extract_embedded_sql_from_source,
+    extract_embedded_sql_from_source, EmbeddedSqlOptions, INTERNAL_PLACEHOLDER,
 };
 use crate::fx::FxHashMap;
 use std::path::PathBuf;

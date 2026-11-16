@@ -1,6 +1,6 @@
 use crate::codebase::postgres::embedded::tests::{fixture, read_fixture};
 use crate::codebase::postgres::embedded::{
-    EmbeddedSqlOptions, SqlIdentifierAssertion, extract_embedded_sql_from_source,
+    extract_embedded_sql_from_source, EmbeddedSqlOptions, SqlIdentifierAssertion,
 };
 #[test]
 fn helper_model_resolves_missing_default_for_each_literal_argument() {

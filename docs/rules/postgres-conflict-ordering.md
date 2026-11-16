@@ -1,6 +1,6 @@
 # `postgres-conflict-ordering`
 
-Numeric constants in parameterizing SQL tags remain value binds, including
+Numeric constants in parameterized SQL tags remain value binds, including
 inside `LIMIT` and table-valued function arguments such as `generate_series`.
 They do not make a reconstructed statement opaque. Conflict checks and
 suppression usage therefore still apply to the complete statement.
