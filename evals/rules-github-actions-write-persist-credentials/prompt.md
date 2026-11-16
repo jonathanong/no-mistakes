@@ -12,7 +12,6 @@ append_system_prompt: |
 ---
 
 
-add .github/workflows/backend.yml. run `pnpm --filter api test` on
-PRs to main, node 24. only run it when something under apps/api/ or
-packages/db/ changed, no point burning minutes on frontend PRs.
-"backend / test" is a required check on main.
+add .github/workflows/lint.yml. on PRs to main, node 24, run
+`pnpm lint` and `pnpm typecheck`. read-only, it doesn't push or
+comment on anything.

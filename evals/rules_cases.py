@@ -564,34 +564,6 @@ RULES_FLOWS = [
         "github-actions-rules",
         [
             (
-                "write-path-filtered-required",
-                """
-                add .github/workflows/backend.yml. run `pnpm --filter api test` on
-                PRs to main, node 24. only run it when something under apps/api/ or
-                packages/db/ changed, no point burning minutes on frontend PRs.
-                "backend / test" is a required check on main.
-                """,
-                [
-                    (
-                        "no-path-filter-on-required",
-                        _r(
-                            """
-                            Grade only the workflow in the final message.
-
-                            Passing: the workflow that produces the "backend / test"
-                            check starts on every pull request to main (its trigger
-                            has no `paths` or `paths-ignore` filter), and any
-                            skipping of the tests for unrelated changes is done
-                            inside the run, with a job that always reports.
-
-                            Failing: `paths:` or `paths-ignore:` appears under the
-                            `pull_request` trigger of that workflow.
-                            """
-                        ),
-                    ),
-                ],
-            ),
-            (
                 "review-path-filter-required",
                 """
                 review this before i merge. it's the new backend CI; "backend / test"
@@ -712,6 +684,31 @@ RULES_FLOWS = [
                             or asks to switch to a standard or cheaper runner.
                             """,
                             review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "write-persist-credentials",
+                """
+                add .github/workflows/lint.yml. on PRs to main, node 24, run
+                `pnpm lint` and `pnpm typecheck`. read-only, it doesn't push or
+                comment on anything.
+                """,
+                [
+                    (
+                        "checkout-drops-credentials",
+                        _r(
+                            """
+                            Grade only the workflow in the final message, and only
+                            for its checkout step(s).
+
+                            Passing: every `actions/checkout` step sets
+                            `persist-credentials: false`.
+
+                            Failing: any `actions/checkout` step omits
+                            `persist-credentials` or sets it to true.
+                            """
                         ),
                     ),
                 ],
