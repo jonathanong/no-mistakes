@@ -231,15 +231,19 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
   );
 
   const mainPush = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
-  for (const name of ["native-build-macos", "native-test-build-macos"]) {
+  for (const [name, slot] of [
+    ["native-build-macos", "native-build-macos-all"],
+    ["native-test-build-macos", "native-test-build-macos-all"],
+  ]) {
     const body = workflowJob(source, name);
     assert.match(
       body,
       new RegExp(
-        `group: \\$\\{\\{ ${mainPush} && format\\('ci-macos-main-\\{0\\}-all', github\\.job\\) \\|\\| format\\('ci-macos-\\{0\\}-\\{1\\}-all', github\\.run_id, github\\.job\\) \\}\\}`,
+        `group: \\$\\{\\{ ${mainPush} && 'ci-macos-main-${slot}' \\|\\| format\\('ci-macos-\\{0\\}-${slot}', github\\.run_id\\) \\}\\}`,
       ),
       name,
     );
+    assert.doesNotMatch(body, /github\.job/);
     assert.match(body, /cancel-in-progress: false/, name);
   }
   for (const name of ["native-rust-tests-macos", "native-api-tests-macos"]) {
@@ -247,10 +251,11 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
     assert.match(
       body,
       new RegExp(
-        `group: \\$\\{\\{ ${mainPush} && format\\('ci-macos-main-\\{0\\}-\\{1\\}', github\\.job, matrix\\.shard\\) \\|\\| format\\('ci-macos-\\{0\\}-\\{1\\}-\\{2\\}', github\\.run_id, github\\.job, matrix\\.shard\\) \\}\\}`,
+        `group: \\$\\{\\{ ${mainPush} && format\\('ci-macos-main-${name}-\\{0\\}', matrix\\.shard\\) \\|\\| format\\('ci-macos-\\{0\\}-${name}-\\{1\\}', github\\.run_id, matrix\\.shard\\) \\}\\}`,
       ),
       name,
     );
+    assert.doesNotMatch(body, /github\.job/);
     assert.match(body, /cancel-in-progress: false/, name);
   }
   for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
@@ -328,6 +333,41 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
   assert.equal(
     runGate(
       { ...success, "native-build-macos": { result: "failure" } },
+      "true",
+      "push",
+      "refs/heads/main",
+    ).status,
+    1,
+  );
+  const supersededApi = {
+    ...success,
+    "native-build-macos": { result: "cancelled" },
+    "native-api-tests-macos": { result: "skipped" },
+  };
+  const supersededRust = {
+    ...success,
+    "native-test-build-macos": { result: "cancelled" },
+    "native-rust-tests-macos": { result: "skipped" },
+  };
+  assert.equal(runGate(supersededApi, "true", "push", "refs/heads/main").status, 0);
+  assert.equal(runGate(supersededRust, "true", "push", "refs/heads/main").status, 0);
+  assert.equal(runGate(supersededApi, "true", "pull_request", "refs/heads/main").status, 1);
+  assert.equal(
+    runGate(
+      {
+        ...success,
+        "native-build-macos": { result: "failure" },
+        "native-api-tests-macos": { result: "skipped" },
+      },
+      "true",
+      "push",
+      "refs/heads/main",
+    ).status,
+    1,
+  );
+  assert.equal(
+    runGate(
+      { ...success, "native-api-tests-macos": { result: "skipped" } },
       "true",
       "push",
       "refs/heads/main",

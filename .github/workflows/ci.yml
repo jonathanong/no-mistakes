@@ -34,7 +34,8 @@ permissions:
 # macOS jobs add a job-level group. A push to main shares
 # ci-macos-main-<job>-all for each build and ci-macos-main-<job>-<shard> for
 # each test shard, with cancel-in-progress false: a newer main push drops the
-# older pending job in that slot, and a running job finishes. Pull requests,
+# older pending job in that slot, and a running job finishes. The group uses
+# the literal job id because github.job is unset outside a step. Pull requests,
 # dispatch, and other branches use a per-run slot, so they never join
 # ci-macos-main.
 concurrency:
@@ -1036,7 +1037,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.macos == 'true' }}
     concurrency:
-      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-{0}-all', github.job) || format('ci-macos-{0}-{1}-all', github.run_id, github.job) }}
+      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'ci-macos-main-native-build-macos-all' || format('ci-macos-{0}-native-build-macos-all', github.run_id) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
@@ -1347,7 +1348,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.macos == 'true' }}
     concurrency:
-      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-{0}-all', github.job) || format('ci-macos-{0}-{1}-all', github.run_id, github.job) }}
+      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'ci-macos-main-native-test-build-macos-all' || format('ci-macos-{0}-native-test-build-macos-all', github.run_id) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
@@ -1635,7 +1636,7 @@ jobs:
     needs: [changes, native-test-build-macos]
     if: ${{ needs.changes.outputs.macos == 'true' }}
     concurrency:
-      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-{0}-{1}', github.job, matrix.shard) || format('ci-macos-{0}-{1}-{2}', github.run_id, github.job, matrix.shard) }}
+      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-native-rust-tests-macos-{0}', matrix.shard) || format('ci-macos-{0}-native-rust-tests-macos-{1}', github.run_id, matrix.shard) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
@@ -1845,7 +1846,7 @@ jobs:
     needs: [changes, native-build-macos]
     if: ${{ needs.changes.outputs.macos == 'true' }}
     concurrency:
-      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-{0}-{1}', github.job, matrix.shard) || format('ci-macos-{0}-{1}-{2}', github.run_id, github.job, matrix.shard) }}
+      group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('ci-macos-main-native-api-tests-macos-{0}', matrix.shard) || format('ci-macos-{0}-native-api-tests-macos-{1}', github.run_id, matrix.shard) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
@@ -1980,7 +1981,7 @@ jobs:
           MACOS_EVENT: ${{ github.event_name }}
           MACOS_REF: ${{ github.ref }}
         run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; console.error(name+": "+job.result); process.exitCode=1; }'
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; const producer={ "native-rust-tests-macos":"native-test-build-macos", "native-api-tests-macos":"native-build-macos" }; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; if (mainPush && job.result==="skipped" && producer[name] && jobs[producer[name]] && jobs[producer[name]].result==="cancelled") continue; console.error(name+": "+job.result); process.exitCode=1; }'
   standalone-build:
     name: Build standalone library tests
     runs-on: ubuntu-latest
