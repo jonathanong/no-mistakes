@@ -1,6 +1,6 @@
 ---
 name: native-app-rules
-description: "Load before writing or reviewing Swift or SwiftUI (iOS, macOS) or C# and .NET MAUI app code. Lists the defects to avoid and the patterns that need a stated reason: core-library boundaries, concurrency, localization, secure storage, release config."
+description: "Load before writing or reviewing Swift or SwiftUI (iOS, macOS) or C# and .NET MAUI app code. Lists the defects to avoid and the patterns that need a stated reason: concurrency, localization, secure storage, release config."
 ---
 
 # Swift and .NET app rules

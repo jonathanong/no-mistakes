@@ -1,6 +1,6 @@
 ---
 name: dependency-rules
-description: "Load before adding, upgrading, or removing a dependency, or editing package.json, a lockfile (pnpm-lock.yaml, package-lock.json), a workspace, a Dependabot config, or an npm publish step. Lists the defects to avoid and the patterns that need a stated reason."
+description: "Load before adding, upgrading, or removing a dependency, or editing package.json, a lockfile (pnpm-lock.yaml, package-lock.json), a Dependabot config, or an npm publish step. Lists the defects to avoid and the patterns that need a stated reason."
 ---
 
 # Dependency and package rules

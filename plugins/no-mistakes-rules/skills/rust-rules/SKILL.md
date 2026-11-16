@@ -1,6 +1,6 @@
 ---
 name: rust-rules
-description: "Load before writing or reviewing Rust code, Cargo.toml, clippy settings, or benchmarks, or before running heavy cargo builds. Lists the defects to avoid and the patterns that need a stated reason: lints, test layout, file size, parallelism, hot loops, caching, build hygiene, performance claims."
+description: "Load before writing or reviewing Rust code, Cargo.toml, clippy settings, or benchmarks. Lists the defects to avoid and the patterns that need a stated reason: lints, parallel locking, hot loops, repo-wide indexes, deterministic output, blocking the async runtime or Node event loop, coverage exclusions, speedup claims, test fixtures."
 ---
 
 # Rust rules

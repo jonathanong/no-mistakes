@@ -1,6 +1,6 @@
 ---
 name: observability-rules
-description: "Load before adding or reviewing a log line, a metric, a trace attribute, an alert, or a monitor (pino, winston, OpenTelemetry, Datadog, Sentry). Lists the defects to avoid and the patterns that need a stated reason: static messages and structured fields, personal data, metric cardinality, fields monitors depend on, absence alerts, context binding."
+description: "Load before adding or reviewing a log line, a metric, an alert, or a monitor (pino, winston, OpenTelemetry, Datadog, Sentry). Lists the defects to avoid and the patterns that need a stated reason: personal data, metric cardinality, fields monitors depend on, absence alerts, bound context, metrics clients across forks."
 ---
 
 # Observability rules

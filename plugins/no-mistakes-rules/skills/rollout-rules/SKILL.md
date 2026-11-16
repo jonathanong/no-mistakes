@@ -1,6 +1,6 @@
 ---
 name: rollout-rules
-description: "Load before adding a feature flag, changing an API, event, or message contract, deploying a change that spans services, or touching payments, refunds, or other irreversible actions. Lists the defects to avoid and the patterns that need a stated reason: deploy order, compatibility, string-referenced config."
+description: "Load before adding a feature flag, changing an API, event, or message contract, deploying a change that spans services, adding a table, service, or write path that needs an entry point, or touching payments, refunds, or other irreversible actions. Lists the defects to avoid and the patterns that need a stated reason: flags, deploy order, compatibility, unreachable new code, irreversible actions, string-referenced config."
 ---
 
 # Rollout rules
