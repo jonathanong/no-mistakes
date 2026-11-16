@@ -4,9 +4,6 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn u
     before: &Value,
     after: &Value,
 ) -> bool {
-    if !after.contains_reference() {
-        return true;
-    }
     match (before, after) {
         (Value::Prefix(text, complete, id), Value::Prefix(next, done, next_id)) => {
             text == next && complete == done && id == next_id

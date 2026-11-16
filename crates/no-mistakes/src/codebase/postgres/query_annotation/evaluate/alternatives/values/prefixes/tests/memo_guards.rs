@@ -93,54 +93,6 @@ fn every_immutable_container_kind_uses_its_shared_snapshot() {
         Value::Possible(values),
     ] {
         assert!(unchanged(&value, &value.clone()));
-        assert!(unchanged(&value, &Value::Unknown));
-    }
-}
-
-#[test]
-fn reference_free_replacements_match_the_raw_empty_intersection_for_mutable_roots() {
-    use crate::codebase::postgres::query_annotation::Function;
-    use crate::fx::FxHashSet;
-    let function = Value::Function(
-        std::sync::Arc::new(Function {
-            start: 0,
-            params: Vec::new(),
-            body: Vec::new(),
-            supported: true,
-            asynchronous: false,
-            arrow: true,
-            self_name: None,
-        }),
-        std::path::PathBuf::from("callback.mts").into(),
-        0,
-    );
-    for name in [
-        "arena_before",
-        "reentrant_record",
-        "sparse_deleted_slots",
-        "all_container_kinds",
-    ] {
-        let case = fixture::load(name);
-        for after in [
-            Value::Unknown,
-            Value::Primitive,
-            Value::Prefix("unidentified".into(), true, None),
-            function.clone(),
-            Value::Object(vec![Value::Unknown].into()),
-            Value::Promise(Box::new(Value::Unknown)),
-        ] {
-            let mut changed = FxHashSet::default();
-            super::super::super::changes(
-                &case.root,
-                &after,
-                case.arena(),
-                case.arena(),
-                &mut changed,
-                &case.definite,
-                &mut None,
-            );
-            assert!(changed.is_empty(), "{name}");
-            assert!(unchanged(&case.root, &after), "{name}");
-        }
+        assert!(!unchanged(&value, &Value::Unknown));
     }
 }
