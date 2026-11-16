@@ -1463,6 +1463,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "multi-argument-sites.sql",
+          "line": 22,
+          "message": "multi-argument-sites.sql:22: WHERE applies a row cast containing UUID columns accounts.id, accounts.token; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate (expression at SQL 22:57 from multi-argument-sites.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN accounts b ON true WHERE (a.id, a.token)::pair = (b.id, b.token)::pair;",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 22,
+          "message": "multi-argument-sites.sql:22: WHERE applies a row cast containing UUID columns accounts.id, accounts.token; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate (expression at SQL 22:81 from multi-argument-sites.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN accounts b ON true WHERE (a.id, a.token)::pair = (b.id, b.token)::pair;",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 23,
+          "message": "multi-argument-sites.sql:23: WHERE applies a row cast containing UUID column accounts.id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(((id, email)) AS pair) = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 24,
+          "message": "multi-argument-sites.sql:24: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE (id)::text = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 27,
+          "message": "multi-argument-sites.sql:27: WHERE applies a row cast containing UUID column accounts.id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(ROW(id, email) AS pair) = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "multi-argument-sites.sql",
           "line": 3,
           "message": "multi-argument-sites.sql:3: WHERE applies num_nonnulls to UUID columns accounts.id, accounts.token, orders.account_id, orders.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
           "rule": "postgres-no-transformed-uuid-predicates",
@@ -1609,6 +1649,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT 1 FROM accounts a JOIN orders o ON true WHERE COALESCE(a.id, a.token, o.id, o.account_id) = $1;",
           "target": "accounts.id, accounts.token, orders.account_id, orders.id"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 22,
+          "message": "multi-argument-sites.sql:22: WHERE applies a row cast containing UUID columns accounts.id, accounts.token; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate (expression at SQL 22:57 from multi-argument-sites.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN accounts b ON true WHERE (a.id, a.token)::pair = (b.id, b.token)::pair;",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 22,
+          "message": "multi-argument-sites.sql:22: WHERE applies a row cast containing UUID columns accounts.id, accounts.token; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate (expression at SQL 22:81 from multi-argument-sites.sql)",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts a JOIN accounts b ON true WHERE (a.id, a.token)::pair = (b.id, b.token)::pair;",
+          "target": "accounts.id, accounts.token"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 23,
+          "message": "multi-argument-sites.sql:23: WHERE applies a row cast containing UUID column accounts.id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(((id, email)) AS pair) = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 24,
+          "message": "multi-argument-sites.sql:24: WHERE applies cast to UUID column accounts.id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE (id)::text = $1;",
+          "target": "accounts.id"
+        },
+        {
+          "file": "multi-argument-sites.sql",
+          "line": 27,
+          "message": "multi-argument-sites.sql:27: WHERE applies a row cast containing UUID column accounts.id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
+          "rule": "postgres-no-transformed-uuid-predicates",
+          "sourceLine": "SELECT 1 FROM accounts WHERE CAST(ROW(id, email) AS pair) = $1;",
+          "target": "accounts.id"
         },
         {
           "file": "multi-argument-sites.sql",
