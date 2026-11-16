@@ -8,6 +8,8 @@ import {
   visibleTaggedImported,
   hiddenTagImported,
   visibleNamedBagImported,
+  hiddenCallImported,
+  hiddenApplyImported,
 } from "./union-helper";
 
 visibleImported(read);
@@ -17,3 +19,5 @@ hiddenBagImported(sql`SELECT ${fragment} FROM t`, { query: read });
 visibleTaggedImported(read);
 hiddenTagImported(read);
 visibleNamedBagImported({ query: read, id });
+hiddenCallImported(fragment, { query: read });
+hiddenApplyImported(fragment, { query: read });

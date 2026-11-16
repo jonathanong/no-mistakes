@@ -43,6 +43,14 @@ export function visibleNamedBagImported(options: { query: QueryExecutor; id: num
   options.query("SELECT id FROM t WHERE id = $1", [options.id]);
 }
 
+export function hiddenCallImported(fragment: string, { query }: { query: QueryExecutor }) {
+  query.call(null, fragment);
+}
+
+export function hiddenApplyImported(fragment: string, { query }: { query: QueryExecutor }) {
+  query.apply(null, [fragment]);
+}
+
 export function exactSource(query: typeof read) { query("SELECT 1"); }
 export function subSource(query: typeof subRead) { query("SELECT 1"); }
 export function otherSource(query: typeof otherRead) { query("SELECT 1"); }

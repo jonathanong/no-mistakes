@@ -17,6 +17,12 @@ function escapedBag(options) {
   consume(options);
   return options.query("SELECT id FROM t");
 }
+function hiddenCall(fragment, { query }) {
+  return query.call(null, fragment);
+}
+function hiddenApply(fragment, { query }) {
+  return query.apply(null, [fragment]);
+}
 function visibleTagged(query) {
   return query(sql`SELECT id FROM t WHERE id = ${id}`);
 }
@@ -47,6 +53,8 @@ visibleBag({ query: read });
 visibleBag({ query: flag ? read : write });
 visibleNamedBag({ query: read, id });
 escapedBag({ query: read });
+hiddenCall(fragment, { query: read });
+hiddenApply(fragment, { query: read });
 visibleTagged(read);
 hiddenRawTemplate(read);
 hiddenUntrustedTag(read);

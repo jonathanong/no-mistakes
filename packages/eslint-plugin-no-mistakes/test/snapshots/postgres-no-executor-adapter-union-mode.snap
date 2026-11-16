@@ -441,72 +441,6 @@
       {
         "column": 16,
         "endColumn": 20,
-        "endLine": 44,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 44,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 16,
-        "endColumn": 35,
-        "endLine": 45,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 45,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleUntyped(read) or visibleUntyped(write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 21,
-        "endColumn": 25,
-        "endLine": 46,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 46,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 21,
-        "endColumn": 40,
-        "endLine": 47,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 47,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleBag({ query: read }) or visibleBag({ query: write })` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 26,
-        "endColumn": 30,
-        "endLine": 48,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 48,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 21,
-        "endColumn": 25,
-        "endLine": 49,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 49,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 15,
-        "endColumn": 19,
         "endLine": 50,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 50,
@@ -516,19 +450,19 @@
         "severity": 2
       },
       {
-        "column": 19,
-        "endColumn": 23,
+        "column": 16,
+        "endColumn": 35,
         "endLine": 51,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 51,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleUntyped(read) or visibleUntyped(write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
       },
       {
-        "column": 20,
-        "endColumn": 24,
+        "column": 21,
+        "endColumn": 25,
         "endLine": 52,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 52,
@@ -538,30 +472,41 @@
         "severity": 2
       },
       {
-        "column": 40,
-        "endColumn": 44,
+        "column": 21,
+        "endColumn": 40,
         "endLine": 53,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 53,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleBag({ query: read }) or visibleBag({ query: write })` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 26,
+        "endColumn": 30,
+        "endLine": 54,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 54,
         "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
       },
       {
-        "column": 40,
-        "endColumn": 59,
-        "endLine": 54,
+        "column": 21,
+        "endColumn": 25,
+        "endLine": 55,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 54,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
+        "line": 55,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
       },
       {
-        "column": 52,
-        "endColumn": 56,
+        "column": 31,
+        "endColumn": 35,
         "endLine": 56,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 56,
@@ -571,8 +516,30 @@
         "severity": 2
       },
       {
-        "column": 10,
-        "endColumn": 14,
+        "column": 32,
+        "endColumn": 36,
+        "endLine": 57,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 57,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 19,
+        "endLine": 58,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 58,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 23,
         "endLine": 59,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 59,
@@ -582,11 +549,66 @@
         "severity": 2
       },
       {
-        "column": 6,
-        "endColumn": 36,
+        "column": 20,
+        "endColumn": 24,
         "endLine": 60,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 60,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
+        "endLine": 61,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 61,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 59,
+        "endLine": 62,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 62,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 52,
+        "endColumn": 56,
+        "endLine": 64,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 64,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 14,
+        "endLine": 67,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 67,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 36,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 68,
         "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`load(read)`) does not connect the statement to the executor, so analysis cannot see it.",
         "messageId": "forward",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -595,9 +617,9 @@
       {
         "column": 6,
         "endColumn": 43,
-        "endLine": 61,
+        "endLine": 69,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 61,
+        "line": 69,
         "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `load(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
         "messageId": "blocked",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -627,72 +649,6 @@
       {
         "column": 16,
         "endColumn": 20,
-        "endLine": 44,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 44,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 16,
-        "endColumn": 35,
-        "endLine": 45,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 45,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleUntyped(read) or visibleUntyped(write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 21,
-        "endColumn": 25,
-        "endLine": 46,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 46,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 21,
-        "endColumn": 40,
-        "endLine": 47,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 47,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleBag({ query: read }) or visibleBag({ query: write })` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 26,
-        "endColumn": 30,
-        "endLine": 48,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 48,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 21,
-        "endColumn": 25,
-        "endLine": 49,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 49,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 15,
-        "endColumn": 19,
         "endLine": 50,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 50,
@@ -702,128 +658,19 @@
         "severity": 2
       },
       {
-        "column": 19,
-        "endColumn": 23,
+        "column": 16,
+        "endColumn": 35,
         "endLine": 51,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 51,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 20,
-        "endColumn": 24,
-        "endLine": 52,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 52,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 40,
-        "endColumn": 44,
-        "endLine": 53,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 53,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 40,
-        "endColumn": 59,
-        "endLine": 54,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 54,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleUntyped(read) or visibleUntyped(write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
         "messageId": "blocked",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
       },
-      {
-        "column": 52,
-        "endColumn": 56,
-        "endLine": 56,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 56,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 6,
-        "endColumn": 36,
-        "endLine": 60,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 60,
-        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`load(read)`) does not connect the statement to the executor, so analysis cannot see it.",
-        "messageId": "forward",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 6,
-        "endColumn": 43,
-        "endLine": 61,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 61,
-        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `load(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      }
-    ],
-    "kind": "invalid",
-    "options": [
-      {
-        "executorTypeNames": [
-          "QueryExecutor"
-        ],
-        "importSpecifier": "@example/db",
-        "mode": "all",
-        "trustedSqlTags": [
-          {
-            "module": "@example/sql",
-            "name": "sql"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-    "findings": [
       {
         "column": 21,
         "endColumn": 25,
-        "endLine": 49,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 49,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 19,
-        "endColumn": 23,
-        "endLine": 51,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 51,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 20,
-        "endColumn": 24,
         "endLine": 52,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 52,
@@ -833,30 +680,30 @@
         "severity": 2
       },
       {
-        "column": 40,
-        "endColumn": 44,
+        "column": 21,
+        "endColumn": 40,
         "endLine": 53,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 53,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `visibleBag({ query: read }) or visibleBag({ query: write })` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 26,
+        "endColumn": 30,
+        "endLine": 54,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 54,
         "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
       },
       {
-        "column": 40,
-        "endColumn": 59,
-        "endLine": 54,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 54,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 45,
-        "endColumn": 49,
+        "column": 21,
+        "endColumn": 25,
         "endLine": 55,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 55,
@@ -866,8 +713,8 @@
         "severity": 2
       },
       {
-        "column": 52,
-        "endColumn": 56,
+        "column": 31,
+        "endColumn": 35,
         "endLine": 56,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 56,
@@ -877,8 +724,8 @@
         "severity": 2
       },
       {
-        "column": 8,
-        "endColumn": 12,
+        "column": 32,
+        "endColumn": 36,
         "endLine": 57,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 57,
@@ -888,8 +735,19 @@
         "severity": 2
       },
       {
-        "column": 10,
-        "endColumn": 14,
+        "column": 15,
+        "endColumn": 19,
+        "endLine": 58,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 58,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 23,
         "endLine": 59,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 59,
@@ -899,11 +757,55 @@
         "severity": 2
       },
       {
-        "column": 6,
-        "endColumn": 36,
+        "column": 20,
+        "endColumn": 24,
         "endLine": 60,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 60,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
+        "endLine": 61,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 61,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 59,
+        "endLine": 62,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 62,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 52,
+        "endColumn": 56,
+        "endLine": 64,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 64,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 36,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 68,
         "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`load(read)`) does not connect the statement to the executor, so analysis cannot see it.",
         "messageId": "forward",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -912,9 +814,173 @@
       {
         "column": 6,
         "endColumn": 43,
+        "endLine": 69,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 69,
+        "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `load(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorTypeNames": [
+          "QueryExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "all",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+    "findings": [
+      {
+        "column": 21,
+        "endColumn": 25,
+        "endLine": 55,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 55,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 31,
+        "endColumn": 35,
+        "endLine": 56,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 56,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 32,
+        "endColumn": 36,
+        "endLine": 57,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 57,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 23,
+        "endLine": 59,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 59,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 24,
+        "endLine": 60,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 60,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
         "endLine": 61,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 61,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 59,
+        "endLine": 62,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 62,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 45,
+        "endColumn": 49,
+        "endLine": 63,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 63,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 52,
+        "endColumn": 56,
+        "endLine": 64,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 64,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 12,
+        "endLine": 65,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 65,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 14,
+        "endLine": 67,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 67,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 36,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 68,
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`load(read)`) does not connect the statement to the executor, so analysis cannot see it.",
+        "messageId": "forward",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 43,
+        "endLine": 69,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 69,
         "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `load(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
         "messageId": "blocked",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -944,61 +1010,6 @@
       {
         "column": 21,
         "endColumn": 25,
-        "endLine": 49,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 49,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 19,
-        "endColumn": 23,
-        "endLine": 51,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 51,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 20,
-        "endColumn": 24,
-        "endLine": 52,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 52,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 40,
-        "endColumn": 44,
-        "endLine": 53,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 53,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 40,
-        "endColumn": 59,
-        "endLine": 54,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 54,
-        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
-        "messageId": "blocked",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 45,
-        "endColumn": 49,
         "endLine": 55,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 55,
@@ -1008,8 +1019,8 @@
         "severity": 2
       },
       {
-        "column": 52,
-        "endColumn": 56,
+        "column": 31,
+        "endColumn": 35,
         "endLine": 56,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 56,
@@ -1019,8 +1030,8 @@
         "severity": 2
       },
       {
-        "column": 8,
-        "endColumn": 12,
+        "column": 32,
+        "endColumn": 36,
         "endLine": 57,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 57,
@@ -1030,11 +1041,88 @@
         "severity": 2
       },
       {
-        "column": 6,
-        "endColumn": 36,
+        "column": 19,
+        "endColumn": 23,
+        "endLine": 59,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 59,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 24,
         "endLine": 60,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
         "line": 60,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
+        "endLine": 61,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 61,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 59,
+        "endLine": 62,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 62,
+        "message": "This adapter hides read or write from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql) or write(sql) or (flag ? read : write)(sql)`). `hidden(sql`SELECT ${fragment} FROM t`, read) or hidden(sql`SELECT ${fragment} FROM t`, write)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 45,
+        "endColumn": 49,
+        "endLine": 63,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 63,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 52,
+        "endColumn": 56,
+        "endLine": 64,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 64,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 8,
+        "endColumn": 12,
+        "endLine": 65,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 65,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 6,
+        "endColumn": 36,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
+        "line": 68,
         "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`load(read)`) does not connect the statement to the executor, so analysis cannot see it.",
         "messageId": "forward",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -1043,9 +1131,9 @@
       {
         "column": 6,
         "endColumn": 43,
-        "endLine": 61,
+        "endLine": 69,
         "file": "test-cases/eslint-snippets/fixture/executor-target/forwarding-mode.ts",
-        "line": 61,
+        "line": 69,
         "message": "This adapter hides read from SQL analysis (arity or rest). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `load(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
         "messageId": "blocked",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -1075,28 +1163,6 @@
       {
         "column": 17,
         "endColumn": 21,
-        "endLine": 13,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
-        "line": 13,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 48,
-        "endColumn": 52,
-        "endLine": 14,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
-        "line": 14,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 29,
-        "endColumn": 33,
         "endLine": 15,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 15,
@@ -1106,8 +1172,8 @@
         "severity": 2
       },
       {
-        "column": 60,
-        "endColumn": 64,
+        "column": 48,
+        "endColumn": 52,
         "endLine": 16,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 16,
@@ -1117,8 +1183,8 @@
         "severity": 2
       },
       {
-        "column": 23,
-        "endColumn": 27,
+        "column": 29,
+        "endColumn": 33,
         "endLine": 17,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 17,
@@ -1128,8 +1194,8 @@
         "severity": 2
       },
       {
-        "column": 19,
-        "endColumn": 23,
+        "column": 60,
+        "endColumn": 64,
         "endLine": 18,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 18,
@@ -1139,11 +1205,55 @@
         "severity": 2
       },
       {
-        "column": 34,
-        "endColumn": 38,
+        "column": 23,
+        "endColumn": 27,
         "endLine": 19,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 19,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 23,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 20,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 34,
+        "endColumn": 38,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 21,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 39,
+        "endColumn": 43,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 22,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 23,
         "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -1173,28 +1283,6 @@
       {
         "column": 17,
         "endColumn": 21,
-        "endLine": 13,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
-        "line": 13,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 48,
-        "endColumn": 52,
-        "endLine": 14,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
-        "line": 14,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 29,
-        "endColumn": 33,
         "endLine": 15,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 15,
@@ -1204,8 +1292,8 @@
         "severity": 2
       },
       {
-        "column": 60,
-        "endColumn": 64,
+        "column": 48,
+        "endColumn": 52,
         "endLine": 16,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 16,
@@ -1215,8 +1303,8 @@
         "severity": 2
       },
       {
-        "column": 23,
-        "endColumn": 27,
+        "column": 29,
+        "endColumn": 33,
         "endLine": 17,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 17,
@@ -1226,8 +1314,8 @@
         "severity": 2
       },
       {
-        "column": 19,
-        "endColumn": 23,
+        "column": 60,
+        "endColumn": 64,
         "endLine": 18,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 18,
@@ -1237,11 +1325,55 @@
         "severity": 2
       },
       {
-        "column": 34,
-        "endColumn": 38,
+        "column": 23,
+        "endColumn": 27,
         "endLine": 19,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 19,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 23,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 20,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 34,
+        "endColumn": 38,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 21,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 39,
+        "endColumn": 43,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 22,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 23,
         "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
@@ -1271,17 +1403,6 @@
       {
         "column": 48,
         "endColumn": 52,
-        "endLine": 14,
-        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
-        "line": 14,
-        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
-        "messageId": "passed",
-        "ruleId": "no-mistakes/postgres-no-executor-adapter",
-        "severity": 2
-      },
-      {
-        "column": 60,
-        "endColumn": 64,
         "endLine": 16,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 16,
@@ -1291,11 +1412,44 @@
         "severity": 2
       },
       {
-        "column": 19,
-        "endColumn": 23,
+        "column": 60,
+        "endColumn": 64,
         "endLine": 18,
         "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
         "line": 18,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 19,
+        "endColumn": 23,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 20,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 39,
+        "endColumn": 43,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 22,
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 40,
+        "endColumn": 44,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/imported-mode.ts",
+        "line": 23,
         "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",

@@ -23,8 +23,8 @@ function opaqueBody(body) {
 
 function parameterBinding(param, property) {
   const target = param?.type === "AssignmentPattern" ? param.left : param;
-  if (!property) return target?.type === "Identifier" ? target : null;
-  if (target?.type === "Identifier") return target;
+  if (!property) return target?.type === "Identifier" ? { node: target, object: false } : null;
+  if (target?.type === "Identifier") return { node: target, object: true };
   if (target?.type !== "ObjectPattern") return null;
   const field = target.properties.find(
     (entry) =>
@@ -33,7 +33,7 @@ function parameterBinding(param, property) {
       entry.key.name === property &&
       entry.value.type === "Identifier",
   );
-  return field?.value ?? null;
+  return field ? { node: field.value, object: false } : null;
 }
 
 function executorCall(reference, property) {
@@ -171,12 +171,12 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted) {
     return false;
   const binding = parameterBinding(fn.params[index], property);
   if (!binding) return false;
-  const variable = resolveVariable(binding, context);
+  const variable = resolveVariable(binding.node, context);
   if (!variable?.references.length) return false;
   if (opaqueBody(fn.body)) return false;
   return variable.references.every((reference) => {
     if (reference.isWrite()) return false;
-    if (property && otherPropertyRead(reference, property)) return true;
+    if (binding.object && otherPropertyRead(reference, property)) return true;
     const invocation = executorCall(reference, property);
     return Boolean(invocation && literalSql(invocation.arguments[0], context, options));
   });
