@@ -541,8 +541,8 @@ At max effort, branch joins skip comparing an unchanged immutable value when
 it contains no runtime argument references. Direct reference summaries are
 memoized in memory for those immutable values; mutations invalidate the
 summaries. Function frames inherit the captured scope's immutable direct-edge
-summary. Adding direct references extends that summary; replacing or removing
-references invalidates it. Values carrying runtime argument references keep
+summary. Adding direct references extends that summary; changing or removing
+reference identities invalidates it. Values carrying runtime argument references keep
 their contextual comparison, so shared helper imports do not merge independent
 root states. A warm dense-argument summary can also prove an incoming prefix
 map empty when it contains no builder or nested argument identities and has no
