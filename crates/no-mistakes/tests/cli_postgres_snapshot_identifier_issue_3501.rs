@@ -32,11 +32,13 @@ fn postgres_identifier_issue_3501_check_json_snapshot() {
             vec![7, 11, 15, 19, 23, 28, 32, 37],
         ),
         ("negative/cyclic-type.ts", vec![5]),
+        ("negative/duplicate-type.ts", vec![5]),
         ("negative/guards.ts", vec![11, 15, 21, 26]),
         ("negative/inline-arrays.ts", vec![9, 10, 11, 12, 13, 14]),
         ("negative/literal-unions.ts", vec![4, 8, 12, 17, 21, 26, 30]),
         ("negative/maps.ts", vec![11, 12, 13, 14]),
         ("negative/metadata.ts", vec![8, 14, 20, 26]),
+        ("negative/type-scope.ts", vec![5, 11, 16, 22]),
         (
             "negative/nonrequired-literal-unions.ts",
             vec![6, 10, 14, 18],

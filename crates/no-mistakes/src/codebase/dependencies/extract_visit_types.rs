@@ -5,13 +5,16 @@ fn visit_ts_type_alias_declaration_with_scope<'a>(
     collector.record_bounded_type(declaration);
     if collector.collect_value_flow
         && collector.function_stack.is_empty()
+        && collector.type_local_stack.len() == 1
         && declaration.type_parameters.is_none()
     {
         let shape = collector.annotation_shape(&declaration.type_annotation);
         collector
             .value_flow
             .type_shapes
-            .insert(declaration.id.name.to_string(), shape);
+            .entry(declaration.id.name.to_string())
+            .and_modify(|existing| *existing = ValueType::Unknown)
+            .or_insert(shape);
         if collector.export_depth > 0 {
             collector.value_flow.type_exports.push(ExportedBinding {
                 specifier: None,
