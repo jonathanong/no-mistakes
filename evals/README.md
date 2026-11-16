@@ -330,6 +330,8 @@ already pass without the plugin. `describe` lost on
 0.33). Re-measure on the replacement cases before changing any description.
 `queue-exception-enqueue-in-tx-receipt` fired 0/12 across both variants.
 
+Second replication, 2026-11-16, 14 should-fire cases (the 5 replacement cases included): `control` 59/84, `describe` 69/84, allowed gap 7, off-topic 0/24 for both. The plugin now ships the `describe` descriptions (trimmed where one claimed more than its skill body covers; `DESCRIBE` in `rules_variants.py` matches), so `describe` is the new `control`: the two variants are identical until a description changes again.
+
 Demand is "skill surface": these traps come from the rules
 text, not from mined traffic. `summarize.py --mentions` and
 `power.py --fabrication` do not apply, since there are no graph command forms

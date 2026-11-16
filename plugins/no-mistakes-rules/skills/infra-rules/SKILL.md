@@ -1,6 +1,6 @@
 ---
 name: infra-rules
-description: "MUST NOT / SHOULD NOT rules for infrastructure and ops scripts: OpenTofu or Terraform, IAM, secrets stores, provisioning and cleanup scripts, shell, runtime state, probes, and data ownership. Use when writing or reviewing infrastructure code, machine setup, shell scripts, or code whose correctness depends on how many instances run."
+description: "Load before writing or reviewing infrastructure and ops code: OpenTofu or Terraform, IAM policies, secrets stores, provisioning or cleanup scripts, shell scripts, health probes, or code whose correctness depends on how many instances run. Lists the defects to avoid and the patterns that need a stated reason."
 ---
 
 # Infrastructure and shell rules

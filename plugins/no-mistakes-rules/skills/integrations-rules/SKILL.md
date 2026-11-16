@@ -1,6 +1,6 @@
 ---
 name: integrations-rules
-description: "MUST NOT / SHOULD NOT rules for third-party APIs and inbound webhooks: response classification, retries and idempotency, delivery records, payload mapping, timestamps and units, batch failure policy, and signature verification. Use when calling, parsing, or receiving a partner or vendor API."
+description: "Load before writing or reviewing code that calls, parses, or receives a third-party API or webhook (Stripe, Twilio, Slack, a partner REST API). Lists the defects to avoid and the patterns that need a stated reason: response classification, retries and idempotency, delivery records, payload mapping, timestamps and units, batch failures, signature verification."
 ---
 
 # Integration and webhook rules

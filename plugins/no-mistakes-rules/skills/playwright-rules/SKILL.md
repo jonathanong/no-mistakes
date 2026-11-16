@@ -1,6 +1,6 @@
 ---
 name: playwright-rules
-description: "MUST NOT / SHOULD NOT rules for Playwright and other browser end-to-end tests: waits, locators, test ids, setup, network mocking, and timeouts. Use when writing, reviewing, or de-flaking a browser test or adding test ids to UI."
+description: "Load before writing, reviewing, or de-flaking a Playwright or other browser end-to-end test, or adding data-testid attributes to UI. Lists the defects to avoid and the patterns that need a stated reason: waits, locators, test ids, setup, network mocking, timeouts."
 ---
 
 # Playwright rules

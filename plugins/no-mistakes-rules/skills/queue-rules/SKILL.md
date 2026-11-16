@@ -1,6 +1,6 @@
 ---
 name: queue-rules
-description: "MUST NOT / SHOULD NOT rules for background work: queue producers and workers, scheduled jobs, sweeps, reconcilers, backfills, leases, and dedup. Use when writing or reviewing a job, a worker, an enqueue call, or any loop that reads rows on a schedule."
+description: "Load before writing or reviewing background work: a queue producer or worker (BullMQ, pg-boss, SQS), an enqueue call, a cron or nightly job, a sweep, reconciler, cleanup, backfill, or any loop that reads rows on a schedule. Lists the defects to avoid and the patterns that need a stated reason: producers, workers, leases, dedup, bounded iteration."
 ---
 
 # Queue and background-job rules

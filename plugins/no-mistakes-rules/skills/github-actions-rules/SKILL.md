@@ -1,6 +1,6 @@
 ---
 name: github-actions-rules
-description: "MUST NOT / SHOULD NOT rules for GitHub Actions and CI: pinning, permissions, untrusted input, timeouts, polling, required checks, concurrency, runners, and CI log diagnosis. Use when writing or reviewing a workflow, composite action, or CI failure fix."
+description: "Load before writing, reviewing, or debugging anything under .github/workflows (ci.yml, release.yml, publish.yml), a composite action, a required check, or a CI failure. Lists the defects to avoid and the patterns that need a stated reason: pinning, permissions, untrusted input, timeouts, gating on other workflows, required checks, concurrency, runners, masked failures in CI output."
 ---
 
 # GitHub Actions rules

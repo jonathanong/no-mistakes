@@ -1,6 +1,6 @@
 ---
 name: security-rules
-description: "MUST NOT / SHOULD NOT rules for application security and HTTP APIs: secrets, auth and sessions, SSRF, injection, CSRF, CSP, LLM prompts, response exposure, and API shape. Use when writing or reviewing an endpoint, auth code, secret handling, outbound fetches, or LLM calls."
+description: "Load before writing or reviewing an HTTP endpoint, auth or session code, secret handling, an outbound fetch to a user-supplied URL, HTML or SQL built from input, or an LLM prompt. Lists the defects to avoid and the patterns that need a stated reason: secrets, auth, SSRF, injection, CSRF, CSP, response exposure, API shape."
 ---
 
 # Security and API rules

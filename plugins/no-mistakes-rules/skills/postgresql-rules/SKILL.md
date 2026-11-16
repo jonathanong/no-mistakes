@@ -1,6 +1,6 @@
 ---
 name: postgresql-rules
-description: "MUST NOT / SHOULD NOT rules for PostgreSQL: queries, locks, transactions, schema, migrations, and partitioning. Use when writing or reviewing SQL, a migration, a repository/data-access function, or a query plan."
+description: "Load before writing or reviewing anything that sends SQL to PostgreSQL: a query through pg/node-postgres, Kysely, Drizzle, Prisma, or psql; a repository or data-access function; a migration; an index; or a query plan. Lists the defects to avoid and the patterns that need a stated reason: queries, locks, transactions, schema, migrations, partitioning."
 ---
 
 # PostgreSQL rules
