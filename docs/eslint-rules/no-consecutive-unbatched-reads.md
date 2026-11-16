@@ -40,6 +40,8 @@ Each candidate declarator or statement expression must contain exactly one confi
 
 Declarators are compared in execution order, including across statement boundaries; a non-read declarator breaks adjacency. Separate switch cases are never combined, and a return ends a sequence. Static computed method names are accepted. Both reads must target the same resolved client binding. Referencing any previous declared or assigned result binding, including a destructured binding, anywhere in the second read call exempts the pair. A dependency only in the surrounding conversion does not change whether that read can be batched. Compound assignments, assignments to properties or unresolved bindings, aliases, arbitrary control flow, and helper return values are not followed. Configured methods assert independent reads when no result dependency is visible; the rule does not prove purity of argument helpers or discover hidden dependencies. Keep such dependencies explicit in the second call or separate the statements.
 
+Assignments inside wrappers also establish result dependencies: after `Number(key = await client.get('a'))`, a read using `key` is not independent. Nested property writes, compound assignments, and increment/decrement operations are unsupported writes and break the pair rather than establishing a batching opportunity.
+
 ## Fix
 
 Use the client's batch API or a suitable concurrent operation when ordering and failure semantics permit. No automatic fix changes execution order.

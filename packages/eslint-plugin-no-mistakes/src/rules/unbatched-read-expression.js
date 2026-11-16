@@ -12,8 +12,6 @@ function conditionalChild(node, key) {
   if (node.type === "LogicalExpression") return key === "right";
   if (node.type === "ConditionalExpression") return key !== "test";
   if (node.type === "AssignmentPattern") return key === "right";
-  if (node.type === "AssignmentExpression" && ["&&=", "||=", "??="].includes(node.operator))
-    return key === "right";
   if (node.type === "CallExpression" && key === "arguments") return optionalChain(node);
   if (node.type === "MemberExpression" && key === "property") return optionalChain(node);
   return false;
@@ -21,8 +19,15 @@ function conditionalChild(node, key) {
 
 function findAwaitedRead(expression, context, match) {
   const candidates = [];
+  const assignments = [];
+  let unsupportedWrite = false;
   function visit(node, conditional) {
     if (!node || isFunction(node)) return;
+    if (node.type === "AssignmentExpression") {
+      if (node.operator === "=") assignments.push(node.left);
+      else unsupportedWrite = true;
+    }
+    if (node.type === "UpdateExpression") unsupportedWrite = true;
     if (node.type === "AwaitExpression") {
       const read = match(node.argument);
       if (read)
@@ -45,7 +50,9 @@ function findAwaitedRead(expression, context, match) {
     }
   }
   visit(expression, false);
-  return candidates.length === 1 && !candidates[0].conditional ? candidates[0].read : null;
+  return !unsupportedWrite && candidates.length === 1 && !candidates[0].conditional
+    ? { ...candidates[0].read, assignments }
+    : null;
 }
 
 module.exports = { findAwaitedRead };

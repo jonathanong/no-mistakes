@@ -101,3 +101,38 @@ async function optionalNonNull(k1: string, consume?: { method: (value: unknown) 
   const b = await consume?.method!(await kv.get('conditional'));
   const c = Number(await kv.ttl(k1));
 }
+
+async function assignedDependency(k1: string) {
+  let key;
+  Number(key = await kv.get(k1));
+  await kv.get(key);
+}
+
+async function initializedAssignmentDependency(k1: string) {
+  let key;
+  const a = Number(key = await kv.get(k1));
+  await kv.get(key);
+}
+
+async function destructuredAssignmentDependency(k1: string) {
+  let key;
+  JSON.stringify(({ key } = await kv.get(k1)));
+  await kv.get(key);
+}
+
+async function propertyAssignment(k1: string, holder: { key?: unknown }) {
+  Number(holder.key = await kv.get(k1));
+  await kv.get('next');
+}
+
+async function compoundAssignment(k1: string) {
+  let key = 0;
+  Number(key += await kv.get(k1));
+  await kv.get('next');
+}
+
+async function incrementedBinding(k1: string) {
+  let key = 0;
+  const a = combine(key++, await kv.get(k1));
+  await kv.get('next');
+}

@@ -35,16 +35,10 @@ module.exports = {
       if (statement.type === "ExpressionStatement") expression = statement.expression;
       if (statement.type === "VariableDeclarator") expression = statement.init;
       if (statement.type === "ReturnStatement") expression = statement.argument;
-      let assigned;
-      expression = unwrapExpression(expression);
-      if (expression?.type === "AssignmentExpression") {
-        if (expression.operator !== "=") return null;
-        assigned = expression.left;
-      }
       const root = statement.type === "VariableDeclarator" ? statement : expression;
       const matched = findAwaitedRead(root, context, configuredRead);
       if (!matched) return null;
-      const variables = assignedVariables(assigned);
+      const variables = matched.assignments.flatMap(assignedVariables);
       if (statement.type === "VariableDeclarator")
         variables.push(...context.sourceCode.getDeclaredVariables(statement));
       if (variables.includes(null)) return null;

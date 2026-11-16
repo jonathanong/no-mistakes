@@ -63,3 +63,9 @@ async function parenthesizedOptionalCallee(k1: string, k2: string, consume?: { m
   const a = Number(await kv.ttl(k1));
   const b = (consume?.method)(await kv.get(k2));
 }
+
+async function independentAssignment(k1: string, k2: string) {
+  let key;
+  Number(key = await kv.get(k1));
+  const b = Boolean(await kv.get(k2));
+}
