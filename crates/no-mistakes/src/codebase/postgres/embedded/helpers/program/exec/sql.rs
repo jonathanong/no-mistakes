@@ -4,7 +4,7 @@ use super::super::{Expr, Mark};
 use super::val::{empty_sql, Path, Text, Val};
 use super::Machine;
 use crate::codebase::postgres::embedded::helpers::split::{compose, plain, Marker};
-use crate::codebase::postgres::embedded::placeholders::internal_placeholder;
+use crate::codebase::postgres::embedded::placeholders::{internal_bind, internal_placeholder};
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
 
 /// A spliced literal keeps the physical line map exact only when it is one
@@ -38,8 +38,15 @@ impl Machine<'_> {
     }
 
     /// The placeholder a bound value leaves in the text.
-    fn bind(&self, mark: Mark) -> RecoveredSql {
-        self.text_at(internal_placeholder(1), mark)
+    fn bind(&self, mark: Mark, parameterizes_all: bool) -> RecoveredSql {
+        self.text_at(
+            if parameterizes_all {
+                internal_bind(1)
+            } else {
+                internal_placeholder(1)
+            },
+            mark,
+        )
     }
 
     /// The text a value contributes when appended or inlined as SQL.
@@ -109,7 +116,7 @@ impl Machine<'_> {
                 parts.push(match value {
                     Val::Sql(_) if !parameterizes_all => self.fragment(value, &path, *mark)?,
                     Val::Free if !parameterizes_all => return None,
-                    _ => self.bind(*mark),
+                    _ => self.bind(*mark, parameterizes_all),
                 });
             }
             let text = self.weave(pieces, parts)?;

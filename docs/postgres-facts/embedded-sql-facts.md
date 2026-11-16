@@ -25,12 +25,11 @@ Supported argument shapes:
 - template literals
 - identifiers bound in scope (`const q = \`SELECT ...\`; query(q)`)
 
-Template interpolations become `sql_placeholder_N` (1-based, in source
-order). The first quasi is copied as-is; each later quasi is prefixed with
-the next placeholder. User-authored text that happens to contain the
-`sql_placeholder_` substring is not renumbered when fragments are joined.
-This is the lock-ordering `sqlText` contract. It is intentionally different
-from a runtime-query helper, which joins quasis with `?`.
+Value interpolations in a parameterizing tag become `$N` binds, in the same
+order as the driver parameters. Untagged interpolations and unresolved
+identifier holes use `sql_placeholder_N` instead. Generated markers retain
+their provenance when fragments are joined; authored `$N` and
+`sql_placeholder_N` text is not renumbered.
 
 A same-file `const` string, no-substitution template, or `as const` scalar is
 spliced into that placeholder instead, including nested untagged templates up
@@ -73,10 +72,12 @@ as `sql_placeholder_N`. The hole is removed and the rest of the statement
 stays; a space is inserted only when the neighboring tokens would otherwise
 glue into one word. An unresolved identifier interpolation, including a
 frozen-record field, stays `sql_placeholder_N` until its alternatives are
-known. A value interpolation in that same trusted tag is a `$N` bind, numbered
-only among the value binds. Neither hole drops the tail after it. A trusted
-tag whose holes are all value binds still publishes each one as
-`sql_placeholder_N`. A resolved string constant, including a template that
+known. Every value interpolation in a parameterizing tag is a `$N` bind,
+including numeric and string constants and arguments to a table-valued
+function after `FROM`. One sequence covers the entire statement, including
+appended local and imported helper fragments. Identifier holes and raw SQL
+fragments do not consume value-bind numbers. Neither kind of hole drops the
+tail after it. A resolved string constant, including a template that
 builds one, stays that bind when the hole is a value. It is not copied into
 the statement as text. An imported number or other non-SQL value, including
 one referenced from a helper that is appended later, stays a bind too. It does
@@ -88,6 +89,13 @@ the hole's own digits when it is a numeric literal and the hole index
 otherwise, and with no separator. A separator is inserted only between two
 adjacent value holes of a tagged template. An empty fragment, or one that
 starts with its own punctuation, is spliced unchanged.
+
+For example, `SQL` followed by the template
+`` `SELECT ${id} FROM generate_series(1, ${HARD_MAX}) LIMIT ${HARD_MAX}` ``
+recovers `SELECT $1 FROM generate_series(1, $2) LIMIT $3`, even when
+`HARD_MAX` is imported. A reconstructed statement keeps exact rule evidence;
+generated bind markers alone do not create an opaque SQL tail. A genuinely
+unresolved SQL fragment still retains uncertainty.
 
 Numeric literal alternatives inside untagged template holes are stringified using
 JavaScript number formatting, including radix and exponent literals. For example,

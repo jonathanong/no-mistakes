@@ -1,4 +1,4 @@
-use super::{extract_embedded_sql_from_source, EmbeddedSqlKind, EmbeddedSqlOptions};
+use super::{EmbeddedSqlKind, EmbeddedSqlOptions, extract_embedded_sql_from_source};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -23,7 +23,7 @@ fn same_file_multistatement_helper_passed_to_write_is_composed() {
     assert_eq!(facts.calls[0].callee, "write");
     let sql = facts.calls[0].sql_text.as_deref().unwrap();
     assert!(sql.starts_with("UPDATE activitypub_inbox_deliveries"));
-    assert!(sql.contains("AND created_at < sql_placeholder_"));
+    assert!(sql.contains("AND created_at < $2"));
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn typed_parameter_builder_recovers_only_straight_line_static_appends() {
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("/* good */ SELECT id FROM items WHERE id = sql_placeholder_1")
+        Some("/* good */ SELECT id FROM items WHERE id = $1")
     );
     assert_eq!(facts.calls[1].kind, EmbeddedSqlKind::Composed);
     assert_eq!(
@@ -71,7 +71,7 @@ fn typed_parameter_builder_recovers_only_straight_line_static_appends() {
     }
     assert_eq!(
         facts.calls[12].sql_text.as_deref(),
-        Some("/* timed */ SELECT id FROM items WHERE id = sql_placeholder_1")
+        Some("/* timed */ SELECT id FROM items WHERE id = $1")
     );
     // The first project(timed, ...) mutates timed; later recovery cannot
     // reuse its original SELECT prefix as a complete builder snapshot.

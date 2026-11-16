@@ -21,7 +21,7 @@ pub(crate) mod helpers;
 mod options;
 mod placeholders;
 pub(crate) use placeholders::{
-    count_placeholders, publish_placeholders_with_positions, renumber_placeholders,
+    count_placeholders, publish_placeholders_with_positions, renumber_placeholders, INTERNAL_BIND,
     INTERNAL_PLACEHOLDER,
 };
 pub(crate) mod relative;
@@ -38,7 +38,7 @@ pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
 mod text;
 pub(crate) use tags::matches_trusted_sql_import;
-pub(super) use text::unpublished_sql_text;
+pub(super) use text::{positional_digits, unpublished_sql_text};
 pub use text::{executed_query_text, sql_text};
 pub(crate) mod walk;
 pub use bindings::{executor_bindings, is_database_call};
@@ -155,3 +155,7 @@ mod exact_origins_tests;
 
 #[cfg(test)]
 mod template_recovery_fixture_tests;
+
+#[cfg(test)]
+#[path = "embedded/placeholder_bind_tests.rs"]
+mod placeholder_bind_tests;

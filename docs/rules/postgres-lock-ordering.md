@@ -1,5 +1,11 @@
 # `postgres-lock-ordering`
 
+Parameterized value holes, including imported numeric constants inside
+appended helpers, retain a single `$N` sequence across the complete statement.
+Statement-form `.append()` and `.append()` of raw string text preserve that
+SQL text. Known SQL is parsed normally; a genuinely unresolved fragment stays
+opaque rather than producing a parse error from a substituted fragment.
+
 `executorNames` replaces the default `[query, read, write]` list; it does not
 extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
 and add names. Setting both options is a configuration error. When a replacement

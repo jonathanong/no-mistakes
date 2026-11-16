@@ -79,7 +79,8 @@ pub(crate) fn fragment_separator(text: &str, start: usize, end: usize) -> bool {
 
 /// A value hole: comparison or arithmetic operand, `LIMIT`/`OFFSET`,
 /// `VALUES` list, or function argument. A column list after
-/// `INTO`/`UPDATE`/`FROM`/`JOIN`/`TABLE` is not one.
+/// `INTO`/`UPDATE`/`TABLE` is not one. A relation function after
+/// `FROM` or `JOIN` still takes value arguments.
 pub(crate) fn value_position(text: &str) -> bool {
     let trimmed = text.trim_end();
     let Some(tail) = trimmed.chars().next_back() else {
@@ -108,7 +109,7 @@ pub(crate) fn value_position(text: &str) -> bool {
         return true;
     }
     let prev = ident_before(before, word);
-    if ["into", "update", "from", "join", "table"]
+    if ["into", "update", "table"]
         .iter()
         .any(|keyword| prev.eq_ignore_ascii_case(keyword))
     {

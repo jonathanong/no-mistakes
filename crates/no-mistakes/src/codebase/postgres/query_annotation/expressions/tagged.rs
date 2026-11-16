@@ -48,10 +48,19 @@ pub(super) fn tagged(
         let mut parts = Vec::new();
         for (index, quasi) in value.quasi.quasis.iter().enumerate() {
             if index > 0 {
-                parts.push(Expr::Text(format!(
-                    "{}{index}",
-                    super::super::super::embedded::INTERNAL_PLACEHOLDER
-                )));
+                let previous = crate::ast::template_quasi_text(&value.quasi.quasis[index - 1]);
+                let text = if previous.ends_with('$') {
+                    super::super::super::embedded::positional_digits(
+                        &value.quasi.expressions[index - 1],
+                        index,
+                    )
+                } else {
+                    format!(
+                        "{}{index}",
+                        super::super::super::embedded::INTERNAL_PLACEHOLDER
+                    )
+                };
+                parts.push(Expr::Text(text));
             }
             parts.push(Expr::Text(
                 crate::ast::template_quasi_text(quasi).into_owned(),

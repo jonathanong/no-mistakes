@@ -1,5 +1,10 @@
 # `postgres-conflict-ordering`
 
+Numeric constants in parameterizing SQL tags remain value binds, including
+inside `LIMIT` and table-valued function arguments such as `generate_series`.
+They do not make a reconstructed statement opaque. Conflict checks and
+suppression usage therefore still apply to the complete statement.
+
 `executorNames` replaces the default `[query, read, write]` list; it does not
 extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
 and add names. Setting both options is a configuration error. When a replacement

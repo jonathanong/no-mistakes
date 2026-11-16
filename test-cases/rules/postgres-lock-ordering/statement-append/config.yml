@@ -5,3 +5,7 @@ rules:
     include: [src/lock.ts]
     options:
       importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: sql-template-strings
+          name: default
+      schemaCatalogPath: schema.json

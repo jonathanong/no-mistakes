@@ -1,4 +1,4 @@
-use super::{extract_embedded_sql_from_source, EmbeddedSqlKind, EmbeddedSqlOptions};
+use super::{EmbeddedSqlKind, EmbeddedSqlOptions, extract_embedded_sql_from_source};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -34,9 +34,7 @@ fn function_local_write_append_is_composed() {
     assert_eq!(facts.calls[0].callee, "write");
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some(
-            "UPDATE topics SET title = sql_placeholder_1 WHERE id = sql_placeholder_2 AND published = true"
-        )
+        Some("UPDATE topics SET title = $1 WHERE id = $2 AND published = true")
     );
 }
 
@@ -46,9 +44,7 @@ fn append_of_a_bound_helper_sql_statement_is_composed() {
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some(
-            "SELECT id FROM topics WHERE published = true AND tenant_id = sql_placeholder_1 ORDER BY id"
-        )
+        Some("SELECT id FROM topics WHERE published = true AND tenant_id = $1 ORDER BY id")
     );
 }
 
@@ -58,7 +54,7 @@ fn append_of_a_helper_sql_statement_call_is_composed() {
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT id FROM topics WHERE published = true AND tenant_id = sql_placeholder_1")
+        Some("SELECT id FROM topics WHERE published = true AND tenant_id = $1")
     );
 }
 

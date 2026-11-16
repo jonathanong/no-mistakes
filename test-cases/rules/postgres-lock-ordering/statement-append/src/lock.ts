@@ -12,6 +12,6 @@ export async function lockPlacement(ref: { kind: string; id: string }, imageId: 
   await db.query(stmt);
 }
 
-export function unparseableControl() {
-  return db.query(SQL`SELECT id FROM placements FOR UPDATE OF`);
+export function noncanonicalControl(ids: string[]) {
+  return db.query(SQL`SELECT placement.id FROM placements placement WHERE placement.id = ANY(${ids}::uuid[]) ORDER BY placement.surface_id FOR UPDATE OF placement`);
 }

@@ -6,3 +6,6 @@ rules:
     options:
       importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
+      trustedSqlTags:
+        - module: sql-template-strings
+          name: default

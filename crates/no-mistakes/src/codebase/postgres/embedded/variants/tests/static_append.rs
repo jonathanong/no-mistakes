@@ -23,12 +23,12 @@ fn deterministic_trusted_appends_keep_a_parseable_singleton_and_physical_binds()
         assert!(!call.variants_truncated());
     }
     let direct = &file.calls[0].variants[0];
-    assert_eq!(direct.sql_text, "SELECT id FROM users WHERE owner = sql_placeholder_1 AND active AND team = sql_placeholder_2");
+    assert_eq!(
+        direct.sql_text,
+        "SELECT id FROM users WHERE owner = $1 AND active AND team = $2"
+    );
     assert_eq!(direct.recovered_placeholder_positions.len(), 2);
-    for (marker, origin) in [
-        ("sql_placeholder_1", "${owner}"),
-        ("sql_placeholder_2", "${team}"),
-    ] {
+    for (marker, origin) in [("$1", "${owner}"), ("$2", "${team}")] {
         assert_eq!(
             direct
                 .sql_source_offsets

@@ -3,6 +3,8 @@ use crate::codebase::postgres::{
     EmbeddedSqlOptions, ExecutedPostgresSource,
 };
 
+mod parameterized;
+
 fn extract(name: &str) -> Vec<super::ExecutedPostgresSql> {
     extract_with_imports(name, false)
 }

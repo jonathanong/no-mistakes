@@ -8,3 +8,7 @@ rules:
       relations:
         - table: candidates
           requireColumns: [owner_id]
+      trustedSqlTags:
+        - module: sql-template-strings
+          name: default
+      schemaCatalogPath: schema.json

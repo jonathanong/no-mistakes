@@ -67,7 +67,7 @@ fn builder_text_executor_arguments_recover_composed_sql_and_fail_closed() {
     let sql = straight.sql_text.as_deref().expect("recovered SQL");
     assert!(sql.contains("WITH picked AS"), "{sql}");
     assert!(sql.contains("view_active_plans"), "{sql}");
-    assert!(sql.contains("sql_placeholder_"), "{sql}");
+    assert!(sql.contains("p.tier = $1"), "{sql}");
 
     let branching = call_in_function(&facts, &source, "branching");
     assert_eq!(branching.kind, EmbeddedSqlKind::Dynamic);

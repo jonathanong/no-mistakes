@@ -1,4 +1,4 @@
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
 use std::path::PathBuf;
 
 fn case_root(rule: &str, name: &str) -> PathBuf {
@@ -9,7 +9,7 @@ fn case_root(rule: &str, name: &str) -> PathBuf {
 
 #[test]
 fn postgres_reopen_shapes_check_json_snapshot() {
-    assert_saved_fixture(
+    let reports = assert_saved_fixture_report(
         "postgres_reopen_shapes",
         &[
             (
@@ -37,5 +37,61 @@ fn postgres_reopen_shapes_check_json_snapshot() {
                 rules_path("postgres-conflict-ordering", "imported-limit", "config.yml"),
             ),
         ],
+        &[],
+        &["--include-sql-verdicts"],
     );
+    for (case, rule, expected) in [
+        ("cross_module_claim", "postgres-lock-ordering", 1),
+        ("statement_append", "postgres-lock-ordering", 1),
+        ("raw_column_append", "postgres-required-predicates", 1),
+        ("imported_limit", "postgres-conflict-ordering", 2),
+    ] {
+        let report = &reports[case]["report"];
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), expected, "{case}: {report}");
+        assert!(findings.iter().all(|finding| finding["rule"] == rule));
+        assert!(
+            report["warnings"].as_array().unwrap().is_empty(),
+            "{report}"
+        );
+        assert!(!report.to_string().contains("unused-disable"), "{report}");
+        let verdicts = report["sqlVerdicts"].as_array().unwrap();
+        assert!(!verdicts.is_empty(), "{case}: {report}");
+        assert!(verdicts.iter().any(|row| row["status"] == "violation"));
+        assert!(
+            verdicts.iter().all(|row| {
+                row["status"] != "abstain"
+                    && (row["evidence"] == "exact" || row["evidence"] == "exhaustive-union")
+                    && row.get("residualReasons").is_none()
+            }),
+            "{case}: {report}"
+        );
+        if case == "imported_limit" {
+            assert_eq!(verdicts.len(), 4, "{report}");
+            for file in ["src/insert.ts", "src/root-cause.ts"] {
+                assert_eq!(
+                    findings.iter().filter(|row| row["file"] == file).count(),
+                    1,
+                    "{report}"
+                );
+            }
+            assert!(verdicts
+                .iter()
+                .all(|row| { row["evidence"] == "exact" && row["status"] == "violation" }));
+        } else if case == "raw_column_append" {
+            assert_eq!(verdicts.len(), 2, "{report}");
+            assert!(verdicts.iter().all(|row| row["status"] == "violation"));
+        } else {
+            assert!(verdicts.iter().any(|row| row["status"] == "proven-clear"));
+        }
+        for finding in findings {
+            let expected_target = match case {
+                "raw_column_append" => "candidates",
+                "imported_limit" if finding["file"] == "src/root-cause.ts" => "targetless-arbiter",
+                "imported_limit" => "missing-canonical-order",
+                _ => "lock-ordering",
+            };
+            assert_eq!(finding["target"], expected_target, "{case}: {finding}");
+        }
+    }
 }

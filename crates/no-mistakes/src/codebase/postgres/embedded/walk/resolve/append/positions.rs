@@ -8,7 +8,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 pub(in crate::codebase::postgres::embedded::walk) fn fragment(
     call: &CallExpression<'_>,
     visitor: &ScopeVisitor<'_>,
-    offset: u32,
+    offset: placeholders::Counts,
 ) -> (u32, Vec<EmbeddedSqlSourcePosition>) {
     // apply_append has already verified that its first argument is static.
     let expression = call.arguments[0].as_expression().unwrap();
@@ -33,7 +33,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn fragment(
         visitor.source,
         call.span.start as usize,
         line,
-        offset as usize,
+        offset.all as usize,
     );
     (line, positions)
 }
@@ -41,19 +41,19 @@ pub(in crate::codebase::postgres::embedded::walk) fn fragment(
 pub(in crate::codebase::postgres::embedded) fn renumber(
     positions: &mut [EmbeddedSqlSourcePosition],
     sql: &str,
-    offset: u32,
+    offset: impl Into<placeholders::Counts>,
 ) {
+    let offset = offset.into();
     for position in positions {
         let original_column = position.sql_column;
-        for (index, (at, _)) in sql
-            .match_indices(placeholders::INTERNAL_PLACEHOLDER)
-            .enumerate()
-        {
-            let digits = sql[at + placeholders::INTERNAL_PLACEHOLDER.len()..]
+        let mut seen = placeholders::Counts::default();
+        for (at, internal, _) in placeholders::markers(sql) {
+            let ordinal = seen.next(internal);
+            let digits = sql[at + internal.len()..]
                 .bytes()
                 .take_while(u8::is_ascii_digit)
                 .count();
-            let delta = (offset as usize + index + 1).to_string().len() as i32 - digits as i32;
+            let delta = (offset.shift(internal) + ordinal).to_string().len() as i32 - digits as i32;
             let prefix = placeholders::publish_placeholders(sql[..at].to_string());
             let line = prefix.bytes().filter(|byte| *byte == b'\n').count() as u32 + 1;
             let column = prefix.rsplit('\n').next().unwrap().chars().count() as u32 + 1;

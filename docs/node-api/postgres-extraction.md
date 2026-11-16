@@ -1,5 +1,11 @@
 # PostgreSQL executor extraction
 
+Parameterized SQL values use one `$N` sequence, including numeric and string
+constants and value holes in appended helper fragments. Unresolved identifier
+holes retain `sql_placeholder_N`. Generated bind provenance still distinguishes
+an unknown bound value from an opaque SQL fragment; it does not prevent exact
+rule evidence for a reconstructed statement.
+
 PostgreSQL rules invoked through `check()` or an `analyzeProject()` check query
 use the same explicit executor configuration as the CLI. Set `importSpecifier`,
 `executorNames`, or `extraExecutorNames` in the rule options to select embedded

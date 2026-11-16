@@ -136,11 +136,12 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
         || {
             (
                 line,
-                source_positions::for_expression(
+                source_positions::for_rendered_expression(
                     expr,
                     visitor.source,
                     expr.span().start as usize,
                     line,
+                    Some(&sql),
                 ),
                 source_positions::origins::expression(expr, visitor.source, &sql),
                 Default::default(),

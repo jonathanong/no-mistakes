@@ -44,6 +44,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             })
             .collect::<Vec<_>>();
+        let parameterized = trusted_tag && self.files[path].facts.parameterized_tags.contains(tag);
         let trusted_raw = tag == "String.raw" && trusted_tag;
         let interpolation_mutates = effects
             .iter()
@@ -74,6 +75,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         .is_some_and(|effect| self.tag_helper(effect, path, *env)));
             let value = if fragment {
                 Value::Unknown
+            } else if parameterized && index % 2 == 1 {
+                match part {
+                    Expr::Text(text) => Value::Prefix(
+                        if text
+                            .starts_with(crate::codebase::postgres::embedded::INTERNAL_PLACEHOLDER)
+                        {
+                            format!("{}1", crate::codebase::postgres::embedded::INTERNAL_BIND)
+                        } else {
+                            text.clone()
+                        },
+                        true,
+                        None,
+                    ),
+                    _ => self.expr(part, path, env, depth, generic),
+                }
             } else {
                 self.expr(part, path, env, depth, generic)
             };

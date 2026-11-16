@@ -1,6 +1,6 @@
 use crate::codebase::postgres::{
-    extract_embedded_sql_from_source, EmbeddedSqlOptions, SqlBoundItemKind, SqlPinSource,
-    TrustedSqlTag,
+    EmbeddedSqlOptions, SqlBoundItemKind, SqlPinSource, TrustedSqlTag,
+    extract_embedded_sql_from_source,
 };
 
 #[test]
@@ -20,10 +20,11 @@ fn repeated_primitive_bindings_keep_private_identity_through_bound_extraction() 
     };
     assert_eq!(call.bound_value_origins.len(), 2, "{call:#?}");
     let declaration = source.find("userId: number").unwrap() as u32;
-    assert!(call
-        .bound_value_origins
-        .iter()
-        .all(|(_, _, id)| *id == declaration));
+    assert!(
+        call.bound_value_origins
+            .iter()
+            .all(|(_, _, id)| *id == declaration)
+    );
     assert_eq!(call.bound_value_sql, call.sql_text);
     let sql = call.sql_text.as_deref().unwrap();
     assert!(sql.contains("m.user_id >= sql_placeholder_2"));
@@ -46,10 +47,12 @@ fn repeated_primitive_bindings_keep_private_identity_through_bound_extraction() 
         .flat_map(|bound| &bound.query.items)
         .find(|item| matches!(&item.kind, SqlBoundItemKind::Table(name) if name == "members"))
         .expect("saved scalar relation");
-    assert!(member
-        .pins
-        .iter()
-        .any(|pin| pin.column == "group_id" && matches!(pin.source, SqlPinSource::Value)));
+    assert!(
+        member
+            .pins
+            .iter()
+            .any(|pin| pin.column == "group_id" && matches!(pin.source, SqlPinSource::Value))
+    );
     assert!(
         member
             .pins
@@ -71,8 +74,8 @@ fn repeated_parameter_fields_keep_distinct_sql_placeholders_and_shared_identity(
         panic!("one saved executor call");
     };
     let sql = call.sql_text.as_deref().unwrap();
-    assert!(sql.contains("m.user_id >= sql_placeholder_2"));
-    assert!(sql.contains("m.user_id <= sql_placeholder_3"));
+    assert!(sql.contains("m.user_id >= $2"));
+    assert!(sql.contains("m.user_id <= $3"));
     assert_eq!(call.bound_value_sql, call.sql_text);
     let binds = super::collect(call, &path);
     assert_eq!(binds.len(), 4, "{call:#?}");

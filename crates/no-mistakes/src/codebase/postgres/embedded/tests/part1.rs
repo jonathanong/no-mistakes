@@ -11,7 +11,7 @@ fn tagged_template_uses_placeholder_convention() {
         .unwrap();
     assert_eq!(
         call.sql_text.as_deref(),
-        Some("SELECT id FROM users WHERE id = sql_placeholder_1")
+        Some("SELECT id FROM users WHERE id = $1")
     );
 }
 

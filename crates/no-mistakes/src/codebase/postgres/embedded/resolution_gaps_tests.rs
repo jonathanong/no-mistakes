@@ -1,4 +1,4 @@
-use super::{extract_embedded_sql_from_source, EmbeddedSqlKind, EmbeddedSqlOptions};
+use super::{EmbeddedSqlKind, EmbeddedSqlOptions, extract_embedded_sql_from_source};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -96,6 +96,6 @@ fn append_does_not_renumber_user_authored_placeholder_substrings() {
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT sql_placeholder_1 AS sql_placeholder_1")
+        Some("SELECT $1 AS sql_placeholder_1")
     );
 }

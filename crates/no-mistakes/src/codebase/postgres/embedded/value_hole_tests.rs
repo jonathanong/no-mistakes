@@ -1,4 +1,4 @@
-use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions, TrustedSqlTag};
+use super::{EmbeddedSqlOptions, TrustedSqlTag, extract_embedded_sql_from_source};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -29,10 +29,7 @@ fn sqls(name: &str) -> String {
 #[test]
 fn value_constants_stay_bind_parameters() {
     let sql = sqls("src/values.ts");
-    assert!(
-        sql.contains("VALUES (sql_placeholder_1, sql_placeholder_2)"),
-        "{sql}"
-    );
+    assert!(sql.contains("VALUES ($1, $2)"), "{sql}");
     assert!(sql.contains("WHERE slug = sql_placeholder_1"), "{sql}");
     assert!(sql.contains("username = sql_placeholder_1"), "{sql}");
     assert!(sql.contains("LOWER(sql_placeholder_1)"), "{sql}");
@@ -48,9 +45,9 @@ fn value_constants_stay_bind_parameters() {
 #[test]
 fn adjacent_holes_keep_a_separator() {
     let sql = sqls("src/holes.ts");
-    assert!(sql.contains("sql_placeholder_2 sql_placeholder_3"), "{sql}");
+    assert!(sql.contains("$2 $3"), "{sql}");
     assert!(sql.contains("WHERE n = $4"), "{sql}");
-    assert!(!sql.contains("sql_placeholder_2sql_placeholder_3"), "{sql}");
+    assert!(!sql.contains("$2$3"), "{sql}");
     assert!(!sql.contains("$ sql_placeholder"), "{sql}");
     assert!(!sql.contains("$sql_placeholder"), "{sql}");
 }

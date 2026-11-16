@@ -167,7 +167,7 @@ fn filled_boundary(
     boundary: usize,
 ) -> Option<usize> {
     let mut prefix = String::new();
-    let (mut start, mut binds) = (0, 0);
+    let (mut start, mut binds) = (0, Default::default());
     for (range, site) in markers {
         if range.start >= boundary {
             break;
@@ -187,7 +187,11 @@ fn filled_boundary(
     Some(publish_placeholders(prefix).len())
 }
 
-fn append(prefix: &mut String, text: &str, binds: &mut u32) {
+fn append(
+    prefix: &mut String,
+    text: &str,
+    binds: &mut crate::codebase::postgres::embedded::placeholders::Counts,
+) {
     prefix.push_str(&renumber_placeholders(text, *binds));
     *binds += count_placeholders(text);
 }

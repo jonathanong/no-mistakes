@@ -11,10 +11,7 @@ fn mutable_builder_loops_keep_zero_and_one_with_an_unknown_residual() {
         assert!(call.is_unanalyzable());
     }
     assert_eq!(texts(&calls[0]), ["SELECT 1", "SELECT 1 LIMIT 1"]);
-    assert_eq!(
-        texts(&calls[1]),
-        ["SELECT 2", "SELECT 2 WHERE id = sql_placeholder_1"]
-    );
+    assert_eq!(texts(&calls[1]), ["SELECT 2", "SELECT 2 WHERE id = $1"]);
     assert_eq!(
         calls[1].variants[1].recovered_placeholder_positions.len(),
         1

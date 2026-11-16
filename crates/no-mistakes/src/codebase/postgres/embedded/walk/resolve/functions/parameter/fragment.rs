@@ -62,7 +62,13 @@ pub(super) fn append(
     )?
     .sql;
     let line = byte_offset_to_line(source, call.span.start as usize);
-    let positions = source_positions::for_expression(arg, source, call.span.start as usize, line);
+    let positions = source_positions::for_rendered_expression(
+        arg,
+        source,
+        call.span.start as usize,
+        line,
+        Some(&sql),
+    );
     let origins = origins::collect(arg, source, &sql);
     Some(ParameterFragment {
         append_site: call.span.start,

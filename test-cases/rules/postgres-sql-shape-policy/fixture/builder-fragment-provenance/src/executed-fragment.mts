@@ -1,4 +1,4 @@
-import sql from 'sql-template-strings'
+import { sql } from '@example/db'
 import { query } from '@data-stores/psql'
 
 export function executedAndFragment(after: string) {

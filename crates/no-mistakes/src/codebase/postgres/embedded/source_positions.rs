@@ -4,7 +4,9 @@ use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_span::GetSpan;
 use std::path::PathBuf;
 
+mod binds;
 mod compose;
+pub(in crate::codebase::postgres::embedded) use binds::for_rendered_expression;
 pub(in crate::codebase::postgres::embedded) mod origins;
 mod variants;
 pub(in crate::codebase::postgres::embedded) use variants::piece;
@@ -192,3 +194,6 @@ impl Positions {
         }
     }
 }
+
+#[cfg(test)]
+mod binds_tests;

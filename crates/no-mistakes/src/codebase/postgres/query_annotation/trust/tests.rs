@@ -150,3 +150,31 @@ fn canonical_module_tags_preserve_legacy_fallback_without_widening_shadows() {
         "a default class is not the intrinsic String tag: {class_tags:?}"
     );
 }
+
+#[test]
+fn parameterizing_tags_follow_import_ownership_and_raw_overrides() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/parameterized-bind-trust.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    for raw in [false, true] {
+        let mut options = super::super::super::EmbeddedSqlOptions::configured("", &[]);
+        if raw {
+            options = options.with_raw_sql_tags(&[super::super::super::TrustedSqlTag {
+                module: "sql-template-strings".into(),
+                name: "sql".into(),
+            }]);
+        }
+        let (_, parameterized) =
+            crate::ast::with_program(&path, &source, |program, _| collect_tags(program, &options))
+                .unwrap();
+        let names = if raw {
+            vec!["SQL", "alias"]
+        } else {
+            vec!["SQL", "alias", "sQl"]
+        };
+        assert_eq!(
+            parameterized,
+            names.into_iter().map(str::to_string).collect()
+        );
+    }
+}

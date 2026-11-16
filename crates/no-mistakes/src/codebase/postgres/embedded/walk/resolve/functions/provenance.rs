@@ -41,8 +41,13 @@ impl RecoveredSql {
 
     pub(crate) fn literal(expr: &Expression<'_>, source: &str, sql: String) -> Self {
         let line = byte_offset_to_line(source, expr.span().start as usize);
-        let mut positions =
-            source_positions::for_expression(expr, source, expr.span().start as usize, line);
+        let mut positions = source_positions::for_rendered_expression(
+            expr,
+            source,
+            expr.span().start as usize,
+            line,
+            Some(&sql),
+        );
         positions.insert(
             0,
             EmbeddedSqlSourcePosition {

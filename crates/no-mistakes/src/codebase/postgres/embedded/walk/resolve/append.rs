@@ -49,7 +49,7 @@ pub(crate) fn apply_append_to(
         .lookup(name)
         .and_then(|binding| binding.sql)
         .map(|sql| count_placeholders(&sql))
-        .unwrap_or(0);
+        .unwrap_or_default();
     let (fragment_line, fragment_positions) = positions::fragment(call, visitor, offset);
     for scope in visitor.scopes.iter_mut().rev() {
         if let Some(binding) = scope.get_mut(name) {

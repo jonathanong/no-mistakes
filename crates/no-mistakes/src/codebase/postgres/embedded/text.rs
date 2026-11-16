@@ -62,7 +62,7 @@ pub(in crate::codebase::postgres::embedded) fn render_hole(
     }
 }
 
-pub(in crate::codebase::postgres::embedded) fn positional_digits(
+pub(in crate::codebase::postgres) fn positional_digits(
     hole: &Expression<'_>,
     index: usize,
 ) -> String {

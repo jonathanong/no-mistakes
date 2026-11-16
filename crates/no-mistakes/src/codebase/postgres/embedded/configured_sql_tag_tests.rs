@@ -1,7 +1,7 @@
-use super::{extract_embedded_sql_from_source, EmbeddedSqlKind, EmbeddedSqlOptions, TrustedSqlTag};
+use super::{EmbeddedSqlKind, EmbeddedSqlOptions, TrustedSqlTag, extract_embedded_sql_from_source};
 use crate::codebase::rules::postgres_no_offset::{self, check_with_files};
-use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::schema::{RuleDef, RuleScope};
 use std::path::{Path, PathBuf};
 
 fn fixture(name: &str) -> PathBuf {
@@ -88,11 +88,13 @@ fn shadowed_sql_parameter_is_not_the_configured_binding() {
     let calls = calls("configured-sql-tag-shadowed-param.ts");
     assert_eq!(calls.len(), 2, "{calls:?}");
     assert_eq!(calls[0].kind, EmbeddedSqlKind::Inline);
-    assert!(calls[0]
-        .sql_text
-        .as_deref()
-        .unwrap()
-        .contains("sql_placeholder_1"));
+    assert!(
+        calls[0]
+            .sql_text
+            .as_deref()
+            .unwrap()
+            .contains("sql_placeholder_1")
+    );
     assert_eq!(calls[1].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(
         finding_lines("configured-sql-tag-shadowed-param.ts"),
@@ -105,11 +107,7 @@ fn cased_sql_export_from_sql_template_strings_stays_trusted() {
     let calls = calls("configured-sql-tag-cased-export.ts");
     assert_eq!(calls.len(), 1, "{calls:?}");
     assert_eq!(calls[0].kind, EmbeddedSqlKind::Inline);
-    assert!(calls[0]
-        .sql_text
-        .as_deref()
-        .unwrap()
-        .contains("sql_placeholder_1"));
+    assert!(calls[0].sql_text.as_deref().unwrap().contains("$1"));
     assert!(finding_lines("configured-sql-tag-cased-export.ts").is_empty());
 }
 

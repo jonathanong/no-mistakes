@@ -1,13 +1,13 @@
-//! A parameterized tag keeps unknown identifier and frozen-member holes.
-//! Value interpolations stay the ordinary placeholder spelling unless one of
-//! those holes shares the template. Then each value bind is `$N`, numbered
-//! only among the binds, and the text after every hole stays.
+//! Parameterized values keep generated bind identities through composition.
+//! Identifier and frozen-member holes retain their independently resolved text.
 
 use super::super::super::ScopeVisitor;
 use super::untrusted_tag;
 use crate::codebase::postgres::embedded::helpers::sentinel;
 use crate::codebase::postgres::embedded::tags::{self, quasi_text};
-use crate::codebase::postgres::embedded::{text::positional_digits, unpublished_sql_text};
+use crate::codebase::postgres::embedded::{
+    placeholders::internal_bind, text::positional_digits, unpublished_sql_text,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TaggedTemplateExpression};
 
@@ -26,39 +26,31 @@ pub(super) fn text(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<
     {
         return Some(ordinary);
     }
-    let (spliced, fragment) = splice(visitor, tagged);
-    if fragment || sentinel::contains(&spliced) {
-        Some(spliced)
-    } else {
-        Some(ordinary)
-    }
+    Some(splice(visitor, tagged))
 }
 
-fn splice(visitor: &ScopeVisitor<'_>, tagged: &TaggedTemplateExpression<'_>) -> (String, bool) {
+fn splice(visitor: &ScopeVisitor<'_>, tagged: &TaggedTemplateExpression<'_>) -> String {
     let mut out = String::new();
     let mut binds = 0usize;
-    let mut fragment = false;
     for (index, quasi) in tagged.quasi.quasis.iter().enumerate() {
         let before = quasi_text(quasi, false);
         out.push_str(&before);
         let Some(hole) = tagged.quasi.expressions.get(index) else {
             continue;
         };
-        if let Some(piece) = piece(visitor, hole, index as u32 + 1, &out) {
-            fragment = true;
-            out.push_str(&piece);
-        } else if before.ends_with('$') {
+        if before.ends_with('$') {
             out.push_str(&positional_digits(hole, index + 1));
+        } else if let Some(piece) = piece(visitor, hole, index as u32 + 1, &out) {
+            out.push_str(&piece);
         } else {
             binds += 1;
             if !out.is_empty() && before.is_empty() {
                 out.push(' ');
             }
-            out.push('$');
-            out.push_str(&binds.to_string());
+            out.push_str(&internal_bind(binds));
         }
     }
-    (out, fragment)
+    out
 }
 
 fn piece(

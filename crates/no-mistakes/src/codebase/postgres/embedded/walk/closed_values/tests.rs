@@ -1,6 +1,6 @@
 use crate::codebase::postgres::embedded::tests::{fixture, read_fixture};
 use crate::codebase::postgres::embedded::{
-    extract_embedded_sql_from_source, EmbeddedSqlOptions, SqlIdentifierAssertion,
+    EmbeddedSqlOptions, SqlIdentifierAssertion, extract_embedded_sql_from_source,
 };
 #[test]
 fn helper_model_resolves_missing_default_for_each_literal_argument() {
@@ -130,7 +130,7 @@ fn explicitly_raw_tags_enumerate_while_parameterized_tags_keep_bind_values() {
     );
     assert_eq!(
         facts.calls[1].sql_text.as_deref(),
-        Some("SELECT * FROM users WHERE name = sql_placeholder_1")
+        Some("SELECT * FROM users WHERE name = $1")
     );
     assert!(facts.calls[2].variants.is_empty());
     assert!(facts.calls[2].is_unanalyzable());

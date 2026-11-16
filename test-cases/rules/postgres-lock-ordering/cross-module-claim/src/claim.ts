@@ -11,6 +11,6 @@ export function claimWork(ids: string[], now: Date) {
   );
 }
 
-export function unparseableControl() {
-  return query(SQL`SELECT id FROM work FOR UPDATE OF`);
+export function noncanonicalControl(ids: string[]) {
+  return query(SQL`SELECT work.id FROM work WHERE work.id = ANY(${ids}::uuid[]) ORDER BY work.record_id FOR UPDATE OF work`);
 }

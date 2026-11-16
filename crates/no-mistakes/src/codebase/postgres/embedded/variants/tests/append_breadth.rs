@@ -38,9 +38,11 @@ fn append_budget_keeps_all_singletons_then_pairs_and_an_unknown_residual() {
     let prepared =
         crate::codebase::postgres::collect::dml::embedded_call_facts(&file, false, false);
     assert_eq!(prepared.len(), 39);
-    assert!(prepared
-        .iter()
-        .all(|facts| facts.variant_locations.is_some()));
+    assert!(
+        prepared
+            .iter()
+            .all(|facts| facts.variant_locations.is_some())
+    );
     assert_eq!(
         prepared.iter().filter(|facts| facts.parse_failed).count(),
         1
@@ -72,29 +74,17 @@ fn template_strings_parameterizes_all_interpolations_and_composes_deep_chains() 
     assert_eq!(calls.len(), 7);
     assert_eq!(
         calls[0].sql_text.as_deref(),
-        Some("SELECT sql_placeholder_1 WHERE id = sql_placeholder_2 AND n = sql_placeholder_3")
+        Some("SELECT $1 WHERE id = $2 AND n = $3")
     );
     assert_eq!(calls[0].recovered_placeholder_positions.len(), 3);
-    assert_eq!(
-        texts(&calls[1]),
-        [
-            "SELECT sql_placeholder_1",
-            "SELECT sql_placeholder_1 WHERE id = sql_placeholder_2"
-        ]
-    );
+    assert_eq!(texts(&calls[1]), ["SELECT $1", "SELECT $1 WHERE id = $2"]);
     assert_eq!(texts(&calls[2]), ["SELECT 1", "SELECT 1 /* suffix */"]);
     assert_eq!(
         calls[3].sql_text.as_deref(),
         Some(format!("SELECT 7{}", " /* link */".repeat(20)).as_str())
     );
     assert!(!calls[3].is_unanalyzable());
-    assert_eq!(
-        calls[4].sql_text.as_deref(),
-        Some("SELECT sql_placeholder_1")
-    );
+    assert_eq!(calls[4].sql_text.as_deref(), Some("SELECT $1"));
     assert_eq!(calls[5].sql_text.as_deref(), Some("SELECT 8 WHERE active"));
-    assert_eq!(
-        calls[6].sql_text.as_deref(),
-        Some("SELECT sql_placeholder_1")
-    );
+    assert_eq!(calls[6].sql_text.as_deref(), Some("SELECT $1"));
 }
