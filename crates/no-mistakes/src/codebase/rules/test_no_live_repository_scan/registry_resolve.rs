@@ -15,7 +15,7 @@ pub(super) struct RegistryResolver<'a> {
 }
 
 enum ResolverKind<'a> {
-    Scoped(ScopedImportResolver<'a>),
+    Scoped(Box<ScopedImportResolver<'a>>),
     Fallback(ImportResolver<'static>),
 }
 
@@ -25,10 +25,10 @@ impl<'a> RegistryResolver<'a> {
         visible: &dyn VisiblePathLookup,
     ) -> Self {
         let kind = match resolution.catalog {
-            Some(catalog) => ResolverKind::Scoped(match resolution.session {
+            Some(catalog) => ResolverKind::Scoped(Box::new(match resolution.session {
                 Some(session) => ScopedImportResolver::new_in_session(catalog, visible, session),
                 None => ScopedImportResolver::from_visible(catalog, visible),
-            }),
+            })),
             None => {
                 ResolverKind::Fallback(ImportResolver::new_owned(Arc::new(TsConfig::default())))
             }
