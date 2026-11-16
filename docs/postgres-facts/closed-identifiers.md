@@ -97,9 +97,10 @@ function assertSafeSqlIdentifier(table: string) {
 A parameter or catch binding named `Set` drops that helper proof: `new Set`
 would no longer be the intrinsic constructor. Enumerating a parameter's
 string-literal union lets `postgres-no-test-state-mutation` and
-`postgres-bounded-statements` check each variant. It does not satisfy
-`postgres-no-unbounded-sql-identifier`. That rule still needs a runtime switch,
-a runtime record literal return, or a configured allowlist assertion.
+`postgres-bounded-statements` check each variant. At max effort,
+`postgres-no-unbounded-sql-identifier` also trusts a declared finite
+string-literal parameter union. Broad or unresolved types, reassigned parameters,
+and casts of external data remain unbounded.
 
 These options stay on the rule, including when executor selection is inherited
 from a PostgreSQL project. They do not add fields to `projects.*.postgres`.

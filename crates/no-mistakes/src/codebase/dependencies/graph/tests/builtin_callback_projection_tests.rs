@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactMap, TsFactPlan, TsFileFacts};
 
 struct CallbackFacts<'a> {
@@ -58,6 +59,18 @@ fn fixture_graph(fail_import: bool) -> (PathBuf, DepGraph) {
     )
     .unwrap();
     (root, graph)
+}
+
+#[test]
+fn callback_occurrences_preserve_source_offset_lookup_order() {
+    let (_, graph) = fixture_graph(false);
+    let sites = graph.resolved_call_sites();
+    assert!(sites
+        .iter()
+        .any(|site| site.invocation == InvocationKind::Callback && site.line == 0));
+    assert!(sites
+        .windows(2)
+        .all(|pair| { (&pair[0].file, pair[0].offset) <= (&pair[1].file, pair[1].offset) }));
 }
 
 #[test]

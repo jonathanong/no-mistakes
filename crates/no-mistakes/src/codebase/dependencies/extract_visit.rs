@@ -4,6 +4,7 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_statements_with_receiver_region(self, statements);
     }
     fn visit_expression(&mut self, expression: &Expression<'a>) {
+        self.note_widened_string_assertion(expression);
         self.record_callable_value_use(expression);
         visit_expression_with_annex_b_initializer(self, expression);
     }

@@ -34,6 +34,7 @@ impl ValueFlowResolution<'_, '_> {
             ValueType::Unknown
             | ValueType::Number
             | ValueType::Element(_)
+            | ValueType::FiniteStringLiterals
             | ValueType::Signature(_) => FlowValue::Unknown,
             ValueType::Param(callback, index) => {
                 self.contextual_parameter(path, callback, *index, visited)

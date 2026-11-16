@@ -1,0 +1,15 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["positive/**/*.ts", "negative/**/*.ts"]
+      finiteDomainAssertions:
+        - name: assertAllowed
+          argument: 0
+      identifierValidators:
+        - module: "../validators"
+          name: assertIdent
+          argument: 0

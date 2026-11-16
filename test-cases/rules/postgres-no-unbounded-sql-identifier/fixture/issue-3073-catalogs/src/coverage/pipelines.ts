@@ -28,3 +28,5 @@ export const CYCLIC = cyclicRows.map(row => row.relation.table).join(',')
 
 const STRING_ROWS = [{ key: 'a_count', relation: { table: 'rel_a' } }] as const
 export const ALREADY_STRINGS = STRING_ROWS.map(row => row.relation.table).map(value => value.length).join(',')
+
+const BARE_FILTER = BAD_ROWS.filter(row => row).join(',')

@@ -15,6 +15,8 @@ pub enum ValueType {
     Object(FxHashMap<String, ValueType>),
     /// The `number` or `bigint` keyword.
     Number,
+    /// A non-empty string literal type or union of string literal types.
+    FiniteStringLiterals,
     /// `(typeof NAME)[number]`: an element of a value's array type.
     Element(String),
     /// Positional parameter shapes of a function type.

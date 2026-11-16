@@ -68,11 +68,12 @@ impl CatalogProof<'_, '_> {
                     return None;
                 }
                 let valid = callback.reads.iter().all(|read| {
-                    if method == "filter" {
-                        source.fields.iter().any(|field| field.starts_with(read))
-                    } else {
-                        source.fields.contains(read)
-                    }
+                    !read.is_empty()
+                        && if method == "filter" {
+                            source.fields.iter().any(|field| field.starts_with(read))
+                        } else {
+                            source.fields.contains(read)
+                        }
                 });
                 (valid && (method == "filter" || callback.string_output))
                     .then_some((source, method == "map"))
@@ -119,11 +120,12 @@ pub(super) fn collection_safe(
         return false;
     };
     if !callback.reads.iter().all(|read| {
-        if method == "filter" {
-            source.fields.iter().any(|field| field.starts_with(read))
-        } else {
-            source.fields.contains(read)
-        }
+        !read.is_empty()
+            && if method == "filter" {
+                source.fields.iter().any(|field| field.starts_with(read))
+            } else {
+                source.fields.contains(read)
+            }
     }) {
         return false;
     }

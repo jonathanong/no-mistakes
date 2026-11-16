@@ -64,7 +64,7 @@ impl Bindings<'_> {
             .map(|initial| &initial.value)
             .or_else(|| binding.map(|binding| &binding.value));
         let Some(value) = value else {
-            return Some(self.parameter(file, scope, name));
+            return Some(self.parameter_at(file, scope, name, at));
         };
         let key = (scope, name.to_string(), declared_at);
         if !seen.bindings.insert(key.clone()) {
