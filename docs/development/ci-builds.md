@@ -52,6 +52,18 @@ The current validation graph is organized as follows:
   Windows job did not succeed. `Tests with coverage` keeps requiring `Native
   tests` to succeed. Pushes to `main`, manual dispatch, and the release workflow
   always run the macOS jobs.
+  A push to `main` also places each macOS build in `ci-macos-main-<job>-all` and
+  each macOS test shard in `ci-macos-main-<job>-<shard>`.
+  `cancel-in-progress` stays false, so the running job finishes and a newer
+  main push drops only the older pending job in that slot. Pull requests,
+  manual dispatch, and other branches use a per-run group and do not join
+  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` stay
+  on the workflow's per-commit group. The group names use the literal job id.
+  `Native tests` accepts a cancelled macOS job only for a push to `main`.
+  A superseded build is cancelled before its test job starts, so that test job
+  is skipped; `Native tests` accepts that skip only when the producer was
+  cancelled on a push to `main`. The macOS cache-retain jobs still require
+  `success`, so a superseded run does not save a cache.
   The [completed seed run](https://github.com/jonathanong/no-mistakes/actions/runs/43378356388)
   showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
   queue waits of 8–12 minutes with roughly two jobs running concurrently.
