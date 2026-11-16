@@ -1,4 +1,4 @@
-use super::super::shape::{atom_with, membership_with, Atom, Lit};
+use super::super::shape::{atom_with, binding, membership_with, Atom, Lit};
 use super::preserves;
 use crate::codebase::postgres::parse_postgres_expression;
 use crate::codebase::postgres::SchemaCatalog;
@@ -131,4 +131,23 @@ fn value_preserving_casts_keep_the_literal() {
     )
     .is_none());
     assert!(atom_with(&parsed("label = 'pending'::citext"), &catalog, &varchar).is_none());
+}
+
+#[test]
+fn placeholder_binding_keeps_a_text_literal_for_any_caller_type_map() {
+    let catalog = catalog();
+    let expr = parsed("$1 = 'pending'::text");
+    let hostile = BTreeMap::from([
+        ("label".to_owned(), "ci_email".to_owned()),
+        ("folded".to_owned(), "citext".to_owned()),
+    ]);
+    let expected = Some(("$1".to_owned(), Lit::Str("pending".to_owned())));
+    assert_eq!(binding(&expr, &catalog, &BTreeMap::new()), expected);
+    assert_eq!(binding(&expr, &catalog, &hostile), expected);
+    assert_eq!(
+        binding(&parsed("'pending'::text = $2"), &catalog, &hostile),
+        Some(("$2".to_owned(), Lit::Str("pending".to_owned())))
+    );
+    let text = BTreeMap::from([("label".to_owned(), "character varying".to_owned())]);
+    assert!(binding(&parsed("$1 = 'pending'::citext"), &catalog, &text).is_none());
 }

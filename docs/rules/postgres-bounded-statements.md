@@ -600,6 +600,8 @@ compares the same way
 enum label, including a quoted mixed-case enum name). `citext` and
 `char` / `character` do not treat `'a'::text` as `'a'`. A stored `(col)::text`
 predicate matches only a text-family column, so a domain does not match it.
+The catalog stores the domain's own name, and the rule does not resolve that
+name to its base type.
 A `varchar` partial index stored as `(col)::text = ANY (ARRAY[...])` matches
 that literal set, and it does not match `'pending'::citext`.
 An array constructor
