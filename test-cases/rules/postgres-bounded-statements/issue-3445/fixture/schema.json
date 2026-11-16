@@ -50,6 +50,32 @@
           "predicate": "n IS NOT NULL",
           "definition": "CREATE UNIQUE INDEX custom_n ON custom (lower(n)) WHERE n IS NOT NULL",
           "keys": [{ "column": null, "expression": "lower(n)" }]
+        },
+        "custom_n_upper": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "n IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX custom_n_upper ON custom (upper(n)) WHERE n IS NOT NULL",
+          "keys": [{ "column": null, "expression": "upper(n)" }]
+        },
+        "custom_n_btrim": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "n IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX custom_n_btrim ON custom (btrim(n)) WHERE n IS NOT NULL",
+          "keys": [{ "column": null, "expression": "btrim(n)" }]
         }
       }
     },

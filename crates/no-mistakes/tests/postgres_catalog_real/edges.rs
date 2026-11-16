@@ -327,6 +327,10 @@ fn column_facts_comments_and_foreign_key_actions_are_observed() {
         (Some("SET NULL"), Some("CASCADE"))
     );
     assert_eq!(parent["validated"], true);
+    assert_eq!(parent["deferrable"], false);
+    let deferred = &items["foreignKeys"]["\"Deferred Parent\""];
+    assert_eq!(deferred["columns"], serde_json::json!(["Parent Id"]));
+    assert_eq!(deferred["deferrable"], true);
     let loose = &items["foreignKeys"]["\"Loose Parent\""];
     assert_eq!(loose["columns"], serde_json::json!(["Parent Id", "mood"]));
     assert_eq!(
@@ -335,6 +339,7 @@ fn column_facts_comments_and_foreign_key_actions_are_observed() {
     );
     assert_eq!(loose["referencedTable"], "\"Order Items\"");
     assert_eq!(loose["validated"], false);
+    assert_eq!(loose["deferrable"], false);
     assert_eq!(catalog["views"]["order_items_v"]["comment"], "a view");
     assert_eq!(catalog["views"]["order_items_m"]["materialized"], true);
     assert_eq!(catalog["views"]["order_items_m"]["comment"], Value::Null);
@@ -366,6 +371,16 @@ fn the_reader_derives_the_model_from_the_generated_catalog() {
     }
     let items = catalog.table("\"Order Items\"").unwrap();
     assert_eq!(items.primary_key.as_deref(), Some(&["Id".to_string()][..]));
+    let deferred = items
+        .foreign_keys
+        .iter()
+        .find(|key| key.name == "\"Deferred Parent\"")
+        .unwrap();
+    assert!(deferred.deferrable);
+    assert!(items
+        .foreign_keys
+        .iter()
+        .any(|key| key.name == "\"Loose Parent\"" && !key.deferrable));
     assert!(items
         .columns
         .iter()

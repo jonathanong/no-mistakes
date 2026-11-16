@@ -802,6 +802,7 @@
             "order_id",
             "line_no"
           ],
+          "deferrable": false,
           "onDelete": "CASCADE",
           "onUpdate": "RESTRICT",
           "referencedColumns": [
@@ -924,6 +925,7 @@
           "columns": [
             "id"
           ],
+          "deferrable": false,
           "onDelete": "NO ACTION",
           "onUpdate": "NO ACTION",
           "referencedColumns": [
@@ -1246,6 +1248,7 @@
           "columns": [
             "order_id"
           ],
+          "deferrable": false,
           "onDelete": "CASCADE",
           "onUpdate": "NO ACTION",
           "referencedColumns": [
@@ -1390,6 +1393,7 @@
           "columns": [
             "account_id"
           ],
+          "deferrable": false,
           "onDelete": "CASCADE",
           "onUpdate": "NO ACTION",
           "referencedColumns": [

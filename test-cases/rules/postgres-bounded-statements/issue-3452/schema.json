@@ -310,6 +310,43 @@
           "keys": [{ "column": "owner", "expression": "owner" }]
         }
       }
+    },
+    "domains": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner": { "dataType": "uuid", "ordinalPosition": 2 },
+        "folded": { "dataType": "ci_email", "nullable": true, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "domains_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX domains_pkey ON domains (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "domains_exact": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((folded)::text = 'a'::text)",
+          "definition": "CREATE UNIQUE INDEX domains_exact ON domains (owner) WHERE ((folded)::text = 'a'::text)",
+          "keys": [{ "column": "owner", "expression": "owner" }]
+        }
+      }
     }
   }
 }

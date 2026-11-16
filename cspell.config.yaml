@@ -37,6 +37,7 @@ words:
   - callsites
   - constantize
   - conname
+  - condeferrable
   - ctid
   - citext
   - conrelid

@@ -47,6 +47,8 @@ mod cli_postgres_snapshot_bounded_issue_3432;
 mod cli_postgres_snapshot_bounded_issue_3436;
 #[path = "cli_postgres_snapshot_bounded_issue_3445.rs"]
 mod cli_postgres_snapshot_bounded_issue_3445;
+#[path = "cli_postgres_snapshot_bounded_issue_3459.rs"]
+mod cli_postgres_snapshot_bounded_issue_3459;
 #[path = "cli_postgres_snapshot_bounded_on.rs"]
 mod cli_postgres_snapshot_bounded_on;
 #[path = "cli_postgres_snapshot_bounded_statements.rs"]

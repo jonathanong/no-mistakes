@@ -142,7 +142,8 @@ is non-null only for a catalog base table, not a view.
   downstream keyed target remain reported. `ON` pins
   only the side an outer join can null-extend, never the preserved side, and a `WHERE` on the
   null-extended side is not assumed to turn the join inner: a `LEFT JOIN` with its key
-  pinned only in `WHERE` reports the preserved relation. `JOIN … USING (col)` pins the same
+  pinned only in `WHERE` reports the preserved relation. A `RIGHT JOIN` records only
+  its left side, and a `FULL JOIN` records neither side from `ON`. `JOIN … USING (col)` pins the same
   way as `ON a.col = b.col` when each side is one FROM item; after a longer chain, which
   item owns the column cannot be told, so it pins nothing.
 - For an uncapped `SELECT`, a complete primary or valid unique key equated directly
@@ -370,7 +371,9 @@ Every key element must have a finite pin. Supported index shapes include:
   predicate as `(col)::text = ANY (ARRAY['pending'::text, 'ready'::text])`, or
   `(col)::text = ANY ((ARRAY['pending'::character varying, 'ready'::character varying])::text[])`
   when the index was written with `IN`. Those match the same literal set.
-  `(col)::text` is not a bare column for `citext` or `char` / `character`.
+  `(col)::text` is not a bare column for `citext`, `char` / `character`, or any other
+  catalog type, including a domain. Comparing a `varchar` column with `'pending'::citext`
+  does not match that stored list.
   A longer list, a shorter list, or `col = one-literal`
   does not match a multi-value list. A bare parameter does not match a literal.
   `col = $n` together with `$n = literal` or `literal = $n` in the same alternative

@@ -62,7 +62,7 @@ fn function_column(function: &Function, table: &CatalogTable) -> Option<String> 
         _ => return None,
     };
     // A non-null range can still have a null bound. See postgres-bounded-statements-proof.md.
-    (family(column_type(table, &column)?)? == "text").then_some(column)
+    text_family_column(table, &column).then_some(column)
 }
 
 fn plain_call(function: &Function) -> bool {

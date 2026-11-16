@@ -121,4 +121,14 @@ fn value_preserving_casts_keep_the_literal() {
         &nvarchar
     )
     .is_none());
+    let domain = BTreeMap::from([("folded".to_owned(), "ci_email".to_owned())]);
+    assert!(atom_with(&parsed("(folded)::text = 'a'::text"), &catalog, &domain).is_none());
+    let qualified_domain = BTreeMap::from([("folded".to_owned(), "public.ci_email".to_owned())]);
+    assert!(atom_with(
+        &parsed("(folded)::text = 'a'::text"),
+        &catalog,
+        &qualified_domain
+    )
+    .is_none());
+    assert!(atom_with(&parsed("label = 'pending'::citext"), &catalog, &varchar).is_none());
 }
