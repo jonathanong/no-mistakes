@@ -16,6 +16,7 @@ mod member_paths;
 mod member_refs;
 pub(super) mod pass_through;
 mod process_refs;
+mod registry_dispatch;
 mod resets;
 mod scope;
 mod stub_global;
@@ -57,6 +58,7 @@ pub(super) fn collect(
                 &mut result,
             ),
             AstKind::CallExpression(call) => {
+                registry_dispatch::from_call(semantic, call, &mut result);
                 if concurrent::overlap(semantic, call) {
                     result
                         .lifecycle_overlaps

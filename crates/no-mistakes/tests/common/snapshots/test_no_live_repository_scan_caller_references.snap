@@ -413,8 +413,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/scan.mts",
           "import": "readdirSync",
-          "line": 4,
-          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/scan.mts:8 passes `directory`, a value forwarded through another parameter. Fix: pass an owned root from the caller that supplies that parameter. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "line": 5,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but src/scan.mts:10 passes `directory`, a value forwarded through another parameter. Fix: pass an owned root from the caller that supplies that parameter. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "return readdirSync(root);",
           "target": "unresolved root"
@@ -427,7 +427,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/scan.mts",
-          "line": 7,
+          "line": 8,
           "message": "coverage producer has no reachable assertion owner; executing code alone does not validate behavior; call an assertion-bearing helper or configure a genuine ownership contract: src/scan.mts#assertOwned",
           "rule": "coverage-producer-assertion-owner",
           "sourceLine": "export function assertOwned(root: string) {",
@@ -679,10 +679,95 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "registry-computed-dispatch": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/scan.mts:7 references `processSync` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "registry-dispatch-only": {
     "exitCode": 0,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "src/scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because src/scan.mts:7 references `processSync` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-dynamic-dispatch": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/scan.test.mts",
+          "import": "workers[name]",
+          "line": 8,
+          "message": "unresolved root: `workers[name]` dispatches a registry that holds a scanning function, but the key is not a static string, so the scanner cannot be named. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "workers[name](root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-dynamic-local": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/scan.test.mts",
+          "import": "readdirSync",
+          "line": 6,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/scan.test.mts:9 references `processSync` other than as a direct call. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root);",
+          "target": "unresolved root"
+        },
+        {
+          "file": "tests/scan.test.mts",
+          "import": "workers[name]",
+          "line": 12,
+          "message": "unresolved root: `workers[name]` dispatches a registry that holds a scanning function, but the key is not a static string, so the scanner cannot be named. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "workers[name](root);",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -727,6 +812,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unresolved root"
         }
       ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-specifier-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

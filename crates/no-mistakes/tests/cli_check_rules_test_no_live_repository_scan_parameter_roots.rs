@@ -90,7 +90,11 @@ fn caller_references_check_json_snapshot() {
         "promise-call",
         "promise-escape",
         "promise-named",
+        "registry-computed-dispatch",
         "registry-dispatch-only",
+        "registry-dynamic-dispatch",
+        "registry-dynamic-local",
+        "registry-specifier-owned",
         "registry-reference",
         "registry-member",
         "registry-computed",
@@ -130,8 +134,7 @@ fn caller_reference_owned_roots_clear_and_recall_controls_report() {
         let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
         let count = report["rules"].as_array().unwrap().len()
             + report["advisories"].as_array().unwrap().len();
-        // Dispatch alone is not a resolved caller, so this case has no diagnostic.
-        if name.ends_with("-owned") || name == "registry-dispatch-only" {
+        if name.ends_with("-owned") {
             assert_eq!(count, 0, "{name}: {report}");
         } else {
             assert!(count > 0, "{name}: {report}");

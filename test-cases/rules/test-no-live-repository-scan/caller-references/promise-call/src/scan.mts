@@ -4,6 +4,6 @@ export function scan(root: string) {
   return readdirSync(root);
 }
 
-export function assertOwned(root: string) {
+export function forward(root: string) {
   return Promise.resolve(root).call(scan);
 }
