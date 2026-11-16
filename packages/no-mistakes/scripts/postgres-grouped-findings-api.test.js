@@ -10,11 +10,11 @@ const cases = [
   ["postgres-bounded-statements/statement-groups/fixture", "embedded-with-extra.yml", 4],
   ["postgres-bounded-statements/statement-groups/fixture", "variant-prefix.yml", 1],
   ["postgres-bounded-statements/statement-groups/fixture", "repeated-helper.yml", 2],
-  ["postgres-no-transformed-uuid-predicates/fixture", "../configs/multi-argument-sites.yml", 17],
+  ["postgres-no-transformed-uuid-predicates/fixture", "../configs/multi-argument-sites.yml", 22],
   [
     "postgres-no-transformed-uuid-predicates/fixture",
     "../configs/multi-argument-sites-low.yml",
-    17,
+    22,
   ],
   ["postgres-no-transformed-uuid-predicates/fixture", "../configs/multi-argument-variants.yml", 1],
   [
