@@ -73,7 +73,11 @@ fn directive<'a>(line: &'a str, carry: &mut Carry) -> Option<&'a str> {
             if template_step(ch, &mut chars, carry) {
                 continue;
             }
-            if found.is_none() && ch == '-' && super::super::dash_comment_can_start(line, idx) {
+            if found.is_none()
+                && ch == '-'
+                && chars.peek().is_some_and(|(_, next)| *next == '-')
+                && super::super::dash_comment_can_start(line, idx)
+            {
                 found = Some(line[idx + 2..].trim());
             }
             continue;
@@ -82,7 +86,7 @@ fn directive<'a>(line: &'a str, carry: &mut Carry) -> Option<&'a str> {
             break;
         }
     }
-    host::finish_ident(&mut ident, carry);
+    host::finish_ident(line, line.len(), &mut ident, carry);
     found
 }
 

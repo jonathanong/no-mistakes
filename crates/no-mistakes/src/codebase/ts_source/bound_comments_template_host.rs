@@ -59,7 +59,7 @@ pub(super) fn host_step(
     ident: &mut String,
 ) -> bool {
     if !is_ident(ch) {
-        finish_ident(ident, carry);
+        finish_ident(line, idx, ident, carry);
     }
     let next = chars.peek().map(|(_, next)| *next);
     if ch == '/' && next == Some('*') {
@@ -88,6 +88,10 @@ pub(super) fn host_step(
     if ch == '-' && next == Some('-') && super::super::super::dash_comment_can_start(line, idx) {
         return false;
     }
+    if ch == ')' {
+        carry.regex_ok = super::super::super::paren_closes_control_flow_condition(line, idx);
+        return true;
+    }
     value::value_step(ch, next, chars, carry, ident)
 }
 
@@ -104,28 +108,74 @@ fn is_ident(ch: char) -> bool {
     ch.is_alphanumeric() || ch == '_' || ch == '$'
 }
 
-pub(super) fn finish_ident(ident: &mut String, carry: &mut Carry) {
+pub(super) fn finish_ident(line: &str, end: usize, ident: &mut String, carry: &mut Carry) {
     if ident.is_empty() {
         return;
     }
-    carry.regex_ok = matches!(
-        ident.as_str(),
-        "await"
-            | "case"
-            | "delete"
-            | "do"
-            | "else"
-            | "in"
-            | "instanceof"
-            | "new"
-            | "of"
-            | "return"
-            | "throw"
-            | "typeof"
-            | "void"
-            | "yield"
-    );
+    // `of` is a keyword only in `for (... of`. As an identifier, `/` is division.
+    carry.regex_ok = if ident == "of" {
+        of_follows_for(line, end)
+    } else {
+        matches!(
+            ident.as_str(),
+            "await"
+                | "case"
+                | "delete"
+                | "do"
+                | "else"
+                | "in"
+                | "instanceof"
+                | "new"
+                | "return"
+                | "throw"
+                | "typeof"
+                | "void"
+                | "yield"
+        )
+    };
     ident.clear();
+}
+
+fn of_follows_for(line: &str, end: usize) -> bool {
+    let before = line[..end].trim_end();
+    let Some(word_at) = before.len().checked_sub(2) else {
+        return false;
+    };
+    if &before[word_at..] != "of" {
+        return false;
+    }
+    if word_at > 0
+        && before[..word_at]
+            .chars()
+            .next_back()
+            .is_some_and(|ch| ch == '_' || ch == '$' || ch.is_ascii_alphanumeric())
+    {
+        return false;
+    }
+    let mut depth = 0i32;
+    for (idx, ch) in before[..word_at].char_indices().rev() {
+        match ch {
+            ')' => depth += 1,
+            '(' if depth == 0 => return for_before_paren(line, idx),
+            '(' => depth -= 1,
+            _ => {}
+        }
+    }
+    false
+}
+
+fn for_before_paren(line: &str, open_idx: usize) -> bool {
+    match super::super::super::previous_word(line, open_idx) {
+        Some("for") => true,
+        Some("await") => {
+            let await_at = line[..open_idx]
+                .trim_end()
+                .len()
+                .saturating_sub("await".len());
+            super::super::super::previous_word(line, await_at) == Some("for")
+        }
+        _ => false,
+    }
 }
 
 fn adjust_js(ch: char, carry: &mut Carry) {

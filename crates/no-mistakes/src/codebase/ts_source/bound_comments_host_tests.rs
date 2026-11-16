@@ -78,3 +78,25 @@ fn quote_escapes_and_nested_braces_keep_the_next_bound() {
         }]
     );
 }
+
+#[test]
+fn control_regex_identifier_of_and_a_trailing_dash_keep_the_bound() {
+    let source = concat!(
+        "if (ready) /`-- no-mistakes-bound postgres-bounded-statements rows<=1: regex/.test(text);\n",
+        "const of = 8;\n",
+        "const label = `page ${of / 2}`;\n",
+        "for (const x of /`-- no-mistakes-bound postgres-bounded-statements rows<=1: for of/) {}\n",
+        "const q = `SELECT 1 -\n",
+        "  1\n",
+        "  -- no-mistakes-bound postgres-bounded-statements rows<=1: bounded\n",
+        "`;\n",
+    );
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 7,
+            rows: 1,
+            justification: "bounded".to_string(),
+        }]
+    );
+}
