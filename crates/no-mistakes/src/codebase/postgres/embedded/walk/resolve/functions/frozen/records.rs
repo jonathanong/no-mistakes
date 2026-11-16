@@ -12,9 +12,9 @@ pub(super) enum Values {
 }
 
 /// String records share the 16-variant budget. Nested object records may be
-/// larger; a closed key still publishes at most 16 entries.
+/// larger; an imported dynamic key publishes every entry.
 const MAX_FROZEN_STRING_ENTRIES: usize = 16;
-const MAX_FROZEN_OBJECT_ENTRIES: usize = 64;
+const MAX_FROZEN_OBJECT_ENTRIES: usize = crate::codebase::postgres::MAX_FROZEN_OBJECT_SQL_VARIANTS;
 
 pub(super) fn record_values(object: &ObjectExpression<'_>, source: &str) -> Option<Values> {
     if object.properties.is_empty() {

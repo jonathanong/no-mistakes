@@ -62,6 +62,7 @@ pub(crate) fn prefix(text: &str) -> &str {
 }
 
 /// A marker glued to an identifier character, as in `` tmp_${expr} ``.
+#[cfg(test)]
 pub(crate) fn splits_identifier(text: &str) -> bool {
     find_all(text).iter().any(|(range, _)| {
         text[..range.start]
@@ -75,6 +76,7 @@ pub(crate) fn splits_identifier(text: &str) -> bool {
 ///
 /// `` SELECT id FROM tmp_${expr} `` and `` SELECT ${name} `` qualify.
 /// `` WHERE id = ${expr} `` does not: a placeholder there is a new column.
+#[cfg(test)]
 pub(crate) fn has_identifier_slot_hole(text: &str) -> bool {
     find_all(text)
         .iter()
@@ -86,33 +88,37 @@ pub(crate) fn has_identifier_slot_hole(text: &str) -> bool {
 /// Restoring `sql_placeholder_N` keeps the statement parseable. Scrubbing the
 /// hole leaves a trailing operator, and the identifier audit then treats the
 /// configured helper as used.
+#[cfg(test)]
 pub(crate) fn has_value_operand_hole(text: &str) -> bool {
     find_all(text)
         .iter()
         .any(|(range, _)| value_operand(text, range.start))
 }
 
-/// A hole that is a whole fragment, not an identifier or a value operand.
-///
-/// Publishing it as `sql_placeholder_N` glues marker text into the statement.
-pub(crate) fn has_opaque_fragment_hole(text: &str) -> bool {
-    find_all(text)
-        .iter()
-        .any(|(range, _)| !restorable_hole(text, range.start))
-}
-
-fn restorable_hole(text: &str, hole_start: usize) -> bool {
+pub(crate) fn in_identifier_slot(text: &str, hole_start: usize) -> bool {
     identifier_slot(text, hole_start)
-        || value_operand(text, hole_start)
-        || text[..hole_start].trim_end().ends_with('(')
 }
 
+/// The two sides of a removed fragment splice would form one token.
+pub(crate) fn fragment_separator(text: &str, start: usize, end: usize) -> bool {
+    let word = |ch: char| ch.is_ascii_alphanumeric() || ch == '_';
+    let next_word = text[end..].chars().next().is_some_and(word);
+    let prev_space = text[..start]
+        .chars()
+        .next_back()
+        .is_some_and(|ch| ch.is_whitespace());
+    let prev_word = text[..start].chars().next_back().is_some_and(word);
+    (next_word && !prev_space) || (prev_word && next_word)
+}
+
+#[cfg(test)]
 fn value_operand(text: &str, hole_start: usize) -> bool {
     text[..hole_start].trim_end().ends_with('=')
 }
 
 /// Glued relation text, or a value operand, keeps a public placeholder
 /// without a member site.
+#[cfg(test)]
 pub(crate) fn keeps_placeholder(text: &str) -> bool {
     has_value_operand_hole(text) || (splits_identifier(text) && has_identifier_slot_hole(text))
 }
@@ -140,6 +146,7 @@ fn identifier_slot(text: &str, hole_start: usize) -> bool {
 }
 
 /// Put `sql_placeholder_N` back where each marker stood, in text order.
+#[cfg(test)]
 pub(crate) fn restore_placeholders(text: &str) -> String {
     let holes = find_all(text);
     if holes.is_empty() {

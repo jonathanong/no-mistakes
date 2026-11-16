@@ -14,6 +14,7 @@ mod bindings;
 mod byte_origins;
 mod call;
 pub use byte_origins::SqlByteOrigins;
+pub(crate) use call::MAX_FROZEN_OBJECT_SQL_VARIANTS;
 pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 mod dml_kind;
 pub(crate) mod helpers;

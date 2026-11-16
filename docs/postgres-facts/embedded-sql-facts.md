@@ -68,9 +68,15 @@ binding lookup is file-wide and scope-insensitive, so a name reused for a
 plain value elsewhere in the file also fails closed. Rules with
 `unanalyzableSql: fail` report calls whose complete alternatives cannot be
 recovered instead of reading the fragment as a bind value. An unresolved
-fragment hole is not published as `sql_placeholder_N`, even when the same
-statement also has an identifier hole: the statement stays dynamic and the
-fragment text is dropped.
+fragment splice, including `.append` of an unknown fragment, is not published
+as `sql_placeholder_N`. The hole is removed and the rest of the statement
+stays; a space is inserted only when the neighboring tokens would otherwise
+glue into one word. An unresolved identifier interpolation, including a
+frozen-record field, stays `sql_placeholder_N` until its alternatives are
+known. A value interpolation in that same trusted tag is a `$N` bind, numbered
+only among the value binds. Neither hole drops the tail after it. A trusted
+tag whose holes are all value binds still publishes each one as
+`sql_placeholder_N`.
 
 Numeric literal alternatives inside untagged template holes are stringified using
 JavaScript number formatting, including radix and exponent literals. For example,

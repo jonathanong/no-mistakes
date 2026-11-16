@@ -45,8 +45,12 @@ non-key column can still be unbounded.
   `Object`, a getter, an empty or mixed value, a boolean or null argument, or
   a helper imported from its own file stay opaque. A string record with more
   than 16 entries stays opaque. A nested object record may hold up to 64
-  entries; a closed key that selects at most 16 of them is enumerated, and a
-  dynamic key does not publish a partial set.
+  entries. A closed key enumerates the entries it selects. An imported helper
+  called with a dynamic key enumerates every nested-object entry, up to that
+  64-entry record, and does not publish a shorter prefix. A same-file dynamic
+  key still uses the 16-alternative budget, so a larger same-file record stays
+  opaque instead of publishing a prefix. A product of alternatives past the
+  budget stays opaque.
 - Configured assertion calls with a literal string array or intrinsic `Set`
   allowlist, including a local unmodified collection or const alias.
 - A source-visible same-file helper whose local literal membership guard throws

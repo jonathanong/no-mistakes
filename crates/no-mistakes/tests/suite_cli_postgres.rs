@@ -92,6 +92,8 @@ mod cli_postgres_snapshot_finite_text_columns;
 mod cli_postgres_snapshot_fk_index;
 #[path = "cli_postgres_snapshot_fk_on_delete.rs"]
 mod cli_postgres_snapshot_fk_on_delete;
+#[path = "cli_postgres_snapshot_frozen_record_dynamic.rs"]
+mod cli_postgres_snapshot_frozen_record_dynamic;
 #[path = "cli_postgres_snapshot_generated_column_predicates.rs"]
 mod cli_postgres_snapshot_generated_column_predicates;
 #[path = "cli_postgres_snapshot_generated_column_writes.rs"]
@@ -112,6 +114,8 @@ mod cli_postgres_snapshot_idempotent_insert;
 mod cli_postgres_snapshot_identifier_builders;
 #[path = "cli_postgres_snapshot_identifier_catalogs.rs"]
 mod cli_postgres_snapshot_identifier_catalogs;
+#[path = "cli_postgres_snapshot_identifier_holes.rs"]
+mod cli_postgres_snapshot_identifier_holes;
 #[path = "cli_postgres_snapshot_identifier_length.rs"]
 mod cli_postgres_snapshot_identifier_length;
 #[path = "cli_postgres_snapshot_identifier_repros.rs"]

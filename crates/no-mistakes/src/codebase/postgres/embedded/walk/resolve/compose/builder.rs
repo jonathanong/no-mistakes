@@ -49,8 +49,7 @@ fn recover(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>, dynamic: bool) -> 
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }
-        Expression::TaggedTemplateExpression(_) if untrusted_tag(expr, visitor) => None,
-        Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
+        Expression::TaggedTemplateExpression(_) => super::tagged::text(expr, visitor),
         Expression::Identifier(ident) if dynamic => visitor
             .lookup(ident.name.as_str())
             .and_then(|binding| binding.sql)

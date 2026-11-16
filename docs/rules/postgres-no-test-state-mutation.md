@@ -54,9 +54,11 @@ switches, immutable lookup records, and a module-private frozen literal record
 returned through an `Object.hasOwn` guard are supported, including a nested
 `Object.freeze` of literal fields. The guard may also test `typeof key !== 'string'`
 and may throw or return early. A string record with more than 16 entries stays
-opaque. A nested object record may hold up to 64 entries; a closed key that
-selects at most 16 of them is enumerated, and a dynamic key does not publish a
-partial set. A `record[key]` read outside that helper, a
+opaque. A nested object record may hold up to 64 entries. A closed key
+enumerates the entries it selects. An imported helper called with a dynamic
+key enumerates every nested-object entry and does not publish a shorter
+prefix. A same-file dynamic key still uses the 16-alternative budget. A
+`record[key]` read outside that helper, a
 property write on the returned object, or passing that object into a call stays
 opaque, and the binding does not outlive its scope. Rule-local
 `sqlIdentifierAssertions` selects named imports with a literal allowlist argument;

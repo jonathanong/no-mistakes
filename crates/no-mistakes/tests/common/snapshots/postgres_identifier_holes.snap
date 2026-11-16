@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "unknown_identifier_keeps_the_statement": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/mutate.test.mts",
+          "line": 12,
+          "message": "tests/mutate.test.mts:12: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"DELETE FROM sql_placeholder_1 WHERE sql_placeholder_2 = $1\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(sql`DELETE FROM ${table} WHERE ${keyColumn} = ${id}`);",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "tests/mutate.test.mts",
+          "line": 6,
+          "message": "tests/mutate.test.mts:6: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"UPDATE sql_placeholder_1 SET token = $1 WHERE sql_placeholder_2 = $2\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

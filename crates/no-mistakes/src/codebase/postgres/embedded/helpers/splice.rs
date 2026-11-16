@@ -3,9 +3,7 @@ use super::unpublish::{unpublish, unpublish_origins};
 use crate::codebase::postgres::embedded::placeholders::publish_placeholders_with_positions;
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
 use crate::codebase::postgres::embedded::walk::resolve::rewrite_origins;
-use crate::codebase::postgres::embedded::{
-    EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS,
-};
+use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant};
 use crate::fx::FxHashMap;
 use fill::fill_all;
 
@@ -16,22 +14,24 @@ type Holes = FxHashMap<usize, Vec<RecoveredSql>>;
 /// holds holes becomes a complete `Composed` call when every hole has one
 /// text, and a call with finite alternatives otherwise; a call whose holes
 /// sit in its complete alternatives keeps its kind and legacy text and gets
-/// filled alternatives. Any gap, or more than
-/// [`MAX_EMBEDDED_SQL_VARIANTS`] results, yields `None` so the scrubbed
-/// `Dynamic` call stays in place. `groups` zips holes that share one choice.
+/// filled alternatives. Any gap, or more than `budget` results, yields `None`
+/// so the dynamic call stays in place. `groups` zips holes that share one
+/// choice. Frozen object records pass a higher budget; other calls stay at
+/// the default variant cap.
 pub(crate) fn splice_grouped(
     template: &EmbeddedSqlCall,
     holes: &Holes,
     groups: &FxHashMap<usize, u32>,
+    budget: usize,
 ) -> Option<EmbeddedSqlCall> {
     if !template.variants.is_empty() {
         let mut variants = Vec::new();
         for variant in &template.variants {
-            for filled in splice_variant(variant, holes, groups)? {
+            for filled in splice_variant(variant, holes, groups, budget)? {
                 EmbeddedSqlVariant::push_unique(&mut variants, filled);
             }
         }
-        if variants.len() > MAX_EMBEDDED_SQL_VARIANTS {
+        if variants.len() > budget {
             return None;
         }
         let mut call = EmbeddedSqlCall {
@@ -84,7 +84,7 @@ pub(crate) fn splice_grouped(
         line: first_line,
         sql,
     };
-    let mut filled = fill_all(&caller, holes, groups)?;
+    let mut filled = fill_all(&caller, holes, groups, budget)?;
     if filled.len() > 1 {
         let mut variants = Vec::new();
         for joined in filled {
@@ -119,6 +119,7 @@ fn splice_variant(
     variant: &EmbeddedSqlVariant,
     holes: &Holes,
     groups: &FxHashMap<usize, u32>,
+    budget: usize,
 ) -> Option<Vec<EmbeddedSqlVariant>> {
     let positions = &variant.recovered_placeholder_positions;
     let caller = RecoveredSql {
@@ -133,17 +134,23 @@ fn splice_variant(
         positions: variant.sql_source_positions.clone(),
     };
     Some(
-        fill::fill_with_boundaries(&caller, holes, fill::internal_boundary(variant), groups)?
-            .into_iter()
-            .map(|(joined, boundary)| {
-                let mut filled = publish_variant(joined, variant.append_sites.clone());
-                filled.variants_truncated = variant.variants_truncated;
-                filled.closed_domain = variant.closed_domain;
-                filled.type_annotation = variant.type_annotation;
-                filled.first_append_offset = boundary;
-                filled
-            })
-            .collect(),
+        fill::fill_with_boundaries(
+            &caller,
+            holes,
+            fill::internal_boundary(variant),
+            groups,
+            budget,
+        )?
+        .into_iter()
+        .map(|(joined, boundary)| {
+            let mut filled = publish_variant(joined, variant.append_sites.clone());
+            filled.variants_truncated = variant.variants_truncated;
+            filled.closed_domain = variant.closed_domain;
+            filled.type_annotation = variant.type_annotation;
+            filled.first_append_offset = boundary;
+            filled
+        })
+        .collect(),
     )
 }
 

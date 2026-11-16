@@ -12,6 +12,7 @@ use crate::codebase::check_facts::sql_source_prerequisites::{
 };
 use crate::codebase::postgres::{
     splice_imported_sql_grouped, EmbeddedSqlCall, EmbeddedSqlOptions, PendingImportedSql,
+    MAX_EMBEDDED_SQL_VARIANTS, MAX_FROZEN_OBJECT_SQL_VARIANTS,
 };
 use crate::codebase::ts_source::FileIdMap;
 use crate::fx::FxHashMap;
@@ -132,5 +133,14 @@ fn complete_call(
     for (index, site) in &pending.sites {
         holes.insert(*index, shared.fill(profile, options, path, site)?);
     }
-    splice_imported_sql_grouped(&pending.template, &holes, &pending.correlation)
+    let budget = if pending
+        .sites
+        .iter()
+        .all(|(_, site)| site.member.is_some() && site.constant.is_none())
+    {
+        MAX_FROZEN_OBJECT_SQL_VARIANTS
+    } else {
+        MAX_EMBEDDED_SQL_VARIANTS
+    };
+    splice_imported_sql_grouped(&pending.template, &holes, &pending.correlation, budget)
 }

@@ -4,6 +4,8 @@ mod appended_fragment;
 mod closed_record_getter;
 mod closed_record_prefix;
 mod factory;
+mod frozen_record_dynamic;
+mod identifier_holes;
 mod iterator;
 mod low;
 mod prefix_policy;

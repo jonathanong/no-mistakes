@@ -86,6 +86,7 @@ pub use embedded::{
 };
 pub(crate) use embedded::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, retain_unproven_spans,
+    MAX_FROZEN_OBJECT_SQL_VARIANTS,
 };
 pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,

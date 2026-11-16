@@ -1,5 +1,6 @@
 //! End-of-walk step: no hole marker may reach a public fact.
-//! Unfilled calls stay dynamic, with a leading statement or `sql_placeholder_N`.
+//! Unfilled calls stay dynamic. Identifier holes keep `sql_placeholder_N` and
+//! the rest of the statement. A fragment splice becomes a gap, not a cut.
 
 use super::sentinel;
 use super::summary::{ImportedSite, PendingImportedSql};
@@ -9,7 +10,7 @@ use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, 
 use std::collections::BTreeMap;
 
 mod policy;
-use policy::{trimmed_prefix, unfilled_statement};
+use policy::trimmed_prefix;
 
 pub(crate) struct Walked<'a> {
     pub(crate) calls: &'a mut [EmbeddedSqlCall],
@@ -94,11 +95,7 @@ fn take_pending(
         template.sql_source_positions.clear();
         template.recovered_placeholder_positions.clear();
     }
-    if keep_identifier_placeholders(call, sites) {
-        restore_member_placeholders(call);
-    } else {
-        scrub(call);
-    }
+    publish_call(call, sites);
     if !complete {
         return None;
     }
@@ -120,29 +117,7 @@ fn take_pending(
     })
 }
 
-fn keep_identifier_placeholders(call: &EmbeddedSqlCall, sites: &[ImportedSite]) -> bool {
-    let texts: Vec<&String> = call
-        .sql_text
-        .iter()
-        .chain(call.variants.iter().map(|variant| &variant.sql_text))
-        .collect();
-    if texts
-        .iter()
-        .any(|text| sentinel::has_opaque_fragment_hole(text))
-    {
-        return false;
-    }
-    texts.iter().any(|text| sentinel::keeps_placeholder(text))
-        || texts.iter().any(|text| unfilled_statement(text))
-        || (texts
-            .iter()
-            .any(|text| sentinel::has_identifier_slot_hole(text))
-            && used_sites(texts.into_iter(), sites).is_some_and(|used| {
-                !used.is_empty() && used.iter().all(|(_, site)| site.member.is_some())
-            }))
-}
-
-fn restore_member_placeholders(call: &mut EmbeddedSqlCall) {
+fn publish_call(call: &mut EmbeddedSqlCall, sites: &[ImportedSite]) {
     let source = call.sql_text.clone().or_else(|| {
         call.variants
             .first()
@@ -152,7 +127,8 @@ fn restore_member_placeholders(call: &mut EmbeddedSqlCall) {
     call.kind = EmbeddedSqlKind::Dynamic;
     call.sql_source_positions.clear();
     call.recovered_placeholder_positions.clear();
-    call.sql_text = source.map(|text| sentinel::restore_placeholders(&text));
+    let published = source.map(|text| policy::publish(&text, sites));
+    call.sql_text = published.filter(|text| !text.trim().is_empty());
 }
 
 fn used_sites<'a>(
@@ -168,23 +144,4 @@ fn used_sites<'a>(
         }
     }
     Some(used)
-}
-
-fn scrub(call: &mut EmbeddedSqlCall) {
-    call.variants.clear();
-    call.kind = EmbeddedSqlKind::Dynamic;
-    if !call.sql_text.as_deref().is_some_and(sentinel::contains) {
-        return;
-    }
-    let text = call.sql_text.take().unwrap_or_default();
-    let Some((kept, cut)) = trimmed_prefix(&text) else {
-        call.sql_source_positions.clear();
-        call.recovered_placeholder_positions.clear();
-        return;
-    };
-    call.sql_source_positions
-        .retain(|position| (position.sql_line, position.sql_column) < cut);
-    call.recovered_placeholder_positions
-        .retain(|position| *position < cut);
-    call.sql_text = Some(kept);
 }

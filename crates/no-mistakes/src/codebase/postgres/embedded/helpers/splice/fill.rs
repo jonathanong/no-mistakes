@@ -7,7 +7,7 @@ use super::{Holes, RecoveredSql};
 use crate::codebase::postgres::embedded::placeholders::{
     count_placeholders, publish_placeholders, renumber_placeholders,
 };
-use crate::codebase::postgres::embedded::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
+use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
 use crate::fx::FxHashMap;
 use std::ops::Range;
 
@@ -18,9 +18,10 @@ pub(super) fn fill_all(
     caller: &RecoveredSql,
     holes: &Holes,
     groups: &FxHashMap<usize, u32>,
+    budget: usize,
 ) -> Option<Vec<RecoveredSql>> {
     Some(
-        fill_with_boundaries(caller, holes, None, groups)?
+        fill_with_boundaries(caller, holes, None, groups, budget)?
             .into_iter()
             .map(|(sql, _)| sql)
             .collect(),
@@ -32,6 +33,7 @@ pub(super) fn fill_with_boundaries(
     holes: &Holes,
     boundary: Option<usize>,
     groups: &FxHashMap<usize, u32>,
+    budget: usize,
 ) -> Option<Vec<(RecoveredSql, Option<usize>)>> {
     let markers = sentinel::find_all(&caller.sql);
     let mut sites: Vec<usize> = markers.iter().map(|(_, site)| *site).collect();
@@ -52,7 +54,7 @@ pub(super) fn fill_with_boundaries(
                 next.push(extended);
             }
         }
-        if next.len() > MAX_EMBEDDED_SQL_VARIANTS {
+        if next.len() > budget {
             return None;
         }
         combos = next;

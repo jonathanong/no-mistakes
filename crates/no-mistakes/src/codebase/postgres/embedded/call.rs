@@ -1,5 +1,6 @@
 use super::{EmbeddedSqlSourcePosition, SqlByteOrigins};
 mod variants;
+pub(crate) use variants::MAX_FROZEN_OBJECT_SQL_VARIANTS;
 pub use variants::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 
 /// One executor call site and its recovered SQL text. For `Dynamic` calls,

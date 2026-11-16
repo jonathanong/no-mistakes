@@ -208,10 +208,11 @@ Executor calls without statically recovered SQL follow `options.unanalyzable`:
 The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore`
 keep their names.
 
-An appended fragment that stays unresolved is not recovered SQL. The call stays
-dynamic and follows `unanalyzableSql`. It is not rewritten into a
-`sql_placeholder_N` that then fails to parse, including when the same statement
-also has an identifier hole.
+An appended fragment that stays unresolved is not recovered SQL and is not
+rewritten into a `sql_placeholder_N`. The splice is removed, with a space when
+the neighboring tokens would glue, and the rest of the statement stays. An
+identifier hole in that statement stays a placeholder. The call stays dynamic
+and follows `unanalyzableSql`.
 
 Recovered SQL containing `FOR UPDATE` that fails to parse always produces an
 `unparseable` finding, including under `ignore` and `advise`. That SQL may hold

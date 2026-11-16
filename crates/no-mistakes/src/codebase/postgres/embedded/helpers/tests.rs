@@ -219,7 +219,12 @@ fn splice(
     template: &crate::codebase::postgres::EmbeddedSqlCall,
     holes: &crate::fx::FxHashMap<usize, Vec<RecoveredSql>>,
 ) -> Option<crate::codebase::postgres::EmbeddedSqlCall> {
-    super::splice::splice_grouped(template, holes, &crate::fx::FxHashMap::default())
+    super::splice::splice_grouped(
+        template,
+        holes,
+        &crate::fx::FxHashMap::default(),
+        crate::codebase::postgres::MAX_EMBEDDED_SQL_VARIANTS,
+    )
 }
 
 fn template_call(internal: String) -> crate::codebase::postgres::EmbeddedSqlCall {

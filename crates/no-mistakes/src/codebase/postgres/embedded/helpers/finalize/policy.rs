@@ -1,27 +1,53 @@
 //! When a hole stays a public placeholder, and where a known prefix ends.
 //!
-//! A placeholder replaces an identifier hole (`LOCK TABLE`, `FROM`, `INTO`).
-//! A whole unresolved fragment is not an identifier hole: restoring it glues
-//! `sql_placeholder_N` onto the surrounding text and the statement fails to parse.
+//! An identifier or value hole stays `sql_placeholder_N`, and the text after
+//! it stays too. A real fragment splice (an `.append` of an unresolved
+//! fragment) is not a placeholder: it becomes a gap, with a space only when
+//! the neighboring tokens would otherwise glue.
 
 use super::super::sentinel;
 use super::super::split::coordinate;
+use super::super::summary::ImportedSite;
 use crate::codebase::postgres::embedded::walk::resolve::has_known_leading_statement;
+use std::ops::Range;
+
+/// Replace each hole. Identifier holes become `sql_placeholder_N`. A fragment
+/// splice becomes empty, or one space when that keeps the next token separate.
+pub(super) fn publish(text: &str, sites: &[ImportedSite]) -> String {
+    let holes = sentinel::find_all(text);
+    if holes.is_empty() {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut cursor = 0;
+    let mut index = 1usize;
+    for (range, site) in &holes {
+        out.push_str(&text[cursor..range.start]);
+        if fragment_gap(text, range, sites.get(*site)) {
+            if sentinel::fragment_separator(text, range.start, range.end) {
+                out.push(' ');
+            }
+        } else {
+            out.push_str("sql_placeholder_");
+            out.push_str(&index.to_string());
+            index += 1;
+        }
+        cursor = range.end;
+    }
+    out.push_str(&text[cursor..]);
+    out
+}
+
+fn fragment_gap(text: &str, range: &Range<usize>, site: Option<&ImportedSite>) -> bool {
+    site.is_some_and(|site| site.constant == Some(true))
+        && !sentinel::in_identifier_slot(text, range.start)
+}
 
 /// Prefix before the first hole, plus the SQL coordinate where that prefix ends.
 pub(super) fn trimmed_prefix(text: &str) -> Option<(String, (u32, u32))> {
     let prefix = sentinel::prefix(text);
     let kept = keep_prefix(text)?;
     Some((kept, coordinate(text, prefix.len())))
-}
-
-/// A non-bare hole whose leading text is not a known statement, and whose hole
-/// is an identifier slot. Other holes are scrubbed with the fragment.
-pub(super) fn unfilled_statement(text: &str) -> bool {
-    sentinel::contains(text)
-        && !sentinel::is_bare(text)
-        && keep_prefix(text).is_none()
-        && sentinel::has_identifier_slot_hole(text)
 }
 
 /// The prefix before the first hole, when it is a known statement.

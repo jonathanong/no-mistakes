@@ -18,7 +18,7 @@ export function claimResolved(feedId: string) {
   return execute(statement);
 }
 
-// An unresolved fragment must stay opaque. It must not become a placeholder.
+// An unresolved fragment must not become a placeholder. The tail stays.
 export function claimUnresolved() {
   const statement = sql`WITH candidate AS (SELECT source.id FROM sources source WHERE source.published_at IS NULL`;
   statement.append(scopeCondition);
@@ -28,7 +28,7 @@ export function claimUnresolved() {
   return execute(statement);
 }
 
-// A fragment hole beside an identifier hole is still opaque.
+// An identifier hole stays a placeholder. The fragment hole does not.
 export function claimWithTable() {
   const statement = sql`WITH candidate AS (SELECT source.id FROM `;
   statement.append(tableName);
