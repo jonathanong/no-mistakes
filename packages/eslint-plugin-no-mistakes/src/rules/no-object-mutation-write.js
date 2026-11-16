@@ -2,7 +2,14 @@
 
 const api = require("./no-object-mutation-runtime");
 const { escapeFresh, remember, unknown } = require("./no-object-mutation-values");
-const { rootIdentifier, staticPath } = require("./no-object-mutation-syntax");
+const {
+  literalKey,
+  memberKey,
+  rootIdentifier,
+  staticKey,
+  staticPath,
+  unwrap,
+} = require("./no-object-mutation-syntax");
 
 function markEscaped(state, tag, seen) {
   const was = Boolean(tag?.type === "fresh" && tag.escaped);
@@ -68,7 +75,47 @@ function shouldReport(state, target) {
   return enabled !== false;
 }
 
+function initializesOwnField(node) {
+  const member = node.left;
+  if (
+    node.type !== "AssignmentExpression" ||
+    node.operator !== "=" ||
+    member?.type !== "MemberExpression" ||
+    unwrap(member.object)?.type !== "ThisExpression"
+  ) {
+    return false;
+  }
+  let enclosing = node.parent;
+  while (
+    enclosing &&
+    ![
+      "FunctionExpression",
+      "FunctionDeclaration",
+      "ArrowFunctionExpression",
+      "ClassDeclaration",
+      "ClassExpression",
+    ].includes(enclosing.type)
+  ) {
+    enclosing = enclosing.parent;
+  }
+  const method = enclosing?.parent;
+  if (method?.type !== "MethodDefinition" || method.kind !== "constructor" || method.static) {
+    return false;
+  }
+  const key = memberKey(member);
+  return (
+    key !== null &&
+    method.parent.body.some(
+      (field) =>
+        field.type === "PropertyDefinition" &&
+        !field.static &&
+        (field.computed ? literalKey(field.key) : staticKey(field.key)) === key,
+    )
+  );
+}
+
 function considerWrite(state, target, node, info) {
+  if (!info.viaCall && initializesOwnField(node)) return;
   if (target?.mutator) target = target.mutator.member;
   if (target?.type === "union") {
     for (const member of target.members) {

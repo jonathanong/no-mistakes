@@ -51,13 +51,20 @@ function functionEnvironment(state, node, scope, tag) {
   const classMethod =
     node.parent?.type === "MethodDefinition" || node.parent?.type === "TSAbstractMethodDefinition";
   const declared = !arrow && declaredReceiver(state.context.sourceCode, node);
+  const receiverType = node.params.find((param) => param.name === "this")?.typeAnnotation
+    ?.typeAnnotation;
+  const arrayReceiver =
+    receiverType?.type === "TSArrayType" ||
+    (receiverType?.type === "TSTypeReference" && receiverType.typeName.name === "Array");
   env.inClass = arrow ? Boolean(scope.inClass) : classMethod || declared;
   env.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
   env.receiver = arrow
     ? scope.receiver || null
     : declared
-      ? { type: "this", inClass: true }
-      : tag.receiver || null;
+      ? { type: "this", inClass: true, isArray: arrayReceiver }
+      : classMethod
+        ? { type: "this", inClass: true, isArray: Boolean(scope.arrayThis && !node.parent.static) }
+        : tag.receiver || null;
   return env;
 }
 

@@ -126,7 +126,7 @@ function mutationCall(node, scope) {
     return forwardedMutation(callee.object, node, scope);
   }
   if (ARRAY_METHODS.has(name)) {
-    return { targetNode: callee.object, otherArgs: node.arguments };
+    return { targetNode: callee.object, otherArgs: node.arguments, arrayReceiver: true };
   }
   if (REFLECT_METHODS.has(name) && isGlobal(callee.object, scope, "Reflect")) {
     return argumentMutation(node);

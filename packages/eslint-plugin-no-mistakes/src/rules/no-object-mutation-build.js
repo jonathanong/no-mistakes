@@ -74,6 +74,7 @@ function visitObject(state, node, scope, role) {
 
 function visitArray(state, node, scope, role) {
   const fresh = createFresh(scope);
+  fresh.isArray = true;
   for (const element of node.elements) {
     if (!element) {
       continue;

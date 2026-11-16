@@ -39,6 +39,7 @@ function readMember(tag, key, objectNode) {
   if (objectNode && ARRAY_METHODS.has(key)) {
     const member = readMember(tag, key);
     if (member.type === "fn" || member.fn) return member;
+    if (objectNode.type === "ThisExpression" && !tag?.isArray) return member;
     // Keep the receiver's actual value identity, including later escapes. The
     // separate member tag preserves ordinary object/collection provenance.
     return { type: "unknown", mutator: { receiver: tag, receiverNode: objectNode, member } };

@@ -24,6 +24,10 @@ function visitClassNode(state, node, scope, role) {
   copyMethods(value, superTag);
   const classEnv = child(scope);
   classEnv.inClass = true;
+  classEnv.arrayThis =
+    node.superClass?.type === "Identifier" &&
+    node.superClass.name === "Array" &&
+    !lookup(scope, "Array");
   if (node.type === "ClassExpression" && node.id) {
     bindName(node.id.name, value, classEnv, "local");
   }
