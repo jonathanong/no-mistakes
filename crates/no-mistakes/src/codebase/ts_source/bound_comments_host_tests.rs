@@ -57,3 +57,24 @@ fn postfix_division_and_nested_templates_keep_the_next_bound() {
         }]
     );
 }
+
+#[test]
+fn quote_escapes_and_nested_braces_keep_the_next_bound() {
+    let source = concat!(
+        "const quoted = 'it\\'s';\n",
+        "const nested = `${`a\\``}`;\n",
+        "const block = `${`a${b({c:1})}`}`;\n",
+        "const obj = { n: 1 };\n",
+        "const q = `\n",
+        "  -- no-mistakes-bound postgres-bounded-statements rows<=4: after\n",
+        "`;\n",
+    );
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 6,
+            rows: 4,
+            justification: "after".to_string(),
+        }]
+    );
+}

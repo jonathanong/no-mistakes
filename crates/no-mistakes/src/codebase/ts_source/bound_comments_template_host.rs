@@ -129,12 +129,11 @@ pub(super) fn finish_ident(ident: &mut String, carry: &mut Carry) {
 }
 
 fn adjust_js(ch: char, carry: &mut Carry) {
-    let Some(depth) = carry.js.last_mut() else {
-        return;
-    };
+    // Called only while the current JS frame's depth is above zero.
+    let depth = carry.js.last_mut().expect("js frame");
     if ch == '{' {
         *depth += 1;
-    } else if *depth > 0 {
+    } else {
         *depth -= 1;
     }
 }
@@ -142,7 +141,7 @@ fn adjust_js(ch: char, carry: &mut Carry) {
 fn adjust_braces(ch: char, carry: &mut Carry) {
     if ch == '{' {
         carry.braces += 1;
-    } else if ch == '}' {
+    } else {
         carry.braces -= 1;
         if carry.braces == 0 {
             carry.template = true;

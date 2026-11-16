@@ -105,9 +105,8 @@ fn js_content(
     }
     if ch == '$' && chars.peek().is_some_and(|(_, next)| *next == '{') {
         chars.next();
-        if let Some(depth) = carry.js.last_mut() {
-            *depth = 1;
-        }
+        // `js_content` runs only while a frame is open.
+        *carry.js.last_mut().expect("nested template") = 1;
         carry.regex_ok = true;
     }
 }

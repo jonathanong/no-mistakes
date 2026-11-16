@@ -66,8 +66,7 @@ fn brace_step(ch: char, carry: &mut Carry) -> bool {
         carry.regex_ok = ch == '{';
         return true;
     }
-    if !ch.is_whitespace() {
-        carry.regex_ok = "([{,;:?=&|*%<>~^/".contains(ch);
-    }
+    // A brace outside an interpolation is an operator, same as `(`.
+    carry.regex_ok = "([{,;:?=&|*%<>~^/".contains(ch);
     true
 }
