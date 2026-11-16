@@ -20,64 +20,30 @@ impl Proof<'_, '_> {
         name: &str,
         at: u32,
     ) -> bool {
-        self.binds_binding(
-            file,
-            scope,
-            name,
-            at,
-            &mut FxHashSet::default(),
-            &mut FxHashSet::default(),
-        )
+        self.binds_binding(file, scope, name, at)
     }
 
-    fn binds_binding(
-        &mut self,
-        file: &Path,
-        scope: usize,
-        name: &str,
-        at: u32,
-        seen: &mut FxHashSet<(PathBuf, usize, String, u32)>,
-        calls: &mut FxHashSet<(PathBuf, u32, u32)>,
-    ) -> bool {
+    fn binds_binding(&mut self, file: &Path, scope: usize, name: &str, at: u32) -> bool {
         let binding = self.bindings.value(file, scope, name, at);
-        let key = (
-            file.to_path_buf(),
-            scope,
-            name.into(),
-            binding.map_or(u32::MAX, |b| b.declared_at),
-        );
-        if !seen.insert(key.clone()) {
-            return true;
-        }
-        let result = if let Some(binding) = binding {
-            self.bound_binding(file, binding, at, seen, calls)
+        // The builder proof has already rejected cycles and untracked calls.
+        if let Some(binding) = binding {
+            self.bound_binding(file, binding, at)
         } else {
             scope != 0
                 || self
                     .graph
                     .imported_value(file, name)
                     .is_none_or(|(producer, imported)| {
-                        self.binds_binding(&producer, 0, &imported, u32::MAX, seen, calls)
+                        self.binds_binding(&producer, 0, &imported, u32::MAX)
                     })
-        };
-        seen.remove(&key);
-        result
+        }
     }
 
-    fn bound_binding(
-        &mut self,
-        file: &Path,
-        binding: &ValueBinding,
-        at: u32,
-        seen: &mut FxHashSet<(PathBuf, usize, String, u32)>,
-        calls: &mut FxHashSet<(PathBuf, u32, u32)>,
-    ) -> bool {
-        if self.binds_expression(file, &binding.value, seen, calls) {
+    fn bound_binding(&mut self, file: &Path, binding: &ValueBinding, at: u32) -> bool {
+        if self.binds_expression(file, &binding.value) {
             return true;
         }
-        let Some(flow) = self.file(file).map(|data| data.flow) else {
-            return true;
-        };
+        let flow = self.files[file].flow;
         let appended: Vec<_> = flow
             .calls
             .iter()
@@ -90,51 +56,24 @@ impl Proof<'_, '_> {
             .collect();
         appended
             .iter()
-            .any(|argument| self.binds_expression(file, argument, seen, calls))
+            .any(|argument| self.binds_expression(file, argument))
     }
 
-    fn binds_expression(
-        &mut self,
-        file: &Path,
-        value: &ValueExpression,
-        seen: &mut FxHashSet<(PathBuf, usize, String, u32)>,
-        calls: &mut FxHashSet<(PathBuf, u32, u32)>,
-    ) -> bool {
+    fn binds_expression(&mut self, file: &Path, value: &ValueExpression) -> bool {
         match value {
             ValueExpression::Named {
                 name,
                 scope,
                 offset,
                 ..
-            } => self.binds_binding(file, scope.unwrap_or(0), name, *offset, seen, calls),
-            ValueExpression::Call(start, end) => {
-                let key = (file.to_path_buf(), *start, *end);
-                if !calls.insert(key.clone()) {
-                    return true;
-                }
-                let result = self.binds_call(file, *start, *end, seen, calls);
-                calls.remove(&key);
-                result
-            }
+            } => self.binds_binding(file, scope.unwrap_or(0), name, *offset),
+            ValueExpression::Call(start, end) => self.binds_call(file, *start, *end),
             _ => true,
         }
     }
 
-    fn binds_call(
-        &mut self,
-        file: &Path,
-        start: u32,
-        end: u32,
-        seen: &mut FxHashSet<(PathBuf, usize, String, u32)>,
-        calls: &mut FxHashSet<(PathBuf, u32, u32)>,
-    ) -> bool {
-        let Some(call) = self
-            .file(file)
-            .and_then(|data| data.calls.get(&(start, end)))
-            .copied()
-        else {
-            return true;
-        };
+    fn binds_call(&mut self, file: &Path, start: u32, end: u32) -> bool {
+        let call = self.files[file].calls[&(start, end)];
         if self.files[file]
             .flow
             .tagged_templates
@@ -144,11 +83,11 @@ impl Proof<'_, '_> {
         }
         if let ValueExpression::Member(base, method) = &call.callee {
             return method != "append"
-                || self.binds_expression(file, base, seen, calls)
+                || self.binds_expression(file, base)
                 || call
                     .arguments
                     .iter()
-                    .any(|arg| self.binds_expression(file, arg, seen, calls));
+                    .any(|arg| self.binds_expression(file, arg));
         }
         let targets = self
             .graph
@@ -186,7 +125,7 @@ impl Proof<'_, '_> {
                 returns.is_empty()
                     || returns
                         .iter()
-                        .any(|value| self.binds_expression(producer, value, seen, calls))
+                        .any(|value| self.binds_expression(producer, value))
             })
     }
 }

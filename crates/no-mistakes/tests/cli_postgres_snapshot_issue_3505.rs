@@ -39,6 +39,7 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         ("chained append", "q"),
         ("multi missing", "q"),
         ("multi wrong", "q"),
+        ("dynamic values", "q"),
     ] {
         assert!(
             findings.iter().any(|finding| {

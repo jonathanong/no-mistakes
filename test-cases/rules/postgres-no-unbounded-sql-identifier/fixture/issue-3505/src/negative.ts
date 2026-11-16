@@ -73,3 +73,12 @@ export async function multiHoleWrongValues(id: string) {
   const suffix = sql` ORDER BY id`;
   return read(`/* multi wrong */ ${q.text}${suffix.text}`, suffix.values);
 }
+
+function otherStatement() {
+  return sql`SELECT 1`;
+}
+
+export async function dynamicValuesReceiver(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  return read(`/* dynamic values */ ${q.text}`, otherStatement().values);
+}
