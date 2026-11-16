@@ -145,3 +145,41 @@ fn function_export_walk_skips_non_callables_and_stops_on_a_star_cycle() {
         vec![(scan, "sync".to_string())]
     );
 }
+
+#[test]
+fn a_sourced_named_reexport_follows_the_callable_and_skips_a_namespace() {
+    let barrel = PathBuf::from("/repo/src/barrel.mts");
+    let scan = PathBuf::from("/repo/src/scan.mts");
+    let edges = graph(&[(&barrel, &scan)]);
+    let facts = Facts {
+        files: HashMap::from([
+            (
+                barrel.clone(),
+                TsFileFacts {
+                    exported_bindings: vec![
+                        export("sync", "sync", Some("./scan.mts")),
+                        export("*", "workers", Some("./scan.mts")),
+                        export("gone", "gone", Some("./missing.mts")),
+                    ],
+                    ..TsFileFacts::default()
+                },
+            ),
+            (
+                scan.clone(),
+                TsFileFacts {
+                    exported_bindings: vec![export("sync", "sync", None)],
+                    exported_functions: vec!["sync".to_string()],
+                    callable_scope_ids: vec![(CallableId(7), "sync".to_string())],
+                    ..TsFileFacts::default()
+                },
+            ),
+        ]),
+    };
+    let resolution = resolution();
+    let visible = PathSet::default();
+    let locate = locate(&edges, &facts, &resolution, &visible);
+    assert_eq!(
+        home::function_exports(&locate, &barrel),
+        vec![(scan, "sync".to_string())]
+    );
+}

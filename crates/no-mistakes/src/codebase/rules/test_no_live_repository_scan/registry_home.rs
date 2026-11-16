@@ -17,6 +17,7 @@ pub(super) struct Locate<'a> {
     pub(super) facts: &'a dyn TsFactLookup,
     pub(super) resolution: &'a super::super::Resolution<'a>,
     pub(super) visible: &'a dyn VisiblePathLookup,
+    pub(super) resolver: super::resolve::RegistryResolver<'a>,
 }
 
 pub(super) fn homes(locate: &Locate<'_>, site: &ResolvedCallSite, object: &str) -> Vec<Home> {
@@ -153,9 +154,41 @@ fn collect_functions(
             out.push((file.to_path_buf(), name.clone()));
         }
     }
+    for export in &ts.exported_bindings {
+        follow_sourced_function(locate, file, export, out);
+    }
     for specifier in &ts.star_reexport_specifiers {
         if let Some(target) = super::resolve::resolve(locate, file, specifier) {
             collect_functions(locate, &target, seen, out);
         }
+    }
+}
+
+fn follow_sourced_function(
+    locate: &Locate<'_>,
+    file: &Path,
+    export: &crate::codebase::dependencies::extract::ExportedBinding,
+    out: &mut Vec<(PathBuf, String)>,
+) {
+    if export.local == "*" {
+        return;
+    }
+    let Some(specifier) = export.specifier.as_deref() else {
+        return;
+    };
+    let Some(target) = super::resolve::resolve(locate, file, specifier) else {
+        return;
+    };
+    let Some((found, local)) = binding_local(locate, &target, &export.local, &mut Vec::new())
+    else {
+        return;
+    };
+    let callable = locate.facts.get_ts_facts(&found).is_some_and(|ts| {
+        ts.callable_scope_ids
+            .iter()
+            .any(|(_, scope)| scope == &local)
+    });
+    if callable {
+        out.push((found, local));
     }
 }

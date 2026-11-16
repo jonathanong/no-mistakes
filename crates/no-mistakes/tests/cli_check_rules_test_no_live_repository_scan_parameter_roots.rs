@@ -102,6 +102,7 @@ fn caller_references_check_json_snapshot() {
         "registry-namespace-owned",
         "registry-namespace-key",
         "registry-namespace-cycle",
+        "registry-namespace-reexport",
         "registry-default",
         "registry-barrel",
         "registry-star",

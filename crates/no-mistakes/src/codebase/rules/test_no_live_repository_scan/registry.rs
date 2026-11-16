@@ -35,6 +35,7 @@ pub(super) fn apply<'a>(
         facts,
         resolution,
         visible: &files,
+        resolver: resolve::RegistryResolver::prepare(resolution, &files),
     };
     let mut reached = Vec::new();
     let mut unresolved = Vec::new();

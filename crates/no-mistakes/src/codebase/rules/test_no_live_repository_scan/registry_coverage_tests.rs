@@ -51,6 +51,7 @@ fn locate<'a>(
         facts,
         resolution,
         visible,
+        resolver: resolve::RegistryResolver::prepare(resolution, visible),
     }
 }
 
