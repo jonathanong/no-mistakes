@@ -371,15 +371,17 @@ jobs:
     timeout-minutes: 8
     env:
       LYCHEE_REPORT: lychee/out.md
+      # docs/performance/2238/39488578982/README.md and tables.md are hash-locked by checksums.json.
       LYCHEE_ARGS: >-
         --no-progress
         --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
         --exclude-path ^fixtures/
+        --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$'
         README.md
-        docs/**/*.md
-        plugins/*/skills/**/*.md
-        packages/*/README.md
-        crates/*/README.md
+        'docs/**/*.md'
+        'plugins/*/skills/**/*.md'
+        'packages/*/README.md'
+        'crates/*/README.md'
         AGENTS.md
     steps:
       - name: Checkout
