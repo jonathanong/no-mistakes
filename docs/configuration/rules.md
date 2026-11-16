@@ -567,14 +567,22 @@ map sets `fail`, `advise` (default), or `ignore` independently for
 with required reasons. `writeSets` asserts helper-written relations for one
 file and transaction factory line. Both lists default to empty and participate
 in unused-entry accounting. Unresolved SQL and transaction membership follow
-`unanalyzable` / `unanalyzableSql`. Its `executorOptionProperties` defaults to
-`[]`; for example, `[query]` selects inline `{ query: tx }` or
+`unanalyzable` / `unanalyzableSql`. Its `executorOptions` defaults to `[]`;
+for example, `[{ name: query }]` selects inline `{ query: tx }` or
 `{ query: tx.query }` overrides at configured executors. An unresolved override
 follows the unanalyzable policy and is never classified as autocommit.
+Names must be nonempty. The existing `executorOptionProperties: [query]` form
+remains supported; both lists combine and repeated names are deduplicated.
 Configured factory bindings support `const`, `using`, and `await using` with
 block scope. Optional `schemaCatalogPath` supplies schema relationships for
 table locks that order later DDL. A read of a locked guard relation before later
 DDL in the same transaction also establishes that purpose without a catalog.
+Complete catalogs also supply trigger-derived write evidence; ordering-only
+catalogs do not.
+Direct callbacks passed to a configured imported transaction factory can provide
+the transaction client. Local, unexported helpers can forward an options parameter
+and select SQL with a literal boolean argument at each caller. Unknown callers
+and flags do not establish safe transaction membership.
 See the rule page for helper summaries and supported proof limits.
 
 [`postgres-column-check-constraints`](../rules/postgres-column-check-constraints.md)

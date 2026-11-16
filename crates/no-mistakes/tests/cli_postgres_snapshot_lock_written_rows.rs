@@ -493,3 +493,11 @@ fn postgres_lock_written_rows_trigger_writes_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_caller_options_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_caller_options",
+        &[("caller_options", "caller-options", "caller-options.yml")],
+    );
+}

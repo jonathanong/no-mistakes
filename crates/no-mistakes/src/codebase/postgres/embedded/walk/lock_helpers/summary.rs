@@ -8,6 +8,8 @@ pub(crate) struct Query {
     pub(crate) span: (u32, u32),
     pub(crate) access: ExecutorAccess,
     pub(crate) executor: usize,
+    pub(crate) option_property: Option<Vec<String>>,
+    pub(crate) condition: Option<(usize, bool)>,
     pub(crate) sql: String,
     pub(crate) line: u32,
     pub(crate) parameters: Vec<Parameter>,

@@ -7,6 +7,7 @@ const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const cases = [
   ["resource-transactions", "checks-fail.yml", 1],
   ["resource-options", "resource-options.yml", 4],
+  ["caller-options", "caller-options.yml", 13],
   ["hashed-advisory", "checks-fail.yml", 4],
   ["helper-unwritten", "checks-fail.yml", 1],
   ["helper-written", "checks-fail.yml", 0],

@@ -1,0 +1,122 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "caller_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/nested.ts",
+          "line": 11,
+          "message": "src/nested.ts:11: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory; helper wrapper locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await wrapper();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 14,
+          "message": "src/query.ts:14: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory; helper optional locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await optional(id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 15,
+          "message": "src/query.ts:15: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction; helper optional locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await optional(id, { query: write });",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 16,
+          "message": "src/query.ts:16: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory; helper guarded locks at line 6",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await guarded(id, true);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 17,
+          "message": "src/query.ts:17: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction; helper guarded locks at line 6",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await guarded(id, true, { query: write });",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 18,
+          "message": "src/query.ts:18: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`, { query: write });",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 19,
+          "message": "src/query.ts:19: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 28,
+          "message": "src/query.ts:28: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`, { query: transaction });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unsafe.ts",
+          "line": 10,
+          "message": "src/unsafe.ts:10: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unsafe.ts",
+          "line": 14,
+          "message": "src/unsafe.ts:14: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unsafe.ts",
+          "line": 26,
+          "message": "src/unsafe.ts:26: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory; helper unknownFlag locks at line 17",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await unknownFlag(flag, { query: tx });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unsafe.ts",
+          "line": 3,
+          "message": "src/unsafe.ts:3: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unsafe.ts",
+          "line": 6,
+          "message": "src/unsafe.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

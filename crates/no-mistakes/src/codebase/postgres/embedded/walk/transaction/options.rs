@@ -60,7 +60,7 @@ pub(super) fn annotate_alias(
     state::alias(visitor, receiver, fact)
 }
 
-fn receiver<'a>(
+pub(in crate::codebase::postgres::embedded::walk) fn receiver<'a>(
     visitor: &ScopeVisitor<'_>,
     expression: &'a Expression<'a>,
     properties: &[String],

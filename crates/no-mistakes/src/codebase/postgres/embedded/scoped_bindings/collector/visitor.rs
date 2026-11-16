@@ -1,0 +1,191 @@
+use super::{callback_transactions, owners, ScopeCollector};
+use oxc_ast::ast::{
+    ArrowFunctionExpression, AssignmentTargetPropertyIdentifier, BindingPattern, BlockStatement,
+    ForStatement, Function, FunctionBody, Program, SimpleAssignmentTarget, StaticBlock,
+    SwitchStatement, VariableDeclaration, VariableDeclarationKind,
+};
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::{GetSpan, Span};
+use oxc_syntax::scope::ScopeFlags;
+
+impl<'a> Visit<'a> for ScopeCollector {
+    fn visit_binding_identifier(&mut self, id: &oxc_ast::ast::BindingIdentifier<'a>) {
+        self.declare_delayed_binding(id);
+    }
+
+    fn visit_identifier_reference(&mut self, id: &oxc_ast::ast::IdentifierReference<'a>) {
+        self.record_delayed_reference(id);
+    }
+
+    fn visit_simple_assignment_target(&mut self, target: &SimpleAssignmentTarget<'a>) {
+        self.delayed.write = target.get_expression().map_or(target.span(), |expression| {
+            crate::codebase::ts_source::unwrap_ts_wrappers(expression).span()
+        });
+        walk::walk_simple_assignment_target(self, target);
+    }
+
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        target: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.delayed.write = target.binding.span;
+        walk::walk_assignment_target_property_identifier(self, target);
+    }
+
+    fn visit_statements(
+        &mut self,
+        statements: &oxc_allocator::Vec<'a, oxc_ast::ast::Statement<'a>>,
+    ) {
+        self.record_delayed_statements(statements);
+        walk::walk_statements(self, statements);
+    }
+
+    scope_visits!();
+
+    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+        self.exclude_dynamic_this(function);
+        self.record_type_parameters(function.type_parameters.as_deref(), function.span);
+        if function.r#type == oxc_ast::ast::FunctionType::FunctionDeclaration {
+            if let Some(id) = &function.id {
+                self.declare_delayed_binding(id);
+                if self.factories.contains(id.name.as_str()) {
+                    callback_transactions::record_shadow(
+                        id.name.as_str(),
+                        *self.scopes.last().expect("scope"),
+                        &mut self.factory_shadows,
+                    );
+                }
+            }
+        }
+        self.delayed.functions.push(function.span);
+        callback_transactions::record_parameter_shadows(
+            &function.params,
+            function.span,
+            &self.factories,
+            &mut self.factory_shadows,
+        );
+        self.bind_params(&function.params, function.span);
+        walk::walk_function(self, function, flags);
+        self.delayed.functions.pop();
+    }
+
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        self.record_type_parameters(arrow.type_parameters.as_deref(), arrow.span);
+        self.delayed.functions.push(arrow.span);
+        callback_transactions::record_parameter_shadows(
+            &arrow.params,
+            arrow.span,
+            &self.factories,
+            &mut self.factory_shadows,
+        );
+        self.bind_params(&arrow.params, arrow.span);
+        walk::walk_arrow_function_expression(self, arrow);
+        self.delayed.functions.pop();
+    }
+
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        if let Some(name) = &class.id {
+            let span = if class.r#type == oxc_ast::ast::ClassType::ClassDeclaration {
+                *self.scopes.last().expect("scope")
+            } else {
+                class.span
+            };
+            self.type_shadows.push((name.name.to_string(), span));
+        }
+        self.record_type_parameters(class.type_parameters.as_deref(), class.span);
+        self.prepare_class_receivers(class);
+        self.classes.push(class.span);
+        walk::walk_class(self, class);
+        self.classes.pop();
+    }
+
+    fn visit_property_definition(&mut self, property: &oxc_ast::ast::PropertyDefinition<'a>) {
+        self.record_class_property(property);
+        walk::walk_property_definition(self, property);
+    }
+
+    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) {
+        self.record_parameter_property(parameter);
+        walk::walk_formal_parameter(self, parameter);
+    }
+
+    fn visit_ts_type_alias_declaration(
+        &mut self,
+        alias: &oxc_ast::ast::TSTypeAliasDeclaration<'a>,
+    ) {
+        self.record_type_shadow(alias.id.name.as_str());
+        walk::walk_ts_type_alias_declaration(self, alias);
+    }
+
+    fn visit_ts_interface_declaration(
+        &mut self,
+        interface: &oxc_ast::ast::TSInterfaceDeclaration<'a>,
+    ) {
+        self.record_type_shadow(interface.id.name.as_str());
+        walk::walk_ts_interface_declaration(self, interface);
+    }
+
+    fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
+        self.record_undeclared_variable(declaration);
+        walk::walk_variable_declarator(self, declaration);
+    }
+
+    fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
+        if self.track_resource_transactions && !call.optional {
+            callback_transactions::record(
+                call,
+                &self.factories,
+                &self.factory_shadows,
+                &mut self.found.transactions,
+            );
+        }
+        walk::walk_call_expression(self, call);
+    }
+
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        if self.delayed.enabled && declaration.kind == VariableDeclarationKind::Let {
+            for item in &declaration.declarations {
+                if item.init.is_none() && item.type_annotation.is_some() {
+                    self.delayed.candidates.insert(item.id.span().start);
+                }
+            }
+        }
+        // `var` hoists past the block, so only block-scoped kinds are bound.
+        callback_transactions::record_local_shadows(
+            declaration,
+            self.delayed.functions.last().copied(),
+            *self.scopes.last().expect("scope"),
+            &self.factories,
+            &mut self.factory_shadows,
+        );
+        if declaration.kind != VariableDeclarationKind::Var {
+            let end = self.scopes.last().expect("program scope").end;
+            for declarator in &declaration.declarations {
+                if let (BindingPattern::BindingIdentifier(ident), Some(init)) =
+                    (&declarator.id, &declarator.init)
+                {
+                    let hit =
+                        owners::factory_hit(&self.factories, &self.provisional_factories, init);
+                    let span = Span::new(declarator.id.span().start, end);
+                    if hit.confirmed
+                        && (declaration.kind == VariableDeclarationKind::Const
+                            || (self.track_resource_transactions
+                                && matches!(
+                                    declaration.kind,
+                                    VariableDeclarationKind::Using
+                                        | VariableDeclarationKind::AwaitUsing
+                                )))
+                    {
+                        self.found
+                            .transactions
+                            .entry(ident.name.to_string())
+                            .or_default()
+                            .push(span);
+                    }
+                    self.record(ident.name.as_str(), span, hit);
+                }
+            }
+        }
+        walk::walk_variable_declaration(self, declaration);
+    }
+}

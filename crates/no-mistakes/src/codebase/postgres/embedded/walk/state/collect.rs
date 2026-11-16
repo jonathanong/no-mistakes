@@ -29,6 +29,20 @@ pub(crate) fn collect_calls<'a>(
     } else {
         super::super::finite_identifiers::vitest_it_imports(program)
     };
+    let functions = if head_calls_only {
+        resolve::LocalFunctions::collect_heads_with_raw(
+            program,
+            &options.trusted_sql_tags,
+            &options.raw_sql_tags,
+        )
+    } else {
+        resolve::LocalFunctions::collect_with_raw(
+            program,
+            source,
+            &options.trusted_sql_tags,
+            &options.raw_sql_tags,
+        )
+    };
     let mut visitor = ScopeVisitor {
         #[cfg(feature = "test-instrumentation")]
         lock_summary_passes: 0,
@@ -39,6 +53,9 @@ pub(crate) fn collect_calls<'a>(
             program,
             options.track_transaction_helpers,
             source,
+            bindings,
+            options,
+            functions.imported_sql_tags(),
         ),
         incomplete_transaction_owners: Default::default(),
         exited_functions: Default::default(),
@@ -101,20 +118,7 @@ pub(crate) fn collect_calls<'a>(
         loop_depth: 0,
         function_scopes: Vec::new(),
         var_scopes: Vec::new(),
-        functions: if head_calls_only {
-            resolve::LocalFunctions::collect_heads_with_raw(
-                program,
-                &options.trusted_sql_tags,
-                &options.raw_sql_tags,
-            )
-        } else {
-            resolve::LocalFunctions::collect_with_raw(
-                program,
-                source,
-                &options.trusted_sql_tags,
-                &options.raw_sql_tags,
-            )
-        },
+        functions,
         sql_statement_types: sql_statement_type_bindings(program),
         unproven_member_query_spans: Vec::new(),
         transaction_options: Default::default(),

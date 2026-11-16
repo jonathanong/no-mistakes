@@ -177,3 +177,71 @@ fn executor_option_metadata_rejects_conflicting_overrides_and_ended_aliases() {
     assert!(!call.executor_transaction_known);
     assert!(call.transaction_id.is_none());
 }
+
+#[test]
+fn configured_caller_options_specialize_transaction_and_boolean_parameters() {
+    let root = fixture("caller-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let findings = check_with_files(
+        &root,
+        &config,
+        &[
+            root.join("src/query.ts"),
+            root.join("src/unsafe.ts"),
+            root.join("src/nested.ts"),
+        ],
+    )
+    .unwrap();
+    let mut lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file.ends_with("query.ts"))
+        .map(|finding| finding.line)
+        .collect();
+    lines.sort();
+    assert_eq!(lines, [14, 15, 16, 17, 18, 19, 28], "{findings:?}");
+    let mut unsafe_lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file.ends_with("unsafe.ts"))
+        .map(|finding| finding.line)
+        .collect();
+    unsafe_lines.sort();
+    assert_eq!(unsafe_lines, [3, 6, 10, 14, 26], "{findings:?}");
+    let nested_lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file.ends_with("nested.ts"))
+        .map(|finding| finding.line)
+        .collect();
+    assert_eq!(nested_lines, [11], "{findings:?}");
+}
+
+#[test]
+fn caller_option_routing_requires_explicit_configuration() {
+    let root = fixture("caller-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options.yml");
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    config.rules[0]
+        .options
+        .as_mapping_mut()
+        .unwrap()
+        .remove(serde_yaml::Value::String("executorOptions".into()));
+    let findings = check(&root, &config).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file.ends_with("query.ts")
+                && finding.line == 10
+                && finding.target.as_deref() == Some(CHECKS[3])),
+        "{findings:?}"
+    );
+}
