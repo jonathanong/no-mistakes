@@ -374,7 +374,9 @@ Every key element must have a finite pin. Supported index shapes include:
   `(col)::text = ANY ((ARRAY['pending'::character varying, 'ready'::character varying])::text[])`
   when the index was written with `IN`. Those match the same literal set.
   `(col)::text` is not a bare column for `citext`, `char` / `character`, or any other
-  catalog type, including a domain. Comparing a `varchar` column with `'pending'::citext`
+  catalog type, including a domain. The catalog stores the domain's own name, and
+  the proof does not resolve that name to its base type, so a domain over `citext`
+  or `text` stays unmatched. Comparing a `varchar` column with `'pending'::citext`
   does not match that stored list.
   A longer list, a shorter list, or `col = one-literal`
   does not match a multi-value list. A bare parameter does not match a literal.

@@ -1,10 +1,9 @@
 use super::super::SchemaCatalog;
-use std::path::PathBuf;
 
 #[test]
 fn issue_3462_shared_bare_name_does_not_prove_not_null() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-bounded-statements/issue-3462/schema.json");
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
+        .join("../issue-3462/schema.json");
     let catalog = SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap();
     assert_eq!(
         catalog

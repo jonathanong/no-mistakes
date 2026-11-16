@@ -1,6 +1,5 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
-assertion_line: 108
 ---
 {
   "partial-index-gaps": {
