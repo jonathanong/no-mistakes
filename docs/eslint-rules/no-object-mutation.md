@@ -201,7 +201,7 @@ shared. Class `this` writes and functions with a declared receiver are allowed u
 `allowThis` is `false`. A receiver is declared by a TypeScript `this: T` parameter
 or an attached JSDoc `@this {T}` tag. Arrows inherit the enclosing receiver; a
 nested regular function must declare its own. `this` in a plain function without
-a declared receiver is reported. `this` in an object method is reported
+a declared receiver is reported. `this` in an undeclared object method is reported
 when that object escapes, including a module-level object, and allowed while
 the object stays a local builder. A class that stays local is allowed, including
 `new` and a method call. Returning the class, `new` of it, or `fn.bind(...)`
@@ -240,7 +240,7 @@ export function update() {
 | `imported`   | `true`  | The same for imported bindings and their members.                                                                                                                                                                                                                         |
 | `parameters` | `true`  | The same for parameters and values reached from them.                                                                                                                                                                                                                     |
 | `calls`      | `true`  | `Object.assign`, `Object.defineProperty`, `Object.defineProperties`, and `Object.setPrototypeOf`, including those `Object` methods via `.call`, `.apply`, and `.bind`. `Reflect.set` and `Reflect.defineProperty`. `push`, `pop`, `shift`, `unshift`, `splice`, `sort`, `reverse`, `fill`, and `copyWithin`, including those array methods via `.call` and `.apply`. |
-| `allowThis`  | `true`  | Allow `this` writes in class methods or functions and methods declaring a TypeScript `this: T` parameter or attached JSDoc `@this {T}`. Arrows inherit that receiver; nested regular functions need their own declaration.                                                                                                                                                                                            |
+| `allowThis`  | `true`  | Allow `this` writes inside a class body, or in functions and methods declaring a TypeScript `this: T` parameter or attached JSDoc `@this {T}`. Arrows inherit that receiver; nested regular functions need their own declaration.                                                                                                                                                                                            |
 | `allow`      | `[]`    | Root names or dotted paths. `tables` allows `tables[key]`. `tables.users` allows `tables.users.id` but not a computed `tables[key]`.                                                                                                                                      |
 
 ## Fix
