@@ -87,3 +87,7 @@ fn static_member(callee: &str) -> Option<(String, Option<String>)> {
     let (object, key) = callee.split_once('.')?;
     (is_name(object) && is_name(key)).then(|| (object.to_string(), Some(key.to_string())))
 }
+
+#[cfg(test)]
+#[path = "registry_coverage_tests.rs"]
+mod coverage_tests;

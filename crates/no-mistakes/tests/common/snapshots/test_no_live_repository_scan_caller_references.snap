@@ -723,6 +723,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "registry-cycle-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "registry-default": {
     "exitCode": 0,
     "report": {
@@ -820,6 +832,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "registry-export-star-as-owned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "registry-member": {
     "exitCode": 0,
     "report": {
@@ -853,6 +877,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "unresolved root: `workers[name]` dispatches a registry that holds a scanning function, but the key is not a static string, so the scanner cannot be named. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "workers[name](root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-namespace-cycle": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/scan.test.mts",
+          "import": "workers[name]",
+          "line": 7,
+          "message": "unresolved root: `workers[name]` dispatches a registry that holds a scanning function, but the key is not a static string, so the scanner cannot be named. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "workers[name](root);",
+          "target": "unresolved root"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-namespace-key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/scan.mts",
+          "import": "readdirSync",
+          "line": 4,
+          "message": "unresolved root: `readdirSync` enumerates a directory whose root is a parameter, but callers are unknowable because tests/scan.test.mts:4 imports `../src/scan.mts` through a namespace import. Fix: import the helper with a named static import and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "return readdirSync(root);",
           "target": "unresolved root"
         }
       ],
@@ -936,6 +1004,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "exitCode": 0,
     "report": {
       "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "registry-star-gaps": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "tests/scan.test.mts",
+          "import": "workers[name]",
+          "line": 7,
+          "message": "unresolved root: `workers[name]` dispatches a registry that holds a scanning function, but the key is not a static string, so the scanner cannot be named. Fix: call the helper directly and pass an owned root from the caller. As a last option, add `no-mistakes-disable-next-line test-no-live-repository-scan` with a reason.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "workers[name](root);",
+          "target": "unresolved root"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
