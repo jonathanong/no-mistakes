@@ -38,10 +38,24 @@ pub fn executed_query_text(
 /// source characters, escape sequences un-processed) over the cooked form
 /// every other tag — the trusted `sql` tag included — returns; see
 /// [`tags::is_string_raw_tag_spelling`].
+/// Adjacent holes, and a `$` glued to the next hole, need a separator so
+/// `sql_placeholder_2sql_placeholder_3` and `$sql_placeholder_4` stay two tokens.
+/// A hole that begins the template is not adjacent to anything.
+pub(in crate::codebase::postgres::embedded) fn separate_adjacent_hole(
+    before: &str,
+    already: &str,
+) -> bool {
+    !already.is_empty() && (before.is_empty() || before.ends_with('$'))
+}
+
 fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
     let mut out = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
         if index > 0 {
+            let previous = tags::quasi_text(&template.quasis[index - 1], use_raw);
+            if separate_adjacent_hole(&previous, &out) {
+                out.push(' ');
+            }
             out.push_str(&placeholders::internal_placeholder(index));
         }
         out.push_str(&tags::quasi_text(quasi, use_raw));

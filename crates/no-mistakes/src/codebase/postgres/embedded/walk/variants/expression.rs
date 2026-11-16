@@ -89,8 +89,13 @@ pub(super) fn recover(
             ) =>
         {
             if visitor.functions.imported_sql_tags().raw(&tagged.tag) {
-                let mut values =
-                    template::clauses::recover(visitor, &tagged.quasi, depth - 1, constraints)?;
+                let mut values = template::clauses::recover(
+                    visitor,
+                    &tagged.quasi,
+                    depth - 1,
+                    constraints,
+                    true,
+                )?;
                 for value in &mut values {
                     value.fragment = true;
                 }
@@ -106,7 +111,7 @@ pub(super) fn recover(
             }
         }
         Expression::TemplateLiteral(template) => literal(visitor, expr, line)
-            .or_else(|| template::clauses::recover(visitor, template, depth, constraints)),
+            .or_else(|| template::clauses::recover(visitor, template, depth, constraints, false)),
         Expression::CallExpression(call) => {
             if let Some(recovered) = super::helper::recover(visitor, call, depth - 1, constraints) {
                 recovered

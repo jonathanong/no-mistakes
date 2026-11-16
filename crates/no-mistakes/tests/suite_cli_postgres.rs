@@ -200,6 +200,8 @@ mod cli_postgres_snapshot_unanalyzable_schema;
 mod cli_postgres_snapshot_undeclared_executors;
 #[path = "cli_postgres_snapshot_unmatched_executors.rs"]
 mod cli_postgres_snapshot_unmatched_executors;
+#[path = "cli_postgres_snapshot_value_const_holes.rs"]
+mod cli_postgres_snapshot_value_const_holes;
 
 #[path = "cli_check_rules_postgres_json_relation_ids.rs"]
 mod cli_check_rules_postgres_json_relation_ids;

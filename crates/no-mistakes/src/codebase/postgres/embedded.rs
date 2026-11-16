@@ -140,6 +140,8 @@ mod trusted_sql_tag_tests;
 #[cfg(test)]
 mod undeclared_tests;
 #[cfg(test)]
+mod value_hole_tests;
+#[cfg(test)]
 #[path = "embedded/variants/tests.rs"]
 mod variants_tests;
 

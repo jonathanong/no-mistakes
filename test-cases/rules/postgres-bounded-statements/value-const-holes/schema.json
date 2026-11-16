@@ -1,0 +1,156 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "widgets": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "slug": { "dataType": "text", "nullable": false },
+        "name": { "dataType": "text", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "widgets_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX widgets_pkey ON widgets (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "widgets_slug_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX widgets_slug_key ON widgets (slug)",
+          "keys": [{ "column": "slug", "expression": "slug" }]
+        }
+      }
+    },
+    "reports": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "owner_id": { "dataType": "uuid", "nullable": false },
+        "reviewer_id": { "dataType": "uuid", "nullable": false },
+        "state": { "dataType": "text", "nullable": false },
+        "label": { "dataType": "text", "nullable": false },
+        "tenant_id": { "dataType": "uuid", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "reports_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX reports_pkey ON reports (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "reports_reviewer_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX reports_reviewer_id_key ON reports (reviewer_id)",
+          "keys": [{ "column": "reviewer_id", "expression": "reviewer_id" }]
+        }
+      }
+    },
+    "users": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "username": { "dataType": "text", "nullable": false }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "users_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX users_pkey ON users (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "users_username_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX users_username_key ON users (username)",
+          "keys": [{ "column": "username", "expression": "username" }]
+        },
+        "users_username_lower_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX users_username_lower_key ON users (lower(username))",
+          "keys": [{ "column": null, "expression": "lower(username)" }]
+        }
+      }
+    },
+    "objects": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "storage_key": { "dataType": "text", "nullable": true }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "objects_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX objects_pkey ON objects (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  }
+}

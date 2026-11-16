@@ -76,7 +76,10 @@ frozen-record field, stays `sql_placeholder_N` until its alternatives are
 known. A value interpolation in that same trusted tag is a `$N` bind, numbered
 only among the value binds. Neither hole drops the tail after it. A trusted
 tag whose holes are all value binds still publishes each one as
-`sql_placeholder_N`.
+`sql_placeholder_N`. A resolved string constant, including a template that
+builds one, stays that bind when the hole is a value. It is not copied into
+the statement as text. A nested tagged template, a declared SQL fragment, or
+an identifier taken from a closed record still splices.
 
 Numeric literal alternatives inside untagged template holes are stringified using
 JavaScript number formatting, including radix and exponent literals. For example,
