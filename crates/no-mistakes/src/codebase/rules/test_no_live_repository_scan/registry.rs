@@ -18,6 +18,7 @@ pub(super) fn apply<'a>(
     filter: &RulePathFilter,
     enumerators: &[Enumerator],
 ) -> Vec<(&'a ResolvedCallSite, String)> {
+    let callers = alias::caller_nodes(graph);
     let mut reached = Vec::new();
     let mut unresolved = Vec::new();
     for site in graph.resolved_call_sites() {
@@ -33,12 +34,14 @@ pub(super) fn apply<'a>(
         };
         let resolved = key
             .as_deref()
-            .and_then(|key| alias::function_node(graph, facts, site, &object, key));
+            .and_then(|key| alias::function_node(graph, facts, site, &object, key, &callers));
         if let Some(node) = resolved {
             reached.push(node);
             continue;
         }
-        if key.is_none() && alias::registry_scans(graph, facts, site, &object, enumerators) {
+        if key.is_none()
+            && alias::registry_scans(graph, facts, site, &object, enumerators, &callers)
+        {
             unresolved.push((site, label));
         }
     }
