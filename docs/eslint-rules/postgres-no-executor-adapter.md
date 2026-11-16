@@ -362,9 +362,9 @@ run(0 ?? read, account);
   still reports. This option changes only this rule.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   In `"forwarding-only"` mode, a direct tagged template is visible SQL only
-  when its tag resolves to that configured named import. Interpolated values
-  remain placeholders. Other modes accept this option for shared executor
-  configurations without using it.
+  when its tag resolves to that configured named import and the template starts
+  with non-empty static text. Interpolated values remain placeholders. Other
+  modes accept this option for shared executor configurations without using it.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that

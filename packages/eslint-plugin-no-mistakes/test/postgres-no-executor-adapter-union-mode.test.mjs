@@ -27,7 +27,7 @@ function testCase(name, mode, typed = false, config = base) {
     options: [{ ...config, mode }],
     languageOptions: {
       parser: tsParser,
-      parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
+      parserOptions: typed ? { projectService: true, tsconfigRootDir: dirname(filename) } : {},
     },
   };
 }

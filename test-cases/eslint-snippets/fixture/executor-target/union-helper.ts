@@ -35,6 +35,10 @@ export function visibleTaggedImported(query: QueryExecutor) {
   query(sql`SELECT id FROM t WHERE id = ${id}`);
 }
 
+export function hiddenTaggedFragmentImported(fragment: string, query: QueryExecutor) {
+  query(sql`${fragment}`);
+}
+
 export function hiddenTagImported(query: QueryExecutor) {
   query(raw`SELECT ${fragment} FROM t`);
 }

@@ -26,6 +26,9 @@ function hiddenApply(fragment, { query }) {
 function visibleTagged(query) {
   return query(sql`SELECT id FROM t WHERE id = ${id}`);
 }
+function hiddenTaggedFragment(fragment, query) {
+  return query(sql`${fragment}`);
+}
 function hiddenRawTemplate(query) {
   return query(`SELECT ${fragment} FROM t`);
 }
@@ -56,6 +59,7 @@ escapedBag({ query: read });
 hiddenCall(fragment, { query: read });
 hiddenApply(fragment, { query: read });
 visibleTagged(read);
+hiddenTaggedFragment(fragment, read);
 hiddenRawTemplate(read);
 hiddenUntrustedTag(read);
 hidden(sql`SELECT ${fragment} FROM t`, read);

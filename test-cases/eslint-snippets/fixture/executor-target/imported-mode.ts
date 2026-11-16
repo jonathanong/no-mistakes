@@ -6,6 +6,7 @@ import {
   visibleBagImported,
   hiddenBagImported,
   visibleTaggedImported,
+  hiddenTaggedFragmentImported,
   hiddenTagImported,
   visibleNamedBagImported,
   hiddenCallImported,
@@ -17,6 +18,7 @@ hiddenImported(sql`SELECT ${fragment} FROM t`, read);
 visibleBagImported({ query: read });
 hiddenBagImported(sql`SELECT ${fragment} FROM t`, { query: read });
 visibleTaggedImported(read);
+hiddenTaggedFragmentImported(fragment, read);
 hiddenTagImported(read);
 visibleNamedBagImported({ query: read, id });
 hiddenCallImported(fragment, { query: read });
