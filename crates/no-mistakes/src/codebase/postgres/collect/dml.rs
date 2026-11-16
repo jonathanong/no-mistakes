@@ -24,11 +24,8 @@ pub(super) fn collect(
         .par_iter()
         .filter(|path| matches_sql_include(root, path, &globs))
         .map(|path| {
-            let source = match sources.read_path(path) {
+            let source = match sources.read_source_path(path) {
                 Ok(source) => source,
-                Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
-                    return Ok(super::encoding::statement_failure(path));
-                }
                 Err(error) => {
                     return Err(PostgresFactError::for_path(
                         path,

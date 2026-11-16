@@ -50,6 +50,7 @@ test-cases/rules/postgres-grouping-not-aggregation/invalid-utf8/** -text -whites
 test-cases/rules/postgres-json-relation-ids/invalid-utf8/** -text -whitespace
 test-cases/rules/postgres-no-offset/invalid-utf8/** -text -whitespace
 test-cases/rules/postgres-no-offset/invalid-utf8-low/** -text -whitespace
+test-cases/rules/postgres-no-offset/invalid-utf8-sql/page.sql -text -whitespace
 test-cases/rules/postgres-no-transformed-uuid-predicates/invalid-utf8-low/** -text -whitespace
 test-cases/rules/postgres-redundant-index/invalid-utf8/** -text -whitespace
 fixtures/symbols/signature-impact-encoding/** -text -whitespace

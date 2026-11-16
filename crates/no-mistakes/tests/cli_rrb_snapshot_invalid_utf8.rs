@@ -226,6 +226,11 @@ fn invalid_utf8_postgres() {
             ),
             c("postgres_no_offset", "postgres-no-offset"),
             case(
+                "postgres_no_offset_sql",
+                "test-cases/rules/postgres-no-offset/invalid-utf8-sql",
+                ".no-mistakes.yml",
+            ),
+            case(
                 "postgres_no_offset_low",
                 "test-cases/rules/postgres-no-offset/invalid-utf8-low",
                 ".no-mistakes.yml",
@@ -322,6 +327,7 @@ fn invalid_utf8_postgres() {
         "postgres-grouping-not-aggregation",
     );
     assert_definite(&report, "postgres_no_offset", "postgres-no-offset");
+    assert_definite(&report, "postgres_no_offset_sql", "postgres-no-offset");
     assert_definite(&report, "postgres_no_offset_low", "postgres-no-offset");
     assert_definite(
         &report,

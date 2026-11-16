@@ -185,4 +185,14 @@ uncertain or partial selector coverage cannot prove staleness. See
 
 ## Invalid UTF-8
 
-Schema SQL is decoded lossily through the source store, so a stray byte does not drop the file's foreign keys. Allow-directive text uses that same decode. A read that still fails is an unanalyzable finding.
+Schema SQL is decoded lossily through the source store, so a stray byte does not drop the file's foreign keys. Allow-directive text uses that same decode.
+
+An unreadable selected migration fails the rule and reports no findings. The error is `postgres-fk-index failed to collect PostgreSQL facts`. Exclude the path until it can be opened:
+
+```yaml
+rules:
+  - rule: postgres-fk-index
+    exclude: ["migrations/001.sql"]
+```
+
+When prepared facts already exist and the source store cannot re-open that migration, the rule reports one finding at line 1 with target `unanalyzable`, including when the file has no foreign key. The message is `cannot verify postgres-fk-index: cannot read source: <error>; restore read access and save valid UTF-8 source so this check can verify the file`. A disable comment in that file is not applied. The same `exclude` skips the file.

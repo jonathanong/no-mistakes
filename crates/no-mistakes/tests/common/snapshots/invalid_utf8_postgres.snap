@@ -263,6 +263,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "postgres_no_offset_sql": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "page.sql",
+          "line": 2,
+          "message": "page.sql:2: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "target": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "postgres_no_test_state_mutation": {
     "exitCode": 1,
     "report": {

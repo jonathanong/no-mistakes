@@ -436,4 +436,4 @@ and use ordinary location-scoped directives for source exceptions.
 
 ## Invalid UTF-8
 
-Source text this rule reads is decoded lossily, so a stray byte next to an executor call does not drop the file. A missing file remains a read error. Standalone SQL the statement pass cannot decode as UTF-8 stays an unanalyzable encoding failure.
+Source text this rule reads, including standalone SQL, is decoded lossily, so a stray byte does not drop the file or replace it with an encoding failure. A missing file remains a read error.

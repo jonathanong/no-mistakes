@@ -342,4 +342,4 @@ complete schema metadata; a complete catalog satisfies every catalog rule.
 
 ## Invalid UTF-8
 
-Source text this rule reads is decoded lossily. Other read errors contribute no source text. Standalone SQL files the statement pass cannot decode as UTF-8 stay unanalyzable encoding failures. `unanalyzableSql` still applies to SQL the statement pass cannot parse.
+Source text this rule reads, including standalone SQL, is decoded lossily, so a stray byte does not drop the file or replace it with an encoding failure. Other read errors contribute no source text. `unanalyzableSql` still applies to SQL the statement pass cannot parse.

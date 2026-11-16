@@ -10,7 +10,6 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub(super) mod dml;
-pub(super) mod encoding;
 
 /// Read `sql_paths` through `sources` and extract migration schema facts.
 pub fn extract_schema_facts(
@@ -183,3 +182,6 @@ pub(crate) fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> 
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod lossy_sql_tests;
