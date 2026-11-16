@@ -1,0 +1,119 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "rows_5": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: SELECT can return every row of seats; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM seats AS renamed(label, owner_id, band) WHERE owner_id = $1;",
+          "target": "table:seats"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 3,
+          "message": "sql/lookups.sql:3: SELECT can return every row of shadows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM shadows AS renamed(slot, band) WHERE slot = $1;",
+          "target": "table:shadows"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 5,
+          "message": "sql/lookups.sql:5: SELECT can return every row of others; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM others WHERE owner_id = $1;",
+          "target": "table:others"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 7,
+          "message": "sql/lookups.sql:7: SELECT can return every row of audit.misses; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM audit.misses WHERE owner_id = $1;",
+          "target": "table:audit.misses"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of seats; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM seats AS renamed(label) WHERE owner_id = $1;",
+          "target": "table:seats"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: SELECT can return every row of seats; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM seats AS renamed(label, owner_id, band) WHERE owner_id = $1;",
+          "target": "table:seats"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 3,
+          "message": "sql/lookups.sql:3: SELECT can return every row of shadows; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM shadows AS renamed(slot, band) WHERE slot = $1;",
+          "target": "table:shadows"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 4,
+          "message": "sql/lookups.sql:4: SELECT can return every row of gaps; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM gaps AS renamed(note) WHERE owner_id = $1;",
+          "target": "table:gaps"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 5,
+          "message": "sql/lookups.sql:5: SELECT can return every row of others; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM others WHERE owner_id = $1;",
+          "target": "table:others"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 6,
+          "message": "sql/lookups.sql:6: SELECT can return every row of audit.bands; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM audit.bands WHERE owner_id = $1;",
+          "target": "table:audit.bands"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 7,
+          "message": "sql/lookups.sql:7: SELECT can return every row of audit.misses; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT owner_id FROM audit.misses WHERE owner_id = $1;",
+          "target": "table:audit.misses"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

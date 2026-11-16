@@ -45,18 +45,20 @@ pub(super) fn contains_or(expr: &Expr) -> bool {
     }
 }
 
-pub(super) fn negated_between(expr: &Expr, column: &str) -> bool {
+pub(super) fn negated_between(expr: &Expr, column: &str, qualifiers: &[String]) -> bool {
     match unwrap_expr(expr) {
         Expr::Between {
             expr,
             negated: true,
             ..
-        } if super::parse::is_column(expr, column) => true,
+        } if super::parse::names_column(expr, column, qualifiers) => true,
         Expr::BinaryOp {
             left,
             op: BinaryOperator::And,
             right,
-        } => negated_between(left, column) || negated_between(right, column),
+        } => {
+            negated_between(left, column, qualifiers) || negated_between(right, column, qualifiers)
+        }
         _ => false,
     }
 }

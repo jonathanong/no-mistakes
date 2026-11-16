@@ -1,0 +1,173 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "seats": {
+      "relationKind": "table",
+      "columns": {
+        "label": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 3 }
+      },
+      "indexes": {
+        "seats_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX seats_owner_id_slot_key ON public.seats USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "seats_slot_check": { "definition": "CHECK (seats.slot BETWEEN 1 AND 5)" }
+      }
+    },
+    "shadows": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "shadows_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX shadows_owner_id_slot_key ON public.shadows USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "shadows_slot_check": { "definition": "CHECK (slot BETWEEN 1 AND 5)" }
+      }
+    },
+    "gaps": {
+      "relationKind": "table",
+      "columns": {
+        "note": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 4 }
+      },
+      "indexes": {
+        "gaps_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX gaps_owner_id_slot_key ON public.gaps USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "gaps_slot_check": { "definition": "CHECK (public.gaps.slot BETWEEN 1 AND 5)" }
+      }
+    },
+    "others": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "others_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX others_owner_id_slot_key ON public.others USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "others_slot_check": { "definition": "CHECK (other_table.slot BETWEEN 1 AND 5)" }
+      }
+    },
+    "audit.bands": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "audit_bands_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX audit_bands_owner_id_slot_key ON audit.bands USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "audit_bands_slot_check": { "definition": "CHECK (audit.bands.slot BETWEEN 1 AND 5)" }
+      }
+    },
+    "audit.misses": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "audit_misses_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX audit_misses_owner_id_slot_key ON audit.misses USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "audit_misses_slot_check": {
+          "definition": "CHECK (public.misses.slot BETWEEN 1 AND 5)"
+        }
+      }
+    }
+  }
+}

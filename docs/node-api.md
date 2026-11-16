@@ -710,7 +710,10 @@ unique-key remainder whose free columns have proven finite domains when their
 product is at most that cap. Leave it unset to keep those lookups reported.
 An accepted product is silent. A product above the cap stays a finding and
 names that product, including a materialized-body finding. Date literals in a
-domain range are `YYYY-MM-DD`.
+domain range are `YYYY-MM-DD`. A catalog check may qualify the physical column
+with its table, with the catalog schema and table, or with the schema already
+on the catalog key. An enum domain is that
+enum's current label count.
 No separate runtime export is
 needed.
 

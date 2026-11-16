@@ -39,15 +39,21 @@ pub(super) fn integer_type(data_type: &str) -> bool {
     )
 }
 
+#[cfg(test)]
 pub(super) fn check_span(definition: &str, column: &str) -> Option<Span> {
+    owned_check(definition, column, &[])
+}
+
+/// `qualifiers` are `table` and `schema.table` names that may prefix `column`.
+pub(super) fn owned_check(definition: &str, column: &str, qualifiers: &[String]) -> Option<Span> {
     let expr = check_expr(definition)?;
-    if dnf::contains_or(&expr) || dnf::negated_between(&expr, column) {
+    if dnf::contains_or(&expr) || dnf::negated_between(&expr, column, qualifiers) {
         return None;
     }
     let canonical = canonical_bound_expr(&expr);
     let mut conjuncts = Vec::new();
     dnf::and_conjuncts(&canonical, &mut conjuncts);
-    closed_span(column, &conjuncts, Literal::Integer)
+    span_of(column, &conjuncts, Literal::Integer, qualifiers)
 }
 
 pub(super) fn intersect(left: Option<Span>, right: Option<Span>) -> Option<Span> {
@@ -63,10 +69,14 @@ pub(super) fn query_spans(conjuncts: &[Expr], alternatives: usize) -> Vec<Vec<Ex
 }
 
 pub(super) fn closed_span(column: &str, conjuncts: &[Expr], kind: Literal) -> Option<Span> {
+    span_of(column, conjuncts, kind, &[])
+}
+
+fn span_of(column: &str, conjuncts: &[Expr], kind: Literal, qualifiers: &[String]) -> Option<Span> {
     let mut low = None;
     let mut high = None;
     for conjunct in conjuncts {
-        parse::absorb(column, conjunct, kind, &mut low, &mut high);
+        parse::absorb(column, conjunct, kind, &mut low, &mut high, qualifiers);
     }
     let span = Span {
         low: low?,
@@ -110,5 +120,7 @@ fn check_expr(definition: &str) -> Option<Expr> {
         .then_some(*check.expr)
 }
 
+#[cfg(test)]
+mod qualified_tests;
 #[cfg(test)]
 mod tests;
