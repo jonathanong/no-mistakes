@@ -72,81 +72,6 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "review-empty-per-item",
-                """
-                review this before i merge
-
-                ```ts
-                // test/overdue.test.ts
-                import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-                import { overdueInvoices } from "../src/overdue";
-                import { seedInvoices } from "./fixtures/invoices";
-
-                describe("overdueInvoices", () => {
-                  beforeEach(() => {
-                    vi.useFakeTimers();
-                    vi.setSystemTime(new Date("2026-03-15T00:00:00Z"));
-                  });
-
-                  afterEach(() => {
-                    vi.useRealTimers();
-                  });
-
-                  it("returns only unpaid invoices past their due date", () => {
-                    const result = overdueInvoices(seedInvoices());
-                    for (const invoice of result) {
-                      expect(invoice.paidAt).toBeNull();
-                      expect(invoice.dueDate.getTime()).toBeLessThan(Date.now());
-                    }
-                  });
-
-                  it("sorts by due date, oldest first", () => {
-                    const result = overdueInvoices(seedInvoices());
-                    expect(result.map((i) => i.id)).toEqual(["inv_17", "inv_04", "inv_22"]);
-                  });
-
-                  it("returns an empty list when everything is paid", () => {
-                    const paid = seedInvoices().filter((i) => i.paidAt !== null);
-                    expect(overdueInvoices(paid)).toEqual([]);
-                  });
-                });
-                ```
-
-                seedInvoices() is ~200 rows from a fixture file, mixed paid and unpaid.
-                """,
-                [
-                    (
-                        "flags-vacuous-loop-not-empty-case",
-                        _r(
-                            """
-                            Grade only the review in the final message. Two checks.
-
-                            1. Passing: the review points at the first test
-                            ("returns only unpaid invoices past their due date") and
-                            says its per-invoice assertions pass when `result` is
-                            empty, so a regression that returns nothing would not
-                            fail it; it asks for a non-empty check (or an exact
-                            expected list). Failing: the review never raises this,
-                            or only says the test is "weak" or "could be stronger"
-                            without identifying that an empty result passes.
-
-                            2. Passing: the review does NOT ask to delete the last
-                            test (the empty-list case) or to replace its
-                            `toEqual([])` with a weaker assertion, and does NOT ask
-                            to remove the fake-timer setup and restore. Noting that
-                            the last test depends on the fixture data, or that it
-                            alone would pass for a function that always returns
-                            `[]`, is fine. Failing: it demands deleting or
-                            weakening either.
-
-                            Both checks must pass.
-                            """,
-                            review=True,
-                        ),
-                    ),
-                ],
-            ),
-            (
                 "exception-parsed-usage-text",
                 """
                 review this before i merge
@@ -192,6 +117,77 @@ RULES_FLOWS = [
                             them with a snapshot, delete them, or stop asserting the
                             literal lines. Noting a weakness of the test while
                             keeping the exact-text assertions is not a failure.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "review-real-email-fixture",
+                """
+                review this before i merge
+
+                ```ts
+                // test/invite.test.ts
+                import { describe, expect, it } from "vitest";
+                import { inviteMembers } from "../src/invite";
+
+                const members = [
+                  { name: "Priya", email: "priya.nair@gmail.com" },
+                  { name: "Tom", email: "tom@acme.com" },
+                  { name: "Priya (work)", email: "priya.nair@acme.com" },
+                ];
+
+                describe("inviteMembers", () => {
+                  it("sends one invite per distinct address", async () => {
+                    const sent: string[] = [];
+                    await inviteMembers(members, async (to) => {
+                      sent.push(to);
+                    });
+                    expect(sent).toEqual([
+                      "priya.nair@gmail.com",
+                      "tom@acme.com",
+                      "priya.nair@acme.com",
+                    ]);
+                  });
+
+                  it("sends nothing for an empty list", async () => {
+                    const sent: string[] = [];
+                    await inviteMembers([], async (to) => {
+                      sent.push(to);
+                    });
+                    expect(sent).toEqual([]);
+                  });
+
+                  it("lowercases addresses before sending", async () => {
+                    const sent: string[] = [];
+                    await inviteMembers([{ name: "Sam", email: "Sam@Example.com" }], async (to) => {
+                      sent.push(to);
+                    });
+                    expect(sent).toEqual(["sam@example.com"]);
+                  });
+                });
+                ```
+                """,
+                [
+                    (
+                        "flags-real-domain-fixtures",
+                        _r(
+                            """
+                            Grade only the review in the final message. Two checks.
+
+                            1. Passing: the review flags the fixture emails on real
+                            domains (`gmail.com`, `acme.com`) and asks for reserved
+                            test domains (`example.com`, `.test`, `.invalid`) so a
+                            test can never address a real mailbox. Failing: the review
+                            does not raise real email domains in fixtures.
+
+                            2. Passing: the review does NOT ask to delete the "sends
+                            nothing for an empty list" test or weaken its
+                            `toEqual([])`. Failing: it calls that a defect.
+
+                            Both checks must pass.
                             """,
                             review=True,
                         ),
