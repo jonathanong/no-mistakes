@@ -205,9 +205,9 @@ estimate means runs errored — see
 
 ## Flows
 
-Every case carries a `tags:` field naming its flow. 81 generated cases across
-13 flows; 72 excluding the holdout. The 62 skill cases are the first 12 flows;
-the 17 `rules` cases load the `no-mistakes-rules` plugin instead.
+Every case carries a `tags:` field naming its flow. 80 generated cases across
+13 flows; 71 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 18 `rules` cases load the `no-mistakes-rules` plugin instead.
 
 | tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
@@ -223,7 +223,7 @@ the 17 `rules` cases load the `no-mistakes-rules` plugin instead.
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
 | `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
-| `rules` | 19 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
+| `rules` | 18 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
 "Skill surface" means `SKILL.md` documents it but no comparable question
@@ -262,8 +262,9 @@ that says "use `rg` here, the graph won't help" is ideal.
 
 The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 `rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
-topics (`testing`, `postgresql`, `queue`, `github-actions`) × four cases
-(`postgresql` has no review case yet), plus four off-topic guards. Every case
+topics (`testing`, `postgresql`, `queue`, `github-actions`) with 14 cases
+between them (`testing` and `github-actions` have three, the others four),
+plus four off-topic guards. Every case
 loads all 16 plugin skills.
 
 - **write** (2 per topic, slug `write-*`): ordinary work (a function, query,
@@ -293,7 +294,7 @@ plugin fired at all.
 ### Trigger variants
 
 `python3 evals/generate.py --rules-variant <name>` builds a copy of the plugin
-under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the 19
+under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the 18
 rules cases under `evals-variants/rules-<name>/`, pointed at it. Rule bodies
 are copied unchanged, so a difference between variants is a triggering
 difference.
