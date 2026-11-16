@@ -23,10 +23,13 @@ function importedBinding(identifier, context) {
   if (specifier.type === "ImportNamespaceSpecifier") {
     return { kind: "namespace", source: declaration.source.value };
   }
+  if (specifier.type === "ImportDefaultSpecifier") {
+    return { kind: "default", source: declaration.source.value };
+  }
   if (specifier.type !== "ImportSpecifier") return null;
   const imported = specifier.imported;
   const name = imported.type === "Identifier" ? imported.name : String(imported.value);
-  return { kind: "named", source: declaration.source.value, name };
+  return { kind: name === "default" ? "default" : "named", source: declaration.source.value, name };
 }
 
 // `const { sql } = db` is the namespace member `db.sql`. A default on the

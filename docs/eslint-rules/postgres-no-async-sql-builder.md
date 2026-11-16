@@ -174,18 +174,23 @@ async function buildQuery(id: string) {
   still reports. A module-level binding that is not that shape, including a
   module-level configured tag, is not judged SQL.
 
-- `source`, when set, limits `callees` to a named import, a namespace member,
-  or a `const` destructure of that namespace (`const { sql } = db`,
+- `source`, when set, limits `callees` to a default import, a named import,
+  a namespace member, or a `const` destructure of that namespace
+  (`const { sql } = db`,
   `const { sql: tag } = db`, `const { ["sql"]: tag } = db`, and
   ``const { [`sql`]: tag } = db``) imported from that exact module specifier.
   A string literal or expression-free template is that member (`db["sql"]` and
   ``db[`sql`]``). A computed identifier key (`db[name]`,
   `const { [name]: tag } = db`), a default on the destructured property
-  (`const { sql = other } = db`), a `let` or `var`, and a default import do
-  not match. Renamed imports match the imported name
-  (`import { sql as tag }` matches `sql`). Type-only and default imports do
-  not match. Without `source`, `callees` match the local identifier or member
-  name as written, including those static keys.
+  (`const { sql = other } = db`), and a `let` or `var` do not match.
+  Any local binding of the source's default export matches, including
+  `import sql from "@example/db"`, `import tag from "@example/db"`, and
+  `import { default as tag } from "@example/db"`, regardless of the names in
+  `callees`. Renamed named imports match the imported name
+  (`import { sql as tag }` matches `sql`). Type-only imports, imports from
+  other sources, and local bindings that shadow the import do not match.
+  Without `source`, `callees` match the local identifier or member name as
+  written, including those static keys.
 
 ```js
 {

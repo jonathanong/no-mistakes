@@ -129,16 +129,6 @@ const suite = {
     },
     {
       code: withSyncRead(`
-          import sql from "@example/db";
-          async function buildQuery() { return sql\`SELECT 1\`; }
-          read(buildQuery());
-        `),
-      filename: "app.ts",
-      options: [SQL],
-      languageOptions: { parser: tsParser },
-    },
-    {
-      code: withSyncRead(`
           import { sql, type tag } from "@example/db";
           async function buildQuery(tag: string) { return tag; }
           read(buildQuery("SELECT 1"));
@@ -416,6 +406,17 @@ const suite = {
     },
   ],
   invalid: [
+    {
+      code: withSyncRead(`
+          import sql from "@example/db";
+          async function buildQuery() { return sql\`SELECT 1\`; }
+          read(buildQuery());
+        `),
+      filename: "app.ts",
+      options: [SQL],
+      languageOptions: { parser: tsParser },
+    },
+
     // ignores sync functions, real suspension, and callees that are not the returned builder
     {
       code: withSyncRead(`

@@ -1,0 +1,258 @@
+[
+  {
+    "file": "other-source.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "local.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "type-only.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "shadowed.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "renamed-default.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "default.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "default.ts",
+        "line": 2,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "renamed-default.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "renamed-default.ts",
+        "line": 2,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "named-default.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "named-default.ts",
+        "line": 2,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "named.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "named.ts",
+        "line": 2,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "shadowed.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 3,
+        "file": "shadowed.ts",
+        "line": 3,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "default.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 63,
+        "endLine": 2,
+        "file": "default.ts",
+        "line": 2,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
