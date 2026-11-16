@@ -54,7 +54,7 @@ test(
               knownPrefix?.startsWith(prefix),
             );
             assert.ok(row, `${policy}: missing composed evidence for ${prefix}`);
-            assert.match(row.knownPrefix, /owner_id = sql_placeholder_1$/);
+            assert.match(row.knownPrefix, /owner_id = \$1$/);
             assert.doesNotMatch(row.knownPrefix, /ownerId/);
           }
           assert.deepEqual(
