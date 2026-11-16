@@ -82,3 +82,16 @@ async function assignmentDefault(k1: string, source: unknown) {
   const b = Boolean(({ value = await kv.get('fallback') } = source));
   const c = Number(await kv.ttl(k1));
 }
+
+async function ambiguousAssignment(k1: string, k2: string) {
+  let value;
+  await kv.get(k1);
+  ({ value = await kv.get('fallback') } = await kv.get(k2));
+  await kv.get(k1);
+}
+
+async function ambiguousDeclaration(k1: string, k2: string) {
+  await kv.get(k1);
+  const { value = await kv.get('fallback') } = await kv.get(k2);
+  await kv.get(k1);
+}

@@ -40,9 +40,9 @@ module.exports = {
       if (expression?.type === "AssignmentExpression") {
         if (expression.operator !== "=") return null;
         assigned = expression.left;
-        expression = expression.right;
       }
-      const matched = findAwaitedRead(expression, context, configuredRead);
+      const root = statement.type === "VariableDeclarator" ? statement : expression;
+      const matched = findAwaitedRead(root, context, configuredRead);
       if (!matched) return null;
       const variables = assignedVariables(assigned);
       if (statement.type === "VariableDeclarator")
