@@ -24,6 +24,9 @@ mod plain_clause;
 #[path = "tests/hasown.rs"]
 mod hasown;
 
+#[path = "tests/reopen_shapes.rs"]
+mod reopen_shapes;
+
 fn variant_root(name: &str) -> PathBuf {
     normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -78,8 +78,11 @@ only among the value binds. Neither hole drops the tail after it. A trusted
 tag whose holes are all value binds still publishes each one as
 `sql_placeholder_N`. A resolved string constant, including a template that
 builds one, stays that bind when the hole is a value. It is not copied into
-the statement as text. A nested tagged template, a declared SQL fragment, or
-an identifier taken from a closed record still splices. A `$` written
+the statement as text. An imported number or other non-SQL value, including
+one referenced from a helper that is appended later, stays a bind too. It does
+not leave the statement dynamic, and it does not drop the SQL around it. A
+nested tagged template, a declared SQL fragment, or an identifier taken from a
+closed record still splices. A `$` written
 immediately before a numeric or unknown hole is a positional parameter, with
 the hole's own digits when it is a numeric literal and the hole index
 otherwise, and with no separator. A separator is inserted only between two

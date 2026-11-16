@@ -77,14 +77,19 @@ pub(crate) fn fragment_separator(text: &str, start: usize, end: usize) -> bool {
     (next_word && !prev_space) || (prev_word && next_word)
 }
 
-/// A value hole: comparison operand, `VALUES` list, or function argument.
-/// A column list after `INTO`/`UPDATE`/`FROM`/`JOIN`/`TABLE` is not one.
+/// A value hole: comparison or arithmetic operand, `LIMIT`/`OFFSET`,
+/// `VALUES` list, or function argument. A column list after
+/// `INTO`/`UPDATE`/`FROM`/`JOIN`/`TABLE` is not one.
 pub(crate) fn value_position(text: &str) -> bool {
     let trimmed = text.trim_end();
     let Some(tail) = trimmed.chars().next_back() else {
         return false;
     };
-    if matches!(tail, '=' | '<' | '>') {
+    if matches!(tail, '=' | '<' | '>' | '+' | '-' | '*' | '/') {
+        return true;
+    }
+    let word = last_ident(trimmed);
+    if word.eq_ignore_ascii_case("limit") || word.eq_ignore_ascii_case("offset") {
         return true;
     }
     let Some(open) = trimmed.rfind('(') else {

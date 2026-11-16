@@ -176,6 +176,8 @@ mod cli_postgres_snapshot_opaque_functions;
 mod cli_postgres_snapshot_redundant_index;
 #[path = "cli_postgres_snapshot_reopen_chains.rs"]
 mod cli_postgres_snapshot_reopen_chains;
+#[path = "cli_postgres_snapshot_reopen_shapes.rs"]
+mod cli_postgres_snapshot_reopen_shapes;
 #[path = "cli_postgres_snapshot_require_query_annotation.rs"]
 mod cli_postgres_snapshot_require_query_annotation;
 #[path = "cli_postgres_snapshot_required_comments.rs"]
