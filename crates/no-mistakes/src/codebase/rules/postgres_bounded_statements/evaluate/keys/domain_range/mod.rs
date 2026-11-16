@@ -39,11 +39,6 @@ pub(super) fn integer_type(data_type: &str) -> bool {
     )
 }
 
-#[cfg(test)]
-pub(super) fn check_span(definition: &str, column: &str) -> Option<Span> {
-    owned_check(definition, column, &[])
-}
-
 /// `qualifiers` are `table` and `schema.table` names that may prefix `column`.
 pub(super) fn owned_check(definition: &str, column: &str, qualifiers: &[String]) -> Option<Span> {
     let expr = check_expr(definition)?;

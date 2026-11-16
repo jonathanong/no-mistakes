@@ -43,22 +43,22 @@ fn date_predicate_counts_inclusive_days() {
 #[test]
 fn checks_accept_between_and_paired_bounds() {
     assert_eq!(
-        check_span("CHECK (slot BETWEEN 1 AND 50)", "slot")
+        owned_check("CHECK (slot BETWEEN 1 AND 50)", "slot", &[])
             .unwrap()
             .width(),
         Some(50)
     );
     assert_eq!(
-        check_span("CHECK ((rank >= 1) AND (rank <= 10))", "rank")
+        owned_check("CHECK ((rank >= 1) AND (rank <= 10))", "rank", &[])
             .unwrap()
             .width(),
         Some(10)
     );
-    assert!(check_span("CHECK (slot BETWEEN 1 AND 50 OR slot = 1)", "slot").is_none());
-    assert!(check_span("CHECK (slot NOT BETWEEN 1 AND 50)", "slot").is_none());
-    assert!(check_span("UNIQUE (slot)", "slot").is_none());
-    assert!(check_span("CHECK (slot BETWEEN 1 AND 50) NOT ENFORCED", "slot").is_none());
-    assert!(check_span("CHECK (slot >= 5 AND slot <= 3)", "slot").is_none());
+    assert!(owned_check("CHECK (slot BETWEEN 1 AND 50 OR slot = 1)", "slot", &[]).is_none());
+    assert!(owned_check("CHECK (slot NOT BETWEEN 1 AND 50)", "slot", &[]).is_none());
+    assert!(owned_check("UNIQUE (slot)", "slot", &[]).is_none());
+    assert!(owned_check("CHECK (slot BETWEEN 1 AND 50) NOT ENFORCED", "slot", &[]).is_none());
+    assert!(owned_check("CHECK (slot >= 5 AND slot <= 3)", "slot", &[]).is_none());
 }
 
 #[test]
