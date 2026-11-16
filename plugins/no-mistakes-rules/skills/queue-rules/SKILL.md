@@ -43,3 +43,5 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT clear a "needs work" flag unconditionally when a run ends; compare-and-clear against the version you read, or a change that arrived mid-run is lost.
 - MUST NOT self-requeue without a no-progress guard.
 - MUST NOT leave a non-terminal state without a timeout exit, or pick work without an `ORDER BY`.
+- SHOULD NOT let one sweep's failure or backlog stop an independent sweep from making progress.
+- SHOULD NOT let one sweep's mutable state (a tally, budget, or cursor map) decide another sweep's work. See [bounded-iteration](https://github.com/jonathanong/skills/blob/main/skills/bounded-iteration/SKILL.md).
