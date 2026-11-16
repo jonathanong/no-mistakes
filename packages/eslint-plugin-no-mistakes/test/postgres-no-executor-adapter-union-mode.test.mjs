@@ -36,6 +36,7 @@ const suite = {
   valid: [
     testCase("imported-mode.ts", "all", true),
     testCase("opaque-eval.ts", "all"),
+    testCase("opaque-wrapped-eval.ts", "all"),
     testCase("union-sources.ts", "all", true, { executorNames: ["read"] }),
     testCase("union-sources.ts", "forwarding-only", true, { executorNames: ["read"] }),
   ],
@@ -51,6 +52,7 @@ const suite = {
     testCase("forwarding-mode.ts", "forwarding-only"),
     testCase("forwarding-mode.ts", "forwarding-only", true),
     testCase("opaque-eval.ts", "forwarding-only"),
+    testCase("opaque-wrapped-eval.ts", "forwarding-only"),
     testCase("imported-mode.ts", "all"),
     testCase("imported-mode.ts", "forwarding-only"),
     testCase("imported-mode.ts", "forwarding-only", true),

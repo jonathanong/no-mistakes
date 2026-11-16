@@ -1,6 +1,6 @@
 "use strict";
 
-const { childNodes, resolveVariable } = require("./postgres-query-text");
+const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 const { localFunction } = require("./postgres-no-executor-adapter-target");
 const { literalSql, tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
@@ -10,12 +10,8 @@ function opaqueBody(body) {
   while (stack.length) {
     const node = stack.pop();
     if (node.type === "Identifier" && node.name === "arguments") return true;
-    if (
-      node.type === "CallExpression" &&
-      node.callee.type === "Identifier" &&
-      node.callee.name === "eval"
-    )
-      return true;
+    const callee = node.type === "CallExpression" ? unwrapTs(node.callee) : null;
+    if (callee?.type === "Identifier" && callee.name === "eval") return true;
     stack.push(...childNodes(node));
   }
   return false;
