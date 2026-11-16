@@ -1,0 +1,55 @@
+[
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-target/union-sql.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 17,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/union-sql.ts",
+        "line": 4,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 18,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/union-sql.ts",
+        "line": 7,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 20,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/union-sql.ts",
+        "line": 10,
+        "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+        "messageId": "manualTransaction",
+        "ruleId": "no-mistakes/postgres-no-manual-transaction",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorTypeNames": [
+          "QueryExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "sql"
+          }
+        ]
+      }
+    ]
+  }
+]

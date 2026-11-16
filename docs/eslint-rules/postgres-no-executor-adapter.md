@@ -41,6 +41,16 @@ destructured properties without property defaults are supported. A shadowed type
 name cannot prove the configured type. Forwarding callbacks still report,
 including `load((statement) => read(statement))`.
 
+A parameter may also use a union when **every** member is a configured executor
+type imported from the configured module or `typeof` a configured executor
+named import from that module. `QueryExecutor | typeof read` and `typeof read`
+are proven; `QueryExecutor | ((statement: unknown) => unknown)` is not. This
+works for same-file helpers and, with typed linting, imported helpers. SQL
+checks recognize these proven parameters inside the helper. A `typeof` executor
+import follows the same exact `importSpecifier` boundary as `executorNames`;
+configured type imports may also come from its subpaths. With explicit
+`executorNames` and no module, named executor imports from any module qualify.
+
 Imported helpers require typed linting: configure `@typescript-eslint/parser`
 with `parserOptions.project` or `projectService` so `parserServices.program`
 is available. The declared parameter must reference a configured type imported
@@ -334,9 +344,18 @@ run(0 ?? read, account);
   declaring function. It also proves supported helper argument slots described
   above, including proven required options-object fields with typed linting.
   It defaults to `[]`.
+- `mode` is `"all"` by default. Set `"forwarding-only"` to report forwarding
+  callbacks and blocked or unproven SQL paths while allowing a stable same-file
+  helper to receive an executor directly or in a fresh options object when
+  every use of that parameter calls it with a literal SQL string or static
+  template. With typed linting, the same check applies to imported helpers.
+  A helper that calls the executor with a received or composed SQL fragment
+  still reports. This option changes only this rule.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
-  It is accepted so a shared executor configuration validates. This rule does
-  not read SQL text.
+  In `"forwarding-only"` mode, a direct tagged template is visible SQL only
+  when its tag resolves to that configured named import. Interpolated values
+  remain placeholders. Other modes accept this option for shared executor
+  configurations without using it.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that
@@ -361,6 +380,33 @@ run(0 ?? read, account);
   Set `executorNames: []` to select no executor calls. The option schema sets
   `additionalProperties: false`, so ESLint rejects an `extraExecutorNames` key
   as a configuration error.
+
+For example, with `mode: "forwarding-only"`:
+
+```ts
+function load(query) {
+  return query("SELECT id FROM orders");
+}
+load(read); // allowed: the executor call names visible SQL
+load((statement) => read(statement)); // reported: forwarding callback
+
+function search(fragment, query) {
+  return query(fragment);
+}
+search(sql`SELECT id FROM orders`, read); // reported: SQL is hidden from the executor call
+```
+
+The mode also accepts a fresh object such as `load({ query: read })` when a
+stable local helper calls that property with visible SQL. It does not infer
+contracts from names, callable structural types, mutable helpers, or imported
+implementations without typed linting. Under Oxlint, including `--type-aware`,
+JavaScript plugins receive no TypeScript program. Imported callees therefore
+cannot be proven and keep reporting. Use ESLint with
+`@typescript-eslint/parser` and `parserOptions.projectService` for this rule.
+Interpolated raw templates and arbitrary tagged templates are unproven in this
+mode. Configure a trusted SQL tag when placeholders are needed. A conditional
+argument with only configured executor branches is allowed when the local or
+typed imported helper names visible SQL; an unknown branch still reports.
 
 ## Fix
 
