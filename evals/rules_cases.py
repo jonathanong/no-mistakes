@@ -237,47 +237,6 @@ RULES_FLOWS = [
                 ],
             ),
             (
-                "write-anti-join",
-                """
-                findWinbackCustomers(pool): customers who haven't ordered in the
-                last 90 days, for a win-back email. node-postgres. guest checkouts
-                leave orders.customer_id empty.
-
-                ```sql
-                create table customers (
-                  id uuid primary key,
-                  email text not null,
-                  created_at timestamptz not null default now()
-                );
-                create table orders (
-                  id uuid primary key,
-                  customer_id uuid references customers(id),
-                  created_at timestamptz not null default now()
-                );
-                create index orders_customer_created_idx on orders (customer_id, created_at);
-                ```
-                """,
-                [
-                    (
-                        "not-exists-not-not-in",
-                        _r(
-                            """
-                            Grade only the SQL in the final message, and only for how
-                            it excludes customers who have recent orders. Other
-                            aspects of the query are not part of this grade.
-
-                            Passing: the exclusion uses `NOT EXISTS (...)` (or an
-                            equivalent anti-join such as `LEFT JOIN ... WHERE ... IS
-                            NULL`).
-
-                            Failing: the exclusion uses `NOT IN (SELECT ...)`, even
-                            when the subquery filters out NULL customer ids.
-                            """
-                        ),
-                    ),
-                ],
-            ),
-            (
                 "exception-index-timeout",
                 """
                 review this migration before i merge. our runner runs this file
@@ -314,6 +273,94 @@ RULES_FLOWS = [
                             Failing: the review calls the raised timeout a defect,
                             asks to remove it, to keep the default, or to split or
                             shrink the work instead.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "write-advisory-lock",
+                """
+                runLedgerRollup(pool): we run six app instances and the rollup must
+                not run on two of them at once. use postgres for the guard, no new
+                infrastructure. node-postgres.
+
+                ```ts
+                import type { Pool, PoolClient } from "pg";
+
+                // reads and writes ledger rows only, using the client it is given.
+                // takes a few seconds. returns how many rows it rolled up.
+                declare function rollup(client: PoolClient): Promise<number>;
+                ```
+                """,
+                [
+                    (
+                        "xact-lock-not-session",
+                        _r(
+                            """
+                            Grade only the code in the final message.
+
+                            Passing: the guard is a transaction-scoped lock
+                            (`pg_try_advisory_xact_lock`, or a `SELECT ... FOR UPDATE
+                            SKIP LOCKED` / lease row) taken inside a transaction on a
+                            single checked-out client that also runs `rollup`, with
+                            the client released in `finally`.
+
+                            Failing: it uses a session-level advisory lock
+                            (`pg_advisory_lock` or `pg_try_advisory_lock`, with or
+                            without a later `pg_advisory_unlock`), including through
+                            `pool.query` or on a checked-out client without a
+                            transaction.
+                            """
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "review-long-identifier",
+                """
+                review this migration before i merge. the runner wraps every file in a
+                transaction; the table is created in this same file.
+
+                ```sql
+                -- 0081_subscription_renewal_attempts.sql
+                CREATE TABLE subscription_renewal_attempts (
+                  id uuid PRIMARY KEY DEFAULT uuidv7(),
+                  subscription_id uuid NOT NULL REFERENCES subscriptions(id),
+                  attempted_at timestamptz NOT NULL DEFAULT now(),
+                  outcome text NOT NULL CHECK (outcome IN ('succeeded', 'declined', 'error'))
+                );
+
+                CREATE INDEX subscription_renewal_attempts_subscription_id_attempted_at_idx
+                  ON subscription_renewal_attempts (subscription_id, attempted_at DESC);
+
+                CREATE UNIQUE INDEX subscription_renewal_attempts_subscription_id_attempted_at_outcome_uniq
+                  ON subscription_renewal_attempts (subscription_id, attempted_at, outcome);
+
+                COMMENT ON TABLE subscription_renewal_attempts IS 'one row per renewal charge attempt';
+                ```
+                """,
+                [
+                    (
+                        "flags-truncated-identifiers",
+                        _r(
+                            """
+                            Grade only the review in the final message. Two checks.
+
+                            1. Passing: the review flags that the two index names
+                            exceed Postgres's 63-byte identifier limit and are
+                            silently truncated, so the two names can collide on the
+                            same truncated prefix (the second CREATE fails or a later
+                            migration cannot find the index by its full name); it asks
+                            for shorter names. Failing: the review does not raise the
+                            identifier length.
+
+                            2. Passing: the review does NOT ask for `CONCURRENTLY` on
+                            the index builds; the table is created in the same
+                            transaction. Failing: it calls the plain builds a defect.
+
+                            Both checks must pass.
                             """,
                             review=True,
                         ),
