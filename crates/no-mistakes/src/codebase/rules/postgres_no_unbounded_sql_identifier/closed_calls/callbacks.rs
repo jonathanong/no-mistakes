@@ -78,3 +78,6 @@ pub(super) fn literal(flow: &ValueFlowFacts, call: &ValueCall) -> bool {
         .get(owner)
         .is_some_and(|summary| summary.reads.iter().all(Vec::is_empty))
 }
+
+#[cfg(test)]
+mod tests;

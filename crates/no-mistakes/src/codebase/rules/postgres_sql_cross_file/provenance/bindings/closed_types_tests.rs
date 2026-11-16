@@ -153,6 +153,9 @@ fn closed_types_reject_missing_facts_unresolved_aliases_and_uncatalogued_element
     assert!(!bindings.closed_type(&present, &element));
 }
 
+#[path = "finite_flow_tests.rs"]
+mod finite_flow;
+
 #[path = "parameter_index_tests.rs"]
 mod parameter_index;
 
