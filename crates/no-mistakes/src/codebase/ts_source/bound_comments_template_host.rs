@@ -79,14 +79,33 @@ pub(super) fn host_step(
     if ch == '-' && next == Some('-') && super::super::super::dash_comment_can_start(line, idx) {
         return false;
     }
+    // `++` and `--` are postfix here. A following `/` is division, not a regex.
+    if ch == '+' || ch == '-' {
+        if next == Some(ch) {
+            chars.next();
+            carry.regex_ok = false;
+        } else {
+            carry.regex_ok = true;
+        }
+        return true;
+    }
+    // Prefix `!` keeps regex_ok; a non-null assertion after a value leaves it false.
+    if ch == '!' {
+        return true;
+    }
     if ch == '\'' || ch == '"' {
         carry.quote = Some(ch);
         carry.escaped = false;
         carry.regex_ok = false;
         return true;
     }
-    if ch == '`' && carry.braces == 0 {
-        carry.template = true;
+    if ch == '`' {
+        let inside = carry.braces > 0 || carry.js.last().is_some_and(|depth| *depth > 0);
+        if inside {
+            carry.js.push(0);
+        } else {
+            carry.template = true;
+        }
         carry.regex_ok = false;
         return true;
     }
@@ -95,14 +114,20 @@ pub(super) fn host_step(
         carry.regex_ok = false;
         return true;
     }
-    if carry.braces > 0 && (ch == '{' || ch == '}') {
-        adjust_braces(ch, carry);
-        carry.regex_ok = ch == '{';
-        return true;
+    if ch == '{' || ch == '}' {
+        if carry.js.last().is_some_and(|depth| *depth > 0) {
+            adjust_js(ch, carry);
+            carry.regex_ok = ch == '{';
+            return true;
+        }
+        if carry.braces > 0 {
+            adjust_braces(ch, carry);
+            carry.regex_ok = ch == '{';
+            return true;
+        }
     }
     if !ch.is_whitespace() {
-        // Operators that may be followed by a regex literal. `-` is not a range.
-        carry.regex_ok = "([{,;:?=!&|+-*%<>~^/".contains(ch);
+        carry.regex_ok = "([{,;:?=&|*%<>~^/".contains(ch);
     }
     true
 }
@@ -133,6 +158,17 @@ pub(super) fn finish_ident(ident: &mut String, carry: &mut Carry) {
             | "yield"
     );
     ident.clear();
+}
+
+fn adjust_js(ch: char, carry: &mut Carry) {
+    let Some(depth) = carry.js.last_mut() else {
+        return;
+    };
+    if ch == '{' {
+        *depth += 1;
+    } else if *depth > 0 {
+        *depth -= 1;
+    }
 }
 
 fn adjust_braces(ch: char, carry: &mut Carry) {

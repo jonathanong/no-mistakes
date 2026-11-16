@@ -34,6 +34,9 @@ struct Carry {
     regex: bool,
     regex_class: bool,
     regex_ok: bool,
+    /// Brace depth of each JS template opened inside an interpolation.
+    /// Zero is template contents, where a quote is not a host string.
+    js: Vec<u32>,
 }
 
 fn directive<'a>(line: &'a str, carry: &mut Carry) -> Option<&'a str> {
@@ -62,6 +65,10 @@ fn directive<'a>(line: &'a str, carry: &mut Carry) -> Option<&'a str> {
             host::regex_char(ch, carry);
             continue;
         }
+        if carry.js.last() == Some(&0) {
+            js_content(ch, &mut chars, carry);
+            continue;
+        }
         if carry.template && carry.braces == 0 {
             if template_step(ch, &mut chars, carry) {
                 continue;
@@ -77,6 +84,32 @@ fn directive<'a>(line: &'a str, carry: &mut Carry) -> Option<&'a str> {
     }
     host::finish_ident(&mut ident, carry);
     found
+}
+
+fn js_content(
+    ch: char,
+    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
+    carry: &mut Carry,
+) {
+    if carry.escaped {
+        carry.escaped = false;
+        return;
+    }
+    if ch == '\\' {
+        carry.escaped = true;
+        return;
+    }
+    if ch == '`' {
+        carry.js.pop();
+        return;
+    }
+    if ch == '$' && chars.peek().is_some_and(|(_, next)| *next == '{') {
+        chars.next();
+        if let Some(depth) = carry.js.last_mut() {
+            *depth = 1;
+        }
+        carry.regex_ok = true;
+    }
 }
 
 fn template_step(

@@ -33,3 +33,26 @@ fn host_regex_continued_string_and_interpolation_braces_stay_out_of_sql() {
         }]
     );
 }
+
+#[test]
+fn postfix_division_and_nested_templates_keep_the_next_bound() {
+    let source = concat!(
+        "const label = `page ${count++ / 2}`;\n",
+        "const bang = `page ${count! / 2}`;\n",
+        "const minus = `page ${count--/2}`;\n",
+        "const plus = +/'/;\n",
+        "const nested = `${`it's`}`;\n",
+        "const inner = `${`${'x'}`}`;\n",
+        "const q = `\n",
+        "  -- no-mistakes-bound postgres-bounded-statements rows<=4: after\n",
+        "`;\n",
+    );
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 8,
+            rows: 4,
+            justification: "after".to_string(),
+        }]
+    );
+}
