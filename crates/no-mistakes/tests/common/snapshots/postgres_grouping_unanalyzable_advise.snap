@@ -1,0 +1,35 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: [distinct-over-unique-key] catalog uniqueness and equality pins already identify each deduplication key; remove DISTINCT while preserving COUNT(expression), or remove grouping without aggregates (source column 19)",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await query(sql`SELECT DISTINCT id FROM policy_items`);",
+          "target": "distinct-over-unique-key"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-grouping-not-aggregation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `OtherClient` from `db`; add `OtherClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+          "rule": "postgres-grouping-not-aggregation",
+          "sourceLine": "await other.query(\"SELECT DISTINCT id FROM policy_items\");",
+          "target": "undeclared-executor-type"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "unprovenMemberQuerySql": 1,
+      "warnings": []
+    }
+  }
+}

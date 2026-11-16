@@ -34,13 +34,13 @@ fn assert_policy(policy: &str, diagnostic_expected: bool) {
         advisories.iter().any(|finding| {
             finding["rule"] == RULE
                 && finding["target"] == "distinct-over-unique-key"
-                && finding["line"] == 8
+                && finding["line"] == 4
         }),
         "the configured executor must retain its proven grouping advisory: {report}"
     );
     let diagnostics: Vec<_> = advisories
         .iter()
-        .filter(|finding| finding["rule"] == RULE && finding["line"] == 9)
+        .filter(|finding| finding["rule"] == RULE && finding["line"] == 5)
         .collect();
     assert_eq!(
         diagnostics.len(),
