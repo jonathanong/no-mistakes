@@ -11,14 +11,9 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
             _ => return false,
         }
     };
-    let Some(edges) = arena
-        .objects
-        .get(id)
-        .and_then(|slots| slots.cached_references())
-    else {
-        return false;
-    };
-    edges.identities.is_empty()
-        && edges.arguments.is_empty()
-        && arena.extras.get(id).is_none_or(|slots| slots.is_empty())
+    arena.extras.get(id).is_none_or(|slots| slots.is_empty())
+        && arena
+            .objects
+            .get(id)
+            .is_some_and(|slots| !slots.contains_reference())
 }

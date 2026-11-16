@@ -44,10 +44,10 @@ fn parity(case: &fixture::Case, value: &Value) {
 }
 
 #[test]
-fn only_warm_scalar_arguments_skip_and_functions_do_not_supply_prefixes() {
+fn scalar_arguments_skip_without_full_edges_and_functions_do_not_supply_prefixes() {
     let case = scalar_case();
     let value = Value::Arguments(1);
-    assert!(!prefix_free_argument(&value, case.arena()));
+    assert!(prefix_free_argument(&value, case.arena()));
     assert!(case.objects[&1].cached_references().is_none());
     let edges = case.objects[&1].references();
     assert_eq!(edges.environments, FxHashSet::from_iter([0]));
@@ -66,6 +66,8 @@ fn only_warm_scalar_arguments_skip_and_functions_do_not_supply_prefixes() {
 #[test]
 fn builder_and_nested_argument_edges_keep_the_original_walk() {
     let case = fixture::load("arena_before");
+    assert!(!prefix_free_argument(&Value::Arguments(1), case.arena()));
+    assert!(case.objects[&1].cached_references().is_none());
     case.objects[&1].references();
     assert!(!prefix_free_argument(&Value::Arguments(1), case.arena()));
     assert!(!legacy::collect(&Value::Arguments(1), case.arena(), &case.definite).is_empty());
@@ -100,8 +102,64 @@ fn sparse_slots_are_live_and_dense_mutations_invalidate_only_the_current_snapsho
     };
     assert!(prefix_free_argument(&Value::Arguments(1), original));
     case.objects.get_mut(&1).unwrap().pop();
-    assert!(!prefix_free_argument(&Value::Arguments(1), case.arena()));
+    assert!(prefix_free_argument(&Value::Arguments(1), case.arena()));
+    assert!(case.objects[&1].cached_references().is_none());
     case.objects[&1].references();
     case.definite.insert((1, 0));
     parity(&case, &Value::Arguments(1));
+}
+
+#[test]
+fn dense_prefix_summary_is_shared_once_and_invalidated_by_snapshot_writes() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    let mut case = scalar_case();
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(observer.clone()), || {
+        let snapshot = case.objects.clone();
+        for _ in 0..16 {
+            assert!(prefix_free_argument(&Value::Arguments(1), case.arena()));
+            assert!(!snapshot[&1].contains_reference());
+        }
+        assert_eq!(
+            observer.snapshot().work["postgres.annotation.dense_prefix_summary_builds"],
+            1
+        );
+        assert!(case.objects[&1].cached_references().is_none());
+        case.objects.get_mut(&1).unwrap().push(Value::Array(1));
+        assert!(case.objects[&1].contains_reference());
+        assert!(!snapshot[&1].contains_reference());
+        assert_eq!(
+            observer.snapshot().work["postgres.annotation.dense_prefix_summary_builds"],
+            2
+        );
+        assert!(case.objects[&1].cached_references().is_none());
+        case.objects.get_mut(&1).unwrap().pop();
+        assert!(!case.objects[&1].contains_reference());
+        assert_eq!(
+            observer.snapshot().work["postgres.annotation.dense_prefix_summary_builds"],
+            3
+        );
+        case.objects
+            .get_mut(&1)
+            .unwrap()
+            .push(Value::Prefix("changed".into(), true, Some(9)));
+        assert!(case.objects[&1].contains_reference());
+        assert_eq!(
+            observer.snapshot().work["postgres.annotation.dense_prefix_summary_builds"],
+            4
+        );
+        assert!(case.objects[&1].cached_references().is_none());
+    });
+}
+
+#[test]
+fn dense_prefix_summary_disabled_observer_retains_no_work_ledger() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    let case = scalar_case();
+    let observer = InvocationObserver::new(false);
+    with_observer(Some(observer.clone()), || {
+        assert!(prefix_free_argument(&Value::Arguments(1), case.arena()));
+        assert!(case.objects[&1].cached_references().is_none());
+    });
+    assert!(observer.snapshot().work.is_empty());
 }

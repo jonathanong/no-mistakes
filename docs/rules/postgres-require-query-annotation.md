@@ -544,11 +544,14 @@ summaries. Function frames inherit the captured scope's immutable direct-edge
 summary. Adding direct references extends that summary; changing or removing
 reference identities invalidates it. Values carrying runtime argument references keep
 their contextual comparison, so shared helper imports do not merge independent
-root states. A warm dense-argument summary can also prove an incoming prefix
-map empty when it contains no builder or nested argument identities and has no
-sparse slots. Cold summaries and mutable nested arguments keep their original
-walk. The `postgres.annotation.prefix_unchanged_binding_skips` counter counts
-both kinds of omitted binding comparisons.
+root states. Dense-argument snapshots also memoize whether their slots contain
+builder or argument identities. An empty summary with no sparse slots proves
+the incoming prefix map empty. Warm direct-edge summaries supply the same proof
+without another walk. Dense writes invalidate the memo; nested arguments and
+sparse slots keep their contextual comparisons. The
+`postgres.annotation.prefix_unchanged_binding_skips` counter counts both kinds of
+omitted binding comparisons; `postgres.annotation.dense_prefix_summary_builds`
+counts new dense-slot boolean summaries.
 The saved [multi-root walk workload](../../fixtures/performance/annotation-multi-root-shared-walks/README.md)
 checks annotated calls, an unannotated query, excluded unrelated roots and actual
 prefix work. Timing samples run with observer diagnostics disabled; counter
