@@ -76,10 +76,16 @@ pub(super) fn host_step(
     if ch == '#' && super::super::super::comment_prefix_can_start(line, idx) {
         return false;
     }
+    // Postfix `--` stays code when a space follows. A host `--` comment still ends the line.
+    if ch == '-' && next == Some('-') && host_postfix_decrement(line, idx, carry) {
+        chars.next();
+        carry.regex_ok = false;
+        return true;
+    }
     if ch == '-' && next == Some('-') && super::super::super::dash_comment_can_start(line, idx) {
         return false;
     }
-    // `++` and `--` are postfix here. A following `/` is division, not a regex.
+    // `++` and a single `+` or `-` may precede a regex. Postfix `--` does not.
     if ch == '+' || ch == '-' {
         if next == Some(ch) {
             chars.next();
@@ -130,6 +136,15 @@ pub(super) fn host_step(
         carry.regex_ok = "([{,;:?=&|*%<>~^/".contains(ch);
     }
     true
+}
+
+fn host_postfix_decrement(line: &str, idx: usize, carry: &Carry) -> bool {
+    let prev = line[..idx].trim_end().chars().next_back();
+    !carry.regex_ok
+        && matches!(
+            prev,
+            Some(')' | ']' | '!' | '_' | '0'..='9' | 'A'..='Z' | 'a'..='z')
+        )
 }
 
 fn is_ident(ch: char) -> bool {

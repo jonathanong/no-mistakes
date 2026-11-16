@@ -40,6 +40,7 @@ fn postfix_division_and_nested_templates_keep_the_next_bound() {
         "const label = `page ${count++ / 2}`;\n",
         "const bang = `page ${count! / 2}`;\n",
         "const minus = `page ${count--/2}`;\n",
+        "const spaced = `page ${count-- / 2}`;\n",
         "const plus = +/'/;\n",
         "const nested = `${`it's`}`;\n",
         "const inner = `${`${'x'}`}`;\n",
@@ -50,7 +51,7 @@ fn postfix_division_and_nested_templates_keep_the_next_bound() {
     assert_eq!(
         comments(source),
         vec![BoundComment::Valid {
-            line: 8,
+            line: 9,
             rows: 4,
             justification: "after".to_string(),
         }]
