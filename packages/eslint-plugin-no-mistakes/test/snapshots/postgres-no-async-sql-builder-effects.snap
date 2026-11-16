@@ -249,23 +249,6 @@
         "builders": [
           {
             "callees": [
-              "sql"
-            ],
-            "source": "@example/db"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "file": "app.ts",
-    "findings": [],
-    "kind": "valid",
-    "options": [
-      {
-        "builders": [
-          {
-            "callees": [
               "tag"
             ],
             "source": "@example/db"
@@ -657,6 +640,35 @@
             "callees": [
               "sql"
             ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "app.ts",
+    "findings": [
+      {
+        "column": 11,
+        "endColumn": 64,
+        "endLine": 3,
+        "file": "app.ts",
+        "line": 3,
+        "message": "This async SQL builder never waits. Remove async and return the same literal SQL synchronously so the analyzer can judge it; callers that only await the call can call it directly. No autofix is offered.",
+        "messageId": "removeAsync",
+        "ruleId": "no-mistakes/postgres-no-async-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builders": [
+          {
+            "callees": [
+              "sql"
+            ],
+            "source": "@example/db"
           }
         ]
       }

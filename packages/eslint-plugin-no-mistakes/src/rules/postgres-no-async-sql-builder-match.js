@@ -57,9 +57,9 @@ function calleeMatches(callee, builder, context) {
     const imported = importedBinding(node, context);
     if (
       imported &&
-      imported.kind === "named" &&
       imported.source === builder.source &&
-      builder.callees.includes(imported.name)
+      (imported.kind === "default" ||
+        (imported.kind === "named" && builder.callees.includes(imported.name)))
     ) {
       return true;
     }
