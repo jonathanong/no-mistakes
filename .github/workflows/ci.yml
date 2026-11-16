@@ -59,6 +59,7 @@ jobs:
       # Path metadata only. Docs-only changes still run every non-macOS family.
       docs-only: ${{ github.event_name == 'pull_request' && steps.docs-only-paths.outputs.docs-only == 'true' }}
       # Pull requests run macOS families only when a path can differ there.
+      # That diff starts at the merge base, so base-only edits do not count.
       # Pushes and workflow_dispatch always run them. Release is a separate workflow.
       macos: ${{ github.event_name != 'pull_request' || steps.macos-paths.outputs.macos == 'true' }}
 
@@ -165,7 +166,28 @@ jobs:
             fi
           done
 
-          git diff --no-renames --name-status -z "$BASE_SHA" "$HEAD_SHA" |
+          # Pull requests diff from the merge base. Pushes keep the endpoint comparison.
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            attempts=0
+            while ! git merge-base "$BASE_SHA" "$HEAD_SHA" >/dev/null 2>&1; do
+              attempts=$((attempts + 1))
+              if (( attempts > 4 )); then
+                node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              if ! git fetch --no-tags --deepen=300 origin "$BASE_SHA" "$HEAD_SHA"; then
+                node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            done
+          fi
+
+          if ! DIFF_BASE=$(node .github/scripts/macos-pr-scope.cjs --diff-base "$GITHUB_EVENT_NAME" "$BASE_SHA" "$HEAD_SHA"); then
+            node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git diff --no-renames --name-status -z "$DIFF_BASE" "$HEAD_SHA" |
             node .github/scripts/macos-pr-scope.cjs >> "$GITHUB_OUTPUT"
   quality-source:
     name: Source policy and tooling tests

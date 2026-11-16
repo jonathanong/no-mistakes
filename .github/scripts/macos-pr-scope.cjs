@@ -91,6 +91,23 @@ function macosRequired(changes) {
   return changes.length === 0 || changes.some(({ path }) => triggersMacos(path));
 }
 
+function diffBase(eventName, base, head) {
+  if (!/^[0-9a-f]{40}$/.test(base) || !/^[0-9a-f]{40}$/.test(head)) {
+    throw new Error("Expected full commit SHAs");
+  }
+  // Pushes compare the event endpoints. A pull request compares the merge base
+  // so files that changed only on the base branch do not select macOS jobs.
+  if (eventName !== "pull_request") return base;
+  const result = require("node:child_process").spawnSync("git", ["merge-base", base, head], {
+    encoding: "utf8",
+  });
+  const sha = (result.stdout || "").trim();
+  if (result.status !== 0 || !/^[0-9a-f]{40}$/.test(sha)) {
+    throw new Error("Expected a merge base for the pull request");
+  }
+  return sha;
+}
+
 function readChangedFiles() {
   const fields = require("node:fs").readFileSync(0).toString("utf8").split("\0");
   if (fields.pop() !== "" || fields.length % 2 !== 0) {
@@ -113,12 +130,20 @@ if (require.main === module) {
     process.stdout.write("macos=true\n");
     process.exit(0);
   }
+  const diffBaseFlag = process.argv.indexOf("--diff-base");
+  if (diffBaseFlag !== -1) {
+    const [eventName, base, head] = process.argv.slice(diffBaseFlag + 1);
+    if (!eventName || !base || !head) throw new Error("Expected event name, base SHA, and head SHA");
+    process.stdout.write(`${diffBase(eventName, base, head)}\n`);
+    process.exit(0);
+  }
   process.stdout.write(`macos=${macosRequired(readChangedFiles())}\n`);
 }
 
 module.exports = {
   INDEPENDENT_PREFIXES,
   TRIGGER_PREFIXES,
+  diffBase,
   macosRequired,
   triggersMacos,
 };

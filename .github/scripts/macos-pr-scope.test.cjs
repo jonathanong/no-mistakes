@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
-const { readFileSync } = require("node:fs");
+const { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } = require("node:fs");
+const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
@@ -16,8 +17,38 @@ const source = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8")
 const selector = path.join(__dirname, "macos-pr-scope.cjs");
 const modified = (paths) => paths.map((file) => ({ status: "M", path: file }));
 
-function run(input, args = []) {
-  return spawnSync(process.execPath, [selector, ...args], { input, encoding: "utf8" });
+function run(input, args = [], cwd) {
+  return spawnSync(process.execPath, [selector, ...args], { input, encoding: "utf8", cwd });
+}
+
+function git(repo, args) {
+  const result = spawnSync(
+    "git",
+    [
+      "-C",
+      repo,
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      "user.email=test@example.com",
+      "-c",
+      "user.name=test",
+      ...args,
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, `${args.join(" ")}\n${result.stderr}`);
+  return result.stdout.trim();
+}
+
+function nameStatus(repo, from, to) {
+  const result = spawnSync(
+    "git",
+    ["-C", repo, "diff", "--no-renames", "--name-status", "-z", from, to],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout;
 }
 
 test("enumerated paths run macOS and platform-independent paths do not", () => {
@@ -234,4 +265,87 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
     runGate({ ...skippedMacos, "native-api-tests-macos": { result: "cancelled" } }, "false").status,
     1,
   );
+});
+
+test("pull requests compare macOS paths from the merge base", () => {
+  const step = source.slice(
+    source.indexOf("      - name: Check macOS paths"),
+    source.indexOf("  quality-source:"),
+  );
+  assert.match(step, /\[\[ "\$GITHUB_EVENT_NAME" == "pull_request" \]\]/);
+  assert.match(step, /git merge-base "\$BASE_SHA" "\$HEAD_SHA"/);
+  assert.match(step, /git fetch --no-tags --deepen=300 origin "\$BASE_SHA" "\$HEAD_SHA"/);
+  assert.match(
+    step,
+    /macos-pr-scope\.cjs --diff-base "\$GITHUB_EVENT_NAME" "\$BASE_SHA" "\$HEAD_SHA"/,
+  );
+  assert.match(step, /git diff --no-renames --name-status -z "\$DIFF_BASE" "\$HEAD_SHA"/);
+  assert.equal(step.split("macos-pr-scope.cjs --all").length - 1, 4);
+  const docs = source.slice(
+    source.indexOf("      - name: Check docs-only paths"),
+    source.indexOf("      - name: Check macOS paths"),
+  );
+  assert.match(docs, /git diff --no-renames --name-status -z "\$BASE_SHA" "\$HEAD_SHA"/);
+  assert.doesNotMatch(docs, /merge-base|--diff-base/);
+
+  const repo = mkdtempSync(path.join(tmpdir(), "macos-pr-scope-"));
+  const postgres = "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements.rs";
+  try {
+    git(repo, ["init", "-q", "-b", "main"]);
+    mkdirSync(path.join(repo, "crates/no-mistakes/src/codebase/rules"), { recursive: true });
+    mkdirSync(path.join(repo, ".github/workflows"), { recursive: true });
+    writeFileSync(path.join(repo, "README.md"), "base\n");
+    git(repo, ["add", "README.md"]);
+    git(repo, ["commit", "-qm", "base"]);
+    git(repo, ["checkout", "-q", "-b", "pr"]);
+    writeFileSync(path.join(repo, postgres), "rule\n");
+    git(repo, ["add", "-A"]);
+    git(repo, ["commit", "-qm", "pr"]);
+    const head = git(repo, ["rev-parse", "HEAD"]);
+    git(repo, ["checkout", "-q", "main"]);
+    writeFileSync(path.join(repo, ".github/workflows/ci.yml"), "workflow\n");
+    git(repo, ["add", "-A"]);
+    git(repo, ["commit", "-qm", "main"]);
+    const base = git(repo, ["rev-parse", "HEAD"]);
+    const mergeBase = git(repo, ["merge-base", base, head]);
+
+    const selected = run("", ["--diff-base", "pull_request", base, head], repo);
+    assert.equal(selected.status, 0, selected.stderr);
+    assert.equal(selected.stdout.trim(), mergeBase);
+    assert.notEqual(mergeBase, base);
+    assert.equal(run("", ["--diff-base", "push", base, head], repo).stdout.trim(), base);
+    assert.equal(
+      run("", ["--diff-base", "workflow_dispatch", base, head], repo).stdout.trim(),
+      base,
+    );
+
+    const pullRequestDiff = nameStatus(repo, mergeBase, head);
+    assert.equal(run(pullRequestDiff).stdout, "macos=false\n");
+    assert.match(pullRequestDiff, /postgres_bounded_statements\.rs/);
+    assert.doesNotMatch(pullRequestDiff, /workflows\/ci\.yml/);
+    const endpointDiff = nameStatus(repo, base, head);
+    assert.match(endpointDiff, /workflows\/ci\.yml/);
+    assert.equal(run(endpointDiff).stdout, "macos=true\n");
+
+    git(repo, ["checkout", "-q", "pr"]);
+    mkdirSync(path.join(repo, ".github/workflows"), { recursive: true });
+    writeFileSync(path.join(repo, ".github/workflows/release.yml"), "release\n");
+    git(repo, ["add", "-A"]);
+    git(repo, ["commit", "-qm", "pr-workflow"]);
+    const workflowHead = git(repo, ["rev-parse", "HEAD"]);
+    const workflowBase = run("", ["--diff-base", "pull_request", base, workflowHead], repo);
+    assert.equal(workflowBase.status, 0, workflowBase.stderr);
+    assert.equal(run(nameStatus(repo, workflowBase.stdout.trim(), workflowHead)).stdout, "macos=true\n");
+
+    git(repo, ["checkout", "-q", "--orphan", "unrelated"]);
+    writeFileSync(path.join(repo, "README.md"), "unrelated\n");
+    git(repo, ["add", "README.md"]);
+    git(repo, ["commit", "-qm", "unrelated"]);
+    const unrelated = git(repo, ["rev-parse", "HEAD"]);
+    assert.notEqual(run("", ["--diff-base", "pull_request", unrelated, head], repo).status, 0);
+    assert.notEqual(run("", ["--diff-base", "push", "abc", head], repo).status, 0);
+    assert.notEqual(run("", ["--diff-base", "pull_request", base], repo).status, 0);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
