@@ -121,5 +121,9 @@ fn callers(file: &Path, id: u32, name: &str) -> CallerIndex {
 
 #[path = "registry_coverage_alias_tests.rs"]
 mod alias_tests;
+#[path = "registry_coverage_breadth_tests.rs"]
+mod breadth_tests;
 #[path = "registry_coverage_home_tests.rs"]
 mod home_tests;
+#[path = "registry_coverage_resolver_tests.rs"]
+mod resolver_tests;
