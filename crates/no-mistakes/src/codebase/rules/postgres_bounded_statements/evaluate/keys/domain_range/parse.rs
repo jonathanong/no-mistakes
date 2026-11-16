@@ -156,6 +156,14 @@ fn date_text(value: &Value) -> Option<(i32, u32, u32)> {
     if bytes.len() != 10 || bytes[4] != b'-' || bytes[7] != b'-' {
         return None;
     }
+    if !bytes[..4]
+        .iter()
+        .chain(bytes[5..7].iter())
+        .chain(bytes[8..].iter())
+        .all(u8::is_ascii_digit)
+    {
+        return None;
+    }
     let year = text.get(..4)?.parse().ok()?;
     let month = text.get(5..7)?.parse().ok()?;
     let day = text.get(8..)?.parse().ok()?;

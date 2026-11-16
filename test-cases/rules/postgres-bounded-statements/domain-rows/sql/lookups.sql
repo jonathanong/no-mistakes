@@ -34,3 +34,12 @@ SELECT slug FROM slugs WHERE slug = $1;
 SELECT actor_id FROM participants
 WHERE conversation_id = $1 AND (slot = 1 OR slot = (SELECT NULL::integer));
 SELECT id FROM (SELECT NULL::integer AS slot FROM participants) d WHERE d.slot = $1;
+SELECT day, metric, category FROM daily WHERE owner_id = $1 AND day >= DATE '2026-+1-01' AND day <= DATE '2026-01-02';
+UPDATE ranks SET id = id WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;
+WITH edited AS (
+  UPDATE ranks SET id = id WHERE owner_id = $1 AND rank >= 2 AND rank <= 4 RETURNING id
+)
+SELECT id FROM edited;
+SELECT id FROM ranks AS r WHERE r.owner_id = $1 AND r.rank >= 2 AND r.rank <= 4;
+SELECT day, metric, category FROM daily AS d WHERE d.owner_id = $1 AND d.day >= DATE '2026-01-01' AND d.day <= DATE '2026-01-02';
+SELECT day, metric, category FROM daily AS d WHERE d.owner_id = $1 AND other.day >= DATE '2026-01-01' AND other.day <= DATE '2026-01-02';

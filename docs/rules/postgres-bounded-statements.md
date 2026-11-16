@@ -267,9 +267,13 @@ sizes is at most `maxDomainRows`. Equality-pinned columns do not multiply. A
 domain is a validated `CHECK (col BETWEEN a AND b)` or
 `CHECK (col >= a AND col <= b)` on a non-null integer column, a non-null enum,
 a non-null boolean, or a closed inclusive literal range in the query predicate,
-including a `date` column between two `YYYY-MM-DD` date literals. A query range matches
-the column's visible name, so `FROM alias_slots AS renamed(n)` is closed by
-`WHERE n BETWEEN 1 AND 5`. A catalog check names the physical column. It may
+including a `date` column between two `YYYY-MM-DD` date literals. Month and day
+must be digits, so `DATE '2026-+1-01'` is not a domain. A query range matches
+the column's visible name after a qualifier that names that same item is
+removed, so `FROM alias_slots AS renamed(n)` is closed by `WHERE n BETWEEN 1 AND 5`
+and `FROM ranks AS r` is closed by `WHERE r.rank >= 2 AND r.rank <= 4`. A
+qualifier that does not name that item, such as `other.rank`, or the table name
+when an alias hides it, is not a domain. A catalog check names the physical column. It may
 also qualify that column with this table (`seats.slot`) or with the catalog
 schema and this table (`public.seats.slot`). A qualifier that names another
 relation is not a domain. When the catalog key already names a schema
@@ -929,7 +933,7 @@ are selected. Valid sibling statements still receive ordinary rule findings.
 
 A statement can be bounded by something the schema cannot show, such as an application page size on a join the catalog cannot cap. A reviewed declaration names that limit and why it is finite. It suppresses only `postgres-bounded-statements` findings for that one statement. Other rules still run, and SQL this rule cannot analyze stays reported.
 
-Put the declaration in a line comment on the statement's outer keyword line, or on the line immediately above it. That keyword is `SELECT`, `UPDATE`, `DELETE`, `WITH`, or an executing wrapper such as `EXPLAIN ANALYZE`. `--`, `//`, and `#` comments all work, in a `.sql` file or in SQL embedded in an executor call. A `--` comment inside a template literal counts; a directive inside a string does not.
+Put the declaration in a line comment on the statement's outer keyword line, or on the line immediately above it. That keyword is `SELECT`, `UPDATE`, `DELETE`, `WITH`, or an executing wrapper such as `EXPLAIN ANALYZE`. `--`, `//`, and `#` comments all work, in a `.sql` file or in SQL embedded in an executor call. A `--` comment inside a template literal counts. A directive inside a string, a comment, or a regex does not. A `'` or `"` string continued onto the next line, including one ended by a trailing backslash, stays a string. Braces inside a string in `${...}` do not open or close that interpolation.
 
 ```sql
 -- no-mistakes-bound postgres-bounded-statements rows<=100: caller passes one page of ids

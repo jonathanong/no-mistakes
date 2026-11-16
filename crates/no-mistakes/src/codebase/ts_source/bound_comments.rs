@@ -104,3 +104,7 @@ fn invalid(line: u32, error: BoundCommentError) -> BoundComment {
 #[cfg(test)]
 #[path = "bound_comments_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "bound_comments_host_tests.rs"]
+mod host_tests;
