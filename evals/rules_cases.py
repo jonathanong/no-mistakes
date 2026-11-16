@@ -373,42 +373,6 @@ RULES_FLOWS = [
         "queue-rules",
         [
             (
-                "write-enqueue-in-transaction",
-                """
-                createInvoice(input): insert the invoice row and its line items,
-                then queue a send-invoice job with the invoice id so the email goes
-                out. helpers below.
-
-                ```ts
-                import { db } from "./db"; // db.transaction(async (tx) => ...) commits when the callback resolves, rolls back if it throws
-                import { invoiceQueue } from "./queues"; // invoiceQueue.add(name: string, data: object, opts?: { jobId?: string }): Promise<Job>
-                import { invoices, invoiceLines } from "./schema"; // tx.insert(table).values(row | rows).returning()
-
-                type Input = {
-                  customerId: string;
-                  lines: Array<{ sku: string; qty: number; unitCents: number }>;
-                };
-                ```
-                """,
-                [
-                    (
-                        "enqueue-after-commit",
-                        _r(
-                            """
-                            Grade only the code in the final message.
-
-                            Passing: `invoiceQueue.add` is called after the
-                            `db.transaction(...)` call has returned (outside the
-                            transaction callback), and is awaited.
-
-                            Failing: `invoiceQueue.add` is called inside the
-                            transaction callback.
-                            """
-                        ),
-                    ),
-                ],
-            ),
-            (
                 "write-bounded-sweep",
                 """
                 nightly job runTrialExpiry(pool): downgrade accounts whose trial
@@ -551,6 +515,45 @@ RULES_FLOWS = [
                             a defect, or asks to move it after commit.
                             """,
                             review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "write-self-requeue",
+                """
+                backfillSlugs(job): fill in the slug column for products that don't
+                have one yet, 500 at a time, and keep going until none are left.
+                one job shouldn't hold a worker for the whole backfill. node-postgres.
+
+                ```ts
+                import type { Pool } from "pg";
+                import { backfillQueue } from "./queues"; // backfillQueue.add(name: string, data: object, opts?: { delay?: number; jobId?: string }): Promise<Job>
+
+                // products(id uuid, name text, slug text null)
+                // makeSlug(name: string): string  -- can return "" for names with no usable characters
+                declare const pool: Pool;
+                declare function makeSlug(name: string): string;
+                type BackfillJob = { data: { batch?: number } };
+                ```
+                """,
+                [
+                    (
+                        "no-progress-guard",
+                        _r(
+                            """
+                            Grade only the code in the final message.
+
+                            Passing: before re-enqueuing itself the job checks that
+                            the batch made progress (it counts rows it actually
+                            filled, or advances a cursor, and stops or fails when a
+                            batch fills none), so rows that cannot be filled (an
+                            empty slug) cannot make the job re-enqueue forever.
+
+                            Failing: the job re-enqueues whenever it read a full
+                            batch of 500 (or any non-empty batch) with no check that
+                            progress was made.
+                            """
                         ),
                     ),
                 ],
