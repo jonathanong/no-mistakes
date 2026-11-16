@@ -21,7 +21,7 @@ and loads only when that topic comes up.
 | `git-rules` | Commits, rebases, PRs, docs, evidence |
 | `infra-rules` | Infrastructure as code, runtime, ops scripts, shell |
 | `integrations-rules` | Third-party APIs, webhooks, retries, payload mapping |
-| `rollout-rules` | Feature flags, deploy order, API and message compatibility |
+| `rollout-rules` | Feature flags, deploy order, API and message compatibility, tables, services and write paths no entry point reaches |
 | `observability-rules` | Logs, metrics, alerts, context binding |
 | `native-app-rules` | Swift and .NET apps |
 
