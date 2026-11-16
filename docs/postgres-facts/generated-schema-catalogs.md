@@ -49,8 +49,11 @@ physical system column’s uniqueness. Stored array leaves remain unbounded.
 `SqlBoundQuery.input_mode` is a Rust fact contract exported as `SqlBoundInputMode`:
 `Streaming` permits an outer row cap to suppress ordinary input findings,
 `Blocking` identifies set operations that require complete inputs, `Returning`
-identifies a data-modifying CTE that emits one row per changed target row, and
-`Skipped` identifies input work excluded by an empty-row proof. The input policy is separate
+identifies a data-modifying CTE that emits one row per changed target row,
+`ReturningSource` marks the source rows of `INSERT ... RETURNING` (a second
+reference of that source is not a join proof), and
+`Skipped` identifies input work excluded by an empty-row proof. Compaction
+folds `ReturningSource` back to `Streaming`. The input policy is separate
 from `capped`: a derived or CTE wrapper may return one row while its blocking set
 inputs remain unbounded. Compaction retains mandatory inputs as nested canonical
 bound queries, including their locations and key facts; no alternate graph or

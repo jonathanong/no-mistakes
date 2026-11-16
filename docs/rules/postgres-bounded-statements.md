@@ -727,6 +727,12 @@ UPDATE accounts AS a SET name = 'n' FROM c WHERE a.email = c.email;
 
 `INSERT ... RETURNING` yields one row per source row. A `VALUES` list or a capped `SELECT` keeps that cap for the statement that uses the returned key. An uncapped `SELECT` source does not. A caller-bounded source does. `jsonb_to_recordset($1)` joined to the later target's complete unique key, then returned under another column name, bounds a following update pinned on that key the same way as `id = ANY($1)`. An unquoted datetime keyword in that insert list does not erase the bound; its cardinality is the datetime-keyword rule in the scalar-call paragraph below. Returning a column that is not the target key, scanning the source table without a key pin, a quoted or schema-qualified call in that insert list, or `jsonb_to_recordset` fed from a table column, still reports. `INSERT ... VALUES ($1, ...)` returning that key stays bounded. The [parameter-key fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3433/fixture/) cover that flow.
 
+A joined `INSERT ... RETURNING` CTE does not fan out when the later statement
+names it once and the predicate pins every column of the target's unique key.
+The same source still reports when that CTE is named twice in the later
+`FROM` list, when the join predicate is an `OR`, or when the join uses a
+column that is not unique.
+
 `jsonb_to_recordset($1)` and `jsonb_populate_recordset(NULL, $1)` are caller-bounded, the same as `jsonb_array_elements($1)`, when the argument is a caller-supplied value.
 
 A `LIMIT` on a CTE bounds the rest of that statement when each later data-modifying CTE writes rows identified by a complete primary key of the capped rows. A non-unique join inside the capped CTE does not reopen those later writes. The same statement without the `LIMIT` still reports.
@@ -736,6 +742,9 @@ A call to a function the rule cannot prove scalar in the capped CTE's select lis
 Unquoted `current_date`, `current_time`, `current_timestamp`, `localtime`, and `localtimestamp` are SQL datetime keywords with scalar cardinality, including inside `CASE` and with a precision argument such as `current_timestamp(0)`. `clock_timestamp`, `statement_timestamp`, and `transaction_timestamp` are scalar builtins, so a `LIMIT` on a select list that uses only those calls stays trusted. A quoted or schema-qualified spelling such as `"current_timestamp"()` or `pg_catalog.current_timestamp()` is an ordinary call, as is `app.current_timestamp()`. The [reopened statement fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3397-reopen/) cover `CURRENT_TIMESTAMP` inside `CASE`, a view join, an update inside a CTE, and the still-reported controls.
 
 Rows from `jsonb_to_recordset($1)` stay caller-bounded as they pass through later primary-key updates, including a final read of the returned keys. When that recordset reads a table column instead of a caller value, the finding names the table that supplied the document, not the primary-key target. `INSERT ... RETURNING` of a caller-supplied array, then `CROSS JOIN LATERAL unnest(cte.column)` matched back by primary key, is the same caller bound. An array taken from a table is not.
+
+That column-fed finding's line is the supplying table's `FROM`, and its message
+uses the enclosing statement kind.
 
 `id = ANY(ARRAY(SELECT alias.column FROM capped))` is bounded the same way as `id IN (SELECT alias.column FROM capped)`. The name inside the array subquery may be qualified, as in `a.id`.
 

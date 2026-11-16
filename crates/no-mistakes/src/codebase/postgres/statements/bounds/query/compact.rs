@@ -120,7 +120,10 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
     items.push(items::opaque(at));
     SqlBoundQuery {
         input_mode: match bound.input_mode {
-            SqlBoundInputMode::Returning => SqlBoundInputMode::Streaming,
+            // The summary drops both the modified-target projection and the insert-source identity.
+            SqlBoundInputMode::Returning | SqlBoundInputMode::ReturningSource => {
+                SqlBoundInputMode::Streaming
+            }
             mode => mode,
         },
         outputs: bound

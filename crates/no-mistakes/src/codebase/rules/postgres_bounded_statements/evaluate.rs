@@ -1,6 +1,8 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use super::view_bounds::{ViewBoundMode, ViewBounds};
-use crate::codebase::postgres::statements::{SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery};
+use crate::codebase::postgres::statements::{
+    SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundQuery,
+};
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
 mod accepts;
 pub(in crate::codebase::rules::postgres_bounded_statements) use accepts::DomainAccept;
@@ -108,6 +110,7 @@ fn evaluate(
             SqlBoundItemKind::Opaque => false,
         })
         .collect();
+    clear_repeated_returning(&query.items, &mut bounded);
     let write_target =
         write_target.or((query.input_mode == SqlBoundInputMode::Returning).then_some(0));
     let domains = if write_target.is_some() {
@@ -171,4 +174,21 @@ fn evaluate(
         catalog,
         views,
     )
+}
+
+/// A second `INSERT ... RETURNING` reference is not a cardinality proof.
+fn clear_repeated_returning(items: &[SqlBoundItem], bounded: &mut [bool]) {
+    for (index, item) in items.iter().enumerate() {
+        let SqlBoundItemKind::Query(inner) = &item.kind else {
+            continue;
+        };
+        if inner.input_mode == SqlBoundInputMode::ReturningSource
+            && items.iter().enumerate().any(|(other, peer)| {
+                other != index
+                    && matches!(&peer.kind, SqlBoundItemKind::Query(query) if query == inner)
+            })
+        {
+            bounded[index] = false;
+        }
+    }
 }
