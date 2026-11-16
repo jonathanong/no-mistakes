@@ -295,6 +295,12 @@ distinguishes them. These labels stay stable when unrelated SQL inputs or verdic
 reporting are enabled.
 Single-column messages and targets keep their existing shape.
 
+A cast of a row constructor containing UUID columns also reports, for example
+`(a.id, a.token)::pair = (b.id, b.token)::pair` or
+`CAST(ROW(id, email) AS pair) = $1`. The message identifies the row cast and
+lists the affected UUID columns; it does not describe the cast as applied
+directly to each column.
+
 Repeated evaluations of one physical expression combine their affected UUID
 columns. Repeating that helper expression twice within one executed SQL query
 produces two findings, at both efforts. Optional earlier helper calls do not
@@ -572,6 +578,14 @@ timestamp interval to UUID bounds in application code, then compare the column:
 
 ```sql
 SELECT id FROM users WHERE id >= $1 AND id < $2;
+```
+
+For a row cast, compare the columns individually without casts, or use a row
+comparison of columns without casts when it preserves the intended semantics:
+
+```sql
+SELECT 1 FROM accounts a JOIN accounts b ON true
+WHERE (a.id, a.token) = (b.id, b.token);
 ```
 
 ## Suppression

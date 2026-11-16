@@ -31,7 +31,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 3,
-          "message": "access-paths/single-row.sql:3: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:3: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -39,7 +39,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 4,
-          "message": "access-paths/single-row.sql:4: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:4: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(other_col)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -47,7 +47,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 5,
-          "message": "access-paths/single-row.sql:5: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:5: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(NULL)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -55,7 +55,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 6,
-          "message": "access-paths/single-row.sql:6: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:6: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW($1, other_col)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -93,7 +93,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 3,
-          "message": "access-paths/single-row.sql:3: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:3: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(sql_placeholder_0)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -101,7 +101,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 4,
-          "message": "access-paths/single-row.sql:4: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:4: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(other_col)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -109,7 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 5,
-          "message": "access-paths/single-row.sql:5: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:5: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW(NULL)::uuid_single;",
           "target": "single_row_items.post_id"
@@ -117,7 +117,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "access-paths/single-row.sql",
           "line": 6,
-          "message": "access-paths/single-row.sql:6: WHERE applies cast to UUID column single_row_items.post_id; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics",
+          "message": "access-paths/single-row.sql:6: WHERE applies a row cast containing UUID column single_row_items.post_id; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate",
           "rule": "postgres-no-transformed-uuid-predicates",
           "sourceLine": "SELECT * FROM single_row_items WHERE ROW(post_id)::uuid_single = ROW($1, other_col)::uuid_single;",
           "target": "single_row_items.post_id"

@@ -129,10 +129,31 @@ pub(super) fn finding(file: &str, table: &str, use_: &SqlTransformedColumnUseFac
     } else {
         ""
     };
-    RuleFinding { causes: Vec::new(),
-        rule: RULE_ID.into(), file: file.into(), line,
-        message: format!("{file}:{line}: {clause} applies {} to UUID column {table}.{}; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics{residual_rewrite}", use_.transformation, use_.column),
-        import: None, target: Some(format!("{table}.{}", use_.column)),
+    let message = if matches!(use_.expression.as_ref(), sqlparser::ast::Expr::Cast { expr, .. } if row_constructor(expr))
+    {
+        format!("{file}:{line}: {clause} applies a row cast containing UUID column {table}.{}; compare the columns uncast, or use a row comparison of uncast columns, so ordinary column indexes can support the predicate", use_.column)
+    } else {
+        format!("{file}:{line}: {clause} applies {} to UUID column {table}.{}; keep the UUID column bare so an ordinary column index can support the predicate. Cast the parameter to uuid, or compare the UUID column to a precomputed bound that preserves the intended semantics{residual_rewrite}", use_.transformation, use_.column)
+    };
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: file.into(),
+        line,
+        message,
+        import: None,
+        target: Some(format!("{table}.{}", use_.column)),
+    }
+}
+fn row_constructor(expr: &sqlparser::ast::Expr) -> bool {
+    use sqlparser::ast::Expr;
+    match expr {
+        Expr::Nested(inner) => row_constructor(inner),
+        Expr::Tuple(_) => true,
+        Expr::Function(function) => {
+            matches!(function.name.0.as_slice(), [name] if name.as_ident().is_some_and(|name| name.quote_style.is_none() && name.value.eq_ignore_ascii_case("row")))
+        }
+        _ => false,
     }
 }
 pub(super) fn unknown(file: &str, line: usize) -> RuleFinding {
