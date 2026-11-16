@@ -81,7 +81,7 @@ test("native aggregate requires all eight platform producer and consumer jobs", 
     .map((name) => name.trim())
     .filter(Boolean)
     .sort();
-  assert.deepEqual(needs, families.flatMap((name) => [name, `${name}-macos`]).sort());
+  assert.deepEqual(needs, ["changes", ...families.flatMap((name) => [name, `${name}-macos`])].sort());
   assert.match(body, /name: Native tests\n/);
   assert.match(body, /if: \$\{\{ always\(\) \}\}/);
 });

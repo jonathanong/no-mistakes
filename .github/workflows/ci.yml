@@ -56,8 +56,12 @@ jobs:
       benchmarks: ${{ github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/ci/cold-build' && !startsWith(github.ref, 'refs/heads/ci/warm-build-') && steps.benchmark-paths.outputs.changed || 'false' }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
       timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
-      # Retained as path metadata; every PR runs all test families.
+      # Path metadata only. Docs-only changes still run every non-macOS family.
       docs-only: ${{ github.event_name == 'pull_request' && steps.docs-only-paths.outputs.docs-only == 'true' }}
+      # Pull requests run macOS families only when a path can differ there.
+      # That diff starts at the merge base, so base-only edits do not count.
+      # Pushes and workflow_dispatch always run them. Release is a separate workflow.
+      macos: ${{ github.event_name != 'pull_request' || steps.macos-paths.outputs.macos == 'true' }}
 
     steps:
       - name: Checkout
@@ -140,6 +144,51 @@ jobs:
 
           git diff --no-renames --name-status -z "$BASE_SHA" "$HEAD_SHA" |
             node .github/scripts/docs-only-scope.cjs >> "$GITHUB_OUTPUT"
+
+      - name: Check macOS paths
+        id: macos-paths
+        timeout-minutes: 2
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for sha in "$BASE_SHA" "$HEAD_SHA"; do
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "$sha"
+            fi
+          done
+
+          # Pull requests diff from the merge base. Pushes keep the endpoint comparison.
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            attempts=0
+            while ! git merge-base "$BASE_SHA" "$HEAD_SHA" >/dev/null 2>&1; do
+              attempts=$((attempts + 1))
+              if (( attempts > 4 )); then
+                node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              if ! git fetch --no-tags --deepen=300 origin "$BASE_SHA" "$HEAD_SHA"; then
+                node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            done
+          fi
+
+          if ! DIFF_BASE=$(node .github/scripts/macos-pr-scope.cjs --diff-base "$GITHUB_EVENT_NAME" "$BASE_SHA" "$HEAD_SHA"); then
+            node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git diff --no-renames --name-status -z "$DIFF_BASE" "$HEAD_SHA" |
+            node .github/scripts/macos-pr-scope.cjs >> "$GITHUB_OUTPUT"
   quality-source:
     name: Source policy and tooling tests
     runs-on: ubuntu-latest
@@ -271,7 +320,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs
@@ -978,6 +1027,7 @@ jobs:
   native-build-macos:
     name: Native build (${{ matrix.name }})
     needs: changes
+    if: ${{ needs.changes.outputs.macos == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
@@ -1285,6 +1335,7 @@ jobs:
   native-test-build-macos:
     name: Native Rust compile (${{ matrix.name }})
     needs: changes
+    if: ${{ needs.changes.outputs.macos == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
@@ -1566,6 +1617,7 @@ jobs:
   native-rust-tests-macos:
     name: Native Rust tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: [changes, native-test-build-macos]
+    if: ${{ needs.changes.outputs.macos == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -1772,6 +1824,7 @@ jobs:
   native-api-tests-macos:
     name: Native API tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: [changes, native-build-macos]
+    if: ${{ needs.changes.outputs.macos == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
@@ -1883,6 +1936,7 @@ jobs:
     name: Native tests
     needs:
       [
+        changes,
         native-build,
         native-build-macos,
         native-test-build,
@@ -1900,8 +1954,9 @@ jobs:
         timeout-minutes: 1
         env:
           RESULTS: ${{ toJSON(needs) }}
+          MACOS_REQUIRED: ${{ needs.changes.outputs.macos }}
         run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (allow && job.result==="skipped" && macos.test(name)) continue; console.error(name+": "+job.result); process.exitCode=1; }'
   standalone-build:
     name: Build standalone library tests
     runs-on: ubuntu-latest

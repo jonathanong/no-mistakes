@@ -242,11 +242,19 @@ and runner-capacity limits that still prevent the ten-minute target.
 Pull requests run the validation jobs for Markdown changes as well as code
 changes. Documentation contract tests are part of the Rust coverage build and
 the required `Docs tests` check runs documentation tests independently. The
-docs-only path detector
-does not skip the current test matrix. Markdown under `crates/`, `packages/`,
-`plugins/`, `fixtures/`, `test-cases/`, `tests/`, `evals/`, `.ast-grep/`, and
-`docs/eslint-rules/`, plus pages read by unit and package tests, remains test
-input; update the docs-only detector tests when adding new test-read pages.
+docs-only path detector does not skip that non-macOS matrix. macOS native
+build, compile, Rust test, and API test jobs run on a pull request only when
+the diff can differ on macOS: native bindings, platform packages, Cargo
+manifests, the toolchain file, build scripts, path and filesystem modules, or
+CI workflows. A docs-only or postgres-rule-only pull request skips those jobs.
+The pull request diff starts at the merge base with the base branch, so a
+workflow edit that exists only on the base does not count. `Native tests` and
+`Tests with coverage` treat that skip as success. Pushes to
+`main` and the release workflow always run the macOS jobs. Markdown under
+`crates/`, `packages/`, `plugins/`, `fixtures/`, `test-cases/`, `tests/`,
+`evals/`, `.ast-grep/`, and `docs/eslint-rules/`, plus pages read by unit and
+package tests, remains test input; update the docs-only detector tests when
+adding new test-read pages.
 
 ## Shared machines and memory
 

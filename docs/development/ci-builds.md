@@ -36,6 +36,22 @@ The current validation graph is organized as follows:
   platform. Contract tests keep their build and test commands aligned.
   Windows runs six Rust shards and six real-addon API shards; macOS runs two of
   each, with every selected case still executed once.
+  On a pull request, those macOS jobs run only when
+  `.github/scripts/macos-pr-scope.cjs` reports a path that can differ on macOS:
+  native or N-API bindings, `packages/no-mistakes` platform packages, Cargo
+  manifests, `rust-toolchain.toml`, Cargo build scripts, the path and filesystem
+  modules named in that script, or CI workflows and scripts. A path the script
+  does not list as platform-independent also runs them. Postgres rule sources,
+  their fixtures, and their docs are platform-independent, so a pull request that
+  only changes those paths skips the macOS jobs. The pull request diff starts at
+  the merge base with the base branch, so a workflow edit that exists only on the
+  base does not count. The catalog client in
+  `crates/no-mistakes/src/postgres_catalog` is not in that set: it spawns `psql`,
+  and the filter runs the macOS jobs for it. `Native tests` accepts that
+  skip and still fails when a required macOS job did not succeed, or when any
+  Windows job did not succeed. `Tests with coverage` keeps requiring `Native
+  tests` to succeed. Pushes to `main`, manual dispatch, and the release workflow
+  always run the macOS jobs.
   The [completed seed run](https://github.com/jonathanong/no-mistakes/actions/runs/43378356388)
   showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
   queue waits of 8–12 minutes with roughly two jobs running concurrently.
@@ -46,7 +62,7 @@ The current validation graph is organized as follows:
   Job Object serial setting, while avoiding repeated harness initialization.
   Case plans and batch results remain available as artifacts. This divides the
   snapshot suites across runners. The platform-specific invocation tests and API checks remain
-  required.
+  required whenever those macOS jobs run.
 - Fan-in jobs preserve the existing required-check names and fail if a
   producer or shard fails. Artifact transfer and per-job setup remain part of
   elapsed PR wall time.
