@@ -147,7 +147,7 @@ fn function_export_walk_skips_non_callables_and_stops_on_a_star_cycle() {
 }
 
 #[test]
-fn a_sourced_named_reexport_follows_the_callable_and_skips_a_namespace() {
+fn a_sourced_named_reexport_keeps_a_callable_and_skips_a_non_callable() {
     let barrel = PathBuf::from("/repo/src/barrel.mts");
     let scan = PathBuf::from("/repo/src/scan.mts");
     let edges = graph(&[(&barrel, &scan)]);
@@ -158,6 +158,7 @@ fn a_sourced_named_reexport_follows_the_callable_and_skips_a_namespace() {
                 TsFileFacts {
                     exported_bindings: vec![
                         export("sync", "sync", Some("./scan.mts")),
+                        export("idle", "idle", Some("./scan.mts")),
                         export("*", "workers", Some("./scan.mts")),
                         export("gone", "gone", Some("./missing.mts")),
                     ],
@@ -167,7 +168,10 @@ fn a_sourced_named_reexport_follows_the_callable_and_skips_a_namespace() {
             (
                 scan.clone(),
                 TsFileFacts {
-                    exported_bindings: vec![export("sync", "sync", None)],
+                    exported_bindings: vec![
+                        export("sync", "sync", None),
+                        export("idle", "idle", None),
+                    ],
                     exported_functions: vec!["sync".to_string()],
                     callable_scope_ids: vec![(CallableId(7), "sync".to_string())],
                     ..TsFileFacts::default()

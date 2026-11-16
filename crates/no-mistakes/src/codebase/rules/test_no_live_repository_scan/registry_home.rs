@@ -3,6 +3,7 @@ use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKin
 use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite, TsFactLookup};
 use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 const HOP_CAP: usize = 8;
@@ -63,8 +64,8 @@ pub(super) fn binding_local(
 
 pub(super) fn function_exports(locate: &Locate<'_>, file: &Path) -> Vec<(PathBuf, String)> {
     let mut out = Vec::new();
-    let mut seen = Vec::new();
-    collect_functions(locate, file, &mut seen, &mut out);
+    let mut best = FxHashMap::default();
+    collect_functions(locate, file, 0, &mut best, &mut out);
     out
 }
 
@@ -139,19 +140,20 @@ fn one_star(
 fn collect_functions(
     locate: &Locate<'_>,
     file: &Path,
-    seen: &mut Vec<PathBuf>,
+    depth: usize,
+    best: &mut FxHashMap<PathBuf, usize>,
     out: &mut Vec<(PathBuf, String)>,
 ) {
-    if seen.len() >= HOP_CAP || seen.iter().any(|item| item == file) {
+    if depth >= HOP_CAP || best.get(file).is_some_and(|seen| *seen <= depth) {
         return;
     }
-    seen.push(file.to_path_buf());
+    best.insert(file.to_path_buf(), depth);
     let Some(ts) = locate.facts.get_ts_facts(file) else {
         return;
     };
     for name in &ts.exported_functions {
         if ts.callable_scope_ids.iter().any(|(_, scope)| scope == name) {
-            out.push((file.to_path_buf(), name.clone()));
+            remember(out, (file.to_path_buf(), name.clone()));
         }
     }
     for export in &ts.exported_bindings {
@@ -159,7 +161,7 @@ fn collect_functions(
     }
     for specifier in &ts.star_reexport_specifiers {
         if let Some(target) = super::resolve::resolve(locate, file, specifier) {
-            collect_functions(locate, &target, seen, out);
+            collect_functions(locate, &target, depth + 1, best, out);
         }
     }
 }
@@ -183,12 +185,16 @@ fn follow_sourced_function(
     else {
         return;
     };
-    let callable = locate.facts.get_ts_facts(&found).is_some_and(|ts| {
+    if locate.facts.get_ts_facts(&found).is_some_and(|ts| {
         ts.callable_scope_ids
             .iter()
             .any(|(_, scope)| scope == &local)
-    });
-    if callable {
-        out.push((found, local));
+    }) {
+        remember(out, (found, local));
+    }
+}
+fn remember(out: &mut Vec<(PathBuf, String)>, item: (PathBuf, String)) {
+    if !out.contains(&item) {
+        out.push(item);
     }
 }
