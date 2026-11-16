@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "view-table-name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "statements.sql",
+          "line": 4,
+          "message": "statements.sql:4: SELECT can return every row of consumptions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT committed_at FROM consumptions LIMIT archive.budgets.cap",
+          "target": "table:consumptions"
+        },
+        {
+          "file": "statements.sql",
+          "line": 9,
+          "message": "statements.sql:9: SELECT can return every row of consumptions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT committed_at FROM consumptions LIMIT budgets.cap",
+          "target": "table:consumptions"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

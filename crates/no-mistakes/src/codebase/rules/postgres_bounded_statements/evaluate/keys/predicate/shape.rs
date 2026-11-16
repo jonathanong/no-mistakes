@@ -93,13 +93,16 @@ pub(super) fn eq_placeholder(
     Some((column, placeholder(value)?))
 }
 
-pub(super) fn binding(expr: &Expr, catalog: &SchemaCatalog) -> Option<(String, Lit)> {
-    let types = BTreeMap::new();
+pub(super) fn binding(
+    expr: &Expr,
+    catalog: &SchemaCatalog,
+    types: &BTreeMap<String, String>,
+) -> Option<(String, Lit)> {
     let (left, right) = eq_pair(expr)?;
-    if let (Some(name), Some(value)) = (placeholder(left), literal(right, catalog, None, &types)) {
+    if let (Some(name), Some(value)) = (placeholder(left), literal(right, catalog, None, types)) {
         return Some((name, value));
     }
-    if let (Some(name), Some(value)) = (placeholder(right), literal(left, catalog, None, &types)) {
+    if let (Some(name), Some(value)) = (placeholder(right), literal(left, catalog, None, types)) {
         return Some((name, value));
     }
     None

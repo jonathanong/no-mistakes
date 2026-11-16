@@ -17,8 +17,10 @@ set operation). A statement is bounded when any of these holds:
   items, including when proving that a projected column is non-null. A column of the query that owns the `LIMIT` does not count. A bare name
   counts only when exactly one preceding `unnest` of parameter arrays declares that
   column. A bare name over a single table does not count. A parent column is
-  non-null when it is a `NOT NULL` catalog column, or a `VALUES` or `SELECT` column
-  whose every row is a non-null literal or bind. A reference column-alias list is
+  non-null when it is a `NOT NULL` column of a base table, or a `VALUES` or
+  `SELECT` column whose every row is a non-null literal or bind. A view with the
+  same bare name in another schema does not lend that table's nullability, and a
+  bare name that matches both does not count. A reference column-alias list is
   not that proof. `ROLLUP`, `CUBE`, and `GROUPING SETS` can make a grouped column
   NULL. A set operation uses the left arm's output names, and a short alias list
   renames only that prefix. Parentheses keep an inner catalog column. A

@@ -156,8 +156,9 @@ unchanged.
 
 `SchemaCatalog::unique_keys(table)` returns those key column sets: valid, ready, live,
 immediate, non-partial unique or primary indexes whose keys are all plain columns, and
-`SchemaCatalog::column_is_not_null(table, column)` says whether a column cannot hold NULL
-(`ctid` never does), which decides whether an `IS NOT DISTINCT FROM` pin identifies a row.
+`SchemaCatalog::column_is_not_null(table, column)` says whether a column of a base table
+cannot hold NULL (`ctid` never does). A view that shares the name is not that table. The
+fact decides whether an `IS NOT DISTINCT FROM` pin identifies a row.
 `postgres-bounded-statements` consumes all three.
 
 [PostgreSQL fact sources](../postgres-facts.md)

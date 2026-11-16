@@ -127,6 +127,8 @@ mod cli_postgres_snapshot_issue_3397;
 mod cli_postgres_snapshot_issue_3437;
 #[path = "cli_postgres_snapshot_issue_3452.rs"]
 mod cli_postgres_snapshot_issue_3452;
+#[path = "cli_postgres_snapshot_issue_3462.rs"]
+mod cli_postgres_snapshot_issue_3462;
 #[path = "cli_postgres_snapshot_json_relation_ids.rs"]
 mod cli_postgres_snapshot_json_relation_ids;
 #[path = "cli_postgres_snapshot_key_column_types.rs"]

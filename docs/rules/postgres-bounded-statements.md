@@ -417,8 +417,10 @@ Literal arrays and mixed table/parameter inputs do not establish this unnest bou
 
 A `LIMIT` or `FETCH FIRST` count may also name a qualified column of a relation
 visible from an enclosing query when that value is provably non-null. A
-`NOT NULL` catalog column counts. A `VALUES` or `SELECT` column counts when
-every row is a non-null literal or bind, so
+`NOT NULL` catalog column counts only when that name is a base table. A view
+with the same bare name in another schema does not lend the table's
+nullability, and a bare name that matches both does not count. A `VALUES`
+or `SELECT` column counts when every row is a non-null literal or bind, so
 `WITH windows(row_limit) AS (VALUES (2))` and `LIMIT windows.row_limit` both
 count, the same way `LIMIT $2` does. Bare, unquoted `COALESCE`, `LEAST`, and
 `GREATEST` count when one argument is non-null: `GREATEST` ignores NULL

@@ -1,0 +1,52 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "budgets": {
+      "relationKind": "table",
+      "columns": {
+        "actor_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "cap": { "dataType": "int4", "nullable": false, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["actor_id"] },
+      "indexes": {}
+    },
+    "safe": {
+      "relationKind": "table",
+      "columns": {
+        "actor_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "cap": { "dataType": "int4", "nullable": false, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["actor_id"] },
+      "indexes": {
+        "safe_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX safe_pkey ON safe (actor_id)",
+          "keys": [{ "column": "actor_id", "expression": "actor_id" }]
+        }
+      }
+    },
+    "consumptions": {
+      "relationKind": "table",
+      "columns": {
+        "committed_at": { "dataType": "timestamptz", "nullable": true, "ordinalPosition": 1 }
+      },
+      "primaryKey": null,
+      "indexes": {}
+    }
+  },
+  "views": {
+    "archive.budgets": {
+      "materialized": false,
+      "definition": "SELECT NULL::uuid AS actor_id, NULL::integer AS cap"
+    }
+  }
+}
