@@ -252,6 +252,17 @@
       "file": "fixture.ts",
       "findings": [
         {
+          "column": 9,
+          "endColumn": 34,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
           "column": 3,
           "endColumn": 25,
           "endLine": 8,

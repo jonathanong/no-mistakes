@@ -10,6 +10,8 @@ Adjacent independent awaited reads add round trips. Configure the client's read 
 import { cache as client } from '@app/cache';
 const first = await client.get('a');
 const second = await client.ttl('b');
+const third = Number(await client.ttl('c'));
+const fourth = JSON.parse((await client.get('d')) ?? '{}');
 ```
 
 ## Allowed
@@ -32,7 +34,13 @@ The options object accepts `clients` (exact local identifier names), `imports` (
 }] }
 ```
 
-Adjacent reads in a module, block, or individual switch case are compared. Supported shapes are direct await expressions, simple assignments with an awaited right side, variable declarators initialized by awaits (including exported declarations), and a second read written as `return await`. Declarators are compared in execution order, including across statement boundaries; a non-read declarator breaks adjacency. Separate switch cases are never combined, and a return ends a sequence. Transparent TypeScript assertions and static computed method names are accepted. Both reads must target the same resolved client binding. Referencing any previous declared or assigned result binding, including a destructured binding, anywhere in the second call exempts the pair. Compound assignments, assignments to properties or unresolved bindings, aliases, nested awaits, arbitrary control flow, and helper return values are not followed. Configured methods assert independent reads when no result dependency is visible; the rule does not prove purity of argument helpers or discover hidden dependencies. Keep such dependencies explicit in the second call or separate the statements.
+Adjacent reads in a module, block, or individual switch case are compared. Supported statement shapes are expression statements, simple assignments, variable declarators (including exported declarations), and a second read written as a return statement. The awaited read may occur inside call arguments, conversions, member access on its result, parentheses, or transparent TypeScript assertions. A read on the left side of `&&`, `||`, or `??`, or in a conditional expression's test, is unconditional and remains eligible.
+
+Each candidate declarator or statement expression must contain exactly one configured awaited read outside function boundaries, and it must be unconditional. Multiple configured awaited reads are ambiguous and break adjacency, including when one read is conditional, in a binding-pattern default, or nested in another read's arguments. Reads inside callbacks, arrows, or nested functions do not belong to the containing statement. Reads on the right side of a logical expression, in either conditional branch, in optional-call arguments or optional computed access, or through an optional client call are not unconditional and are not paired. Reading an optional property of an already awaited result does not make the read itself conditional.
+
+Declarators are compared in execution order, including across statement boundaries; a non-read declarator breaks adjacency. Separate switch cases are never combined, and a return ends a sequence. Static computed method names are accepted. Both reads must target the same resolved client binding. Referencing any previous declared or assigned result binding, including a destructured binding, anywhere in the second read call exempts the pair. A dependency only in the surrounding conversion does not change whether that read can be batched. Compound assignments, assignments to properties or unresolved bindings, aliases, arbitrary control flow, and helper return values are not followed. Configured methods assert independent reads when no result dependency is visible; the rule does not prove purity of argument helpers or discover hidden dependencies. Keep such dependencies explicit in the second call or separate the statements.
+
+Assignments inside wrappers also establish result dependencies: after `Number(key = await client.get('a'))`, a read using `key` is not independent. Nested property writes, compound assignments, and increment/decrement operations are unsupported writes and break the pair rather than establishing a batching opportunity.
 
 ## Fix
 

@@ -1,5 +1,6 @@
 "use strict";
 const { unwrapExpression } = require("./async-ast");
+const { findAwaitedRead } = require("./unbatched-read-expression");
 const { memberPropertyName, resolveVariable } = require("./async-target-bindings");
 const { importSelectorSchema, matchesRuntimeImport } = require("./configured-runtime-import");
 const { ruleSuppression } = require("../rule-suppression");
@@ -34,17 +35,18 @@ module.exports = {
       if (statement.type === "ExpressionStatement") expression = statement.expression;
       if (statement.type === "VariableDeclarator") expression = statement.init;
       if (statement.type === "ReturnStatement") expression = statement.argument;
-      let assigned;
-      expression = unwrapExpression(expression);
-      if (expression?.type === "AssignmentExpression") {
-        if (expression.operator !== "=") return null;
-        assigned = expression.left;
-        expression = expression.right;
-      }
-      const awaited = unwrapExpression(expression);
-      if (awaited?.type !== "AwaitExpression") return null;
-      const call = unwrapExpression(awaited.argument);
-      if (call.type !== "CallExpression") return null;
+      const root = statement.type === "VariableDeclarator" ? statement : expression;
+      const matched = findAwaitedRead(root, context, configuredRead);
+      if (!matched) return null;
+      const variables = matched.assignments.flatMap(assignedVariables);
+      if (statement.type === "VariableDeclarator")
+        variables.push(...context.sourceCode.getDeclaredVariables(statement));
+      if (variables.includes(null)) return null;
+      return { ...matched, variables };
+    }
+    function configuredRead(expression) {
+      const call = unwrapExpression(expression);
+      if (call?.type !== "CallExpression") return null;
       const member = unwrapExpression(call.callee);
       if (
         member.type !== "MemberExpression" ||
@@ -58,11 +60,7 @@ module.exports = {
         !options.imports?.some((selector) => matchesRuntimeImport(client, selector, context))
       )
         return null;
-      const variables = assignedVariables(assigned);
-      if (statement.type === "VariableDeclarator")
-        variables.push(...context.sourceCode.getDeclaredVariables(statement));
-      if (variables.includes(null)) return null;
-      return { call, client, variables, variable: resolveVariable(client, context) };
+      return { call, client, variable: resolveVariable(client, context) };
     }
     function assignedVariables(pattern) {
       if (!pattern) return [];

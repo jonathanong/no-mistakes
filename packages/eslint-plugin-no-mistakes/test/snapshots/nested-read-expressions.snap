@@ -1,0 +1,374 @@
+[
+  {
+    "file": "client-contracts/reads-nested-expressions.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 42,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 5,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 10,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 15,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 20,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 25,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 30,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 35,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 35,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 41,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 41,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 42,
+        "endLine": 46,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 46,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 50,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 50,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 54,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 54,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 59,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 59,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 64,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 64,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 70,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 70,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      }
+    ],
+    "options": {
+      "clients": [
+        "kv"
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-nested-boundaries.ts",
+    "findings": [],
+    "options": {
+      "clients": [
+        "kv"
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-nested-expressions.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 42,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 5,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 10,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 15,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 20,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 25,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 30,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 35,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 35,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 41,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 41,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 42,
+        "endLine": 46,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 46,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 50,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 50,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 54,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 54,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 59,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 59,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 64,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 64,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 39,
+        "endLine": 70,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-nested-expressions.ts",
+        "line": 70,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      }
+    ],
+    "options": {
+      "imports": [
+        {
+          "imported": "cache",
+          "source": "@app/cache"
+        }
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-nested-boundaries.ts",
+    "findings": [],
+    "options": {
+      "imports": [
+        {
+          "imported": "cache",
+          "source": "@app/cache"
+        }
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  }
+]
