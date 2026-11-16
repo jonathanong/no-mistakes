@@ -18,6 +18,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Deploys and contracts
 
 - MUST NOT deploy a producer of a new shape while consumers that cannot read it can still run; expand, migrate, then contract.
-- MUST NOT add a table, service, or write path that no entry point (API route, MCP tool, CLI command, or job) reaches, directly or through code it calls; build the entry point in the same change, even if nothing calls it yet. Exceptions: a schema expand step that deploys ahead of the code that uses it, and a library whose entry points live in its consumers' repos.
+- SHOULD NOT add a table, service, or write path that no entry point (API route, MCP tool, CLI command, or job) reaches, directly or through code it calls; build the entry point in the same change, even if nothing calls it yet. Exceptions: a schema expand step that deploys ahead of the code that uses it, and a library whose entry points live in its consumers' repos.
 - MUST NOT fail open on irreversible or money-moving actions; when unsure, stop and report.
 - SHOULD NOT reference config, task names, or handlers by string without validating them at startup.
