@@ -310,7 +310,26 @@ Run all three single-arm (`--ablation none --runs 3`) on the same day:
 python3 evals/generate.py --rules-variant describe
 pnpm run evals -- --eval-dir evals-variants/rules-describe --tag rules \
   --runs 3 --ablation none -j 4
-``` Demand is "skill surface": these traps come from the rules
+```
+
+Replication, 2026-11-16: `control` and `describe`, `--runs 6`, single
+arm, Sonnet 5.5 agent, Opus 5.5 judge, same day, 17 cases.
+
+| variant | should-fire trigger | off-topic fired | cost |
+| --- | --- | --- | --- |
+| `control` | 51/78 (65%) | 0/24 | $8.21 |
+| `describe` | 58/78 (74%) | 0/24 | $8.85 |
+
+`power.py --runs 6` allows a wrong-way gap of 6 between two fresh arms, so
++7 clears the noise by one count. It agrees with the 2026-11-14 screen
+(+6/48). The gain is concentrated in `postgresql-write-anti-join` (2/6 →
+6/6) and `postgresql-write-offset-pagination` (1/6 → 6/6), two cases that
+already pass without the plugin. `describe` lost on
+`testing-exception-parsed-usage-text` (6/6 → 4/6 fired, score 0.83 →
+0.33). Re-measure on the replacement cases before changing any description.
+`queue-exception-enqueue-in-tx-receipt` fired 0/12 across both variants.
+
+Demand is "skill surface": these traps come from the rules
 text, not from mined traffic. `summarize.py --mentions` and
 `power.py --fabrication` do not apply, since there are no graph command forms
 to fabricate.
