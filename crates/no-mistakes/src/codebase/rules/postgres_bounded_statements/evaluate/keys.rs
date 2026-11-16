@@ -3,11 +3,15 @@ use super::{qualified, reads_outer, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
 use std::collections::BTreeMap;
+mod domain_apply;
+mod domain_range;
+mod domain_rows;
 mod domains;
 mod implied;
 mod indexes;
 mod not_null;
 mod predicate;
+pub(in crate::codebase::rules::postgres_bounded_statements) use domain_apply::Credit;
 pub(super) use domains::{output_domains, prepare as finite_domains, Domains};
 mod view;
 
@@ -28,46 +32,40 @@ pub(super) fn dependent_on(items: SourceItems) -> Keys {
 pub(super) fn prepare(
     item: &SqlBoundItem,
     item_index: usize,
-    (owners, domains): (&BTreeMap<String, usize>, Option<&Domains>),
+    (owners, domains, domain_rows): (&BTreeMap<String, usize>, Option<&Domains>, Option<u64>),
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
     views: &super::super::view_bounds::ViewBounds,
-) -> Keys {
+) -> (Keys, Option<Credit>) {
     let SqlBoundItemKind::Table(name) = &item.kind else {
-        return Vec::new();
+        return (Vec::new(), None);
     };
     let Some(table) = catalog.bounded_relation(name) else {
         // viewBounds is the cardinality contract, so a derived key must not override it.
         if views.get(name, catalog).is_some() {
-            return Vec::new();
+            return (Vec::new(), None);
         }
-        return view::keys_for(item, item_index, owners, subqueries, arrays, catalog, name);
+        return (
+            view::keys_for(item, item_index, owners, subqueries, arrays, catalog, name),
+            None,
+        );
     };
-    let mut keys: Vec<Vec<(String, String)>> = catalog
+    let mut specs: Vec<domain_rows::Spec> = catalog
         .unique_keys(name)
         .into_iter()
-        .chain(
-            views
-                .keys
-                .columns(&table.name)
-                .map(|column| vec![column.to_owned()]),
-        )
-        .filter_map(|key| {
-            key.into_iter()
-                .map(|physical| {
-                    let visible =
-                        super::super::arrays::key_visible(table, &item.column_aliases, &physical)?
-                            .to_owned();
-                    Some((visible, physical))
-                })
-                .collect()
-        })
+        .filter_map(|key| domain_rows::spec(table, &item.column_aliases, key, true))
+        .chain(views.keys.columns(&table.name).filter_map(|column| {
+            domain_rows::spec(table, &item.column_aliases, vec![column.to_owned()], false)
+        }))
         .collect();
     if table.relation_kind != RelationKind::PartitionedTable
         && !item.column_aliases.iter().any(|alias| alias == "ctid")
     {
-        keys.push(vec![("ctid".to_owned(), "ctid".to_owned())]);
+        specs.push(domain_rows::Spec {
+            columns: vec![("ctid".to_owned(), "ctid".to_owned())],
+            eligible: false,
+        });
     }
     // Static read/cast evidence is independent of the fixed point, including failed proofs.
     let sources: Vec<_> = item
@@ -111,9 +109,11 @@ pub(super) fn prepare(
             if item.rejected_alternatives.contains(&alternative) {
                 return vec![vec![vec![vec![]]]];
             }
-            keys.iter()
-                .map(|key| {
-                    key.iter()
+            specs
+                .iter()
+                .map(|spec| {
+                    spec.columns
+                        .iter()
                         .map(|(visible, physical)| {
                             let not_null = physical == "ctid"
                                 || table
@@ -142,14 +142,44 @@ pub(super) fn prepare(
                 .collect()
         })
         .collect();
+    let mut widths = domain_rows.map(|_| {
+        (0..item.pin_alternatives.max(1))
+            .map(|alternative| {
+                if item.rejected_alternatives.contains(&alternative) {
+                    return vec![vec![None]];
+                }
+                specs
+                    .iter()
+                    .map(|spec| {
+                        domain_rows::widths_for(
+                            table,
+                            catalog,
+                            item,
+                            alternative,
+                            &spec.columns,
+                            spec.eligible,
+                        )
+                    })
+                    .collect()
+            })
+            .collect::<domain_rows::StatementWidths>()
+    });
     indexes::append(
         &mut prepared,
         item,
         item_index,
         owners,
-        (name, table),
+        (name, table, widths.as_mut()),
         &sources,
         catalog,
     );
-    prepared
+    let credit = domain_rows.and_then(|cap| {
+        domain_apply::apply(
+            &mut prepared,
+            widths.as_deref().unwrap_or(&[]),
+            &item.rejected_alternatives,
+            cap,
+        )
+    });
+    (prepared, credit)
 }

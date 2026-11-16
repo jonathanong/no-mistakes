@@ -123,6 +123,13 @@ impl AllowList {
         self.entries.iter().any(|entry| entry.object == object)
     }
 
+    pub(crate) fn entry_objects(&self) -> impl Iterator<Item = (usize, &str)> + '_ {
+        self.entries
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| (index, entry.object.as_str()))
+    }
+
     pub fn compile(rule_id: &str, entries: Vec<AllowEntry>) -> Result<Self> {
         let mut seen = BTreeSet::new();
         for entry in &entries {

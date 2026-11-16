@@ -258,3 +258,14 @@ fail the check. A disable directive that covers the declaration or the statement
 omits that entry. A missing limit, `rows<=0`, a missing justification, or a
 declaration on an already bounded statement is a finding. See
 [declared statement bounds](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-bounded-statements.md#declared-statement-bounds).
+
+`postgres-bounded-statements.options.maxDomainRows` accepts a unique-key lookup
+whose free columns each have a proven finite domain when the product of those
+domains is at most the cap. Leave it unset to keep the current findings. A
+domain is a validated integer check, a non-null enum, a non-null boolean, or a
+closed inclusive `YYYY-MM-DD` literal range on the column's visible name,
+including a positional alias. `smallint` and `integer` widths are not domains.
+An accepted product is silent. A product above the cap stays a finding and
+names that product, including a materialized-body finding. The proof skips a statement an allow entry or another
+bound already accepts. An allow entry the proof replaces entirely is reported
+once, on that entry in the rules file.

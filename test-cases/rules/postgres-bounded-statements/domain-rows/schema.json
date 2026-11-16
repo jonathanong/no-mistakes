@@ -1,0 +1,772 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "enums": {
+    "metrics": {
+      "values": [
+        "reports",
+        "actions"
+      ]
+    },
+    "categories": {
+      "values": [
+        "spam",
+        "abuse"
+      ]
+    }
+  },
+  "tables": {
+    "questions": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "community_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "order_index": {
+          "dataType": "smallint",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "deleted_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "questions_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX questions_pkey ON public.questions USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "questions_community_id_order_index_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX questions_community_id_order_index_key ON public.questions USING btree (community_id, order_index) WHERE (deleted_at IS NULL)",
+          "keys": [
+            {
+              "column": "community_id",
+              "expression": "community_id"
+            },
+            {
+              "column": "order_index",
+              "expression": "order_index"
+            }
+          ],
+          "predicate": "(deleted_at IS NULL)"
+        }
+      }
+    },
+    "participants": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "conversation_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "actor_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "slot": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "indexes": {
+        "participants_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX participants_pkey ON public.participants USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "participants_conversation_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX participants_conversation_id_slot_key ON public.participants USING btree (conversation_id, slot)",
+          "keys": [
+            {
+              "column": "conversation_id",
+              "expression": "conversation_id"
+            },
+            {
+              "column": "slot",
+              "expression": "slot"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "participants_slot_check": {
+          "definition": "CHECK (slot BETWEEN 1 AND 50)"
+        },
+        "participants_actor_check": {
+          "definition": "CHECK (actor_id IS NOT NULL)"
+        }
+      }
+    },
+    "entries": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "entries_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX entries_pkey ON public.entries USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "daily": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "day": {
+          "dataType": "date",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "metric": {
+          "dataType": "metrics",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "category": {
+          "dataType": "categories",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "daily_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX daily_pkey ON public.daily USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "daily_day_owner_id_metric_category_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX daily_day_owner_id_metric_category_key ON public.daily USING btree (day, owner_id, metric, category)",
+          "keys": [
+            {
+              "column": "day",
+              "expression": "day"
+            },
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "metric",
+              "expression": "metric"
+            },
+            {
+              "column": "category",
+              "expression": "category"
+            }
+          ]
+        }
+      }
+    },
+    "wide_slots": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "slot": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "wide_slots_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX wide_slots_pkey ON public.wide_slots USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "wide_slots_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX wide_slots_owner_id_slot_key ON public.wide_slots USING btree (owner_id, slot)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "slot",
+              "expression": "slot"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "wide_slots_slot_check": {
+          "definition": "CHECK (slot BETWEEN 1 AND 5001)"
+        }
+      }
+    },
+    "flags": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "flags_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX flags_pkey ON public.flags USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "flags_owner_id_active_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX flags_owner_id_active_key ON public.flags USING btree (owner_id, active)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "active",
+              "expression": "active"
+            }
+          ]
+        }
+      }
+    },
+    "ranks": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "rank": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "ranks_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX ranks_pkey ON public.ranks USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "ranks_owner_id_rank_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX ranks_owner_id_rank_key ON public.ranks USING btree (owner_id, rank)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "rank",
+              "expression": "rank"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "ranks_rank_check": {
+          "definition": "CHECK ((rank >= 1) AND (rank <= 10))"
+        }
+      }
+    },
+    "maybe_flags": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "maybe_flags_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX maybe_flags_pkey ON public.maybe_flags USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "maybe_flags_owner_id_active_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX maybe_flags_owner_id_active_key ON public.maybe_flags USING btree (owner_id, active)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "active",
+              "expression": "active"
+            }
+          ]
+        }
+      }
+    },
+    "drafts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "rank": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "drafts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX drafts_pkey ON public.drafts USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "drafts_owner_id_rank_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX drafts_owner_id_rank_key ON public.drafts USING btree (owner_id, rank)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "rank",
+              "expression": "rank"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "drafts_rank_check": {
+          "definition": "CHECK ((rank >= 1) AND (rank <= 10))",
+          "validated": false
+        }
+      }
+    },
+    "open_days": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "day": {
+          "dataType": "date",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "open_days_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX open_days_pkey ON public.open_days USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "open_days_owner_id_day_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX open_days_owner_id_day_key ON public.open_days USING btree (owner_id, day)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "day",
+              "expression": "day"
+            }
+          ]
+        }
+      }
+    },
+    "spans": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "owner_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "day": {
+          "dataType": "date",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "spans_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX spans_pkey ON public.spans USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "spans_owner_id_day_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX spans_owner_id_day_key ON public.spans USING btree (owner_id, day)",
+          "keys": [
+            {
+              "column": "owner_id",
+              "expression": "owner_id"
+            },
+            {
+              "column": "day",
+              "expression": "day"
+            }
+          ]
+        }
+      }
+    },
+    "labeled": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "bucket": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "labeled_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX labeled_pkey ON public.labeled USING btree (id)",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "labeled_bucket_check": {
+          "definition": "CHECK (bucket BETWEEN 1 AND 5)"
+        }
+      }
+    },
+    "slugs": {
+      "relationKind": "table",
+      "columns": {
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "slugs_lower_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX slugs_lower_idx ON public.slugs USING btree (lower(slug))",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(slug)"
+            }
+          ]
+        }
+      },
+      "checkConstraints": {}
+    }
+  }
+}

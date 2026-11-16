@@ -26,7 +26,7 @@ pub(super) fn collect(
     query: &SqlBoundQuery,
     nested: &[Option<Evaluation>],
     pin_subqueries: &[Vec<Option<Evaluation>>],
-    bounded: &[bool],
+    (bounded, credits): (&[bool], &[Option<super::keys::Credit>]),
     catalog: &SchemaCatalog,
     views: &ViewBounds,
     precise_columns: bool,
@@ -51,13 +51,16 @@ pub(super) fn collect(
         }
         if !capped && !bounded[index] && nested[index].is_none() {
             if let SqlBoundItemKind::Table(name) = &item.kind {
-                found.extend(relation_offender(
-                    name,
-                    item.line,
-                    item.column,
-                    catalog,
-                    views,
-                ));
+                if let Some(mut offender) =
+                    relation_offender(name, item.line, item.column, catalog, views)
+                {
+                    if let Some(super::keys::Credit::Over(product)) =
+                        credits.get(index).copied().flatten()
+                    {
+                        offender.domain_over = Some(product);
+                    }
+                    found.push(offender);
+                }
             }
         }
     }
@@ -105,6 +108,7 @@ pub(super) fn relation_offender(
         line,
         column,
         blocking_input: false,
+        domain_over: None,
     })
 }
 
@@ -134,5 +138,6 @@ fn view_offender(name: &str, line: usize, column: usize) -> Offender {
         line,
         column,
         blocking_input: false,
+        domain_over: None,
     }
 }

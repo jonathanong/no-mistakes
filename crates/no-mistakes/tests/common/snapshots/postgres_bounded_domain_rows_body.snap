@@ -1,0 +1,55 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "rows_5": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/body.sql",
+          "line": 1,
+          "message": "sql/body.sql:1: MATERIALIZED CTE pool can build an unbounded candidate pool from ranks; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body; unique-key domain product is 10, above maxDomainRows 5",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH pool AS MATERIALIZED (",
+          "target": "table:ranks"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/body.sql",
+          "line": 1,
+          "message": "sql/body.sql:1: MATERIALIZED CTE pool can build an unbounded candidate pool from ranks; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH pool AS MATERIALIZED (",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/body.sql",
+          "line": 6,
+          "message": "sql/body.sql:6: MATERIALIZED CTE flags_pool can build an unbounded candidate pool from flags; add a LIMIT inside the body or restrict each relation by a primary/unique key or a reviewed columnBounds key; an outer cap does not bound the body",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "WITH flags_pool AS MATERIALIZED (",
+          "target": "table:flags"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

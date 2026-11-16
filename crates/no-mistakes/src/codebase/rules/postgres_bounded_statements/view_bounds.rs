@@ -16,6 +16,7 @@ pub(super) enum ViewBoundMode {
 pub(super) struct ViewBounds {
     views: BTreeMap<String, ViewBoundMode>,
     pub(super) keys: super::column_bounds::ColumnBounds,
+    pub(super) domain_rows: Option<u64>,
 }
 
 impl ViewBounds {
@@ -35,6 +36,7 @@ impl ViewBounds {
         Ok(Self {
             views: resolved,
             keys: Default::default(),
+            domain_rows: None,
         })
     }
 

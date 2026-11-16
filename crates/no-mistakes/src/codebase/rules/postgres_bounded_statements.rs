@@ -14,6 +14,7 @@ pub(in crate::codebase) use bodies::{body_advice_requested, body_bounds_requeste
 mod column_bounds;
 mod evaluate;
 pub(crate) use evaluate::lookup::bound as bound_lookup_items;
+mod redundant_allow;
 mod scan;
 mod view_bounds;
 use std::collections::BTreeMap;
@@ -43,6 +44,7 @@ pub(super) struct Options {
     view_bounds: BTreeMap<String, ViewBoundMode>,
     column_bounds: BTreeMap<String, column_bounds::ColumnBound>,
     materialized_bodies: bodies::Policy,
+    max_domain_rows: Option<u64>,
 }
 
 pub(crate) struct CompiledOptions {
@@ -56,6 +58,7 @@ pub(crate) struct CompiledOptions {
     view_bounds: BTreeMap<String, ViewBoundMode>,
     column_bounds: BTreeMap<String, column_bounds::ColumnBound>,
     materialized_bodies: bodies::Policy,
+    max_domain_rows: Option<u64>,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
@@ -72,8 +75,14 @@ pub(crate) fn check_with_files_sources_and_facts(
         RULE_ID,
         compile_options,
         |opts: &Options| (&opts.include, &opts.exclude),
-        |root, compiled, files, sources, facts| {
-            scan::scan(root, compiled, files, sources, Some(facts))
+        |root, compiled, files, sources, facts, rule| {
+            let anchor = crate::codebase::rules::config_diagnostic::ConfigAnchor::resolve(
+                root,
+                config,
+                Some(sources),
+                rule,
+            );
+            scan::scan(root, compiled, files, sources, Some(facts), &anchor)
         },
     )
 }
@@ -102,6 +111,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         view_bounds: opts.view_bounds.clone(),
         column_bounds: opts.column_bounds.clone(),
         materialized_bodies: opts.materialized_bodies,
+        max_domain_rows: opts.max_domain_rows,
     })
 }
 

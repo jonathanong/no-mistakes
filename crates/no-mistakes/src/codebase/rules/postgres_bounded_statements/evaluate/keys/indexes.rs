@@ -1,3 +1,4 @@
+use super::domain_rows::StatementWidths;
 use super::predicate;
 use super::Keys;
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
@@ -23,7 +24,7 @@ pub(super) fn append(
     item: &SqlBoundItem,
     item_index: usize,
     owners: &BTreeMap<String, usize>,
-    (name, table): (&str, &CatalogTable),
+    (name, table, mut widths): (&str, &CatalogTable, Option<&mut StatementWidths>),
     sources: &[Option<Vec<usize>>],
     catalog: &SchemaCatalog,
 ) {
@@ -45,6 +46,15 @@ pub(super) fn append(
                 continue;
             }
             if let Some(key) = pinned_key(index, &pins, alternative) {
+                if let Some(widths) = widths.as_deref_mut() {
+                    widths[alternative].push(column_widths(
+                        &index.keys,
+                        table,
+                        catalog,
+                        item,
+                        alternative,
+                    ));
+                }
                 branch.push(key);
             }
         }
@@ -120,6 +130,32 @@ fn pinned_key(
                 })
                 .collect();
             Some(matching)
+        })
+        .collect()
+}
+
+fn column_widths(
+    keys: &[Expr],
+    table: &CatalogTable,
+    catalog: &SchemaCatalog,
+    item: &SqlBoundItem,
+    alternative: usize,
+) -> Vec<Option<u64>> {
+    keys.iter()
+        .map(|expression| {
+            let Expr::Identifier(ident) = unwrap_expr(expression) else {
+                return None;
+            };
+            let physical = ident_key(ident);
+            let visible =
+                super::super::super::arrays::key_visible(table, &item.column_aliases, &physical)?;
+            super::domain_rows::column_domain(
+                table,
+                catalog,
+                item,
+                (visible, &physical),
+                alternative,
+            )
         })
         .collect()
 }

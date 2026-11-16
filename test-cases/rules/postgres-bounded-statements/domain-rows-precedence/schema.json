@@ -1,0 +1,144 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "enums": {
+    "currency_code": {
+      "values": ["aud", "cad", "eur", "gbp", "jpy", "usd"]
+    }
+  },
+  "tables": {
+    "currencies": {
+      "relationKind": "table",
+      "columns": {
+        "code": {
+          "dataType": "currency_code",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "currencies_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX currencies_pkey ON public.currencies USING btree (code)",
+          "keys": [{ "column": "code", "expression": "code" }]
+        }
+      }
+    },
+    "ledger_rows": {
+      "relationKind": "table",
+      "columns": {
+        "batch_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "ledger_rows_batch_id_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX ledger_rows_batch_id_id_key ON public.ledger_rows USING btree (batch_id, id)",
+          "keys": [
+            { "column": "batch_id", "expression": "batch_id" },
+            { "column": "id", "expression": "id" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "ledger_rows_id_check": {
+          "definition": "CHECK (id BETWEEN 0 AND 99)"
+        }
+      }
+    },
+    "mixed": {
+      "relationKind": "table",
+      "columns": {
+        "batch_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "row_index": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "note": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "indexes": {
+        "mixed_batch_id_row_index_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX mixed_batch_id_row_index_key ON public.mixed USING btree (batch_id, row_index)",
+          "keys": [
+            { "column": "batch_id", "expression": "batch_id" },
+            { "column": "row_index", "expression": "row_index" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "mixed_row_index_check": {
+          "definition": "CHECK (row_index BETWEEN 0 AND 9)"
+        }
+      }
+    },
+    "notes": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "body": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {
+        "notes_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX notes_pkey ON public.notes USING btree (id)",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  }
+}

@@ -64,7 +64,9 @@ fn run(
             RULE,
             |_| Ok(()),
             |_| (&[], &[]),
-            scan,
+            |root, compiled, files, sources, facts, _rule| {
+                scan(root, compiled, files, sources, facts)
+            },
         ),
         Runner::Included => {
             super::run_included_postgres_rule(context, RULE, |_| Ok(()), |_, _| true, scan)

@@ -33,6 +33,36 @@ pub(super) fn nested(
     ))
 }
 
+pub(super) fn pin_queries(
+    query: &SqlBoundQuery,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+    precise_columns: bool,
+) -> Vec<Vec<Option<Evaluation>>> {
+    query
+        .items
+        .iter()
+        .map(|item| {
+            item.pins
+                .iter()
+                .map(|pin| match &pin.source {
+                    SqlPinSource::Query(inner)
+                    | SqlPinSource::ReadQuery(inner)
+                    | SqlPinSource::ArrayQuery(inner) => Some(pin_query(
+                        inner,
+                        pin,
+                        &query.items,
+                        catalog,
+                        views,
+                        precise_columns,
+                    )),
+                    _ => None,
+                })
+                .collect()
+        })
+        .collect()
+}
+
 pub(super) fn pin_query(
     inner: &SqlBoundQuery,
     pin: &SqlBoundPin,

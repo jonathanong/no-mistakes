@@ -175,7 +175,9 @@ defaults to `[select, update, delete]`; an empty list, an unknown kind or a dupl
 a configuration error. `allow` defaults to `[]`: each entry is `{object, reason}`
 with an object such as `table:currencies` or `view:public.small_codes`. An empty reason, an object that is not a
 catalog ref, or a duplicate is a configuration error, and an entry that suppresses
-nothing is reported as stale. The catalog's name for the table is the object ref.
+nothing is reported as stale at the catalog path. An entry whose every covered
+statement the domain proof accepts on its own is reported once, on that allow
+entry in the rules file. The catalog's name for the table is the object ref.
 
 ### Catalog views
 
@@ -255,6 +257,31 @@ Each key must resolve to one catalog table column. Missing or ambiguous tables,
 missing columns, and duplicate aliases for the same column are configuration
 errors. Use a qualified table name when a bare name is ambiguous. These are
 rule-local assertions, separate from schema uniqueness and `viewBounds`.
+
+### Finite unique-key domains
+
+`maxDomainRows` defaults to unset. Leave it unset to keep the current findings.
+Set it to a non-negative integer to accept a lookup whose free unique-key
+columns each have a provable finite domain, when the product of those domain
+sizes is at most `maxDomainRows`. Equality-pinned columns do not multiply. A
+domain is a validated `CHECK (col BETWEEN a AND b)` or
+`CHECK (col >= a AND col <= b)` on a non-null integer column, a non-null enum,
+a non-null boolean, or a closed inclusive literal range in the query predicate,
+including a `date` column between two `YYYY-MM-DD` date literals. A query range matches
+the column's visible name, so `FROM alias_slots AS renamed(n)` is closed by
+`WHERE n BETWEEN 1 AND 5`. A catalog check still names the physical column.
+Several checks and query bounds intersect. An integer type's width is not a domain: `smallint` and
+`integer` stay reported unless a check or a literal range closes them. Nullable
+columns, checks that are not validated, `OR` checks, and open ranges are not
+domains. `OR` branches add their products and the sum must fit the cap. The
+finding for a product above the cap names that product, including a materialized-body finding. A product within the
+cap accepts the statement silently, the same way a `LIMIT` or a unique-key
+lookup does. The domain proof runs only for a statement that would otherwise
+be a finding, so a statement an allow entry, a `LIMIT`, or another bound
+already accepts keeps that result. When the domain proof alone accepts every
+statement an allow entry covers, that entry is reported once, on the allow
+entry in the rules file.
+`maxDomainRows: 0` accepts no extra statement.
 
 ### Executor configuration
 

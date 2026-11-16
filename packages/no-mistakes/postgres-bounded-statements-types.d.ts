@@ -36,6 +36,12 @@ export interface PostgresBoundedStatementsOptions {
   columnBounds?: Record<string, PostgresColumnBound>;
   /** Independent pool-body bounds, excluding existence/scalar subquery probes. Defaults to ignore; require-bound advises. */
   materializedBodies?: PostgresMaterializedBodyPolicy;
+  /**
+   * Accept a unique-key lookup when every free column has a proven finite domain
+   * and the product of those domains is at most this many rows. Unset reports
+   * those lookups. An integer type's width is not a domain.
+   */
+  maxDomainRows?: number;
   effort?: Effort;
   unanalyzable?: Unanalyzable;
   unanalyzableSql?: Unanalyzable;

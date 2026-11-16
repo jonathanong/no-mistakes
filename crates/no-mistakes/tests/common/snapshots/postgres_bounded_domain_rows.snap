@@ -1,0 +1,372 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "rows_50": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE community_id = $1 AND deleted_at IS NULL ORDER BY order_index;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 11,
+          "message": "sql/lookups.sql:11: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 1460, above maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily WHERE owner_id = $1",
+          "target": "table:daily"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 13,
+          "message": "sql/lookups.sql:13: SELECT can return every row of wide_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 5001, above maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM wide_slots WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 16,
+          "message": "sql/lookups.sql:16: SELECT can return every row of maybe_flags; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM maybe_flags WHERE owner_id = $1;",
+          "target": "table:maybe_flags"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 17,
+          "message": "sql/lookups.sql:17: SELECT can return every row of drafts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM drafts WHERE owner_id = $1;",
+          "target": "table:drafts"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 18,
+          "message": "sql/lookups.sql:18: SELECT can return every row of open_days; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM open_days WHERE owner_id = $1 AND day >= DATE '2026-01-01';",
+          "target": "table:open_days"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 19,
+          "message": "sql/lookups.sql:19: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 80, above maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
+          "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: UPDATE can change every row of questions; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 23,
+          "message": "sql/lookups.sql:23: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 6000, above maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
+          "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 31,
+          "message": "sql/lookups.sql:31: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 32,
+          "message": "sql/lookups.sql:32: UPDATE can change every row of wide_slots; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; unique-key domain product is 5001, above maxDomainRows 50",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 4,
+          "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL RETURNING id",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 7,
+          "message": "sql/lookups.sql:7: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE community_id = $1 ORDER BY order_index;",
+          "target": "table:questions"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "rows_5000": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE community_id = $1 AND deleted_at IS NULL ORDER BY order_index;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 13,
+          "message": "sql/lookups.sql:13: SELECT can return every row of wide_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 5001, above maxDomainRows 5000",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM wide_slots WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 16,
+          "message": "sql/lookups.sql:16: SELECT can return every row of maybe_flags; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM maybe_flags WHERE owner_id = $1;",
+          "target": "table:maybe_flags"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 17,
+          "message": "sql/lookups.sql:17: SELECT can return every row of drafts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM drafts WHERE owner_id = $1;",
+          "target": "table:drafts"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 18,
+          "message": "sql/lookups.sql:18: SELECT can return every row of open_days; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM open_days WHERE owner_id = $1 AND day >= DATE '2026-01-01';",
+          "target": "table:open_days"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: UPDATE can change every row of questions; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 23,
+          "message": "sql/lookups.sql:23: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason; unique-key domain product is 6000, above maxDomainRows 5000",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
+          "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 31,
+          "message": "sql/lookups.sql:31: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 32,
+          "message": "sql/lookups.sql:32: UPDATE can change every row of wide_slots; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key; unique-key domain product is 5001, above maxDomainRows 5000",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 4,
+          "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL RETURNING id",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 7,
+          "message": "sql/lookups.sql:7: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE community_id = $1 ORDER BY order_index;",
+          "target": "table:questions"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/lookups.sql",
+          "line": 1,
+          "message": "sql/lookups.sql:1: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE community_id = $1 AND deleted_at IS NULL ORDER BY order_index;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 11,
+          "message": "sql/lookups.sql:11: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily WHERE owner_id = $1",
+          "target": "table:daily"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 13,
+          "message": "sql/lookups.sql:13: SELECT can return every row of wide_slots; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM wide_slots WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 14,
+          "message": "sql/lookups.sql:14: SELECT can return every row of flags; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM flags WHERE owner_id = $1;",
+          "target": "table:flags"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 15,
+          "message": "sql/lookups.sql:15: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 16,
+          "message": "sql/lookups.sql:16: SELECT can return every row of maybe_flags; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM maybe_flags WHERE owner_id = $1;",
+          "target": "table:maybe_flags"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 17,
+          "message": "sql/lookups.sql:17: SELECT can return every row of drafts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM drafts WHERE owner_id = $1;",
+          "target": "table:drafts"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 18,
+          "message": "sql/lookups.sql:18: SELECT can return every row of open_days; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM open_days WHERE owner_id = $1 AND day >= DATE '2026-01-01';",
+          "target": "table:open_days"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 19,
+          "message": "sql/lookups.sql:19: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
+          "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 2,
+          "message": "sql/lookups.sql:2: UPDATE can change every row of questions; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 23,
+          "message": "sql/lookups.sql:23: SELECT can return every row of spans; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day FROM spans WHERE owner_id = $1 AND (",
+          "target": "table:spans"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 30,
+          "message": "sql/lookups.sql:30: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 31,
+          "message": "sql/lookups.sql:31: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks WHERE owner_id = $1 AND rank >= 20 AND rank <= 30;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 32,
+          "message": "sql/lookups.sql:32: UPDATE can change every row of wide_slots; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE wide_slots SET id = id WHERE owner_id = $1;",
+          "target": "table:wide_slots"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 4,
+          "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL RETURNING id",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 7,
+          "message": "sql/lookups.sql:7: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, order_index FROM questions WHERE community_id = $1 ORDER BY order_index;",
+          "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 8,
+          "message": "sql/lookups.sql:8: SELECT can return every row of participants; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT actor_id FROM participants WHERE conversation_id = $1;",
+          "target": "table:participants"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

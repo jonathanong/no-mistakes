@@ -705,7 +705,13 @@ asynchronous `check()` →
 `PostgresBoundedStatementsOptions`, `PostgresMaterializedBodyPolicy`,
 `PostgresColumnBound`, and `PostgresViewBoundMode` for the rule options. `columnBounds` maps catalog
 `table.column` names to a required nonempty `reason`; CLI and Node use the same
-catalog validation and caller-bounded key proof. No separate runtime export is
+catalog validation and caller-bounded key proof. `maxDomainRows` accepts a
+unique-key remainder whose free columns have proven finite domains when their
+product is at most that cap. Leave it unset to keep those lookups reported.
+An accepted product is silent. A product above the cap stays a finding and
+names that product, including a materialized-body finding. Date literals in a
+domain range are `YYYY-MM-DD`.
+No separate runtime export is
 needed.
 
 `materializedBodies` excludes existence and scalar subquery probes. Unbounded

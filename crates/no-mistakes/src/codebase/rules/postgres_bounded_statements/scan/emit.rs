@@ -1,5 +1,5 @@
 use super::groups::Groups;
-use super::messages::{finding, message};
+use super::messages::{append_domain_over, finding, message};
 use crate::codebase::postgres::{SqlBoundFact, SqlBoundKind, SqlStatementFileFacts};
 use crate::codebase::rules::{PostgresFindings, VariantFindingDedup};
 
@@ -15,6 +15,7 @@ pub(super) struct Offenders<'a, 'src> {
     pub(super) file_index: usize,
     pub(super) native_statement_count: usize,
     pub(super) offenders: Vec<super::super::evaluate::Offender>,
+    pub(super) domain_rows: Option<u64>,
 }
 
 pub(super) fn offenders(input: Offenders<'_, '_>) {
@@ -30,6 +31,7 @@ pub(super) fn offenders(input: Offenders<'_, '_>) {
         file_index,
         native_statement_count,
         offenders,
+        domain_rows,
     } = input;
     let group_start = output.len();
     for offender in offenders {
@@ -45,10 +47,18 @@ pub(super) fn offenders(input: Offenders<'_, '_>) {
                 offender.line
             })
             .max(1);
-        let body_message = bound
-            .body
-            .as_ref()
-            .map(|body| super::super::bodies::message(body, &offender.table));
+        let mut text = match bound.body.as_deref() {
+            Some(body) => super::super::bodies::message(body, &offender.table),
+            None => {
+                let kind = if bound.target.is_none() {
+                    SqlBoundKind::Select
+                } else {
+                    bound.kind
+                };
+                message(kind, &offender.table, &offender.object)
+            }
+        };
+        append_domain_over(&mut text, offender.domain_over, domain_rows);
         let site = facts
             .variant_locations
             .as_ref()
@@ -67,19 +77,7 @@ pub(super) fn offenders(input: Offenders<'_, '_>) {
             facts,
             site,
             source,
-            finding(
-                rel,
-                line,
-                &body_message.unwrap_or_else(|| {
-                    let kind = if bound.target.is_none() {
-                        SqlBoundKind::Select
-                    } else {
-                        bound.kind
-                    };
-                    message(kind, &offender.table, &offender.object)
-                }),
-                &offender.object.to_string(),
-            ),
+            finding(rel, line, &text, &offender.object.to_string()),
         );
     }
     groups.collect(

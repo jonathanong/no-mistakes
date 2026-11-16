@@ -195,6 +195,7 @@ test("bounded statement options export key fan-out contracts", () => {
   );
   assert.match(types, /materializedBodies\?: PostgresMaterializedBodyPolicy;/);
   assert.match(types, /viewBounds\?: Record<string, PostgresViewBoundMode>;/);
+  assert.match(types, /maxDomainRows\?: number;/);
   assert.match(types, /schemaCatalogPath: string;/);
   assert.ok(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(

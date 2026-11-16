@@ -16,6 +16,7 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     prepared: Option<&dyn SqlFactContext>,
+    anchor: &crate::codebase::rules::config_diagnostic::ConfigAnchor,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let prepared =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
@@ -30,6 +31,7 @@ pub(super) fn scan(
     let catalog = inputs.catalog;
     let mut views = ViewBounds::compile(&opts.view_bounds, catalog)?;
     views.keys = super::column_bounds::ColumnBounds::compile(&opts.column_bounds, catalog)?;
+    views.domain_rows = opts.max_domain_rows;
     let native_statement_count = inputs.native_statement_count;
     let statements = inputs.statements;
     let embedded = inputs.embedded;
@@ -52,6 +54,7 @@ pub(super) fn scan(
             }
         }
     }
+    let mut accepted = std::collections::BTreeSet::new();
     let mut groups = groups::Groups::default();
     let mut advice_groups = groups::Groups::default();
     let mut advice = crate::codebase::rules::PostgresFindings::default();
@@ -104,6 +107,7 @@ pub(super) fn scan(
                 advice_groups: &mut advice_groups,
                 attribution: &mut attribution,
                 native_statement_count,
+                accepted: &mut accepted,
             },
             start,
             &statements[start..end],
@@ -114,8 +118,9 @@ pub(super) fn scan(
     }
     groups.finish(&mut findings, root, sources, &opts.allow);
     advice_groups.finish(&mut advice, root, sources, &opts.allow);
+    let redundant = super::redundant_allow::plan(&findings, &advice, &accepted, opts, anchor);
     Ok(super::bodies::finish(
-        prepared, opts, root, sources, findings, advice,
+        prepared, opts, root, sources, findings, advice, redundant,
     ))
 }
 
