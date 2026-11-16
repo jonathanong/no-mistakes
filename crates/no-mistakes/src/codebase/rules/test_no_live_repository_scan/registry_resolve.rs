@@ -7,10 +7,16 @@ use crate::codebase::ts_resolver::{
 use crate::codebase::workspaces::IndexedWorkspaceMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 /// One prepared resolver for every registry lookup in this request.
 pub(super) struct RegistryResolver<'a> {
-    scoped: Option<ScopedImportResolver<'a>>,
+    kind: ResolverKind<'a>,
+}
+
+enum ResolverKind<'a> {
+    Scoped(ScopedImportResolver<'a>),
+    Fallback(ImportResolver<'static>),
 }
 
 impl<'a> RegistryResolver<'a> {
@@ -18,17 +24,33 @@ impl<'a> RegistryResolver<'a> {
         resolution: &'a super::super::Resolution<'a>,
         visible: &dyn VisiblePathLookup,
     ) -> Self {
-        let scoped = resolution
-            .session
-            .zip(resolution.catalog)
-            .map(|(session, catalog)| {
-                ScopedImportResolver::new_in_session(catalog, visible, session)
-            });
-        Self { scoped }
+        let kind = match resolution.catalog {
+            Some(catalog) => ResolverKind::Scoped(match resolution.session {
+                Some(session) => ScopedImportResolver::new_in_session(catalog, visible, session),
+                None => ScopedImportResolver::from_visible(catalog, visible),
+            }),
+            None => {
+                ResolverKind::Fallback(ImportResolver::new_owned(Arc::new(TsConfig::default())))
+            }
+        };
+        Self { kind }
     }
 
-    fn scoped(&self) -> Option<&ScopedImportResolver<'a>> {
-        self.scoped.as_ref()
+    fn classify(
+        &self,
+        specifier: &str,
+        from: &Path,
+        workspace: &IndexedWorkspaceMap,
+        visible: &dyn VisiblePathLookup,
+    ) -> crate::codebase::ts_resolver::ImportClassification {
+        match &self.kind {
+            ResolverKind::Scoped(scoped) => {
+                scoped.classify_import(specifier, from, workspace, visible)
+            }
+            ResolverKind::Fallback(fallback) => {
+                fallback.classify_import(specifier, from, workspace, visible)
+            }
+        }
     }
 }
 
@@ -50,20 +72,9 @@ pub(super) fn resolve(locate: &Locate<'_>, from: &Path, specifier: &str) -> Opti
 fn classified(locate: &Locate<'_>, from: &Path, specifier: &str) -> Option<PathBuf> {
     let fallback_workspace = IndexedWorkspaceMap::default();
     let workspace = locate.resolution.workspace.unwrap_or(&fallback_workspace);
-    if let Some(scoped) = locate.resolver.scoped() {
-        return scoped
-            .classify_import(specifier, from, workspace, locate.visible)
-            .preferred_path()
-            .map(normalize_path);
-    }
-    let fallback_config = TsConfig::default();
-    let config = locate
-        .resolution
-        .catalog
-        .map(|catalog| catalog.config_for(from))
-        .unwrap_or(&fallback_config);
-    ImportResolver::new(config)
-        .classify_import(specifier, from, workspace, locate.visible)
+    locate
+        .resolver
+        .classify(specifier, from, workspace, locate.visible)
         .preferred_path()
         .map(normalize_path)
 }

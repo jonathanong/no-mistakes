@@ -64,7 +64,7 @@ pub(super) fn binding_local(
 pub(super) fn function_exports(locate: &Locate<'_>, file: &Path) -> Vec<(PathBuf, String)> {
     let mut out = Vec::new();
     let mut seen = Vec::new();
-    collect_functions(locate, file, &mut seen, &mut out);
+    collect_functions(locate, file, 0, &mut seen, &mut out);
     out
 }
 
@@ -139,10 +139,11 @@ fn one_star(
 fn collect_functions(
     locate: &Locate<'_>,
     file: &Path,
+    depth: usize,
     seen: &mut Vec<PathBuf>,
     out: &mut Vec<(PathBuf, String)>,
 ) {
-    if seen.len() >= HOP_CAP || seen.iter().any(|item| item == file) {
+    if depth >= HOP_CAP || seen.iter().any(|item| item == file) {
         return;
     }
     seen.push(file.to_path_buf());
@@ -159,7 +160,7 @@ fn collect_functions(
     }
     for specifier in &ts.star_reexport_specifiers {
         if let Some(target) = super::resolve::resolve(locate, file, specifier) {
-            collect_functions(locate, &target, seen, out);
+            collect_functions(locate, &target, depth + 1, seen, out);
         }
     }
 }

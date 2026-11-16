@@ -106,6 +106,7 @@ fn caller_references_check_json_snapshot() {
         "registry-default",
         "registry-barrel",
         "registry-star",
+        "registry-star-breadth",
         "registry-star-gaps",
         "registry-star-ambiguous-owned",
         "registry-cycle-owned",
