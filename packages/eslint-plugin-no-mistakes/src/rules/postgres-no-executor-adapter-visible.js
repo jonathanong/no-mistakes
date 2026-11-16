@@ -175,6 +175,7 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted) {
   if (!variable?.references.length) return false;
   if (opaqueBody(fn.body)) return false;
   return variable.references.every((reference) => {
+    if (reference.init) return true;
     if (reference.isWrite()) return false;
     if (binding.object && otherPropertyRead(reference, property)) return true;
     const invocation = executorCall(reference, property);

@@ -4,6 +4,9 @@ import { sql, raw } from "@example/sql";
 function visible(query: QueryExecutor) {
   return query("SELECT id FROM t");
 }
+function visibleDefault(query: QueryExecutor = read) {
+  return query("SELECT id FROM t");
+}
 function visibleUntyped(query) {
   return query("SELECT id FROM t");
 }
@@ -50,6 +53,7 @@ function opaque(query: QueryExecutor) {
 }
 
 visible(read);
+visibleDefault(read);
 visibleUntyped(read);
 visibleUntyped(flag ? read : write);
 visibleBag({ query: read });
