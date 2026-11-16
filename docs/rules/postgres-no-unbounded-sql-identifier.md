@@ -521,7 +521,8 @@ is reported. A parameter declared with a finite string-literal union is bounded,
 including an exported parameter: `kind: "orders" | "refunds"` may appear in
 `SELECT 1 FROM ${kind}_accounts`. This trusts the declared parameter contract,
 as executor-type selection does. Parentheses and resolvable module-level finite type aliases
-preserve that contract. Conflicting declarations stay unbounded.
+preserve that contract, including assertions through those finite aliases.
+Conflicting declarations stay unbounded.
 Reassignment, an unresolved type, a union containing
 `string`, or widening through `as string` does not establish this proof.
 [closed identifier values](../postgres-facts/closed-identifiers.md) states the
@@ -615,7 +616,8 @@ separator, or an escaped or mutated array does not establish this proof.
 
 A module-level `const` array of literal strings may also be mapped through a
 configured `identifierValidators` function before joining. The imported runtime
-function must match its configured module and name. `finiteDomainAssertions`
+function must match its configured module and name, including canonical barrel
+re-exports and renamed imports. `finiteDomainAssertions`
 validates arguments and does not prove a map callback's return value.
 An open or mutable source,
 a shadowed callback, or a callback reading an outer value stays unbounded.

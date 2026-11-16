@@ -18,7 +18,7 @@ test(
     const pending = cjs.check(options);
     assert.ok(pending instanceof Promise);
     const report = await pending;
-    assert.equal(report.rules.length, 50);
+    assert.equal(report.rules.length, 52);
     assert.ok(
       report.rules.every((finding) => finding.file.replaceAll("\\", "/").startsWith("negative/")),
     );

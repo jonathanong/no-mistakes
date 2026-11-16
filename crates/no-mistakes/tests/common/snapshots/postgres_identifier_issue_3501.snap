@@ -21,6 +21,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "TABLES"
         },
         {
+          "file": "negative/barrel-map.ts",
+          "import": "TABLES",
+          "line": 5,
+          "message": "Unbounded identifier source `TABLES` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "export function wrongBarrel() { return query(`LOCK TABLE ${TABLES.join(', ')}`); }",
+          "target": "TABLES"
+        },
+        {
           "file": "negative/callback-controls.ts",
           "import": "SPREAD",
           "line": 9,
@@ -418,6 +427,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "negative/nonrequired-literal-unions.ts",
+          "import": "kind",
+          "line": 6,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-scopes.ts",
           "import": "kind",
           "line": 6,
           "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",

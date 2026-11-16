@@ -25,6 +25,7 @@ fn postgres_identifier_issue_3501_check_json_snapshot() {
         .collect();
     let expected = [
         ("negative/assertion-callback.ts", vec![9]),
+        ("negative/barrel-map.ts", vec![5]),
         ("negative/callback-controls.ts", vec![8, 9, 14]),
         ("negative/callbacks.ts", vec![8, 9, 12]),
         (
@@ -38,6 +39,7 @@ fn postgres_identifier_issue_3501_check_json_snapshot() {
         ("negative/literal-unions.ts", vec![4, 8, 12, 17, 21, 26, 30]),
         ("negative/maps.ts", vec![11, 12, 13, 14]),
         ("negative/metadata.ts", vec![8, 14, 20, 26]),
+        ("negative/parameter-scopes.ts", vec![6]),
         ("negative/type-scope.ts", vec![5, 11, 16, 22]),
         (
             "negative/nonrequired-literal-unions.ts",

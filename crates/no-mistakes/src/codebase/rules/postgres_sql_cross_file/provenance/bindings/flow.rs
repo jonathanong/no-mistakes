@@ -1,7 +1,6 @@
 //! Whether a local binding's value flows from an unbounded identifier source.
 use super::Bindings;
 use crate::codebase::dependencies::extract::ValueExpression;
-use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::fx::FxHashSet;
 use std::path::Path;
 
@@ -35,55 +34,38 @@ impl Bindings<'_> {
     /// not. An unresolved scope (0) keeps the file-wide name match. A
     /// `number`-annotated parameter is not an identifier source.
     pub(crate) fn parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
-        let Some(ts) = self.facts.get_ts_facts(file) else {
-            return false;
-        };
-        let mut named = ts
-            .value_flow
-            .parameters
-            .iter()
-            .filter(|parameter| parameter.name == name)
-            .peekable();
         if scope == 0 {
-            return named.peek().is_some();
+            return self.has_parameter_name(file, name);
         }
-        named
-            .filter(|parameter| parameter.scope == scope)
+        self.scoped_parameters(file, scope, name)
+            .iter()
             .any(|parameter| !self.closed_type(file, parameter))
     }
 
     /// Every parameter of this exact scope and name is numeric or catalog typed.
     pub(crate) fn closed_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
-        let Some(ts) = self.facts.get_ts_facts(file) else {
-            return false;
-        };
-        let mut named = ts
-            .value_flow
-            .parameters
-            .iter()
-            .filter(|parameter| parameter.name == name && parameter.scope == scope)
-            .peekable();
+        let named = self.scoped_parameters(file, scope, name);
         scope != 0
-            && named.peek().is_some()
-            && named.all(|parameter| self.closed_type(file, parameter))
+            && !named.is_empty()
+            && named
+                .iter()
+                .all(|parameter| self.closed_type(file, parameter))
     }
 
     /// A parameter in this exact scope whose default holds no unbounded source.
     pub(crate) fn plain_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
-        self.facts.get_ts_facts(file).is_some_and(|ts| {
-            ts.value_flow.parameters.iter().any(|parameter| {
-                parameter.scope == scope
-                    && parameter.name == name
-                    && !self.expr_unbounded(
-                        file,
-                        &parameter.default,
-                        &mut Seen {
-                            bindings: FxHashSet::default(),
-                            calls: FxHashSet::default(),
-                        },
-                    )
+        self.scoped_parameters(file, scope, name)
+            .iter()
+            .any(|parameter| {
+                !self.expr_unbounded(
+                    file,
+                    &parameter.default,
+                    &mut Seen {
+                        bindings: FxHashSet::default(),
+                        calls: FxHashSet::default(),
+                    },
+                )
             })
-        })
     }
 
     pub(super) fn expr_unbounded(

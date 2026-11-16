@@ -4,6 +4,7 @@ use crate::codebase::dependencies::extract::{IdentifierAssignment, ValueBinding,
 mod assignments;
 mod closed_types;
 mod flow;
+mod parameters;
 mod rows;
 pub(crate) use closed_types::literal_array;
 
@@ -21,6 +22,7 @@ pub(crate) struct Bindings<'a> {
     pub(super) graph: Option<&'a DepGraph>,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
     assignments: std::sync::OnceLock<AssignmentIndex<'a>>,
+    parameters: std::sync::OnceLock<parameters::ParameterIndex<'a>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
     overwrites: FxHashMap<RowMemberKey<'a>, FxHashSet<(u32, u32)>>,
     iterations: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
@@ -45,6 +47,7 @@ impl<'a> Bindings<'a> {
             calls: fx_map(),
             values: fx_map(),
             assignments: Default::default(),
+            parameters: Default::default(),
             iterations: fx_map(),
             overwrites: fx_map(),
         };

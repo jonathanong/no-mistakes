@@ -75,7 +75,7 @@ impl Context<'_, '_> {
                     && (closed_callback(flow, value_call)
                         || module_literal_array(flow, base)
                             && callbacks::configured(
-                                self.opts, self.facts, self.file, flow, value_call,
+                                self.graph, self.opts, self.facts, self.file, flow, value_call,
                             ))
                     || flow.catalogs.literal_receivers.contains(&(start, end))
                         && callbacks::literal(flow, value_call)

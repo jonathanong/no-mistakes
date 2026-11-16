@@ -27,3 +27,22 @@ export function finiteAssertion(kind: 'orders' | 'refunds') {
 export function numericCast(id: number) {
   return query(`SELECT 1 FROM events_${id as unknown as string}`);
 }
+
+export function aliasAssertion(kind: Kind) {
+  return query(`SELECT 1 FROM ${kind as Kind}_accounts`);
+}
+
+export function laterAliasAssertion(kind: Kind) {
+  return query(`SELECT 1 FROM ${kind as LaterKind}_accounts`);
+}
+
+export function nestedAliasAssertions(kind: Kind) {
+  return query(`SELECT 1 FROM ${(kind as Kind) as LaterKind}_accounts`);
+}
+
+type LaterKind = Kind;
+
+export function readonlyValue(kind: Kind) {
+  const table = ({ value: kind } as const).value;
+  return query(`SELECT 1 FROM ${table}_accounts`);
+}

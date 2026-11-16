@@ -1,7 +1,8 @@
 use super::*;
-use crate::codebase::dependencies::extract::ImportedBindingKind;
+use crate::codebase::dependencies::extract::{ImportedBindingKind, InvocationKind};
 
 pub(super) fn configured(
+    graph: &DepGraph,
     opts: &CompiledOptions,
     facts: &CheckFactMap,
     file: &Path,
@@ -14,7 +15,13 @@ pub(super) fn configured(
     let [callback] = call.arguments.as_slice() else {
         return false;
     };
-    let ValueExpression::Named { name, scope, .. } = callback else {
+    let ValueExpression::Named {
+        name,
+        scope,
+        offset,
+        ..
+    } = callback
+    else {
         return false;
     };
     let scope = scope.unwrap_or(0);
@@ -32,9 +39,16 @@ pub(super) fn configured(
     }
     opts.identifier_validators.iter().any(|validator| {
         validator.argument == 0
+            && super::super::closed::configured::selected(
+                graph,
+                file,
+                (*offset, call.context, name, InvocationKind::Callback),
+                validator.module.as_deref(),
+                &validator.name,
+            )
             && match &validator.module {
-                None => validator.name == *name,
-                Some(module) => {
+                None => true,
+                Some(_) => {
                     scope == 0
                         && !flow
                             .bindings
@@ -45,8 +59,6 @@ pub(super) fn configured(
                                 !binding.is_type_only
                                     && binding.local == *name
                                     && binding.kind == ImportedBindingKind::Named
-                                    && binding.imported == validator.name
-                                    && binding.specifier == *module
                             })
                         })
                 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::dependencies::extract::{InvocationKind, ValueCall};
+use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::rules::postgres_sql_cross_file::IdentifierReturns;
 
 pub(in super::super) fn prepare(
@@ -27,7 +27,12 @@ pub(in super::super) fn prepare(
                     && selected(
                         graph,
                         file,
-                        call,
+                        (
+                            call.offset,
+                            call.context,
+                            &call.source_callee,
+                            InvocationKind::Call,
+                        ),
                         validator.module.as_deref(),
                         &validator.name,
                     )
@@ -37,8 +42,19 @@ pub(in super::super) fn prepare(
                 .iter()
                 .enumerate()
                 .filter_map(|(index, source)| {
-                    selected(graph, file, call, source.module.as_deref(), &source.name)
-                        .then_some(index)
+                    selected(
+                        graph,
+                        file,
+                        (
+                            call.offset,
+                            call.context,
+                            &call.source_callee,
+                            InvocationKind::Call,
+                        ),
+                        source.module.as_deref(),
+                        &source.name,
+                    )
+                    .then_some(index)
                 })
                 .collect();
             if validator || !sources.is_empty() {
@@ -49,23 +65,24 @@ pub(in super::super) fn prepare(
     returns
 }
 
-fn selected(
+pub(in super::super) fn selected(
     graph: &DepGraph,
     file: &Path,
-    call: &ValueCall,
+    occurrence: (u32, Option<CallableId>, &str, InvocationKind),
     module: Option<&str>,
     name: &str,
 ) -> bool {
+    let (offset, context, source_callee, invocation) = occurrence;
     let Some(module) = module else {
-        return call.source_callee == name;
+        return source_callee == name;
     };
     let sites = graph.call_sites_in_file(file);
-    let start = sites.partition_point(|site| site.offset < call.offset);
+    let start = sites.partition_point(|site| site.offset < offset);
     sites[start..]
         .iter()
-        .take_while(|site| site.offset == call.offset)
-        .filter(|site| site.caller_id == call.context && site.invocation == InvocationKind::Call)
-        .filter(|site| site.source_callee == call.source_callee)
+        .take_while(|site| site.offset == offset)
+        .filter(|site| site.caller_id == context && site.invocation == invocation)
+        .filter(|site| site.source_callee == source_callee)
         .any(|site| graph.matches_module_export(module, name, site))
 }
 

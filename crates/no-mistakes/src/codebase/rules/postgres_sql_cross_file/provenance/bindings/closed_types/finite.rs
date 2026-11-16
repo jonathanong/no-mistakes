@@ -3,20 +3,15 @@ use super::*;
 impl Bindings<'_> {
     pub(crate) fn finite_string_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
         self.numeric_parameter_bounds_only
-            && self.facts.get_ts_facts(file).is_some_and(|ts| {
-                ts.value_flow.parameters.iter().any(|parameter| {
-                    parameter.scope == scope
-                        && parameter.name == name
-                        && !self.non_required_parameter(file, scope, name)
-                        && match &parameter.type_reference {
-                            Some(shape @ ValueType::FiniteStringLiterals)
-                            | Some(shape @ ValueType::Reference(_)) => {
-                                self.finite_string_type(file, shape)
-                            }
-                            _ => false,
-                        }
+            && !self.non_required_parameter(file, scope, name)
+            && self
+                .scoped_parameters(file, scope, name)
+                .iter()
+                .any(|parameter| match &parameter.type_reference {
+                    Some(shape @ ValueType::FiniteStringLiterals)
+                    | Some(shape @ ValueType::Reference(_)) => self.finite_string_type(file, shape),
+                    _ => false,
                 })
-            })
     }
 
     pub(super) fn non_required_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
@@ -95,7 +90,12 @@ impl Bindings<'_> {
     fn widened_string_assertion_at(&self, file: &Path, at: u32) -> bool {
         self.facts
             .get_ts_facts(file)
-            .is_some_and(|ts| ts.value_flow.widened_string_assertions.contains(&at))
+            .and_then(|ts| ts.value_flow.widened_string_assertions.get(&at))
+            .is_some_and(|shapes| {
+                shapes
+                    .iter()
+                    .any(|shape| !self.finite_string_type(file, shape))
+            })
     }
 
     fn finite_string_source(

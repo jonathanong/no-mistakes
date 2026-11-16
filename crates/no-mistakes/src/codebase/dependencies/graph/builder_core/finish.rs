@@ -48,18 +48,19 @@
                     .push(node.clone());
             }
         }
+        // Offset-based occurrence lookups require callbacks and direct calls in source order.
         resolved_call_sites.sort_by(|left: &ResolvedCallSite, right| {
             (
                 &left.file,
-                left.line,
                 left.offset,
+                left.line,
                 &left.caller,
                 &left.source_callee,
             )
                 .cmp(&(
                 &right.file,
-                right.line,
                 right.offset,
+                right.line,
                 &right.caller,
                 &right.source_callee,
             ))
