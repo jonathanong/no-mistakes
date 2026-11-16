@@ -1,0 +1,12 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-unused-vars": "off",
+    "no-mistakes/no-object-mutation": "error"
+  }
+}
