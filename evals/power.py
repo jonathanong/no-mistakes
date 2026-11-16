@@ -598,7 +598,7 @@ def _self_test() -> None:
 
 def main() -> None:
     args = sys.argv[1:]
-    if not args:
+    if not args or "-h" in args or "--help" in args:
         raise SystemExit(__doc__)
     if "--self-test" in args:
         _self_test()
