@@ -345,6 +345,15 @@ fn postgres_annotation_excluded_callers_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_annotation_multi_root_shared_walks_check_json_snapshot() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/annotation-multi-root-shared-walks");
+    let cases =
+        ["low", "max"].map(|effort| (effort, root.clone(), root.join(format!("{effort}.yml"))));
+    assert_saved_fixture("postgres_annotation_multi_root_shared_walks", &cases);
+}
+
+#[test]
 fn postgres_copy_streams_workspace_prefix_check_json_snapshot() {
     let root = rules_path(RULE, "fixture", "copy-streams-workspace-prefix");
     let cases = [

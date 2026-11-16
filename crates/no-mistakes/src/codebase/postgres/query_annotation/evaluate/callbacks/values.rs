@@ -87,7 +87,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                             }
                             // Opaque consumers do not supply a reference receiver.
                             scopes::bind_this(&mut locals, function, None);
-                            let mut scope = self.environment(locals);
+                            let mut scope = self.environment_scope(locals);
                             self.register_mappings(scope, *captured, function, None);
                             self.register_captured_bindings(scope, *captured, function);
                             let mutating = self.callback_may_mutate(function, path, scope);

@@ -29,7 +29,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 None,
                 || {
                     let mut work = super::values::Walk::new();
-                    let mut memo = super::values::ComparisonMemo::default();
                     for (before, after) in comparisons {
                         for (name, value) in before.reference_bindings() {
                             // An arm can drop a name the other branch still has.
@@ -39,15 +38,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                                     work.unchanged_binding();
                                 }
                             } else {
-                                let cached = memo.repeated(value, after);
-                                if let Some(hit) = cached {
-                                    if let Some(work) = work.as_mut() {
-                                        work.memoized(hit);
-                                    }
-                                }
-                                if cached == Some(true) {
-                                    continue;
-                                }
                                 super::values::changes(
                                     value,
                                     after,

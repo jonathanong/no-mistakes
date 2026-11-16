@@ -540,11 +540,11 @@ pruning does not imply that excluded dependencies initialize only once per run.
 At max effort, branch joins skip comparing an unchanged immutable value when
 it contains no runtime argument references. Direct reference summaries are
 memoized in memory for those immutable values; mutations invalidate the
-summaries. Values carrying runtime argument references keep their contextual
-comparison, so shared helper imports do not merge independent root states.
-Repeated value pairs reuse their comparison result within one branch comparison
-phase, while argument arenas and deletion masks are fixed. A later phase
-recomputes the result against its own state.
+summaries. Function frames inherit the captured scope's immutable direct-edge
+summary. Adding direct references extends that summary; replacing or removing
+references invalidates it. Values carrying runtime argument references keep
+their contextual comparison, so shared helper imports do not merge independent
+root states.
 The saved [multi-root walk workload](../../fixtures/performance/annotation-multi-root-shared-walks/README.md)
 checks annotated calls, an unannotated query, excluded unrelated roots and actual
 prefix work. Timing samples run with observer diagnostics disabled; counter

@@ -134,13 +134,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         };
         if !function.supported
-            || (!self.files[function_path.as_path()].facts.precise_records
-                && function.body.iter().any(|step| {
-                    matches!(
-                        step,
-                        crate::codebase::postgres::query_annotation::Step::Branch(_, _, _)
-                    )
-                }))
+            || scopes::has_legacy_branch(
+                &function,
+                self.files[function_path.as_path()].facts.precise_records,
+            )
         {
             return self.unsupported_call(
                 &function,
@@ -168,7 +165,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
         }
         scopes::bind_this(&mut locals, &function, receiver.as_ref());
-        let mut scope = self.environment(locals);
+        let mut scope = self.environment_scope(locals);
         self.register_mappings(scope, captured, &function, mapping);
         self.register_captured_bindings(scope, captured, &function);
         let suspended = self.files[function_path.as_path()].facts.precise_records

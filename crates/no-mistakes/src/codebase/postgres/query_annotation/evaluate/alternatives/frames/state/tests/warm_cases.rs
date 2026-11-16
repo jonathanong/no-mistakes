@@ -42,10 +42,12 @@ fn mutations_and_live_auxiliary_edges_keep_the_raw_oracle_state() {
     prime(&state);
     let original = state.clone();
     state.scopes[0].insert("changed".into(), Value::Arguments(9));
-    assert!(state.scopes[0].cached_references().is_none());
+    assert!(state.scopes[0].cached_references().is_some());
+    assert!(state.scopes[0].references().arguments.contains(&9));
+    assert!(!original.scopes[0].references().arguments.contains(&9));
     let changed = compare(&state);
     assert_eq!(changed.bindings, 0);
-    assert!(changed.summary_scans > 0);
+    assert_eq!(changed.summary_scans, 0);
     assert_eq!(changed.slots, 0);
     assert!(state.scopes[0].cached_references().is_some());
     assert_eq!(compare(&original).bindings, 0);

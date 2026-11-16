@@ -2,7 +2,7 @@ use super::{Environment, Value};
 use crate::fx::FxHashSet;
 
 /// Direct immutable references only: argument contents remain mutable arena state.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct Edges {
     pub environments: FxHashSet<Environment>,
     pub arguments: FxHashSet<u64>,

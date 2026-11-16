@@ -39,3 +39,6 @@ fn saved_growing_shadow_indexes_do_linear_construction_and_lookup_work() {
         assert!(shadows.construction_work + capture_lookups <= 5 * size + 20);
     }
 }
+
+#[path = "tests/inheritance.rs"]
+mod inheritance;

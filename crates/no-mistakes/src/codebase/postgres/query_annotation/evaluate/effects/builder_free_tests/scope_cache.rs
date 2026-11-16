@@ -79,7 +79,7 @@ fn scope_cache_reuse_preserves_cross_scope_prefix_argument_order_and_fresh_mutab
 }
 
 #[test]
-fn nested_and_direct_scope_writes_invalidate_cached_prefix_only_selection() {
+fn nested_writes_invalidate_and_direct_additions_extend_cached_selection() {
     let spec = spec();
     let files = FxHashMap::default();
     let mut e = evaluator(
@@ -108,9 +108,11 @@ fn nested_and_direct_scope_writes_invalidate_cached_prefix_only_selection() {
     e.scopes[0].insert("argument".into(), Value::Array(id(&spec, "argument")));
     e.argument_objects
         .insert(id(&spec, "argument"), vec![builder(&spec, "sparse")]);
-    assert!(e.scopes[0].cached_references().is_none());
-    e.scopes[0].references();
-    assert!(!e.scopes[0].references().arguments.is_empty());
+    assert!(e.scopes[0].cached_references().is_some());
+    assert!(e.scopes[0]
+        .references()
+        .arguments
+        .contains(&id(&spec, "argument")));
     assert_eq!(
         e.collect_live_builder_ids(std::mem::drop),
         collect_old(&e, &e.live_builder_values()).0

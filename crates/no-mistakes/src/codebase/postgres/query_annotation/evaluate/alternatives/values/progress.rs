@@ -14,9 +14,7 @@ pub(in super::super) struct Walk {
     completed: u64,
     after_empty_skips: u64,
     unchanged_bindings: u64,
-    memo_hits: u64,
-    memo_misses: u64,
-    published: [u64; 8],
+    published: [u64; 6],
 }
 
 impl Walk {
@@ -31,15 +29,8 @@ impl Walk {
             completed: 0,
             after_empty_skips: 0,
             unchanged_bindings: 0,
-            memo_hits: 0,
-            memo_misses: 0,
-            published: [0; 8],
+            published: [0; 6],
         })
-    }
-
-    pub(in super::super) fn memoized(&mut self, hit: bool) {
-        self.memo_hits += u64::from(hit);
-        self.memo_misses += u64::from(!hit);
     }
 
     pub(in super::super) fn unchanged_binding(&mut self) {
@@ -85,8 +76,6 @@ impl Walk {
             self.containers,
             self.after_empty_skips,
             self.unchanged_bindings,
-            self.memo_hits,
-            self.memo_misses,
         ];
         if totals == self.published {
             return;
@@ -98,8 +87,6 @@ impl Walk {
             "postgres.annotation.prefix_containers",
             "postgres.annotation.prefix_after_empty_skips",
             "postgres.annotation.prefix_unchanged_binding_skips",
-            "postgres.annotation.prefix_comparison_memo_hits",
-            "postgres.annotation.prefix_comparison_memo_misses",
         ];
         for ((name, value), previous) in names.into_iter().zip(totals).zip(self.published) {
             self.observer.increment(name, value - previous);
