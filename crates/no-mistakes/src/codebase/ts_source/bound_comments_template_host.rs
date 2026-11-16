@@ -89,7 +89,9 @@ pub(super) fn host_step(
         return false;
     }
     if ch == ')' {
-        carry.regex_ok = super::super::super::paren_closes_control_flow_condition(line, idx);
+        // The helper excludes `line[idx]`, so the search must include this `)`.
+        let after = idx + ch.len_utf8();
+        carry.regex_ok = super::super::super::paren_closes_control_flow_condition(line, after);
         return true;
     }
     value::value_step(ch, next, chars, carry, ident)
@@ -112,9 +114,9 @@ pub(super) fn finish_ident(line: &str, end: usize, ident: &mut String, carry: &m
     if ident.is_empty() {
         return;
     }
-    // `of` is a keyword only in `for (... of`. As an identifier, `/` is division.
+    // `of` is the for-of keyword only. An initializer `of` is an identifier.
     carry.regex_ok = if ident == "of" {
-        of_follows_for(line, end)
+        value::of_is_keyword(line, end)
     } else {
         matches!(
             ident.as_str(),
@@ -134,48 +136,6 @@ pub(super) fn finish_ident(line: &str, end: usize, ident: &mut String, carry: &m
         )
     };
     ident.clear();
-}
-
-fn of_follows_for(line: &str, end: usize) -> bool {
-    let before = line[..end].trim_end();
-    let Some(word_at) = before.len().checked_sub(2) else {
-        return false;
-    };
-    if &before[word_at..] != "of" {
-        return false;
-    }
-    if word_at > 0
-        && before[..word_at]
-            .chars()
-            .next_back()
-            .is_some_and(|ch| ch == '_' || ch == '$' || ch.is_ascii_alphanumeric())
-    {
-        return false;
-    }
-    let mut depth = 0i32;
-    for (idx, ch) in before[..word_at].char_indices().rev() {
-        match ch {
-            ')' => depth += 1,
-            '(' if depth == 0 => return for_before_paren(line, idx),
-            '(' => depth -= 1,
-            _ => {}
-        }
-    }
-    false
-}
-
-fn for_before_paren(line: &str, open_idx: usize) -> bool {
-    match super::super::super::previous_word(line, open_idx) {
-        Some("for") => true,
-        Some("await") => {
-            let await_at = line[..open_idx]
-                .trim_end()
-                .len()
-                .saturating_sub("await".len());
-            super::super::super::previous_word(line, await_at) == Some("for")
-        }
-        _ => false,
-    }
 }
 
 fn adjust_js(ch: char, carry: &mut Carry) {

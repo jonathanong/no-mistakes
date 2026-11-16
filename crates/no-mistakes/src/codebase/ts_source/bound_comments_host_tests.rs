@@ -100,3 +100,39 @@ fn control_regex_identifier_of_and_a_trailing_dash_keep_the_bound() {
         }]
     );
 }
+
+#[test]
+fn for_initializer_of_stays_division_and_for_of_regex_stays_closed() {
+    let source = concat!(
+        "const of = 8;\n",
+        "const label = `page ${(() => { for (let i = of / 2; i < 5; i++) {} return 1; })()}`;\n",
+        "const plain = `page ${(() => { for (of / 2; i < 3; i++) {} return 1; })()}`;\n",
+        "const comma = `page ${(() => { for (let i = 1, of / 2; i < 3; i++) {} return 1; })()}`;\n",
+        "const clause = `page ${(() => { for (let i = 0; of / 2; i++) {} return 1; })()}`;\n",
+        "const call = `page ${(() => { for (of foo(1) / 2; i < 3; i++) {} return 1; })()}`;\n",
+        "const index = `page ${(() => { for (of a[0] / 2; i < 3; i++) {} return 1; })()}`;\n",
+        "const block = `page ${(() => { for (of a{1} / 2; i < 3; i++) {} return 1; })()}`;\n",
+        "const brackets = `n ${for (const x of /keep/) {} [of / 2]}`;\n",
+        "const braces = `n ${for (const x of /keep/) {} {of / 2}}`;\n",
+        "const called = `page ${foo(bar) / 2}`;\n",
+        "const awaited = `page ${await (of / 2)}`;\n",
+        "for (const x of /a;`-- no-mistakes-bound postgres-bounded-statements rows<=1: semi/) {}\n",
+        "for (const {a = 1} of /`-- no-mistakes-bound postgres-bounded-statements rows<=1: def/) {}\n",
+        "for (const [a, b] of /`-- no-mistakes-bound postgres-bounded-statements rows<=1: pair/) {}\n",
+        "for await (const x of /`-- no-mistakes-bound postgres-bounded-statements rows<=1: awaited/) {}\n",
+        "for (const x of /[a/;]`-- no-mistakes-bound postgres-bounded-statements rows<=1: class/) {}\n",
+        "for (const x of /a\\/;`-- no-mistakes-bound postgres-bounded-statements rows<=1: esc/) {}\n",
+        "const control = `page ${if (ready) / -- no-mistakes-bound postgres-bounded-statements rows<=1: regex/}`;\n",
+        "const q = `\n",
+        "  -- no-mistakes-bound postgres-bounded-statements rows<=1: bounded\n",
+        "`;\n",
+    );
+    assert_eq!(
+        comments(source),
+        vec![BoundComment::Valid {
+            line: 21,
+            rows: 1,
+            justification: "bounded".to_string(),
+        }]
+    );
+}
