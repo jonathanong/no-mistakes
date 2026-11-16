@@ -55,3 +55,21 @@ export async function recursiveBuilder() {
 export async function missingNamespaceValues() {
   return read(`/* namespace values */ ${statements.namespaceStatement.text}`);
 }
+
+export async function chainedAppendValues(id: string) {
+  const q = sql`SELECT * FROM items`;
+  q.append(sql` WHERE true`).append(sql` AND id = ${id}`);
+  return read(`/* chained append */ ${q.text}`);
+}
+
+export async function multiHoleMissingValues(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const suffix = sql` ORDER BY id`;
+  return read(`/* multi missing */ ${q.text}${suffix.text}`);
+}
+
+export async function multiHoleWrongValues(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const suffix = sql` ORDER BY id`;
+  return read(`/* multi wrong */ ${q.text}${suffix.text}`, suffix.values);
+}

@@ -84,9 +84,7 @@ impl Proof<'_, '_> {
             .filter(|call| call.offset < at)
             .filter(|call| {
                 matches!(&call.callee, ValueExpression::Member(owner, method)
-                if method == "append" && matches!(owner.as_ref(), ValueExpression::Named {
-                    name: other, scope: other_scope, ..
-                } if other == &binding.name && other_scope.unwrap_or(0) == binding.scope))
+                if method == "append" && self.append_receiver(file, owner, binding))
             })
             .filter_map(|call| call.arguments.first().cloned())
             .collect();

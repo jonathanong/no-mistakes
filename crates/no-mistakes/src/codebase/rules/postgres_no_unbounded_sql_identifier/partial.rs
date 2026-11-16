@@ -7,6 +7,9 @@ use std::collections::BTreeSet;
 #[path = "partial_mask.rs"]
 mod projection;
 use projection::mask;
+#[path = "partial_owner.rs"]
+mod owner;
+pub(super) use owner::{text_owner, text_owner_for, TextOwner};
 
 pub(super) fn sources<'a>(
     graph: &DepGraph,
@@ -103,49 +106,6 @@ pub(super) fn sources<'a>(
         }
     }
     sources
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum TextOwner<'a> {
-    Local(&'a str, usize),
-    Namespace(&'a str, &'a str),
-}
-
-fn owner_identity(value: &ValueExpression) -> Option<TextOwner<'_>> {
-    match value {
-        ValueExpression::Named { name, scope, .. } => {
-            Some(TextOwner::Local(name, scope.unwrap_or(0)))
-        }
-        ValueExpression::Member(base, exported) => {
-            let ValueExpression::Named { name, .. } = base.as_ref() else {
-                return None;
-            };
-            Some(TextOwner::Namespace(name, exported))
-        }
-        _ => None,
-    }
-}
-
-pub(super) fn text_owner<'a>(
-    bindings: &Bindings<'a>,
-    call: &SqlCall<'_>,
-) -> Option<(TextOwner<'a>, bool)> {
-    let value_call = bindings.value_call(&call.file, call.span)?;
-    let first = value_call.arguments.first()?;
-    let owner = match first {
-        ValueExpression::Member(owner, key) if key == "text" => owner.as_ref(),
-        ValueExpression::Derived(parts) => match parts.as_ref() {
-            [ValueExpression::Member(owner, key)] if key == "text" => owner.as_ref(),
-            _ => return None,
-        },
-        _ => return None,
-    };
-    let owner = owner_identity(owner)?;
-    let paired = value_call.arguments.get(1).is_some_and(|arg| {
-        matches!(arg, ValueExpression::Member(inner, key) if key == "values"
-            && owner_identity(inner) == Some(owner))
-    });
-    Some((owner, paired))
 }
 
 fn holes<'a>(

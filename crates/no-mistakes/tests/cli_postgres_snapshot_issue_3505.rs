@@ -36,6 +36,9 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         ("imported values", "imported"),
         ("recursive", "q"),
         ("namespace values", "statements.namespaceStatement"),
+        ("chained append", "q"),
+        ("multi missing", "q"),
+        ("multi wrong", "q"),
     ] {
         assert!(
             findings.iter().any(|finding| {

@@ -46,3 +46,9 @@ export async function matchedNamespaceValues() {
   return read(`/* matched namespace */ ${statements.namespaceStatement.text}`,
     statements.namespaceStatement.values);
 }
+
+export async function multiHoleNoBinds() {
+  const q = sql`SELECT * FROM items`;
+  const suffix = sql` ORDER BY id`;
+  return read(`/* multi literal */ ${q.text}${suffix.text}`);
+}

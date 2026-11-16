@@ -552,6 +552,10 @@ array or a different builder's array does not establish the parameterized
 fragment proof. Reassigning the builder also ends the proof. For example,
 ``read(`/* tag */ ${q.text}`, q.values)`` is proven for a stable `q`, while
 ``read(`/* tag */ ${q.text}`)`` is not.
+Each `.text` source in a plain template needs its own matching bind array when
+that source has binds; a second builder's `.values` cannot cover the first.
+The same requirement applies to binds added by chained or statement-level
+`.append()` calls before the executor call.
 
 An exported `sql-template-strings` statement or fragment may be imported through
 named or namespace imports and static re-exports. Its constructor and append

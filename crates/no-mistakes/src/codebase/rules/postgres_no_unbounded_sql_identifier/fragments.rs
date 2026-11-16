@@ -47,33 +47,38 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
 
     pub(super) fn missing_values(&mut self, call: &SqlCall<'_>, source: &Provenance) -> bool {
         use super::partial::TextOwner;
-        let Some((owner, false)) = super::partial::text_owner(self.bindings, call) else {
-            return false;
+        let owner = match source {
+            Provenance::Reference {
+                name,
+                scope,
+                members,
+                ..
+            } if members.as_slice() == ["text"] => TextOwner::Local(name, *scope),
+            Provenance::Namespace {
+                local,
+                exported,
+                members,
+            } if members.as_slice() == [exported.as_str(), "text"] => {
+                TextOwner::Namespace(local, exported)
+            }
+            _ => return false,
         };
-        match (owner, source) {
-            (
-                TextOwner::Local(owner, owner_scope),
-                Provenance::Reference {
-                    name,
-                    scope,
-                    offset,
-                    members,
-                },
-            ) if members.as_slice() == ["text"] && owner == name && owner_scope == *scope => {
+        if super::partial::text_owner_for(self.bindings, call, owner) != Some(false) {
+            return false;
+        }
+        match source {
+            Provenance::Reference {
+                name,
+                scope,
+                offset,
+                ..
+            } => {
                 self.proof.binding(&call.file, *scope, name, *offset, false)
                     && self.proof.binds_at(&call.file, *scope, name, *offset)
             }
-            (
-                TextOwner::Namespace(owner, export),
-                Provenance::Namespace {
-                    local,
-                    exported,
-                    members,
-                },
-            ) if members.as_slice() == [exported.as_str(), "text"]
-                && owner == local
-                && export == exported =>
-            {
+            Provenance::Namespace {
+                local, exported, ..
+            } => {
                 self.proof.namespace(&call.file, local, exported)
                     && self.proof.binds_namespace(&call.file, local, exported)
             }
