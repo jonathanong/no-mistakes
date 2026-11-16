@@ -33,6 +33,15 @@ fn excluded_callers_of_large_helpers_remain_roots_without_shared_cache_work() {
     assert_eq!(work["postgres.annotation.excluded_roots_retained"], 64);
     assert_eq!(work["postgres.annotation.excluded_roots_pruned"], 0);
     assert_eq!(work["postgres.annotation.shared_init.disabled"], 1);
+    assert_eq!(
+        work.get("postgres.annotation.prefix_walks")
+            .copied()
+            .unwrap_or(0),
+        0
+    );
+    let builds = work["postgres.annotation.dense_prefix_summary_builds"];
+    let skips = work["postgres.annotation.prefix_unchanged_binding_skips"];
+    assert!(builds > 0 && builds <= skips, "{work:?}");
     for metric in ["cache_hits", "cache_misses", "builds"] {
         assert_eq!(
             work[&*format!("postgres.annotation.shared_init.{metric}")],
