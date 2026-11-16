@@ -16,6 +16,8 @@ export const methods = {
   returned() { this.data = 'return type'; },
   /** @this {} */
   empty() { this.data = 'empty'; },
+  /** @this {} @returns {Object} */
+  emptyWithReturn() { this.data = 'empty with return'; },
   // @this {Object}
   /** @returns {Object} */
   mixed() { this.data = 'mixed comments'; },

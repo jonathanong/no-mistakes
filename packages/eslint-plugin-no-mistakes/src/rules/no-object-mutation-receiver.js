@@ -32,9 +32,9 @@ function declaredReceiver(sourceCode, node) {
     return (
       comment?.type === "Block" &&
       comment.value.startsWith("*") &&
-      /(?:^|\n)\s*\*?\s*@this\s+\{\s*\S[^\r\n]*\}/.test(comment.value) &&
+      /(?:^|\n)\s*\*?\s*@this\s+\{\s*[^}\s][^\r\n]*\}/.test(comment.value) &&
       adjacentAnnotations(sourceCode, target, "@this").some((type) =>
-        /^\{\s*\S[^\r\n]*\}/.test(type),
+        /^\{\s*[^}\s][^\r\n]*\}/.test(type),
       )
     );
   });

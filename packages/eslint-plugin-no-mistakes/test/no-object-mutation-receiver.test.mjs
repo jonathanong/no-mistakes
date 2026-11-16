@@ -26,7 +26,7 @@ describe("no-object-mutation declared receivers", () => {
   });
 
   it("requires attached JSDoc and preserves ordinary function boundaries", () => {
-    expect(messages(fixture(jsControls), rule, undefined, jsControls)).toEqual(mutations(10));
+    expect(messages(fixture(jsControls), rule, undefined, jsControls)).toEqual(mutations(11));
   });
 
   it("honors allowThis false for both receiver declarations", () => {
