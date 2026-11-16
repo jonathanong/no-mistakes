@@ -52,7 +52,7 @@ pub(super) fn column_domain(
         return (count > 0).then_some(count);
     }
     if domain_range::integer_type(&lower) {
-        return integer_domain(table, item, (visible, physical), alternative);
+        return integer_domain(table, catalog, item, (visible, physical), alternative);
     }
     if lower == "date" {
         return date_domain(item, visible, alternative);
@@ -80,17 +80,19 @@ pub(super) fn widths_for(
 
 fn integer_domain(
     table: &CatalogTable,
+    catalog: &SchemaCatalog,
     item: &SqlBoundItem,
     (visible, physical): (&str, &str),
     alternative: usize,
 ) -> Option<u64> {
+    let qualifiers = check_qualifiers(catalog, table);
     let mut span = None;
     let mut saw = false;
     for check in &table.check_constraints {
         if !check.validated {
             continue;
         }
-        let Some(next) = domain_range::check_span(&check.definition, physical) else {
+        let Some(next) = domain_range::owned_check(&check.definition, physical, &qualifiers) else {
             continue;
         };
         saw = true;
@@ -106,6 +108,18 @@ fn integer_domain(
 
 fn date_domain(item: &SqlBoundItem, visible: &str, alternative: usize) -> Option<u64> {
     arm_span(item, visible, alternative, Literal::Date)?.width()
+}
+
+fn check_qualifiers(catalog: &SchemaCatalog, table: &CatalogTable) -> Vec<String> {
+    let parts = crate::codebase::postgres::decoded_parts(&table.name);
+    let bare = parts.last().cloned().unwrap_or_default();
+    let mut names = vec![bare.clone()];
+    if parts.len() > 1 {
+        names.push(parts.join("."));
+    } else if let Some(schema) = catalog.declared_schema() {
+        names.push(format!("{schema}.{bare}"));
+    }
+    names
 }
 
 fn arm_span(item: &SqlBoundItem, visible: &str, alternative: usize, kind: Literal) -> Option<Span> {

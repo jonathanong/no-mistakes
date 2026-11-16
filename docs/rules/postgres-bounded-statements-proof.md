@@ -118,7 +118,11 @@ is non-null only for a catalog base table, not a view.
   finite domain and the product of those domains is at most the cap. Equality
   pins are not multiplied. A domain is a validated integer check, a non-null
   enum, a non-null boolean, or a closed inclusive `YYYY-MM-DD` literal range. An integer
-  type's width is not a domain. `OR` arms add their products. A product within
+  type's width is not a domain. A catalog check may qualify the physical column
+  with its table, with the catalog schema and table, or with the schema already
+  on the catalog key. Another relation's
+  qualifier is not a domain. An enum domain is that enum's current label count.
+  `OR` arms add their products. A product within
   the cap is silent. A product above the cap stays a finding and names that
   product, including a materialized body. The proof skips a statement another bound already accepts. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d

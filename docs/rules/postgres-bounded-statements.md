@@ -269,14 +269,39 @@ domain is a validated `CHECK (col BETWEEN a AND b)` or
 a non-null boolean, or a closed inclusive literal range in the query predicate,
 including a `date` column between two `YYYY-MM-DD` date literals. A query range matches
 the column's visible name, so `FROM alias_slots AS renamed(n)` is closed by
-`WHERE n BETWEEN 1 AND 5`. A catalog check still names the physical column.
+`WHERE n BETWEEN 1 AND 5`. A catalog check names the physical column. It may
+also qualify that column with this table (`seats.slot`) or with the catalog
+schema and this table (`public.seats.slot`). A qualifier that names another
+relation is not a domain. When the catalog key already names a schema
+(`audit.bands`), the qualifier is that key (`audit.bands.slot`). The catalog
+schema is not prefixed onto such a key, so `public.bands.slot` is not a domain
+for it. A catalog that does not name a schema does not treat `schema.table.column`
+as a domain either. On a table with more than one column, an alias list
+renames only its leading entries, and a dropped-column gap in the catalog
+ordinals does not add an alias slot. Renaming a unique-key column, or choosing
+an alias equal to another physical column name, keeps the finding.
 Several checks and query bounds intersect. An integer type's width is not a domain: `smallint` and
 `integer` stay reported unless a check or a literal range closes them. Nullable
 columns, checks that are not validated, `OR` checks, and open ranges are not
-domains. `OR` branches add their products and the sum must fit the cap. The
+domains. An enum domain is the number of labels in the catalog for this run.
+Adding a label later widens the product without a change at the query; rerun
+against the updated catalog. `OR` branches add their products and the sum must fit the cap. The
 finding for a product above the cap names that product, including a materialized-body finding. A product within the
 cap accepts the statement silently, the same way a `LIMIT` or a unique-key
-lookup does. The domain proof runs only for a statement that would otherwise
+lookup does.
+
+`participants` has unique `(conversation_id, slot)` and
+`CHECK (slot BETWEEN 1 AND 50)`. This lookup pins `conversation_id` and leaves
+`slot` free, so the product is 50 and `maxDomainRows: 50` accepts it:
+
+```sql
+SELECT actor_id FROM participants WHERE conversation_id = $1;
+```
+
+A non-null boolean free column contributes 2, as with `flags.active`. A
+non-null enum contributes its current label count, as with `daily.metric`.
+
+The domain proof runs only for a statement that would otherwise
 be a finding, so a statement an allow entry, a `LIMIT`, or another bound
 already accepts keeps that result. When the domain proof alone accepts every
 statement an allow entry covers, that entry is reported once, on the allow

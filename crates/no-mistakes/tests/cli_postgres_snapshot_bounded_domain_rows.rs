@@ -108,6 +108,22 @@ fn postgres_bounded_domain_rows_body_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_bounded_domain_rows_alias_shapes_check_json_snapshot() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-bounded-statements/domain-rows-alias-shapes"),
+    );
+    assert_saved_fixture(
+        "postgres_bounded_domain_rows_alias_shapes",
+        &[
+            ("unset", root.clone(), root.join("shapes-unset.yml")),
+            ("rows_5", root.clone(), root.join("shapes-5.yml")),
+            ("unscoped", root.clone(), root.join("shapes-unscoped.yml")),
+        ],
+    );
+}
+
+#[test]
 fn postgres_bounded_domain_rows_group_order_check_json_snapshot() {
     let root = group_order();
     assert_saved_fixture(

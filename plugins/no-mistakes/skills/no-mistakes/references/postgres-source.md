@@ -264,7 +264,10 @@ whose free columns each have a proven finite domain when the product of those
 domains is at most the cap. Leave it unset to keep the current findings. A
 domain is a validated integer check, a non-null enum, a non-null boolean, or a
 closed inclusive `YYYY-MM-DD` literal range on the column's visible name,
-including a positional alias. `smallint` and `integer` widths are not domains.
+including a positional alias. A catalog check may qualify the physical column
+with its table, with the catalog schema and table, or with the schema already
+on the catalog key. An enum domain is that
+enum's current label count. `smallint` and `integer` widths are not domains.
 An accepted product is silent. A product above the cap stays a finding and
 names that product, including a materialized-body finding. The proof skips a statement an allow entry or another
 bound already accepts. An allow entry the proof replaces entirely is reported

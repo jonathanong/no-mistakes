@@ -139,7 +139,10 @@ integer that defaults to unset. When set, a lookup whose free unique-key
 columns each have a proven finite domain is accepted when the product of those
 domain sizes is at most the cap. A domain is a validated integer check range, a
 non-null enum, a non-null boolean, or a closed inclusive `YYYY-MM-DD`
-literal range in the predicate. An integer type's width is not a domain. An
+literal range in the predicate. A catalog check may qualify the physical column
+with its table, with the catalog schema and table, or with the schema already
+on the catalog key. An enum domain is that
+enum's current label count. An integer type's width is not a domain. An
 accepted product is silent. A larger product stays a finding and names that
 product, including a materialized-body finding. The proof
 does not apply to a statement an allow entry or another bound already accepts.

@@ -3,14 +3,24 @@ use super::{days_from_civil, Literal};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use sqlparser::ast::{BinaryOperator, DataType, Expr, UnaryOperator, Value};
 
-pub(super) fn is_column(expr: &Expr, column: &str) -> bool {
+pub(super) fn names_column(expr: &Expr, column: &str, qualifiers: &[String]) -> bool {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => ident_key(ident) == column,
+        Expr::CompoundIdentifier(parts) => qualified_column(parts, column, qualifiers),
         Expr::Cast {
             expr, data_type, ..
-        } if keeps_column(data_type) => is_column(expr, column),
+        } if keeps_column(data_type) => names_column(expr, column, qualifiers),
         _ => false,
     }
+}
+
+fn qualified_column(parts: &[sqlparser::ast::Ident], column: &str, qualifiers: &[String]) -> bool {
+    let (name, prefix) = parts.split_last().expect("compound identifier");
+    !prefix.is_empty()
+        && ident_key(name) == column
+        && qualifiers
+            .iter()
+            .any(|qualifier| qualifier.split('.').eq(prefix.iter().map(ident_key)))
 }
 
 pub(super) fn absorb(
@@ -19,6 +29,7 @@ pub(super) fn absorb(
     kind: Literal,
     low: &mut Option<i64>,
     high: &mut Option<i64>,
+    qualifiers: &[String],
 ) {
     let expr = unwrap_expr(expr);
     if let Expr::Between {
@@ -28,7 +39,7 @@ pub(super) fn absorb(
         high: upper,
     } = expr
     {
-        if is_column(expr, column) {
+        if names_column(expr, column, qualifiers) {
             if let Some(value) = literal(lower, kind) {
                 raise(low, value);
             }
@@ -42,22 +53,22 @@ pub(super) fn absorb(
         return;
     };
     match op {
-        BinaryOperator::GtEq if is_column(left, column) => {
+        BinaryOperator::GtEq if names_column(left, column, qualifiers) => {
             if let Some(value) = literal(right, kind) {
                 raise(low, value);
             }
         }
-        BinaryOperator::LtEq if is_column(left, column) => {
+        BinaryOperator::LtEq if names_column(left, column, qualifiers) => {
             if let Some(value) = literal(right, kind) {
                 lower_high(high, value);
             }
         }
-        BinaryOperator::LtEq if is_column(right, column) => {
+        BinaryOperator::LtEq if names_column(right, column, qualifiers) => {
             if let Some(value) = literal(left, kind) {
                 raise(low, value);
             }
         }
-        BinaryOperator::GtEq if is_column(right, column) => {
+        BinaryOperator::GtEq if names_column(right, column, qualifiers) => {
             if let Some(value) = literal(left, kind) {
                 lower_high(high, value);
             }

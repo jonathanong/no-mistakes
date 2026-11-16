@@ -89,6 +89,11 @@ impl SchemaCatalog {
         self.current_database.as_deref()
     }
 
+    /// Schema named by the catalog snapshot, when the producer set one.
+    pub(crate) fn declared_schema(&self) -> Option<&str> {
+        self.schema.as_deref()
+    }
+
     pub fn load(root: &Path, raw_path: &str, sources: &SourceStore) -> Result<Self> {
         let path = catalog_path(root, raw_path)?;
         let source = sources.read_path(&path).map_err(|error| {
