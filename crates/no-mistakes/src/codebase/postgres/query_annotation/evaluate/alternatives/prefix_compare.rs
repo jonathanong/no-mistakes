@@ -33,7 +33,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                         for (name, value) in before.reference_bindings() {
                             // An arm can drop a name the other branch still has.
                             let after = super::bindings::binding_or_unproven(after, name);
-                            if super::values::unchanged(value, after) {
+                            if super::values::unchanged(value, after)
+                                || super::values::prefix_free_argument(value, before_arena)
+                            {
                                 if let Some(work) = work.as_mut() {
                                     work.unchanged_binding();
                                 }
