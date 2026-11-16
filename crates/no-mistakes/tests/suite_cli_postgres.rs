@@ -174,6 +174,8 @@ mod cli_postgres_snapshot_object_naming;
 mod cli_postgres_snapshot_opaque_functions;
 #[path = "cli_postgres_snapshot_redundant_index.rs"]
 mod cli_postgres_snapshot_redundant_index;
+#[path = "cli_postgres_snapshot_reopen_chains.rs"]
+mod cli_postgres_snapshot_reopen_chains;
 #[path = "cli_postgres_snapshot_require_query_annotation.rs"]
 mod cli_postgres_snapshot_require_query_annotation;
 #[path = "cli_postgres_snapshot_required_comments.rs"]

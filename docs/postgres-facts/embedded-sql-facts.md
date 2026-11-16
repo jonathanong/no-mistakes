@@ -79,7 +79,12 @@ tag whose holes are all value binds still publishes each one as
 `sql_placeholder_N`. A resolved string constant, including a template that
 builds one, stays that bind when the hole is a value. It is not copied into
 the statement as text. A nested tagged template, a declared SQL fragment, or
-an identifier taken from a closed record still splices.
+an identifier taken from a closed record still splices. A `$` written
+immediately before a numeric or unknown hole is a positional parameter, with
+the hole's own digits when it is a numeric literal and the hole index
+otherwise, and with no separator. A separator is inserted only between two
+adjacent value holes of a tagged template. An empty fragment, or one that
+starts with its own punctuation, is spliced unchanged.
 
 Numeric literal alternatives inside untagged template holes are stringified using
 JavaScript number formatting, including radix and exponent literals. For example,

@@ -1,6 +1,7 @@
 use super::{placeholders, tags};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TemplateLiteral};
+use oxc_syntax::number::ToJsString;
 use std::collections::HashMap;
 
 /// SQL text of a literal, tagged template, or template expression.
@@ -11,10 +12,10 @@ pub fn sql_text(expr: &Expression<'_>) -> Option<String> {
 pub(in crate::codebase::postgres) fn unpublished_sql_text(expr: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
-        Expression::TemplateLiteral(template) => Some(template_sql_text(template, false)),
+        Expression::TemplateLiteral(template) => Some(template_sql_text(template, false, false)),
         Expression::TaggedTemplateExpression(tagged) => {
             let use_raw = tags::is_string_raw_tag_spelling(&tagged.tag);
-            Some(template_sql_text(&tagged.quasi, use_raw))
+            Some(template_sql_text(&tagged.quasi, use_raw, true))
         }
         _ => None,
     }
@@ -34,29 +35,75 @@ pub fn executed_query_text(
     }
 }
 
+/// One hole in a template. `space` is inserted only between adjacent value
+/// holes of a tagged template. A `$` already sitting against a numeric or
+/// unknown hole stays a positional parameter (`$` plus these digits).
+pub(in crate::codebase::postgres::embedded) struct RenderedHole {
+    pub space: bool,
+    pub text: String,
+}
+
+pub(in crate::codebase::postgres::embedded) fn render_hole(
+    previous: &str,
+    hole: &Expression<'_>,
+    index: usize,
+    already: &str,
+    separate_adjacent: bool,
+) -> RenderedHole {
+    if previous.ends_with('$') && !tagged_fragment(hole) {
+        return RenderedHole {
+            space: false,
+            text: positional_digits(hole, index),
+        };
+    }
+    RenderedHole {
+        space: separate_adjacent && !already.is_empty() && previous.is_empty(),
+        text: placeholders::internal_placeholder(index),
+    }
+}
+
+pub(in crate::codebase::postgres::embedded) fn positional_digits(
+    hole: &Expression<'_>,
+    index: usize,
+) -> String {
+    match unwrap_ts_wrappers(hole) {
+        Expression::NumericLiteral(literal) => literal.value.to_js_string(),
+        _ => index.to_string(),
+    }
+}
+
+fn tagged_fragment(hole: &Expression<'_>) -> bool {
+    matches!(
+        unwrap_ts_wrappers(hole),
+        Expression::TaggedTemplateExpression(_)
+    )
+}
+
 /// `use_raw` selects `String.raw`'s own runtime semantics (the literal
 /// source characters, escape sequences un-processed) over the cooked form
 /// every other tag — the trusted `sql` tag included — returns; see
-/// [`tags::is_string_raw_tag_spelling`].
-/// Adjacent holes, and a `$` glued to the next hole, need a separator so
-/// `sql_placeholder_2sql_placeholder_3` and `$sql_placeholder_4` stay two tokens.
-/// A hole that begins the template is not adjacent to anything.
-pub(in crate::codebase::postgres::embedded) fn separate_adjacent_hole(
-    before: &str,
-    already: &str,
-) -> bool {
-    !already.is_empty() && (before.is_empty() || before.ends_with('$'))
-}
-
-fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
+/// [`tags::is_string_raw_tag_spelling`]. `separate_adjacent` is set only for
+/// a tagged template, so a plain string builder does not split `$${n}`.
+fn template_sql_text(
+    template: &TemplateLiteral<'_>,
+    use_raw: bool,
+    separate_adjacent: bool,
+) -> String {
     let mut out = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
         if index > 0 {
             let previous = tags::quasi_text(&template.quasis[index - 1], use_raw);
-            if separate_adjacent_hole(&previous, &out) {
+            let rendered = render_hole(
+                &previous,
+                &template.expressions[index - 1],
+                index,
+                &out,
+                separate_adjacent,
+            );
+            if rendered.space {
                 out.push(' ');
             }
-            out.push_str(&placeholders::internal_placeholder(index));
+            out.push_str(&rendered.text);
         }
         out.push_str(&tags::quasi_text(quasi, use_raw));
     }

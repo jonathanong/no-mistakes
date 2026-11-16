@@ -49,7 +49,20 @@ fn value_constants_stay_bind_parameters() {
 fn adjacent_holes_keep_a_separator() {
     let sql = sqls("src/holes.ts");
     assert!(sql.contains("sql_placeholder_2 sql_placeholder_3"), "{sql}");
-    assert!(sql.contains("$ sql_placeholder_4"), "{sql}");
+    assert!(sql.contains("WHERE n = $4"), "{sql}");
     assert!(!sql.contains("sql_placeholder_2sql_placeholder_3"), "{sql}");
+    assert!(!sql.contains("$ sql_placeholder"), "{sql}");
     assert!(!sql.contains("$sql_placeholder"), "{sql}");
+}
+
+#[test]
+fn punctuation_fragments_splice_without_a_separator() {
+    let sql = sqls("src/fragments.ts");
+    assert!(sql.contains("SELECT $1, other_col FROM widgets"), "{sql}");
+    assert!(sql.contains("SELECT $1 FROM widgets"), "{sql}");
+    assert!(
+        !sql.contains("sql_placeholder_1 sql_placeholder_2"),
+        "{sql}"
+    );
+    assert!(!sql.contains("$1 ,"), "{sql}");
 }

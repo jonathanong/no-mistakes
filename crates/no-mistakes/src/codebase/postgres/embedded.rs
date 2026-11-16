@@ -132,6 +132,8 @@ mod imported_sql_tag_tests;
 #[cfg(test)]
 mod nested_sql_fragment_tests;
 #[cfg(test)]
+mod positional_parameter_tests;
+#[cfg(test)]
 mod resolution_gaps_tests;
 #[cfg(test)]
 mod scoped_bindings_tests;

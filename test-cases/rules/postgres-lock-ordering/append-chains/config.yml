@@ -1,0 +1,21 @@
+version: 2
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    include: [src/query.ts]
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+  - rule: postgres-required-predicates
+    scope: repository
+    include: [src/query.ts]
+    options:
+      importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+      relations:
+        - table: contacts
+          requireColumns: [id]
