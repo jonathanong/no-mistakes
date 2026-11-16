@@ -1,6 +1,6 @@
 ---
 name: git-rules
-description: "MUST NOT / SHOULD NOT rules for git, commits, pull requests, docs, evidence for claims, and change hygiene: staging, history rewrites, rebases, hooks, scope, and PR descriptions. Use when committing, rebasing, pushing, writing a PR, updating docs and agent instructions, or making a claim about production behavior."
+description: "Load before committing, staging, rebasing, pushing, writing a PR description, editing docs or AGENTS.md, or stating a claim about production behavior. Lists the defects to avoid and the patterns that need a stated reason: staging, history rewrites, hooks, scope, evidence for claims."
 ---
 
 # Git and change rules

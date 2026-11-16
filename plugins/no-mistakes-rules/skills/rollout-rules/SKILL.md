@@ -1,6 +1,6 @@
 ---
 name: rollout-rules
-description: "MUST NOT / SHOULD NOT rules for shipping changes safely: feature flags, deploy order across services, API and message compatibility, unreachable new code, irreversible actions, and string-referenced config. Use when adding a flag, a table, a service, or a write path, changing an API or message contract, deploying a change that spans services, or touching money-moving or irreversible actions."
+description: "Load before adding a feature flag, changing an API, event, or message contract, deploying a change that spans services, or touching payments, refunds, or other irreversible actions. Lists the defects to avoid and the patterns that need a stated reason: deploy order, compatibility, string-referenced config."
 ---
 
 # Rollout rules

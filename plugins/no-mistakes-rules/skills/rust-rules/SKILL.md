@@ -1,6 +1,6 @@
 ---
 name: rust-rules
-description: "MUST NOT / SHOULD NOT rules for Rust: lints, parallelism, hot loops, determinism, coverage, and performance claims. Use when writing or reviewing Rust code."
+description: "Load before writing or reviewing Rust code, Cargo.toml, clippy settings, or benchmarks, or before running heavy cargo builds. Lists the defects to avoid and the patterns that need a stated reason: lints, test layout, file size, parallelism, hot loops, caching, build hygiene, performance claims."
 ---
 
 # Rust rules

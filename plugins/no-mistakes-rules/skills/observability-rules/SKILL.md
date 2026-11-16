@@ -1,6 +1,6 @@
 ---
 name: observability-rules
-description: "MUST NOT / SHOULD NOT rules for logs, metrics, and alerts: static messages and structured fields, personal data, metric cardinality, fields monitors depend on, absence alerts, and context binding. Use when adding or reviewing logging, metrics, or monitors."
+description: "Load before adding or reviewing a log line, a metric, a trace attribute, an alert, or a monitor (pino, winston, OpenTelemetry, Datadog, Sentry). Lists the defects to avoid and the patterns that need a stated reason: static messages and structured fields, personal data, metric cardinality, fields monitors depend on, absence alerts, context binding."
 ---
 
 # Observability rules

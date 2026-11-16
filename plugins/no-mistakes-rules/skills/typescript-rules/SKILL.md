@@ -1,6 +1,6 @@
 ---
 name: typescript-rules
-description: "MUST NOT / SHOULD NOT rules for TypeScript, JavaScript, and Node.js: async and promises, errors, mutation, aliases and dead paths, static analysis, process lifecycle, HTTP clients, caches like Redis or Valkey, and package boundaries. Use when writing or reviewing TS/JS or Node code."
+description: "Load before writing or reviewing TypeScript, JavaScript, or Node.js code: async functions and promises, error handling, HTTP clients (fetch, undici, axios), Redis or Valkey caches, process lifecycle, package boundaries. Lists the defects to avoid and the patterns that need a stated reason."
 ---
 
 # TypeScript and Node rules

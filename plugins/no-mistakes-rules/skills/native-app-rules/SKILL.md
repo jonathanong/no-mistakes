@@ -1,6 +1,6 @@
 ---
 name: native-app-rules
-description: "MUST NOT / SHOULD NOT rules for native apps in Swift (iOS, macOS) and .NET (MAUI, C#): concurrency, localization, secure storage, and release config. Use when writing or reviewing Swift or C# app code."
+description: "Load before writing or reviewing Swift or SwiftUI (iOS, macOS) or C# and .NET MAUI app code. Lists the defects to avoid and the patterns that need a stated reason: core-library boundaries, concurrency, localization, secure storage, release config."
 ---
 
 # Swift and .NET app rules
