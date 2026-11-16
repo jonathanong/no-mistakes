@@ -5,6 +5,8 @@ use std::path::PathBuf;
 
 #[path = "fragment_builder_bindings.rs"]
 mod bindings;
+#[path = "fragment_builder_binds.rs"]
+mod binds;
 #[path = "fragment_builder_helpers.rs"]
 mod helpers;
 #[path = "fragment_builder_imports.rs"]

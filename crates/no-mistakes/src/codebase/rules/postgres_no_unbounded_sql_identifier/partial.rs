@@ -18,6 +18,9 @@ pub(super) fn sources<'a>(
     match identifier_status(call.call) {
         Some(true) => return identifier_sources(graph, facts, call, bindings),
         Some(false) => return BTreeSet::new(),
+        None if text_owner(facts, call).is_some() => {
+            return identifier_sources(graph, facts, call, bindings);
+        }
         None => {}
     }
     let Some(ts) = facts.get_ts_facts(&call.file) else {
@@ -100,6 +103,53 @@ pub(super) fn sources<'a>(
         }
     }
     sources
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum TextOwner<'a> {
+    Local(&'a str, usize),
+    Namespace(&'a str, &'a str),
+}
+
+fn owner_identity(value: &ValueExpression) -> Option<TextOwner<'_>> {
+    match value {
+        ValueExpression::Named { name, scope, .. } => {
+            Some(TextOwner::Local(name, scope.unwrap_or(0)))
+        }
+        ValueExpression::Member(base, exported) => {
+            let ValueExpression::Named { name, .. } = base.as_ref() else {
+                return None;
+            };
+            Some(TextOwner::Namespace(name, exported))
+        }
+        _ => None,
+    }
+}
+
+pub(super) fn text_owner<'a>(
+    facts: &'a CheckFactMap,
+    call: &SqlCall<'_>,
+) -> Option<(TextOwner<'a>, bool)> {
+    let flow = &facts.get_ts_facts(&call.file)?.value_flow;
+    let value_call = flow
+        .calls
+        .iter()
+        .find(|value| (value.offset, value.end) == call.span)?;
+    let first = value_call.arguments.first()?;
+    let owner = match first {
+        ValueExpression::Member(owner, key) if key == "text" => owner.as_ref(),
+        ValueExpression::Derived(parts) => match parts.as_ref() {
+            [ValueExpression::Member(owner, key)] if key == "text" => owner.as_ref(),
+            _ => return None,
+        },
+        _ => return None,
+    };
+    let owner = owner_identity(owner)?;
+    let paired = value_call.arguments.get(1).is_some_and(|arg| {
+        matches!(arg, ValueExpression::Member(inner, key) if key == "values"
+            && owner_identity(inner) == Some(owner))
+    });
+    Some((owner, paired))
 }
 
 fn holes<'a>(

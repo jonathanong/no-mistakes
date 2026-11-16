@@ -92,6 +92,11 @@ fn scan(
                 members,
             } = &provenance
             {
+                if fragment_proofs.missing_values(call, &provenance) {
+                    sinks += 1;
+                    findings.push(message(root, call, name, Some(name.clone())));
+                    continue;
+                }
                 if bindings.env_alias(&call.file, *scope, name, *offset)
                     || bindings.flows_unbounded(&call.file, *scope, name, *offset)
                     || (!bindings.row_member_overwritten(
@@ -100,6 +105,21 @@ fn scan(
                 {
                     sinks += 1;
                     findings.push(message(root, call, name, Some(name.clone())));
+                    continue;
+                }
+            }
+            if let Provenance::Namespace {
+                local, exported, ..
+            } = &provenance
+            {
+                if fragment_proofs.missing_values(call, &provenance) {
+                    sinks += 1;
+                    findings.push(message(
+                        root,
+                        call,
+                        &format!("{local}.{exported}"),
+                        Some(local.clone()),
+                    ));
                     continue;
                 }
             }

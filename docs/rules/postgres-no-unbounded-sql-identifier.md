@@ -546,6 +546,12 @@ This includes immutable local or module-const fragments, `.append()` chains
 of proven fragments, statement-level appends, and resolved synchronous helper
 returns. The proof preserves the matching `.values` bind array.
 Executor calls inside bind expressions are checked independently.
+When a bind-bearing builder's `.text` is interpolated into a plain SQL string,
+pass that same builder's `.values` as the second executor argument. A missing
+array or a different builder's array does not establish the parameterized
+fragment proof. Reassigning the builder also ends the proof. For example,
+``read(`/* tag */ ${q.text}`, q.values)`` is proven for a stable `q`, while
+``read(`/* tag */ ${q.text}`)`` is not.
 
 An exported `sql-template-strings` statement or fragment may be imported through
 named or namespace imports and static re-exports. Its constructor and append
@@ -642,6 +648,11 @@ select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
 set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`,
 `finiteDomainAssertions`, `identifierValidators`, and `identifierSources` default to empty.
+When a rule references a project with a `postgres` block, configure
+`trustedSqlTags` under that project's `postgres.executors`. A rule-local
+`trustedSqlTags` in this case is rejected with a config error because it
+restates the shared project scope. The built-in `sql-template-strings` imports
+need no explicit entry at either level.
 `include` and `exclude` default to empty (all indexable files). See [Closed domains](#closed-domains).
 
 ## Suppression
