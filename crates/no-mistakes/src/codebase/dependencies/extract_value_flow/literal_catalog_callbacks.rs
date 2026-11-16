@@ -91,5 +91,5 @@ fn member_path(expression: &Expression<'_>, parameter: &str) -> Option<Vec<Strin
     }
     let mut path = Vec::new();
     collect(expression, parameter, &mut path)?;
-    (!path.is_empty()).then_some(path)
+    Some(path)
 }

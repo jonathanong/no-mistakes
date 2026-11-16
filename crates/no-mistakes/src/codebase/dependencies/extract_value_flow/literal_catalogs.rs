@@ -15,6 +15,7 @@ pub(crate) struct LiteralCatalogFacts {
     pub(crate) callbacks: FxHashMap<CallableId, CatalogCallback>,
     pub(crate) reads: FxHashMap<u32, CatalogRead>,
     pub(crate) consumers: FxHashMap<u32, (u32, u32)>,
+    pub(crate) literal_receivers: FxHashSet<(u32, u32)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,6 +1,9 @@
 use super::*;
 use oxc_ast::ast::ConditionalExpression;
 
+#[path = "expressions/string_assertions.rs"]
+mod string_assertions;
+
 impl ImportCollector {
     pub(in super::super) fn value_expression(
         &self,

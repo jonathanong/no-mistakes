@@ -9,6 +9,8 @@ use crate::codebase::rules::postgres_sql_cross_file::{
 };
 use std::path::Path;
 
+mod finite;
+
 impl Bindings<'_> {
     pub(crate) fn with_numeric_parameter_bounds(mut self) -> Self {
         self.numeric_parameter_bounds_only = true;
@@ -18,6 +20,20 @@ impl Bindings<'_> {
     pub(super) fn closed_type(&self, file: &Path, parameter: &ValueParameter) -> bool {
         match &parameter.type_reference {
             Some(ValueType::Number) => true,
+            Some(ValueType::FiniteStringLiterals) if self.numeric_parameter_bounds_only => {
+                parameter.invalidated_at.is_none()
+                    && parameter.mutation_contexts.is_empty()
+                    && !self.non_required_parameter(file, parameter.scope, &parameter.name)
+            }
+            Some(ValueType::Reference(name))
+                if self.numeric_parameter_bounds_only
+                    && parameter.invalidated_at.is_none()
+                    && parameter.mutation_contexts.is_empty()
+                    && !self.non_required_parameter(file, parameter.scope, &parameter.name)
+                    && self.finite_string_type(file, &ValueType::Reference(name.clone())) =>
+            {
+                true
+            }
             _ if self.numeric_parameter_bounds_only => false,
             Some(shape) => self.catalog_type(file, shape),
             None => false,

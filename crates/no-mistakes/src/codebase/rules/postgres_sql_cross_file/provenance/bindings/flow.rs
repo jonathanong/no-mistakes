@@ -16,11 +16,14 @@ impl Bindings<'_> {
             bindings: FxHashSet::default(),
             calls: FxHashSet::default(),
         };
+        if self.widened_finite_string_flow(file, scope, name, at, &mut seen) {
+            return true;
+        }
         if let Some(unbounded) = self.assignment_unbounded(file, scope, name, at, &mut seen) {
             return unbounded;
         }
         let Some(binding) = self.value(file, scope, name, at) else {
-            return self.parameter(file, scope, name);
+            return self.parameter_at(file, scope, name, at);
         };
         seen.bindings
             .insert((binding.scope, binding.name.clone(), binding.declared_at));
@@ -121,11 +124,14 @@ impl Bindings<'_> {
         at: u32,
         seen: &mut Seen,
     ) -> bool {
+        if self.widened_finite_string_flow(file, scope, name, at, seen) {
+            return true;
+        }
         if let Some(unbounded) = self.assignment_unbounded(file, scope, name, at, seen) {
             return unbounded;
         }
         let Some(binding) = self.value(file, scope, name, at) else {
-            return self.parameter(file, scope, name);
+            return self.parameter_at(file, scope, name, at);
         };
         let key = (binding.scope, binding.name.clone(), binding.declared_at);
         if !seen.bindings.insert(key.clone()) {

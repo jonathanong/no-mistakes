@@ -1,5 +1,8 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "cli_postgres_snapshot_identifier_issue_3501.rs"]
+mod cli_postgres_snapshot_identifier_issue_3501;
+
 #[path = "common/check_json_clean.rs"]
 mod check_json_clean;
 #[path = "common/check_json_snapshot.rs"]

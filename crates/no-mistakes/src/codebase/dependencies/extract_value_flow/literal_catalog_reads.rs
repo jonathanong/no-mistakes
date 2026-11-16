@@ -18,6 +18,22 @@ impl ImportCollector {
         let mut kind = CatalogReadKind::Value;
         let value = if let Expression::CallExpression(call) = expression {
             if let Expression::StaticMemberExpression(member) = &call.callee {
+                if !call.optional && !member.optional && member.property.name == "map" {
+                    if let Expression::ArrayExpression(array) =
+                        crate::codebase::ts_source::unwrap_ts_wrappers(&member.object)
+                    {
+                        if array.elements.iter().all(|element| {
+                            element.as_expression().is_some_and(|value| {
+                                super::super::closed_identifiers::literal_string(value).is_some()
+                            })
+                        }) {
+                            self.value_flow
+                                .catalogs
+                                .literal_receivers
+                                .insert((call.span.start, call.span.end));
+                        }
+                    }
+                }
                 if matches!(member.property.name.as_str(), "filter" | "map" | "join") {
                     if let Expression::CallExpression(base) =
                         crate::codebase::ts_source::unwrap_ts_wrappers(&member.object)

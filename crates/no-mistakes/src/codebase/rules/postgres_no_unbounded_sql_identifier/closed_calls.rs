@@ -3,11 +3,14 @@ use super::*;
 use crate::codebase::dependencies::extract::{
     unique_closed_collection, CallableId, RegistryKind, ValueCall, ValueFlowFacts,
 };
-use crate::codebase::rules::postgres_sql_cross_file::literal_array;
+use crate::codebase::rules::postgres_sql_cross_file::{literal_array, CompiledOptions};
+
+mod callbacks;
 
 /// A local binding whose value is built only from a closed array.
 pub(super) fn proven(
     graph: &DepGraph,
+    opts: &CompiledOptions,
     facts: &CheckFactMap,
     bindings: &Bindings<'_>,
     call: &SqlCall<'_>,
@@ -30,6 +33,7 @@ pub(super) fn proven(
     };
     let ctx = Context {
         graph,
+        opts,
         facts,
         bindings,
         file: &call.file,
@@ -39,6 +43,7 @@ pub(super) fn proven(
 
 struct Context<'a, 'b> {
     graph: &'a DepGraph,
+    opts: &'a CompiledOptions,
     facts: &'a CheckFactMap,
     bindings: &'a Bindings<'b>,
     file: &'a Path,
@@ -65,7 +70,16 @@ impl Context<'_, '_> {
                     || value_call.arguments.len() == 1 && value_call.last_argument_literal)
                     && self.closed_list(base)
             }
-            "map" => self.closed_list(base) && closed_callback(flow, value_call),
+            "map" => {
+                self.closed_list(base)
+                    && (closed_callback(flow, value_call)
+                        || module_literal_array(flow, base)
+                            && callbacks::configured(
+                                self.opts, self.facts, self.file, flow, value_call,
+                            ))
+                    || flow.catalogs.literal_receivers.contains(&(start, end))
+                        && callbacks::literal(flow, value_call)
+            }
             "filter" | "slice" => self.closed_list(base),
             _ => false,
         }
@@ -127,4 +141,22 @@ fn closed_return(flow: &ValueFlowFacts, id: CallableId, value: &ValueExpression)
             .any(|parameter| parameter.owner == id && parameter.name == *name),
         _ => false,
     }
+}
+
+fn module_literal_array(flow: &ValueFlowFacts, value: &ValueExpression) -> bool {
+    let ValueExpression::Named {
+        name,
+        scope: Some(0),
+        ..
+    } = value
+    else {
+        return false;
+    };
+    unique_closed_collection(flow, name, RegistryKind::Array)
+        && flow.bindings.iter().any(|binding| {
+            binding.scope == 0
+                && binding.name == *name
+                && binding.immutable
+                && binding.invalidated_at.is_none()
+        })
 }

@@ -20,7 +20,7 @@ that block is set. Do not restate `importSpecifier`, `executorNames`,
 
 Flags `process.env`, imported config, request parameters, query result rows, or
 a local alias of those values interpolated into a SQL relation without a closed-domain
-proof or a configured trusted identifier helper. A TypeScript union, `satisfies`, or `as const`
+proof or a configured trusted identifier helper. A `satisfies` or `as const`
 assertion around external data is not validation. Generated bind values remain
 allowed.
 
@@ -400,7 +400,7 @@ supported generated identifier shape, or an explicit trusted helper contract:
   helpers share the same proof. An alias captured before validation does not. A guard inside
   a branch does not cover a query after that branch. A regex test is not a finite
   domain. Membership operands cast to the array element type remain outside
-  this proof; an unchecked union type alone also remains unbounded.
+  this proof; an unchecked array-element annotation alone also remains unbounded.
   An inner `const` that shadows
   the guarded name stays unbounded.
 - A completed call, before interpolation, to a helper listed in
@@ -517,13 +517,12 @@ may appear after `WHERE expires_at < $1` beside a guarded derived table name.
 At max effort the identifier proof checks each hole independently, including
 immutable aliases of literal alternatives, even with `unanalyzableSql: ignore`.
 The guarded table stays clean; an unchecked string table in the same statement
-is reported. A type-only string-literal union, including one on an exported
-parameter, does not satisfy this rule. TypeScript types are not runtime
-validation, and an exported function can receive any string from a caller this
-analysis does not see. Only a runtime switch, a runtime record literal return,
-or a configured allowlist assertion over a literal `Set` clears it.
-`postgres-no-test-state-mutation` and `postgres-bounded-statements` may still
-enumerate each literal of that union.
+is reported. A parameter declared with a finite string-literal union is bounded,
+including an exported parameter: `kind: "orders" | "refunds"` may appear in
+`SELECT 1 FROM ${kind}_accounts`. This trusts the declared parameter contract,
+as executor-type selection does. Parentheses and resolvable local finite type aliases
+preserve that contract. Reassignment, an unresolved type, a union containing
+`string`, or widening through `as string` does not establish this proof.
 [closed identifier values](../postgres-facts/closed-identifiers.md) states the
 recovery limits. A union that includes `string`, an optional or defaulted
 parameter, or a cast of external data stays unbounded.
@@ -611,8 +610,14 @@ function list(n: number) {
 ```
 
 The array must remain immutable. A string input used after `$`, a dynamic
-separator, or an escaped or mutated array does not establish this proof. A
-union-typed string parameter without runtime validation remains unbounded.
+separator, or an escaped or mutated array does not establish this proof.
+
+A module-level `const` array of literal strings may also be mapped through a
+configured `identifierValidators` function before joining. The imported runtime
+function must match its configured module and name. `finiteDomainAssertions`
+validates arguments and does not prove a map callback's return value.
+An open or mutable source,
+a shadowed callback, or a callback reading an outer value stays unbounded.
 
 ## Fix
 

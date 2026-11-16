@@ -179,9 +179,10 @@ pub struct ValueFlowFacts {
     /// Iterable provenance for const loop bindings, never ordinary runtime values.
     pub iteration_bindings: Vec<ValueBinding>,
     pub(crate) for_of: ForOfFacts,
-    /// Scalar-overwrite reads: (call start, call end, scope, receiver, member).
     pub row_literal_overwrites: Vec<(u32, u32, usize, String, String)>,
     pub parameters: Vec<ValueParameter>,
+    pub(crate) non_required_parameters: FxHashMap<usize, FxHashSet<String>>,
+    pub(crate) widened_string_assertions: FxHashSet<u32>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
     pub type_exports: Vec<ExportedBinding>,

@@ -559,6 +559,12 @@ import from `sql-template-strings`. Unsupported syntax uses
 the same report/advisory/ignore policy in CLI and async Node reports. See
 [closed domains](rules/postgres-no-unbounded-sql-identifier.md#closed-domains).
 
+At max effort, `postgres-no-unbounded-sql-identifier` shares the CLI's proof for
+module constant literal arrays mapped through configured identifier validators
+and declared finite string-literal parameter unions. Reassigned parameters,
+widened casts, unresolved types, and open or mutable collections still report
+through both `check()` and `analyzeProject()`.
+
 For `postgres-require-query-annotation`, these async reports share the CLI's
 low-effort finite conditional heads, finite explicit helper returns, safe
 returned-local builder proofs, and bounded literal names from direct tuple

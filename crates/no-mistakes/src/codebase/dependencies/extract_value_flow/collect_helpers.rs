@@ -24,6 +24,7 @@ impl ImportCollector {
     ) -> ValueType {
         use oxc_ast::ast::TSType;
         match annotation {
+            _ if finite_string_type(annotation) => ValueType::FiniteStringLiterals,
             TSType::TSTypeReference(reference) => {
                 let Some(name) = type_reference_name(reference) else {
                     return ValueType::Unknown;
@@ -103,6 +104,20 @@ impl ImportCollector {
             TSType::TSNumberKeyword(_) | TSType::TSBigIntKeyword(_) => ValueType::Number,
             _ => ValueType::Unknown,
         }
+    }
+}
+
+fn finite_string_type(annotation: &oxc_ast::ast::TSType<'_>) -> bool {
+    use oxc_ast::ast::TSType;
+    match annotation {
+        TSType::TSLiteralType(literal) => {
+            matches!(literal.literal, oxc_ast::ast::TSLiteral::StringLiteral(_))
+        }
+        TSType::TSUnionType(union) => {
+            !union.types.is_empty() && union.types.iter().all(finite_string_type)
+        }
+        TSType::TSParenthesizedType(inner) => finite_string_type(&inner.type_annotation),
+        _ => false,
     }
 }
 

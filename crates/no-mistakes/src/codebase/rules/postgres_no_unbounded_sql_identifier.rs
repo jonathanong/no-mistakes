@@ -80,7 +80,7 @@ fn scan(
         for provenance in partial::sources(graph, opts, facts, call, &bindings) {
             if closed::proven(graph, opts, facts, &bindings, call, &provenance)
                 || catalog_proof.proven(call, &provenance)
-                || closed_calls::proven(graph, facts, &bindings, call, &provenance)
+                || closed_calls::proven(graph, opts, facts, &bindings, call, &provenance)
                 || fragment_proofs.proven(call, &provenance)
             {
                 continue;
