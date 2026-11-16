@@ -3,7 +3,7 @@ use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKin
 use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite, TsFactLookup};
 use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::ts_source::facts::TsFileFacts;
-use std::collections::HashMap;
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 const HOP_CAP: usize = 8;
@@ -64,7 +64,7 @@ pub(super) fn binding_local(
 
 pub(super) fn function_exports(locate: &Locate<'_>, file: &Path) -> Vec<(PathBuf, String)> {
     let mut out = Vec::new();
-    let mut best = HashMap::new();
+    let mut best = FxHashMap::default();
     collect_functions(locate, file, 0, &mut best, &mut out);
     out
 }
@@ -141,7 +141,7 @@ fn collect_functions(
     locate: &Locate<'_>,
     file: &Path,
     depth: usize,
-    best: &mut HashMap<PathBuf, usize>,
+    best: &mut FxHashMap<PathBuf, usize>,
     out: &mut Vec<(PathBuf, String)>,
 ) {
     if depth >= HOP_CAP || best.get(file).is_some_and(|seen| *seen <= depth) {
