@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const { bindName } = require("./no-object-mutation-bind");
 const { markEscaped } = require("./no-object-mutation-write");
 const {
@@ -29,9 +30,8 @@ function visitClassNode(state, node, scope, role) {
   const decorated = visitMembers(state, node, classEnv, value);
   // A module class is already shared. Escaping it here would walk methods
   // before later module bindings exist; flush walks those methods instead.
-  if (decorated || role === "escape") {
-    markEscaped(state, value);
-  }
+  if (decorated) markEscaped(state, value);
+  else escapeResult(state, value, scope, role, markEscaped);
   if (prior && prior.kind === "module") {
     return prior.tag;
   }

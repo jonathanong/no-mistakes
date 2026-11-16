@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const { assignPattern, bindingEscapes } = require("./no-object-mutation-bind");
 const { readOnlyFresh } = require("./no-object-mutation-join");
 const { considerWrite, markEscaped } = require("./no-object-mutation-write");
@@ -67,9 +68,7 @@ function visitObject(state, node, scope, role) {
       remember(fresh, value);
     }
   }
-  if (role === "escape") {
-    markEscaped(state, fresh);
-  }
+  escapeResult(state, fresh, scope, role, markEscaped);
   return fresh;
 }
 
@@ -86,9 +85,7 @@ function visitArray(state, node, scope, role) {
         : api.visit(state, element, scope, "read"),
     );
   }
-  if (role === "escape") {
-    markEscaped(state, fresh);
-  }
+  escapeResult(state, fresh, scope, role, markEscaped);
   return fresh;
 }
 

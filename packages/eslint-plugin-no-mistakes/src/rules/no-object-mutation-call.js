@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const { constructInstance } = require("./no-object-mutation-class");
 const { callFunction, escapeFunction } = require("./no-object-mutation-fn");
 const { finishGet, visitKnownCall } = require("./no-object-mutation-invoke");
@@ -35,17 +36,13 @@ function visitNew(state, node, scope, role) {
     }
     runConstruction(state, classTag);
     invokeCallable(state, classTag);
-    if (role === "escape") {
-      api.releaseEscaping(state, tag);
-    }
+    escapeResult(state, tag, scope, role);
     return tag;
   }
   for (const argument of node.arguments) {
     visitArgument(state, argument, scope, "escape");
   }
-  if (role === "escape") {
-    api.releaseEscaping(state, tag);
-  }
+  escapeResult(state, tag, scope, role);
   return tag;
 }
 
@@ -164,9 +161,7 @@ function visitIdentifier(state, node, scope, role) {
   if (!tag && node.name === "arguments" && scope.hasArguments) {
     tag = shared("parameter");
   }
-  if (role === "escape") {
-    api.releaseEscaping(state, tag);
-  }
+  escapeResult(state, tag, scope, role);
   captureOuter(scope, tag);
   return tag || unknown();
 }

@@ -12,6 +12,12 @@
     "options": null
   },
   {
+    "file": "no-object-mutation-early-returns/returned-mutations.js",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
     "file": "no-object-mutation-early-returns/escapes.js",
     "findings": [
       {
@@ -108,6 +114,68 @@
         "endLine": 48,
         "file": "no-object-mutation-early-returns/escapes.js",
         "line": 48,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-early-returns/returned-mutators.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 7,
+        "file": "no-object-mutation-early-returns/returned-mutators.js",
+        "line": 7,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 16,
+        "file": "no-object-mutation-early-returns/returned-mutators.js",
+        "line": 16,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 23,
+        "endLine": 25,
+        "file": "no-object-mutation-early-returns/returned-mutators.js",
+        "line": 25,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 35,
+        "file": "no-object-mutation-early-returns/returned-mutators.js",
+        "line": 35,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 28,
+        "endLine": 42,
+        "file": "no-object-mutation-early-returns/returned-mutators.js",
+        "line": 42,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",

@@ -16,9 +16,14 @@ describe("no-object-mutation early returns", () => {
     await expect(
       snapshotDocument(
         snapshotSuite(rule, languageOptions, {
-          valid: [savedCase("valid"), savedCase("typed", undefined, "ts")],
+          valid: [
+            savedCase("valid"),
+            savedCase("typed", undefined, "ts"),
+            savedCase("returned-mutations"),
+          ],
           invalid: [
             savedCase("escapes"),
+            savedCase("returned-mutators"),
             savedCase("top-level-return", {
               sourceType: "script",
               parserOptions: { ecmaFeatures: { globalReturn: true } },

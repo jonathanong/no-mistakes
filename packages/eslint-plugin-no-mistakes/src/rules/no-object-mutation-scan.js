@@ -108,11 +108,12 @@ function visit(state, node, scope, role) {
       return unknown();
     case "ReturnStatement":
       if (node.argument) {
-        const value = visit(state, node.argument, scope, "read");
-        if (!scope.fnTag?.reduceSeed) {
-          if (scope.functionEnv.returned) scope.functionEnv.returned.push(value);
-          else api.releaseEscaping(state, value);
-        }
+        const returnRole = scope.fnTag?.reduceSeed
+          ? "read"
+          : scope.functionEnv.returned
+            ? "return"
+            : "escape";
+        visit(state, node.argument, scope, returnRole);
       }
       return unknown();
     case "LabeledStatement":

@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const { functionEnvironment } = require("./no-object-mutation-receiver");
 const { bindName, bindPattern } = require("./no-object-mutation-bind");
 const {
@@ -52,9 +53,7 @@ function visitFunction(state, node, scope, role) {
       bindName(node.id.name, tag, scope, "local");
     }
   }
-  if (role === "escape") {
-    escapeFunction(state, tag);
-  }
+  escapeResult(state, tag, scope, role, escapeFunction);
   return existing ? lookup(scope, node.id.name)?.tag || tag : tag;
 }
 
@@ -77,7 +76,7 @@ function walkFunctionBody(state, node, scope, tag) {
   } else {
     api.visit(state, body, fnEnv, "escape");
   }
-  for (const value of fnEnv.returned) api.releaseEscaping(state, value);
+  for (const { tag: value, release } of fnEnv.returned) release(state, value);
   flushPending(state, fnEnv);
 }
 
