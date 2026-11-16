@@ -3,6 +3,18 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 
 use super::RULE_ID;
+use crate::config::v2::NoMistakesConfig;
+
+/// True when an application selects Vitest roots, so the catalog must be prepared.
+pub fn vitest_roots_configured(config: &NoMistakesConfig) -> bool {
+    config.rule_applications(RULE_ID).iter().any(|application| {
+        application
+            .options
+            .get("roots")
+            .and_then(serde_yaml::Value::as_sequence)
+            .is_none_or(|roots| roots.iter().any(|root| root.get("vitest").is_some()))
+    })
+}
 
 /// Segments that mark a path as bounded fixture input.
 pub(super) const DEFAULT_FIXTURE_DIRS: &[&str] = &["fixtures", "__fixtures__"];

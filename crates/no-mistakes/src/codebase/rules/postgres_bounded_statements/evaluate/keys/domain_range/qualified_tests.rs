@@ -1,11 +1,14 @@
 use super::*;
 use crate::codebase::postgres::{canonical_bound_expr, parse_postgres_expression};
 
-fn seats() -> Vec<String> {
-    vec!["seats".to_string(), "public.seats".to_string()]
+fn seats() -> Vec<Vec<String>> {
+    vec![
+        vec!["seats".to_string()],
+        vec!["public".to_string(), "seats".to_string()],
+    ]
 }
 
-fn width(sql: &str, names: &[String]) -> Option<u64> {
+fn width(sql: &str, names: &[Vec<String>]) -> Option<u64> {
     owned_check(sql, "slot", names).and_then(|span| span.width())
 }
 
@@ -46,7 +49,7 @@ fn qualified_checks_match_only_this_table() {
     assert_eq!(
         width(
             "CHECK (public.seats.slot BETWEEN 1 AND 5)",
-            &["seats".to_string()]
+            &[vec!["seats".to_string()]]
         ),
         None
     );
@@ -57,6 +60,33 @@ fn qualified_checks_match_only_this_table() {
         ),
         None
     );
+    let dotted = vec![
+        vec!["audit.log".to_string()],
+        vec!["public".to_string(), "audit.log".to_string()],
+    ];
+    assert_eq!(
+        width(r#"CHECK ("audit.log".slot BETWEEN 1 AND 5)"#, &dotted),
+        Some(5)
+    );
+    assert_eq!(
+        width(
+            r#"CHECK (public."audit.log".slot BETWEEN 1 AND 5)"#,
+            &dotted
+        ),
+        Some(5)
+    );
+    assert_eq!(
+        width(
+            r#"CHECK ("audit.log".slot BETWEEN 1 AND 5)"#,
+            &[vec!["audit".to_string(), "log".to_string()]]
+        ),
+        None
+    );
+    assert!(!super::parse::names_column(
+        &sqlparser::ast::Expr::CompoundIdentifier(vec![]),
+        "slot",
+        &dotted
+    ));
     let expr = parse_postgres_expression("seats.slot BETWEEN 1 AND 5").unwrap();
     let expr = canonical_bound_expr(&expr);
     let mut conjuncts = Vec::new();

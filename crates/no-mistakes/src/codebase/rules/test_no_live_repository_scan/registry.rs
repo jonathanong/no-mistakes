@@ -1,6 +1,10 @@
 //! A const object of functions reached only through a member call.
 #[path = "registry_alias.rs"]
 mod alias;
+#[path = "registry_home.rs"]
+mod home;
+#[path = "registry_resolve.rs"]
+mod resolve;
 
 use super::super::forbidden_calls::site_source_node;
 use super::super::path_filter::RulePathFilter;
@@ -10,6 +14,9 @@ use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{
     CallTraversal, DepGraph, ResolvedCallSite, TsFactLookup,
 };
+use crate::codebase::ts_source::module_facts::arguments::is_name;
+use crate::fx::PathSet;
+use std::path::PathBuf;
 
 pub(super) fn apply<'a>(
     graph: &'a DepGraph,
@@ -17,8 +24,19 @@ pub(super) fn apply<'a>(
     scope: &mut super::reachable::Scope,
     filter: &RulePathFilter,
     enumerators: &[Enumerator],
+    resolution: &super::Resolution<'_>,
+    graph_files: &[PathBuf],
 ) -> Vec<(&'a ResolvedCallSite, String)> {
     let callers = alias::caller_nodes(graph);
+    let reach = alias::Reach::new(graph, enumerators);
+    let files: PathSet = graph_files.iter().cloned().collect();
+    let locate = home::Locate {
+        graph,
+        facts,
+        resolution,
+        visible: &files,
+        resolver: resolve::RegistryResolver::prepare(resolution, &files),
+    };
     let mut reached = Vec::new();
     let mut unresolved = Vec::new();
     for site in graph.resolved_call_sites() {
@@ -34,14 +52,12 @@ pub(super) fn apply<'a>(
         };
         let resolved = key
             .as_deref()
-            .and_then(|key| alias::function_node(graph, facts, site, &object, key, &callers));
+            .and_then(|key| alias::function_node(&locate, site, &object, key, &callers));
         if let Some(node) = resolved {
             reached.push(node);
             continue;
         }
-        if key.is_none()
-            && alias::registry_scans(graph, facts, site, &object, enumerators, &callers)
-        {
+        if key.is_none() && alias::registry_scans(&locate, &reach, site, &object, &callers) {
             unresolved.push((site, label));
         }
     }
@@ -73,8 +89,6 @@ fn static_member(callee: &str) -> Option<(String, Option<String>)> {
     (is_name(object) && is_name(key)).then(|| (object.to_string(), Some(key.to_string())))
 }
 
-fn is_name(name: &str) -> bool {
-    let mut chars = name.chars();
-    matches!(chars.next(), Some(c) if c == '_' || c == '$' || c.is_ascii_alphabetic())
-        && chars.all(|c| c == '_' || c == '$' || c.is_ascii_alphanumeric())
-}
+#[cfg(test)]
+#[path = "registry_coverage_tests.rs"]
+mod coverage_tests;

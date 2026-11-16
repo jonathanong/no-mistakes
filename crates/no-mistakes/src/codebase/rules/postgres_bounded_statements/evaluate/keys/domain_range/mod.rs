@@ -39,8 +39,12 @@ pub(super) fn integer_type(data_type: &str) -> bool {
     )
 }
 
-/// `qualifiers` are `table` and `schema.table` names that may prefix `column`.
-pub(super) fn owned_check(definition: &str, column: &str, qualifiers: &[String]) -> Option<Span> {
+/// `qualifiers` are identifier lists that may prefix `column`, such as `["seats"]` or `["public", "seats"]`.
+pub(super) fn owned_check(
+    definition: &str,
+    column: &str,
+    qualifiers: &[Vec<String>],
+) -> Option<Span> {
     let expr = check_expr(definition)?;
     if dnf::contains_or(&expr) || dnf::negated_between(&expr, column, qualifiers) {
         return None;
@@ -67,7 +71,12 @@ pub(super) fn closed_span(column: &str, conjuncts: &[Expr], kind: Literal) -> Op
     span_of(column, conjuncts, kind, &[])
 }
 
-fn span_of(column: &str, conjuncts: &[Expr], kind: Literal, qualifiers: &[String]) -> Option<Span> {
+fn span_of(
+    column: &str,
+    conjuncts: &[Expr],
+    kind: Literal,
+    qualifiers: &[Vec<String>],
+) -> Option<Span> {
     let mut low = None;
     let mut high = None;
     for conjunct in conjuncts {

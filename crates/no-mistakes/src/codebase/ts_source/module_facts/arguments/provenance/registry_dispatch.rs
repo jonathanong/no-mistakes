@@ -40,7 +40,7 @@ fn call_label(semantic: &Semantic<'_>, call: &CallExpression<'_>, object: &str) 
     }
 }
 
-fn is_name(name: &str) -> bool {
+pub(crate) fn is_name(name: &str) -> bool {
     let mut chars = name.chars();
     matches!(chars.next(), Some(c) if c == '_' || c == '$' || c.is_ascii_alphabetic())
         && chars.all(|c| c == '_' || c == '$' || c.is_ascii_alphanumeric())

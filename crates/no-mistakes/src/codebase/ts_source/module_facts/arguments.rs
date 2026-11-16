@@ -9,6 +9,7 @@ mod path_origin;
 mod path_origin_equality;
 mod path_value;
 mod provenance;
+pub(crate) use provenance::registry_dispatch::is_name;
 #[path = "arguments/provenance/pass_through_writes.rs"]
 mod transparent_writes;
 pub(crate) use transparent_writes::{

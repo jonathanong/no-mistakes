@@ -276,7 +276,9 @@ qualifier that does not name that item, such as `other.rank`, or the table name
 when an alias hides it, is not a domain. A catalog check names the physical column. It may
 also qualify that column with this table (`seats.slot`) or with the catalog
 schema and this table (`public.seats.slot`). A qualifier that names another
-relation is not a domain. When the catalog key already names a schema
+relation is not a domain. A quoted name that contains a dot stays one
+identifier: `"audit.log".slot` matches the table `"audit.log"` and does not
+match the two identifiers `audit` and `log`. When the catalog key already names a schema
 (`audit.bands`), the qualifier is that key (`audit.bands.slot`). The catalog
 schema is not prefixed onto such a key, so `public.bands.slot` is not a domain
 for it. A catalog that does not name a schema does not treat `schema.table.column`

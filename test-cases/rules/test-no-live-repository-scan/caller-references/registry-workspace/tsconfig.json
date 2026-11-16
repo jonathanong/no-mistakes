@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@scope/pkg": ["packages/pkg/index.mts"],
+      "@scope/pkg/*": ["packages/pkg/*.mts"]
+    }
+  }
+}

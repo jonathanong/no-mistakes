@@ -2,16 +2,51 @@
 use super::super::super::forbidden_calls::site_source_node;
 use super::super::config::Enumerator;
 use super::super::enumerators::scan_of;
-use crate::codebase::dependencies::extract::{CallableId, ImportedBinding, ImportedBindingKind};
-use crate::codebase::dependencies::graph::{
-    CallTraversal, DepGraph, EdgeKind, NodeId, ResolvedCallSite, TsFactLookup,
-};
+use super::home::{self, Home, Locate};
+use crate::codebase::dependencies::extract::CallableId;
+use crate::codebase::dependencies::graph::{CallTraversal, DepGraph, NodeId, ResolvedCallSite};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::{fx_map, FxHashMap};
-use std::collections::HashSet;
+use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 
 pub(super) type CallerIndex = FxHashMap<PathBuf, FxHashMap<CallableId, NodeId>>;
+
+pub(super) struct Reach<'a> {
+    graph: &'a DepGraph,
+    scanners: crate::fx::FxHashSet<NodeId>,
+    memo: RefCell<FxHashMap<NodeId, bool>>,
+}
+
+impl<'a> Reach<'a> {
+    pub(super) fn new(graph: &'a DepGraph, enumerators: &[Enumerator]) -> Self {
+        let scanners = graph
+            .resolved_call_sites()
+            .iter()
+            .filter(|site| scan_of(site, enumerators).is_some())
+            .map(site_source_node)
+            .collect();
+        Self {
+            graph,
+            scanners,
+            memo: RefCell::new(fx_map()),
+        }
+    }
+
+    pub(super) fn reaches(&self, node: &NodeId) -> bool {
+        if let Some(known) = self.memo.borrow().get(node).copied() {
+            return known;
+        }
+        let sources = self.graph.call_source_nodes(
+            std::slice::from_ref(node),
+            CallTraversal::Transitive,
+            None,
+        );
+        let found = sources.iter().any(|source| self.scanners.contains(source));
+        self.memo.borrow_mut().insert(node.clone(), found);
+        found
+    }
+}
 
 pub(super) fn caller_nodes(graph: &DepGraph) -> CallerIndex {
     let mut index: CallerIndex = fx_map();
@@ -29,45 +64,89 @@ pub(super) fn caller_nodes(graph: &DepGraph) -> CallerIndex {
 }
 
 pub(super) fn function_node(
-    graph: &DepGraph,
-    facts: &dyn TsFactLookup,
+    locate: &Locate<'_>,
     site: &ResolvedCallSite,
     object: &str,
     key: &str,
     callers: &CallerIndex,
 ) -> Option<NodeId> {
-    homes(graph, facts, site, object)
+    home::homes(locate, site, object)
         .into_iter()
-        .find_map(|(file, local)| {
-            let ts = facts.get_ts_facts(&file)?;
-            let name = terminal_alias(ts, &format!("{local}.{key}"))?;
-            callable(callers, &file, ts, &name)
+        .find_map(|home| match home {
+            Home::Object(file, local) => object_member(locate, callers, &file, &local, key),
+            Home::Namespace(file) => namespace_member(locate, callers, &file, key),
         })
 }
 
 pub(super) fn registry_scans(
-    graph: &DepGraph,
-    facts: &dyn TsFactLookup,
+    locate: &Locate<'_>,
+    reach: &Reach<'_>,
     site: &ResolvedCallSite,
     object: &str,
-    enumerators: &[Enumerator],
     callers: &CallerIndex,
 ) -> bool {
-    homes(graph, facts, site, object)
+    home::homes(locate, site, object)
         .into_iter()
-        .any(|(file, local)| {
-            facts
+        .any(|home| match home {
+            Home::Object(file, local) => locate
+                .facts
                 .get_ts_facts(&file)
-                .is_some_and(|ts| scans_member(graph, ts, &file, &local, enumerators, callers))
+                .is_some_and(|ts| scans_member(reach, ts, &file, &local, callers)),
+            Home::Namespace(file) => home::function_exports(locate, &file)
+                .into_iter()
+                .any(|(file, name)| namespace_scans(locate, reach, callers, &file, &name)),
         })
 }
 
+fn object_member(
+    locate: &Locate<'_>,
+    callers: &CallerIndex,
+    file: &Path,
+    local: &str,
+    key: &str,
+) -> Option<NodeId> {
+    let ts = locate.facts.get_ts_facts(file)?;
+    let name = terminal_alias(ts, &format!("{local}.{key}"))?;
+    callable(callers, file, ts, &name)
+}
+
+fn namespace_member(
+    locate: &Locate<'_>,
+    callers: &CallerIndex,
+    file: &Path,
+    key: &str,
+) -> Option<NodeId> {
+    let (file, local) = home::binding_local(locate, file, key, &mut Vec::new())?;
+    let ts = locate.facts.get_ts_facts(&file)?;
+    let name = if ts
+        .callable_scope_ids
+        .iter()
+        .any(|(_, scope)| scope == &local)
+    {
+        local
+    } else {
+        terminal_alias(ts, &local)?
+    };
+    callable(callers, &file, ts, &name)
+}
+
+fn namespace_scans(
+    locate: &Locate<'_>,
+    reach: &Reach<'_>,
+    callers: &CallerIndex,
+    file: &Path,
+    name: &str,
+) -> bool {
+    locate.facts.get_ts_facts(file).is_some_and(|ts| {
+        callable(callers, file, ts, name).is_some_and(|node| reach.reaches(&node))
+    })
+}
+
 fn scans_member(
-    graph: &DepGraph,
+    reach: &Reach<'_>,
     ts: &TsFileFacts,
     file: &Path,
     local: &str,
-    enumerators: &[Enumerator],
     callers: &CallerIndex,
 ) -> bool {
     let prefix = format!("{local}.");
@@ -77,90 +156,7 @@ fn scans_member(
             && alias.local.starts_with(&prefix)
             && terminal_alias(ts, &alias.local)
                 .and_then(|name| callable(callers, file, ts, &name))
-                .is_some_and(|node| reaches_scan(graph, enumerators, &node))
-    })
-}
-
-fn reaches_scan(graph: &DepGraph, enumerators: &[Enumerator], node: &NodeId) -> bool {
-    let sources =
-        graph.call_source_nodes(std::slice::from_ref(node), CallTraversal::Transitive, None);
-    graph.resolved_call_sites().iter().any(|site| {
-        sources.contains(&site_source_node(site)) && scan_of(site, enumerators).is_some()
-    })
-}
-
-/// The module that defines `object`, and the local binding name of that object.
-fn homes(
-    graph: &DepGraph,
-    facts: &dyn TsFactLookup,
-    site: &ResolvedCallSite,
-    object: &str,
-) -> Vec<(PathBuf, String)> {
-    facts
-        .get_ts_facts(&site.file)
-        .map(|caller| {
-            let mut found = Vec::new();
-            if local_registry(caller, object) {
-                found.push((site.file.clone(), object.to_string()));
-            }
-            if let Some(binding) = imported_binding(caller, object) {
-                if let Some(home) = imported_home(graph, facts, &site.file, binding) {
-                    found.push(home);
-                }
-            }
-            found
-        })
-        .unwrap_or_default()
-}
-
-fn local_registry(caller: &TsFileFacts, object: &str) -> bool {
-    let prefix = format!("{object}.");
-    caller.callable_aliases.iter().any(|alias| {
-        alias.scope_id.is_none()
-            && alias.invalidated_at.is_none()
-            && alias.local.starts_with(&prefix)
-    })
-}
-
-fn imported_binding<'a>(caller: &'a TsFileFacts, object: &str) -> Option<&'a ImportedBinding> {
-    caller.imported_bindings.iter().find(|binding| {
-        binding.local == object
-            && !binding.is_type_only
-            && binding.kind == ImportedBindingKind::Named
-    })
-}
-
-fn imported_home(
-    graph: &DepGraph,
-    facts: &dyn TsFactLookup,
-    from: &Path,
-    binding: &ImportedBinding,
-) -> Option<(PathBuf, String)> {
-    direct_imports(graph, from).into_iter().find_map(|file| {
-        specifier_matches(from, &binding.specifier, &file)
-            .then(|| export_local(facts, &file, &binding.imported))
-            .flatten()
-    })
-}
-
-fn specifier_matches(from: &Path, specifier: &str, target: &Path) -> bool {
-    from.parent()
-        .filter(|_| specifier.starts_with("./") || specifier.starts_with("../"))
-        .is_some_and(|dir| {
-            let candidate = crate::codebase::ts_resolver::normalize_path(&dir.join(specifier));
-            candidate == crate::codebase::ts_resolver::normalize_path(target)
-        })
-}
-
-fn export_local(
-    facts: &dyn TsFactLookup,
-    file: &Path,
-    imported: &str,
-) -> Option<(PathBuf, String)> {
-    let home = facts.get_ts_facts(file)?;
-    home.exported_bindings.iter().find_map(|export| {
-        (export.exported == imported && export.specifier.is_none())
-            .then(|| (file.to_path_buf(), export.local.clone()))
+                .is_some_and(|node| reach.reaches(&node))
     })
 }
 
@@ -183,15 +179,4 @@ fn callable(callers: &CallerIndex, file: &Path, ts: &TsFileFacts, name: &str) ->
         .find(|(_, scope)| scope == name)
         .map(|(id, _)| *id)?;
     callers.get(file).and_then(|ids| ids.get(&id)).cloned()
-}
-
-fn direct_imports(graph: &DepGraph, file: &Path) -> Vec<PathBuf> {
-    let kinds = [EdgeKind::Import, EdgeKind::WorkspaceImport]
-        .into_iter()
-        .collect::<HashSet<_>>();
-    graph
-        .deps_of(&[NodeId::file(file)], Some(1), Some(&kinds))
-        .into_iter()
-        .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))
-        .collect()
 }

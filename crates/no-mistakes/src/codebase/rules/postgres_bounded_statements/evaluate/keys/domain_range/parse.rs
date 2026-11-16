@@ -3,7 +3,7 @@ use super::{days_from_civil, Literal};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use sqlparser::ast::{BinaryOperator, DataType, Expr, UnaryOperator, Value};
 
-pub(super) fn names_column(expr: &Expr, column: &str, qualifiers: &[String]) -> bool {
+pub(super) fn names_column(expr: &Expr, column: &str, qualifiers: &[Vec<String>]) -> bool {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => ident_key(ident) == column,
         Expr::CompoundIdentifier(parts) => qualified_column(parts, column, qualifiers),
@@ -14,13 +14,23 @@ pub(super) fn names_column(expr: &Expr, column: &str, qualifiers: &[String]) -> 
     }
 }
 
-fn qualified_column(parts: &[sqlparser::ast::Ident], column: &str, qualifiers: &[String]) -> bool {
-    let (name, prefix) = parts.split_last().expect("compound identifier");
+fn qualified_column(
+    parts: &[sqlparser::ast::Ident],
+    column: &str,
+    qualifiers: &[Vec<String>],
+) -> bool {
+    let Some((name, prefix)) = parts.split_last() else {
+        return false;
+    };
     !prefix.is_empty()
         && ident_key(name) == column
-        && qualifiers
-            .iter()
-            .any(|qualifier| qualifier.split('.').eq(prefix.iter().map(ident_key)))
+        && qualifiers.iter().any(|qualifier| {
+            qualifier.len() == prefix.len()
+                && qualifier
+                    .iter()
+                    .zip(prefix)
+                    .all(|(part, ident)| part == &ident_key(ident))
+        })
 }
 
 pub(super) fn absorb(
@@ -29,7 +39,7 @@ pub(super) fn absorb(
     kind: Literal,
     low: &mut Option<i64>,
     high: &mut Option<i64>,
-    qualifiers: &[String],
+    qualifiers: &[Vec<String>],
 ) {
     let expr = unwrap_expr(expr);
     if let Expr::Between {

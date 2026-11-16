@@ -45,7 +45,7 @@ pub(super) fn contains_or(expr: &Expr) -> bool {
     }
 }
 
-pub(super) fn negated_between(expr: &Expr, column: &str, qualifiers: &[String]) -> bool {
+pub(super) fn negated_between(expr: &Expr, column: &str, qualifiers: &[Vec<String>]) -> bool {
     match unwrap_expr(expr) {
         Expr::Between {
             expr,

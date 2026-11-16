@@ -1,0 +1,61 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "\"audit.log\"": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "audit_log_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX audit_log_owner_id_slot_key ON \"audit.log\" USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "audit_log_slot_check": { "definition": "CHECK (\"audit.log\".slot BETWEEN 1 AND 5)" }
+      }
+    },
+    "split": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "split_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX split_owner_id_slot_key ON split USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "split_slot_check": { "definition": "CHECK (audit.log.slot BETWEEN 1 AND 5)" }
+      }
+    }
+  }
+}
