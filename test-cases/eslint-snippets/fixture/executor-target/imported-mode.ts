@@ -9,6 +9,7 @@ import {
   hiddenTaggedFragmentImported,
   hiddenTagImported,
   visibleNamedBagImported,
+  mutatedNamedBagImported,
   hiddenCallImported,
   hiddenApplyImported,
 } from "./union-helper";
@@ -21,5 +22,6 @@ visibleTaggedImported(read);
 hiddenTaggedFragmentImported(fragment, read);
 hiddenTagImported(read);
 visibleNamedBagImported({ query: read, id });
+mutatedNamedBagImported({ query: read, id: 1 });
 hiddenCallImported(fragment, { query: read });
 hiddenApplyImported(fragment, { query: read });

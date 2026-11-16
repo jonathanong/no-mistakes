@@ -42,8 +42,6 @@ function executorCall(reference, property) {
   if (property && node.parent?.type === "MemberExpression" && node.parent.object === node) {
     if (node.parent.computed || node.parent.property.name !== property) return null;
     callee = node.parent;
-  } else if (property && node.parent?.type === "ObjectPattern") {
-    return null;
   }
   const call = callee.parent;
   return call?.type === "CallExpression" && call.callee === callee ? call : null;
@@ -100,12 +98,6 @@ function importedVisible(call, index, property, context, options) {
   function visit(node) {
     if (!safe) return;
     if (ts.isIdentifier(node) && node.text === "arguments") safe = false;
-    if (
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === "eval"
-    )
-      safe = false;
     if (node !== binding && ts.isIdentifier(node) && checker.getSymbolAtLocation(node) === symbol) {
       seen = true;
       let invoked = node.parent;

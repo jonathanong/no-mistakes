@@ -20,6 +20,10 @@ function escapedBag(options) {
   consume(options);
   return options.query("SELECT id FROM t");
 }
+function mutatedBag(options) {
+  options.id++;
+  return options.query("SELECT id FROM t");
+}
 function hiddenCall(fragment, { query }) {
   return query.call(null, fragment);
 }
@@ -60,6 +64,7 @@ visibleBag({ query: read });
 visibleBag({ query: flag ? read : write });
 visibleNamedBag({ query: read, id });
 escapedBag({ query: read });
+mutatedBag({ query: read, id: 1 });
 hiddenCall(fragment, { query: read });
 hiddenApply(fragment, { query: read });
 visibleTagged(read);
