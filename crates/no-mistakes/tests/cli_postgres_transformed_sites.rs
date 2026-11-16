@@ -37,10 +37,10 @@ fn uuid_transforms_report_each_expression_once_with_all_columns_at_both_efforts(
             .collect();
         assert_eq!(
             lines,
-            [1, 2, 3, 4, 4, 6, 9, 10, 10, 11, 11, 15, 19],
+            [1, 2, 3, 4, 4, 6, 9, 10, 10, 11, 11, 15, 19, 22, 22, 23, 24, 27],
             "{report}"
         );
-        for (line, expected) in [(1, 2), (2, 4), (3, 4), (6, 2)] {
+        for (line, expected) in [(1, 2), (2, 4), (3, 4), (6, 2), (22, 2), (23, 1), (27, 1)] {
             let finding = sql.iter().find(|finding| finding["line"] == line).unwrap();
             let columns: Vec<_> = finding["target"].as_str().unwrap().split(", ").collect();
             assert_eq!(columns.len(), expected, "{finding}");
@@ -48,6 +48,19 @@ fn uuid_transforms_report_each_expression_once_with_all_columns_at_both_efforts(
                 assert!(finding["message"].as_str().unwrap().contains(column));
             }
         }
+        for finding in sql
+            .iter()
+            .filter(|finding| matches!(finding["line"].as_u64(), Some(22 | 23 | 27)))
+        {
+            let message = finding["message"].as_str().unwrap();
+            assert!(message.contains("applies a row cast containing UUID column"));
+            assert!(message.contains("row comparison of uncast columns"));
+        }
+        let scalar = sql.iter().find(|finding| finding["line"] == 24).unwrap();
+        assert!(scalar["message"]
+            .as_str()
+            .unwrap()
+            .contains("applies cast to UUID column accounts.id; keep the UUID column bare"));
         let repeated: Vec<_> = sql.iter().filter(|finding| finding["line"] == 4).collect();
         assert_ne!(repeated[0]["message"], repeated[1]["message"]);
         let ts: Vec<_> = findings
