@@ -176,6 +176,22 @@ function forwardToLocal(sharedRows, row) {
 }
 ```
 
+Computed member receivers keep the ownership of their possible children. A local
+literal containing fresh arrays can be filled through either a computed or static
+key before it escapes:
+
+```ts
+export function group(items: { kind: "a" | "b"; v: number }[]) {
+  const out: Record<"a" | "b", number[]> = { a: [], b: [] };
+  for (const item of items) out[item.kind].push(item.v);
+  return out;
+}
+```
+
+A computed read of a parameter, import, or module binding stays shared. A shared
+or escaped child inside a local literal also stays shared through a computed
+read; selecting a child does not create a fresh copy.
+
 The local object is created in that function and the writes finish before it
 is returned, passed to a call, stored on a shared object, or captured by a
 closure that itself escapes. Calling that closure does not escape the builder
