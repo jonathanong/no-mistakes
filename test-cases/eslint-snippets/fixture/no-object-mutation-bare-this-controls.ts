@@ -15,4 +15,8 @@ export function typedArray(this: number[]) { this.push(1); }
 export function genericArray(this: Array<number>) { this.pop(); }
 export class ArrayChild extends Array {
   append() { this.push(1); }
+  field = () => this.push(1);
+  initial = this.pop();
 }
+/** @this {number[]} */
+export function documentedArray() { this.push(1); }

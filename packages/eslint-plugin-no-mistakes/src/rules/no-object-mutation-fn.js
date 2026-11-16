@@ -100,7 +100,7 @@ function deferExpression(state, expression, scope) {
   fnEnv.pending = [];
   fnEnv.hasArguments = Boolean(scope.hasArguments);
   // A field's `this` is the instance, not an enclosing method receiver.
-  fnEnv.receiver = null;
+  fnEnv.receiver = { type: "this", inClass: true, isArray: Boolean(scope.arrayThis) };
   api.visit(state, expression, fnEnv, "read");
   flushPending(state, fnEnv);
   return tag;

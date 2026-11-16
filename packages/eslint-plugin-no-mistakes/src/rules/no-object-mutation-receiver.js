@@ -55,7 +55,13 @@ function functionEnvironment(state, node, scope, tag) {
     ?.typeAnnotation;
   const arrayReceiver =
     receiverType?.type === "TSArrayType" ||
-    (receiverType?.type === "TSTypeReference" && receiverType.typeName.name === "Array");
+    (receiverType?.type === "TSTypeReference" && receiverType.typeName.name === "Array") ||
+    (declared &&
+      annotationTargets(node).some((target) =>
+        adjacentAnnotations(state.context.sourceCode, target, "@this").some((type) =>
+          /^\{\s*(?:[^{}]+\[\]|Array\s*<[^{}]+>)\s*\}/.test(type),
+        ),
+      ));
   env.inClass = arrow ? Boolean(scope.inClass) : classMethod || declared;
   env.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
   env.receiver = arrow

@@ -21,7 +21,7 @@ describe("no-object-mutation constructor initialization and bare this calls", ()
     for (const index of [1, 3]) {
       expect(
         messages(cases[index].code, rule, { allowThis: false }, cases[index].filename).length,
-      ).toBe(index === 1 ? 17 : 9);
+      ).toBe(index === 1 ? 17 : 12);
     }
   });
   it("snapshots every saved shape", async () => {
