@@ -118,6 +118,7 @@ fn postgres_bounded_domain_rows_alias_shapes_check_json_snapshot() {
         &[
             ("unset", root.clone(), root.join("shapes-unset.yml")),
             ("rows_5", root.clone(), root.join("shapes-5.yml")),
+            ("unscoped", root.clone(), root.join("shapes-unscoped.yml")),
         ],
     );
 }

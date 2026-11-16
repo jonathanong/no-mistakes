@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: schema-unscoped.json
+      sqlInclude: [sql/unscoped.sql]
+      include: [sql/unscoped.sql]
+      maxDomainRows: 5

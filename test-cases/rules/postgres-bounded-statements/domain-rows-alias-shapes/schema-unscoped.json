@@ -1,0 +1,33 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "plain": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "slot": { "dataType": "integer", "nullable": false, "ordinalPosition": 2 }
+      },
+      "indexes": {
+        "plain_owner_id_slot_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "definition": "CREATE UNIQUE INDEX plain_owner_id_slot_key ON plain USING btree (owner_id, slot)",
+          "keys": [
+            { "column": "owner_id", "expression": "owner_id" },
+            { "column": "slot", "expression": "slot" }
+          ]
+        }
+      },
+      "checkConstraints": {
+        "plain_slot_check": { "definition": "CHECK (public.plain.slot BETWEEN 1 AND 5)" }
+      }
+    }
+  }
+}

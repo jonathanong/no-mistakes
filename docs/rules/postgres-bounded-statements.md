@@ -275,7 +275,8 @@ schema and this table (`public.seats.slot`). A qualifier that names another
 relation is not a domain. When the catalog key already names a schema
 (`audit.bands`), the qualifier is that key (`audit.bands.slot`). The catalog
 schema is not prefixed onto such a key, so `public.bands.slot` is not a domain
-for it. On a table with more than one column, an alias list
+for it. A catalog that does not name a schema does not treat `schema.table.column`
+as a domain either. On a table with more than one column, an alias list
 renames only its leading entries, and a dropped-column gap in the catalog
 ordinals does not add an alias slot. Renaming a unique-key column, or choosing
 an alias equal to another physical column name, keeps the finding.

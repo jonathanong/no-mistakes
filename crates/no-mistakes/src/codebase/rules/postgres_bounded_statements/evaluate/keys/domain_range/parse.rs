@@ -15,9 +15,7 @@ pub(super) fn names_column(expr: &Expr, column: &str, qualifiers: &[String]) -> 
 }
 
 fn qualified_column(parts: &[sqlparser::ast::Ident], column: &str, qualifiers: &[String]) -> bool {
-    let Some((name, prefix)) = parts.split_last() else {
-        return false;
-    };
+    let (name, prefix) = parts.split_last().expect("compound identifier");
     !prefix.is_empty()
         && ident_key(name) == column
         && qualifiers
