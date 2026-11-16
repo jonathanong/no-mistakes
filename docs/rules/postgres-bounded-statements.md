@@ -698,7 +698,7 @@ WITH c AS (SELECT email FROM accounts ORDER BY email LIMIT $1)
 UPDATE accounts AS a SET name = 'n' FROM c WHERE a.email = c.email;
 ```
 
-`INSERT ... RETURNING` yields one row per source row. A `VALUES` list or a capped `SELECT` keeps that cap for the statement that uses the returned key. An uncapped `SELECT` source does not.
+`INSERT ... RETURNING` yields one row per source row. A `VALUES` list or a capped `SELECT` keeps that cap for the statement that uses the returned key. An uncapped `SELECT` source does not. A caller-bounded source does. `jsonb_to_recordset($1)` joined to the later target's complete unique key, then returned under another column name, bounds a following update pinned on that key the same way as `id = ANY($1)`. An unquoted datetime keyword in that insert list does not erase the bound; its cardinality is the datetime-keyword rule in the scalar-call paragraph below. Returning a column that is not the target key, scanning the source table without a key pin, a quoted or schema-qualified call in that insert list, or `jsonb_to_recordset` fed from a table column, still reports. `INSERT ... VALUES ($1, ...)` returning that key stays bounded. The [parameter-key fixtures](../../test-cases/rules/postgres-bounded-statements/issue-3433/fixture/) cover that flow.
 
 `jsonb_to_recordset($1)` and `jsonb_populate_recordset(NULL, $1)` are caller-bounded, the same as `jsonb_array_elements($1)`, when the argument is a caller-supplied value.
 
