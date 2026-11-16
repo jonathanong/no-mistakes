@@ -20,11 +20,11 @@ fn call(facts: &EmbeddedSqlFileFacts, index: usize) -> &EmbeddedSqlCall {
 fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
     let facts = extract("pending.ts");
     assert_eq!(facts.calls.len(), 15);
-    // Public form: exactly what the walk produced before imports were modeled.
+    // The append is a gap. The caller's own ORDER BY fragment stays.
     assert_eq!(call(&facts, 0).kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(
         call(&facts, 0).sql_text.as_deref(),
-        Some("SELECT l.id FROM links l WHERE l.account_id = sql_placeholder_1 AND ")
+        Some("SELECT l.id FROM links l WHERE l.account_id = sql_placeholder_1 AND  ORDER BY l.id")
     );
     assert_eq!(call(&facts, 0).recovered_placeholder_positions, [(1, 47)]);
     let pending = pending_for(&facts, 0).expect("pending");
@@ -205,8 +205,8 @@ fn a_trimmed_fragment_publishes_only_the_binds_that_remain() {
 
 #[test]
 fn unresolved_imported_calls_keep_the_pre_recovery_public_facts() {
-    // Public shape from before imported-helper recovery: Dynamic, and only the
-    // verified leading statement. The saved file is that differential.
+    // Public shape while the import is unresolved. Fragment appends are gaps,
+    // and the caller's own text on either side stays. The saved file is that differential.
     let facts = extract("pending.ts");
     let mut snapshot = String::new();
     for (index, call) in facts.calls.iter().enumerate() {

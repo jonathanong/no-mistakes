@@ -39,8 +39,23 @@ pub(super) fn publish(text: &str, sites: &[ImportedSite]) -> String {
 }
 
 fn fragment_gap(text: &str, range: &Range<usize>, site: Option<&ImportedSite>) -> bool {
-    site.is_some_and(|site| site.constant == Some(true))
-        && !sentinel::in_identifier_slot(text, range.start)
+    let Some(site) = site else {
+        return false;
+    };
+    if sentinel::in_identifier_slot(text, range.start) || value_operand(text, range.start) {
+        return false;
+    }
+    match site.constant {
+        Some(true) => true,
+        // An imported name is an identifier, even outside the keyword list.
+        Some(false) => false,
+        // A frozen-record field stays a placeholder. A helper call splices SQL.
+        None => site.member.is_none(),
+    }
+}
+
+fn value_operand(text: &str, hole_start: usize) -> bool {
+    text[..hole_start].trim_end().ends_with('=')
 }
 
 /// Prefix before the first hole, plus the SQL coordinate where that prefix ends.

@@ -1,4 +1,4 @@
-0	Dynamic	Some("SELECT l.id FROM links l WHERE l.account_id = sql_placeholder_1 AND ")	[(1, 47)]	0
+0	Dynamic	Some("SELECT l.id FROM links l WHERE l.account_id = sql_placeholder_1 AND  ORDER BY l.id")	[(1, 47)]	0
 1	Dynamic	Some("INSERT INTO links (id) VALUES (1) ")	[]	0
 2	Dynamic	None	[]	0
 3	Dynamic	Some("SELECT 1 WHERE ")	[]	0

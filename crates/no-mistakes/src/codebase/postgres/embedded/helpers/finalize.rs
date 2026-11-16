@@ -3,6 +3,7 @@
 //! the rest of the statement. A fragment splice becomes a gap, not a cut.
 
 use super::sentinel;
+use super::split::coordinate;
 use super::summary::{ImportedSite, PendingImportedSql};
 use crate::codebase::postgres::embedded::relative::PendingRelativeCall;
 use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
@@ -125,10 +126,38 @@ fn publish_call(call: &mut EmbeddedSqlCall, sites: &[ImportedSite]) {
     });
     call.variants.clear();
     call.kind = EmbeddedSqlKind::Dynamic;
-    call.sql_source_positions.clear();
-    call.recovered_placeholder_positions.clear();
-    let published = source.map(|text| policy::publish(&text, sites));
-    call.sql_text = published.filter(|text| !text.trim().is_empty());
+    let Some(text) = source else {
+        call.sql_text = None;
+        return;
+    };
+    if let Some((range, _)) = sentinel::find_all(&text).first() {
+        let cut = coordinate(&text, range.start);
+        call.sql_source_positions
+            .retain(|position| (position.sql_line, position.sql_column) < cut);
+        call.recovered_placeholder_positions
+            .retain(|position| *position < cut);
+    }
+    let published = policy::publish(&text, sites);
+    call.sql_text = Some(published).filter(|text| {
+        let trimmed = text.trim();
+        !trimmed.is_empty() && !placeholder_only(trimmed)
+    });
+}
+
+/// A helper call with no surrounding statement is not public SQL.
+fn placeholder_only(text: &str) -> bool {
+    let mut rest = text;
+    while let Some(stripped) = rest.strip_prefix("sql_placeholder_") {
+        let digits = stripped.bytes().take_while(u8::is_ascii_digit).count();
+        if digits == 0 {
+            return false;
+        }
+        rest = stripped[digits..].trim_start();
+        if rest.is_empty() {
+            return true;
+        }
+    }
+    false
 }
 
 fn used_sites<'a>(
