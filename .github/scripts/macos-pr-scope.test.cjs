@@ -222,10 +222,46 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
   for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
     assert.doesNotMatch(workflowJob(source, name), /needs\.changes\.outputs\.macos/);
   assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /outputs\.macos/);
+  assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /ci-macos-main/);
+  assert.match(workflowJob(source, "native-compile-profile"), /cancel-in-progress: false/);
   assert.doesNotMatch(workflowJob(source, "tests-gate"), /MACOS_REQUIRED/);
+  assert.match(
+    source,
+    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| github\.sha \}\}/,
+  );
+
+  const mainPush = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
+  for (const name of ["native-build-macos", "native-test-build-macos"]) {
+    const body = workflowJob(source, name);
+    assert.match(
+      body,
+      new RegExp(
+        `group: \\$\\{\\{ ${mainPush} && format\\('ci-macos-main-\\{0\\}-all', github\\.job\\) \\|\\| format\\('ci-macos-\\{0\\}-\\{1\\}-all', github\\.run_id, github\\.job\\) \\}\\}`,
+      ),
+      name,
+    );
+    assert.match(body, /cancel-in-progress: false/, name);
+  }
+  for (const name of ["native-rust-tests-macos", "native-api-tests-macos"]) {
+    const body = workflowJob(source, name);
+    assert.match(
+      body,
+      new RegExp(
+        `group: \\$\\{\\{ ${mainPush} && format\\('ci-macos-main-\\{0\\}-\\{1\\}', github\\.job, matrix\\.shard\\) \\|\\| format\\('ci-macos-\\{0\\}-\\{1\\}-\\{2\\}', github\\.run_id, github\\.job, matrix\\.shard\\) \\}\\}`,
+      ),
+      name,
+    );
+    assert.match(body, /cancel-in-progress: false/, name);
+  }
+  for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
+    assert.doesNotMatch(workflowJob(source, name), /concurrency:|ci-macos-main/);
+  for (const name of ["retain-native-build-macos-cache", "retain-native-test-build-macos-cache"])
+    assert.match(workflowJob(source, name), /needs\.[^.]+\.result == 'success'/);
 
   const native = workflowJob(source, "native-tests");
   assert.match(native, /MACOS_REQUIRED: \$\{\{ needs\.changes\.outputs\.macos \}\}/);
+  assert.match(native, /MACOS_EVENT: \$\{\{ github\.event_name \}\}/);
+  assert.match(native, /MACOS_REF: \$\{\{ github\.ref \}\}/);
   const needs = native
     .match(/needs:\s*\[([^\]]+)\]/)[1]
     .split(",")
@@ -239,10 +275,16 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
     "native-rust-tests-macos",
     "native-test-build-macos",
   ]);
-  const runGate = (results, required) =>
+  const runGate = (results, required, event = "", ref = "") =>
     spawnSync("bash", ["-eu", "-c", script], {
       encoding: "utf8",
-      env: { ...process.env, MACOS_REQUIRED: required, RESULTS: JSON.stringify(results) },
+      env: {
+        ...process.env,
+        MACOS_REQUIRED: required,
+        MACOS_EVENT: event,
+        MACOS_REF: ref,
+        RESULTS: JSON.stringify(results),
+      },
     });
   const success = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
   const skippedMacos = {
@@ -263,6 +305,33 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
   assert.equal(runGate({ ...success, changes: { result: "skipped" } }, "false").status, 1);
   assert.equal(
     runGate({ ...skippedMacos, "native-api-tests-macos": { result: "cancelled" } }, "false").status,
+    1,
+  );
+  const cancelledMacos = {
+    ...success,
+    ...Object.fromEntries(macosJobs.map((name) => [name, { result: "cancelled" }])),
+  };
+  assert.equal(runGate(cancelledMacos, "true", "push", "refs/heads/main").status, 0);
+  assert.equal(runGate(cancelledMacos, "false", "push", "refs/heads/main").status, 0);
+  assert.equal(runGate(cancelledMacos, "true", "pull_request", "refs/heads/main").status, 1);
+  assert.equal(runGate(cancelledMacos, "true", "push", "refs/heads/ci/cold-build").status, 1);
+  assert.equal(runGate(cancelledMacos, "true", "workflow_dispatch", "refs/heads/main").status, 1);
+  assert.equal(
+    runGate(
+      { ...success, "native-build": { result: "cancelled" } },
+      "true",
+      "push",
+      "refs/heads/main",
+    ).status,
+    1,
+  );
+  assert.equal(
+    runGate(
+      { ...success, "native-build-macos": { result: "failure" } },
+      "true",
+      "push",
+      "refs/heads/main",
+    ).status,
     1,
   );
 });
