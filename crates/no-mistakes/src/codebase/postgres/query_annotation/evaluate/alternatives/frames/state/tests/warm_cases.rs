@@ -8,7 +8,7 @@ fn prime(state: &State) {
     }
 }
 #[test]
-fn cold_pruning_keeps_global_dag_sharing_and_does_not_construct_summaries() {
+fn cold_pruning_memoizes_direct_edges_once_without_changing_the_raw_result() {
     let state = fixture::saved();
     assert!(state
         .scopes
@@ -19,24 +19,21 @@ fn cold_pruning_keeps_global_dag_sharing_and_does_not_construct_summaries() {
         .values()
         .all(|slots| slots.cached_references().is_none()));
     let cold = compare(&state);
-    assert!(cold.legacy_visits > 0 && cold.bindings > 0 && cold.slots > 0);
-    assert_eq!(
-        cold.values, cold.legacy_visits,
-        "cold fallback preserves global visited sharing"
-    );
-    assert_eq!(cold.summary_scans, 0);
+    assert!(cold.legacy_visits > 0);
+    assert_eq!((cold.bindings, cold.slots), (0, 0));
+    assert!(cold.values < cold.legacy_visits);
+    assert!(cold.summary_scans > 0);
     assert!(state
         .scopes
         .iter()
-        .all(|scope| scope.cached_references().is_none()));
-    assert!(state
-        .objects
-        .values()
-        .all(|slots| slots.cached_references().is_none()));
+        .all(|scope| scope.cached_references().is_some()));
+    assert!(state.objects[&7].cached_references().is_some());
+    assert!(state.objects[&99].cached_references().is_none());
     prime(&state);
     let warm = compare(&state);
     assert_eq!((warm.bindings, warm.slots), (0, 0));
     assert!(warm.values < warm.legacy_visits);
+    assert_eq!(warm.summary_scans, 0);
     eprintln!("prune work cold={cold:?}; explicitly primed warm={warm:?}");
 }
 #[test]
@@ -47,15 +44,18 @@ fn mutations_and_live_auxiliary_edges_keep_the_raw_oracle_state() {
     state.scopes[0].insert("changed".into(), Value::Arguments(9));
     assert!(state.scopes[0].cached_references().is_none());
     let changed = compare(&state);
-    assert!(changed.bindings > 0);
+    assert_eq!(changed.bindings, 0);
+    assert!(changed.summary_scans > 0);
     assert_eq!(changed.slots, 0);
-    assert!(state.scopes[0].cached_references().is_none());
+    assert!(state.scopes[0].cached_references().is_some());
     assert_eq!(compare(&original).bindings, 0);
     state.objects.get_mut(&7).unwrap().push(Value::Arguments(9));
     assert!(state.objects[&7].cached_references().is_none());
     assert!(original.objects[&7].cached_references().is_some());
-    assert!(compare(&state).slots > 0);
-    assert!(state.objects[&7].cached_references().is_none());
+    let changed = compare(&state);
+    assert_eq!(changed.slots, 0);
+    assert!(changed.summary_scans > 0);
+    assert!(state.objects[&7].cached_references().is_some());
     state.mapped.clear();
     state.captured.clear();
     state.extras.clear();

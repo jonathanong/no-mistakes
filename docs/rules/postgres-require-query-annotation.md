@@ -537,6 +537,19 @@ initialization cache was removed after downstream validation found higher CPU
 cost when excluded callers repeatedly imported large in-scope helpers. Scope
 pruning does not imply that excluded dependencies initialize only once per run.
 
+At max effort, branch joins skip comparing an unchanged immutable value when
+it contains no runtime argument references. Direct reference summaries are
+memoized in memory for those immutable values; mutations invalidate the
+summaries. Values carrying runtime argument references keep their contextual
+comparison, so shared helper imports do not merge independent root states.
+Repeated value pairs reuse their comparison result within one branch comparison
+phase, while argument arenas and deletion masks are fixed. A later phase
+recomputes the result against its own state.
+The saved [multi-root walk workload](../../fixtures/performance/annotation-multi-root-shared-walks/README.md)
+checks annotated calls, an unannotated query, excluded unrelated roots and actual
+prefix work. Timing samples run with observer diagnostics disabled; counter
+samples run separately.
+
 Branch comparison first collects the incoming binding's builder prefixes. If
 that map is empty, it skips collecting the arm's replacement value: this
 comparison only taints identities present in the incoming map.

@@ -133,3 +133,6 @@ mod source_prerequisites;
 
 #[path = "tests/event_prerequisites.rs"]
 mod event_prerequisites;
+
+#[path = "tests/multi_root_work.rs"]
+mod multi_root_work;

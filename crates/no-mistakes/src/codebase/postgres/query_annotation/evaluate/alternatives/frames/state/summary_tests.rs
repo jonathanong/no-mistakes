@@ -132,10 +132,6 @@ fn compare(state: &State) -> Work {
         })
         .map(|(_, count)| *count)
         .sum();
-    assert_eq!(
-        summary_scans, 0,
-        "pruning must never initialize a cold summary"
-    );
     Work {
         legacy_visits,
         bindings,

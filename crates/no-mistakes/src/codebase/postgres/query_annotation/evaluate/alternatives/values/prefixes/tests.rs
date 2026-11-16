@@ -3,6 +3,8 @@ use crate::diagnostics::{with_observer, InvocationObserver};
 mod empty_before;
 mod fixture;
 mod legacy;
+mod memo_guards;
+mod pair_memo;
 mod unchanged_scope;
 
 #[test]
