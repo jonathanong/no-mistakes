@@ -18,7 +18,7 @@ pub(super) fn sources<'a>(
     match identifier_status(call.call) {
         Some(true) => return identifier_sources(graph, facts, call, bindings),
         Some(false) => return BTreeSet::new(),
-        None if text_owner(facts, call).is_some() => {
+        None if text_owner(bindings, call).is_some() => {
             return identifier_sources(graph, facts, call, bindings);
         }
         None => {}
@@ -127,14 +127,10 @@ fn owner_identity(value: &ValueExpression) -> Option<TextOwner<'_>> {
 }
 
 pub(super) fn text_owner<'a>(
-    facts: &'a CheckFactMap,
+    bindings: &Bindings<'a>,
     call: &SqlCall<'_>,
 ) -> Option<(TextOwner<'a>, bool)> {
-    let flow = &facts.get_ts_facts(&call.file)?.value_flow;
-    let value_call = flow
-        .calls
-        .iter()
-        .find(|value| (value.offset, value.end) == call.span)?;
+    let value_call = bindings.value_call(&call.file, call.span)?;
     let first = value_call.arguments.first()?;
     let owner = match first {
         ValueExpression::Member(owner, key) if key == "text" => owner.as_ref(),

@@ -1,5 +1,7 @@
 use super::*;
-use crate::codebase::dependencies::extract::{IdentifierAssignment, ValueBinding, ValueFlowFacts};
+use crate::codebase::dependencies::extract::{
+    IdentifierAssignment, ValueBinding, ValueCall, ValueFlowFacts,
+};
 
 mod assignments;
 mod closed_types;
@@ -21,6 +23,7 @@ pub(crate) struct Bindings<'a> {
     pub(super) facts: &'a CheckFactMap,
     pub(super) graph: Option<&'a DepGraph>,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
+    value_calls: FxHashMap<(&'a Path, u32, u32), &'a ValueCall>,
     assignments: std::sync::OnceLock<AssignmentIndex<'a>>,
     parameters: std::sync::OnceLock<parameters::ParameterIndex<'a>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
@@ -46,6 +49,7 @@ impl<'a> Bindings<'a> {
             routes: super::super::graph::RegistryRoutes::new(facts),
             calls: fx_map(),
             values: fx_map(),
+            value_calls: fx_map(),
             assignments: Default::default(),
             parameters: Default::default(),
             iterations: fx_map(),
@@ -78,6 +82,9 @@ impl<'a> Bindings<'a> {
         index
     }
     fn add(&mut self, file: &'a Path, flow: &'a ValueFlowFacts) {
+        for call in &flow.calls {
+            self.value_calls.insert((file, call.offset, call.end), call);
+        }
         for binding in &flow.bindings {
             self.values
                 .entry((file, binding.scope, &binding.name))
@@ -96,6 +103,9 @@ impl<'a> Bindings<'a> {
                 .or_default()
                 .push(binding);
         }
+    }
+    pub(crate) fn value_call(&self, file: &Path, span: (u32, u32)) -> Option<&'a ValueCall> {
+        self.value_calls.get(&(file, span.0, span.1)).copied()
     }
     pub(crate) fn value(
         &self,

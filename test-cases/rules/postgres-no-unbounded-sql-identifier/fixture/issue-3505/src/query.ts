@@ -29,6 +29,19 @@ export async function noBindValuesNeeded() {
   return read(`/* literal helper */ ${returned.text}`);
 }
 
+export async function repeatedNoBindFragment() {
+  const fragment = sql`id`;
+  const statement = sql``.append(fragment).append(fragment);
+  return read(`/* repeated */ SELECT ${statement.text}`);
+}
+
+export async function appendAfterFirstUse(id: string) {
+  const statement = sql`SELECT * FROM items`;
+  await read(`/* before append */ ${statement.text}`);
+  statement.append(sql` WHERE id = ${id}`);
+  return read(`/* after append */ ${statement.text}`, statement.values);
+}
+
 export async function matchedNamespaceValues() {
   return read(`/* matched namespace */ ${statements.namespaceStatement.text}`,
     statements.namespaceStatement.values);

@@ -6,7 +6,7 @@ mod builders;
 
 pub(super) struct Proofs<'a, 'facts> {
     proof: builders::Proof<'a, 'facts>,
-    facts: &'a CheckFactMap,
+    bindings: &'a Bindings<'facts>,
 }
 
 impl<'a, 'facts> Proofs<'a, 'facts> {
@@ -18,7 +18,7 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
     ) -> Self {
         Self {
             proof: builders::Proof::new(graph, opts, facts, bindings),
-            facts,
+            bindings,
         }
     }
 
@@ -47,7 +47,7 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
 
     pub(super) fn missing_values(&mut self, call: &SqlCall<'_>, source: &Provenance) -> bool {
         use super::partial::TextOwner;
-        let Some((owner, false)) = super::partial::text_owner(self.facts, call) else {
+        let Some((owner, false)) = super::partial::text_owner(self.bindings, call) else {
             return false;
         };
         match (owner, source) {
