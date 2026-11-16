@@ -176,6 +176,30 @@ function forwardToLocal(sharedRows, row) {
 }
 ```
 
+An early return of a fresh local accumulator does not make later writes to the
+remaining path shared. The same holds when the return is inside a block or an
+`else` branch, and when a fresh nested value is built after the early return:
+
+```ts
+function build(skip) {
+  const rows = [];
+  if (skip) return rows;
+  rows.push("local");
+  return rows;
+}
+
+function buildNested(skip) {
+  if (skip) return { rows: [] };
+  const result = { rows: [] };
+  const rows = result.rows;
+  rows.push("local");
+  return result;
+}
+```
+
+Writes after a real escape still report, including when the escape occurs on
+the path after the early return.
+
 Computed member receivers keep the ownership of their possible children. A local
 literal containing fresh arrays can be filled through either a computed or static
 key before it escapes:

@@ -55,10 +55,7 @@ function visitFunction(state, node, scope, role) {
   if (role === "escape") {
     escapeFunction(state, tag);
   }
-  if (!existing) {
-    return tag;
-  }
-  return lookup(scope, node.id.name)?.tag || tag;
+  return existing ? lookup(scope, node.id.name)?.tag || tag : tag;
 }
 
 function walkFunctionBody(state, node, scope, tag) {
@@ -80,6 +77,7 @@ function walkFunctionBody(state, node, scope, tag) {
   } else {
     api.visit(state, body, fnEnv, "escape");
   }
+  for (const value of fnEnv.returned) api.releaseEscaping(state, value);
   flushPending(state, fnEnv);
 }
 

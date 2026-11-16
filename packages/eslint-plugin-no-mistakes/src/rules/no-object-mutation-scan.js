@@ -18,13 +18,8 @@ const {
 const { markEscaped } = require("./no-object-mutation-write");
 const { child, rootEnv, unknown } = require("./no-object-mutation-values");
 
-// Escapes stick once seen, including on a conditional path: a later write is
-// not a straight-line local builder. Function bodies wait until the enclosing
-// scope has bound its locals, then run at the first call, when the function
-// escapes, or at the end of that scope. Nested functions record writes to an
-// outer fresh object and decide them when that function is called or escapes.
-// Module, import, and parameter writes are reported while the body is walked.
-// Storing a value into the module or another function escapes it.
+// Return values escape after the body walk so terminating branches do not
+// poison fresh values on continuing paths; other escapes remain immediate.
 
 function scanMutations(program, context, options) {
   const state = {
@@ -113,7 +108,11 @@ function visit(state, node, scope, role) {
       return unknown();
     case "ReturnStatement":
       if (node.argument) {
-        visit(state, node.argument, scope, scope.fnTag?.reduceSeed ? "read" : "escape");
+        const value = visit(state, node.argument, scope, "read");
+        if (!scope.fnTag?.reduceSeed) {
+          if (scope.functionEnv.returned) scope.functionEnv.returned.push(value);
+          else api.releaseEscaping(state, value);
+        }
       }
       return unknown();
     case "LabeledStatement":
