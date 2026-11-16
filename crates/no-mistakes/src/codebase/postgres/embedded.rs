@@ -148,6 +148,8 @@ mod value_hole_tests;
 mod variants_tests;
 
 #[cfg(test)]
+mod transaction_callback_tests;
+#[cfg(test)]
 mod transaction_tests;
 
 #[cfg(test)]
