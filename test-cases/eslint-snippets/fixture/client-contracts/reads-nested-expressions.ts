@@ -58,3 +58,8 @@ async function arrayHoles(k1: string, k2: string) {
   const a = [, await kv.get(k1)];
   const b = [await kv.get(k2), ,];
 }
+
+async function parenthesizedOptionalCallee(k1: string, k2: string, consume?: { method: (value: unknown) => unknown }) {
+  const a = Number(await kv.ttl(k1));
+  const b = (consume?.method)(await kv.get(k2));
+}

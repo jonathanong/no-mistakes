@@ -2,6 +2,7 @@
 const { isFunction, unwrapExpression } = require("./async-ast");
 
 function optionalChain(node) {
+  if (node?.type === "TSNonNullExpression") return optionalChain(node.expression);
   if (node?.type === "MemberExpression") return node.optional || optionalChain(node.object);
   if (node?.type === "CallExpression") return node.optional || optionalChain(node.callee);
   return false;

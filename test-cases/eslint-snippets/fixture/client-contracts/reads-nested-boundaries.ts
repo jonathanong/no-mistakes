@@ -95,3 +95,9 @@ async function ambiguousDeclaration(k1: string, k2: string) {
   const { value = await kv.get('fallback') } = await kv.get(k2);
   await kv.get(k1);
 }
+
+async function optionalNonNull(k1: string, consume?: { method: (value: unknown) => unknown }) {
+  const a = Number(await kv.ttl(k1));
+  const b = await consume?.method!(await kv.get('conditional'));
+  const c = Number(await kv.ttl(k1));
+}

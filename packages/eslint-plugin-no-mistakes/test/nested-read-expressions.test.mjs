@@ -10,7 +10,7 @@ const readMethods = ["get", "ttl", "exists"];
 const clients = { clients: ["kv"], readMethods };
 const imports = { imports: [{ source: "@app/cache", imported: "cache" }], readMethods };
 const names = ["reads-nested-expressions", "reads-nested-boundaries"];
-const expectedLines = [5, 10, 15, 20, 25, 30, 35, 41, 46, 50, 54, 59];
+const expectedLines = [5, 10, 15, 20, 25, 30, 35, 41, 46, 50, 54, 59, 64];
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture/client-contracts");
 
 function findings(name, options) {
