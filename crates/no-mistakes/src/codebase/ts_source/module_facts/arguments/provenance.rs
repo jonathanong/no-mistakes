@@ -16,7 +16,7 @@ mod member_paths;
 mod member_refs;
 pub(super) mod pass_through;
 mod process_refs;
-mod registry_dispatch;
+pub(super) mod registry_dispatch;
 mod resets;
 mod scope;
 mod stub_global;

@@ -110,14 +110,14 @@ fn date_domain(item: &SqlBoundItem, visible: &str, alternative: usize) -> Option
     arm_span(item, visible, alternative, Literal::Date)?.width()
 }
 
-fn check_qualifiers(catalog: &SchemaCatalog, table: &CatalogTable) -> Vec<String> {
+fn check_qualifiers(catalog: &SchemaCatalog, table: &CatalogTable) -> Vec<Vec<String>> {
     let parts = crate::codebase::postgres::decoded_parts(&table.name);
     let bare = parts.last().cloned().unwrap_or_default();
-    let mut names = vec![bare.clone()];
+    let mut names = vec![vec![bare.clone()]];
     if parts.len() > 1 {
-        names.push(parts.join("."));
+        names.push(parts);
     } else if let Some(schema) = catalog.declared_schema() {
-        names.push(format!("{schema}.{bare}"));
+        names.push(vec![schema.to_string(), bare]);
     }
     names
 }

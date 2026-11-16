@@ -32,16 +32,7 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     })
 }
 
-/// True when an application selects Vitest roots, so the catalog must be prepared.
-pub fn vitest_roots_configured(config: &NoMistakesConfig) -> bool {
-    config.rule_applications(RULE_ID).iter().any(|application| {
-        application
-            .options
-            .get("roots")
-            .and_then(serde_yaml::Value::as_sequence)
-            .is_none_or(|roots| roots.iter().any(|root| root.get("vitest").is_some()))
-    })
-}
+pub use config::vitest_roots_configured;
 
 pub(crate) fn check_with_graph(
     root: &Path,
@@ -71,9 +62,15 @@ pub(crate) fn check_with_graph(
         let setups = owned::setups::ConfiguredSetups::new(&root, vitest, &root_files);
         let mut scope = reachable::sources(graph, &roots, &root_files, graph_files, &setups)?;
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
-        for (site, expression) in
-            registry::apply(graph, facts, &mut scope, &filter, &options.enumerators)
-        {
+        for (site, expression) in registry::apply(
+            graph,
+            facts,
+            &mut scope,
+            &filter,
+            &options.enumerators,
+            resolution,
+            graph_files,
+        ) {
             findings::unresolved_findings(&mut diagnostics, options.unresolved_root).push(
                 findings::unresolved_dispatch(&root, application, site, &expression),
             );

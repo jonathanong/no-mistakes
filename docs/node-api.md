@@ -712,7 +712,9 @@ An accepted product is silent. A product above the cap stays a finding and
 names that product, including a materialized-body finding. Date literals in a
 domain range are `YYYY-MM-DD`. A catalog check may qualify the physical column
 with its table, with the catalog schema and table, or with the schema already
-on the catalog key. An enum domain is that
+on the catalog key. A quoted name that contains a dot stays one identifier:
+`"audit.log".slot` matches the table `"audit.log"` and does not match the two
+identifiers `audit` and `log`. An enum domain is that
 enum's current label count.
 No separate runtime export is
 needed.
