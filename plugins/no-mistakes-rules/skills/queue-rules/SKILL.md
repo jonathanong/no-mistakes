@@ -43,5 +43,5 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT clear a "needs work" flag unconditionally when a run ends; compare-and-clear against the version you read, or a change that arrived mid-run is lost.
 - MUST NOT self-requeue without a no-progress guard.
 - MUST NOT leave a non-terminal state without a timeout exit, or pick work without an `ORDER BY`.
-- MUST NOT run several sweeps, stages, or phases in one job; give each its own job name, with its cursor in job data and its own cap, retry, and failure, and enqueue a later phase after commit once the earlier phase's walk finishes.
-- MUST NOT share a mutable budget, tally, error list, or cursor map across stages; bound total load with the queue's ordering lane and concurrency. How a phase enqueues the next: [bounded-iteration](https://github.com/jonathanong/skills/blob/main/skills/bounded-iteration/SKILL.md).
+- SHOULD NOT run several independent sweeps in one job; give each its own job, cursor, cap, and retry, so one sweep's failure or backlog does not stall the others.
+- SHOULD NOT share a mutable tally, error list, or cursor map across sweeps in one run; one sweep's state then decides another's work. See [bounded-iteration](https://github.com/jonathanong/skills/blob/main/skills/bounded-iteration/SKILL.md).

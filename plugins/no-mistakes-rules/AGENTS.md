@@ -1,5 +1,16 @@
 # Editing the rules plugin
 
+## Rules are universal
+
+Every rule ships to every codebase that installs the plugin. Write only rules
+that hold for any reasonable codebase in the rule's domain, not one project's
+choices.
+
+- A rule requested or approved for one consumer is not universal by that fact.
+  Generalize it, downgrade it to SHOULD NOT, or leave it in that project's own
+  instructions.
+- When unsure whether a rule is universal, leave it out or make it SHOULD NOT.
+
 Be conservative with MUST NOT. Agents treat it as a defect to fix before
 handoff, so an overbroad MUST NOT forces wrong changes in codebases where the
 pattern is deliberate.
