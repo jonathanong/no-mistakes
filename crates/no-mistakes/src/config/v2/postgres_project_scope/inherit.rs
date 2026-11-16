@@ -187,7 +187,7 @@ fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, kee
         set_string(options, "schemaCatalogPath", &scope.schema_catalog_path);
     }
     if !scope.unanalyzable_sql.is_empty() {
-        set_string(options, "unanalyzableSql", &scope.unanalyzable_sql);
+        super::yaml::set_unanalyzable(options, rule, &scope.unanalyzable_sql);
     }
     if !keep_rule_sql {
         set_strings(options, "sqlInclude", &scope.sql_include);

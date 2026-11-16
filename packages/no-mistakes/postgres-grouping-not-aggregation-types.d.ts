@@ -6,6 +6,9 @@ export type PostgresGroupingNotAggregationCode =
   | "distinct-join-filter"
   | "aggregate-existence-test";
 
+/** Policy for SQL that cannot be statically analyzed. Defaults to advise. */
+export type PostgresGroupingNotAggregationUnanalyzableSql = "ignore" | "advise";
+
 /** Options for the always-advisory postgres-grouping-not-aggregation rule. */
 export interface PostgresGroupingNotAggregationOptions {
   /** Catalog of primary keys and unique indexes. Missing or empty disables all shapes. */
@@ -25,4 +28,6 @@ export interface PostgresGroupingNotAggregationOptions {
   executorOptionProperties?: string[];
   trustedSqlTags?: { module: string; name: string }[];
   sqlLiteralHelpers?: string[];
+  /** Controls diagnostic advisories; proven grouping findings remain advisory. */
+  unanalyzableSql?: PostgresGroupingNotAggregationUnanalyzableSql;
 }

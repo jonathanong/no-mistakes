@@ -1,0 +1,61 @@
+{
+  "coverage": "complete",
+  "enums": {},
+  "formatVersion": 2,
+  "functions": {},
+  "schema": "public",
+  "tables": {
+    "policy_items": {
+      "checkConstraints": {},
+      "columns": {
+        "id": {
+          "comment": null,
+          "dataType": "uuid",
+          "defaultExpression": null,
+          "generated": null,
+          "generatedExpression": null,
+          "identity": null,
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "comment": null,
+      "foreignKeys": {},
+      "indexes": {
+        "policy_items_pkey": {
+          "accessMethod": "btree",
+          "constraintBacked": true,
+          "definition": "CREATE UNIQUE INDEX policy_items_pkey ON public.policy_items USING btree (id)",
+          "immediate": true,
+          "keys": [
+            {
+              "collation": null,
+              "column": "id",
+              "descending": false,
+              "expression": "id",
+              "nullsFirst": false,
+              "opclass": "pg_catalog.uuid_ops",
+              "orderingSupported": true
+            }
+          ],
+          "live": true,
+          "predicate": null,
+          "primary": true,
+          "ready": true,
+          "unique": true,
+          "valid": true
+        }
+      },
+      "physicalPartition": null,
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "relationKind": "table",
+      "triggers": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "views": {}
+}

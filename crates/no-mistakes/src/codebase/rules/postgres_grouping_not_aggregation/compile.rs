@@ -1,5 +1,16 @@
 use super::*;
 pub(super) fn options(opts: &Options) -> Result<CompiledOptions> {
+    if !opts.unanalyzable_sql.trim().is_empty()
+        && !matches!(
+            crate::codebase::postgres::unanalyzable_sql_mode(RULE_ID, &opts.unanalyzable_sql),
+            Ok(crate::codebase::postgres::UnanalyzableSqlMode::Ignore
+                | crate::codebase::postgres::UnanalyzableSqlMode::Advise)
+        )
+    {
+        anyhow::bail!(
+            "{RULE_ID}: unanalyzableSql must be `ignore` or `advise`; this rule is advisory only"
+        );
+    }
     GlobMatcher::new(&opts.sql_include, &format!("{RULE_ID} sqlInclude"))?;
     Ok(CompiledOptions {
         schema_catalog_path: opts.schema_catalog_path.clone(),

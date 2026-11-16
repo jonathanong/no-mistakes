@@ -93,3 +93,14 @@ pub(super) fn set_tags(map: &mut Mapping, tags: &[ProjectPostgresTrustedSqlTag])
 pub(super) fn contains_key(map: &Mapping, key: &str) -> bool {
     map.contains_key(Value::String(key.to_string()))
 }
+
+pub(super) fn set_unanalyzable(map: &mut Mapping, rule: &str, value: &str) {
+    let value = if rule == "postgres-grouping-not-aggregation"
+        && value.trim().eq_ignore_ascii_case("fail")
+    {
+        "advise"
+    } else {
+        value
+    };
+    set_string(map, "unanalyzableSql", value);
+}

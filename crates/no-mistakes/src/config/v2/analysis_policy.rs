@@ -101,6 +101,9 @@ impl NoMistakesConfig {
                 && sql_policy_rule(&rule.rule)
             {
                 let value = match policy.unanalyzable {
+                    Unanalyzable::Report if rule.rule == "postgres-grouping-not-aggregation" => {
+                        "advise"
+                    }
                     Unanalyzable::Report if rule.rule != "postgres-require-query-annotation" => {
                         "fail"
                     }
