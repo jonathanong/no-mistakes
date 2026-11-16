@@ -10,6 +10,21 @@ fn fixture(name: &str) -> String {
 }
 
 #[test]
+fn zero_row_insert_returning_keeps_the_skipped_source() {
+    let found = super::super::facts(&fixture("insert-limit-zero.sql"));
+    let skipped = found.iter().any(|fact| {
+        fact.query.items.iter().any(|item| {
+            matches!(
+                &item.kind,
+                SqlBoundItemKind::Query(bound)
+                    if bound.input_mode == SqlBoundInputMode::Skipped
+            )
+        })
+    });
+    assert!(skipped, "LIMIT 0 insert source stays skipped");
+}
+
+#[test]
 fn returning_cte_projects_only_the_modified_target_row_bound() {
     for (name, kind) in [
         ("update-pk.sql", SqlBoundKind::Update),

@@ -1,5 +1,6 @@
 use super::items::Builder;
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
+use crate::codebase::postgres::statements::SqlBoundInputMode;
 use sqlparser::ast::{Delete, FromTable, Query, Statement, Update, UpdateTableFromKind};
 
 /// An `UPDATE` is bounded when the relation it changes is: other FROM items only feed it values.
@@ -113,6 +114,10 @@ pub(super) fn returning_bound(
             let mut bound = super::query::bound_query(source, &projection_scope, positions);
             if let Some(returning) = &insert.returning {
                 super::inserted::name(&mut bound, source, returning, positions);
+            }
+            // Skipped and Blocking already decide the source. Streaming is the insert's row source.
+            if bound.input_mode == SqlBoundInputMode::Streaming {
+                bound.input_mode = SqlBoundInputMode::ReturningSource;
             }
             return Some(bound);
         }

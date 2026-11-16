@@ -70,4 +70,39 @@ fn parameter_returning_key_matches_any_array() {
         findings.len(),
         cases.iter().filter(|case| case.report).count()
     );
+    for (name, table) in [
+        ("column-recordset", "repro_batches"),
+        ("cte-twice", "repro_posts"),
+        ("or-join", "repro_posts"),
+        ("nonunique-join", "repro_posts"),
+    ] {
+        let case = cases.iter().find(|case| case.name == name).unwrap();
+        let hits: Vec<_> = findings
+            .iter()
+            .filter(|finding| finding.line >= case.start && finding.line <= case.end)
+            .collect();
+        assert_eq!(hits.len(), 1, "{name}");
+        let expected = format!("table:{table}");
+        assert_eq!(hits[0].target.as_deref(), Some(expected.as_str()), "{name}");
+        let message = format!("UPDATE can change every row of {table}");
+        assert!(
+            hits[0].message.contains(&message),
+            "{name}: {}",
+            hits[0].message
+        );
+    }
+    let from_line = sql
+        .lines()
+        .position(|line| line.trim() == "FROM repro_batches b")
+        .unwrap()
+        + 1;
+    let column = cases
+        .iter()
+        .find(|case| case.name == "column-recordset")
+        .unwrap();
+    let column_hit = findings
+        .iter()
+        .find(|finding| finding.line >= column.start && finding.line <= column.end)
+        .unwrap();
+    assert_eq!(column_hit.line, from_line);
 }

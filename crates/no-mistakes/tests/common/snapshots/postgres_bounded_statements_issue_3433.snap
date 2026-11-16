@@ -13,6 +13,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "statements.sql",
+          "line": 131,
+          "message": "statements.sql:131: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
+          "line": 149,
+          "message": "statements.sql:149: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
+          "line": 166,
+          "message": "statements.sql:166: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE repro_posts p",
+          "target": "table:repro_posts"
+        },
+        {
+          "file": "statements.sql",
           "line": 33,
           "message": "statements.sql:33: UPDATE can change every row of repro_posts; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
           "rule": "postgres-bounded-statements",
