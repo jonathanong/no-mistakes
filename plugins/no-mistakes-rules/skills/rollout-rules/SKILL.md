@@ -1,6 +1,6 @@
 ---
 name: rollout-rules
-description: "MUST NOT / SHOULD NOT rules for shipping changes safely: feature flags, deploy order across services, API and message compatibility, irreversible actions, and string-referenced config. Use when adding a flag, changing an API or message contract, deploying a change that spans services, or touching money-moving or irreversible actions."
+description: "MUST NOT / SHOULD NOT rules for shipping changes safely: feature flags, deploy order across services, API and message compatibility, unreachable new code, irreversible actions, and string-referenced config. Use when adding a flag, a table, a service, or a write path, changing an API or message contract, deploying a change that spans services, or touching money-moving or irreversible actions."
 ---
 
 # Rollout rules
@@ -18,5 +18,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Deploys and contracts
 
 - MUST NOT deploy a producer of a new shape while consumers that cannot read it can still run; expand, migrate, then contract.
+- MUST NOT add a table, service, or write path that no entry point (API route, MCP tool, CLI command, or job) reaches; build the entry point in the same change, even if nothing calls it yet. The exception is a schema expand step that deploys ahead of the code that uses it.
 - MUST NOT fail open on irreversible or money-moving actions; when unsure, stop and report.
 - SHOULD NOT reference config, task names, or handlers by string without validating them at startup.
