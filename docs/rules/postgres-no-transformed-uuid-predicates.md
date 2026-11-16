@@ -581,7 +581,7 @@ SELECT id FROM users WHERE id >= $1 AND id < $2;
 ```
 
 For a row cast, compare the columns individually without casts, or use a row
-comparison of uncast columns when it preserves the intended semantics:
+comparison of columns without casts when it preserves the intended semantics:
 
 ```sql
 SELECT 1 FROM accounts a JOIN accounts b ON true
