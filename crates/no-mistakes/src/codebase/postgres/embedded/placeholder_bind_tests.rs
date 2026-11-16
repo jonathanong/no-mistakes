@@ -53,3 +53,26 @@ fn value_rendering_preserves_relation_holes_and_function_argument_binds() {
         "SELECT $1 FROM sql_placeholder_2 JOIN generate_series(1, $2) series ON true WHERE id = $3"
     );
 }
+
+#[test]
+fn imported_scalar_projection_and_case_arms_stay_value_binds() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/parameterized-imported-values/query.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = super::extract_embedded_sql_from_source(
+        &path,
+        &source,
+        &super::EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    assert_eq!(facts.calls.len(), 5);
+    for (call, expected) in facts.calls.iter().zip([
+        "SELECT $1, $2 FROM entries OFFSET 1",
+        "SELECT CASE WHEN true THEN $1 ELSE $2 END FROM entries OFFSET 1",
+        "SELECT $1, CASE WHEN true THEN $2 ELSE $3 END FROM entries OFFSET 1",
+        "SELECT $1, CASE WHEN true THEN $2 ELSE $3 END FROM entries OFFSET 1",
+        "SELECT $1, CASE WHEN true THEN $2 ELSE $3 END FROM entries OFFSET 1",
+    ]) {
+        assert!(!call.is_unanalyzable(), "{call:#?}");
+        assert_eq!(call.sql_text.as_deref(), Some(expected));
+    }
+}

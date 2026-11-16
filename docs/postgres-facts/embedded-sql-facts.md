@@ -87,8 +87,10 @@ closed record still splices. A `$` written
 immediately before a numeric or unknown hole is a positional parameter, with
 the hole's own digits when it is a numeric literal and the hole index
 otherwise, and with no separator. A separator is inserted only between two
-adjacent value holes of a tagged template. An empty fragment, or one that
-starts with its own punctuation, is spliced unchanged.
+adjacent value holes of a tagged template. An adjacent empty fragment, or one
+that starts with its own punctuation, is spliced unchanged. Scalar values in
+`SELECT` projections and `CASE` arms remain binds, including imported constants
+and empty or punctuation-leading strings; their text never becomes SQL syntax.
 
 For example, `SQL` followed by the template
 `` `SELECT ${id} FROM generate_series(1, ${HARD_MAX}) LIMIT ${HARD_MAX}` ``

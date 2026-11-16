@@ -1,0 +1,190 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "values": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.mts",
+          "line": 11,
+          "message": "query.mts:11: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(SQL`SELECT CASE WHEN true THEN ${NUMBER_VALUE} ELSE ${STRING_VALUE} END FROM entries OFFSET 1`);",
+          "target": "offset#2"
+        },
+        {
+          "file": "query.mts",
+          "line": 15,
+          "message": "query.mts:15: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(SQL`SELECT ${constants.NUMBER_VALUE}, CASE WHEN true THEN ${constants.STRING_VALUE} ELSE ${constants.NUMBER_VALUE} END FROM entries OFFSET 1`);",
+          "target": "offset#3"
+        },
+        {
+          "file": "query.mts",
+          "line": 20,
+          "message": "query.mts:20: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(SQL`SELECT ${PUNCTUATION_VALUE}, CASE WHEN true THEN ${PUNCTUATION_VALUE} ELSE ${PUNCTUATION_VALUE} END FROM entries OFFSET 1`);",
+          "target": "offset#4"
+        },
+        {
+          "file": "query.mts",
+          "line": 25,
+          "message": "query.mts:25: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(SQL`SELECT ${EMPTY_VALUE}, CASE WHEN true THEN ${EMPTY_VALUE} ELSE ${PUNCTUATION_VALUE} END FROM entries OFFSET 1`);",
+          "target": "offset#5"
+        },
+        {
+          "file": "query.mts",
+          "line": 7,
+          "message": "query.mts:7: do not use SQL OFFSET; use cursor pagination, LIMIT + 1, COUNT, EXISTS, or ROW_NUMBER() instead",
+          "rule": "postgres-no-offset",
+          "sourceLine": "return query(SQL`SELECT ${NUMBER_VALUE}, ${STRING_VALUE} FROM entries OFFSET 1`);",
+          "target": "offset"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "query.mts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-offset",
+          "span": [
+            1068,
+            947
+          ],
+          "status": "violation",
+          "subcheck": "offset"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "query.mts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-offset",
+          "span": [
+            231,
+            304
+          ],
+          "status": "violation",
+          "subcheck": "offset"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "query.mts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-offset",
+          "span": [
+            356,
+            457
+          ],
+          "status": "violation",
+          "subcheck": "offset"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "query.mts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-offset",
+          "span": [
+            507,
+            655
+          ],
+          "status": "violation",
+          "subcheck": "offset"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "query.mts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-offset",
+          "span": [
+            744,
+            877
+          ],
+          "status": "violation",
+          "subcheck": "offset"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

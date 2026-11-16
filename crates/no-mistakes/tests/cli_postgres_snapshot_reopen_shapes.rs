@@ -10,6 +10,36 @@ fn case_root(rule: &str, name: &str) -> PathBuf {
     path
 }
 
+fn scalar_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/parameterized-imported-values")
+}
+
+#[test]
+fn postgres_scalar_value_contexts_check_json_snapshot() {
+    let root = scalar_root();
+    let reports = assert_saved_fixture_report(
+        "postgres_scalar_value_contexts",
+        &[("values", root.clone(), root.join("config.yml"))],
+        &[],
+        &["--include-sql-verdicts"],
+    );
+    let report = &reports["values"]["report"];
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 5, "{report}");
+    assert!(findings.iter().all(|row| {
+        row["rule"] == "postgres-no-offset"
+            && row["target"].as_str().unwrap().split('#').next() == Some("offset")
+    }));
+    let verdicts = report["sqlVerdicts"].as_array().unwrap();
+    assert_eq!(verdicts.len(), 5, "{report}");
+    assert!(verdicts.iter().all(|row| {
+        row["status"] == "violation"
+            && row["evidence"] == "exact"
+            && row.get("residualReasons").is_none()
+    }), "{report}");
+}
+
 #[test]
 fn postgres_reopen_shapes_check_json_snapshot() {
     let reports = assert_saved_fixture_report(

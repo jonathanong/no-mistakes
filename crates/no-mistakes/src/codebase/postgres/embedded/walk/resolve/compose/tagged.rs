@@ -42,7 +42,13 @@ fn splice(visitor: &ScopeVisitor<'_>, tagged: &TaggedTemplateExpression<'_>) -> 
         };
         if before.ends_with('$') {
             out.push_str(&positional_digits(hole, index + 1));
-        } else if let Some(piece) = piece(visitor, hole, index as u32 + 1, &out) {
+        } else if let Some(piece) = piece(
+            visitor,
+            hole,
+            index as u32 + 1,
+            &out,
+            index > 0 && before.is_empty(),
+        ) {
             out.push_str(&piece);
         } else if sentinel::in_relation_slot(&out, out.len()) {
             out.push_str(&internal_placeholder(index + 1));
@@ -62,6 +68,7 @@ fn piece(
     expr: &Expression<'_>,
     placeholder: u32,
     prefix: &str,
+    adjacent_fragment: bool,
 ) -> Option<String> {
     // A value hole stays a bind unless it is itself a SQL fragment.
     if sentinel::value_position(prefix) && !fragment_hole(visitor, expr) {
@@ -69,19 +76,31 @@ fn piece(
     }
     let text = match unwrap_ts_wrappers(expr) {
         Expression::Identifier(ident) => {
+            if !visitor
+                .literal_objects
+                .is_text_const(&visitor.scopes, ident.name.as_str())
+                && !sentinel::in_relation_slot(prefix, prefix.len())
+                && !fragment_hole(visitor, expr)
+            {
+                return None;
+            }
             let piece = super::super::super::imported::constants::identifier_piece(visitor, ident)?;
             if visitor
                 .literal_objects
                 .is_text_const(&visitor.scopes, ident.name.as_str())
             {
-                // A value-position const already returned above. Elsewhere only
-                // an empty or punctuation-leading fragment is spliced; a word
-                // stays a bind so `widget-…` and `keep-…` are not inlined.
-                return starts_with_own_punctuation(&piece).then_some(piece);
+                return (adjacent_fragment && starts_with_own_punctuation(&piece)).then_some(piece);
             }
             return sentinel::contains(&piece).then_some(piece);
         }
         Expression::StaticMemberExpression(member) => {
+            if matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(object)
+                if !visitor.shadowed_locally(object.name.as_str()) && visitor.constant_namespaces.contains(object.name.as_str()))
+                && !sentinel::in_relation_slot(prefix, prefix.len())
+                && !fragment_hole(visitor, expr)
+            {
+                return None;
+            }
             super::super::super::frozen_alias::splice_member(visitor, member, placeholder)
         }
         _ => None,

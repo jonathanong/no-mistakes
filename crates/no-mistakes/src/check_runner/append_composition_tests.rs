@@ -60,7 +60,7 @@ fn invalid_append_alternatives_advise_in_every_policy_and_keep_valid_siblings() 
                 })
                 .expect("composed SQL is visible in opt-in annotation evidence");
             let text = row.known_prefix.as_deref().unwrap();
-            assert!(text.ends_with("owner_id = sql_placeholder_1"), "{text}");
+            assert!(text.ends_with("owner_id = $1"), "{text}");
             assert!(!text.contains("ownerId"));
         }
     }
@@ -81,7 +81,7 @@ fn static_append_initializer_preserves_the_annotation_in_shared_sql_facts() {
     let call = &facts.calls[3];
     assert_eq!(
         call.sql_text.as_deref(),
-        Some("/* bound */SELECT id FROM widgets WHERE owner_id = sql_placeholder_1"),
+        Some("/* bound */SELECT id FROM widgets WHERE owner_id = $1"),
         "{facts:#?}"
     );
 }

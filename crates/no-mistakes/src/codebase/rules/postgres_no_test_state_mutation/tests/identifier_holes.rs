@@ -57,13 +57,12 @@ fn unknown_identifier_holes_keep_the_full_statement() {
         .collect::<Vec<_>>();
     assert!(
         sql.iter()
-            .any(|text| text
-                == "UPDATE sql_placeholder_1 SET token = $1 WHERE sql_placeholder_2 = $2"),
+            .any(|text| text == "UPDATE sql_placeholder_1 SET token = $1 WHERE $2 = $3"),
         "{sql:#?}"
     );
     assert!(
         sql.iter()
-            .any(|text| text == "DELETE FROM sql_placeholder_1 WHERE sql_placeholder_2 = $1"),
+            .any(|text| text == "DELETE FROM sql_placeholder_1 WHERE $1 = $2"),
         "{sql:#?}"
     );
     assert!(
