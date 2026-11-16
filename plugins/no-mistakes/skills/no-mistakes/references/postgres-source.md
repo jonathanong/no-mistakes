@@ -264,7 +264,8 @@ whose free columns each have a proven finite domain when the product of those
 domains is at most the cap. Leave it unset to keep the current findings. A
 domain is a validated integer check, a non-null enum, a non-null boolean, or a
 closed inclusive `YYYY-MM-DD` literal range on the column's visible name,
-including a positional alias. A catalog check may qualify the physical column
+including a positional alias. Month and day must be digits. A qualifier counts
+only when it names that same item (`r.n`, not `other.n`). A catalog check may qualify the physical column
 with its table, with the catalog schema and table, or with the schema already
 on the catalog key. An enum domain is that
 enum's current label count. `smallint` and `integer` widths are not domains.

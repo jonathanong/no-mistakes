@@ -101,11 +101,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
+          "line": 37,
+          "message": "sql/lookups.sql:37: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily WHERE owner_id = $1 AND day >= DATE '2026-+1-01' AND day <= DATE '2026-01-02';",
+          "target": "table:daily"
+        },
+        {
+          "file": "sql/lookups.sql",
           "line": 4,
           "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL RETURNING id",
           "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 45,
+          "message": "sql/lookups.sql:45: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily AS d WHERE d.owner_id = $1 AND other.day >= DATE '2026-01-01' AND other.day <= DATE '2026-01-02';",
+          "target": "table:daily"
         },
         {
           "file": "sql/lookups.sql",
@@ -202,11 +218,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
+          "line": 37,
+          "message": "sql/lookups.sql:37: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily WHERE owner_id = $1 AND day >= DATE '2026-+1-01' AND day <= DATE '2026-01-02';",
+          "target": "table:daily"
+        },
+        {
+          "file": "sql/lookups.sql",
           "line": 4,
           "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL RETURNING id",
           "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 45,
+          "message": "sql/lookups.sql:45: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily AS d WHERE d.owner_id = $1 AND other.day >= DATE '2026-01-01' AND other.day <= DATE '2026-01-02';",
+          "target": "table:daily"
         },
         {
           "file": "sql/lookups.sql",
@@ -343,11 +375,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/lookups.sql",
+          "line": 37,
+          "message": "sql/lookups.sql:37: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily WHERE owner_id = $1 AND day >= DATE '2026-+1-01' AND day <= DATE '2026-01-02';",
+          "target": "table:daily"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 38,
+          "message": "sql/lookups.sql:38: UPDATE can change every row of ranks; pick the target rows in a CTE or subquery with a LIMIT, or match a primary or unique key",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE ranks SET id = id WHERE owner_id = $1 AND rank >= 2 AND rank <= 4;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
           "line": 4,
           "message": "sql/lookups.sql:4: SELECT can return every row of questions; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "UPDATE questions SET deleted_at = CURRENT_TIMESTAMP WHERE community_id = $1 AND deleted_at IS NULL RETURNING id",
           "target": "table:questions"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 40,
+          "message": "sql/lookups.sql:40: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "UPDATE ranks SET id = id WHERE owner_id = $1 AND rank >= 2 AND rank <= 4 RETURNING id",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 43,
+          "message": "sql/lookups.sql:43: SELECT can return every row of ranks; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id FROM ranks AS r WHERE r.owner_id = $1 AND r.rank >= 2 AND r.rank <= 4;",
+          "target": "table:ranks"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 44,
+          "message": "sql/lookups.sql:44: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily AS d WHERE d.owner_id = $1 AND d.day >= DATE '2026-01-01' AND d.day <= DATE '2026-01-02';",
+          "target": "table:daily"
+        },
+        {
+          "file": "sql/lookups.sql",
+          "line": 45,
+          "message": "sql/lookups.sql:45: SELECT can return every row of daily; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT day, metric, category FROM daily AS d WHERE d.owner_id = $1 AND other.day >= DATE '2026-01-01' AND other.day <= DATE '2026-01-02';",
+          "target": "table:daily"
         },
         {
           "file": "sql/lookups.sql",

@@ -1,10 +1,16 @@
 use super::{directive_payload, parse_payload, BoundComment};
 
-/// `--` inside a template literal is SQL. A backtick inside a host string
-/// or comment does not open that template.
+#[path = "bound_comments_template_host.rs"]
+mod host;
+
+/// `--` inside a template literal is SQL. A backtick inside a host string,
+/// comment, or regex does not open that template.
 pub(super) fn template_sql_comments(source: &str, rule_id: &str) -> Vec<BoundComment> {
     let mut found = Vec::new();
-    let mut carry = Carry::default();
+    let mut carry = Carry {
+        regex_ok: true,
+        ..Carry::default()
+    };
     for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         let Some(body) = directive(line, &mut carry) else {
             continue;
@@ -23,125 +29,103 @@ struct Carry {
     braces: u32,
     sql_string: bool,
     block: bool,
+    quote: Option<char>,
+    escaped: bool,
+    regex: bool,
+    regex_class: bool,
+    regex_ok: bool,
+    /// Brace depth of each JS template opened inside an interpolation.
+    /// Zero is template contents, where a quote is not a host string.
+    js: Vec<u32>,
 }
 
 fn directive<'a>(line: &'a str, carry: &mut Carry) -> Option<&'a str> {
-    let mut template_escaped = false;
-    let mut host_quote = None;
-    let mut host_escaped = false;
+    // A trailing `\` consumed the newline, so the next character stays literal.
+    if carry.escaped {
+        carry.escaped = false;
+    }
+    // A host regex cannot contain a raw newline. Drop it so it cannot swallow the file.
+    if carry.regex {
+        carry.regex = false;
+        carry.regex_class = false;
+    }
+    let mut ident = String::new();
     let mut found = None;
     let mut chars = line.char_indices().peekable();
     while let Some((idx, ch)) = chars.next() {
-        if carry.braces > 0 {
-            adjust_braces(ch, carry);
+        if carry.quote.is_some() {
+            host::quote_char(ch, carry);
             continue;
         }
         if carry.block {
-            close_block(ch, &mut chars, carry);
+            host::close_block(ch, &mut chars, carry);
             continue;
         }
-        if !carry.template {
-            if host_step(
-                line,
-                idx,
-                ch,
-                &mut chars,
-                &mut host_quote,
-                &mut host_escaped,
-                carry,
-            ) {
+        if carry.regex {
+            host::regex_char(ch, carry);
+            continue;
+        }
+        if carry.js.last() == Some(&0) {
+            js_content(ch, &mut chars, carry);
+            continue;
+        }
+        if carry.template && carry.braces == 0 {
+            if template_step(ch, &mut chars, carry) {
                 continue;
             }
-            break;
-        }
-        if template_step(ch, &mut chars, &mut template_escaped, carry) {
+            if found.is_none()
+                && ch == '-'
+                && chars.peek().is_some_and(|(_, next)| *next == '-')
+                && super::super::dash_comment_can_start(line, idx)
+            {
+                found = Some(line[idx + 2..].trim());
+            }
             continue;
         }
-        if found.is_none() && ch == '-' && super::super::dash_comment_can_start(line, idx) {
-            found = Some(line[idx + 2..].trim());
+        if !host::host_step(line, idx, ch, &mut chars, carry, &mut ident) {
+            break;
         }
     }
+    host::finish_ident(line, line.len(), &mut ident, carry);
     found
 }
 
-fn adjust_braces(ch: char, carry: &mut Carry) {
-    if ch == '{' {
-        carry.braces += 1;
-    } else if ch == '}' {
-        carry.braces -= 1;
-        if carry.braces == 0 {
-            carry.template = true;
-        }
-    }
-}
-
-fn close_block(
+fn js_content(
     ch: char,
     chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
     carry: &mut Carry,
 ) {
-    if ch == '*' && chars.peek().is_some_and(|(_, next)| *next == '/') {
-        chars.next();
-        carry.block = false;
+    if carry.escaped {
+        carry.escaped = false;
+        return;
     }
-}
-
-fn host_step(
-    line: &str,
-    idx: usize,
-    ch: char,
-    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
-    host_quote: &mut Option<char>,
-    host_escaped: &mut bool,
-    carry: &mut Carry,
-) -> bool {
-    if let Some(quote) = *host_quote {
-        if *host_escaped {
-            *host_escaped = false;
-        } else if ch == '\\' {
-            *host_escaped = true;
-        } else if ch == quote {
-            *host_quote = None;
-        }
-        return true;
-    }
-    let next = chars.peek().map(|(_, next)| *next);
-    if ch == '/' && next == Some('*') {
-        chars.next();
-        carry.block = true;
-        return true;
-    }
-    if ch == '/' && next == Some('/') {
-        return false;
-    }
-    if ch == '#' && super::super::comment_prefix_can_start(line, idx) {
-        return false;
-    }
-    if ch == '-' && next == Some('-') && super::super::dash_comment_can_start(line, idx) {
-        return false;
-    }
-    if ch == '\'' || ch == '"' {
-        *host_quote = Some(ch);
-        return true;
+    if ch == '\\' {
+        carry.escaped = true;
+        return;
     }
     if ch == '`' {
-        carry.template = true;
+        carry.js.pop();
+        return;
     }
-    true
+    if ch == '$' && chars.peek().is_some_and(|(_, next)| *next == '{') {
+        chars.next();
+        // `js_content` runs only while a frame is open.
+        *carry.js.last_mut().expect("nested template") = 1;
+        carry.regex_ok = true;
+    }
 }
 
 fn template_step(
     ch: char,
     chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
-    template_escaped: &mut bool,
     carry: &mut Carry,
 ) -> bool {
-    if *template_escaped {
-        *template_escaped = false;
+    if carry.escaped {
+        carry.escaped = false;
         return true;
     }
     if ch == '\\' {
-        *template_escaped = true;
+        carry.escaped = true;
         return true;
     }
     if carry.sql_string {
@@ -167,6 +151,7 @@ fn template_step(
         chars.next();
         carry.braces = 1;
         carry.template = false;
+        carry.regex_ok = true;
         return true;
     }
     false

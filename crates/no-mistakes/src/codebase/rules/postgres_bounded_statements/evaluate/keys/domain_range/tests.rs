@@ -35,9 +35,10 @@ fn date_predicate_counts_inclusive_days() {
         closed_span("day", &conjuncts, Literal::Date).is_none()
     };
     assert!(absent("day >= DATE '01-02-03' AND day <= DATE '01-02-04'"));
-    assert!(absent(
-        "day >= DATE '2026-1-01' AND day <= DATE '2026-01-02'"
-    ));
+    for low in ["2026-1-01", "2026-+1-01", "2026-01-+1"] {
+        let sql = format!("day >= DATE '{low}' AND day <= DATE '2026-01-02'");
+        assert!(absent(&sql), "{sql}");
+    }
 }
 
 #[test]
