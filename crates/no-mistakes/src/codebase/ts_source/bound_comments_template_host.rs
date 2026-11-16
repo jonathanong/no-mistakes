@@ -1,5 +1,8 @@
 use super::Carry;
 
+#[path = "bound_comments_template_host_value.rs"]
+mod value;
+
 pub(super) fn quote_char(ch: char, carry: &mut Carry) {
     if carry.escaped {
         carry.escaped = false;
@@ -85,57 +88,7 @@ pub(super) fn host_step(
     if ch == '-' && next == Some('-') && super::super::super::dash_comment_can_start(line, idx) {
         return false;
     }
-    // `++` and a single `+` or `-` may precede a regex. Postfix `--` does not.
-    if ch == '+' || ch == '-' {
-        if next == Some(ch) {
-            chars.next();
-            carry.regex_ok = false;
-        } else {
-            carry.regex_ok = true;
-        }
-        return true;
-    }
-    // Prefix `!` keeps regex_ok; a non-null assertion after a value leaves it false.
-    if ch == '!' {
-        return true;
-    }
-    if ch == '\'' || ch == '"' {
-        carry.quote = Some(ch);
-        carry.escaped = false;
-        carry.regex_ok = false;
-        return true;
-    }
-    if ch == '`' {
-        let inside = carry.braces > 0 || carry.js.last().is_some_and(|depth| *depth > 0);
-        if inside {
-            carry.js.push(0);
-        } else {
-            carry.template = true;
-        }
-        carry.regex_ok = false;
-        return true;
-    }
-    if is_ident(ch) {
-        ident.push(ch);
-        carry.regex_ok = false;
-        return true;
-    }
-    if ch == '{' || ch == '}' {
-        if carry.js.last().is_some_and(|depth| *depth > 0) {
-            adjust_js(ch, carry);
-            carry.regex_ok = ch == '{';
-            return true;
-        }
-        if carry.braces > 0 {
-            adjust_braces(ch, carry);
-            carry.regex_ok = ch == '{';
-            return true;
-        }
-    }
-    if !ch.is_whitespace() {
-        carry.regex_ok = "([{,;:?=&|*%<>~^/".contains(ch);
-    }
-    true
+    value::value_step(ch, next, chars, carry, ident)
 }
 
 fn host_postfix_decrement(line: &str, idx: usize, carry: &Carry) -> bool {
