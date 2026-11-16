@@ -328,6 +328,15 @@ run(0 ?? read, account);
 }
 ```
 
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `importSpecifier` | `""` | Select the database import boundary. |
+| `executorNames` | `query`, `read`, `write` with a module; required otherwise | Select named executors. |
+| `executorFactoryNames` | `[]` | Select imported executor factories. |
+| `executorTypeNames` | `[]` | Select imported executor types. |
+| `trustedSqlTags` | `[]` | Select named SQL tags whose templates expose SQL in `"forwarding-only"` mode. |
+| `mode` | `"all"` | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL. |
+
 - `importSpecifier` identifies the database module and defaults to empty.
   Configure your database module explicitly. Named executor imports must come
   from that exact module. A subpath such as `@example/db/read` does not match
@@ -382,6 +391,19 @@ run(0 ?? read, account);
   as a configuration error.
 
 For example, with `mode: "forwarding-only"`:
+
+```js
+{
+  "no-mistakes/postgres-no-executor-adapter": [
+    "error",
+    {
+      importSpecifier: "@example/db",
+      executorTypeNames: ["QueryExecutor"],
+      mode: "forwarding-only",
+    },
+  ],
+}
+```
 
 ```ts
 function load(query) {
