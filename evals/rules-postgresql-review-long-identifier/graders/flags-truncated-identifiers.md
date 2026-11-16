@@ -8,8 +8,8 @@ Grade only the review in the final message. Two checks.
 
 1. Passing: the review flags that the two index names
 exceed Postgres's 63-byte identifier limit and are
-silently truncated, so the two names can collide on the
-same truncated prefix (the second CREATE fails or a later
+silently truncated to the same 63-byte prefix, so the
+two names collide (the second CREATE fails or a later
 migration cannot find the index by its full name); it asks
 for shorter names. Failing: the review does not raise the
 identifier length.

@@ -24,8 +24,8 @@ CREATE TABLE subscription_renewal_attempts (
   outcome text NOT NULL CHECK (outcome IN ('succeeded', 'declined', 'error'))
 );
 
-CREATE INDEX subscription_renewal_attempts_subscription_id_attempted_at_idx
-  ON subscription_renewal_attempts (subscription_id, attempted_at DESC);
+CREATE INDEX subscription_renewal_attempts_subscription_id_attempted_at_outcome_idx
+  ON subscription_renewal_attempts (subscription_id, attempted_at DESC, outcome);
 
 CREATE UNIQUE INDEX subscription_renewal_attempts_subscription_id_attempted_at_outcome_uniq
   ON subscription_renewal_attempts (subscription_id, attempted_at, outcome);

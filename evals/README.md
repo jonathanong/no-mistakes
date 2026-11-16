@@ -205,9 +205,9 @@ estimate means runs errored — see
 
 ## Flows
 
-Every case carries a `tags:` field naming its flow. 81 generated cases across
-13 flows; 72 excluding the holdout. The 62 skill cases are the first 12 flows;
-the 17 `rules` cases load the `no-mistakes-rules` plugin instead.
+Every case carries a `tags:` field naming its flow. 80 generated cases across
+13 flows; 71 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 18 `rules` cases load the `no-mistakes-rules` plugin instead.
 
 | tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
