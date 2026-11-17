@@ -851,6 +851,16 @@ the 5,000 ms gate. Registering each policy independently retains all twelve
 analyses, CJS/ESM and CLI parity checks, suppressions and work-count assertions.
 The timing threshold and enforcement modes are unchanged.
 
+The local-action-checkout parity matrix also registers its six saved fixtures
+independently. One bundled test ran four async API analyses and one CLI process
+per fixture (30 analyses and six CLI launches in total). Discovery can invoke
+local `git ls-files`; checkout references in fixture YAML do not perform network
+access or clone repositories. Issue #3515 recorded a passing 6,643 ms bundled
+case rejected by the 5,000 ms gate under runner load. Each fixture now retains
+CJS/ESM `check`, CJS/ESM `analyzeProject`, CLI output and exit-status assertions,
+including passing and suppressed controls. All six cases still run in the
+real-addon suite under the same 5,000 ms gate; no exemption or retry is added.
+
 Test CI cancels superseded in-progress runs only for pull requests. An active
 main run can finish and upload Rust coverage when another merge lands. GitHub's
 default concurrency queue can still replace an older pending main run before
