@@ -72,11 +72,21 @@ fn scan(
         .with_identifier_returns(returns);
     let mut fragment_proofs = fragments::Proofs::new(graph, opts, facts, &bindings);
     let catalog_proof = catalogs::CatalogProof::new(graph, facts, &bindings);
+    let mut detached = super::postgres_sql_cross_file::DetachedTemplateBinds::new(&bindings);
     for call in calls {
         if !filter.is_match(&call.file) {
             continue;
         }
         candidates += 1;
+        if let Some(Provenance::Reference { name, .. }) = detached.detached(call) {
+            sinks += 1;
+            findings.push(finding(
+                root, RULE_ID, &call.file, call.call.line,
+                format!("SQL text from `{name}.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values."),
+                Some(name.clone()), Some(name),
+            ));
+            continue;
+        }
         for provenance in partial::sources(graph, opts, facts, call, &bindings) {
             if closed::proven(graph, opts, facts, &bindings, call, &provenance)
                 || catalog_proof.proven(call, &provenance)
