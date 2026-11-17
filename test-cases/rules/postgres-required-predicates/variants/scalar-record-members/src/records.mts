@@ -1,4 +1,4 @@
-const records = Object.freeze({ one: { table: 'items', column: 'id' } } as const);
+const records = Object.freeze({ one: Object.freeze({ table: 'items', column: 'id' }) } as const);
 export function config(key: string) {
   if (!Object.hasOwn(records, key)) throw new Error('unknown key');
   return records[key as keyof typeof records];
