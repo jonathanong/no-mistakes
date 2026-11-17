@@ -1,4 +1,4 @@
-const { workflowJob, readWorkflow } = require("./workflow-contract.cjs");
+const { workflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
@@ -142,13 +142,6 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
   assert.ok(jobBudget(consumer) >= api + data.postJobReserveSeconds);
   assert.equal(jobBudget(consumer), 480);
   assert.match(consumer, /needs: linux-runtime/);
-  const download = readWorkflow(path.join(root, ".github/workflows/ci.yml")).jobs[
-    "linux-api-tests"
-  ].steps.find((step) => step.name === "Download Linux runtime");
-  assert.equal(
-    download.run,
-    "python3 .github/scripts/download-native-runtime.py linux-runtime-cli linux-runtime-addon",
-  );
   assert.doesNotMatch(consumer, /build-native\.cjs|cargo build/);
   const gate = job("javascript-tests");
   assert.match(gate, /needs: \[javascript-coverage, linux-api-tests\]/);

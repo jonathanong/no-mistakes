@@ -28,6 +28,12 @@ Current workflow tooling and resource limits validate that original source.
 A normal patch dispatch instead prepares the next patch version; it does not
 repair the earlier release automatically. Do not move or delete the prepared tag.
 
+The Rust parity suite runs from a separate validation-tools checkout without
+installed JavaScript dependencies. PR CI replays the release workflow's actual
+parity command from a historical source fixture with the same isolated layout
+and rejects external package loads. YAML-dependent workflow assertions run in
+the dedicated CI contract tests after dependency installation.
+
 A rerun of the old failed run retains its original workflow implementation.
 Recovery that needs a workflow fix therefore uses a new dispatch after the fix
 lands. npm and Cargo publication retain their exact-version checks and skip
