@@ -42,3 +42,18 @@ the job you have; the rest of this index is reference.
 ```sh
 lychee --no-progress --exclude-path '^fixtures/' --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$' README.md 'docs/**/*.md' 'plugins/*/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md
 ```
+
+CI keeps documentation links in the required quality gate so broken links still
+block changes. The gateway wrapper retries the configured document scope using
+the `LYCHEE_GATEWAY_WAIT` schedule in
+[the workflow](../.github/workflows/ci.yml). After those attempts, a fresh report
+containing only HTTP 5xx responses for links to `github.com` is inconclusive:
+CI emits warnings with the affected URLs rather than treating a server error as
+proof of a broken link. The final report remains in the job summary for diagnosis.
+
+HTTP 404 and other client errors, failures from other hosts, timeouts, incomplete
+reports, and checker execution errors still fail the gate. A report containing a
+GitHub server error alongside any such failure cannot pass. The wrapper removes
+the previous report before each attempt so a checker crash cannot reuse stale
+results. It does not turn all link failures into accepted status codes or rerun
+CI jobs.

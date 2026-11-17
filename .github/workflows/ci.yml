@@ -355,7 +355,7 @@ jobs:
         run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
-        run: node --test .github/scripts/lychee-gateway.test.cjs
+        run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
       - name: Test bounded native runtime download
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/scripts -p test_download_native_runtime.py
@@ -480,6 +480,7 @@ jobs:
     timeout-minutes: 8
     env:
       LYCHEE_REPORT: lychee/out.md
+      LYCHEE_GATEWAY_WAIT: "10,20"
       # docs/performance/2238/39488578982/README.md and tables.md are hash-locked by checksums.json.
       LYCHEE_ARGS: >-
         --no-progress
@@ -509,6 +510,13 @@ jobs:
         if: ${{ steps.links.outcome == 'failure' }}
         timeout-minutes: 2
         run: node .github/scripts/lychee-gateway.cjs
+      - name: Preserve final documentation link report
+        if: ${{ !cancelled() && steps.links.outcome == 'failure' }}
+        timeout-minutes: 1
+        run: |
+          if [ -f "$LYCHEE_REPORT" ]; then
+            cat "$LYCHEE_REPORT" >> "$GITHUB_STEP_SUMMARY"
+          fi
   quality:
     name: Lint and source checks
     needs: [changes, quality-source, quality-rust, quality-js, quality-links]

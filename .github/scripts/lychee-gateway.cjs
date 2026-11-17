@@ -1,27 +1,48 @@
-const { readFileSync } = require("node:fs");
+const { readFileSync, rmSync } = require("node:fs");
 const { spawnSync } = require("node:child_process");
 
-// Lychee 0.24.2 does not retry RejectedStatusCode except 429, and its GitHub
-// API fallback rejects any pull URL, so one HTML 502 fails the link job.
 const TRANSIENT_STATUS = new Set(["500", "502", "503", "504"]);
-const ERROR_ENTRY = /^\* \[([^\]]+)\]\s+</gm;
+const ERROR_ENTRY = /^\* \[([^\]]+)\][ \t]+<([^>\r\n]+)>/gm;
 
 function classify(report) {
-  const summary = report.match(/\|\s*🚫\s*Errors\s*\|\s*(\d+)/);
+  const summaries = [...report.matchAll(/\|\s*🚫\s*Errors\s*\|\s*(\d+)\s*\|/g)];
   return {
-    errors: summary ? Number(summary[1]) : null,
+    errors: summaries.length === 1 ? Number(summaries[0][1]) : null,
     codes: [...report.matchAll(ERROR_ENTRY)].map((match) => match[1]),
   };
 }
 
+function httpUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function githubServerError(entry) {
+  return /^5\d{2}$/.test(entry[1]) && httpUrl(entry[2])?.hostname === "github.com";
+}
+
 function gatewayOnly(report) {
   const { errors, codes } = classify(report);
+  const entries = [...report.matchAll(ERROR_ENTRY)];
+  const timeouts = [...report.matchAll(/\|\s*⏳\s*Timeouts\s*\|\s*(\d+)\s*\|/g)];
   return (
     errors !== null &&
     errors > 0 &&
     codes.length === errors &&
-    codes.every((code) => TRANSIENT_STATUS.has(code))
+    timeouts.length === 1 &&
+    Number(timeouts[0][1]) === 0 &&
+    entries.every(
+      (entry) => httpUrl(entry[2]) && (TRANSIENT_STATUS.has(entry[1]) || githubServerError(entry)),
+    )
   );
+}
+
+function githubGatewayOnly(report) {
+  return gatewayOnly(report) && [...report.matchAll(ERROR_ENTRY)].every(githubServerError);
 }
 
 function waitSeconds() {
@@ -37,7 +58,8 @@ function readReport(reportPath) {
   }
 }
 
-function rerun() {
+function rerun(reportPath) {
+  rmSync(reportPath, { force: true });
   // set -f: without globstar, bash rewrites docs/**/*.md to one directory level.
   const result = spawnSync(
     "bash",
@@ -67,14 +89,27 @@ function main() {
       const sleep = spawnSync("sleep", [String(seconds)], { stdio: "inherit" });
       if (sleep.status !== 0) return sleep.status === null ? 1 : sleep.status;
     }
-    const status = rerun();
-    if (status === 0) return 0;
+    const status = rerun(reportPath);
     report = readReport(reportPath);
-    if (report === null || !gatewayOnly(report)) return status === null ? 1 : status || 1;
+    if (report === null) return 1;
+    if (status === 0) return 0;
+    if (status !== 2 || !gatewayOnly(report)) return status === null ? 1 : status || 1;
   }
-  return 1;
+  if (!githubGatewayOnly(report)) return 1;
+  process.stdout.write(
+    "::warning::GitHub HTTP 5xx responses remain after bounded retries; link validity is unknown. See the preserved lychee report.\n",
+  );
+  process.stdout.write(
+    `${JSON.stringify({
+      inconclusiveGitHubLinks: [...report.matchAll(ERROR_ENTRY)].map((entry) => ({
+        status: Number(entry[1]),
+        url: entry[2],
+      })),
+    })}\n`,
+  );
+  return 0;
 }
 
 module.exports = { classify, gatewayOnly, main };
 
-if (require.main === module) process.exit(main());
+if (require.main === module) process.exitCode = main();
