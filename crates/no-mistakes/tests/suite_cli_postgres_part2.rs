@@ -180,3 +180,6 @@ mod cli_postgres_snapshot_grouping_recovery;
 
 #[path = "cli_postgres_snapshot_grouping_coverage.rs"]
 mod cli_postgres_snapshot_grouping_coverage;
+
+#[path = "cli_postgres_snapshot_issue_3426_regressions.rs"]
+mod cli_postgres_snapshot_issue_3426_regressions;
