@@ -20,12 +20,9 @@ The current validation graph is organized as follows:
   Lightweight policy, report, and aggregate jobs use the slim image where their
   tooling supports it.
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
-  Linux real-addon tests. Those API tests run in three case-based shards using
-  the explicit file set in `.github/scripts/native-api-linux-files.cjs`; Windows and
-  macOS keep their separate platform API file set and six/two shard counts.
-  Ordinary JavaScript tests run in four Vitest shards; a merge job combines the
-  blob reports and coverage before enforcing the configured floors. Real-addon
-  behavior remains in its own job.
+  Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
+  a merge job combines the blob reports and coverage before enforcing the
+  configured floors. Real-addon behavior remains in its own job.
 - Rust coverage builds instrumented test binaries once, then runs six test
   shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
@@ -876,13 +873,11 @@ through the existing Rust test helper, in both the library and native macOS
 harnesses. Repeat the exact test binary under CPU contention to exercise the
 handshake without rebuilding or configuring retries.
 
-Each real-addon shard writes Vitest JSON to `target/native-api-tests.json` and
-retains its collected inventory and selected shard plan. The
-[timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
+Each real-addon step writes Vitest JSON to `target/native-api-tests.json`.
+The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
 slowest tests to the job summary and writes every test's status and duration to
 `target/native-api-tests-durations.csv`. The `native-api-tests-*` artifacts retain
-the inventory, shard plan, JSON, CSV, and Markdown summary, including available
-results after failures.
+the JSON, CSV, and Markdown summary, including available results after failures.
 Real-addon files run one at a time through the
 [Vitest configuration](../../vitest.config.js). Each native process owns a Rayon
 pool that can use the available CPUs; parallel test-file forks would measure

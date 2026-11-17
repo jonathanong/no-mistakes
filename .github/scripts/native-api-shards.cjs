@@ -50,7 +50,6 @@ function run(
   count,
   execute = spawnSync,
   cli = path.join(path.dirname(require.resolve("vitest/package.json")), "vitest.mjs"),
-  selectedFiles = files,
 ) {
   fs.mkdirSync("target", { recursive: true });
   const invoke = (args) => {
@@ -67,7 +66,7 @@ function run(
   };
   invoke([
     "list",
-    ...selectedFiles,
+    ...files,
     "--no-static-parse",
     "--json=target/native-api-inventory.json",
     "--coverage=false",
@@ -80,7 +79,7 @@ function run(
   );
   invoke([
     "run",
-    ...selectedFiles,
+    ...files,
     `--testNamePattern=${plan.pattern}`,
     "--reporter=default",
     "--reporter=json",
@@ -91,18 +90,8 @@ function run(
 
 if (require.main === module) {
   try {
-    if (![4, 5].includes(process.argv.length))
-      throw new Error("usage: native-api-shards.cjs <shard> <count> [linux]");
-    const scope = process.argv[4];
-    if (scope !== undefined && scope !== "linux")
-      throw new Error("native API scope must be linux or omitted");
-    run(
-      Number(process.argv[2]),
-      Number(process.argv[3]),
-      undefined,
-      undefined,
-      scope === "linux" ? require("./native-api-linux-files.cjs") : files,
-    );
+    if (process.argv.length !== 4) throw new Error("usage: native-api-shards.cjs <shard> <count>");
+    run(Number(process.argv[2]), Number(process.argv[3]));
   } catch (error) {
     console.error(error.message);
     process.exitCode = error.status || 1;
