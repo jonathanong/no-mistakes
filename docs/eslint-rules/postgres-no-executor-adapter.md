@@ -328,14 +328,14 @@ run(0 ?? read, account);
 }
 ```
 
-| Option | Default | Purpose |
-| --- | --- | --- |
-| `importSpecifier` | `""` | Select the database import boundary. |
-| `executorNames` | `query`, `read`, `write` with a module; required otherwise | Select named executors. |
-| `executorFactoryNames` | `[]` | Select imported executor factories. |
-| `executorTypeNames` | `[]` | Select imported executor types. |
-| `trustedSqlTags` | `[]` | Select named SQL tags whose templates expose SQL in `"forwarding-only"` mode. |
-| `mode` | `"all"` | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL. |
+| Option                 | Default                                                    | Purpose                                                                       |
+| ---------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `importSpecifier`      | `""`                                                       | Select the database import boundary.                                          |
+| `executorNames`        | `query`, `read`, `write` with a module; required otherwise | Select named executors.                                                       |
+| `executorFactoryNames` | `[]`                                                       | Select imported executor factories.                                           |
+| `executorTypeNames`    | `[]`                                                       | Select imported executor types.                                               |
+| `trustedSqlTags`       | `[]`                                                       | Select named SQL tags whose templates expose SQL in `"forwarding-only"` mode. |
+| `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.       |
 
 - `importSpecifier` identifies the database module and defaults to empty.
   Configure your database module explicitly. Named executor imports must come
@@ -363,8 +363,14 @@ run(0 ?? read, account);
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   In `"forwarding-only"` mode, a direct tagged template is visible SQL only
   when its tag resolves to that configured named import and the template starts
-  with non-empty static text. Interpolated values remain placeholders. Other
-  modes accept this option for shared executor configurations without using it.
+  with non-empty static text. When a template interpolation comes from a helper
+  parameter, the rule follows stable local bindings to that parameter and checks
+  the value supplied at the call. A received SQL fragment or an opaque value
+  keeps the call reported; a proven primitive scalar, including a literal or
+  stable scalar binding, stays a placeholder. Later writes make a binding
+  unproven. A possibly `undefined` value is unproven when it can activate a
+  SQL-fragment default parameter. Other modes accept this option for shared
+  executor configurations without using it.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that
@@ -416,6 +422,12 @@ function search(fragment, query) {
   return query(fragment);
 }
 search(sql`SELECT id FROM orders`, read); // reported: SQL is hidden from the executor call
+
+function filter(where, query) {
+  return query(sql`SELECT id FROM orders WHERE ${where}`);
+}
+filter(sql`active = true`, read); // reported: the helper receives a SQL fragment
+filter(true, read); // allowed: the helper receives a scalar placeholder
 ```
 
 The mode also accepts a fresh object such as `load({ query: read })` when a

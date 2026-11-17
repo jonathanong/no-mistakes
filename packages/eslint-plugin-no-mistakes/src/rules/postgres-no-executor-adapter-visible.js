@@ -3,6 +3,7 @@
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 const { localFunction } = require("./postgres-no-executor-adapter-target");
 const { literalSql, tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
+const { localHoleSafe, tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 
 function opaqueBody(body) {
@@ -62,7 +63,7 @@ function otherPropertyRead(reference, property) {
   return true;
 }
 
-function importedVisible(call, index, property, context, options) {
+function importedVisible(call, index, property, context, options, facts) {
   const services = context.sourceCode.parserServices;
   if (!services?.program || !services.esTreeNodeToTSNodeMap) return null;
   const ts = require("typescript");
@@ -127,7 +128,9 @@ function importedVisible(call, index, property, context, options) {
         !ts.isCallExpression(invoked) ||
         (invoked.expression !== node && invoked.expression !== node.parent) ||
         !invoked.arguments[0] ||
-        !tsLiteralSql(invoked.arguments[0], checker, ts, options)
+        !tsLiteralSql(invoked.arguments[0], checker, ts, options, (hole) =>
+          tsHoleSafe(hole, call, declaration, checker, ts, context, facts, services.program),
+        )
       ) {
         safe = false;
       }
@@ -138,14 +141,14 @@ function importedVisible(call, index, property, context, options) {
   return seen && safe;
 }
 
-function visibleSqlTarget(call, index, quoteNode, context, options, accepted) {
+function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts) {
   if (call.type !== "CallExpression" || call.callee.type !== "Identifier") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
   if (quoteNode && (quoteNode.type !== "Property" || quoteNode.computed)) return null;
   const fn = localFunction(call.callee, context);
   if (!fn)
     return accepted
-      ? (importedVisible(call, index, quoteNode?.key.name, context, options) ?? false)
+      ? (importedVisible(call, index, quoteNode?.key.name, context, options, facts) ?? false)
       : null;
   if (fn.params.some((param) => param.type === "RestElement")) return false;
   const property = quoteNode?.key.name;
@@ -167,7 +170,12 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted) {
     if (reference.isWrite()) return false;
     if (binding.object && otherPropertyRead(reference, property)) return true;
     const invocation = executorCall(reference, property);
-    return Boolean(invocation && literalSql(invocation.arguments[0], context, options));
+    return Boolean(
+      invocation &&
+      literalSql(invocation.arguments[0], context, options, (hole) =>
+        localHoleSafe(hole, call, fn, context),
+      ),
+    );
   });
 }
 

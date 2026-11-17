@@ -113,7 +113,7 @@ module.exports = rule(
             !nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts);
           const visible =
             mode === "forwarding-only" && !nested
-              ? visibleSqlTarget(call, index, quoteNode, context, options, accepted)
+              ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)
               : null;
           if (visible === true || (accepted && visible !== false)) return;
           reportAdapter(
@@ -149,7 +149,7 @@ module.exports = rule(
         !nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts);
       const visible =
         mode === "forwarding-only" && !nested && passed.definite
-          ? visibleSqlTarget(call, index, quoteNode, context, options, accepted)
+          ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)
           : null;
       const hidden = !passed.definite || visible === false || (!accepted && !visible);
       if (nested || (mode === "forwarding-only" ? hidden : !accepted))

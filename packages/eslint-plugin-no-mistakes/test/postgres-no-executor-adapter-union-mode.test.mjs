@@ -37,6 +37,8 @@ const suite = {
     testCase("imported-mode.ts", "all", true),
     testCase("opaque-eval.ts", "all"),
     testCase("opaque-wrapped-eval.ts", "all"),
+    testCase("trusted-fragment-local.ts", "all"),
+    testCase("trusted-fragment-imported.ts", "all", true),
     testCase("union-sources.ts", "all", true, { executorNames: ["read"] }),
     testCase("union-sources.ts", "forwarding-only", true, { executorNames: ["read"] }),
   ],
@@ -53,6 +55,8 @@ const suite = {
     testCase("forwarding-mode.ts", "forwarding-only", true),
     testCase("opaque-eval.ts", "forwarding-only"),
     testCase("opaque-wrapped-eval.ts", "forwarding-only"),
+    testCase("trusted-fragment-local.ts", "forwarding-only"),
+    testCase("trusted-fragment-imported.ts", "forwarding-only", true),
     testCase("imported-mode.ts", "all"),
     testCase("imported-mode.ts", "forwarding-only"),
     testCase("imported-mode.ts", "forwarding-only", true),
@@ -67,6 +71,16 @@ it("snapshots union executor proof and both reporting modes", async () => {
       rule: "postgres-no-executor-adapter",
     }).map((finding) => finding.line);
     expect(lines).toEqual([19, 20, 23]);
+  }
+  for (const [name, typed, expected] of [
+    ["trusted-fragment-local.ts", false, [46, 47, 49, 51, 52, 53, 54, 55, 57, 64, 88]],
+    ["trusted-fragment-imported.ts", true, [14, 15, 17, 19, 20, 21, 22, 23, 25, 32, 44]],
+  ]) {
+    const lines = languageOptionsFindings({
+      ...testCase(name, "forwarding-only", typed),
+      rule: "postgres-no-executor-adapter",
+    }).map((finding) => finding.line);
+    expect(lines).toEqual(expected);
   }
   await expect(
     snapshotDocument(snapshotSuite("postgres-no-executor-adapter", languageOptions, suite)),

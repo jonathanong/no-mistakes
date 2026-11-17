@@ -11,11 +11,12 @@ function configuredTag(source, name, options) {
   );
 }
 
-function literalSql(node, context, options) {
+function literalSql(node, context, options, safeHole) {
   if (node?.type === "Literal" && typeof node.value === "string") return true;
   if (node?.type === "TemplateLiteral") return node.expressions.length === 0;
   if (node?.type !== "TaggedTemplateExpression" || node.tag.type !== "Identifier") return false;
   if (!node.quasi.quasis[0]?.value.cooked?.trim()) return false;
+  if (!node.quasi.expressions.every(safeHole)) return false;
   const variable = resolveVariable(node.tag, context);
   if (variable?.references.some((reference) => reference.isWrite())) return false;
   return Boolean(
@@ -30,13 +31,18 @@ function literalSql(node, context, options) {
   );
 }
 
-function tsLiteralSql(node, checker, ts, options) {
+function tsLiteralSql(node, checker, ts, options, safeHole) {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return true;
   if (!ts.isTaggedTemplateExpression(node) || !ts.isIdentifier(node.tag)) return false;
   const head = ts.isTemplateExpression(node.template)
     ? node.template.head.text
     : node.template.text;
   if (!head.trim()) return false;
+  if (
+    ts.isTemplateExpression(node.template) &&
+    !node.template.templateSpans.every((span) => safeHole(span.expression))
+  )
+    return false;
   const symbol = checker.getSymbolAtLocation(node.tag);
   return Boolean(
     symbol?.declarations?.some((declaration) => {
