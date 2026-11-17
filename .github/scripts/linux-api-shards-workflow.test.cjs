@@ -73,3 +73,18 @@ test("Linux shards use one bounded verified download for both runtime components
   );
   assert.equal(download.uses, undefined);
 });
+
+test("shared producer artifact contracts run before dependency installation", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--require",
+      path.join(__dirname, "fixtures/workflow-contract/builtins-only.cjs"),
+      "--test",
+      path.join(__dirname, "build-artifact-workflow.test.cjs"),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});

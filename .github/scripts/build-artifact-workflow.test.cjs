@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
-const { workflowJob, readWorkflow } = require("./workflow-contract.cjs");
+const { workflowJob } = require("./workflow-contract.cjs");
 const source = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const producers = [
   "linux-runtime",
@@ -64,28 +64,14 @@ test("every build producer validates the source and publishes the artifact run I
 test("test consumers download validated build sources while coverage profiles stay current", () => {
   for (const [name, producer] of Object.entries(consumers)) {
     const body = workflowJob(source, name);
-    if (name === "linux-api-tests") {
-      const download = readWorkflow(path.join(__dirname, "../workflows/ci.yml")).jobs[
-        name
-      ].steps.find((step) => step.name === "Download Linux runtime");
-      assert.equal(
-        download.env.NATIVE_RUNTIME_RUN_ID,
-        `\${{ needs.${producer}.outputs.artifact-run-id }}`,
-      );
-      assert.equal(download.env.GH_TOKEN, "${{ github.token }}");
-      assert.equal(
-        download.run,
-        "python3 .github/scripts/download-native-runtime.py linux-runtime-cli linux-runtime-addon",
-      );
-      continue;
-    }
-    if (name.startsWith("native-api-tests")) {
+    if (name === "linux-api-tests" || name.startsWith("native-api-tests")) {
       assert.ok(
         body.includes(`NATIVE_RUNTIME_RUN_ID: \${{ needs.${producer}.outputs.artifact-run-id }}`),
       );
       assert.match(body, /GH_TOKEN: \$\{\{ github.token \}\}/);
-      assert.match(body, /NATIVE_RUNTIME_TARGET: \$\{\{ matrix.target \}\}/);
-      assert.match(body, /python .github\/scripts\/download-native-runtime.py/);
+      if (name !== "linux-api-tests")
+        assert.match(body, /NATIVE_RUNTIME_TARGET: \$\{\{ matrix.target \}\}/);
+      assert.match(body, /python3? .github\/scripts\/download-native-runtime.py/);
       continue;
     }
     const downloads = steps(body).filter((step) => /uses: actions\/download-artifact@/.test(step));
