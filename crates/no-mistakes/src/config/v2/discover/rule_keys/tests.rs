@@ -88,7 +88,11 @@ fn fragment_unknown_keeps_raw_validation_and_location() {
 
 #[test]
 fn grouping_rule_accepts_only_advisory_configuration() {
-    for name in ["grouping-default.yml", "grouping-advisory.yml"] {
+    for name in [
+        "grouping-default.yml",
+        "grouping-advisory.yml",
+        "grouping-sql-fail.yml",
+    ] {
         check(name).unwrap();
     }
     for name in ["grouping-error.yml", "grouping-fail.yml"] {
@@ -115,6 +119,11 @@ fn grouping_rule_fragment_validation_preserves_advisory_only_policy() {
         assert!(error.contains(expected), "{error}");
         super::validate_fragment(&source, &path, "projects").unwrap();
     }
-    let (source, path) = load("grouping-fragment-valid.yml");
-    super::validate_fragment(&source, &path, "rules").unwrap();
+    for name in [
+        "grouping-fragment-valid.yml",
+        "grouping-fragment-sql-fail.yml",
+    ] {
+        let (source, path) = load(name);
+        super::validate_fragment(&source, &path, "rules").unwrap();
+    }
 }

@@ -69,6 +69,11 @@ pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
     let key = serde_yaml::Value::String("unanalyzableSql".to_string());
     RULES.iter().any(|id| {
         config.rule_applications(id).iter().any(|rule| {
+            if *id == "postgres-grouping-not-aggregation" {
+                return config.effective_rule_analysis(rule).is_ok_and(|policy| {
+                    policy.unanalyzable == crate::config::v2::Unanalyzable::Advise
+                });
+            }
             rule.options
                 .as_mapping()
                 .and_then(|options| options.get(&key))

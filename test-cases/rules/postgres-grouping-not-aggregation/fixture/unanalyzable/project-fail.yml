@@ -1,0 +1,15 @@
+projects:
+  db:
+    root: .
+    include: ["src/**/*.ts"]
+    postgres:
+      schemaCatalogPath: schema.json
+      unanalyzableSql: fail
+      executors:
+        importSpecifier: db
+        executorNames: [query]
+        typeNames: [QueryExecutor]
+        trustedSqlTags: [{ module: db, name: sql }]
+rules:
+  - rule: postgres-grouping-not-aggregation
+    projects: [db]

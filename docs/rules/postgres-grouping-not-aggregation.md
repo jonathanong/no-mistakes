@@ -10,6 +10,8 @@ rewriting: a proven faster grouped query can use a normal suppression.
 This rule cannot fail a run. Findings appear in `advisories`, including when
 severity is omitted. Only explicit `severity: advisory` is accepted; `error`,
 `fail`, and `options.fail` are rejected. Configuration errors remain errors.
+This also applies to SQL diagnostic policy: query rewrites need review
+and benchmarks, and an incomplete SQL proof does not justify a failing finding.
 
 ```yaml
 rules:
@@ -400,9 +402,17 @@ largest in-flight statement.
 | `executorOptionProperties` | `[]` | Declared option properties carrying an executor. |
 | `trustedSqlTags` | `[]` | Explicit `{module, name}` SQL tags. |
 | `sqlLiteralHelpers` | `[]` | Configured literal-preserving SQL helpers. |
-| `unanalyzableSql` | `advise` | `ignore` suppresses diagnostic advisories for SQL that cannot be statically analyzed, including SQL carried by a member call whose receiver is not a configured executor type. `advise` reports those diagnostics. Proven grouping findings remain advisory in either mode. |
+| `unanalyzable` | inherited shared policy, otherwise `advise` | Canonical shared policy: `report` and `advise` emit SQL diagnostic advisories; `ignore` suppresses them. Proven grouping findings remain advisory. |
+| `unanalyzableSql` | `advise` | Legacy alias: `fail` and `advise` emit the same non-failing SQL diagnostic advice, including member calls whose receiver is not a configured executor type; `ignore` suppresses it. Canonical `unanalyzable` takes precedence. |
 
-No allow list or fail option is supported. Public Node options are exported as
+Shared/canonical `report`, project `postgres.unanalyzableSql: fail`, and
+rule-level `unanalyzableSql: fail` all map to `advise`. This rule differs from
+failing PostgreSQL rules because neither a proven grouping shape nor uncertain
+SQL establishes that a query rewrite should be mandatory. The legacy
+`fail` spelling does not promote an advisory into a failure. Invalid modes remain
+configuration errors even when a valid canonical policy is present.
+
+No allow list or `options.fail` option is supported. Public Node options are exported as
 `PostgresGroupingNotAggregationOptions`; the target union is
 `PostgresGroupingNotAggregationCode`; the SQL diagnostic policy is
 `PostgresGroupingNotAggregationUnanalyzableSql`.
