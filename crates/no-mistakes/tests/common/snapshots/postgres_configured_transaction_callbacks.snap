@@ -1,0 +1,162 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "callbacks": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "query.ts",
+          "line": 103,
+          "message": "query.ts:103: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 21 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 108,
+          "message": "query.ts:108: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 22 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 114,
+          "message": "query.ts:114: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 23 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 18,
+          "message": "query.ts:18: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 5 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 24,
+          "message": "query.ts:24: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 6 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 29,
+          "message": "query.ts:29: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 7 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 33,
+          "message": "query.ts:33: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 8 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 39,
+          "message": "query.ts:39: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 9 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 45,
+          "message": "query.ts:45: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 10 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 50,
+          "message": "query.ts:50: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 11 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 55,
+          "message": "query.ts:55: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 12 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 63,
+          "message": "query.ts:63: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 13 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 68,
+          "message": "query.ts:68: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "return tx.query(\"SELECT id FROM items WHERE id = 14 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 74,
+          "message": "query.ts:74: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "return tx.query(\"SELECT id FROM items WHERE id = 15 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 8,
+          "message": "query.ts:8: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 2 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 80,
+          "message": "query.ts:80: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 16 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 91,
+          "message": "query.ts:91: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 18 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
+          "line": 99,
+          "message": "query.ts:99: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 20 FOR UPDATE\");",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

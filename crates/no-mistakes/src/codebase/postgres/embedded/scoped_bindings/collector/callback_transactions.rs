@@ -105,9 +105,10 @@ pub(super) fn record_function_shadow(
         return;
     }
     let scope = match function.r#type {
-        oxc_ast::ast::FunctionType::FunctionDeclaration => outer_scope,
-        oxc_ast::ast::FunctionType::FunctionExpression => function.span,
-        _ => return,
+        oxc_ast::ast::FunctionType::FunctionDeclaration
+        | oxc_ast::ast::FunctionType::TSDeclareFunction => outer_scope,
+        oxc_ast::ast::FunctionType::FunctionExpression
+        | oxc_ast::ast::FunctionType::TSEmptyBodyFunctionExpression => function.span,
     };
     record_shadow(name.name.as_str(), scope, shadows);
 }

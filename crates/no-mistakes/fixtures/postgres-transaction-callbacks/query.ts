@@ -92,4 +92,26 @@ export async function update() {
     });
     await pending;
   }
+  await transaction(function (tx) {
+    return tx.query("SELECT id FROM items WHERE id = 19 FOR UPDATE");
+  });
+  const referenced = async (tx: { query: Function }) => {
+    await tx.query("SELECT id FROM items WHERE id = 20 FOR UPDATE");
+  };
+  await transaction(referenced);
+  await transaction(async ({ query: tx }: { query: { query: Function } }) => {
+    await tx.query("SELECT id FROM items WHERE id = 21 FOR UPDATE");
+  });
+  {
+    const [head, ...[transaction]] = [0, [ordinary]];
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 22 FOR UPDATE");
+    });
+  }
+  {
+    const [transaction = ordinary] = [ordinary];
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 23 FOR UPDATE");
+    });
+  }
 }

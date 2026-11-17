@@ -501,6 +501,16 @@ fn postgres_lock_written_rows_caller_options_check_json_snapshot() {
         &[
             ("caller_options", "caller-options", "caller-options.yml"),
             (
+                "coverage_forms",
+                "caller-options-coverage",
+                "caller-options.yml",
+            ),
+            (
+                "coverage_written_keys",
+                "caller-options-coverage",
+                "caller-options-written.yml",
+            ),
+            (
                 "review_boundaries",
                 "caller-options-review",
                 "caller-options.yml",
@@ -511,5 +521,19 @@ fn postgres_lock_written_rows_caller_options_check_json_snapshot() {
                 "caller-options-written.yml",
             ),
         ],
+    );
+}
+
+#[test]
+fn postgres_configured_transaction_callbacks_check_json_snapshot() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/postgres-transaction-callbacks");
+    assert_saved_fixture(
+        "postgres_configured_transaction_callbacks",
+        &[(
+            "callbacks",
+            root,
+            rules_path(RULE, "configs", "callback-coverage.yml"),
+        )],
     );
 }

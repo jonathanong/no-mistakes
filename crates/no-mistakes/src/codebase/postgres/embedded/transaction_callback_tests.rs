@@ -8,7 +8,7 @@ fn configured_transaction_callback_parameters_are_scoped_transactions() {
         .with_scoped_executors(&["transaction".into()], &[]);
     options.track_transaction_helpers = true;
     let calls = extract_embedded_sql_from_source(&path, &source, &options).calls;
-    assert_eq!(calls.len(), 18, "{calls:?}");
+    assert_eq!(calls.len(), 23, "{calls:?}");
     assert!(calls[0].executor_transaction_known, "{:?}", calls[0]);
     assert!(calls[0].transaction_id.is_some(), "{:?}", calls[0]);
     assert_eq!(calls[0].transaction_line, Some(4));
@@ -31,4 +31,10 @@ fn configured_transaction_callback_parameters_are_scoped_transactions() {
     assert!(calls[16].transaction_id.is_some(), "{:?}", calls[16]);
     assert!(calls[16].executor_transaction_known, "{:?}", calls[16]);
     assert_eq!(calls[17].transaction_id, None);
+    assert!(calls[18].transaction_id.is_some(), "{:?}", calls[18]);
+    assert!(calls[18].executor_transaction_known, "{:?}", calls[18]);
+    assert_eq!(calls[19].transaction_id, None);
+    assert_eq!(calls[20].transaction_id, None);
+    assert_eq!(calls[21].transaction_id, None);
+    assert_eq!(calls[22].transaction_id, None);
 }
