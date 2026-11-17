@@ -79,6 +79,17 @@ The current validation graph is organized as follows:
   producer or shard fails. Artifact transfer and per-job setup remain part of
   elapsed PR wall time.
 
+Native API consumers use the [runtime downloader](../../.github/scripts/download-native-runtime.py)
+instead of a JavaScript artifact action so completed transfers do not depend on
+an action process draining its event loop. It selects the exact platform artifact
+from the validated producer run, verifies the archive against its SHA256 metadata,
+and closes network, archive, and temporary-file resources before returning.
+Transient download failures receive bounded retries with backoff; digest failures
+remain fatal. The downloader reports metadata, transfer, checksum, extraction,
+and total timings to distinguish network stalls from completion stalls. Its
+internal deadline leaves room before the workflow step deadline; a stalled
+transfer still fails the required native API gate.
+
 Coverage reports pass every archived test executable explicitly to LLVM. Cargo's
 new output layout uses metadata markers to distinguish test binaries from build
 script outputs; the archive omits those markers. An implicit directory scan can

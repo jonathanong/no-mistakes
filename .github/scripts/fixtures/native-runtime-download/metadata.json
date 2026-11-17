@@ -1,0 +1,10 @@
+{
+  "artifacts": [
+    {
+      "id": 123,
+      "name": "native-runtime-test-target",
+      "expired": false,
+      "digest": "sha256:adbb44a5c02a0edf30a6090d46a5870f73946efb408fb43595e0c12ca8036dcb"
+    }
+  ]
+}

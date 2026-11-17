@@ -64,6 +64,13 @@ test("every build producer validates the source and publishes the artifact run I
 test("test consumers download validated build sources while coverage profiles stay current", () => {
   for (const [name, producer] of Object.entries(consumers)) {
     const body = workflowJob(source, name);
+    if (name.startsWith("native-api-tests")) {
+      assert.ok(body.includes(`NATIVE_RUNTIME_RUN_ID: \${{ needs.${producer}.outputs.artifact-run-id }}`));
+      assert.match(body, /GH_TOKEN: \$\{\{ github.token \}\}/);
+      assert.match(body, /NATIVE_RUNTIME_TARGET: \$\{\{ matrix.target \}\}/);
+      assert.match(body, /python .github\/scripts\/download-native-runtime.py/);
+      continue;
+    }
     const downloads = steps(body).filter((step) => /uses: actions\/download-artifact@/.test(step));
     assert.ok(downloads.length > 0, name);
     for (const step of downloads) {

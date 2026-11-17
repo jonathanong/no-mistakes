@@ -338,6 +338,9 @@ jobs:
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs
+      - name: Test bounded native runtime download
+        timeout-minutes: 2
+        run: python3 -m unittest discover -s .github/scripts -p test_download_native_runtime.py
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   quality-rust:
     name: Rust quality (${{ matrix.name }})
@@ -1817,12 +1820,11 @@ jobs:
 
       - name: Download native-runtime
         timeout-minutes: 2
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          run-id: ${{ needs.native-build.outputs.artifact-run-id }}
-          github-token: ${{ github.token }}
-          name: native-runtime-${{ matrix.target }}
-          path: target/debug
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATIVE_RUNTIME_RUN_ID: ${{ needs.native-build.outputs.artifact-run-id }}
+          NATIVE_RUNTIME_TARGET: ${{ matrix.target }}
+        run: python .github/scripts/download-native-runtime.py
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -1931,12 +1933,11 @@ jobs:
 
       - name: Download native-runtime
         timeout-minutes: 2
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          run-id: ${{ needs.native-build-macos.outputs.artifact-run-id }}
-          github-token: ${{ github.token }}
-          name: native-runtime-${{ matrix.target }}
-          path: target/debug
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATIVE_RUNTIME_RUN_ID: ${{ needs.native-build-macos.outputs.artifact-run-id }}
+          NATIVE_RUNTIME_TARGET: ${{ matrix.target }}
+        run: python .github/scripts/download-native-runtime.py
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
