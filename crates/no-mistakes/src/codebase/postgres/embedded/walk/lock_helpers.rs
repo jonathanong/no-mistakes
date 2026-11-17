@@ -67,11 +67,6 @@ impl<'a> ScopeVisitor<'a> {
             }
             let mut fact = EmbeddedSqlCall::default();
             specialize::annotate(self, call, &query, &mut fact);
-            if query.option_property.is_none()
-                && (!fact.executor_transaction_known || fact.transaction_id.is_none())
-            {
-                continue;
-            }
             if specialize::enabled(call, &query).is_none() {
                 fact.transaction_id = None;
                 fact.executor_transaction_known = false;

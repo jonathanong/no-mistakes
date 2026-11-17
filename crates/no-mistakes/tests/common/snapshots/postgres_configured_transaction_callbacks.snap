@@ -37,6 +37,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "query.ts",
+          "line": 137,
+          "message": "query.ts:137: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 26 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "query.ts",
           "line": 18,
           "message": "query.ts:18: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
           "rule": "postgres-lock-written-rows-only",

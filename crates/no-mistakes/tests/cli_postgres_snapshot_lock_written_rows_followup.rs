@@ -36,6 +36,20 @@ fn postgres_caller_options_followup_check_json_snapshot() {
             && finding["sourceLine"] == "await lockReassigned({ query: tx });"));
     for label in ["with_options", "without_options"] {
         let findings = report[label]["report"]["rules"].as_array().unwrap();
+        for line in [8, 12] {
+            assert!(
+                findings
+                    .iter()
+                    .any(|finding| finding["file"] == "src/mixed-direct.ts"
+                        && finding["line"] == line
+                        && finding["target"] == "unanalyzable"),
+                "{label}: {findings:?}"
+            );
+        }
+        assert!(!findings
+            .iter()
+            .any(|finding| finding["file"] == "src/mixed-direct.ts"
+                && [3, 7, 13].contains(&finding["line"].as_u64().unwrap())));
         for (file, line) in [
             ("src/uncalled.ts", 3),
             ("src/uncalled.ts", 6),

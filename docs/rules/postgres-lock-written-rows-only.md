@@ -292,7 +292,8 @@ factory also recognizes an arrow or function expression in its first argument:
 the callback's first simple identifier parameter is the transaction. Member
 callees, shadowed factory names, referenced callbacks, and destructured callback
 parameters do not establish this proof. Reassigning the callback parameter
-invalidates its transaction proof. With an import specifier, executor names
+invalidates its transaction proof. Case-block shadows apply only after the
+switch discriminant, which is evaluated in the outer environment. With an import specifier, executor names
 default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.
@@ -479,6 +480,8 @@ the lock must supply a static inline options object selecting a proven
 transaction; missing options, a non-transaction
 client, and unresolved callers retain findings. At least one resolved caller is
 required; a helper with no resolved callers cannot prove transaction membership.
+A proven transaction caller never hides an unresolved helper invocation,
+regardless of the order of those calls.
 A transaction binding reassigned to a pool before the helper call also fails
 that proof. A `Client` type annotation alone
 does not prove a transaction.

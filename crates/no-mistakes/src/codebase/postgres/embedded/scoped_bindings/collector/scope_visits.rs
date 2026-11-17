@@ -40,8 +40,12 @@ macro_rules! scope_visits {
         }
 
         fn visit_switch_statement(&mut self, switch: &SwitchStatement<'a>) {
-            self.with_scope(switch.span, |this| {
-                walk::walk_switch_statement(this, switch)
+            self.visit_expression(&switch.discriminant);
+            let case_block = Span::new(switch.discriminant.span().end, switch.span.end);
+            self.with_scope(case_block, |this| {
+                for case in &switch.cases {
+                    this.visit_switch_case(case);
+                }
             });
         }
 

@@ -125,3 +125,17 @@ export async function caughtOrdinary() {
     });
   }
 }
+
+export async function switchDiscriminant() {
+  switch (await transaction(async (tx) => {
+    await tx.query("SELECT id FROM items WHERE id = 25 FOR UPDATE");
+    return 1;
+  })) {
+    case 1:
+      let transaction = ordinary;
+      await transaction(async (tx) => {
+        await tx.query("SELECT id FROM items WHERE id = 26 FOR UPDATE");
+      });
+      break;
+  }
+}

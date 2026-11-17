@@ -1,4 +1,4 @@
-use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 
 const RULE: &str = "postgres-lock-written-rows-only";
 
