@@ -17,6 +17,14 @@ const cases = [
   ["ddl-guard", "checks-fail.yml", 0],
   ["ddl-catalog", "ddl-catalog.yml", 1],
   ["ddl-negative", "checks-fail.yml", 18],
+  ["trigger-writes", "trigger-writes.yml", 9],
+  ["trigger-upsert", "trigger-writes.yml", 2],
+  ["trigger-composite", "trigger-writes.yml", 3],
+  ["trigger-dynamic-setting", "trigger-writes.yml", 2],
+  ["trigger-replication-role", "trigger-writes.yml", 2],
+  ["mixed-ddl-trigger", "mixed-ddl-trigger-complete.yml", 0],
+  ["mixed-ddl-trigger", "mixed-ddl-trigger-ordering.yml", 1],
+  ["mixed-ddl-trigger", "mixed-ddl-trigger-ignored-check.yml", 0],
 ];
 
 for (const [fixture, config, count] of cases) {

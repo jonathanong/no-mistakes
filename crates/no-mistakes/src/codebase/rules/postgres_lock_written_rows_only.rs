@@ -62,6 +62,10 @@ pub(crate) fn check_with_files_sources_and_facts(
         RULE_ID,
         |rule| {
             let mut compiled = compile(&rule.try_rule_options()?)?;
+            let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+            compiled.schema_catalog_path = compiled
+                .schema_catalog_path
+                .filter(|path| filter.is_match(Path::new(path)));
             compiled.allow_audit = Some(super::allow_audit::AllowAudit::new(
                 root,
                 config,

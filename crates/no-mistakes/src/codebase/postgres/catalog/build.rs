@@ -13,8 +13,10 @@ use std::collections::BTreeMap;
 pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCatalog> {
     let mut tables = BTreeMap::new();
     let mut model_tables = BTreeMap::new();
+    let mut trigger_function_identities = BTreeMap::new();
     for (name, table) in snapshot.tables {
-        let model = model_table(path, &name, &table)?;
+        let identities = trigger_function_identities.entry(name.clone()).or_default();
+        let model = model_table(path, &name, &table, identities)?;
         tables.insert(normalize_table_name(&name), arbiter::arbiter_table(&table));
         model_tables.insert(normalize_table_name(&name), model);
     }
@@ -26,6 +28,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         current_database: snapshot.current_database,
         tables,
         model_tables,
+        trigger_function_identities,
         relation_fallback: Default::default(),
         functions,
         projections: Default::default(),
@@ -89,7 +92,12 @@ fn views(views: BTreeMap<String, super::snapshot::SnapshotView>) -> BTreeMap<Str
         .collect()
 }
 
-fn model_table(path: &str, name: &str, table: &SnapshotTable) -> Result<CatalogTable> {
+fn model_table(
+    path: &str,
+    name: &str,
+    table: &SnapshotTable,
+    identities: &mut BTreeMap<String, String>,
+) -> Result<CatalogTable> {
     Ok(CatalogTable {
         name: name.to_string(),
         relation_kind: columns::relation_kind(path, name, &table.relation_kind)?,
@@ -102,7 +110,7 @@ fn model_table(path: &str, name: &str, table: &SnapshotTable) -> Result<CatalogT
         check_constraints: objects::checks(table),
         unique_constraints: objects::uniques(table),
         indexes: objects::indexes(&table.indexes),
-        triggers: objects::triggers(path, name, table)?,
+        triggers: objects::triggers(path, name, table, identities)?,
         partition_key: objects::partition_key(path, name, table)?,
     })
 }

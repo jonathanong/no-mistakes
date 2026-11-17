@@ -51,3 +51,29 @@ test(
     }
   },
 );
+
+test(
+  "compiled SQL argument aliases preserve bind pairing across async report APIs",
+  { skip: !addon?.endsWith(".node") },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture/issue-3525",
+    );
+    const options = { root, effort: "max" };
+    const pending = cjs.check(options);
+    assert.ok(pending instanceof Promise);
+    const report = await pending;
+    assert.deepEqual(
+      report.rules.map((finding) => finding.line).sort((a, b) => a - b),
+      [7, 20, 27, 51, 59, 77],
+    );
+    assert.deepEqual(await esm.check(options), report);
+    const request = { root, reports: [{ type: "check", effort: "max" }] };
+    const batch = await cjs.analyzeProject(request);
+    assert.deepEqual(batch.reports[0].result, report);
+    assert.deepEqual(await esm.analyzeProject(request), batch);
+  },
+);

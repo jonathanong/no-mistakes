@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {},
+    "orders": {
+      "triggers": {
+        "orders_selected": {
+          "definition": "CREATE TRIGGER orders_selected AFTER UPDATE OF selected ON orders FOR EACH ROW EXECUTE FUNCTION orders_selected()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "orders_selected()": {
+      "definition": "CREATE FUNCTION orders_selected() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET latest = NEW.selected WHERE id = NEW.id; RETURN NEW; END $$;"
+    }
+  }
+}

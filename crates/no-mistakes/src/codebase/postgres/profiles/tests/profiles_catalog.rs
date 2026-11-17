@@ -160,3 +160,36 @@ fn rule_config(rule: &str) -> NoMistakesConfig {
         ..Default::default()
     }
 }
+
+#[test]
+fn lock_written_rule_declares_optional_catalog_demand() {
+    assert_eq!(
+        SCHEMA_CATALOG_RULE_IDS
+            .iter()
+            .filter(|id| **id == "postgres-lock-written-rows-only")
+            .count(),
+        1,
+    );
+    for (options, expected) in [
+        ("{}", Vec::<String>::new()),
+        ("schemaCatalogPath: ''", Vec::new()),
+        (
+            "schemaCatalogPath: trigger-schema.json",
+            vec!["trigger-schema.json".to_owned()],
+        ),
+    ] {
+        let mut options: serde_yaml::Value = serde_yaml::from_str(options).unwrap();
+        options["executorNames"] = serde_yaml::Value::Sequence(Vec::new());
+        let mut config = NoMistakesConfig::default();
+        config.rules.push(RuleDef {
+            rule: "postgres-lock-written-rows-only".into(),
+            scope: Some(RuleScope::Repository),
+            options,
+            ..RuleDef::default()
+        });
+        assert_eq!(
+            configured_schema_catalog_paths(&config, SCHEMA_CATALOG_RULE_IDS).unwrap(),
+            expected
+        );
+    }
+}

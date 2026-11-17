@@ -28,6 +28,7 @@ mod parse;
 mod projection_cache;
 mod relation;
 mod resolve;
+mod trigger_writes;
 mod view_definition;
 mod view_relation;
 

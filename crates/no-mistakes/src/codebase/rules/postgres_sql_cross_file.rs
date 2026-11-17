@@ -16,7 +16,7 @@ pub(crate) use options::{compile, CompiledOptions, Options};
 pub(crate) use provenance::{
     delimit_identifier_markers, identifier_sources, identifier_status, interpolations,
     is_process_env, is_process_specifier, is_text_tag, literal_array, scans_identifier, Bindings,
-    IdentifierReturns, Provenance,
+    DetachedTemplateBinds, IdentifierReturns, Provenance,
 };
 pub(crate) use sql::{identifier_placeholder, sql_calls, SqlCall};
 pub(crate) use validators::{metadata_helper_call, metadata_row_projection};

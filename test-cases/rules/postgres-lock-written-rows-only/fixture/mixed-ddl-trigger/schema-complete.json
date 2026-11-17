@@ -1,0 +1,27 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "public.events": {},
+    "public.reservations": {
+      "foreignKeys": {
+        "reservations_event_fk": {
+          "referencedTable": "public.events"
+        }
+      }
+    },
+    "public.accounts": {},
+    "public.orders": {
+      "triggers": {
+        "orders_update_account": {
+          "definition": "CREATE TRIGGER orders_update_account AFTER INSERT ON public.orders FOR EACH ROW EXECUTE FUNCTION public.orders_update_account()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "public.orders_update_account()": {
+      "definition": "CREATE FUNCTION public.orders_update_account() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE public.accounts SET latest_order_id = NEW.id WHERE id = NEW.account_id; RETURN NEW; END $$;"
+    }
+  }
+}

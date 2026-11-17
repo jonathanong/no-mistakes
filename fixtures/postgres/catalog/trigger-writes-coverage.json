@@ -1,0 +1,168 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "source_upsert_nothing": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_upsert_nothing FOR EACH ROW EXECUTE FUNCTION upsert_nothing()"
+        }
+      }
+    },
+    "source_empty_sql": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_empty_sql FOR EACH ROW EXECUTE FUNCTION empty_sql()"
+        }
+      }
+    },
+    "source_return_old": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_return_old FOR EACH ROW EXECUTE FUNCTION return_old()"
+        }
+      }
+    },
+    "source_return_null": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_return_null FOR EACH ROW EXECUTE FUNCTION return_null()"
+        }
+      }
+    },
+    "source_bad_end": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_bad_end FOR EACH ROW EXECUTE FUNCTION bad_end()"
+        }
+      }
+    },
+    "source_bad_return": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_bad_return FOR EACH ROW EXECUTE FUNCTION bad_return()"
+        }
+      }
+    },
+    "source_short_body": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_short_body FOR EACH ROW EXECUTE FUNCTION short_body()"
+        }
+      }
+    },
+    "source_no_begin": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_no_begin FOR EACH ROW EXECUTE FUNCTION no_begin()"
+        }
+      }
+    },
+    "source_no_return": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_no_return FOR EACH ROW EXECUTE FUNCTION no_return()"
+        }
+      }
+    },
+    "source_unsupported_language": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_unsupported_language FOR EACH ROW EXECUTE FUNCTION unsupported_language()"
+        }
+      }
+    },
+    "source_invalid_sql": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_invalid_sql FOR EACH ROW EXECUTE FUNCTION invalid_sql()"
+        }
+      }
+    },
+    "source_derived_update": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_derived_update FOR EACH ROW EXECUTE FUNCTION derived_update()"
+        }
+      }
+    },
+    "source_derived_delete": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_derived_delete FOR EACH ROW EXECUTE FUNCTION derived_delete()"
+        }
+      }
+    },
+    "source_ambiguous": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_ambiguous EXECUTE FUNCTION overloaded()"
+        }
+      }
+    },
+    "source_missing_body": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_missing_body EXECUTE FUNCTION missing_body()"
+        }
+      }
+    },
+    "source_missing_function": {
+      "triggers": {
+        "apply_effect": {
+          "definition": "CREATE TRIGGER apply_effect AFTER INSERT ON source_missing_function EXECUTE FUNCTION absent()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "upsert_nothing()": {
+      "definition": "CREATE FUNCTION upsert_nothing() RETURNS trigger LANGUAGE sql AS $$ SELECT 1; INSERT INTO audit (id) VALUES (1) ON CONFLICT (id) DO NOTHING; $$"
+    },
+    "empty_sql()": {
+      "definition": "CREATE FUNCTION empty_sql() RETURNS trigger LANGUAGE sql AS $$  $$"
+    },
+    "return_old()": {
+      "definition": "CREATE FUNCTION return_old() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN OLD; END; $$"
+    },
+    "return_null()": {
+      "definition": "CREATE FUNCTION return_null() RETURNS trigger LANGUAGE plpgsql AS $$ begin return null; end; $$"
+    },
+    "bad_end()": {
+      "definition": "CREATE FUNCTION bad_end() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET value = 1; RETURN NEW; FINISH; $$"
+    },
+    "bad_return()": {
+      "definition": "CREATE FUNCTION bad_return() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET value = 1; RETURN something_else; END; $$"
+    },
+    "short_body()": {
+      "definition": "CREATE FUNCTION short_body() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN $$"
+    },
+    "no_begin()": {
+      "definition": "CREATE FUNCTION no_begin() RETURNS trigger LANGUAGE plpgsql AS $$ DECLARE x int; BEGIN RETURN NEW; END; $$"
+    },
+    "no_return()": {
+      "definition": "CREATE FUNCTION no_return() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET value = 1; END; $$"
+    },
+    "unsupported_language()": {
+      "definition": "CREATE FUNCTION unsupported_language() RETURNS trigger LANGUAGE plpython3u AS $$ UPDATE accounts SET value = 1; $$"
+    },
+    "invalid_sql()": {
+      "definition": "CREATE FUNCTION invalid_sql() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET $$"
+    },
+    "derived_update()": {
+      "definition": "CREATE FUNCTION derived_update() RETURNS trigger LANGUAGE sql AS $$ UPDATE (SELECT * FROM accounts) AS a SET value = 1; $$"
+    },
+    "derived_delete()": {
+      "definition": "CREATE FUNCTION derived_delete() RETURNS trigger LANGUAGE sql AS $$ DELETE FROM (SELECT * FROM accounts) AS a; $$"
+    },
+    "overloaded()": {
+      "definition": "CREATE FUNCTION overloaded() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET value = 1; $$"
+    },
+    "overloaded(integer)": {
+      "definition": "CREATE FUNCTION overloaded(integer) RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET value = 2; $$"
+    },
+    "missing_body()": {
+      "definition": "CREATE FUNCTION missing_body() RETURNS trigger LANGUAGE sql"
+    }
+  }
+}

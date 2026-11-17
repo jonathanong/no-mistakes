@@ -2,6 +2,7 @@ use super::*;
 
 mod binding_control_flow;
 mod catalog_errors;
+mod catalog_reconciliation;
 mod ddl;
 mod executor_selection;
 mod flow_coverage;
@@ -18,6 +19,9 @@ mod placeholder_provenance;
 mod proof;
 mod returning_commit;
 mod sql_forms;
+mod trigger_composite;
+mod trigger_replication_role;
+mod trigger_writes;
 
 fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     check_with_files(root, config, &[root.join("src/query.ts")])

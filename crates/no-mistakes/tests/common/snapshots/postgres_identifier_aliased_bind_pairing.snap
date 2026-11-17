@@ -1,0 +1,72 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "aliases": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "import": "q",
+          "line": 20,
+          "message": "SQL text from `q.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(statement, other.values);",
+          "target": "q"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "q",
+          "line": 27,
+          "message": "SQL text from `q.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(alias);",
+          "target": "q"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "q",
+          "line": 51,
+          "message": "SQL text from `q.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(statement);",
+          "target": "q"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "q",
+          "line": 59,
+          "message": "SQL text from `q.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(statement, q.values);",
+          "target": "q"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "q",
+          "line": 7,
+          "message": "SQL text from `q.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(statement);",
+          "target": "q"
+        },
+        {
+          "file": "src/query.ts",
+          "import": "table",
+          "line": 77,
+          "message": "Unbounded identifier source `table` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${table}`);",
+          "target": "table"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

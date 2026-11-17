@@ -12,3 +12,6 @@ mod cli_postgres_snapshot_issue_3505;
 
 #[path = "cli_postgres_snapshot_grouping_unanalyzable.rs"]
 mod cli_postgres_snapshot_grouping_unanalyzable;
+
+#[path = "cli_postgres_snapshot_lock_written_rows_catalog.rs"]
+mod cli_postgres_snapshot_lock_written_rows_catalog;
