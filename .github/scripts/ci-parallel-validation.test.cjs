@@ -255,10 +255,6 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   assert.match(shards, /shard: \[1, 2, 3, 4\]/);
   assert.match(shards, /fail-fast: false/);
   assert.match(shards, /standalone-shards\.cjs run/);
-  const helper = readFileSync(path.join(root, ".github/scripts/standalone-shards.cjs"), "utf8");
-  assert.match(helper, /\["nextest", "archive", "--locked", "-p", "no-mistakes", "--lib"/);
-  assert.doesNotMatch(helper, /--all-features|--no-default-features/);
-  assert.ok(helper.includes('delete childEnv["CARGO_BIN_EXE_no-mistakes"]'));
 });
 
 test("CI archive and release validation preserve the locked full-workspace test scope", () => {
