@@ -35,29 +35,29 @@ pub(super) fn unsafe_helper(
             else {
                 return false;
             };
-            let Some(producer) = facts.get_ts_facts(file) else {
-                return false;
-            };
-            producer.value_flow.returns.iter().any(|(returned, value)| {
-                if returned != owner {
-                    return false;
-                }
-                let ValueExpression::Call(inner_start, inner_end) = value else {
-                    return false;
-                };
-                let Some(inner) = bindings.value_call(file, (*inner_start, *inner_end)) else {
-                    return false;
-                };
-                calls_target(graph, file, inner, file, *owner)
-                    || unsafe_append(
-                        proof,
-                        file,
-                        &producer.value_flow,
-                        *owner,
-                        &sql.file,
-                        call,
-                        inner,
-                    )
+            facts.get_ts_facts(file).is_some_and(|producer| {
+                producer.value_flow.returns.iter().any(|(returned, value)| {
+                    if returned != owner {
+                        return false;
+                    }
+                    let ValueExpression::Call(inner_start, inner_end) = value else {
+                        return false;
+                    };
+                    bindings
+                        .value_call(file, (*inner_start, *inner_end))
+                        .is_some_and(|inner| {
+                            calls_target(graph, file, inner, file, *owner)
+                                || unsafe_append(
+                                    proof,
+                                    file,
+                                    &producer.value_flow,
+                                    *owner,
+                                    &sql.file,
+                                    call,
+                                    inner,
+                                )
+                        })
+                })
             })
         })
     })
