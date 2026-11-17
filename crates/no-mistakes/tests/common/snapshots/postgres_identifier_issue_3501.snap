@@ -399,6 +399,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "item"
         },
         {
+          "file": "negative/mutated-map.ts",
+          "import": "TABLES",
+          "line": 9,
+          "message": "Unbounded identifier source `TABLES` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`LOCK TABLE ${TABLES.join(', ')}`);",
+          "target": "TABLES"
+        },
+        {
           "file": "negative/nonrequired-literal-unions.ts",
           "import": "kind",
           "line": 10,
@@ -435,9 +444,72 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "kind"
         },
         {
+          "file": "negative/parameter-cast-paths.ts",
+          "import": "kind",
+          "line": 12,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${({ table: kind as string } as const).table}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-cast-paths.ts",
+          "import": "kind",
+          "line": 16,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${([kind as string] as const)[0]}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-cast-paths.ts",
+          "import": "kind",
+          "line": 8,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
+          "target": "kind"
+        },
+        {
           "file": "negative/parameter-scopes.ts",
           "import": "kind",
           "line": 6,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-writes.ts",
+          "import": "kind",
+          "line": 12,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-writes.ts",
+          "import": "kind",
+          "line": 17,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-writes.ts",
+          "import": "kind",
+          "line": 25,
+          "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
+          "target": "kind"
+        },
+        {
+          "file": "negative/parameter-writes.ts",
+          "import": "kind",
+          "line": 7,
           "message": "Unbounded identifier source `kind` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return query(`SELECT 1 FROM ${kind}_accounts`);",
