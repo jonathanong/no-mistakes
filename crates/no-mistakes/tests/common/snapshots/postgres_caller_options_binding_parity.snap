@@ -1,0 +1,47 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "with_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/binding.ts",
+          "line": 3,
+          "message": "src/binding.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(sql`SELECT id FROM users WHERE id = ${id} FOR UPDATE`);",
+          "target": "row-lock-outside-transaction"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "without_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/binding.ts",
+          "line": 3,
+          "message": "src/binding.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(sql`SELECT id FROM users WHERE id = ${id} FOR UPDATE`);",
+          "target": "row-lock-outside-transaction"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -23,9 +23,8 @@ impl<'a> Visit<'a> for Uses {
     }
     fn visit_export_declaration(&mut self, export: &ExportDeclaration<'a>) {
         if let Declaration::FunctionDeclaration(function) = &export.declaration {
-            if let Some(name) = &function.id {
-                self.escaped.insert(name.name.to_string());
-            }
+            self.escaped
+                .extend(function.id.iter().map(|name| name.name.to_string()));
         }
         walk::walk_export_declaration(self, export);
     }

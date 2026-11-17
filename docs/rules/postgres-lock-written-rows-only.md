@@ -418,6 +418,15 @@ executorOptions:
   - name: query
 ```
 
+A bare call remains a binding lookup even when its name matches a configured
+property. This call has no options argument to select:
+
+```ts
+await using transaction = await beginTransaction();
+const query = transaction;
+await query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);
+```
+
 Names must be nonempty. The existing `executorOptionProperties: [query]` form
 remains supported. Both lists combine, and repeated names are deduplicated.
 An executor can accept an inline options object that routes SQL to a transaction:

@@ -18,3 +18,5 @@ mod cli_postgres_snapshot_lock_written_rows_catalog;
 
 #[path = "cli_postgres_snapshot_frozen_followups.rs"]
 mod cli_postgres_snapshot_frozen_followups;
+#[path = "cli_postgres_snapshot_lock_written_rows_followup.rs"]
+mod cli_postgres_snapshot_lock_written_rows_followup;

@@ -18,6 +18,7 @@ pub(super) fn summarize(
     if params.contains(&callee.name.as_str()) || !bindings.contains(callee.name.as_str()) {
         return None;
     }
+    let first_argument = call.arguments.get(1)?.as_expression()?;
     let mut selected = None;
     for (index, argument) in call.arguments.iter().enumerate().skip(1) {
         match unwrap_ts_wrappers(argument.as_expression()?) {
@@ -77,19 +78,15 @@ pub(super) fn summarize(
                 }
                 _ => return None,
             }
-            if let Some(argument) = call.arguments.get(1) {
-                if let Expression::ArrayExpression(array) =
-                    unwrap_ts_wrappers(argument.as_expression()?)
-                {
-                    if !parameters.is_empty() {
-                        return None;
-                    }
-                    parameters = array
-                        .elements
-                        .iter()
-                        .map(|value| super::parameters::binding(value.as_expression()?, params))
-                        .collect::<Option<Vec<_>>>()?;
+            if let Expression::ArrayExpression(array) = unwrap_ts_wrappers(first_argument) {
+                if !parameters.is_empty() {
+                    return None;
                 }
+                parameters = array
+                    .elements
+                    .iter()
+                    .map(|value| super::parameters::binding(value.as_expression()?, params))
+                    .collect::<Option<Vec<_>>>()?;
             }
             Some(Query {
                 executor,
