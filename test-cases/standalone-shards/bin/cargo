@@ -8,14 +8,20 @@ mode="$2"
 shift 2
 archive=''
 extract=''
+zstd_level=''
+zstd_long=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --archive-file) archive="$2"; shift 2 ;;
+    --zstd-level) zstd_level="$2"; shift 2 ;;
+    --zstd-long) zstd_long=true; shift ;;
     --extract-to) extract="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
 if [[ "$mode" == archive ]]; then
+  test "$zstd_level" = 6
+  test "$zstd_long" = true
   if [[ -n "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" ]]; then
     echo 'argv wrapper must not affect archive builds' >&2
     exit 93

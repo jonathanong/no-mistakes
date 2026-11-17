@@ -6,7 +6,19 @@ function commands(mode, bundle, index, total, workspace = process.cwd()) {
   const archive = path.resolve(bundle, "standalone.tar.zst");
   if (mode === "build")
     return [
-      ["nextest", "archive", "--locked", "-p", "no-mistakes", "--lib", "--archive-file", archive],
+      [
+        "nextest",
+        "archive",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--lib",
+        "--archive-file",
+        archive,
+        "--zstd-level",
+        "6",
+        "--zstd-long",
+      ],
     ];
   if (!Number.isInteger(index) || !Number.isInteger(total) || index < 1 || index > total)
     throw new Error("expected a one-based standalone shard within its total");
