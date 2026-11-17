@@ -3,14 +3,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "appended_scope_fragment": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/violation.ts",
+          "line": 9,
+          "message": "src/violation.ts:9: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(sql`SELECT id FROM sources`.append(scopeSql(ids)).append(sql` FOR UPDATE`));",
+          "target": "lock-ordering"
+        }
+      ],
       "warnings": []
     }
   },

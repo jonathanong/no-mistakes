@@ -1,5 +1,7 @@
 # Closed identifier values in SQL
 
+<!-- cspell:words ILIKE -->
+
 At max effort, SQL recovery can enumerate a closed set of string values used in
 raw SQL construction. Each resulting statement is checked independently. A
 finite set is evidence about possible text, not evidence that the statements
@@ -90,10 +92,13 @@ boundary inside a marker cannot be carried through expansion; otherwise the
 boundary is recomputed after filling and placeholder renumbering.
 
 Value-hole classification recognizes comparison and arithmetic operands,
-`LIMIT`/`OFFSET`, `VALUES` entries, and function arguments. It excludes column
-lists following `INTO`, `UPDATE`, or `TABLE`; a function after `FROM` or `JOIN`
-still has value arguments. These are specific exclusions, not a general proof
-of identifier position. For example, a column hole in
+`LIKE`/`ILIKE`, both bounds of `BETWEEN`, concatenation operands, `LIMIT`/`OFFSET`,
+`VALUES` entries across multiple rows, row-comparison operands, and function
+arguments. The added predicate and tuple contexts use PostgreSQL tokens so
+operator-like text inside strings or comments does not establish those contexts.
+The `AND` after a complete `BETWEEN` stays a boolean-fragment boundary. Column lists following `INTO`, `UPDATE`, or `TABLE`
+are excluded; a function after `FROM` or `JOIN` still has value arguments.
+These are specific exclusions, not a general proof of identifier position. For example, a column hole in
 `CREATE INDEX idx ON users (${column})` is not excluded by this classifier.
 
 Casts alone do not establish a domain. A type assertion on a closed parameter
@@ -228,6 +233,25 @@ trusted-tag module matching policy. Import aliases work. Its explicit raw
 contract takes precedence if the same tag was also selected as a parameterized
 tag. Do not configure parameterized libraries as raw tags. An unknown raw hole
 remains opaque; it is not silently replaced by a bound parameter.
+
+A raw select-list hole can name a projection identifier or supply SQL text, so
+recovery preserves that interpretation. Use a parameterized tag to express a
+scalar select-list value instead of relying on a raw string to distinguish the
+two meanings.
+
+### Explicit positional holes
+
+In direct template rendering and parameterized tag composition, `$${index}`
+preserves a positional parameter for a numeric literal that prints as decimal
+digits or an unresolved index expression. The same test applies to signed
+numeric literals. For example, `1e2` prints `100` and `+10` prints `10`.
+Numbers whose printed form contains a fraction, exponent, or minus sign and
+known nonnumeric literals retain structural uncertainty. These structural holes
+do not advance generated value-bind ordinals, and their source positions still
+point to the original interpolation.
+For a scalar value, use a parameterized tag without a literal `$` before the
+hole. Invalid positional construction remains subject to the configured
+unanalyzable-SQL policy.
 
 ## Findings, suppression, and API parity
 
