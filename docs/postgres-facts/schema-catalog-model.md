@@ -30,7 +30,11 @@ catalog's schema. Ordinary partition leaves with only inherited key clones are
 omitted; leaves with their own primary or foreign key are retained with only
 their local constraints. Handwritten snapshots may also set `partitionOf` to
 identify partition children; explicit key facts on a leaf are interpreted as
-that leaf's own constraints.
+that leaf's own constraints. Ordinary inheritance records a sorted
+`inheritedFrom` array of immediate parent names, schema-qualified when needed;
+partition parents stay in `partitionOf`. Older catalogs omit `inheritedFrom`
+and provide no ordinary inheritance evidence. The DDL purpose proof in
+`postgres-lock-written-rows-only` uses these relationships and foreign keys.
 
 `postgres-key-column-types` reads primary-key columns, foreign-key referencing
 columns, enum types, and partition relationships. `postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`

@@ -17,7 +17,13 @@ WITH selected AS (
       ELSE quote_ident(parent_ns.nspname) || '.' || quote_ident(parent.relname) END
       FROM pg_inherits i JOIN pg_class parent ON parent.oid = i.inhparent
       JOIN pg_namespace parent_ns ON parent_ns.oid = parent.relnamespace
-      WHERE i.inhrelid = c.oid) END AS partition_of
+      WHERE i.inhrelid = c.oid) END AS partition_of,
+    ARRAY(SELECT CASE
+      WHEN parent.relnamespace = c.relnamespace THEN quote_ident(parent.relname)
+      ELSE quote_ident(parent_ns.nspname) || '.' || quote_ident(parent.relname) END AS name
+      FROM pg_inherits i JOIN pg_class parent ON parent.oid = i.inhparent
+      JOIN pg_namespace parent_ns ON parent_ns.oid = parent.relnamespace
+      WHERE i.inhrelid = c.oid AND NOT c.relispartition ORDER BY name) AS inherited_from
   FROM pg_class c JOIN selected s ON s.oid = c.relnamespace
   WHERE c.relkind IN ('r', 'p', 'v', 'm') AND c.relpersistence <> 't'
     AND (NOT c.relispartition OR c.relkind = 'p' OR EXISTS (SELECT 1 FROM pg_constraint local_key
@@ -118,6 +124,8 @@ WITH selected AS (
       WHERE t.tgrelid = r.oid AND NOT t.tgisinternal AND t.tgenabled IN ('O', 'A')), '{}'::jsonb)
   ) || CASE WHEN r.partition_of IS NULL THEN '{}'::jsonb
        ELSE jsonb_build_object('partitionOf', r.partition_of) END
+    || CASE WHEN cardinality(r.inherited_from) = 0 THEN '{}'::jsonb
+       ELSE jsonb_build_object('inheritedFrom', r.inherited_from) END
   ELSE '{}'::jsonb END AS value FROM relations r WHERE r.relkind IN ('r', 'p')
 ), functions AS (
   -- pg_get_functiondef fails on aggregates and does not describe window functions: prokind f/p only.

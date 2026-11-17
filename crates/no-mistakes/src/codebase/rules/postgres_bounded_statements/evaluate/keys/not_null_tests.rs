@@ -21,6 +21,7 @@ fn table(columns: &[(&str, &str)]) -> CatalogTable {
         name: "t".to_string(),
         relation_kind: RelationKind::Table,
         partition_of: None,
+        inherited_from: Vec::new(),
         comment: None,
         columns: columns
             .iter()

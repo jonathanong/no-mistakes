@@ -19,7 +19,7 @@ check already acquires the required parent KEY SHARE lock.
 | Check id | Behavior | Rewrite |
 | --- | --- | --- |
 | `row-lock-unwritten-relation` | `FOR UPDATE`, `FOR NO KEY UPDATE`, `FOR SHARE`, or `FOR KEY SHARE` on a relation the same transaction never updates or deletes; provable keys must match too. | Lock the written row, or rely on the foreign-key check. |
-| `table-lock` | `LOCK TABLE` in any mode. | Use a bounded row lock on the written row. |
+| `table-lock` | `LOCK TABLE` in any mode without a proven later DDL purpose in the same transaction. | Use a bounded row lock, or make the DDL ordering explicit. |
 | `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
 | `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
 
@@ -96,6 +96,41 @@ An unknown alias follows the unanalyzable policy.
 
 An advisory key derived from the written row's id also passes the constant-key
 check.
+
+## Table locks that order DDL
+
+A table lock can protect a preflight check before later DDL acquires its implicit
+lock. The rule accepts a lock when the same transaction later runs `ALTER TABLE`
+(including `ATTACH PARTITION` or `DETACH PARTITION`) or `DROP TABLE` on that
+relation, or on a relation connected through partitioning, inheritance, or a
+foreign key. Statically recovered `CREATE TABLE` statements in the transaction
+can establish those relationships. Optional `schemaCatalogPath` supplies
+existing partition, inheritance, and foreign-key relationships.
+
+```ts
+const tx = await beginTransaction();
+await tx.query("LOCK TABLE events IN ACCESS EXCLUSIVE MODE");
+await tx.query("SELECT 1 FROM events WHERE active LIMIT 1");
+await tx.query("ALTER TABLE events DETACH PARTITION events_archive");
+```
+
+A guard relation need not be related to the DDL target. A read of the locked
+relation after the lock and before later DDL also establishes the purpose:
+
+```ts
+const tx = await beginTransaction();
+await tx.query("LOCK TABLE jobs IN SHARE MODE");
+await tx.query("SELECT 1 FROM jobs WHERE pending LIMIT 1");
+await tx.query("DROP TABLE events_archive");
+```
+
+These proofs require known transaction membership, unconditional execution,
+and directly awaited executor calls in the same function. Reads inside
+CTE-bearing queries do not
+establish a guard proof. A read before the lock or after the DDL does not protect
+a preflight check. A lock
+without later DDL, DML alone, or DDL in another transaction still reports. An
+unrelated locked relation that is never read before the DDL also reports.
 
 ## Counterexample
 
@@ -210,6 +245,11 @@ Factory/type receiver selection remains independent of these imported-executor
 names. See [executor selection](../configuration/rules.md#postgresql-executor-selection)
 for explicit empty lists and configuration warnings. Declare these options in
 the project's PostgreSQL scope when the rule inherits one.
+
+`schemaCatalogPath` defaults to absent. When supplied, it names a root-relative
+PostgreSQL schema catalog used to connect DDL targets to locked relations
+through partitioning, inheritance, and foreign keys.
+Guard-read proofs do not require a catalog.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required

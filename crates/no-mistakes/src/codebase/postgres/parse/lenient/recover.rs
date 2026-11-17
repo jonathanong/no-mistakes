@@ -159,7 +159,9 @@ fn parse_chunk(
             if let Some(partition_change) =
                 recover_partition_change(&chunk, original, allow_concurrent_detach)
             {
-                return vec![LocatedStatement::plain(partition_change)];
+                let mut located = LocatedStatement::plain(partition_change);
+                located.complete = true;
+                return vec![located];
             }
             let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {

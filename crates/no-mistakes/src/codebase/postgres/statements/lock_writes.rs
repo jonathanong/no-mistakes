@@ -1,5 +1,7 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod advisory;
+mod ddl;
+pub(crate) use ddl::DdlEvent;
 mod helpers;
 mod row_locks;
 mod scope;
@@ -11,6 +13,8 @@ use std::{collections::BTreeSet, ops::ControlFlow};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LockWriteFacts {
+    pub ddl_events: Vec<DdlEvent>,
+    pub ddl_recovery_complete: bool,
     pub locks: Vec<RowAccess>,
     pub writes: Vec<RowAccess>,
     pub table_locks: Vec<Option<String>>,
@@ -38,6 +42,9 @@ pub(super) fn collect<const ADVANCED: bool>(
         let mut executed = Vec::new();
         super::wrappers::walk_executed(statement, &mut executed);
         for statement in executed {
+            if ADVANCED {
+                ddl::collect(statement, positions, &mut out);
+            }
             let (first_lock, first_write) = if ADVANCED {
                 (out.locks.len(), out.writes.len())
             } else {

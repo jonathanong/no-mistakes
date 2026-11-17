@@ -66,7 +66,12 @@ pub(super) fn extract(
                 .into_iter()
                 .map(|located| (located.statement, located.source))
                 .unzip();
-            super::super::projection::extract(
+            let partition_complete = parse_failures.is_empty()
+                && orphans.is_empty()
+                && !complete.is_empty() && complete.iter().all(|complete| *complete)
+                && statements.iter().any(|statement| matches!(statement, sqlparser::ast::Statement::AlterTable(table)
+                    if matches!(table.operations.as_slice(), [sqlparser::ast::AlterTableOperation::AttachPartition { .. } | sqlparser::ast::AlterTableOperation::DetachPartition { .. }])));
+            let mut facts = super::super::projection::extract(
                 sql,
                 &prepared,
                 &statements,
@@ -86,7 +91,9 @@ pub(super) fn extract(
                 parse_failed,
                 collect_bounds,
                 placeholder_positions,
-            )
+            );
+            facts.lock_writes.ddl_recovery_complete = partition_complete;
+            facts
         }
     }
 }

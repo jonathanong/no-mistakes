@@ -15,6 +15,7 @@ pub struct CatalogTable {
     pub name: String,
     pub relation_kind: RelationKind,
     pub partition_of: Option<String>,
+    pub inherited_from: Vec<String>,
     pub comment: Option<String>,
     pub columns: Vec<CatalogColumn>,
     pub primary_key: Option<Vec<String>>,

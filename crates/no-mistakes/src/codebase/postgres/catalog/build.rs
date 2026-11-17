@@ -94,6 +94,7 @@ fn model_table(path: &str, name: &str, table: &SnapshotTable) -> Result<CatalogT
         name: name.to_string(),
         relation_kind: columns::relation_kind(path, name, &table.relation_kind)?,
         partition_of: table.partition_of.clone(),
+        inherited_from: table.inherited_from.clone(),
         comment: table.comment.clone(),
         columns: columns::columns(path, name, &table.columns)?,
         primary_key: table.primary_key.as_ref().map(|key| key.columns.clone()),

@@ -211,7 +211,10 @@ for `const`, `using`, and `await using` bindings. Configure
 inline options object. Directly await static lock helpers and pass matching
 executor parameters; imported helpers and re-exports reuse prepared summaries.
 Hashed global advisory keys are checked, while atomic lock/write CTEs on the
-same relation are accepted. Keep `allow` reasons and `writeSets` assertions
+same relation are accepted. Table locks can order later DDL in the same
+transaction, including a guard-relation read between the lock and DDL. Optional
+`schemaCatalogPath` supplies known schema relationships for DDL targets.
+Keep `allow` reasons and `writeSets` assertions
 narrow. Unknown SQL, helper execution, or transaction membership follows the
 unanalyzable policy and never proves a safe lock. See
 [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md)

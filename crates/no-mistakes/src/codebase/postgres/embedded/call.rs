@@ -17,6 +17,10 @@ pub struct EmbeddedSqlCall {
     pub executor_transaction_known: bool,
     pub execution_unconditional: bool,
     #[doc(hidden)]
+    pub execution_awaited: bool,
+    #[doc(hidden)]
+    pub execution_scope: u32,
+    #[doc(hidden)]
     pub bound_value_origins: Vec<(u32, u32, u32)>,
     #[doc(hidden)]
     pub bound_value_sql: Option<String>,

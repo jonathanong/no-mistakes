@@ -442,3 +442,17 @@ fn postgres_lock_written_rows_factory_alias_check_json_snapshot() {
     assert_eq!(escaped[0]["target"], "unanalyzable");
     assert_eq!(report["escaped_alias"], report["escaped_alias_options"]);
 }
+
+#[test]
+fn postgres_lock_written_rows_ddl_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_ddl",
+        &[
+            ("related", "ddl-related", "checks-fail.yml"),
+            ("guard", "ddl-guard", "checks-fail.yml"),
+            ("catalog", "ddl-catalog", "ddl-catalog.yml"),
+            ("negative", "ddl-negative", "checks-fail.yml"),
+            ("uncertain", "ddl-uncertain", "checks-fail.yml"),
+        ],
+    );
+}
