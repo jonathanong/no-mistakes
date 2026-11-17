@@ -2903,12 +2903,10 @@ jobs:
 
       - name: Download Linux runtime
         timeout-minutes: 3
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          run-id: ${{ needs.linux-runtime.outputs.artifact-run-id }}
-          github-token: ${{ github.token }}
-          name: linux-runtime-cli
-          path: target/debug
+        env:
+          NATIVE_RUNTIME_RUN_ID: ${{ needs.linux-runtime.outputs.artifact-run-id }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/download-native-runtime.py linux-runtime-cli
       - name: Restore CLI executable mode
         timeout-minutes: 3
         run: chmod +x target/debug/no-mistakes

@@ -88,3 +88,23 @@ test("shared producer artifact contracts run before dependency installation", ()
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
+
+test("AST analysis downloads only the verified CLI through the bounded helper", () => {
+  const ast = workflow.jobs["ast-analysis"];
+  assert.equal(ast.needs, "linux-runtime");
+  const downloads = ast.steps.filter((step) => step.name === "Download Linux runtime");
+  assert.equal(downloads.length, 1);
+  const download = downloads[0];
+  assert.equal(download["timeout-minutes"], 3);
+  assert.equal(
+    download.env.NATIVE_RUNTIME_RUN_ID,
+    "${{ needs.linux-runtime.outputs.artifact-run-id }}",
+  );
+  assert.equal(download.env.GH_TOKEN, "${{ github.token }}");
+  assert.equal(
+    download.run,
+    "python3 .github/scripts/download-native-runtime.py linux-runtime-cli",
+  );
+  assert.equal(download.uses, undefined);
+  assert.equal(ast.steps.filter((step) => step.uses?.startsWith("pnpm/setup@")).length, 0);
+});

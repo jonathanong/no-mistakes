@@ -174,6 +174,23 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
             self.assertAlmostEqual(report["seconds"][stage],
                                    sum(row["seconds"][stage] for row in report["artifacts"]))
 
+    def test_cli_only_consumer_completes_without_extracting_addon(self):
+        fixtures = Path("transport")
+        shutil.copytree(FIXTURES, fixtures)
+        (fixtures / "curl").chmod(0o755)
+        env = {**os.environ, "PATH": str(fixtures.resolve()) + os.pathsep + os.environ["PATH"],
+               "NATIVE_DOWNLOAD_FIXTURES": str(fixtures.resolve())}
+        result = subprocess.run([sys.executable, str(Path(download.__file__).resolve()),
+                                 "linux-runtime-cli"],
+                                env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(report["success"])
+        self.assertEqual([row["name"] for row in report["artifacts"]], ["linux-runtime-cli"])
+        self.assertEqual(Path("target/debug/no-mistakes").read_text(),
+                         "linux-runtime-cli fixture\\n")
+        self.assertFalse(Path("target/debug/no-mistakes.node").exists())
+
     def test_explicit_names_reject_duplicates_and_invalid_names_before_transport(self):
         for names in (["linux-runtime-cli"] * 2, [""], ["../runtime"], ["runtime/name"]):
             with self.subTest(names=names), patch.object(download.subprocess, "run") as transport:

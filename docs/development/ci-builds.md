@@ -1187,8 +1187,11 @@ was 172.096 and 169.892 seconds. Successful siblings returned 18–32 ms after
 that message. The logs establish a post-success process-lifecycle stall; they
 do not identify the retained handle.
 
-The Linux consumer uses the same bounded downloader as the platform consumers.
-Its explicit CLI/addon names share the existing 110-second deadline across
+The Linux API consumer and AST analysis use the same bounded downloader as
+the platform consumers.
+AST analysis requests only the CLI artifact and preserves the producer run ID and
+artifact digest checks without adding dependency installation.
+The API consumer’s explicit CLI/addon names share the existing 110-second deadline across
 metadata, transfer, checksum, and extraction; the workflow step remains bounded
 at three minutes. Missing, expired, ambiguous, or invalid-digest artifacts fail
 closed, and unsafe ZIP paths remain rejected. Per-artifact and cumulative phase
