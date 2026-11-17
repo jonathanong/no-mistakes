@@ -294,7 +294,7 @@ jobs:
           exit "$fail"
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/coverage-build-resources.test.cjs .github/scripts/release-rust-resources.test.cjs .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
+        run: node --test .github/scripts/coverage-build-resources.test.cjs .github/scripts/release-rust-resources.test.cjs .github/scripts/release-rust-split.test.cjs .github/scripts/release-rust-split-workflow.test.cjs .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
       - name: Test release parity invocation without tooling dependencies
         timeout-minutes: 2
         run: node --test .github/scripts/release-parity-invocation.test.cjs

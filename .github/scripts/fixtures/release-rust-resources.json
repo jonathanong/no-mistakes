@@ -47,11 +47,11 @@
   {
     "name": "a sampler from historical tagged source",
     "change": {
-      "step": "Run Rust tests",
+      "step": "Run Rust tests (unit)",
       "replace": "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh",
       "with": ".github/scripts/with-resource-samples.sh"
     },
-    "expected": ["Run Rust tests"]
+    "expected": ["Run Rust tests (unit)"]
   },
   {
     "name": "Clippy without all feature coverage",
@@ -106,5 +106,14 @@
       }
     },
     "expected": ["CARGO_PROFILE_DEV_CODEGEN_UNITS"]
+  },
+  {
+    "name": "integration replaced by another unit run",
+    "change": {
+      "step": "Run Rust tests (integration)",
+      "replace": "test-integration",
+      "with": "test-unit"
+    },
+    "expected": ["Run Rust tests (integration)"]
   }
 ]

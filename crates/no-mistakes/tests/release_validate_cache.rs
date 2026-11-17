@@ -78,7 +78,12 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
     let workflow = release_workflow();
     let validate = job_body(&workflow, "validate-rust");
     let rust_tests = validate
-        .find("bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" test\n")
+        .find(
+            "bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" test-unit\n",
+        )
+        .unwrap();
+    let integration_tests = validate
+        .find("bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" test-integration\n")
         .unwrap();
     let doctests = validate
         .find("bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" doc\n")
@@ -100,7 +105,10 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         .find("cargo publish --dry-run --locked -p no-mistakes")
         .unwrap();
     assert!(
-        rust_tests < doctests && doctests < cleanup_heading && cleanup_heading < publish,
+        rust_tests < integration_tests
+            && integration_tests < doctests
+            && doctests < cleanup_heading
+            && cleanup_heading < publish,
         "test executables must be dropped after Rust tests and before cargo publish"
     );
     let step = &validate[cleanup_heading..publish];

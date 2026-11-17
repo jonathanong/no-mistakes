@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'cargo:%s\n' "$@"
+case " $* " in
+  *' --test * '*) snapshot=integration.snap ;;
+  *' --tests '*) snapshot=all.snap ;;
+  *) snapshot=unit.snap ;;
+esac
+if [[ -n "${INSTA_SNAPSHOT_REFERENCES_FILE:-}" ]]; then
+  printf '%s\n' "$snapshot" >> "$INSTA_SNAPSHOT_REFERENCES_FILE"
+fi
+exit "${RUST_VALIDATION_FIXTURE_STATUS:-0}"

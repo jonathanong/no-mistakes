@@ -135,7 +135,7 @@ test("development and test profiles omit debugger symbols by default", () => {
 test("release retains the shared all-feature test and doctest scopes", () => {
   const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
   const body = workflow.split("\n  validate-rust:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
-  for (const mode of ["build", "test", "doc"])
+  for (const mode of ["build", "test-unit", "test-integration", "doc"])
     assert.ok(
       body.includes(
         `bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" ${mode}\n`,

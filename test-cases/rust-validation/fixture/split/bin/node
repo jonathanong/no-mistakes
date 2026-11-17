@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$#" == 2 && "$1" == */rust-snapshot-references.cjs && -f "$2" ]] || exit 2
+printf 'audit\n'
+cat -- "$2"
+exit "${RUST_VALIDATION_FIXTURE_SNAPSHOT_STATUS:-0}"

@@ -12,7 +12,8 @@ const sampler = `bash "${tools}with-resource-samples.sh" `;
 const commands = {
   "Run Clippy": "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings",
   "Build Rust tests": `bash "${tools}rust-validation.sh" build`,
-  "Run Rust tests": `bash "${tools}rust-validation.sh" test`,
+  "Run Rust tests (unit)": `bash "${tools}rust-validation.sh" test-unit`,
+  "Run Rust tests (integration)": `bash "${tools}rust-validation.sh" test-integration`,
   "Run Rust doctests": `bash "${tools}rust-validation.sh" doc`,
   "Check Cargo packages": "cargo publish --dry-run --locked -p no-mistakes",
 };

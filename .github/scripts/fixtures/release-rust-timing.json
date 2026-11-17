@@ -1,0 +1,141 @@
+{
+  "run": "https://github.com/jonathanong/no-mistakes/actions/runs/44170204235",
+  "job": "https://github.com/jonathanong/no-mistakes/actions/runs/44170204235/job/134347782358",
+  "workflowHeadSha": "4122bc4fa5b81feb2ad4c935e3883c06e3987de3",
+  "preparedSource": {
+    "version": "0.109.76",
+    "sha": "780878045e4e369309b0817108d9d25c65379dcc",
+    "artifactId": 14367122419
+  },
+  "runner": "ubuntu-latest",
+  "rustc": "1.100.0 (0ef1bc386 2026-11-09)",
+  "environment": {
+    "CARGO_BUILD_JOBS": "1",
+    "CARGO_INCREMENTAL": "0",
+    "CARGO_PROFILE_DEV_CODEGEN_UNITS": "256",
+    "CARGO_PROFILE_TEST_CODEGEN_UNITS": "256",
+    "CARGO_PROFILE_DEV_DEBUG": "0",
+    "CARGO_PROFILE_TEST_DEBUG": "0",
+    "RUST_TEST_THREADS": "4",
+    "RAYON_NUM_THREADS": "1",
+    "RUSTFLAGS": "-D warnings",
+    "INSTA_UPDATE": "no"
+  },
+  "buildStep": {
+    "startedAt": "2026-11-17T20:42:02Z",
+    "completedAt": "2026-11-17T20:55:44Z",
+    "wallSeconds": 822.0,
+    "conclusion": "success",
+    "emittedHarnesses": 10,
+    "resources": {
+      "count": 56,
+      "minimumAvailableMib": 4250,
+      "maximumOomKills": 0,
+      "maximumSampledProcessRssMib": 11023
+    }
+  },
+  "testStep": {
+    "startedAt": "2026-11-17T20:55:45Z",
+    "completedAt": "2026-11-17T21:10:57Z",
+    "logStartedAt": "2026-11-17T20:55:45.1364872Z",
+    "logCutoffAt": "2026-11-17T21:10:57.6576124Z",
+    "timeoutSeconds": 900,
+    "observedSecondsIncludingCancellationGrace": 912.521,
+    "observedSecondsRoundedUp": 913,
+    "conclusion": "timed out",
+    "sampleCount": 1,
+    "completedRuntimeAvailable": false,
+    "warmCargoProfileSeconds": 0.63,
+    "completedUnitHarnessSeconds": 413.89,
+    "observedIntegrationLowerBoundSeconds": 497.63,
+    "resources": {
+      "count": 61,
+      "minimumAvailableMib": 13108,
+      "maximumOomKills": 0,
+      "maximumSampledProcessRssMib": 1577
+    }
+  },
+  "completedHarnesses": [
+    {
+      "harness": "src/lib.rs",
+      "startedAt": "2026-11-17T20:55:45.9716691Z",
+      "completedAt": "2026-11-17T21:02:24.3857041Z",
+      "passed": 14232,
+      "failed": 0,
+      "ignored": 3,
+      "harnessSeconds": 398.4,
+      "rawResult": "test result: ok. 14232 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 398.40s"
+    },
+    {
+      "harness": "src/main.rs",
+      "startedAt": "2026-11-17T21:02:24.4544824Z",
+      "completedAt": "2026-11-17T21:02:40.0149871Z",
+      "passed": 508,
+      "failed": 0,
+      "ignored": 0,
+      "harnessSeconds": 15.49,
+      "rawResult": "test result: ok. 508 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.49s"
+    },
+    {
+      "harness": "tests/macos_invocation.rs",
+      "startedAt": "2026-11-17T21:02:40.0277276Z",
+      "completedAt": "2026-11-17T21:02:50.3150432Z",
+      "passed": 156,
+      "failed": 0,
+      "ignored": 0,
+      "harnessSeconds": 10.22,
+      "rawResult": "test result: ok. 156 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.22s"
+    },
+    {
+      "harness": "tests/suite_cli_package_config.rs",
+      "startedAt": "2026-11-17T21:02:50.3182179Z",
+      "completedAt": "2026-11-17T21:03:08.1572899Z",
+      "passed": 45,
+      "failed": 0,
+      "ignored": 0,
+      "harnessSeconds": 17.77,
+      "rawResult": "test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.77s"
+    },
+    {
+      "harness": "tests/suite_cli_postgres.rs",
+      "startedAt": "2026-11-17T21:03:08.1605039Z",
+      "completedAt": "2026-11-17T21:07:43.6044897Z",
+      "passed": 781,
+      "failed": 0,
+      "ignored": 0,
+      "harnessSeconds": 275.37,
+      "rawResult": "test result: ok. 781 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 275.37s"
+    },
+    {
+      "harness": "tests/suite_cli_queries.rs",
+      "startedAt": "2026-11-17T21:07:43.6159262Z",
+      "completedAt": "2026-11-17T21:08:06.0882384Z",
+      "passed": 294,
+      "failed": 0,
+      "ignored": 0,
+      "harnessSeconds": 22.4,
+      "rawResult": "test result: ok. 294 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.40s"
+    }
+  ],
+  "censoredHarness": {
+    "harness": "tests/suite_cli_rules.rs",
+    "startedAt": "2026-11-17T21:08:06.0919246Z",
+    "cutoffAt": "2026-11-17T21:10:57.6576124Z",
+    "observedLowerBoundSeconds": 171.566,
+    "registered": 476,
+    "reportedPassing": 445,
+    "reportedFailed": 0,
+    "reportedIgnored": 0,
+    "unreported": 31
+  },
+  "notStartedHarnesses": [
+    "tests/suite_cli_test_plans.rs",
+    "tests/suite_contracts.rs",
+    "tests/windows_job_object.rs"
+  ],
+  "snapshotAuditRan": false,
+  "measurementNotes": [
+    "Test wall time and integration time are censored lower bounds from one hosted run.",
+    "Build and test resource values are periodic samples. Test samples through cancellation are diagnostic and excluded from completed test resource comparisons."
+  ]
+}
