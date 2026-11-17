@@ -2,6 +2,7 @@ use super::*;
 
 mod binding_control_flow;
 mod catalog_errors;
+mod catalog_reconciliation;
 mod ddl;
 mod executor_selection;
 mod flow_coverage;

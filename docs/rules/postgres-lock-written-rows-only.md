@@ -136,7 +136,9 @@ unrelated locked relation that is never read before the DDL also reports.
 ## Trigger-derived writes
 
 Set optional `schemaCatalogPath` to a PostgreSQL schema catalog JSON file, relative
-to the analyzed root, to include trigger effects in transaction write sets:
+to the analyzed root, to include trigger effects in transaction write sets.
+Trigger inference requires complete catalog coverage; ordering-only catalogs
+provide DDL relationships without inferred trigger writes:
 
 ```yaml
 options:
@@ -302,6 +304,7 @@ PostgreSQL schema catalog used to connect DDL targets to locked relations
 through partitioning, inheritance, and foreign keys.
 Guard-read proofs do not require a catalog. Ordering-only catalogs are accepted,
 but absent relationship metadata cannot prove that two relations are linked.
+Only complete catalogs contribute trigger-derived write evidence.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required

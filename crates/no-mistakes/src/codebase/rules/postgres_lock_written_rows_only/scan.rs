@@ -4,7 +4,7 @@ use super::{
 };
 use crate::codebase::{
     check_facts::SqlFactContext,
-    postgres::{EmbeddedSqlCall, SqlStatementFileFacts},
+    postgres::{EmbeddedSqlCall, SchemaCatalog},
     ts_source::{relative_slash_path, SourceStore},
 };
 use std::{
@@ -15,11 +15,11 @@ mod ddl;
 mod output;
 mod rows;
 mod settings;
+mod statements;
 mod triggers;
 mod writes;
 use output::{Output, Site};
 use rayon::prelude::*;
-
 pub(super) fn scan(
     root: &Path,
     options: &CompiledOptions,
@@ -27,16 +27,25 @@ pub(super) fn scan(
     sources: &SourceStore,
     facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let enabled = CHECKS
+        .iter()
+        .any(|check| options.checks.get(*check).copied().unwrap_or_default() != Mode::Ignore);
     let catalog = options
         .schema_catalog_path
         .as_deref()
-        .map(|path| facts.prepared().postgres_schema_catalog(path))
+        .filter(|_| {
+            enabled
+                && files
+                    .iter()
+                    .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
+        })
+        .map(|path| facts.prepared().postgres_ordering_catalog(path))
         .transpose()?;
     let triggers = triggers::Triggers::new(catalog);
     let all: anyhow::Result<Vec<_>> = files
         .par_iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
-        .map(|path| scan_file(root, options, path, sources, facts, &triggers))
+        .map(|path| scan_file(root, options, path, sources, facts, &triggers, catalog))
         .collect();
     let mut output = Output::new(options, facts);
     for findings in all? {
@@ -51,6 +60,7 @@ fn scan_file(
     sources: &SourceStore,
     facts: &dyn SqlFactContext,
     triggers: &triggers::Triggers<'_>,
+    catalog: Option<&SchemaCatalog>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let mut output = Output::new(options, facts);
     let embedded = facts.prepared().embedded_sql(path, &options.embedded)?;
@@ -65,22 +75,9 @@ fn scan_file(
     if !CHECKS.iter().any(|check| enabled(check)) {
         return Ok(output.into_findings());
     }
-    let catalog = options
-        .schema_catalog_path
-        .as_deref()
-        .map(|path| facts.prepared().postgres_ordering_catalog(path))
-        .transpose()?;
     let check_written = enabled(CHECKS[0]);
     let check_outside = enabled(CHECKS[3]);
-    let mut grouped: BTreeMap<usize, Vec<&SqlStatementFileFacts>> = BTreeMap::new();
-    for (index, statement) in statements.iter().filter_map(|statement| {
-        statement
-            .variant_locations
-            .as_ref()
-            .map(|locations| (locations.call_index, statement))
-    }) {
-        grouped.entry(index).or_default().push(statement);
-    }
+    let grouped = statements::group(statements);
     let unresolved: BTreeSet<_> = embedded
         .calls
         .iter()

@@ -11,10 +11,10 @@ test("lock-written-rows options expose named checks, policies, exceptions and wr
     "row-lock-outside-transaction",
   ])
     assert.ok(types.includes(`"${id}"`));
+  assert.equal(types.match(/schemaCatalogPath\?: string;/gu)?.length, 1);
   for (const field of [
     'export type PostgresLockWrittenRowsSeverity = "fail" | "advise" | "ignore";',
     "checks?: Partial<Record<PostgresLockWrittenRowsCheck, PostgresLockWrittenRowsSeverity>>;",
-    "schemaCatalogPath?: string;",
     "executorNames?: string[];",
     "executorOptionProperties?: string[];",
     "schemaCatalogPath?: string;",

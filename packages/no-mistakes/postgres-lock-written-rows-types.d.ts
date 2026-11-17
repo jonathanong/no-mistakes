@@ -26,8 +26,6 @@ export interface PostgresLockWrittenRowsWriteSet {
 export interface PostgresLockWrittenRowsOnlyOptions {
   include?: string[];
   exclude?: string[];
-  /** Optional catalog supplying statically recoverable trigger write targets. */
-  schemaCatalogPath?: string;
   importSpecifier?: string;
   /** Replaces default executor names; mutually exclusive with extraExecutorNames. */
   executorNames?: string[];
@@ -39,7 +37,7 @@ export interface PostgresLockWrittenRowsOnlyOptions {
   executorTypeNames?: string[];
   /** Static options properties overriding the transaction executor. Empty by default. */
   executorOptionProperties?: string[];
-  /** Optional root-relative schema catalog for DDL relation relationships. */
+  /** Root-relative catalog for DDL relations; complete coverage enables trigger inference. */
   schemaCatalogPath?: string;
   trustedSqlTags?: { module: string; name: string }[];
   effort?: Effort;

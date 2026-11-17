@@ -6,8 +6,9 @@ analysis as the CLI. Use it for repeated structured queries without subprocess o
 Configured [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 accepts optional `schemaCatalogPath` through `PostgresLockWrittenRowsOnlyOptions`.
 Async `check()` and `analyzeProject()` check reports use the same prepared catalog
-and event-filtered trigger write effects as CLI `check`, including `UPDATE OF`
-columns and bounded transitive chains. Configure the catalog path in the rule's
+for DDL relationships and, with complete coverage, the same event-filtered trigger
+write effects as CLI `check`, including `UPDATE OF` columns and bounded transitive
+chains. Configure the catalog path in the rule's
 YAML options; the existing async `checkJson` binding and report shape are unchanged.
 
 Configured [`postgres-sql-statement-policy`](rules/postgres-sql-statement-policy.md)

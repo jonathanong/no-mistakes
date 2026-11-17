@@ -61,7 +61,6 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-column-requires-trigger",
             "postgres-conflict-ordering",
             "postgres-lock-ordering",
-            "postgres-lock-written-rows-only",
             "postgres-required-comments",
             "postgres-materialized-view-shape",
             "postgres-duplicate-function-body",
@@ -164,6 +163,13 @@ fn rule_config(rule: &str) -> NoMistakesConfig {
 
 #[test]
 fn lock_written_rule_declares_optional_catalog_demand() {
+    assert_eq!(
+        SCHEMA_CATALOG_RULE_IDS
+            .iter()
+            .filter(|id| **id == "postgres-lock-written-rows-only")
+            .count(),
+        1,
+    );
     for (options, expected) in [
         ("{}", Vec::<String>::new()),
         ("schemaCatalogPath: ''", Vec::new()),

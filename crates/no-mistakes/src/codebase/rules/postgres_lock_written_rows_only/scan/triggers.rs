@@ -1,5 +1,5 @@
 use crate::codebase::postgres::{
-    CatalogTriggerWrite, CatalogTriggerWrites, SchemaCatalog, TriggerEvent,
+    CatalogCoverage, CatalogTriggerWrite, CatalogTriggerWrites, SchemaCatalog, TriggerEvent,
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -10,6 +10,7 @@ pub(super) struct Triggers<'a> {
 impl<'a> Triggers<'a> {
     pub fn new(catalog: Option<&'a SchemaCatalog>) -> Self {
         let effects = catalog
+            .filter(|catalog| catalog.coverage() == CatalogCoverage::Complete)
             .map(|catalog| catalog.trigger_write_effects())
             .unwrap_or_default();
         let mut sources: BTreeMap<_, Vec<_>> = BTreeMap::new();

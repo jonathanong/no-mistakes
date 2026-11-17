@@ -41,7 +41,6 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-column-requires-trigger",
     "postgres-conflict-ordering",
     "postgres-lock-ordering",
-    "postgres-lock-written-rows-only",
     "postgres-required-comments",
     "postgres-materialized-view-shape",
     "postgres-duplicate-function-body",
