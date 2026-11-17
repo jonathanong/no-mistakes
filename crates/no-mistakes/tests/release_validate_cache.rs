@@ -79,12 +79,12 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
     let validate = job_body(&workflow, "validate-rust");
     let rust_tests = validate
         .find(
-            "run: bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" test\n",
+            "bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" test\n",
         )
         .unwrap();
     let doctests = validate
         .find(
-            "run: bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" doc\n",
+            "bash \"$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh\" doc\n",
         )
         .unwrap();
     // JavaScript tests run independently and do not consume Rust executables.

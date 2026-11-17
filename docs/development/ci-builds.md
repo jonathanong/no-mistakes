@@ -550,6 +550,72 @@ Release job environment overrides enforce the same symbol-free
 profiles for those historical manifests. The tooling checkout never replaces the tagged Rust source or becomes Cargo's
 working directory.
 
+## Release Rust resource budget
+
+`Validate Rust` serializes Cargo compilation with `CARGO_BUILD_JOBS=1`, including
+Clippy, test compilation, documentation tests, and package verification. Development and test
+profiles use 256 code generation units, partitioning each compiler invocation into smaller
+LLVM units. This is a validation-job override; optimization levels, debug
+assertions, and native distribution profiles are unchanged. The test harness
+uses four threads, and default Rayon pools use one worker. All-feature workspace
+and test-target scopes stay the same. Development/test debug information remains
+zero. Incremental compilation remains disabled: the pinned Rust cache action
+already sets `CARGO_INCREMENTAL=0`, and the job now declares it explicitly.
+
+The instrumented CI producer also uses one Cargo job after #3533. Release test
+compilation is not instrumented, so its memory use must be measured separately.
+The #3552 release lost runner communication while `Build Rust tests` was marked
+in progress; its unavailable logs do not establish an observed OOM or the last
+compiler unit. A controlled four-job ordinary build exceeded a 12 GiB cgroup
+budget and ended with `Result=oom-kill`. One job with the default 16 code generation
+units also exhausted that budget; the last sampled compiler RSS was 12,123 MiB.
+Both terminated samples are censored and provide no completed peak RSS.
+The serial failure establishes single-unit pressure; concurrent compilation
+adds a further risk without attributing a specific kernel event to the hosted failure.
+
+[Cargo documents these code generation partition defaults](https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units).
+The measured 256-unit build completed under the same 12 GiB/no-swap constraint.
+
+A local controlled observation used source base
+`2c43b925ca2da7caa1f91f5309b018097ff04975`, Rust 1.100.0, 24 logical CPUs,
+a 32 GiB machine, and a 12 GiB cgroup with no swap. Features, test targets,
+optimization level, and zero-debug profiles matched the release build. Local
+warning severity was the default; release retains `-D warnings`. Earlier
+attempts populated dependency artifacts, so elapsed times are not cold-cache
+comparisons. Each row has one observation; censored attempts have no eligible
+completed RSS maximum and do not establish a tail bound.
+
+| Validation observation | Outcome | Elapsed | Maximum process RSS | Cgroup peak |
+| --- | --- | --- | --- | --- |
+| Four Cargo jobs, 16 generation units | OOM-killed | Censored at 81 s | Unavailable | 12 GiB limit |
+| One Cargo job, 16 generation units | OOM-killed | Censored at 258 s | Unavailable | 12 GiB limit |
+| One Cargo job, 256 generation units | Completed, exit 0 | 387.22 s | 11,848,820 KiB (11.30 GiB) | 12 GiB, no OOM events |
+| Full test scope, four harness threads, one Rayon worker | Completed, exit 0 | 381.98 s | 1,604,336 KiB (1.53 GiB) | 2.84 GiB |
+| Documentation test scope | Completed, exit 0 | 3.78 s | 1,349,992 KiB (1.29 GiB) | 1.32 GiB |
+
+The successful build's cgroup reached its limit and reclaimed memory; its peak
+is a bounded observation, not an unconstrained hosted peak. The largest sampled
+workspace process was the library test compiler. The hosted runner class has
+16 GB RAM, so serialization and smaller units avoid overlapping that large
+compiler with another compile/link unit. Continue inspecting hosted telemetry
+as the crate grows.
+
+The successful runtime measurement includes the shared helper's full test-target
+scope and snapshot-reference audit. It uses a private temporary directory outside
+any Git ancestor and explicitly installed actionlint/ShellCheck versions. Earlier
+environment failures were excluded from the successful row: an unrelated `/tmp/.git`
+changed fixture discovery, a tool shim lacked a version, and the saved historical
+validation-tools fixture needed its sampler forwarder. Documentation-test scope
+completed with zero documentation test cases on this source. These observations
+cover local validation; the release's isolated PostgreSQL setup remains required.
+
+Every heavy release Rust phase uses the running workflow's resource sampler.
+It logs available memory, free swap/disk, OOM counters, memory pressure, and the
+largest process RSS at startup, every 15 seconds, and exit. Startup also records
+compiler, flags, build/test worker limits, and profile overrides. These samples
+are diagnostics, not a substitute for the concurrency budget or a guarantee
+that logs survive a disconnected runner.
+
 ## Historical CI layouts and bounds
 
 The material below retains earlier workflow descriptions and measurements for
