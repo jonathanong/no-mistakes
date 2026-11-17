@@ -1,11 +1,11 @@
+use crate::fx::FxHashMap;
 use oxc_syntax::scope::ScopeFlags;
-use std::collections::HashMap;
 
 #[derive(Default)]
 pub(super) struct Scopes {
     nodes: Vec<Scope>,
     current: usize,
-    binding_scopes: HashMap<u32, usize>,
+    binding_scopes: FxHashMap<u32, usize>,
 }
 
 struct Scope {

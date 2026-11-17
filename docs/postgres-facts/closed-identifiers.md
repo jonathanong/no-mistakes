@@ -62,7 +62,7 @@ non-key column can still be unbounded.
 
 Frozen-record eligibility is checked before reference walking. Only supported,
 private frozen literals need the lexical proof; ordinary constants do not
-trigger a module scan.
+trigger a reference walk.
 
 ## Imported helper recovery
 
@@ -72,14 +72,14 @@ SQL text would appear. A marker-only string is a speculative call result; it
 does not establish that the helper builds SQL. Marker ranges retain their
 source order so later expansion can correlate repeated sites.
 
-The marker is a reserved Unicode code point distinct from the internal placeholder
-marker. This lets placeholder counting and renumbering ignore it. Before
-extraction publishes facts, finalization removes every marker. A call that
-still contains one becomes dynamic and retains only its verified SQL prefix;
-identifier holes keep their `sql_placeholder_N` text. A fragment is trimmed to
-its verified prefix, and any recovered placeholder position past the cut is
-dropped. Variants containing unresolved markers are discarded. Complete
-pending-call templates are retained privately for imported-helper resolution.
+The marker is a reserved Unicode code point distinct from the internal
+placeholder marker. This lets placeholder counting and renumbering ignore it. Before
+extraction publishes facts, finalization removes every marker. An unresolved
+identifier marker becomes `sql_placeholder_N` while retaining the statement's
+suffix, such as the `WHERE` clause after `SELECT * FROM ${name}`. An unresolved
+fragment splice becomes dynamic and retains only its verified SQL prefix;
+any recovered placeholder position past that cut is dropped. Variants containing
+unresolved markers are discarded. Complete pending-call templates are retained privately for imported-helper resolution.
 
 When a pending template is resolved, each marker is filled with an alternative
 from its helper site. Repeated occurrences of one site use the same choice.
@@ -92,8 +92,9 @@ boundary is recomputed after filling and placeholder renumbering.
 Value-hole classification recognizes comparison and arithmetic operands,
 `LIMIT`/`OFFSET`, `VALUES` entries, and function arguments. It excludes column
 lists following `INTO`, `UPDATE`, or `TABLE`; a function after `FROM` or `JOIN`
-still has value arguments. This distinction keeps identifier positions from
-being treated as bindable SQL values.
+still has value arguments. These are specific exclusions, not a general proof
+of identifier position. For example, a column hole in
+`CREATE INDEX idx ON users (${column})` is not excluded by this classifier.
 
 Casts alone do not establish a domain. A type assertion on a closed parameter
 is erased before the argument is read, so `pick(kind as Key)` stays on the same
