@@ -15,7 +15,7 @@ pub(super) fn collect(statement: &Statement, out: &mut Vec<CatalogTriggerWrite>)
             update
                 .assignments
                 .iter()
-                .flat_map(|assignment| names::assignment_column_keys(&assignment.target))
+                .flat_map(|assignment| names::assignment_base_column_keys(&assignment.target))
                 .collect(),
         ),
         Statement::Delete(delete) => {
@@ -42,7 +42,7 @@ pub(super) fn collect(statement: &Statement, out: &mut Vec<CatalogTriggerWrite>)
                             .assignments
                             .iter()
                             .flat_map(|assignment| {
-                                names::assignment_column_keys(&assignment.target)
+                                names::assignment_base_column_keys(&assignment.target)
                             })
                             .collect(),
                     });

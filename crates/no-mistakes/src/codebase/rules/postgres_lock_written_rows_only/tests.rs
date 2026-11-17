@@ -18,6 +18,7 @@ mod placeholder_provenance;
 mod proof;
 mod returning_commit;
 mod sql_forms;
+mod trigger_composite;
 mod trigger_replication_role;
 mod trigger_writes;
 

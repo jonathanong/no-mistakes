@@ -20,6 +20,8 @@ const cases = [
 
   ["trigger-writes", "trigger-writes.yml", 9],
   ["trigger-upsert", "trigger-writes.yml", 2],
+  ["trigger-composite", "trigger-writes.yml", 3],
+  ["trigger-dynamic-setting", "trigger-writes.yml", 2],
   ["trigger-replication-role", "trigger-writes.yml", 2],
 ];
 

@@ -11,11 +11,12 @@ pub(super) fn trigger_disabled_transactions(
         .filter(|(index, _)| {
             grouped.get(index).is_some_and(|versions| {
                 versions.iter().any(|version| {
-                    version.setting_uses.iter().any(|setting| {
-                        setting
-                            .name
-                            .eq_ignore_ascii_case("session_replication_role")
-                    })
+                    version.lock_writes.dynamic_setting_name
+                        || version.setting_uses.iter().any(|setting| {
+                            setting
+                                .name
+                                .eq_ignore_ascii_case("session_replication_role")
+                        })
                 })
             })
         })

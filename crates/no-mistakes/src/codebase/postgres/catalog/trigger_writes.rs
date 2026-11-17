@@ -173,6 +173,6 @@ impl Visitor for Writes {
 fn columns(assignments: &[sqlparser::ast::Assignment]) -> Vec<String> {
     assignments
         .iter()
-        .flat_map(|value| names::assignment_column_keys(&value.target))
+        .flat_map(|value| names::assignment_base_column_keys(&value.target))
         .collect()
 }

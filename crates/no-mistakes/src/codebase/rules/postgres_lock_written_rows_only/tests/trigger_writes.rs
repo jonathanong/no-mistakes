@@ -58,3 +58,20 @@ fn upsert_update_fires_only_matching_update_triggers() {
         .iter()
         .all(|finding| finding.target.as_deref() == Some(CHECKS[0])));
 }
+
+#[test]
+fn dynamic_setting_names_disable_only_trigger_evidence() {
+    let root = fixture("trigger-dynamic-setting");
+    let mut config = config();
+    config.rules[0].options["schemaCatalogPath"] = serde_yaml::to_value("schema.json").unwrap();
+    let findings = check(&root, &config).unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [6, 27]
+    );
+    assert_eq!(findings[0].target.as_deref(), Some(CHECKS[0]));
+}

@@ -42,13 +42,13 @@
   },
   "functions": {
     "touch()": {
-      "definition": "CREATE FUNCTION touch() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET value = 1; $$"
+      "definition": "CREATE FUNCTION touch() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET value = 1; RETURN NEW; END; $$"
     },
     "public.same()": {
-      "definition": "CREATE FUNCTION public.same() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET value = 1; $$"
+      "definition": "CREATE FUNCTION public.same() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET value = 1; RETURN NEW; END; $$"
     },
     "audit.same()": {
-      "definition": "CREATE FUNCTION audit.same() RETURNS trigger LANGUAGE sql AS $$ UPDATE audit_accounts SET value = 1; $$"
+      "definition": "CREATE FUNCTION audit.same() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE audit_accounts SET value = 1; RETURN NEW; END; $$"
     }
   }
 }

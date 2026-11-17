@@ -75,6 +75,19 @@ pub(crate) fn assignment_column_keys(target: &AssignmentTarget) -> Vec<String> {
     }
 }
 
+pub(crate) fn assignment_base_column_keys(target: &AssignmentTarget) -> Vec<String> {
+    let base = |name: &ObjectName| match name.0.first() {
+        Some(sqlparser::ast::ObjectNamePart::Identifier(ident)) => {
+            super::super::super::idents::ident_key(ident)
+        }
+        _ => String::new(),
+    };
+    match target {
+        AssignmentTarget::ColumnName(name) => vec![base(name)],
+        AssignmentTarget::Tuple(names) => names.iter().map(base).collect(),
+    }
+}
+
 fn column_key(name: &ObjectName) -> String {
     super::super::super::idents::object_name_ident(name)
         .map(super::super::super::idents::ident_key)
