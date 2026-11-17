@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::dependencies::extract::{
-    CallableId, InvocationKind, ValueCall, ValueFlowFacts,
+    CallableId, InvocationKind, ValueBinding, ValueCall, ValueFlowFacts,
 };
 use crate::codebase::dependencies::graph::NodeId;
 
@@ -10,20 +10,8 @@ pub(super) fn unsafe_helper(
     facts: &CheckFactMap,
     bindings: &Bindings<'_>,
     sql: &SqlCall<'_>,
-    source: &Provenance,
+    binding: &ValueBinding,
 ) -> bool {
-    let Provenance::Reference {
-        name,
-        scope,
-        offset,
-        ..
-    } = source
-    else {
-        return false;
-    };
-    let Some(binding) = bindings.value(&sql.file, *scope, name, *offset) else {
-        return false;
-    };
     let ValueExpression::Call(start, end) = binding.value else {
         return false;
     };

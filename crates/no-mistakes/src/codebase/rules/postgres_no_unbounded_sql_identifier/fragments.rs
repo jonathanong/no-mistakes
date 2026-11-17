@@ -116,7 +116,7 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
             self.facts,
             self.bindings,
             call,
-            source,
+            binding,
         );
         self.risky_helpers.insert(key, found);
         found

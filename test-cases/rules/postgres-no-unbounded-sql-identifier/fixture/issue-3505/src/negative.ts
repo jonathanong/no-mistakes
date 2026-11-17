@@ -91,3 +91,7 @@ export async function unsafeAppendHelper(table: string) {
   const q = appendRaw(table);
   return read(`/* unsafe append helper */ ${q.text}`, q.values);
 }
+
+export async function namespaceRelation() {
+  return read(`SELECT * FROM ${statements.namespaceStatement.text}`);
+}

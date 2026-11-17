@@ -41,6 +41,7 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         ("multi wrong", "q"),
         ("dynamic values", "q"),
         ("unsafe append helper", "q"),
+        ("namespaceStatement.text", "statements.namespaceStatement"),
     ] {
         assert!(
             findings.iter().any(|finding| {
