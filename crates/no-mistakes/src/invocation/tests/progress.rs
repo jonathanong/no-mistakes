@@ -311,66 +311,106 @@ fn readable_stderr_deadline_subprocess_helper() {
     let Ok(mode) = std::env::var("NO_MISTAKES_READABLE_DEADLINE_MODE") else {
         return;
     };
-    if mode == "plain" {
-        let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
-            timeout: Some(Duration::from_millis(150)),
-            invocation_timeout: None,
-            ..InvocationOptions::default()
-        })
-        .unwrap();
-        std::thread::sleep(Duration::from_secs(10));
-        panic!("watchdog failed to terminate without diagnostics");
-    }
     use crate::diagnostics::{InvocationObserver, ProgressGuard, TimingKind};
-    let observer = InvocationObserver::with_progress(false, mode == "progress");
-    let _scope = crate::diagnostics::InvocationGuard::install(std::sync::Arc::clone(&observer));
-    let _heartbeat = (mode == "progress").then(|| {
-        ProgressGuard::install(std::sync::Arc::clone(&observer), Duration::from_secs(3600))
+    let observer =
+        (mode != "plain").then(|| InvocationObserver::with_progress(false, mode == "progress"));
+    let _scope = observer.as_ref().map(|observer| {
+        crate::diagnostics::InvocationGuard::install(std::sync::Arc::clone(observer))
     });
+    let _heartbeat = observer
+        .as_ref()
+        .filter(|_| mode == "progress")
+        .map(|observer| {
+            ProgressGuard::install(std::sync::Arc::clone(observer), Duration::from_secs(3600))
+        });
+    if let Some(observer) = &observer {
+        observer.trace("analysis.waiting", TimingKind::Parallel, || {
+            run_readable_watchdog(Some(observer));
+        });
+    } else {
+        run_readable_watchdog(None);
+    }
+}
+
+fn run_readable_watchdog(observer: Option<&crate::diagnostics::InvocationObserver>) {
+    use std::io::Read;
+    if let Some(observer) = observer.filter(|observer| observer.progress_enabled()) {
+        observer.render_progress_stderr();
+    } else {
+        eprintln!("watchdog ready");
+    }
+    let mut start = [0];
+    std::io::stdin().read_exact(&mut start).unwrap();
+    assert_eq!(start, [1]);
     let _execution = InvocationGuard::acquire_for_cli(InvocationOptions {
         timeout: Some(Duration::from_millis(150)),
         invocation_timeout: None,
         ..InvocationOptions::default()
     })
     .unwrap();
-    observer.trace("analysis.waiting", TimingKind::Parallel, || {
-        std::thread::sleep(Duration::from_secs(10));
-        panic!("watchdog failed to terminate");
-    });
+    std::thread::sleep(Duration::from_secs(10));
+    panic!("watchdog failed to terminate");
 }
 
 #[test]
 fn readable_watchdog_output_preserves_timeout_with_and_without_diagnostics() {
+    use std::io::{BufRead, Write};
     use std::process::Stdio;
     for mode in ["plain", "timings", "progress"] {
-        let mut child = Command::new(std::env::current_exe().unwrap())
-            .args([
-                "--exact",
-                "invocation::tests::progress::readable_stderr_deadline_subprocess_helper",
-                "--nocapture",
-            ])
-            .env("NO_MISTAKES_READABLE_DEADLINE_MODE", mode)
-            .stdout(Stdio::null())
-            .stderr(Stdio::piped())
-            .spawn()
-            .unwrap();
+        let mut child = ReadableDeadlineChild(
+            Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "invocation::tests::progress::readable_stderr_deadline_subprocess_helper",
+                    "--nocapture",
+                ])
+                .env("NO_MISTAKES_READABLE_DEADLINE_MODE", mode)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap(),
+        );
+        let stderr = child.0.stderr.take().unwrap();
+        let (ready, receiver) = std::sync::mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            let mut captured = String::new();
+            for line in std::io::BufReader::new(stderr).lines() {
+                let line = line.unwrap();
+                if (mode == "progress" && line.starts_with("[progress] "))
+                    || (mode != "progress" && line == "watchdog ready")
+                {
+                    let _ = ready.send(());
+                }
+                captured.push_str(&line);
+                captured.push('\n');
+            }
+            captured
+        });
+        receiver
+            .recv_timeout(Duration::from_secs(10))
+            .expect("helper must publish readiness before arming its watchdog");
+        assert!(
+            child.0.try_wait().unwrap().is_none(),
+            "premature exit: {mode}"
+        );
+        child.0.stdin.take().unwrap().write_all(&[1]).unwrap();
         let status = child
+            .0
             .wait_timeout(Duration::from_secs(4))
             .unwrap()
-            .unwrap_or_else(|| {
-                let _ = child.kill();
-                let _ = child.wait();
-                panic!("watchdog hung: {mode}");
-            });
-        let output = child.wait_with_output().unwrap();
-        assert_eq!(status.code(), Some(124));
-        let stderr = String::from_utf8(output.stderr).unwrap();
+            .unwrap_or_else(|| panic!("watchdog hung: {mode}"));
+        let stderr = reader.join().unwrap();
+        assert_eq!(status.code(), Some(124), "{mode}: {stderr}");
         assert!(stderr.contains("command timed out"), "{stderr}");
         let snapshot = stderr
             .lines()
             .find_map(|line| line.strip_prefix("[progress] "));
         if mode == "progress" {
-            let snapshot: serde_json::Value = serde_json::from_str(snapshot.unwrap()).unwrap();
+            let snapshot: serde_json::Value = serde_json::from_str(
+                snapshot.expect("progress readiness must be retained in captured stderr"),
+            )
+            .unwrap();
             assert!(snapshot["active"]
                 .as_array()
                 .unwrap()
@@ -379,5 +419,14 @@ fn readable_watchdog_output_preserves_timeout_with_and_without_diagnostics() {
         } else {
             assert!(snapshot.is_none(), "{stderr}");
         }
+    }
+}
+
+struct ReadableDeadlineChild(std::process::Child);
+
+impl Drop for ReadableDeadlineChild {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
     }
 }
