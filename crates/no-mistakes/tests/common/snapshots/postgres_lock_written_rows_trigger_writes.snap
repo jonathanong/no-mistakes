@@ -23,6 +23,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "replication_role": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 13,
+          "message": "src/query.ts:13: row-lock-unwritten-relation: locked row in accounts is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: row-lock-unwritten-relation: locked row in accounts is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "trigger_effects": {
     "exitCode": 1,
     "report": {
@@ -102,6 +131,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.ts:77: row-lock-unwritten-relation: locked row in foreign_r is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await tx.query(\"SELECT id FROM foreign_r WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "upsert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: row-lock-unwritten-relation: locked row in accounts is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 17,
+          "message": "src/query.ts:17: row-lock-unwritten-relation: locked row in accounts is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
           "target": "row-lock-unwritten-relation"
         }
       ],

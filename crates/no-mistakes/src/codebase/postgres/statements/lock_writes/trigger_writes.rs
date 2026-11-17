@@ -1,6 +1,6 @@
 use crate::codebase::postgres::dml::writes::names;
 use crate::codebase::postgres::{CatalogTriggerWrite, TriggerEvent};
-use sqlparser::ast::{FromTable, Statement};
+use sqlparser::ast::{FromTable, OnConflictAction, OnInsert, Statement};
 
 pub(super) fn collect(statement: &Statement, out: &mut Vec<CatalogTriggerWrite>) {
     let (relation, event, columns) = match statement {
@@ -32,6 +32,23 @@ pub(super) fn collect(statement: &Statement, out: &mut Vec<CatalogTriggerWrite>)
         _ => return,
     };
     if let Some(relation) = relation {
+        if let Statement::Insert(insert) = statement {
+            if let Some(OnInsert::OnConflict(conflict)) = &insert.on {
+                if let OnConflictAction::DoUpdate(update) = &conflict.action {
+                    out.push(CatalogTriggerWrite {
+                        relation: relation.clone(),
+                        event: TriggerEvent::Update,
+                        columns: update
+                            .assignments
+                            .iter()
+                            .flat_map(|assignment| {
+                                names::assignment_column_keys(&assignment.target)
+                            })
+                            .collect(),
+                    });
+                }
+            }
+        }
         out.push(CatalogTriggerWrite {
             relation,
             event,

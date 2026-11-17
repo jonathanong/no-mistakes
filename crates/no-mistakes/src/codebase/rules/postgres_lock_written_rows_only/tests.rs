@@ -18,6 +18,7 @@ mod placeholder_provenance;
 mod proof;
 mod returning_commit;
 mod sql_forms;
+mod trigger_replication_role;
 mod trigger_writes;
 
 fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {

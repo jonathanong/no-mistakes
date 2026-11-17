@@ -19,6 +19,8 @@ const cases = [
   ["ddl-negative", "checks-fail.yml", 18],
 
   ["trigger-writes", "trigger-writes.yml", 9],
+  ["trigger-upsert", "trigger-writes.yml", 2],
+  ["trigger-replication-role", "trigger-writes.yml", 2],
 ];
 
 for (const [fixture, config, count] of cases) {

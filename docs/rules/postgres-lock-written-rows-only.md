@@ -157,7 +157,9 @@ await tx.query('INSERT INTO log (id, r_id) VALUES ($2, $1)', [id, next]);
 
 The triggering statement must write the trigger's source relation with the
 matching `INSERT`, `UPDATE`, or `DELETE` event. An `UPDATE OF selected` trigger
-contributes writes only when the statement assigns `selected`. Trigger effects
+contributes writes only when the statement assigns `selected`. An executor
+`INSERT ... ON CONFLICT DO UPDATE` also contributes its UPDATE event and assigned
+columns; `DO NOTHING` does not. Trigger effects
 can fire further triggers; cycles are guarded and traversal stops after 32
 trigger hops.
 Static writes in SQL and simple PL/pgSQL function bodies contribute their target
@@ -167,7 +169,9 @@ column, a `WHEN` condition, or a body that cannot be analyzed contributes no
 write evidence, so an otherwise unwritten lock remains reported. Without a
 catalog, the rule uses only its existing direct and helper write evidence.
 The catalog generator omits disabled and replica-only triggers; unattached
-functions and dropped triggers supply no write evidence.
+functions and dropped triggers supply no write evidence. Transactions that change
+`session_replication_role` use only direct write evidence: the catalog does not
+distinguish origin-only triggers from always-enabled triggers.
 
 ## Counterexample
 

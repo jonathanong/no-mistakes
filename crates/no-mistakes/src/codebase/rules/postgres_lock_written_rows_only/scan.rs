@@ -14,6 +14,7 @@ use std::{
 mod ddl;
 mod output;
 mod rows;
+mod settings;
 mod triggers;
 mod writes;
 use output::{Output, Site};
@@ -109,6 +110,7 @@ fn scan_file(
         .filter_map(|(_, call)| call.transaction_id)
         .collect();
     let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
+    let trigger_disabled = settings::trigger_disabled_transactions(&embedded.calls, &grouped);
     let mut writes = writes::Writes::default();
     let mut trigger_relations: BTreeMap<u32, BTreeSet<String>> = BTreeMap::new();
     for (index, call) in embedded.calls.iter().enumerate() {
@@ -118,10 +120,12 @@ fn scan_file(
                     && call.execution_unconditional
                     && call.executor_transaction_known
                 {
-                    trigger_relations
-                        .entry(id)
-                        .or_default()
-                        .extend(triggers.relations(&versions[0].lock_writes.trigger_writes));
+                    if !trigger_disabled.contains(&id) {
+                        trigger_relations
+                            .entry(id)
+                            .or_default()
+                            .extend(triggers.relations(&versions[0].lock_writes.trigger_writes));
+                    }
                     for write in &versions[0].lock_writes.writes {
                         writes.insert(id, write, call);
                     }
