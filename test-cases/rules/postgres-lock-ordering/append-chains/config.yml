@@ -2,7 +2,7 @@ version: 2
 rules:
   - rule: postgres-lock-ordering
     scope: repository
-    include: [src/query.ts]
+    include: [src/query.ts, src/violation.ts]
     options:
       importSpecifier: "@example/db"
       trustedSqlTags:

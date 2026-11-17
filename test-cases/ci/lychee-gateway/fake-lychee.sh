@@ -30,10 +30,14 @@ fi
 count="$((count + 1))"
 printf '%s\n' "$count" > "$count_file"
 
+if [[ "${LYCHEE_FAKE_NO_REPORT:-0}" == "1" ]]; then
+  exit "${LYCHEE_FAKE_EXIT:-2}"
+fi
+
 if [[ "$count" -ge "${LYCHEE_FAKE_SUCCEED_ON:?}" ]]; then
   cat "${LYCHEE_FAKE_SUCCESS:?}" > "$output"
   exit 0
 fi
 
 cat "${LYCHEE_FAKE_FAILURE:?}" > "$output"
-exit 2
+exit "${LYCHEE_FAKE_EXIT:-2}"

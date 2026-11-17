@@ -5,6 +5,7 @@ rules:
     include:
       - test-helpers/keys.mts
       - tests/impact.test.mts
+      - tests/mutation.test.mts
     options:
       importSpecifier: db
       testGlobs: ["**/*.test.mts"]

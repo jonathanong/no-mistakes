@@ -2,7 +2,7 @@ version: 2
 rules:
   - rule: postgres-conflict-ordering
     scope: repository
-    include: [src/insert.ts]
+    include: [src/insert.ts, src/violation.ts]
     options:
       importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
