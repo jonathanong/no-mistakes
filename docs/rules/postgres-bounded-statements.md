@@ -847,6 +847,12 @@ WITH RECURSIVE ancestors AS (
 SELECT * FROM ancestors;
 ```
 
+A value interpolation in a parameterizing SQL tag, including `${max + 1}`,
+becomes a bound parameter and can supply this cap. The source expression is
+not SQL text. This still requires the catalog key proof below; without it,
+the recursive lookup remains reported. A suppression on a query proven bounded
+by these conditions is unused.
+
 Without the cap, a cycle can revisit the same key forever, so the recursive
 lookup remains reported; add a conjunctive depth cap to fix it. The catalog must
 include a valid, immediate primary or unique index for the joined key.

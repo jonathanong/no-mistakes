@@ -193,9 +193,10 @@ captured binding, statements after the return, a named function expression, or
 an outer result bound with `let`). A same-file helper that receives the caller's builder is
 composed only when the call is straight-line in the builder's own function; in
 a conditional, loop or nested function it keeps the established per-call
-effect analysis. A call that stays `Dynamic` keeps the statement around an
-unresolved hole. An identifier hole stays `sql_placeholder_N`. A fragment
-append is removed, with one space when the neighboring tokens would glue.
+effect analysis. A call that stays `Dynamic` keeps only the verified statement
+prefix before an unresolved fragment append. Its complete pending template
+retains the suffix for successful recovery. An identifier hole stays
+`sql_placeholder_N` and retains the text after it.
 
 #### Helper-line attribution and suppression
 

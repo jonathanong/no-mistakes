@@ -2,17 +2,17 @@
 //!
 //! An identifier or value hole stays `sql_placeholder_N`, and the text after
 //! it stays too. A real fragment splice (an `.append` of an unresolved
-//! fragment) is not a placeholder: it becomes a gap, with a space only when
-//! the neighboring tokens would otherwise glue.
+//! fragment) ends the verified prefix until the fragment is resolved.
 
 use super::super::sentinel;
 use super::super::split::coordinate;
 use super::super::summary::ImportedSite;
-use crate::codebase::postgres::embedded::walk::resolve::has_known_leading_statement;
+use crate::codebase::postgres::embedded::walk::{
+    resolve::has_known_leading_statement, scope::has_diagnostic_leading_statement,
+};
 use std::ops::Range;
 
-/// Replace each hole. Identifier holes become `sql_placeholder_N`. A fragment
-/// splice becomes empty, or one space when that keeps the next token separate.
+/// Replace identifier holes, stopping at an unresolved fragment splice.
 pub(super) fn publish(text: &str, sites: &[ImportedSite]) -> String {
     let holes = sentinel::find_all(text);
     if holes.is_empty() {
@@ -24,9 +24,11 @@ pub(super) fn publish(text: &str, sites: &[ImportedSite]) -> String {
     for (range, site) in &holes {
         out.push_str(&text[cursor..range.start]);
         if fragment_gap(text, range, sites.get(*site)) {
-            if sentinel::fragment_separator(text, range.start, range.end) {
-                out.push(' ');
-            }
+            return if has_diagnostic_leading_statement(&out) {
+                out
+            } else {
+                String::new()
+            };
         } else {
             out.push_str("sql_placeholder_");
             out.push_str(&index.to_string());

@@ -36,24 +36,33 @@ fn variant_only_value_hole_keeps_a_placeholder() {
 }
 
 #[test]
-fn unresolved_fragment_hole_keeps_the_tail_without_a_placeholder() {
+fn unresolved_fragment_without_a_statement_prefix_publishes_no_sql() {
     let hole = sentinel::encode(0);
     let sites = [fragment_site()];
-    let spaced = finalize_text(
+    for sql in [
         format!("/* q */{hole} SELECT id FROM k WHERE id = ANY($1::uuid[]) ORDER BY id LIMIT 3"),
-        &sites,
-    );
-    assert_eq!(
-        spaced.as_deref(),
-        Some("/* q */ SELECT id FROM k WHERE id = ANY($1::uuid[]) ORDER BY id LIMIT 3")
-    );
-    let glued = finalize_text(format!("/* c */{hole}SELECT id FROM k"), &sites);
-    assert_eq!(glued.as_deref(), Some("/* c */ SELECT id FROM k"));
-    assert!(!glued.unwrap_or_default().contains("sql_placeholder_"));
+        format!("/* c */{hole}SELECT id FROM k"),
+    ] {
+        assert_eq!(finalize_text(sql, &sites), None);
+    }
 }
 
 #[test]
-fn fragment_hole_beside_an_identifier_keeps_both_sides() {
+fn unresolved_fragment_never_fabricates_a_predicate_from_the_suffix() {
+    let hole = sentinel::encode(0);
+    assert_eq!(
+        finalize_text(
+            format!(
+                "SELECT id FROM k WHERE {hole} AND image_id = $1 ORDER BY id LIMIT 1 FOR UPDATE"
+            ),
+            &[fragment_site()]
+        ),
+        Some("SELECT id FROM k WHERE ".into()),
+    );
+}
+
+#[test]
+fn identifier_hole_stays_a_placeholder_before_an_unresolved_fragment() {
     let fragment = sentinel::encode(0);
     let table = sentinel::encode(1);
     let sites = [fragment_site(), fragment_site()];
@@ -65,9 +74,7 @@ fn fragment_hole_beside_an_identifier_keeps_both_sides() {
     );
     assert_eq!(
         sql.as_deref(),
-        Some(
-            "WITH candidate AS (SELECT id FROM sql_placeholder_1 t WHERE flag IS NULL ORDER BY id FOR UPDATE SKIP LOCKED)"
-        )
+        Some("WITH candidate AS (SELECT id FROM sql_placeholder_1 t WHERE flag IS NULL")
     );
 }
 
@@ -81,5 +88,17 @@ fn lock_table_hole_keeps_an_identifier_placeholder() {
     assert_eq!(
         sql.as_deref(),
         Some("/* lockReference */ LOCK TABLE sql_placeholder_1 IN ACCESS EXCLUSIVE MODE")
+    );
+}
+
+#[test]
+fn unresolved_fragment_retains_diagnostic_ddl_prefixes_without_the_suffix() {
+    let hole = sentinel::encode(0);
+    assert_eq!(
+        finalize_text(
+            format!("CREATE TABLE items (id int) {hole} DROP TABLE other"),
+            &[fragment_site()]
+        ),
+        Some("CREATE TABLE items (id int) ".into()),
     );
 }

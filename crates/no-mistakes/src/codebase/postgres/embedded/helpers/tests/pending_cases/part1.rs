@@ -4,11 +4,10 @@ use super::*;
 fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
     let facts = extract("pending.ts");
     assert_eq!(facts.calls.len(), 15);
-    // The append is a gap. The caller's own ORDER BY fragment stays.
     assert_eq!(call(&facts, 0).kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(
         call(&facts, 0).sql_text.as_deref(),
-        Some("SELECT l.id FROM links l WHERE l.account_id = $1 AND  ORDER BY l.id")
+        Some("SELECT l.id FROM links l WHERE l.account_id = $1 AND ")
     );
     assert_eq!(call(&facts, 0).recovered_placeholder_positions, [(1, 47)]);
     let pending = pending_for(&facts, 0).expect("pending");

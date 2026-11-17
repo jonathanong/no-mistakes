@@ -68,16 +68,18 @@ plain value elsewhere in the file also fails closed. Rules with
 `unanalyzableSql: fail` report calls whose complete alternatives cannot be
 recovered instead of reading the fragment as a bind value. An unresolved
 fragment splice, including `.append` of an unknown fragment, is not published
-as `sql_placeholder_N`. The hole is removed and the rest of the statement
-stays; a space is inserted only when the neighboring tokens would otherwise
-glue into one word. An unresolved identifier interpolation, including a
+as `sql_placeholder_N`. Public dynamic facts stop at the verified statement
+prefix before that fragment; text after it is not joined across the missing SQL.
+The complete pending template retains the suffix for successful later recovery.
+A fragment before any known statement publishes no SQL prefix.
+An unresolved identifier interpolation, including a
 frozen-record field, stays `sql_placeholder_N` until its alternatives are
 known. Every value interpolation in a parameterized tag is a `$N` bind,
 including numeric and string constants and arguments to a table-valued
 function after `FROM`. One sequence covers the entire statement, including
 appended local and imported helper fragments. Identifier holes and raw SQL
-fragments do not consume value-bind numbers. Neither kind of hole drops the
-tail after it. A resolved string constant, including a template that
+fragments do not consume value-bind numbers. Identifier placeholders retain the
+tail after them; resolved fragments restore the complete pending template. A resolved string constant, including a template that
 builds one, stays that bind when the hole is a value. It is not copied into
 the statement as text. An imported number or other non-SQL value, including
 one referenced from a helper that is appended later, stays a bind too. It does

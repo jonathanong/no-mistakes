@@ -4,7 +4,7 @@ pub(crate) use variants::MAX_FROZEN_OBJECT_SQL_VARIANTS;
 pub use variants::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 
 /// One executor call site and its recovered SQL text. For `Dynamic` calls,
-/// `sql_text` keeps the statement around an unresolved hole.
+/// `sql_text` keeps identifier placeholders or the prefix before an unresolved fragment.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EmbeddedSqlCall {
     /// Concrete alternatives for a recoverable Dynamic call; empty for legacy calls.

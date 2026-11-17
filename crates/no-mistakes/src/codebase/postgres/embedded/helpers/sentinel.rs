@@ -69,18 +69,6 @@ pub(crate) fn in_relation_slot(text: &str, hole_start: usize) -> bool {
     identifier_slot(text, hole_start, false)
 }
 
-/// The two sides of a removed fragment splice would form one token.
-pub(crate) fn fragment_separator(text: &str, start: usize, end: usize) -> bool {
-    let word = |ch: char| ch.is_ascii_alphanumeric() || ch == '_';
-    let next_word = text[end..].chars().next().is_some_and(word);
-    let prev_space = text[..start]
-        .chars()
-        .next_back()
-        .is_some_and(|ch| ch.is_whitespace());
-    let prev_word = text[..start].chars().next_back().is_some_and(word);
-    (next_word && !prev_space) || (prev_word && next_word)
-}
-
 /// A value hole: comparison or arithmetic operand, `LIMIT`/`OFFSET`,
 /// `VALUES` list, or function argument. A column list after
 /// `INTO`/`UPDATE`/`TABLE` is not one. A relation function after

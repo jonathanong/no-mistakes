@@ -1,6 +1,6 @@
 //! End-of-walk step: no hole marker may reach a public fact.
 //! Unfilled calls stay dynamic. Identifier holes keep `sql_placeholder_N` and
-//! the rest of the statement. A fragment splice becomes a gap, not a cut.
+//! the rest of the statement. An unresolved fragment ends the verified prefix.
 
 use super::sentinel;
 use super::split::coordinate;

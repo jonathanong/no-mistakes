@@ -215,10 +215,11 @@ The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore
 keep their names.
 
 An appended fragment that stays unresolved is not recovered SQL and is not
-rewritten into a `sql_placeholder_N`. The splice is removed, with a space when
-the neighboring tokens would glue, and the rest of the statement stays. An
-identifier hole in that statement stays a placeholder. The call stays dynamic
-and follows `unanalyzableSql`.
+rewritten into a `sql_placeholder_N`. Only the verified statement prefix before
+the fragment is published; joining a missing predicate to a later `AND` would
+fabricate invalid SQL. The complete pending template retains the suffix for
+successful helper recovery. An identifier hole stays a placeholder and retains
+the text after it. The call stays dynamic and follows `unanalyzableSql`.
 
 Recovered SQL containing `FOR UPDATE` that fails to parse always produces an
 `unparseable` finding, including under `ignore` and `advise`. That SQL may hold

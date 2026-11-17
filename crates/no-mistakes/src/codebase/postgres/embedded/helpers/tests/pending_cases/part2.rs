@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn unresolved_imported_calls_keep_the_pre_recovery_public_facts() {
-    // Public shape while the import is unresolved. Fragment appends are gaps,
-    // and the caller's own text on either side stays. The saved file is that differential.
+    // The pending template retains the suffix; unresolved public facts stop at the fragment.
     let facts = extract("pending.ts");
     let mut snapshot = String::new();
     for (index, call) in facts.calls.iter().enumerate() {
