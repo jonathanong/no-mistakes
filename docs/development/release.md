@@ -30,8 +30,12 @@ repair the earlier release automatically. Do not move or delete the prepared tag
 
 A rerun of the old failed run retains its original workflow implementation.
 Recovery that needs a workflow fix therefore uses a new dispatch after the fix
-lands. Publication retains its existing exact-version checks and skips channels
-that already published. No recovery dispatch is triggered automatically.
+lands. npm and Cargo publication retain their exact-version checks and skip
+versions already published to those registries. A new dispatch rebuilds GitHub
+release assets and uploads them with `--clobber`, replacing existing assets.
+Their contents and
+checksums can change for the same version. No recovery dispatch is triggered
+automatically.
 
 See [the Rust resource budget](ci-builds.md#release-rust-resource-budget) for the
 compilation and test worker limits and memory-pressure diagnostics.
