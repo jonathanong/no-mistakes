@@ -26,6 +26,7 @@ test("standalone build retains the default-feature library-only scope", () => {
     "--archive-file",
   ]);
   assert.equal(command[7], path.resolve("target/bundle/standalone.tar.zst"));
+  assert.deepEqual(command.slice(8), ["--zstd-level", "6", "--zstd-long"]);
   assert.ok(!command.includes("--all-features"));
   assert.ok(!command.includes("--bins"));
 });

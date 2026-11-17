@@ -336,6 +336,22 @@ and, for each job, its own cleanup. The earlier macOS native path alone exceeded
 the ten-minute target. The following completed parallel measurements distinguish
 cache states and include scheduling overhead.
 
+### Standalone archive transfers
+
+The [standalone archive producer](../../.github/scripts/standalone-shards.cjs)
+uses long-distance archive compression to reduce repeated shard downloads while
+preserving symbol names for panic diagnostics. Debug metadata is already disabled;
+stripping symbols would remove those diagnostics. A single test executable
+dominates the archive, so splitting it would make each shard fetch the same binary.
+
+The [standalone shard workflow](../../.github/workflows/ci.yml) bounds the initial
+download separately from one fresh attempt after failure, within the existing
+combined transfer budget. This lets a stalled request terminate before consuming
+the entire budget. The retry requests the same validated producer artifact and
+overwrites its partial files. Exhausted retries fail the shard and its aggregate
+gate; cancellation does not start another download. The action owns transport
+retries; a fresh attempt restarts the transfer rather than resuming partial bytes.
+
 ### Balancing the remaining macOS snapshot work
 
 The completed baseline for the follow-up is run
