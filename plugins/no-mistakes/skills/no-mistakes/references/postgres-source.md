@@ -206,9 +206,12 @@ executors. Start with its default advisory checks, then set individual check
 ids to `fail` after reviewing row, table, constant advisory, and autocommit
 locks. The executor replacement, additive, and exclusion options above also
 apply to this rule. Configure transaction factories through `executorFactoryNames`
-for `const`, `using`, and `await using` bindings. Configure
-`executorOptionProperties` when a wrapper routes its transaction through an
-inline options object. Directly await static lock helpers and pass matching
+for `const`, `using`, and `await using` bindings, or a simple first parameter
+of a direct factory callback. Configure `executorOptions: [{ name: query }]`
+(or `executorOptionProperties: [query]`) when a wrapper routes its transaction
+through an inline options object. Local, unexported option helpers can forward
+optional options and specialize literal boolean flags; unknown callers or flags
+retain findings. Directly await static executor-parameter lock helpers and pass matching
 executor parameters; imported helpers and re-exports reuse prepared summaries.
 Hashed global advisory keys are checked, while atomic lock/write CTEs on the
 same relation are accepted. Table locks can order later DDL in the same
