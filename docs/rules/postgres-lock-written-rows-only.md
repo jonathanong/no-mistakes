@@ -345,6 +345,8 @@ transaction membership. A lock reached through one of these forms retains an `un
 under `unanalyzableSql: fail`; the configured unanalyzable policy still applies. An alias also cannot extend a transaction past commit or resource
 disposal; a later matching write does not make that lock safe. Saved negative
 controls cover these boundaries with executor-option selectors off and on.
+Unrelated callbacks remain outside this scope when stored beside configured
+executors, including computed/default destructuring and mutable holders.
 
 `executorOptionProperties` defaults to `[]`. Configure explicit property names
 (such as `[query]`) when an executor accepts an inline options object that routes
