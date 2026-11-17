@@ -19,9 +19,8 @@ const {
   passedDirect,
   resolvePassed,
 } = require("./postgres-no-executor-adapter-passed");
-
 const { acceptsExecutor } = require("./postgres-no-executor-adapter-target");
-
+const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
 const RULE_ID = "postgres-no-executor-adapter";
 
 module.exports = rule(
@@ -31,7 +30,7 @@ module.exports = rule(
       description: "disallow executor forwarding adapters that hide SQL from analysis",
       recommended: false,
     },
-    schema: [executorOptionSchema()],
+    schema: [executorOptionSchema({ mode: { enum: ["forwarding-only", "all"] } })],
     messages: {
       forward:
         "This callback only forwards to {{executor}}. Call that executor on the SQL text (`{{direct}}`{{alias}}). Passing the function into a helper (`{{rejected}}`) does not connect the statement to the executor, so analysis cannot see it.",
@@ -43,8 +42,10 @@ module.exports = rule(
   },
   (context) => {
     const options = executorOptionDefaults(context.options?.[0] ?? {});
+    const mode = context.options?.[0]?.mode ?? "all";
     const suppressed = ruleSuppression(context, RULE_ID);
     const source = context.sourceCode;
+    const filename = context.filename;
     const targetFacts = new WeakMap();
     let bindings = { scoped: [], queryMembers: false };
 
@@ -109,8 +110,13 @@ module.exports = rule(
         // Every branch is an executor, so the conditional callee itself is judged.
         // A partial conditional falls through and names only the proven branches.
         if (leaves) {
-          if (!nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts))
-            return;
+          const accepted =
+            !nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts);
+          const visible =
+            mode === "forwarding-only" && !nested
+              ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)
+              : null;
+          if (visible === true || (accepted && visible !== false)) return;
           reportAdapter(
             argument,
             {
@@ -140,9 +146,15 @@ module.exports = rule(
         reportAdapter(argument, passed.adapter, call, index, quoteNode);
         return;
       }
-      if (nested || !acceptsExecutor(call, index, quoteNode, context, options, targetFacts)) {
+      const accepted =
+        !nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts);
+      const visible =
+        mode === "forwarding-only" && !nested && passed.definite
+          ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)
+          : null;
+      const hidden = !passed.definite || visible === false || (!accepted && !visible);
+      if (nested || (mode === "forwarding-only" ? hidden : !accepted))
         reportPassed(argument, passed);
-      }
     }
 
     function visitFresh(expr, call, index, nested) {
@@ -172,7 +184,7 @@ module.exports = rule(
 
     return {
       Program(node) {
-        bindings = executorBindings(node, options, context.filename, context);
+        bindings = executorBindings(node, options, filename, context, false, mode === "all");
       },
       CallExpression(node) {
         if (bindResultIsReported(node)) return;

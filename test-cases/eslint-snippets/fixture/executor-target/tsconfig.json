@@ -1,1 +1,1 @@
-{"compilerOptions":{"strict":true,"baseUrl":".","paths":{"@example/db":["types.ts"]}},"include":["*.ts"]}
+{"compilerOptions":{"strict":true,"baseUrl":".","paths":{"@example/db":["types.ts"],"@example/db/sub":["types.ts"],"@example/other":["types.ts"],"@example/sql":["sql-tag.ts"],"@example/psql":["psql-types.ts"],"sql-template-strings":["default-sql-tag.ts"]}},"include":["*.ts"]}

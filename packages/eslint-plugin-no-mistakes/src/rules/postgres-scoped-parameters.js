@@ -1,11 +1,22 @@
 "use strict";
 
-function typeMatches(annotation, types) {
+const { resolveVariable } = require("./postgres-query-text");
+const { variableIsImportedExecutor } = require("./postgres-no-executor-adapter-binding");
+
+function typeMatches(annotation, types, context, options) {
   const node = annotation?.typeAnnotation ?? annotation;
   if (node?.type === "TSTypeReference") {
     return node.typeName?.type === "Identifier" && types.has(node.typeName.name);
   }
-  if (node?.type === "TSUnionType") return node.types.some((member) => typeMatches(member, types));
+  if (node?.type === "TSTypeQuery" && node.exprName?.type === "Identifier") {
+    return (
+      !options.legacyAdapterScope &&
+      variableIsImportedExecutor(resolveVariable(node.exprName, context), options)
+    );
+  }
+  if (node?.type === "TSUnionType") {
+    return node.types.some((member) => typeMatches(member, types, context, options));
+  }
   return false;
 }
 
@@ -46,7 +57,7 @@ function parameterExecutors(param, types, context, options) {
   const names = [];
   const members = [];
   if (target.type === "Identifier") {
-    if (typeMatches(target.typeAnnotation, types)) names.push(target.name);
+    if (typeMatches(target.typeAnnotation, types, context, options)) names.push(target.name);
     const declared = declaredProperties(target, context, options);
     for (const property of declared?.names ?? []) {
       if (declared.accepts(property)) members.push({ name: target.name, property });
@@ -68,7 +79,7 @@ function parameterExecutors(param, types, context, options) {
         (member) =>
           member.type === "TSPropertySignature" &&
           propertyKeyName(member.key) === key &&
-          typeMatches(member.typeAnnotation, types),
+          typeMatches(member.typeAnnotation, types, context, options),
       );
     if (
       inline ||

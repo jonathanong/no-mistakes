@@ -41,6 +41,16 @@ destructured properties without property defaults are supported. A shadowed type
 name cannot prove the configured type. Forwarding callbacks still report,
 including `load((statement) => read(statement))`.
 
+A parameter may also use a union when **every** member is a configured executor
+type imported from the configured module or `typeof` a configured executor
+named import from that module. `QueryExecutor | typeof read` and `typeof read`
+are proven; `QueryExecutor | ((statement: unknown) => unknown)` is not. This
+works for same-file helpers and, with typed linting, imported helpers. SQL
+checks recognize these proven parameters inside the helper. A `typeof` executor
+import follows the same exact `importSpecifier` boundary as `executorNames`;
+configured type imports may also come from its subpaths. With explicit
+`executorNames` and no module, named executor imports from any module qualify.
+
 Imported helpers require typed linting: configure `@typescript-eslint/parser`
 with `parserOptions.project` or `projectService` so `parserServices.program`
 is available. The declared parameter must reference a configured type imported
@@ -318,6 +328,15 @@ run(0 ?? read, account);
 }
 ```
 
+| Option                 | Default                                                    | Purpose                                                                       |
+| ---------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `importSpecifier`      | `""`                                                       | Select the database import boundary.                                          |
+| `executorNames`        | `query`, `read`, `write` with a module; required otherwise | Select named executors.                                                       |
+| `executorFactoryNames` | `[]`                                                       | Select imported executor factories.                                           |
+| `executorTypeNames`    | `[]`                                                       | Select imported executor types.                                               |
+| `trustedSqlTags`       | `[]`                                                       | Select SQL tags, including default imports, whose templates expose SQL in `"forwarding-only"` mode. |
+| `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.       |
+
 - `importSpecifier` identifies the database module and defaults to empty.
   Configure your database module explicitly. Named executor imports must come
   from that exact module. A subpath such as `@example/db/read` does not match
@@ -334,9 +353,29 @@ run(0 ?? read, account);
   declaring function. It also proves supported helper argument slots described
   above, including proven required options-object fields with typed linting.
   It defaults to `[]`.
+- `mode` is `"all"` by default. Set `"forwarding-only"` to report forwarding
+  callbacks and blocked or unproven SQL paths while allowing a stable same-file
+  helper to receive an executor directly or in a fresh options object when
+  every use of that parameter calls it with a literal SQL string or static
+  template. With typed linting, the same check applies to imported helpers.
+  A helper that calls the executor with a received or composed SQL fragment
+  still reports. This option changes only this rule.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
-  It is accepted so a shared executor configuration validates. This rule does
-  not read SQL text.
+  In `"forwarding-only"` mode, a direct tagged template is visible SQL only
+  when its tag resolves to that configured import and the template starts
+  with non-empty static text. When a template interpolation comes from a helper
+  parameter, the rule follows stable local bindings to that parameter and checks
+  the value supplied at the call. A received SQL fragment or an opaque value
+  keeps the call reported; a proven primitive scalar, including a literal or
+  stable scalar binding, stays a placeholder. Later writes make a binding
+  unproven. A possibly `undefined` value is unproven when it can activate a
+  SQL-fragment default parameter. Other modes accept this option for shared
+  executor configurations without using it.
+  Configure `name: "default"` for `import sql from "sql-template-strings"`;
+  named imports use their exported name. For a static object argument, the
+  same scalar or fragment check follows a destructured property such as
+  `function search({ where }, query)` or `const { where } = options` inside
+  the helper. Computed keys, spreads, and unknown objects remain unproven.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that
@@ -361,6 +400,58 @@ run(0 ?? read, account);
   Set `executorNames: []` to select no executor calls. The option schema sets
   `additionalProperties: false`, so ESLint rejects an `extraExecutorNames` key
   as a configuration error.
+
+For example, with `mode: "forwarding-only"`:
+
+```js
+{
+  "no-mistakes/postgres-no-executor-adapter": [
+    "error",
+    {
+      importSpecifier: "@example/db",
+      executorTypeNames: ["QueryExecutor"],
+      mode: "forwarding-only",
+    },
+  ],
+}
+```
+
+```ts
+function load(query) {
+  return query("SELECT id FROM orders");
+}
+load(read); // allowed: the executor call names visible SQL
+load((statement) => read(statement)); // reported: forwarding callback
+
+function search(fragment, query) {
+  return query(fragment);
+}
+search(sql`SELECT id FROM orders`, read); // reported: SQL is hidden from the executor call
+
+function filter(where, query) {
+  return query(sql`SELECT id FROM orders WHERE ${where}`);
+}
+filter(sql`active = true`, read); // reported: the helper receives a SQL fragment
+filter(true, read); // allowed: the helper receives a scalar placeholder
+
+function filterOptions({ where }, query) {
+  return query(sql`SELECT id FROM orders WHERE ${where}`);
+}
+filterOptions({ where: sql`active = true` }, read); // reported: fragment in a destructured property
+filterOptions({ where: true }, read); // allowed: scalar in a destructured property
+```
+
+The mode also accepts a fresh object such as `load({ query: read })` when a
+stable local helper calls that property with visible SQL. It does not infer
+contracts from names, callable structural types, mutable helpers, or imported
+implementations without typed linting. Under Oxlint, including `--type-aware`,
+JavaScript plugins receive no TypeScript program. Imported callees therefore
+cannot be proven and keep reporting. Use ESLint with
+`@typescript-eslint/parser` and `parserOptions.projectService` for this rule.
+Interpolated raw templates and arbitrary tagged templates are unproven in this
+mode. Configure a trusted SQL tag when placeholders are needed. A conditional
+argument with only configured executor branches is allowed when the local or
+typed imported helper names visible SQL; an unknown branch still reports.
 
 ## Fix
 

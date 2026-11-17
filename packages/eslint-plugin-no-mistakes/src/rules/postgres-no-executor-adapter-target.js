@@ -1,13 +1,13 @@
 "use strict";
 
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
-const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { resolveVariable } = require("./postgres-query-text");
 const { constInitializer, stableFunction } = require("./postgres-no-executor-adapter-binding");
 const { declaredOptionType } = require("./postgres-no-executor-adapter-options");
 const { localOptionBody } = require("./postgres-no-executor-adapter-option-local");
 const { tsOptionBody } = require("./postgres-no-executor-adapter-option-ts");
 const { allowsCollectionKey } = require("./postgres-no-executor-adapter-collection");
+const { localExecutorType, importedExecutorType } = require("./postgres-no-executor-adapter-type");
 
 function localFunction(callee, context) {
   const variable = resolveVariable(callee, context);
@@ -22,18 +22,6 @@ function localFunction(callee, context) {
   return stableFunction(callee, context);
 }
 
-function configuredType(type, context, options) {
-  if (type?.type !== "TSTypeReference" || type.typeName.type !== "Identifier") return false;
-  const variable = resolveVariable(type.typeName, context);
-  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  return Boolean(
-    def?.type === "ImportBinding" &&
-    def.node.type === "ImportSpecifier" &&
-    options.executorTypeNames.includes(def.node.imported.name) &&
-    matchesConfiguredModule(def.parent.source.value, options.importSpecifier, context.filename),
-  );
-}
-
 function localTarget(fn, index, property, context, options, facts) {
   if (fn.params.some((param) => param.type === "RestElement")) return false;
   const param = fn.params[index];
@@ -42,7 +30,7 @@ function localTarget(fn, index, property, context, options, facts) {
   if (!property) {
     return (
       target.type === "Identifier" &&
-      configuredType(target.typeAnnotation?.typeAnnotation, context, options)
+      localExecutorType(target.typeAnnotation?.typeAnnotation, context, options)
     );
   }
   if (target.type === "Identifier") {
@@ -85,7 +73,7 @@ function localTarget(fn, index, property, context, options, facts) {
         entry.key.name === property,
     );
   return (
-    configuredType(member?.typeAnnotation?.typeAnnotation, context, options) &&
+    localExecutorType(member?.typeAnnotation?.typeAnnotation, context, options) &&
     localOptionBody(fn, bound.value, context, facts)
   );
 }
@@ -143,20 +131,7 @@ function importedTarget(call, index, property, context, options, facts) {
     );
   }
   // Structural compatibility and inference do not prove an executor contract.
-  if (!type?.typeName) return false;
-  const symbol = checker.getSymbolAtLocation(type.typeName);
-  const configured = Boolean(
-    symbol?.declarations?.some((declaration) => {
-      const source = declaration.parent?.parent?.parent?.moduleSpecifier?.text;
-      const name = declaration.propertyName?.text ?? declaration.name?.text;
-      return (
-        typeof source === "string" &&
-        options.executorTypeNames.includes(name) &&
-        matchesConfiguredModule(source, options.importSpecifier, type.getSourceFile().fileName)
-      );
-    }),
-  );
-  if (!configured) return false;
+  if (!type || !importedExecutorType(type, checker, options)) return false;
   const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
   return !writes.eval && !writes.symbols.has(target);
 }
@@ -182,4 +157,4 @@ function acceptsExecutor(call, index, quoteNode, context, options, facts) {
   return importedTarget(call, index, property, context, options, facts);
 }
 
-module.exports = { acceptsExecutor };
+module.exports = { acceptsExecutor, localFunction };

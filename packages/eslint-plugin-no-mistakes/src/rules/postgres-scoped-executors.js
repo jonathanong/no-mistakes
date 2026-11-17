@@ -123,6 +123,7 @@ function matchesConfiguredModule(source, specifier, filename) {
 function scopedImports(program, options, filename) {
   const factories = new Set();
   const types = new Set();
+  const executors = new Set();
   const { importSpecifier, executorFactoryNames, executorTypeNames } = options;
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
@@ -132,10 +133,16 @@ function scopedImports(program, options, filename) {
       const imported = importedName(specifier);
       const typeOnly = statement.importKind === "type" || specifier.importKind === "type";
       if (!typeOnly && executorFactoryNames.includes(imported)) factories.add(specifier.local.name);
+      if (
+        !typeOnly &&
+        (!importSpecifier || statement.source?.value === importSpecifier) &&
+        options.executorNames.includes(imported)
+      )
+        executors.add(specifier.local.name);
       if (executorTypeNames.includes(imported)) types.add(specifier.local.name);
     }
   }
-  return { factories, types };
+  return { factories, types, executors };
 }
 
 function isFactoryCall(init, factories) {
@@ -153,10 +160,11 @@ function isFactoryCall(init, factories) {
  */
 function collectScopedExecutors(program, options, filename, context) {
   const found = [];
-  const { factories, types } = scopedImports(program, options, filename);
+  const { factories, types, executors } = scopedImports(program, options, filename);
   if (
     factories.size === 0 &&
     types.size === 0 &&
+    executors.size === 0 &&
     (!context?.sourceCode?.parserServices?.program || options.executorTypeNames.length === 0)
   )
     return found;
