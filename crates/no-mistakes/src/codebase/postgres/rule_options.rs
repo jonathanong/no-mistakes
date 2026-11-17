@@ -53,6 +53,7 @@ pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
         "postgres-conflict-ordering",
         "postgres-explicit-columns",
         "postgres-generated-column-predicates",
+        "postgres-grouping-not-aggregation",
         "postgres-idempotent-insert",
         "postgres-lock-ordering",
         "postgres-no-generated-column-writes",

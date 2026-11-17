@@ -55,6 +55,7 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-conflict-ordering"
             | "postgres-explicit-columns"
             | "postgres-generated-column-predicates"
+            | "postgres-grouping-not-aggregation"
             | "postgres-idempotent-insert"
             | "postgres-lock-ordering"
             | "postgres-lock-written-rows-only"

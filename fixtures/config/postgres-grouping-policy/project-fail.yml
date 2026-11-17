@@ -1,0 +1,10 @@
+projects:
+  db:
+    root: backend
+    postgres:
+      unanalyzableSql: fail
+      executors:
+        importSpecifier: db
+rules:
+  - rule: postgres-grouping-not-aggregation
+    projects: [db]

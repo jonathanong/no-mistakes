@@ -400,10 +400,12 @@ largest in-flight statement.
 | `executorOptionProperties` | `[]` | Declared option properties carrying an executor. |
 | `trustedSqlTags` | `[]` | Explicit `{module, name}` SQL tags. |
 | `sqlLiteralHelpers` | `[]` | Configured literal-preserving SQL helpers. |
+| `unanalyzableSql` | `advise` | `ignore` suppresses diagnostic advisories for SQL that cannot be statically analyzed, including SQL carried by a member call whose receiver is not a configured executor type. `advise` reports those diagnostics. Proven grouping findings remain advisory in either mode. |
 
 No allow list or fail option is supported. Public Node options are exported as
 `PostgresGroupingNotAggregationOptions`; the target union is
-`PostgresGroupingNotAggregationCode`.
+`PostgresGroupingNotAggregationCode`; the SQL diagnostic policy is
+`PostgresGroupingNotAggregationUnanalyzableSql`.
 
 ## Analysis
 

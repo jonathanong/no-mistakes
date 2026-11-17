@@ -85,6 +85,15 @@ fn validate_advisory_rule(entry: &serde_yaml::Mapping, path: &Path, index: usize
     {
         anyhow::bail!("{}: rules[{index}] postgres-grouping-not-aggregation option fail is not supported; remove it because this rule cannot fail a run", path.display());
     }
+    if entry
+        .get("options")
+        .and_then(Value::as_mapping)
+        .and_then(|options| options.get("unanalyzableSql"))
+        .and_then(Value::as_str)
+        .is_some_and(|value| value.trim().eq_ignore_ascii_case("fail"))
+    {
+        anyhow::bail!("{}: rules[{index}] postgres-grouping-not-aggregation unanalyzableSql must be `ignore` or `advise`; this rule is advisory only", path.display());
+    }
     Ok(())
 }
 

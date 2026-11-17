@@ -23,6 +23,7 @@ pub const RULE_ID: &str = "postgres-grouping-not-aggregation";
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct Options {
     schema_catalog_path: String,
+    unanalyzable_sql: String,
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
@@ -96,3 +97,6 @@ mod recovery_tests;
 
 #[cfg(test)]
 mod existence_fixture_tests;
+
+#[cfg(test)]
+mod options_tests;
