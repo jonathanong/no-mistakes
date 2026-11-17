@@ -293,7 +293,10 @@ the callback's first simple identifier parameter is the transaction. Member
 callees, shadowed factory names, referenced callbacks, and destructured callback
 parameters do not establish this proof. Reassigning the callback parameter
 invalidates its transaction proof. Case-block shadows apply only after the
-switch discriminant, which is evaluated in the outer environment. With an import specifier, executor names
+switch discriminant, which is evaluated in the outer environment. Namespace
+blocks own their `var` bindings, including declarations inside nested blocks;
+those bindings do not shadow an imported factory outside the namespace.
+With an import specifier, executor names
 default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.

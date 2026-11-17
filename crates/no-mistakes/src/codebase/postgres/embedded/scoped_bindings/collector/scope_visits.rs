@@ -9,7 +9,9 @@ macro_rules! scope_visits {
         }
 
         fn visit_ts_module_block(&mut self, block: &oxc_ast::ast::TSModuleBlock<'a>) {
+            self.var_scopes.push(block.span);
             self.with_scope(block.span, |this| walk::walk_ts_module_block(this, block));
+            self.var_scopes.pop();
         }
 
         fn visit_function_body(&mut self, body: &FunctionBody<'a>) {

@@ -139,3 +139,19 @@ export async function switchDiscriminant() {
       break;
   }
 }
+
+namespace LocalTransactions {
+  {
+    var transaction = ordinary;
+  }
+  export async function insideNamespace() {
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 27 FOR UPDATE");
+    });
+  }
+}
+export async function outsideNamespace() {
+  await transaction(async (tx) => {
+    await tx.query("SELECT id FROM items WHERE id = 28 FOR UPDATE");
+  });
+}
