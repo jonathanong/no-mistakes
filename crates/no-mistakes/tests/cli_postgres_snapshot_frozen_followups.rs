@@ -42,6 +42,7 @@ fn postgres_closed_identifiers_frozen_followups_check_json_snapshot() {
         "four non-sync helper queries should each produce one finding per rule: {findings:?}"
     );
     for file in [
+        "tests/candidate-filtering.test.ts",
         "tests/deep-frozen.test.ts",
         "tests/strings-unrelated.test.ts",
         "tests/lexical-controls.test.ts",

@@ -60,6 +60,10 @@ non-key column can still be unbounded.
 - A source-visible same-file helper whose local literal membership guard throws
   before returning a permitted value.
 
+Frozen-record eligibility is checked before reference walking. Only supported,
+private frozen literals need the lexical proof; ordinary constants do not
+trigger a module scan.
+
 ## Imported helper recovery
 
 The embedded SQL walk cannot inspect an imported helper's return value. It
