@@ -383,14 +383,24 @@ and `executorOptionProperties`:
 
 ```ts
 await using transaction = await beginTransaction();
-const execute = transaction;
-await execute('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+const query = transaction;
+await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
 await transaction('UPDATE items SET active = true WHERE id = $1', [id]);
 ```
 
 A reassigned `let` alias or an alias passed to another function before execution
 does not prove transaction membership. Keep the executor in an unchanged local
 `const` binding to make the lock and matching write provable.
+
+Pool aliases, conditional transaction/pool receivers, property or destructured
+receivers, and aliases read before transaction initialization do not establish
+transaction membership. A lock reached through one of these forms retains an `unanalyzable` finding
+under `unanalyzableSql: fail`; the configured unanalyzable policy still applies. An alias also cannot extend a transaction past commit or resource
+disposal; a later matching write does not make that lock safe. Saved negative
+controls cover these boundaries with executor-option selectors off and on.
+Unrelated callbacks remain outside this scope when stored beside configured
+executors, including numeric/computed/default destructuring, empty holders, and
+mutable holders.
 
 `executorOptionProperties` defaults to `[]`. Configure explicit property names
 (such as `[query]`) when an executor accepts an inline options object that routes

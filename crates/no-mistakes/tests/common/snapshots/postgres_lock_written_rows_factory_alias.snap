@@ -87,26 +87,44 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "reassigned_alias": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
       "warnings": []
     }
   },
   "reassigned_alias_options": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
       "warnings": []
     }
   }
