@@ -124,6 +124,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable-sql"
         },
         {
+          "file": "tests/selection-budget.test.ts",
+          "line": 27,
+          "message": "tests/selection-budget.test.ts:27: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT '${group}' AS cohort, id FROM ${config.table} WHERE ${config.column} = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/selection-budget.test.ts",
+          "line": 27,
+          "message": "tests/selection-budget.test.ts:27: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT '${group}' AS cohort, id FROM ${config.table} WHERE ${config.column} = $1`);",
+          "target": "unanalyzable-sql"
+        },
+        {
           "file": "tests/shadowed-helper.test.ts",
           "line": 12,
           "message": "tests/shadowed-helper.test.ts:12: executed SQL is not statically recoverable for bounded statements",
