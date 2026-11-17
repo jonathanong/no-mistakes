@@ -556,6 +556,11 @@ Each `.text` source in a plain template needs its own matching bind array when
 that source has binds; a second builder's `.values` cannot cover the first.
 The same requirement applies to binds added by chained or statement-level
 `.append()` calls before the executor call.
+An executor's separate options object does not become an identifier source
+merely because a `.text` fragment appears in the SQL argument. Structural
+return types such as `{ text: string; values: unknown[] }` and
+`SQLStatement` annotations alone do not establish trusted builder proof;
+resolved SQL tags and value flow provide that proof.
 
 An exported `sql-template-strings` statement or fragment may be imported through
 named or namespace imports and static re-exports. Its constructor and append

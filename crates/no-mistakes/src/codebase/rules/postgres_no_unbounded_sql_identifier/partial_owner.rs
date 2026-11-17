@@ -35,6 +35,40 @@ fn member_owner(value: &ValueExpression) -> Option<TextOwner<'_>> {
     }
 }
 
+pub(in super::super) fn source_owner(source: &Provenance) -> Option<TextOwner<'_>> {
+    match source {
+        Provenance::Reference {
+            name,
+            scope,
+            members,
+            ..
+        } if members.as_slice() == ["text"] => Some(TextOwner::Local(name, *scope)),
+        Provenance::Namespace {
+            local,
+            exported,
+            members,
+        } if members.as_slice() == [exported.as_str(), "text"] => {
+            Some(TextOwner::Namespace(local, exported))
+        }
+        _ => None,
+    }
+}
+
+pub(in super::super) fn text_present(
+    bindings: &Bindings<'_>,
+    call: &SqlCall<'_>,
+    wanted: TextOwner<'_>,
+) -> bool {
+    bindings
+        .value_call(&call.file, call.span)
+        .and_then(|value_call| value_call.arguments.first())
+        .is_some_and(|first| {
+            text_parts(first)
+                .iter()
+                .any(|part| member_owner(part) == Some(wanted))
+        })
+}
+
 pub(in super::super) fn text_owner<'a>(
     bindings: &Bindings<'a>,
     call: &SqlCall<'_>,

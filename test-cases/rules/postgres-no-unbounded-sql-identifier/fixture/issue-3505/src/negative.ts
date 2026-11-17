@@ -82,3 +82,12 @@ export async function dynamicValuesReceiver(id: string) {
   const q = sql`SELECT * FROM items WHERE id = ${id}`;
   return read(`/* dynamic values */ ${q.text}`, otherStatement().values);
 }
+
+function appendRaw(table: string) {
+  return sql``.append(table);
+}
+
+export async function unsafeAppendHelper(table: string) {
+  const q = appendRaw(table);
+  return read(`/* unsafe append helper */ ${q.text}`, q.values);
+}

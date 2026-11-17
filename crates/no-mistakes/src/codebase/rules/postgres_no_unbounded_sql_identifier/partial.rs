@@ -9,7 +9,7 @@ mod projection;
 use projection::mask;
 #[path = "partial_owner.rs"]
 mod owner;
-pub(super) use owner::{text_owner, text_owner_for, TextOwner};
+pub(super) use owner::{source_owner, text_owner, text_owner_for, text_present};
 
 pub(super) fn sources<'a>(
     graph: &DepGraph,
@@ -21,9 +21,6 @@ pub(super) fn sources<'a>(
     match identifier_status(call.call) {
         Some(true) => return identifier_sources(graph, facts, call, bindings),
         Some(false) => return BTreeSet::new(),
-        None if text_owner(bindings, call).is_some() => {
-            return identifier_sources(graph, facts, call, bindings);
-        }
         None => {}
     }
     let Some(ts) = facts.get_ts_facts(&call.file) else {
@@ -106,6 +103,23 @@ pub(super) fn sources<'a>(
         }
     }
     sources
+}
+
+pub(super) fn text_candidates<'a>(
+    graph: &DepGraph,
+    facts: &'a CheckFactMap,
+    call: &SqlCall<'_>,
+    bindings: &Bindings<'a>,
+) -> BTreeSet<Provenance> {
+    if identifier_status(call.call).is_some() || text_owner(bindings, call).is_none() {
+        return BTreeSet::new();
+    }
+    identifier_sources(graph, facts, call, bindings)
+        .into_iter()
+        .filter(|source| {
+            source_owner(source).is_some_and(|owner| text_present(bindings, call, owner))
+        })
+        .collect()
 }
 
 fn holes<'a>(

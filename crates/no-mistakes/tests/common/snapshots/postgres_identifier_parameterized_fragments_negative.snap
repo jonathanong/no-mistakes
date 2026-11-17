@@ -22,15 +22,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/negative.ts",
-          "import": "other",
-          "line": 24,
-          "message": "Unbounded identifier source `other` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return read(`/* wrong values */ ${q.text}`, other.values);",
-          "target": "other"
-        },
-        {
-          "file": "src/negative.ts",
           "import": "process.env.DIRECT_TABLE",
           "line": 7,
           "message": "Unbounded identifier source `process.env.DIRECT_TABLE` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
@@ -130,21 +121,21 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/negative.ts",
+          "import": "q",
+          "line": 92,
+          "message": "Unbounded identifier source `q` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* unsafe append helper */ ${q.text}`, q.values);",
+          "target": "q"
+        },
+        {
+          "file": "src/negative.ts",
           "import": "statements",
           "line": 56,
           "message": "Unbounded identifier source `statements.namespaceStatement` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "return read(`/* namespace values */ ${statements.namespaceStatement.text}`);",
           "target": "statements.namespaceStatement"
-        },
-        {
-          "file": "src/negative.ts",
-          "import": "suffix",
-          "line": 74,
-          "message": "Unbounded identifier source `suffix` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "return read(`/* multi wrong */ ${q.text}${suffix.text}`, suffix.values);",
-          "target": "suffix"
         }
       ],
       "warnings": []

@@ -77,6 +77,20 @@ fn scan(
             continue;
         }
         candidates += 1;
+        for provenance in partial::text_candidates(graph, facts, call, &bindings) {
+            if !fragment_proofs.report_text_source(call, &provenance) {
+                continue;
+            }
+            let (target, import) = match provenance {
+                Provenance::Reference { name, .. } => (name.clone(), name),
+                Provenance::Namespace {
+                    local, exported, ..
+                } => (format!("{local}.{exported}"), local),
+                Provenance::ProcessEnv(_) => continue,
+            };
+            sinks += 1;
+            findings.push(message(root, call, &target, Some(import)));
+        }
         for provenance in partial::sources(graph, opts, facts, call, &bindings) {
             if closed::proven(graph, opts, facts, &bindings, call, &provenance)
                 || catalog_proof.proven(call, &provenance)

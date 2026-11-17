@@ -81,7 +81,7 @@ impl<'a, 'facts> Proof<'a, 'facts> {
         self.files.get(file)
     }
 
-    fn expression(
+    pub(super) fn expression(
         &mut self,
         file: &Path,
         expression: &ValueExpression,

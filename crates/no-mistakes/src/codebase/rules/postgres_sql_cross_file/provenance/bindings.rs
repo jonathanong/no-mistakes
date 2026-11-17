@@ -114,13 +114,22 @@ impl<'a> Bindings<'a> {
         name: &str,
         at: u32,
     ) -> Option<&'a ValueBinding> {
-        let values = self.values.get(&(file, scope, name))?;
-        let index = values.partition_point(|value| value.declared_at <= at);
-        let binding = *values.get(index.checked_sub(1)?)?;
+        let binding = self.declared_value(file, scope, name, at)?;
         binding
             .invalidated_at
             .is_none_or(|write| write > at)
             .then_some(binding)
+    }
+    pub(crate) fn declared_value(
+        &self,
+        file: &Path,
+        scope: usize,
+        name: &str,
+        at: u32,
+    ) -> Option<&'a ValueBinding> {
+        let values = self.values.get(&(file, scope, name))?;
+        let index = values.partition_point(|value| value.declared_at <= at);
+        values.get(index.checked_sub(1)?).copied()
     }
     pub(crate) fn env_alias(&self, file: &Path, scope: usize, name: &str, at: u32) -> bool {
         let Some(binding) = self.value(file, scope, name, at) else {

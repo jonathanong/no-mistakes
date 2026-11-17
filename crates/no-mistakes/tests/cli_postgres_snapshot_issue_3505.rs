@@ -40,6 +40,7 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         ("multi missing", "q"),
         ("multi wrong", "q"),
         ("dynamic values", "q"),
+        ("unsafe append helper", "q"),
     ] {
         assert!(
             findings.iter().any(|finding| {
@@ -63,5 +64,50 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         assert_eq!(output.status.code(), Some(2));
         assert!(String::from_utf8_lossy(&output.stderr)
             .contains("options.trustedSqlTags restates the postgres project scope"));
+    }
+}
+
+#[test]
+fn postgres_identifier_downstream_parameterized_shapes_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3505",
+    );
+    let current = assert_saved_fixture_report(
+        "postgres_identifier_downstream_parameterized_shapes",
+        &[
+            (
+                "direct",
+                root.clone(),
+                root.join(".no-mistakes-downstream-direct.yml"),
+            ),
+            (
+                "helper",
+                root.clone(),
+                root.join(".no-mistakes-downstream-helper.yml"),
+            ),
+            (
+                "imported",
+                root.clone(),
+                root.join(".no-mistakes-downstream-imported.yml"),
+            ),
+            (
+                "options",
+                root.clone(),
+                root.join(".no-mistakes-downstream-options.yml"),
+            ),
+        ],
+        &[],
+        &[],
+    );
+    let baseline: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("baseline-main-6094e71e.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(baseline["base"], "6094e71e6a225f53bc36a1c31542db558d7e1ee4");
+    for name in ["direct", "helper", "imported", "options"] {
+        assert_eq!(current[name]["exitCode"], 0, "{name}: {current}");
+        assert_eq!(current[name]["report"]["rules"], baseline["findings"][name]);
     }
 }
