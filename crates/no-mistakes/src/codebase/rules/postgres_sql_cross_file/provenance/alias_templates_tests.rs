@@ -1,4 +1,4 @@
-use super::alias_templates::detached_template_binds;
+use super::alias_templates::DetachedTemplateBinds;
 use super::{Bindings, Provenance};
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::graph::TsFactLookup;
@@ -30,20 +30,18 @@ fn immutable_template_aliases_keep_bind_pairing_and_scoped_builder_identity() {
         }),
     );
     let bindings = Bindings::new(&facts);
+    let mut proof = DetachedTemplateBinds::new(&bindings);
     let calls = &facts.get_ts_facts(&file).unwrap().value_flow.calls;
     let found: BTreeMap<_, _> = calls
         .iter()
         .filter(|call| call.source_callee.starts_with("read"))
         .map(|call| {
             let embedded = EmbeddedSqlCall::default();
-            let source = detached_template_binds(
-                &SqlCall {
-                    file: file.clone(),
-                    span: (call.offset, call.end),
-                    call: &embedded,
-                },
-                &bindings,
-            );
+            let source = proof.detached(&SqlCall {
+                file: file.clone(),
+                span: (call.offset, call.end),
+                call: &embedded,
+            });
             let name = source.map(|source| {
                 let Provenance::Reference { name, members, .. } = source else {
                     panic!("expected local builder");
@@ -54,6 +52,17 @@ fn immutable_template_aliases_keep_bind_pairing_and_scoped_builder_identity() {
             (call.source_callee.as_str(), name)
         })
         .collect();
+    let repeated = calls
+        .iter()
+        .find(|call| call.source_callee == "readMissing")
+        .unwrap();
+    assert!(proof
+        .detached(&SqlCall {
+            file: file.clone(),
+            span: (repeated.offset, repeated.end),
+            call: &EmbeddedSqlCall::default(),
+        })
+        .is_some());
     assert_eq!(
         found,
         BTreeMap::from([

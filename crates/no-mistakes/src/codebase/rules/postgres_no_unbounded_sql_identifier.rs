@@ -72,14 +72,13 @@ fn scan(
         .with_identifier_returns(returns);
     let mut fragment_proofs = fragments::Proofs::new(graph, opts, facts, &bindings);
     let catalog_proof = catalogs::CatalogProof::new(graph, facts, &bindings);
+    let mut detached = super::postgres_sql_cross_file::DetachedTemplateBinds::new(&bindings);
     for call in calls {
         if !filter.is_match(&call.file) {
             continue;
         }
         candidates += 1;
-        if let Some(Provenance::Reference { name, .. }) =
-            super::postgres_sql_cross_file::detached_template_binds(call, &bindings)
-        {
+        if let Some(Provenance::Reference { name, .. }) = detached.detached(call) {
             sinks += 1;
             findings.push(finding(
                 root, RULE_ID, &call.file, call.call.line,

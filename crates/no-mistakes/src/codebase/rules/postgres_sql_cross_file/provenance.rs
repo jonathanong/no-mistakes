@@ -11,7 +11,7 @@ use std::path::Path;
 mod alias_templates;
 #[cfg(test)]
 mod alias_templates_tests;
-pub(crate) use alias_templates::detached_template_binds;
+pub(crate) use alias_templates::DetachedTemplateBinds;
 mod binding_tag;
 mod classification;
 mod classification_calls;
