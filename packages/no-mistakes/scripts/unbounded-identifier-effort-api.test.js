@@ -71,7 +71,7 @@ test(
       [7, 20, 27, 51, 59, 77],
     );
     assert.deepEqual(await esm.check(options), report);
-    const request = { ...options, reports: [{ type: "check" }] };
+    const request = { root, reports: [{ type: "check", effort: "max" }] };
     const batch = await cjs.analyzeProject(request);
     assert.deepEqual(batch.reports[0].result, report);
     assert.deepEqual(await esm.analyzeProject(request), batch);
