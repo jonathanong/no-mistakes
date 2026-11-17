@@ -27,6 +27,7 @@ async function conditionalReads(enabled: boolean, cached: unknown) {
   cached || (await client.get('b'));
   cached ?? (await client.get('c'));
   enabled ? await client.get('d') : await client.get('e');
+  if (enabled) await client.get('f');
 }
 ```
 

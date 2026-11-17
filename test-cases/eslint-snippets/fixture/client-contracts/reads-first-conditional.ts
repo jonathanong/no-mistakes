@@ -21,4 +21,8 @@ async function conditionalFirst(flag: boolean, cached: unknown) {
     flag ? 'yes' : await kv.get('no');
     await kv.get('after-alternate');
   }
+  {
+    if (flag) await kv.get('conditional');
+    await kv.get('after-if');
+  }
 }
