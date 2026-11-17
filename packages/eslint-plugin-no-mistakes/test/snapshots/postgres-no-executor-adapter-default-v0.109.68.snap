@@ -1,0 +1,1423 @@
+[
+  {
+    "file": "default-compat.ts",
+    "typed": false,
+    "findings": []
+  },
+  {
+    "file": "default-compat.ts",
+    "typed": true,
+    "findings": []
+  },
+  {
+    "file": "local.ts",
+    "typed": false,
+    "findings": [
+      {
+        "line": 11,
+        "column": 5,
+        "endLine": 11,
+        "endColumn": 35,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "forward",
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read)`) does not connect the statement to the executor, so analysis cannot see it."
+      },
+      {
+        "line": 17,
+        "column": 5,
+        "endLine": 17,
+        "endColumn": 51,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "blocked",
+        "message": "This adapter hides read from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter."
+      }
+    ]
+  },
+  {
+    "file": "local.ts",
+    "typed": true,
+    "findings": [
+      {
+        "line": 11,
+        "column": 5,
+        "endLine": 11,
+        "endColumn": 35,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "forward",
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`run(read)`) does not connect the statement to the executor, so analysis cannot see it."
+      },
+      {
+        "line": 17,
+        "column": 5,
+        "endLine": 17,
+        "endColumn": 51,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "blocked",
+        "message": "This adapter hides read from SQL analysis (conditional selection). Call the executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). `run(read)` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter."
+      }
+    ]
+  },
+  {
+    "file": "imported.ts",
+    "typed": false,
+    "findings": [
+      {
+        "line": 3,
+        "column": 5,
+        "endLine": 3,
+        "endColumn": 9,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 4,
+        "column": 17,
+        "endLine": 4,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 5,
+        "column": 9,
+        "endLine": 5,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 6,
+        "column": 6,
+        "endLine": 6,
+        "endColumn": 10,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 7,
+        "column": 12,
+        "endLine": 7,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 8,
+        "column": 12,
+        "endLine": 8,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 9,
+        "column": 22,
+        "endLine": 9,
+        "endColumn": 26,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 10,
+        "column": 24,
+        "endLine": 10,
+        "endColumn": 28,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 11,
+        "column": 22,
+        "endLine": 11,
+        "endColumn": 26,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 12,
+        "column": 16,
+        "endLine": 12,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 13,
+        "column": 5,
+        "endLine": 13,
+        "endColumn": 9,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 13,
+        "column": 11,
+        "endLine": 13,
+        "endColumn": 15,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 14,
+        "column": 11,
+        "endLine": 14,
+        "endColumn": 15,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 15,
+        "column": 18,
+        "endLine": 15,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 16,
+        "column": 17,
+        "endLine": 16,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 17,
+        "column": 16,
+        "endLine": 17,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 18,
+        "column": 19,
+        "endLine": 18,
+        "endColumn": 23,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 21,
+        "column": 12,
+        "endLine": 21,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 22,
+        "column": 15,
+        "endLine": 22,
+        "endColumn": 19,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 23,
+        "column": 20,
+        "endLine": 23,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 24,
+        "column": 9,
+        "endLine": 24,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 26,
+        "column": 12,
+        "endLine": 26,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 28,
+        "column": 24,
+        "endLine": 28,
+        "endColumn": 28,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 30,
+        "column": 17,
+        "endLine": 30,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 31,
+        "column": 17,
+        "endLine": 31,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 33,
+        "column": 9,
+        "endLine": 33,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 35,
+        "column": 14,
+        "endLine": 35,
+        "endColumn": 18,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      }
+    ]
+  },
+  {
+    "file": "imported.ts",
+    "typed": true,
+    "findings": [
+      {
+        "line": 5,
+        "column": 9,
+        "endLine": 5,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 6,
+        "column": 6,
+        "endLine": 6,
+        "endColumn": 10,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 7,
+        "column": 12,
+        "endLine": 7,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 8,
+        "column": 12,
+        "endLine": 8,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 10,
+        "column": 24,
+        "endLine": 10,
+        "endColumn": 28,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 11,
+        "column": 22,
+        "endLine": 11,
+        "endColumn": 26,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 12,
+        "column": 16,
+        "endLine": 12,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 13,
+        "column": 11,
+        "endLine": 13,
+        "endColumn": 15,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 14,
+        "column": 11,
+        "endLine": 14,
+        "endColumn": 15,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 16,
+        "column": 17,
+        "endLine": 16,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 17,
+        "column": 16,
+        "endLine": 17,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 18,
+        "column": 19,
+        "endLine": 18,
+        "endColumn": 23,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 21,
+        "column": 12,
+        "endLine": 21,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 24,
+        "column": 9,
+        "endLine": 24,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 26,
+        "column": 12,
+        "endLine": 26,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 28,
+        "column": 24,
+        "endLine": 28,
+        "endColumn": 28,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 30,
+        "column": 17,
+        "endLine": 30,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 31,
+        "column": 17,
+        "endLine": 31,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 33,
+        "column": 9,
+        "endLine": 33,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 35,
+        "column": 14,
+        "endLine": 35,
+        "endColumn": 18,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      }
+    ]
+  },
+  {
+    "file": "options.ts",
+    "typed": false,
+    "findings": [
+      {
+        "line": 10,
+        "column": 16,
+        "endLine": 10,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 11,
+        "column": 16,
+        "endLine": 11,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 12,
+        "column": 20,
+        "endLine": 12,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 13,
+        "column": 21,
+        "endLine": 13,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 14,
+        "column": 21,
+        "endLine": 14,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 15,
+        "column": 25,
+        "endLine": 15,
+        "endColumn": 29,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 16,
+        "column": 23,
+        "endLine": 16,
+        "endColumn": 27,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 17,
+        "column": 19,
+        "endLine": 17,
+        "endColumn": 23,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 18,
+        "column": 21,
+        "endLine": 18,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 19,
+        "column": 16,
+        "endLine": 19,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 20,
+        "column": 16,
+        "endLine": 20,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 21,
+        "column": 15,
+        "endLine": 21,
+        "endColumn": 19,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 22,
+        "column": 21,
+        "endLine": 22,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 23,
+        "column": 21,
+        "endLine": 23,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 24,
+        "column": 18,
+        "endLine": 24,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 25,
+        "column": 18,
+        "endLine": 25,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 26,
+        "column": 20,
+        "endLine": 26,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 27,
+        "column": 16,
+        "endLine": 27,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 28,
+        "column": 20,
+        "endLine": 28,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 30,
+        "column": 26,
+        "endLine": 30,
+        "endColumn": 30,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 31,
+        "column": 16,
+        "endLine": 31,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 32,
+        "column": 16,
+        "endLine": 32,
+        "endColumn": 46,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "forward",
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`named({ query: read })`) does not connect the statement to the executor, so analysis cannot see it."
+      },
+      {
+        "line": 34,
+        "column": 9,
+        "endLine": 34,
+        "endColumn": 14,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 35,
+        "column": 20,
+        "endLine": 35,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 36,
+        "column": 20,
+        "endLine": 36,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 37,
+        "column": 18,
+        "endLine": 37,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 38,
+        "column": 17,
+        "endLine": 38,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 40,
+        "column": 23,
+        "endLine": 40,
+        "endColumn": 27,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 41,
+        "column": 16,
+        "endLine": 41,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 42,
+        "column": 17,
+        "endLine": 42,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 43,
+        "column": 18,
+        "endLine": 43,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 44,
+        "column": 28,
+        "endLine": 44,
+        "endColumn": 32,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 45,
+        "column": 28,
+        "endLine": 45,
+        "endColumn": 32,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 46,
+        "column": 30,
+        "endLine": 46,
+        "endColumn": 34,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 47,
+        "column": 31,
+        "endLine": 47,
+        "endColumn": 35,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 52,
+        "column": 33,
+        "endLine": 52,
+        "endColumn": 37,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 53,
+        "column": 33,
+        "endLine": 53,
+        "endColumn": 37,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 54,
+        "column": 35,
+        "endLine": 54,
+        "endColumn": 39,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 55,
+        "column": 36,
+        "endLine": 55,
+        "endColumn": 40,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 57,
+        "column": 30,
+        "endLine": 57,
+        "endColumn": 34,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 58,
+        "column": 21,
+        "endLine": 58,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 59,
+        "column": 26,
+        "endLine": 59,
+        "endColumn": 30,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 60,
+        "column": 25,
+        "endLine": 60,
+        "endColumn": 29,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 61,
+        "column": 16,
+        "endLine": 61,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 62,
+        "column": 23,
+        "endLine": 62,
+        "endColumn": 27,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 63,
+        "column": 20,
+        "endLine": 63,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 67,
+        "column": 26,
+        "endLine": 67,
+        "endColumn": 30,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 68,
+        "column": 30,
+        "endLine": 68,
+        "endColumn": 34,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      }
+    ]
+  },
+  {
+    "file": "options.ts",
+    "typed": true,
+    "findings": [
+      {
+        "line": 17,
+        "column": 19,
+        "endLine": 17,
+        "endColumn": 23,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 18,
+        "column": 21,
+        "endLine": 18,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 19,
+        "column": 16,
+        "endLine": 19,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 20,
+        "column": 16,
+        "endLine": 20,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 21,
+        "column": 15,
+        "endLine": 21,
+        "endColumn": 19,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 22,
+        "column": 21,
+        "endLine": 22,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 23,
+        "column": 21,
+        "endLine": 23,
+        "endColumn": 25,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 24,
+        "column": 18,
+        "endLine": 24,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 25,
+        "column": 18,
+        "endLine": 25,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 26,
+        "column": 20,
+        "endLine": 26,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 27,
+        "column": 16,
+        "endLine": 27,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 28,
+        "column": 20,
+        "endLine": 28,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 30,
+        "column": 26,
+        "endLine": 30,
+        "endColumn": 30,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 31,
+        "column": 16,
+        "endLine": 31,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 32,
+        "column": 16,
+        "endLine": 32,
+        "endColumn": 46,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "forward",
+        "message": "This callback only forwards to read. Call that executor on the SQL text (`read(sql)`, or `const exec = read; exec(sql)`). Passing the function into a helper (`named({ query: read })`) does not connect the statement to the executor, so analysis cannot see it."
+      },
+      {
+        "line": 35,
+        "column": 20,
+        "endLine": 35,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 36,
+        "column": 20,
+        "endLine": 36,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 38,
+        "column": 17,
+        "endLine": 38,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 40,
+        "column": 23,
+        "endLine": 40,
+        "endColumn": 27,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 41,
+        "column": 16,
+        "endLine": 41,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 42,
+        "column": 17,
+        "endLine": 42,
+        "endColumn": 21,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 43,
+        "column": 18,
+        "endLine": 43,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 46,
+        "column": 30,
+        "endLine": 46,
+        "endColumn": 34,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 47,
+        "column": 31,
+        "endLine": 47,
+        "endColumn": 35,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 54,
+        "column": 35,
+        "endLine": 54,
+        "endColumn": 39,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 55,
+        "column": 36,
+        "endLine": 55,
+        "endColumn": 40,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 57,
+        "column": 30,
+        "endLine": 57,
+        "endColumn": 34,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 59,
+        "column": 26,
+        "endLine": 59,
+        "endColumn": 30,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 60,
+        "column": 25,
+        "endLine": 60,
+        "endColumn": 29,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 61,
+        "column": 16,
+        "endLine": 61,
+        "endColumn": 20,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 63,
+        "column": 20,
+        "endLine": 63,
+        "endColumn": 24,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 68,
+        "column": 30,
+        "endLine": 68,
+        "endColumn": 34,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      }
+    ]
+  },
+  {
+    "file": "evaluated.ts",
+    "typed": false,
+    "findings": []
+  },
+  {
+    "file": "unsafe.ts",
+    "typed": false,
+    "findings": [
+      {
+        "line": 8,
+        "column": 9,
+        "endLine": 8,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 9,
+        "column": 6,
+        "endLine": 9,
+        "endColumn": 10,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 10,
+        "column": 12,
+        "endLine": 10,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 11,
+        "column": 9,
+        "endLine": 11,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 12,
+        "column": 9,
+        "endLine": 12,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 13,
+        "column": 15,
+        "endLine": 13,
+        "endColumn": 19,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 14,
+        "column": 6,
+        "endLine": 14,
+        "endColumn": 10,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 15,
+        "column": 14,
+        "endLine": 15,
+        "endColumn": 18,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 16,
+        "column": 14,
+        "endLine": 16,
+        "endColumn": 18,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 17,
+        "column": 11,
+        "endLine": 17,
+        "endColumn": 15,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 18,
+        "column": 9,
+        "endLine": 18,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 20,
+        "column": 27,
+        "endLine": 20,
+        "endColumn": 31,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 21,
+        "column": 18,
+        "endLine": 21,
+        "endColumn": 22,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 25,
+        "column": 9,
+        "endLine": 25,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 28,
+        "column": 22,
+        "endLine": 28,
+        "endColumn": 26,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 30,
+        "column": 24,
+        "endLine": 30,
+        "endColumn": 28,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 32,
+        "column": 23,
+        "endLine": 32,
+        "endColumn": 27,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 35,
+        "column": 9,
+        "endLine": 35,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 38,
+        "column": 12,
+        "endLine": 38,
+        "endColumn": 16,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      },
+      {
+        "line": 40,
+        "column": 9,
+        "endLine": 40,
+        "endColumn": 13,
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "messageId": "passed",
+        "message": "This call passes read into a helper. Name the executor inside the helper (`read(sql`…`)`, or `const exec = read; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function."
+      }
+    ]
+  },
+  {
+    "file": "writes.ts",
+    "typed": false,
+    "findings": []
+  }
+]

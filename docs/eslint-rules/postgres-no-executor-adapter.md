@@ -334,7 +334,7 @@ run(0 ?? read, account);
 | `executorNames`        | `query`, `read`, `write` with a module; required otherwise | Select named executors.                                                       |
 | `executorFactoryNames` | `[]`                                                       | Select imported executor factories.                                           |
 | `executorTypeNames`    | `[]`                                                       | Select imported executor types.                                               |
-| `trustedSqlTags`       | `[]`                                                       | Select named SQL tags whose templates expose SQL in `"forwarding-only"` mode. |
+| `trustedSqlTags`       | `[]`                                                       | Select SQL tags, including default imports, whose templates expose SQL in `"forwarding-only"` mode. |
 | `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.       |
 
 - `importSpecifier` identifies the database module and defaults to empty.
@@ -362,7 +362,7 @@ run(0 ?? read, account);
   still reports. This option changes only this rule.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   In `"forwarding-only"` mode, a direct tagged template is visible SQL only
-  when its tag resolves to that configured named import and the template starts
+  when its tag resolves to that configured import and the template starts
   with non-empty static text. When a template interpolation comes from a helper
   parameter, the rule follows stable local bindings to that parameter and checks
   the value supplied at the call. A received SQL fragment or an opaque value
@@ -371,6 +371,11 @@ run(0 ?? read, account);
   unproven. A possibly `undefined` value is unproven when it can activate a
   SQL-fragment default parameter. Other modes accept this option for shared
   executor configurations without using it.
+  Configure `name: "default"` for `import sql from "sql-template-strings"`;
+  named imports use their exported name. For a static object argument, the
+  same scalar or fragment check follows a destructured property such as
+  `function search({ where }, query)` or `const { where } = options` inside
+  the helper. Computed keys, spreads, and unknown objects remain unproven.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that
@@ -428,6 +433,12 @@ function filter(where, query) {
 }
 filter(sql`active = true`, read); // reported: the helper receives a SQL fragment
 filter(true, read); // allowed: the helper receives a scalar placeholder
+
+function filterOptions({ where }, query) {
+  return query(sql`SELECT id FROM orders WHERE ${where}`);
+}
+filterOptions({ where: sql`active = true` }, read); // reported: fragment in a destructured property
+filterOptions({ where: true }, read); // allowed: scalar in a destructured property
 ```
 
 The mode also accepts a fresh object such as `load({ query: read })` when a

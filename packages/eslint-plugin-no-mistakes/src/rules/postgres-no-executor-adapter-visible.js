@@ -129,7 +129,18 @@ function importedVisible(call, index, property, context, options, facts) {
         (invoked.expression !== node && invoked.expression !== node.parent) ||
         !invoked.arguments[0] ||
         !tsLiteralSql(invoked.arguments[0], checker, ts, options, (hole) =>
-          tsHoleSafe(hole, call, declaration, checker, ts, context, facts, services.program),
+          tsHoleSafe(
+            hole,
+            call,
+            declaration,
+            checker,
+            ts,
+            context,
+            facts,
+            services.program,
+            symbol,
+            property,
+          ),
         )
       ) {
         safe = false;
@@ -173,7 +184,7 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
     return Boolean(
       invocation &&
       literalSql(invocation.arguments[0], context, options, (hole) =>
-        localHoleSafe(hole, call, fn, context),
+        localHoleSafe(hole, call, fn, context, variable, property),
       ),
     );
   });

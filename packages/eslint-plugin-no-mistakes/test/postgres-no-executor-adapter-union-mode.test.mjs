@@ -14,6 +14,13 @@ const base = {
   executorTypeNames: ["QueryExecutor"],
   trustedSqlTags: [{ module: "@example/sql", name: "sql" }],
 };
+const psql = {
+  importSpecifier: "@example/psql",
+  executorFactoryNames: ["beginTransaction", "beginBoundedTransaction"],
+  executorTypeNames: ["TransactionQuery", "QueryExecutor", "PoolClient", "QueryOptions"],
+  executorNames: ["readPool", "writePool"],
+  trustedSqlTags: [{ module: "sql-template-strings", name: "default" }],
+};
 
 function testCase(name, mode, typed = false, config = base) {
   const filename = resolve(
@@ -39,6 +46,7 @@ const suite = {
     testCase("opaque-wrapped-eval.ts", "all"),
     testCase("trusted-fragment-local.ts", "all"),
     testCase("trusted-fragment-imported.ts", "all", true),
+    testCase("default-tag-imported.ts", "all", true, psql),
     testCase("union-sources.ts", "all", true, { executorNames: ["read"] }),
     testCase("union-sources.ts", "forwarding-only", true, { executorNames: ["read"] }),
   ],
@@ -57,6 +65,9 @@ const suite = {
     testCase("opaque-wrapped-eval.ts", "forwarding-only"),
     testCase("trusted-fragment-local.ts", "forwarding-only"),
     testCase("trusted-fragment-imported.ts", "forwarding-only", true),
+    testCase("default-tag-local.ts", "all", false, psql),
+    testCase("default-tag-local.ts", "forwarding-only", false, psql),
+    testCase("default-tag-imported.ts", "forwarding-only", true, psql),
     testCase("imported-mode.ts", "all"),
     testCase("imported-mode.ts", "forwarding-only"),
     testCase("imported-mode.ts", "forwarding-only", true),
@@ -82,6 +93,30 @@ it("snapshots union executor proof and both reporting modes", async () => {
   ]) {
     const lines = languageOptionsFindings({
       ...testCase(name, "forwarding-only", typed),
+      rule: "postgres-no-executor-adapter",
+    }).map((finding) => finding.line);
+    expect(lines).toEqual(expected);
+  }
+  for (const [name, typed, expected] of [
+    [
+      "default-tag-local.ts",
+      false,
+      [
+        43, 44, 45, 48, 50, 57, 58, 59, 60, 80, 82, 84, 85, 88, 97, 107, 116, 126, 127, 137, 145,
+        160, 163, 167, 191, 192, 193, 194, 195, 197, 198, 206, 207, 225, 231, 243,
+      ],
+    ],
+    [
+      "default-tag-imported.ts",
+      true,
+      [
+        41, 42, 43, 46, 48, 55, 56, 57, 58, 59, 61, 63, 64, 67, 68, 69, 70, 71, 72, 73, 81, 86, 89,
+        93, 94, 95, 96, 98, 100, 101, 102, 103, 107, 109, 117,
+      ],
+    ],
+  ]) {
+    const lines = languageOptionsFindings({
+      ...testCase(name, "forwarding-only", typed, psql),
       rule: "postgres-no-executor-adapter",
     }).map((finding) => finding.line);
     expect(lines).toEqual(expected);

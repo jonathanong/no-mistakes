@@ -1,125 +1,89 @@
 "use strict";
 
-const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
+const { childNodes, resolveVariable } = require("./postgres-query-text");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
+const {
+  localAliasField,
+  localField,
+  objectMutation,
+  projectedScalar,
+  tsAliasField,
+  tsField,
+  tsObjectAliased,
+} = require("./postgres-no-executor-adapter-sql-projection");
 
-function primitiveAnnotation(node, allowUndefined) {
-  if (node?.type === "TSUnionType") {
-    return (
-      node.types.length > 0 && node.types.every((part) => primitiveAnnotation(part, allowUndefined))
-    );
-  }
-  if (node?.type === "TSUndefinedKeyword") return allowUndefined;
-  if (node?.type === "TSLiteralType") {
-    return (
-      node.literal?.type === "Literal" &&
-      (node.literal.value === null ||
-        ["string", "number", "boolean", "bigint"].includes(typeof node.literal.value))
-    );
-  }
-  return [
-    "TSStringKeyword",
-    "TSNumberKeyword",
-    "TSBooleanKeyword",
-    "TSBigIntKeyword",
-    "TSNullKeyword",
-  ].includes(node?.type);
-}
-
-function primitiveType(type, ts, allowUndefined) {
-  if (type.isUnion())
-    return (
-      type.types.length > 0 && type.types.every((part) => primitiveType(part, ts, allowUndefined))
-    );
-  const mask =
-    ts.TypeFlags.StringLike |
-    ts.TypeFlags.NumberLike |
-    ts.TypeFlags.BooleanLike |
-    ts.TypeFlags.BigIntLike |
-    ts.TypeFlags.Null |
-    (allowUndefined ? ts.TypeFlags.Undefined : 0);
-  return Boolean(type.flags & mask);
-}
-
-function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
-  node = unwrapTs(node);
-  if (node?.type === "Literal")
-    return (
-      node.value === null || ["string", "number", "boolean", "bigint"].includes(typeof node.value)
-    );
-  if (node?.type === "TemplateLiteral") return node.expressions.length === 0;
-  if (node?.type === "TaggedTemplateExpression") return false;
-  if (node?.type === "Identifier") {
-    const variable = resolveVariable(node, context);
-    if (variable && !seen.has(variable)) {
-      seen.add(variable);
-      if (variable.references.some((reference) => reference.isWrite() && !reference.init))
-        return false;
-      for (const def of variable.defs) {
-        if (def.type === "Variable") {
-          return (
-            Boolean(def.node.init) && scalarArgument(def.node.init, context, allowUndefined, seen)
-          );
-        }
-        if (
-          def.type === "Parameter" &&
-          primitiveAnnotation(def.name?.typeAnnotation?.typeAnnotation, allowUndefined)
-        )
-          return true;
-      }
-      if (variable.defs.some((def) => def.type !== "Parameter")) return false;
-    }
-  }
-  const parameter = node?.type === "Identifier" ? resolveVariable(node, context) : null;
-  if (!parameter?.defs.length || !parameter.defs.every((def) => def.type === "Parameter"))
-    return false;
-  const services = context.sourceCode.parserServices;
-  if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(node)) return false;
-  const ts = require("typescript");
-  const checker = services.program.getTypeChecker();
-  return primitiveType(
-    checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(node)),
-    ts,
-    allowUndefined,
-  );
-}
-
-function localHoleSafe(expression, call, fn, context) {
+function localHoleSafe(expression, call, fn, context, executorVariable, allowedProperty) {
   const parameters = fn.params.map((param) => {
     const target = param.type === "AssignmentPattern" ? param.left : param;
     return target.type === "Identifier" ? resolveVariable(target, context) : null;
   });
-  const indexes = new Set();
-  const seen = new Set();
-  function visit(node) {
-    if (node.type === "MemberExpression" && !node.computed) return visit(node.object);
+  const fields = new Map();
+  fn.params.forEach((param, index) => {
+    const target = param.type === "AssignmentPattern" ? param.left : param;
+    if (target.type !== "ObjectPattern") return;
+    for (const entry of target.properties) {
+      if (entry.type !== "Property" || entry.value.type !== "Identifier") continue;
+      const variable = resolveVariable(entry.value, context);
+      const field = localField(target, variable, context);
+      if (variable && field !== null) fields.set(variable, { index, field });
+    }
+  });
+  const requirements = [];
+  const seen = new Map();
+  function visit(node, field = null) {
+    if (node.type === "MemberExpression" && !node.computed) {
+      if (node.parent?.type === "CallExpression" && node.parent.callee === node)
+        return visit(node.object, field);
+      if (field !== null) requirements.push(null);
+      return visit(node.object, node.property.name);
+    }
     if (node.type === "Identifier") {
       const variable = resolveVariable(node, context);
-      if (!variable || seen.has(variable)) return;
-      seen.add(variable);
+      if (!variable) return;
+      const visited = seen.get(variable) ?? new Set();
+      if (visited.has(field)) return;
+      visited.add(field);
+      seen.set(variable, visited);
       const index = parameters.indexOf(variable);
       if (index >= 0) {
-        indexes.add(index);
-        if (variable.references.some((ref) => ref.isWrite() && !ref.init)) indexes.add(-1);
-      } else if (variable.defs.some((def) => def.type === "Parameter")) indexes.add(-1);
+        requirements.push({ index, field });
+        if (
+          variable.references.some((ref) => ref.isWrite() && !ref.init) ||
+          (field !== null &&
+            !(call.arguments[index] && projectedScalar(call.arguments[index], null, context)) &&
+            objectMutation(variable, executorVariable, allowedProperty))
+        )
+          requirements.push(null);
+      } else if (fields.has(variable)) {
+        const binding = fields.get(variable);
+        requirements.push(field === null ? binding : null);
+        if (variable.references.some((ref) => ref.isWrite() && !ref.init)) requirements.push(null);
+      } else if (variable.defs.some((def) => def.type === "Parameter")) requirements.push(null);
       else
         for (const def of variable.defs) {
           if (def.type === "Variable") {
-            if (variable.references.some((ref) => ref.isWrite() && !ref.init)) indexes.add(-1);
-            if (def.node.init) visit(def.node.init);
+            if (variable.references.some((ref) => ref.isWrite() && !ref.init))
+              requirements.push(null);
+            const alias = localAliasField(def, variable, context);
+            if (alias) {
+              if (field !== null) requirements.push(null);
+              visit(alias.initializer, alias.field);
+            } else if (def.node.init) visit(def.node.init, field);
+            else if (def.node.id.type !== "Identifier") requirements.push(null);
           }
         }
       return;
     }
-    for (const child of childNodes(node)) visit(child);
+    for (const child of childNodes(node)) visit(child, field);
   }
   visit(expression);
-  return [...indexes].every((index) => {
-    if (index < 0) return false;
+  return requirements.every((requirement) => {
+    if (!requirement) return false;
+    const { index, field } = requirement;
     const fallback = fn.params[index]?.type === "AssignmentPattern" ? fn.params[index].right : null;
-    const defaultScalar = fallback ? scalarArgument(fallback, context) : true;
+    const defaultScalar = fallback ? projectedScalar(fallback, field, context) : true;
     return call.arguments[index]
-      ? scalarArgument(call.arguments[index], context, defaultScalar)
+      ? projectedScalar(call.arguments[index], field, context, defaultScalar)
       : Boolean(fallback && defaultScalar);
   });
 }
@@ -136,47 +100,101 @@ function tsScalarDefault(node, ts) {
   );
 }
 
-function tsHoleSafe(expression, call, declaration, checker, ts, context, facts, program) {
+function tsHoleSafe(
+  expression,
+  call,
+  declaration,
+  checker,
+  ts,
+  context,
+  facts,
+  program,
+  executorSymbol,
+  allowedProperty,
+) {
   const parameters = declaration.parameters.map((param) =>
     ts.isIdentifier(param.name) ? checker.getSymbolAtLocation(param.name) : null,
   );
-  const indexes = new Set();
-  const seen = new Set();
-  function visit(node) {
-    if (ts.isPropertyAccessExpression(node)) return visit(node.expression);
+  const fields = new Map();
+  declaration.parameters.forEach((param, index) => {
+    if (!ts.isObjectBindingPattern(param.name)) return;
+    for (const entry of param.name.elements) {
+      if (!ts.isIdentifier(entry.name)) continue;
+      const symbol = checker.getSymbolAtLocation(entry.name);
+      const field = tsField(param.name, symbol, checker, ts);
+      if (symbol && field !== null) fields.set(symbol, { index, field });
+    }
+  });
+  const requirements = [];
+  const seen = new Map();
+  function visit(node, field = null) {
+    if (ts.isPropertyAccessExpression(node)) {
+      if (ts.isCallExpression(node.parent) && node.parent.expression === node)
+        return visit(node.expression, field);
+      if (field !== null) requirements.push(null);
+      return visit(node.expression, node.name.text);
+    }
     if (ts.isIdentifier(node)) {
       const symbol = checker.getSymbolAtLocation(node);
-      if (!symbol || seen.has(symbol)) return;
-      seen.add(symbol);
+      if (!symbol) return;
+      const visited = seen.get(symbol) ?? new Set();
+      if (visited.has(field)) return;
+      visited.add(field);
+      seen.set(symbol, visited);
       const index = parameters.indexOf(symbol);
       if (index >= 0) {
-        indexes.add(index);
+        requirements.push({ index, field });
+        if (
+          sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol) ||
+          (field !== null &&
+            !(call.arguments[index] && projectedScalar(call.arguments[index], null, context)) &&
+            tsObjectAliased(
+              declaration,
+              symbol,
+              checker,
+              ts,
+              facts,
+              executorSymbol,
+              allowedProperty,
+            ))
+        )
+          requirements.push(null);
+      } else if (fields.has(symbol)) {
+        const binding = fields.get(symbol);
+        requirements.push(field === null ? binding : null);
         if (sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol))
-          indexes.add(-1);
+          requirements.push(null);
       } else
         for (const source of symbol.declarations ?? []) {
-          if (ts.isParameter(source) || ts.isBindingElement(source)) indexes.add(-1);
+          if (ts.isParameter(source)) requirements.push(null);
+          if (ts.isBindingElement(source)) {
+            const alias = tsAliasField(source, symbol, checker, ts);
+            if (alias) {
+              if (field !== null) requirements.push(null);
+              visit(alias.initializer, alias.field);
+            } else requirements.push(null);
+          }
           if (ts.isVariableDeclaration(source)) {
             if (
               sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol)
             )
-              indexes.add(-1);
-            if (source.initializer) visit(source.initializer);
+              requirements.push(null);
+            if (source.initializer) visit(source.initializer, field);
           }
         }
       return;
     }
-    ts.forEachChild(node, visit);
+    ts.forEachChild(node, (child) => visit(child, field));
   }
   visit(expression);
-  return [...indexes].every((index) => {
-    if (index < 0) return false;
+  return requirements.every((requirement) => {
+    if (!requirement) return false;
+    const { index, field } = requirement;
     const fallback = declaration.parameters[index]?.initializer;
-    const defaultScalar = fallback ? tsScalarDefault(fallback, ts) : true;
+    const defaultScalar = fallback ? field === null && tsScalarDefault(fallback, ts) : true;
     return call.arguments[index]
-      ? scalarArgument(call.arguments[index], context, defaultScalar)
+      ? projectedScalar(call.arguments[index], field, context, defaultScalar)
       : Boolean(fallback && defaultScalar);
   });
 }
-
 module.exports = { localHoleSafe, tsHoleSafe };

@@ -45,6 +45,7 @@ module.exports = rule(
     const mode = context.options?.[0]?.mode ?? "all";
     const suppressed = ruleSuppression(context, RULE_ID);
     const source = context.sourceCode;
+    const filename = context.filename;
     const targetFacts = new WeakMap();
     let bindings = { scoped: [], queryMembers: false };
 
@@ -183,7 +184,7 @@ module.exports = rule(
 
     return {
       Program(node) {
-        bindings = executorBindings(node, options, context.filename, context);
+        bindings = executorBindings(node, options, filename, context, false, mode === "all");
       },
       CallExpression(node) {
         if (bindResultIsReported(node)) return;

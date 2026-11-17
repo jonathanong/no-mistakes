@@ -23,10 +23,12 @@ function literalSql(node, context, options, safeHole) {
     variable?.defs.some(
       (def) =>
         def.type === "ImportBinding" &&
-        def.node.type === "ImportSpecifier" &&
         def.parent.importKind !== "type" &&
         def.node.importKind !== "type" &&
-        configuredTag(def.parent.source.value, def.node.imported.name, options),
+        ((def.node.type === "ImportDefaultSpecifier" &&
+          configuredTag(def.parent.source.value, "default", options)) ||
+          (def.node.type === "ImportSpecifier" &&
+            configuredTag(def.parent.source.value, def.node.imported.name, options))),
     ),
   );
 }
@@ -46,6 +48,12 @@ function tsLiteralSql(node, checker, ts, options, safeHole) {
   const symbol = checker.getSymbolAtLocation(node.tag);
   return Boolean(
     symbol?.declarations?.some((declaration) => {
+      if (ts.isImportClause(declaration)) {
+        return (
+          !declaration.isTypeOnly &&
+          configuredTag(declaration.parent.moduleSpecifier.text, "default", options)
+        );
+      }
       const source = declaration.parent?.parent?.parent?.moduleSpecifier?.text;
       const name = declaration.propertyName?.text ?? declaration.name?.text;
       return (

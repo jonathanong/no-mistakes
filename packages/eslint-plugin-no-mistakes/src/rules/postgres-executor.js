@@ -65,9 +65,11 @@ function executorBindings(
   filename,
   context,
   reportUnprovenQueryReceivers = false,
+  legacyAdapterScope = false,
 ) {
   const bindings = new Set();
   const defaults = executorOptionDefaults(options);
+  defaults.legacyAdapterScope = legacyAdapterScope;
   const { importSpecifier, executorNames } = defaults;
   bindings.scoped = collectScopedExecutors(program, defaults, filename, context);
   bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);

@@ -9,7 +9,10 @@ function typeMatches(annotation, types, context, options) {
     return node.typeName?.type === "Identifier" && types.has(node.typeName.name);
   }
   if (node?.type === "TSTypeQuery" && node.exprName?.type === "Identifier") {
-    return variableIsImportedExecutor(resolveVariable(node.exprName, context), options);
+    return (
+      !options.legacyAdapterScope &&
+      variableIsImportedExecutor(resolveVariable(node.exprName, context), options)
+    );
   }
   if (node?.type === "TSUnionType") {
     return node.types.some((member) => typeMatches(member, types, context, options));
