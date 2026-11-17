@@ -2,8 +2,8 @@ use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
 
 #[test]
 fn configured_transaction_callback_parameters_are_scoped_transactions() {
-    let path = super::tests::fixture("transaction-callback.ts");
-    let source = super::tests::read_fixture("transaction-callback.ts");
+    let path = crate::test_support::fixture_root("postgres-transaction-callbacks").join("query.ts");
+    let source = std::fs::read_to_string(&path).expect("fixture");
     let mut options = EmbeddedSqlOptions::configured("", &["query".into()])
         .with_scoped_executors(&["transaction".into()], &[]);
     options.track_transaction_helpers = true;
