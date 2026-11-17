@@ -282,6 +282,20 @@ configured executor ownership.
 Configured factory results bound with `using` or `await using` retain transaction
 membership until the enclosing block ends, just like an immutable `const` binding.
 Nested blocks and shadowed bindings keep distinct transaction identities.
+Unchanged local `const` aliases of a factory result retain the same transaction
+identity for direct calls and `.query` calls, independently of `executorOptions`
+and `executorOptionProperties`:
+
+```ts
+await using transaction = await beginTransaction();
+const execute = transaction;
+await execute('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+await transaction('UPDATE items SET active = true WHERE id = $1', [id]);
+```
+
+A reassigned `let` alias or an alias passed to another function before execution
+does not prove transaction membership. Keep the executor in an unchanged local
+`const` binding to make the lock and matching write provable.
 
 `executorOptionProperties` defaults to `[]`. Configure explicit property names
 (such as `[query]`) when an executor accepts an inline options object that routes
