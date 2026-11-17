@@ -41,6 +41,7 @@ fn postgres_identifier_issue_3501_check_json_snapshot() {
         ("negative/mutated-map.ts", vec![9]),
         ("negative/parameter-cast-paths.ts", vec![8, 12, 16]),
         ("negative/parameter-writes.ts", vec![7, 12, 17, 25]),
+        ("negative/parameter-shadowing.ts", vec![8]),
         ("negative/metadata.ts", vec![8, 14, 20, 26]),
         ("negative/parameter-scopes.ts", vec![6]),
         ("negative/type-scope.ts", vec![5, 11, 16, 22]),
