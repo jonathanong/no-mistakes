@@ -133,6 +133,58 @@ a preflight check. A lock
 without later DDL, DML alone, or DDL in another transaction still reports. An
 unrelated locked relation that is never read before the DDL also reports.
 
+## Trigger-derived writes
+
+Set optional `schemaCatalogPath` to a PostgreSQL schema catalog JSON file, relative
+to the analyzed root, to include trigger effects in transaction write sets.
+Trigger inference requires complete catalog coverage; ordering-only catalogs
+provide DDL relationships without inferred trigger writes:
+
+```yaml
+options:
+  importSpecifier: "@example/db"
+  executorFactoryNames: [beginTransaction]
+  schemaCatalogPath: schema.json
+```
+
+For example, the catalog can describe an `AFTER INSERT ON log` trigger whose
+function performs `UPDATE r SET latest = NEW.id WHERE id = NEW.r_id`. This
+transaction then writes the locked relation through that trigger:
+
+```ts
+const tx = await beginTransaction();
+await tx.query('SELECT id FROM r WHERE id = $1 FOR UPDATE', [id]);
+await tx.query('INSERT INTO log (id, r_id) VALUES ($2, $1)', [id, next]);
+```
+
+The triggering statement must write the trigger's source relation with the
+matching `INSERT`, `UPDATE`, or `DELETE` event. An `UPDATE OF selected` trigger
+contributes writes only when the statement assigns `selected`. An executor
+assignment such as `SET total.amount = 1` matches `UPDATE OF total`, not
+`UPDATE OF amount`. An executor
+`INSERT ... ON CONFLICT DO UPDATE` also contributes its UPDATE event and assigned
+columns; `DO NOTHING` does not. Trigger effects
+can fire further triggers; cycles are guarded and traversal stops after 32
+trigger hops.
+Static writes in SQL and simple PL/pgSQL function bodies contribute their target
+relations. These facts establish relation writes without claiming a proven
+matching row key. A trigger on an unwritten source table, an unmatched event or
+column, a `WHEN` condition, or a body that cannot be analyzed contributes no
+write evidence, so an otherwise unwritten lock remains reported. Without a
+catalog, the rule uses only its existing direct and helper write evidence.
+The catalog generator omits disabled and replica-only triggers; unattached
+functions and dropped triggers supply no write evidence. Transactions that change
+`session_replication_role` use only direct write evidence: the catalog does not
+distinguish origin-only triggers from always-enabled triggers. A `set_config`
+call whose setting name is not a plain string literal also disables inferred
+trigger writes for that transaction, since it could change
+`session_replication_role`; direct row write proofs remain available.
+
+Known limits: transaction-local `ALTER TABLE ... DISABLE TRIGGER` and
+`DROP TRIGGER` statements are not tracked against the catalog snapshot. Row-level
+trigger effects count as relation-write evidence even when the triggering
+statement matches zero rows; the rule does not prove affected-row counts.
+
 ## Counterexample
 
 ```ts
@@ -252,6 +304,7 @@ PostgreSQL schema catalog used to connect DDL targets to locked relations
 through partitioning, inheritance, and foreign keys.
 Guard-read proofs do not require a catalog. Ordering-only catalogs are accepted,
 but absent relationship metadata cannot prove that two relations are linked.
+Only complete catalogs contribute trigger-derived write evidence.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required

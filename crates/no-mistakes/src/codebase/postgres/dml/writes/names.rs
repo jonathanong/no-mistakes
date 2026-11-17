@@ -75,6 +75,20 @@ pub(crate) fn assignment_column_keys(target: &AssignmentTarget) -> Vec<String> {
     }
 }
 
+pub(crate) fn assignment_base_column_keys(target: &AssignmentTarget) -> Vec<String> {
+    let base = |name: &ObjectName| {
+        name.0
+            .first()
+            .and_then(|part| part.as_ident())
+            .map(super::super::super::idents::ident_key)
+            .unwrap_or_default()
+    };
+    match target {
+        AssignmentTarget::ColumnName(name) => vec![base(name)],
+        AssignmentTarget::Tuple(names) => names.iter().map(base).collect(),
+    }
+}
+
 fn column_key(name: &ObjectName) -> String {
     super::super::super::idents::object_name_ident(name)
         .map(super::super::super::idents::ident_key)

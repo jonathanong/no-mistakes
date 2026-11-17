@@ -81,7 +81,8 @@ fn template_parts<'a>(
             if !seen.insert((binding.scope, binding.name.clone(), binding.declared_at)) {
                 return None;
             }
-            template_parts(bindings, file, &binding.value, seen)
+            let value = super::alias_templates::resolve(bindings, file, expr)?;
+            template_parts(bindings, file, value, seen)
         }
         _ => None,
     }

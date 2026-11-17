@@ -18,6 +18,13 @@ rules:
     options:
       importSpecifier: "@example/db"
       schemaCatalogPath: schema.json
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      checks:
+        row-lock-outside-transaction: fail
   - rule: postgres-object-naming
     scope: repository
     options:

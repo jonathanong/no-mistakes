@@ -53,3 +53,14 @@ fn cte_lock_scopes_do_not_leak_into_following_statements() {
         assert!(!facts.relation_identity_changed);
     }
 }
+
+#[test]
+fn ambiguous_delete_targets_do_not_supply_trigger_evidence() {
+    let statements = statements("trigger-write-boundaries.sql");
+    let deletion = collect::<true>(&statements[..1], None);
+    assert!(deletion.trigger_writes.is_empty());
+    for statement in &statements[1..] {
+        let facts = collect::<true>(std::slice::from_ref(statement), None);
+        assert!(facts.dynamic_setting_name);
+    }
+}

@@ -132,3 +132,31 @@ fn postgres_identifier_fragments_check_json_snapshot() {
 
 include!("cli_postgres_identifier_cases_part1.rs");
 include!("cli_postgres_identifier_cases_part2.rs");
+
+#[test]
+fn postgres_identifier_aliased_bind_pairing_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3525",
+    );
+    let report = super::check_json_snapshot::assert_saved_fixture_report(
+        "postgres_identifier_aliased_bind_pairing",
+        &[("aliases", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let findings = report["aliases"]["report"]["rules"].as_array().unwrap();
+    let mut lines = findings
+        .iter()
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect::<Vec<_>>();
+    lines.sort_unstable();
+    assert_eq!(lines, [7, 20, 27, 51, 59, 77]);
+    for finding in findings {
+        assert_eq!(
+            finding["target"],
+            if finding["line"] == 77 { "table" } else { "q" }
+        );
+    }
+}

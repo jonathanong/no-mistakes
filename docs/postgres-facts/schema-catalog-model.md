@@ -44,7 +44,9 @@ ordering catalog with `schemaCatalogPath <path> has ordering-only coverage; this
 rule requires a complete schema catalog`; `postgres-conflict-ordering`,
 `postgres-lock-ordering`, and `postgres-lock-written-rows-only` accept it. The
 written-row lock check uses only relationships present in the catalog; missing
-links do not justify a lock. The ordering checks keep resolving arbiters from
+links do not justify a lock. Trigger-derived writes require complete coverage,
+including when an ordering catalog contains trigger metadata. The ordering checks
+keep resolving arbiters from
 valid, ready, unique or primary btree indexes only. `tables()`, `table(name)`, `functions()`,
 `enums()`, and `views()` expose the rest of the catalog. Iterators are in
 name order. Function order follows the catalog key. Tables are indexed by
