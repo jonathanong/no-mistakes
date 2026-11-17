@@ -28,6 +28,8 @@ test("documentation links retry the saved checker only for gateway failures", ()
   assert.equal(initial["continue-on-error"], true);
   assert.equal(initial.with.args, "${{ env.LYCHEE_ARGS }}");
   assert.equal(retry.if, "${{ steps.links.outcome == 'failure' }}");
+  assert.equal(initial.with.token, "${{ github.token }}");
+  assert.equal(retry.env.GITHUB_TOKEN, initial.with.token);
   assert.notEqual(retry["continue-on-error"], true);
   assert.equal(job.steps.filter((step) => step["continue-on-error"] === true).length, 1);
   assert.equal(job.env.LYCHEE_GATEWAY_WAIT, "10,20");

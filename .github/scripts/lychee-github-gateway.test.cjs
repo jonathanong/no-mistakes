@@ -36,6 +36,7 @@ for (const report of [
   "timeout.md",
   "missing-timeout.md",
   "truncated.md",
+  "truncated-after-url.md",
   "duplicate-summary.md",
 ]) {
   test(`${report} cannot become a warning`, () => {

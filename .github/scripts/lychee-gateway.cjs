@@ -2,7 +2,7 @@ const { readFileSync, rmSync } = require("node:fs");
 const { spawnSync } = require("node:child_process");
 
 const TRANSIENT_STATUS = new Set(["500", "502", "503", "504"]);
-const ERROR_ENTRY = /^\* \[([^\]]+)\][ \t]+<([^>\r\n]+)>/gm;
+const ERROR_ENTRY = /^\* \[([^\]]+)\][ \t]+<([^>\r\n]+)>[^\r\n]*\r?\n/gm;
 
 function classify(report) {
   const summaries = [...report.matchAll(/\|\s*🚫\s*Errors\s*\|\s*(\d+)\s*\|/g)];

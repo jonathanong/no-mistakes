@@ -505,10 +505,13 @@ jobs:
         with:
           args: ${{ env.LYCHEE_ARGS }}
           fail: true
+          token: ${{ github.token }}
           output: lychee/out.md
       - name: Retry transient gateway errors
         if: ${{ steps.links.outcome == 'failure' }}
         timeout-minutes: 2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/lychee-gateway.cjs
       - name: Preserve final documentation link report
         if: ${{ !cancelled() && steps.links.outcome == 'failure' }}
