@@ -37,7 +37,7 @@ impl Proof<'_, '_> {
         }
     }
 
-    pub(super) fn append_receiver(
+    fn append_receiver(
         &self,
         file: &Path,
         value: &ValueExpression,

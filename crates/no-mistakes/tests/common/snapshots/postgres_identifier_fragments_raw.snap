@@ -58,15 +58,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/text-callers.ts",
-          "import": "fixedPrefixSlot",
-          "line": 122,
-          "message": "Unbounded identifier source `fixedPrefixSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${fixedPrefixSlot.text}`);",
-          "target": "fixedPrefixSlot"
-        },
-        {
-          "file": "src/text-callers.ts",
           "import": "forwardedSpreadSlot",
           "line": 108,
           "message": "Unbounded identifier source `forwardedSpreadSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
@@ -112,33 +103,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/text-callers.ts",
-          "import": "ordinaryCallerSlot",
-          "line": 54,
-          "message": "Unbounded identifier source `ordinaryCallerSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${ordinaryCallerSlot.text}`);",
-          "target": "ordinaryCallerSlot"
-        },
-        {
-          "file": "src/text-callers.ts",
-          "import": "ordinaryDiamondSlot",
-          "line": 68,
-          "message": "Unbounded identifier source `ordinaryDiamondSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${ordinaryDiamondSlot.text}`);",
-          "target": "ordinaryDiamondSlot"
-        },
-        {
-          "file": "src/text-callers.ts",
-          "import": "ordinaryMemberSlot",
-          "line": 62,
-          "message": "Unbounded identifier source `ordinaryMemberSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${ordinaryMemberSlot.text}`);",
-          "target": "ordinaryMemberSlot"
-        },
-        {
-          "file": "src/text-callers.ts",
           "import": "recursiveCallerSlot",
           "line": 95,
           "message": "Unbounded identifier source `recursiveCallerSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
@@ -154,51 +118,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT * FROM ${writtenParameterSlot.text}`);",
           "target": "writtenParameterSlot"
-        },
-        {
-          "file": "src/text-opaque-callers.ts",
-          "import": "literalActualSlot",
-          "line": 48,
-          "message": "Unbounded identifier source `literalActualSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${literalActualSlot.text}`);",
-          "target": "literalActualSlot"
-        },
-        {
-          "file": "src/text-opaque-callers.ts",
-          "import": "literalAliasActualSlot",
-          "line": 55,
-          "message": "Unbounded identifier source `literalAliasActualSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${literalAliasActualSlot.text}`);",
-          "target": "literalAliasActualSlot"
-        },
-        {
-          "file": "src/text-opaque-callers.ts",
-          "import": "literalArrayActualSlot",
-          "line": 69,
-          "message": "Unbounded identifier source `literalArrayActualSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${literalArrayActualSlot.text}`);",
-          "target": "literalArrayActualSlot"
-        },
-        {
-          "file": "src/text-opaque-callers.ts",
-          "import": "literalConditionalActualSlot",
-          "line": 75,
-          "message": "Unbounded identifier source `literalConditionalActualSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${literalConditionalActualSlot.text}`);",
-          "target": "literalConditionalActualSlot"
-        },
-        {
-          "file": "src/text-opaque-callers.ts",
-          "import": "literalObjectActualSlot",
-          "line": 63,
-          "message": "Unbounded identifier source `literalObjectActualSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT * FROM ${literalObjectActualSlot.text}`);",
-          "target": "literalObjectActualSlot"
         },
         {
           "file": "src/text-opaque-callers.ts",
@@ -301,30 +220,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/text-raw.ts",
-          "import": "aliasedScalar",
-          "line": 13,
-          "message": "Unbounded identifier source `aliasedScalar` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${aliasedScalar.text}`);",
-          "target": "aliasedScalar"
-        },
-        {
-          "file": "src/text-raw.ts",
           "import": "capturedDefaultSlot",
           "line": 93,
           "message": "Unbounded identifier source `capturedDefaultSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT id FROM ${capturedDefaultSlot.text}`);",
           "target": "capturedDefaultSlot"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "destructuredLiteralSlot",
-          "line": 119,
-          "message": "Unbounded identifier source `destructuredLiteralSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${destructuredLiteralSlot.text}`);",
-          "target": "destructuredLiteralSlot"
         },
         {
           "file": "src/text-raw.ts",
@@ -346,75 +247,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/text-raw.ts",
-          "import": "destructuredSlot",
-          "line": 109,
-          "message": "Unbounded identifier source `destructuredSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${destructuredSlot.text}`);",
-          "target": "destructuredSlot"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "diamond",
-          "line": 69,
-          "message": "Unbounded identifier source `diamond` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${diamond.text}`);",
-          "target": "diamond"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "legacyRawValue",
-          "line": 20,
-          "message": "Unbounded identifier source `legacyRawValue` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${legacyRawValue.text}`);",
-          "target": "legacyRawValue"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "literalDefaultSlot",
-          "line": 99,
-          "message": "Unbounded identifier source `literalDefaultSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${literalDefaultSlot.text}`);",
-          "target": "literalDefaultSlot"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "literals",
-          "line": 10,
-          "message": "Unbounded identifier source `literals` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${literals.text}`);",
-          "target": "literals"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "localMember",
-          "line": 18,
-          "message": "Unbounded identifier source `localMember` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${localMember.text}`);",
-          "target": "localMember"
-        },
-        {
-          "file": "src/text-raw.ts",
           "import": "mixedSlot",
           "line": 49,
           "message": "Unbounded identifier source `mixedSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT id FROM ${mixedSlot.text}`);",
           "target": "mixedSlot"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "nominalSlot",
-          "line": 114,
-          "message": "Unbounded identifier source `nominalSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${nominalSlot.text}`);",
-          "target": "nominalSlot"
         },
         {
           "file": "src/text-raw.ts",
@@ -469,15 +307,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT id FROM ${optionalSlot.text}`);",
           "target": "optionalSlot"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "parameterMember",
-          "line": 15,
-          "message": "Unbounded identifier source `parameterMember` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${parameterMember.text}`);",
-          "target": "parameterMember"
         },
         {
           "file": "src/text-raw.ts",
@@ -550,15 +379,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-unbounded-sql-identifier",
           "sourceLine": "query(`SELECT id FROM ${rawSlot.text}`);",
           "target": "rawSlot"
-        },
-        {
-          "file": "src/text-raw.ts",
-          "import": "untypedSlot",
-          "line": 104,
-          "message": "Unbounded identifier source `untypedSlot` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
-          "rule": "postgres-no-unbounded-sql-identifier",
-          "sourceLine": "query(`SELECT id FROM ${untypedSlot.text}`);",
-          "target": "untypedSlot"
         },
         {
           "file": "src/text-raw.ts",

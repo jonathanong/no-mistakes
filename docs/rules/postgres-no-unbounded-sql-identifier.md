@@ -546,21 +546,12 @@ This includes immutable local or module-const fragments, `.append()` chains
 of proven fragments, statement-level appends, and resolved synchronous helper
 returns. The proof preserves the matching `.values` bind array.
 Executor calls inside bind expressions are checked independently.
-When a bind-bearing builder's `.text` is interpolated into a plain SQL string,
-pass that same builder's `.values` as the second executor argument. A missing
-array or a different builder's array does not establish the parameterized
-fragment proof. Reassigning the builder also ends the proof. For example,
-``read(`/* tag */ ${q.text}`, q.values)`` is proven for a stable `q`, while
-``read(`/* tag */ ${q.text}`)`` is not.
-Each `.text` source in a plain template needs its own matching bind array when
-that source has binds; a second builder's `.values` cannot cover the first.
-The same requirement applies to binds added by chained or statement-level
-`.append()` calls before the executor call.
-An executor's separate options object does not become an identifier source
-merely because a `.text` fragment appears in the SQL argument. Structural
-return types such as `{ text: string; values: unknown[] }` and
-`SQLStatement` annotations alone do not establish trusted builder proof;
-resolved SQL tags and value flow provide that proof.
+The identifier rule does not diagnose missing or mismatched bind arrays. A
+parameterized `.text` fragment does not turn an executor's separate options
+object into an identifier source. Reassignments and direct writes to builder
+properties prevent the trusted SQL fragment proof. A finding still requires an
+independently established unbounded identifier
+source; a structural return type alone does not prove safety.
 
 An exported `sql-template-strings` statement or fragment may be imported through
 named or namespace imports and static re-exports. Its constructor and append

@@ -1,9 +1,0 @@
-{
-  "base": "6094e71e6a225f53bc36a1c31542db558d7e1ee4",
-  "findings": {
-    "direct": [],
-    "helper": [],
-    "imported": [],
-    "options": []
-  }
-}

@@ -4,6 +4,6 @@ rules:
   - rule: postgres-no-unbounded-sql-identifier
     scope: repository
     options:
-      include: ["src/negative.ts"]
+      include: ["src/negative.ts", "src/mutations.ts"]
       importSpecifier: db
       executorNames: [read, write]

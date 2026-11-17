@@ -27,30 +27,18 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         &[],
     );
     let findings = negative["max"]["report"]["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{negative}");
     for (marker, target) in [
-        ("reassigned", "q"),
-        ("missing values", "q"),
-        ("wrong values", "q"),
-        ("helper values", "q"),
-        ("append values", "q"),
-        ("imported values", "imported"),
-        ("recursive", "q"),
-        ("namespace values", "statements.namespaceStatement"),
-        ("chained append", "q"),
-        ("multi missing", "q"),
-        ("multi wrong", "q"),
-        ("dynamic values", "q"),
-        ("unsafe append helper", "q"),
-        ("namespaceStatement.text", "statements.namespaceStatement"),
+        ("DIRECT_TABLE", "process.env.DIRECT_TABLE"),
+        ("text write", "q"),
+        ("property write", "q"),
     ] {
         assert!(
-            findings.iter().any(|finding| {
-                finding["target"] == target
-                    && finding["sourceLine"]
-                        .as_str()
-                        .is_some_and(|line| line.contains(marker))
-            }),
-            "missing {marker}: {negative}"
+            findings.iter().any(|finding| finding["target"] == target
+                && finding["sourceLine"]
+                    .as_str()
+                    .is_some_and(|line| line.contains(marker))),
+            "missing {target}: {negative}"
         );
     }
     for jobs in ["1", "2"] {
@@ -75,7 +63,7 @@ fn postgres_identifier_downstream_parameterized_shapes_check_json_snapshot() {
         "fixture",
         "issue-3505",
     );
-    let current = assert_saved_fixture_report(
+    assert_saved_fixture_clean(
         "postgres_identifier_downstream_parameterized_shapes",
         &[
             (
@@ -99,16 +87,5 @@ fn postgres_identifier_downstream_parameterized_shapes_check_json_snapshot() {
                 root.join(".no-mistakes-downstream-options.yml"),
             ),
         ],
-        &[],
-        &[],
     );
-    let baseline: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(root.join("baseline-main-6094e71e.json")).unwrap(),
-    )
-    .unwrap();
-    assert_eq!(baseline["base"], "6094e71e6a225f53bc36a1c31542db558d7e1ee4");
-    for name in ["direct", "helper", "imported", "options"] {
-        assert_eq!(current[name]["exitCode"], 0, "{name}: {current}");
-        assert_eq!(current[name]["report"]["rules"], baseline["findings"][name]);
-    }
 }

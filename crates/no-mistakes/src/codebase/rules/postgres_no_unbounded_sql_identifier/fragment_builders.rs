@@ -5,8 +5,6 @@ use std::path::PathBuf;
 
 #[path = "fragment_builder_bindings.rs"]
 mod bindings;
-#[path = "fragment_builder_binds.rs"]
-mod binds;
 #[path = "fragment_builder_helpers.rs"]
 mod helpers;
 #[path = "fragment_builder_imports.rs"]
@@ -81,7 +79,7 @@ impl<'a, 'facts> Proof<'a, 'facts> {
         self.files.get(file)
     }
 
-    pub(super) fn expression(
+    fn expression(
         &mut self,
         file: &Path,
         expression: &ValueExpression,
