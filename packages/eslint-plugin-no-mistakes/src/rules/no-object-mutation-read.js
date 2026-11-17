@@ -123,36 +123,44 @@ function iteratedContents(tag) {
   return joined;
 }
 
-function escapeFresh(tag, seen = new Set()) {
+function rememberEscape(tag, key, contexts) {
+  for (const context of contexts) {
+    if (!context.has(tag)) context.set(tag, { key, previous: tag[key] });
+  }
+}
+
+function escapeFresh(tag, seen = new Set(), contexts = []) {
   if (!tag || seen.has(tag)) {
     return;
   }
   if (tag.mutator) {
     seen.add(tag);
-    escapeFresh(tag.mutator.receiver, seen);
-    for (const value of tag.mutator.boundArgs || []) escapeFresh(value, seen);
+    escapeFresh(tag.mutator.receiver, seen, contexts);
+    for (const value of tag.mutator.boundArgs || []) escapeFresh(value, seen, contexts);
   }
   if (tag.type === "union") {
     seen.add(tag);
     for (const member of tag.members) {
-      escapeFresh(member, seen);
+      escapeFresh(member, seen, contexts);
     }
   } else if (tag.type === "mapset") {
     // A map that leaves the function can be filled by the caller.
     if (!tag.contents) {
+      rememberEscape(tag, "contents", contexts);
       tag.contents = { type: "shared", origin: "parameter" };
     }
     seen.add(tag);
   } else if (tag.type === "fresh") {
     seen.add(tag);
+    rememberEscape(tag, "escaped", contexts);
     tag.escaped = true;
     for (const field of tag.fields.values()) {
-      escapeFresh(field, seen);
+      escapeFresh(field, seen, contexts);
     }
     for (const item of tag.items) {
-      escapeFresh(item, seen);
+      escapeFresh(item, seen, contexts);
     }
-    escapeFresh(tag.dynamic, seen);
+    escapeFresh(tag.dynamic, seen, contexts);
   }
 }
 

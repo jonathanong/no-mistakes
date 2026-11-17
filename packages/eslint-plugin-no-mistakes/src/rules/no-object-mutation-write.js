@@ -6,7 +6,7 @@ const { rootIdentifier, staticPath } = require("./no-object-mutation-syntax");
 
 function markEscaped(state, tag, seen) {
   const was = Boolean(tag?.type === "fresh" && tag.escaped);
-  escapeFresh(tag, seen);
+  escapeFresh(tag, seen, state.returnEscapes);
   if (!was && tag?.type === "fresh" && tag.escaped) {
     state.escapeEpoch += 1;
     api.escapeNestedFunctions(state, tag);

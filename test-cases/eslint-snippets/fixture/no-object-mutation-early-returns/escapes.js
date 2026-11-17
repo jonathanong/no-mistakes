@@ -47,3 +47,11 @@ function returnedClosure(skip) {
   if (skip) return values;
   return () => values.push("captured by returned closure");
 }
+
+function escapedBeforeReturn(skip, sink) {
+  const values = [];
+  sink(values);
+  if (skip) return values;
+  values.push("escaped before the return");
+  return values;
+}

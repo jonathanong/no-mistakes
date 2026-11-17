@@ -51,3 +51,12 @@ function returnBeforeAllocation(skip) {
   values.push("kept local");
   return values;
 }
+
+function returnedBuilder() {
+  return function build(skip) {
+    const values = [];
+    if (skip) return values;
+    values.push("local nested builder");
+    return values;
+  };
+}

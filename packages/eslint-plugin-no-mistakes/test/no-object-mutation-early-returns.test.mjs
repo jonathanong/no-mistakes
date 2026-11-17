@@ -24,6 +24,7 @@ describe("no-object-mutation early returns", () => {
           invalid: [
             savedCase("escapes"),
             savedCase("returned-mutators"),
+            savedCase("return-path-captures"),
             savedCase("top-level-return", {
               sourceType: "script",
               parserOptions: { ecmaFeatures: { globalReturn: true } },

@@ -76,7 +76,7 @@ function walkFunctionBody(state, node, scope, tag) {
   } else {
     api.visit(state, body, fnEnv, "escape");
   }
-  for (const { tag: value, release } of fnEnv.returned) release(state, value);
+  for (const { tag: value, key, value: escaped } of fnEnv.returned) value[key] = escaped;
   flushPending(state, fnEnv);
 }
 
@@ -116,14 +116,16 @@ function callFunction(state, tag) {
 }
 
 function escapeFunction(state, tag) {
-  if (!tag || tag.didEscape) {
+  if (!tag) {
     return;
   }
+  const escaped = tag.didEscape;
   tag.didEscape = true;
   ensureWalked(state, tag);
   for (const fresh of tag.captured) {
     markEscaped(state, fresh);
   }
+  if (escaped) return;
   for (const write of tag.deferred) {
     report(state, write.node, write.objectNode, write.viaCall);
   }

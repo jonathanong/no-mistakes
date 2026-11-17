@@ -200,7 +200,8 @@ function buildNested(skip) {
 Writes after a real escape still report, including when the escape occurs on
 the path after the early return. Returning an escaping bound mutator or closure
 also exposes its captured values. Returning `array.push(...)`'s numeric result
-does not expose the array itself.
+does not expose the array itself. Callbacks reachable on a return path remain
+checked even if the continuing path replaces a callback field or captured binding.
 
 Computed member receivers keep the ownership of their possible children. A local
 literal containing fresh arrays can be filled through either a computed or static

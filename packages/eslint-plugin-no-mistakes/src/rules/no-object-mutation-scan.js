@@ -18,8 +18,8 @@ const {
 const { markEscaped } = require("./no-object-mutation-write");
 const { child, rootEnv, unknown } = require("./no-object-mutation-values");
 
-// Return values escape after the body walk so terminating branches do not
-// poison fresh values on continuing paths; other escapes remain immediate.
+// Return escape freshness is applied after the body walk so terminating
+// branches do not poison continuing paths; callback captures resolve eagerly.
 
 function scanMutations(program, context, options) {
   const state = {
