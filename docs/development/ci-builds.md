@@ -979,6 +979,13 @@ unchanged; no test retries are configured. The
 runs a saved delayed body through Vitest and verifies that the enforced reporter
 rejects its real measured duration while retaining the report artifacts.
 
+The [forbidden-lint-suppression parity matrix](../../packages/no-mistakes/scripts/api-tests/forbidden-lint-suppressions-native.js)
+runs each case outside the checkout so discovery can use the saved fixture
+without reading the checkout's Git index. Each case still runs the standalone,
+batched, and CLI calls and compares their full reports. Canonicalizing the
+fixture path keeps parser-failure paths consistent when the operating system
+exposes an aliased temporary directory.
+
 Name independent fixture cases separately in real-addon parity matrices. Each case
 retains all job/API variants and assertions; the per-test timing gate and
 platform API-step deadlines continue to apply. Reports then identify the slow case.
