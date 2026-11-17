@@ -1,0 +1,162 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "frozen-followups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/caller-mutation.test.ts",
+          "line": 13,
+          "message": "tests/caller-mutation.test.ts:13: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${config.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/caller-mutation.test.ts",
+          "line": 13,
+          "message": "tests/caller-mutation.test.ts:13: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${config.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/helper-extra-read.test.ts",
+          "line": 12,
+          "message": "tests/helper-extra-read.test.ts:12: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${config.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/helper-extra-read.test.ts",
+          "line": 12,
+          "message": "tests/helper-extra-read.test.ts:12: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${config.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/imported-mutator.test.ts",
+          "line": 8,
+          "message": "tests/imported-mutator.test.ts:8: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${config.table}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/imported-mutator.test.ts",
+          "line": 8,
+          "message": "tests/imported-mutator.test.ts:8: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${config.table}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 30,
+          "message": "tests/non-sync-helpers.test.ts:30: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(rawSql`SELECT id FROM ${asyncHelper(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 30,
+          "message": "tests/non-sync-helpers.test.ts:30: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(rawSql`SELECT id FROM ${asyncHelper(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 31,
+          "message": "tests/non-sync-helpers.test.ts:31: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(rawSql`SELECT id FROM ${generatorHelper(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 31,
+          "message": "tests/non-sync-helpers.test.ts:31: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(rawSql`SELECT id FROM ${generatorHelper(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 32,
+          "message": "tests/non-sync-helpers.test.ts:32: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(rawSql`SELECT id FROM ${asyncArrow(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 32,
+          "message": "tests/non-sync-helpers.test.ts:32: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "query(rawSql`SELECT id FROM ${asyncArrow(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 33,
+          "message": "tests/non-sync-helpers.test.ts:33: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${asyncFunctionExpression(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/non-sync-helpers.test.ts",
+          "line": 33,
+          "message": "tests/non-sync-helpers.test.ts:33: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${asyncFunctionExpression(\"vote\")} WHERE id = $1`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/shadowed-helper.test.ts",
+          "line": 12,
+          "message": "tests/shadowed-helper.test.ts:12: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${select(source, kind)}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/shadowed-helper.test.ts",
+          "line": 12,
+          "message": "tests/shadowed-helper.test.ts:12: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${select(source, kind)}`);",
+          "target": "unanalyzable-sql"
+        },
+        {
+          "file": "tests/shallow-mutation.test.ts",
+          "line": 15,
+          "message": "tests/shallow-mutation.test.ts:15: executed SQL is not statically recoverable for bounded statements",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${getConfig(\"vote\").table} WHERE ${getConfig(\"vote\").column} = $1`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "tests/shallow-mutation.test.ts",
+          "line": 15,
+          "message": "tests/shallow-mutation.test.ts:15: executed test SQL is not statically recoverable, so database state mutation cannot be ruled out; pass a SQL literal or trusted tagged template",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return query(rawSql`SELECT id FROM ${getConfig(\"vote\").table} WHERE ${getConfig(\"vote\").column} = $1`);",
+          "target": "unanalyzable-sql"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

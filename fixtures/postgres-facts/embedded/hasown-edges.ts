@@ -17,7 +17,7 @@ function getCooked(name: string) {
 
 const mixedKinds = Object.freeze({
   vote: 'users',
-  tag: { table: 'posts' },
+  tag: Object.freeze({ table: 'posts' }),
 } as const);
 function getMixedKinds(name: string) {
   if (!Object.hasOwn(mixedKinds, name)) throw new Error('no');
@@ -40,15 +40,15 @@ function getEmptyKey(name: string) {
   return emptyKey[name as keyof typeof emptyKey];
 }
 
-const emptyNested = Object.freeze({ vote: {} } as const);
+const emptyNested = Object.freeze({ vote: Object.freeze({}) } as const);
 function getEmptyNested(name: string) {
   if (!Object.hasOwn(emptyNested, name)) throw new Error('no');
   return emptyNested[name as keyof typeof emptyNested];
 }
 
 const duplicate = Object.freeze({
-  vote: { table: 'users' },
-  vote: { table: 'posts' },
+  vote: Object.freeze({ table: 'users' }),
+  vote: Object.freeze({ table: 'posts' }),
 } as const);
 function getDuplicate(name: string) {
   if (!Object.hasOwn(duplicate, name)) throw new Error('no');
@@ -56,8 +56,8 @@ function getDuplicate(name: string) {
 }
 
 const uneven = Object.freeze({
-  vote: { table: 'users', column: 'id' },
-  tag: { table: 'posts' },
+  vote: Object.freeze({ table: 'users', column: 'id' }),
+  tag: Object.freeze({ table: 'posts' }),
 } as const);
 function getUneven(name: string) {
   if (!Object.hasOwn(uneven, name)) throw new Error('no');

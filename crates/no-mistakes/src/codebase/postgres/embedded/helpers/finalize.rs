@@ -1,7 +1,3 @@
-//! End-of-walk step: no hole marker may reach a public fact.
-//! Unfilled calls stay dynamic. Identifier holes keep `sql_placeholder_N` and
-//! the rest of the statement. An unresolved fragment ends the verified prefix.
-
 use super::sentinel;
 use super::split::coordinate;
 use super::summary::{ImportedSite, PendingImportedSql};
@@ -40,10 +36,7 @@ pub(crate) fn finalize(
             continue;
         }
         let text = fragment.sql_text.take().unwrap_or_default();
-        // Defensive invariant (#2287): fragment placeholder positions are normally
-        // empty here (assigned later in embedded.rs). Keep the trim so positions
-        // never point past the cut; covered by
-        // trimmed_fragment_drops_placeholder_positions_past_the_hole.
+        // Keep positions before the cut; later offsets must not point past it.
         let Some((kept, cut)) = trimmed_prefix(&text) else {
             fragment.recovered_placeholder_positions.clear();
             continue;

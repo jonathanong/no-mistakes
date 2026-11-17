@@ -1,10 +1,3 @@
-//! Private hole markers for imported-helper calls.
-//!
-//! The single-file walk cannot know what an imported helper returns, so it
-//! composes `MARK <site> MARK` into the SQL text where the helper's text would
-//! go. Every public fact is scrubbed of these markers before it leaves
-//! extraction (see `finalize`); only the pending-call templates keep them.
-
 use std::ops::Range;
 
 /// A Unicode noncharacter: it never appears in real SQL and differs from the
@@ -46,8 +39,6 @@ pub(crate) fn contains(text: &str) -> bool {
     !find_all(text).is_empty()
 }
 
-/// Whether the text is nothing but holes: the result of a speculative
-/// imported call, which is not yet known to be a SQL builder.
 pub(crate) fn is_bare(text: &str) -> bool {
     let holes = find_all(text);
     let hole_bytes: usize = holes.iter().map(|(range, _)| range.len()).sum();
@@ -69,10 +60,6 @@ pub(crate) fn in_relation_slot(text: &str, hole_start: usize) -> bool {
     identifier_slot(text, hole_start, false)
 }
 
-/// A value hole: comparison or arithmetic operand, `LIMIT`/`OFFSET`,
-/// `VALUES` list, or function argument. A column list after
-/// `INTO`/`UPDATE`/`TABLE` is not one. A relation function after
-/// `FROM` or `JOIN` still takes value arguments.
 pub(crate) fn value_position(text: &str) -> bool {
     let trimmed = text.trim_end();
     let Some(tail) = trimmed.chars().next_back() else {
