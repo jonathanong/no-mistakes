@@ -667,3 +667,33 @@ Use `no-mistakes-disable-next-line postgres-no-unbounded-sql-identifier` or
 cross-file registry member writes.
 [`postgres-no-offset`](postgres-no-offset.md) covers pagination clauses.
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) covers statement shapes.
+
+## Aliased SQL text and its bind values
+
+At max effort, an immutable first-argument alias around a single fresh
+`sql-template-strings` builder's `.text` keeps the builder's bind requirements.
+Extracting text does not forward the bind array. For example, this loses the
+value associated with `$1` and reports at `read`:
+
+```ts
+import sql from "sql-template-strings";
+import { read } from "@example/db";
+
+async function lookup(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const statement = `/* alias */ ${q.text}`;
+  await read(statement);
+}
+```
+
+Pass the matching builder's values as the second argument:
+
+```ts
+await read(statement, q.values);
+```
+
+Immutable SQL alias chains and immutable aliases of `.values` preserve that
+pairing. Extra executor options after the values remain allowed. A different
+builder's values do not match, including a same-named builder in another lexical
+scope. Bind-free fragments do not require a values argument. Keep the builder
+local and unchanged; opaque mutations or escapes are outside this proof.

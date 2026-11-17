@@ -77,6 +77,17 @@ fn scan(
             continue;
         }
         candidates += 1;
+        if let Some(Provenance::Reference { name, .. }) =
+            super::postgres_sql_cross_file::detached_template_binds(call, &bindings)
+        {
+            sinks += 1;
+            findings.push(finding(
+                root, RULE_ID, &call.file, call.call.line,
+                format!("SQL text from `{name}.text` loses its bind values in this executor call. Pass the same immutable builder’s `.values` as the second argument, or pass the builder directly. Parameterized SQL text requires its matching values."),
+                Some(name.clone()), Some(name),
+            ));
+            continue;
+        }
         for provenance in partial::sources(graph, opts, facts, call, &bindings) {
             if closed::proven(graph, opts, facts, &bindings, call, &provenance)
                 || catalog_proof.proven(call, &provenance)
