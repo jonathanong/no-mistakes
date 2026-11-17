@@ -11,18 +11,9 @@ pub(super) fn dynamic_setting_name(expr: &Expr) -> bool {
     ) {
         return false;
     }
-    let FunctionArguments::List(arguments) = &function.args else {
-        return true;
-    };
-    let Some(FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::Value(value)))) =
-        arguments.args.first()
-    else {
-        return true;
-    };
-    !matches!(
-        &value.value,
-        Value::SingleQuotedString(_)
-            | Value::EscapedStringLiteral(_)
-            | Value::DollarQuotedString(_)
-    )
+    !matches!(&function.args, FunctionArguments::List(arguments)
+        if matches!(arguments.args.first(),
+            Some(FunctionArg::Unnamed(FunctionArgExpr::Expr(Expr::Value(value))))
+            if matches!(&value.value, Value::SingleQuotedString(_)
+                | Value::EscapedStringLiteral(_) | Value::DollarQuotedString(_))))
 }

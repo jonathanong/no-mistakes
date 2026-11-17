@@ -73,13 +73,13 @@ fn scan_file(
     let check_written = enabled(CHECKS[0]);
     let check_outside = enabled(CHECKS[3]);
     let mut grouped: BTreeMap<usize, Vec<&SqlStatementFileFacts>> = BTreeMap::new();
-    for statement in statements {
-        if let Some(locations) = &statement.variant_locations {
-            grouped
-                .entry(locations.call_index)
-                .or_default()
-                .push(statement);
-        }
+    for (index, statement) in statements.iter().filter_map(|statement| {
+        statement
+            .variant_locations
+            .as_ref()
+            .map(|locations| (locations.call_index, statement))
+    }) {
+        grouped.entry(index).or_default().push(statement);
     }
     let unresolved: BTreeSet<_> = embedded
         .calls

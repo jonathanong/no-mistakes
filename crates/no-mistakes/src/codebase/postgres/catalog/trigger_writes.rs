@@ -35,13 +35,7 @@ impl SchemaCatalog {
                     if trigger.when.is_some() {
                         continue;
                     }
-                    let Some(identity) = self
-                        .trigger_function_identities
-                        .get(&table.name)
-                        .and_then(|identities| identities.get(&trigger.name))
-                    else {
-                        continue;
-                    };
+                    let identity = &self.trigger_function_identities[&table.name][&trigger.name];
                     let selected = functions.get(identity).or_else(|| {
                         let (schema, bare) = super::names::split_key(identity);
                         if schema.as_deref()? != self.declared_schema()? {
@@ -142,12 +136,12 @@ impl Visitor for Writes {
     fn pre_visit_statement(&mut self, statement: &Statement) -> ControlFlow<()> {
         match statement {
             Statement::Insert(insert) => {
-                if let Some(table) = names::table_object_name(&insert.table) {
-                    self.push(table.clone(), TriggerEvent::Insert, Vec::new());
-                    if let Some(OnInsert::OnConflict(conflict)) = &insert.on {
-                        if let OnConflictAction::DoUpdate(update) = &conflict.action {
-                            self.push(table, TriggerEvent::Update, columns(&update.assignments));
-                        }
+                let table = names::table_object_name(&insert.table)
+                    .expect("PostgreSQL INSERT target is a table name");
+                self.push(table.clone(), TriggerEvent::Insert, Vec::new());
+                if let Some(OnInsert::OnConflict(conflict)) = &insert.on {
+                    if let OnConflictAction::DoUpdate(update) = &conflict.action {
+                        self.push(table, TriggerEvent::Update, columns(&update.assignments));
                     }
                 }
             }

@@ -178,6 +178,11 @@ call whose setting name is not a plain string literal also disables inferred
 trigger writes for that transaction, since it could change
 `session_replication_role`; direct row write proofs remain available.
 
+Known limits: transaction-local `ALTER TABLE ... DISABLE TRIGGER` and
+`DROP TRIGGER` statements are not tracked against the catalog snapshot. Row-level
+trigger effects count as relation-write evidence even when the triggering
+statement matches zero rows; the rule does not prove affected-row counts.
+
 ## Counterexample
 
 ```ts

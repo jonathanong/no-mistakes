@@ -75,3 +75,25 @@ fn dynamic_setting_names_disable_only_trigger_evidence() {
     );
     assert_eq!(findings[0].target.as_deref(), Some(CHECKS[0]));
 }
+
+#[test]
+fn excluded_catalog_keeps_trigger_relations_unproven() {
+    let config: NoMistakesConfig = serde_yaml::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-lock-written-rows-only/configs/trigger-catalog-excluded.yml"
+    )))
+    .unwrap();
+    let findings = check(&fixture("trigger-writes"), &config).unwrap();
+    assert_eq!(findings.len(), 13, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some(CHECKS[0])));
+}
+
+#[test]
+fn missing_trigger_catalog_reports_the_configured_path() {
+    let mut config = config();
+    config.rules[0].options["schemaCatalogPath"] = serde_yaml::to_value("absent.json").unwrap();
+    let error = check(&fixture("trigger-writes"), &config).unwrap_err();
+    assert!(error.to_string().contains("absent.json"), "{error}");
+}

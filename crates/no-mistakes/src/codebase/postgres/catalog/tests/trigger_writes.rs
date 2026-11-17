@@ -66,3 +66,16 @@ fn trigger_functions_preserve_schema_identity_and_catalog_schema_fallback() {
         "touch"
     );
 }
+
+#[test]
+fn unsupported_trigger_bodies_and_ambiguous_functions_supply_no_inferred_writes() {
+    let catalog = super::load_fixture("trigger-writes-coverage.json").unwrap();
+    let effects = catalog.trigger_write_effects();
+    assert_eq!(effects.len(), 1, "{effects:?}");
+    assert_eq!(effects[0].source_relation, "source_upsert_nothing");
+    assert_eq!(effects[0].events, [TriggerEvent::Insert]);
+    assert_eq!(effects[0].writes.len(), 1);
+    assert_eq!(effects[0].writes[0].relation, "audit");
+    assert_eq!(effects[0].writes[0].event, TriggerEvent::Insert);
+    assert!(effects[0].writes[0].columns.is_empty());
+}
