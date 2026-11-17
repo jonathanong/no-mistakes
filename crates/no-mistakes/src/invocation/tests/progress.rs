@@ -1,5 +1,9 @@
 use super::*;
 
+#[path = "progress/deadline_child.rs"]
+mod deadline_child;
+use deadline_child::ReadableDeadlineChild;
+
 #[cfg(unix)]
 #[test]
 fn active_progress_signal_subprocess_helper() {
@@ -112,11 +116,13 @@ fn progress_survives_sigkill_and_sigterm_preserves_default_signal_exit_status() 
             assert!(snapshots.is_empty(), "{stderr}");
         } else {
             assert!(!snapshots.is_empty(), "{stderr}");
-            assert!(snapshots.iter().any(|snapshot| snapshot["active"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"]))));
+            assert!(snapshots.iter().any(|snapshot| {
+                snapshot["active"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"]))
+            }));
         }
     }
 }
@@ -354,79 +360,73 @@ fn run_readable_watchdog(observer: Option<&crate::diagnostics::InvocationObserve
 
 #[test]
 fn readable_watchdog_output_preserves_timeout_with_and_without_diagnostics() {
-    use std::io::{BufRead, Write};
-    use std::process::Stdio;
     for mode in ["plain", "timings", "progress"] {
-        let mut child = ReadableDeadlineChild(
-            Command::new(std::env::current_exe().unwrap())
-                .args([
-                    "--exact",
-                    "invocation::tests::progress::readable_stderr_deadline_subprocess_helper",
-                    "--nocapture",
-                ])
-                .env("NO_MISTAKES_READABLE_DEADLINE_MODE", mode)
-                .stdin(Stdio::piped())
-                .stdout(Stdio::null())
-                .stderr(Stdio::piped())
-                .spawn()
-                .unwrap(),
-        );
-        let stderr = child.0.stderr.take().unwrap();
-        let (ready, receiver) = std::sync::mpsc::channel();
-        let reader = std::thread::spawn(move || {
-            let mut captured = String::new();
-            for line in std::io::BufReader::new(stderr).lines() {
-                let line = line.unwrap();
-                if (mode == "progress" && line.starts_with("[progress] "))
-                    || (mode != "progress" && line == "watchdog ready")
-                {
-                    let _ = ready.send(());
-                }
-                captured.push_str(&line);
-                captured.push('\n');
-            }
-            captured
-        });
-        receiver
-            .recv_timeout(Duration::from_secs(10))
-            .expect("helper must publish readiness before arming its watchdog");
-        assert!(
-            child.0.try_wait().unwrap().is_none(),
-            "premature exit: {mode}"
-        );
-        child.0.stdin.take().unwrap().write_all(&[1]).unwrap();
-        let status = child
-            .0
-            .wait_timeout(Duration::from_secs(4))
-            .unwrap()
-            .unwrap_or_else(|| panic!("watchdog hung: {mode}"));
-        let stderr = reader.join().unwrap();
-        assert_eq!(status.code(), Some(124), "{mode}: {stderr}");
-        assert!(stderr.contains("command timed out"), "{stderr}");
-        let snapshot = stderr
+        let (status, output) = ReadableDeadlineChild::spawn(
+            "invocation::tests::progress::readable_stderr_deadline_subprocess_helper",
+            mode,
+        )
+        .run()
+        .unwrap_or_else(|error| panic!("{error}"));
+        assert_eq!(status.code(), Some(124), "{output}");
+        assert!(output.stderr.contains("command timed out"), "{output}");
+        let snapshot = output
+            .stderr
             .lines()
             .find_map(|line| line.strip_prefix("[progress] "));
         if mode == "progress" {
-            let snapshot: serde_json::Value = serde_json::from_str(
-                snapshot.expect("progress readiness must be retained in captured stderr"),
-            )
-            .unwrap();
-            assert!(snapshot["active"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"])));
+            let snapshot =
+                snapshot.unwrap_or_else(|| panic!("missing progress snapshot\n{output}"));
+            let snapshot: serde_json::Value = serde_json::from_str(snapshot)
+                .unwrap_or_else(|error| panic!("invalid progress snapshot: {error}\n{output}"));
+            assert!(
+                snapshot["active"].as_array().is_some_and(|spans| spans
+                    .iter()
+                    .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"]))),
+                "missing active analysis.waiting span\n{output}"
+            );
         } else {
-            assert!(snapshot.is_none(), "{stderr}");
+            assert!(snapshot.is_none(), "{output}");
         }
     }
 }
 
-struct ReadableDeadlineChild(std::process::Child);
+const READINESS_FAILURE_STDERR: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/invocation-watchdog/fixture/readiness-failure.stderr"
+));
 
-impl Drop for ReadableDeadlineChild {
-    fn drop(&mut self) {
-        let _ = self.0.kill();
-        let _ = self.0.wait();
+#[test]
+fn readable_watchdog_no_readiness_subprocess_helper() {
+    if std::env::var_os("NO_MISTAKES_READABLE_DEADLINE_MODE").is_some() {
+        eprint!("{READINESS_FAILURE_STDERR}");
     }
+}
+
+#[test]
+fn readable_watchdog_reports_child_stderr_and_timing_on_readiness_failure() {
+    let diagnostic = ReadableDeadlineChild::spawn(
+        "invocation::tests::progress::readable_watchdog_no_readiness_subprocess_helper",
+        "progress",
+    )
+    .run()
+    .unwrap_err();
+    let (summary, stderr) = diagnostic.split_once("\nchild stderr:\n").unwrap();
+    assert_eq!(stderr, READINESS_FAILURE_STDERR);
+    assert!(
+        summary.contains("helper must publish readiness"),
+        "{summary}"
+    );
+    let (_, timing) = summary.split_once("mode=progress elapsed_ms=").unwrap();
+    let (elapsed_ms, stages) = timing.split_once(' ').unwrap();
+    assert!(elapsed_ms.parse::<u128>().is_ok(), "{summary}");
+
+    assert_eq!(stages, "readiness=None acknowledgement=None");
+    let normalized = diagnostic.replacen(
+        &format!("elapsed_ms={elapsed_ms}"),
+        "elapsed_ms=<elapsed>",
+        1,
+    );
+    insta::with_settings!({ prepend_module_to_snapshot => false }, {
+        insta::assert_snapshot!("readable_watchdog_readiness_failure", normalized);
+    });
 }

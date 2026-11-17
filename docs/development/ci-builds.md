@@ -942,6 +942,12 @@ through the existing Rust test helper, in both the library and native macOS
 harnesses. Repeat the exact test binary under CPU contention to exercise the
 handshake without rebuilding or configuring retries.
 
+Watchdog test failures retain child stderr and measured stage timing after the
+helper is killed and reaped. This includes failures before readiness, so a hosted
+failure can be investigated without rerunning CI to recover missing evidence.
+A saved synthetic stderr case and diagnostic snapshot pin the failure context;
+they do not change the production timeout or best-effort progress contract.
+
 Linux real-addon jobs select the full Linux inventory in the
 [shared file catalog](../../.github/scripts/native-api-files.cjs), while the
 platform jobs keep their narrower inventory. The
