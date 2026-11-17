@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    options:
+      importSpecifier: db
+      executorNames: []
+      executorFactoryNames: [beginTransaction]
+      trustedSqlTags: [{ module: sql-template-strings, name: default }]
+      testGlobs: ["test-helpers/**/*.mts"]
+      unanalyzableSql: advise

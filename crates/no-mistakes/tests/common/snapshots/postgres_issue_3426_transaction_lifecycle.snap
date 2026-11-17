@@ -1,0 +1,168 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "transaction_lifecycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "test-helpers/control.mts",
+          "line": 7,
+          "message": "test-helpers/control.mts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(sql`TRUNCATE TABLE t`)",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "test-helpers/mutation-tail.mts",
+          "line": 61,
+          "message": "test-helpers/mutation-tail.mts:61: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "; TRUNCATE TABLE m",
+          "target": "TRUNCATE"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/control.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            211,
+            239
+          ],
+          "status": "violation",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/make.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            2881,
+            884
+          ],
+          "status": "proven-clear",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/minimal.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            247,
+            322
+          ],
+          "status": "proven-clear",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/mutation-tail.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            2920,
+            900
+          ],
+          "status": "violation",
+          "subcheck": "test-state-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

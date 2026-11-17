@@ -183,3 +183,6 @@ mod cli_postgres_snapshot_grouping_coverage;
 
 #[path = "cli_postgres_snapshot_issue_3426_regressions.rs"]
 mod cli_postgres_snapshot_issue_3426_regressions;
+
+#[path = "cli_postgres_snapshot_issue_3426_transaction.rs"]
+mod cli_postgres_snapshot_issue_3426_transaction;
