@@ -13,7 +13,12 @@ fn lock_write_lifecycle_records_executed_targets_and_invalidates_join_keys() {
     let statements = statements("lock-write-lifecycle.sql");
     let legacy = collect::<false>(&statements, None);
     let advanced = collect::<true>(&statements, None);
-    assert_eq!(legacy, advanced);
+    let mut shared = advanced.clone();
+    assert_eq!(
+        std::mem::take(&mut shared.ddl_events),
+        [super::DdlEvent::Lock(0), super::DdlEvent::Lock(1)]
+    );
+    assert_eq!(legacy, shared);
     assert!(advanced.relation_identity_changed);
     assert!(advanced.transaction_boundary);
     assert_eq!(
