@@ -21,7 +21,9 @@ impl ProgressOutput {
         Self::start(duplicate_stderr())
     }
 
-    fn start(writer: io::Result<impl Write + Send + 'static>) -> Arc<Self> {
+    pub(in crate::diagnostics) fn start(
+        writer: io::Result<impl Write + Send + 'static>,
+    ) -> Arc<Self> {
         let (sender, receiver) = mpsc::sync_channel::<Message>(1);
         // Deliberately detached: a blocked OS write must never hold cleanup or
         // signal termination hostage. This worker owns bytes, never an observer.

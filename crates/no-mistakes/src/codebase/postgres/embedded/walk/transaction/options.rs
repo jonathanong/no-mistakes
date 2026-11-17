@@ -26,6 +26,13 @@ pub(super) fn annotate(
                 return Some(false);
             }
             let Some(captured) = state::option(visitor, id) else {
+                if call.arguments.len() == 2
+                    && visitor.lookup(id.name.as_str()).is_some_and(|binding| {
+                        !binding.initialized && binding.value_identity.is_some()
+                    })
+                {
+                    return None;
+                }
                 return Some(false);
             };
             found = Some(captured);
@@ -60,7 +67,7 @@ pub(super) fn annotate_alias(
     state::alias(visitor, receiver, fact)
 }
 
-fn receiver<'a>(
+pub(in crate::codebase::postgres::embedded::walk) fn receiver<'a>(
     visitor: &ScopeVisitor<'_>,
     expression: &'a Expression<'a>,
     properties: &[String],

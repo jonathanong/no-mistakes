@@ -2,7 +2,7 @@ const { assert, test, readFileSync, join, packageRoot } = require("./context");
 
 test("lock-written-rows options expose named checks, policies, exceptions and write sets", () => {
   const types = readFileSync(join(packageRoot, "postgres-lock-written-rows-types.d.ts"), "utf8");
-  for (const name of ["Check", "Severity", "Allow", "WriteSet", "OnlyOptions"])
+  for (const name of ["Check", "Severity", "Allow", "WriteSet", "ExecutorOption", "OnlyOptions"])
     assert.match(types, new RegExp(`export (?:type|interface) PostgresLockWrittenRows${name}\\b`));
   for (const id of [
     "row-lock-unwritten-relation",
@@ -18,6 +18,8 @@ test("lock-written-rows options expose named checks, policies, exceptions and wr
     "executorNames?: string[];",
     "executorOptionProperties?: string[];",
     "schemaCatalogPath?: string;",
+    "executorOptions?: PostgresLockWrittenRowsExecutorOption[];",
+    "name: string;",
     "extraExecutorNames?: string[];",
     "excludeExecutorNames?: string[];",
     "allow?: PostgresLockWrittenRowsAllow[];",

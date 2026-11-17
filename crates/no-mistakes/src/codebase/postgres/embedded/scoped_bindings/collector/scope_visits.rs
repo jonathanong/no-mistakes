@@ -9,26 +9,46 @@ macro_rules! scope_visits {
         }
 
         fn visit_ts_module_block(&mut self, block: &oxc_ast::ast::TSModuleBlock<'a>) {
+            self.var_scopes.push(block.span);
             self.with_scope(block.span, |this| walk::walk_ts_module_block(this, block));
+            self.var_scopes.pop();
         }
 
         fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
+            self.var_scopes.push(body.span);
             self.with_scope(body.span, |this| walk::walk_function_body(this, body));
+            self.var_scopes.pop();
+        }
+
+        fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+            if self.track_resource_transactions {
+                if let Some(param) = &clause.param {
+                    super::callback_transactions::record_pattern_shadows(
+                        &param.pattern,
+                        clause.span,
+                        &self.factories,
+                        &mut self.factory_shadows,
+                    );
+                }
+            }
+            self.with_scope(clause.span, |this| walk::walk_catch_clause(this, clause));
         }
 
         fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
             self.found.undeclared_this_exclusions.push(block.span);
+            self.var_scopes.push(block.span);
             self.with_scope(block.span, |this| walk::walk_static_block(this, block));
+            self.var_scopes.pop();
         }
 
         fn visit_switch_statement(&mut self, switch: &SwitchStatement<'a>) {
-            self.with_scope(switch.span, |this| {
-                walk::walk_switch_statement(this, switch)
+            self.visit_expression(&switch.discriminant);
+            let case_block = Span::new(switch.discriminant.span().end, switch.span.end);
+            self.with_scope(case_block, |this| {
+                for case in &switch.cases {
+                    this.visit_switch_case(case);
+                }
             });
-        }
-
-        fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
-            self.with_scope(clause.span, |this| walk::walk_catch_clause(this, clause));
         }
 
         fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {

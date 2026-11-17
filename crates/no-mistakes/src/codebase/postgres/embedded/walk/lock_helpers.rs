@@ -3,10 +3,14 @@ use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression};
+mod applications;
 mod collect;
+mod escapes;
 mod invocation;
+mod option_query;
 mod parameters;
 mod query;
+mod specialize;
 mod summary;
 pub(super) use collect::collect;
 pub(crate) use summary::{ExecutorAccess, Invocation, Parameter, Summary};
@@ -28,6 +32,9 @@ impl<'a> ScopeVisitor<'a> {
         let helper = self.lock_helpers.get(name.name.as_str())?;
         if !self.awaited_lock_helper_calls.contains(&call.span.start)
             || helper.calls.iter().any(|query| {
+                if query.option_property.is_some() {
+                    return false;
+                }
                 call.arguments
                     .get(query.executor)
                     .and_then(|argument| argument.as_expression())
@@ -55,23 +62,15 @@ impl<'a> ScopeVisitor<'a> {
             return;
         };
         for query in helper.calls {
-            let Some(receiver) = call
-                .arguments
-                .get(query.executor)
-                .and_then(|arg| arg.as_expression())
-            else {
+            if specialize::enabled(call, &query) == Some(false) {
+                self.lock_helper_applications.entry(query.span).or_default();
                 continue;
-            };
-            let receiver = match unwrap_ts_wrappers(receiver) {
-                Expression::StaticMemberExpression(member) if member.property.name == "query" => {
-                    &member.object
-                }
-                receiver => receiver,
-            };
+            }
             let mut fact = EmbeddedSqlCall::default();
-            super::transaction::annotate_receiver(self, receiver, call.span.start, &mut fact);
-            if !fact.executor_transaction_known || fact.transaction_id.is_none() {
-                continue;
+            specialize::annotate(self, call, &query, &mut fact);
+            if specialize::enabled(call, &query).is_none() {
+                fact.transaction_id = None;
+                fact.executor_transaction_known = false;
             }
             fact.sql_text = Some(query.sql.clone());
             fact.kind = EmbeddedSqlKind::Inline;
@@ -93,18 +92,16 @@ impl<'a> ScopeVisitor<'a> {
                     Parameter::Unknown => None,
                 })
                 .collect();
-            self.applied_lock_helper_spans.insert(query.span);
+            self.lock_helper_applications
+                .entry(query.span)
+                .or_default()
+                .push(self.calls.len());
             self.calls.push(fact);
             self.call_spans.push((call.span.start, call.span.end));
             if self.track_order {
                 self.confirmed_order.push(self.next_seq);
             }
             self.next_seq += 1;
-        }
-    }
-    pub(super) fn mark_lock_helper_definitions(&mut self) {
-        for (call, span) in self.calls.iter_mut().zip(&self.call_spans) {
-            call.helper_definition = self.applied_lock_helper_spans.contains(span);
         }
     }
 }

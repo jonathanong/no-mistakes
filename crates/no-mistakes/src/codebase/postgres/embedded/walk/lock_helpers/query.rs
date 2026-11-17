@@ -49,6 +49,8 @@ pub(super) fn summarize(call: &CallExpression<'_>, params: &[&str], source: &str
     };
     Some(super::summary::Query {
         executor,
+        option_property: None,
+        condition: None,
         access,
         parameters,
         span: (call.span.start, call.span.end),

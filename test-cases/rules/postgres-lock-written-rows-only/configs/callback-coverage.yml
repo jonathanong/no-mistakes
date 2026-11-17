@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      include: [query.ts]
+      executorNames: [query]
+      executorFactoryNames: [transaction]
+      checks:
+        row-lock-unwritten-relation: ignore
+        row-lock-outside-transaction: fail

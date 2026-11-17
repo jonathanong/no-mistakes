@@ -50,6 +50,7 @@ pub(super) fn compose(
     helper
         .calls
         .iter()
+        .filter(|query| super::specialize::enabled(call, query) != Some(false))
         .map(|query| {
             let argument = unwrap_ts_wrappers(call.arguments.get(query.executor)?.as_expression()?);
             let (receiver, access) = match argument {
@@ -68,6 +69,21 @@ pub(super) fn compose(
             let mut projected = query.clone();
             projected.executor = executor;
             projected.access = access;
+            if query.option_property.is_some() {
+                projected.span = (call.span.start, call.span.end);
+            }
+            if let Some((index, expected)) = query.condition {
+                let value = unwrap_ts_wrappers(call.arguments.get(index)?.as_expression()?);
+                projected.condition = match value {
+                    Expression::BooleanLiteral(_) => None,
+                    _ => {
+                        let Parameter::Argument(index) = parameter(value, params) else {
+                            return None;
+                        };
+                        Some((index, expected))
+                    }
+                };
+            }
             projected.parameters = query
                 .parameters
                 .iter()
