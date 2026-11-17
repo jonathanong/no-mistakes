@@ -28,3 +28,12 @@ export async function uncappedPositive(start: string) {
     FROM posts JOIN w ON w.parent_id = posts.id
   ) SELECT * FROM w`);
 }
+
+export async function bypassedCap(start: string, max: number) {
+  return query(sql`WITH RECURSIVE w AS (
+    SELECT id, parent_id, 0 AS depth FROM posts WHERE id = ${start}
+    UNION ALL
+    SELECT posts.id, posts.parent_id, w.depth + 1
+    FROM posts JOIN w ON w.parent_id = posts.id WHERE w.depth < ${max + 1} OR posts.parent_id IS NOT NULL
+  ) SELECT * FROM w`);
+}
