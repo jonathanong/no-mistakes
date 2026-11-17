@@ -1,0 +1,13 @@
+version: 2
+effort: max
+projects:
+  db:
+    root: .
+    include: ["src/query.ts"]
+    postgres:
+      executors:
+        importSpecifier: db
+        trustedSqlTags: [{ module: sql-template-strings, name: sql }]
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    projects: [db]

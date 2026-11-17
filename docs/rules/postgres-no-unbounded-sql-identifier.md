@@ -546,6 +546,12 @@ This includes immutable local or module-const fragments, `.append()` chains
 of proven fragments, statement-level appends, and resolved synchronous helper
 returns. The proof preserves the matching `.values` bind array.
 Executor calls inside bind expressions are checked independently.
+The identifier rule does not diagnose missing or mismatched bind arrays. A
+parameterized `.text` fragment does not turn an executor's separate options
+object into an identifier source. Reassignments and direct writes to builder
+properties prevent the trusted SQL fragment proof. A finding still requires an
+independently established unbounded identifier
+source; a structural return type alone does not prove safety.
 
 An exported `sql-template-strings` statement or fragment may be imported through
 named or namespace imports and static re-exports. Its constructor and append
@@ -642,6 +648,11 @@ select executor calls when the rule does not inherit a project postgres block.
 `executorNames` defaults to `query`, `read`, and `write` when a specifier is
 set. `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`,
 `finiteDomainAssertions`, `identifierValidators`, and `identifierSources` default to empty.
+When a rule references a project with a `postgres` block, configure
+`trustedSqlTags` under that project's `postgres.executors`. A rule-local
+`trustedSqlTags` in this case is rejected with a config error because it
+restates the shared project scope. The built-in `sql-template-strings` imports
+need no explicit entry at either level.
 `include` and `exclude` default to empty (all indexable files). See [Closed domains](#closed-domains).
 
 ## Suppression

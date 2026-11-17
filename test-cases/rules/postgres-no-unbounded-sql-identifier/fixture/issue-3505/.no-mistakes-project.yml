@@ -1,0 +1,13 @@
+version: 2
+effort: max
+projects:
+  db:
+    root: .
+    postgres:
+      executors:
+        importSpecifier: db
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    projects: [db]
+    options:
+      trustedSqlTags: [{ module: sql-template-strings, name: sql }]

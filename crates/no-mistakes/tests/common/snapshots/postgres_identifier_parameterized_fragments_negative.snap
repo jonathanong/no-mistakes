@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/mutations.ts",
+          "import": "q",
+          "line": 13,
+          "message": "Unbounded identifier source `q` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* property write */ SELECT ${q.text}`, q.values);",
+          "target": "q"
+        },
+        {
+          "file": "src/mutations.ts",
+          "import": "q",
+          "line": 7,
+          "message": "Unbounded identifier source `q` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`/* text write */ SELECT * FROM ${q.text}`, q.values);",
+          "target": "q"
+        },
+        {
+          "file": "src/negative.ts",
+          "import": "process.env.DIRECT_TABLE",
+          "line": 7,
+          "message": "Unbounded identifier source `process.env.DIRECT_TABLE` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${process.env.DIRECT_TABLE}`);",
+          "target": "process.env.DIRECT_TABLE"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
