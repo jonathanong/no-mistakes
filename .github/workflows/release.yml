@@ -175,7 +175,7 @@ jobs:
     name: Validate Rust
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 100
     env:
       # Resumed tags may predate the workspace profile defaults.
       CARGO_PROFILE_DEV_DEBUG: "0"
@@ -314,7 +314,7 @@ jobs:
         run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-disk-usage.sh" "before Clippy"
 
       - name: Run Clippy
-        timeout-minutes: 10
+        timeout-minutes: 18
         run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
       - name: Record Rust disk usage after Clippy
@@ -335,7 +335,7 @@ jobs:
         run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-disk-usage.sh" "before Rust test build"
 
       - name: Build Rust tests
-        timeout-minutes: 20
+        timeout-minutes: 65
         run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" build
 
       - name: Record Rust disk usage after test build
@@ -524,7 +524,7 @@ jobs:
     # Windows MSVC (24-45+ minutes) and ARM macOS (36 minutes in run
     # 43015153792, over 45 in run 43072329341) are the slowest, most variable
     # targets; give them more headroom than Linux.
-    timeout-minutes: ${{ (matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin') && 100 || 80 }}
+    timeout-minutes: ${{ (matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin') && 120 || 100 }}
     permissions:
       contents: read
     # A cold ARM macOS build hit the 45-minute compile deadline with fat LTO
@@ -610,7 +610,7 @@ jobs:
       # and the Node cdylib. Do not commit that crate-type: Linux coverage
       # should not also link a cdylib.
       - name: Build CLI and N-API addon
-        timeout-minutes: ${{ (matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin') && 75 || 45 }}
+        timeout-minutes: ${{ (matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin') && 90 || 65 }}
         shell: bash
         run: |
           set -euo pipefail

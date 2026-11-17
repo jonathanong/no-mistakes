@@ -21,7 +21,7 @@ for (const name of [
   test(`${name} cannot pass when a dependency fails, cancels, or skips`, () => {
     const body = job(name);
     assert.ok(body);
-    assert.match(body, /if: \$\{\{ always\(\) \}\}/);
+    assert.match(body, /if: \$\{\{ always\(\)(?: && needs.changes.outputs.rust == 'true')? \}\}/);
     const needs = body
       .match(/needs:\s*\[([^\]]+)\]/)[1]
       .split(",")

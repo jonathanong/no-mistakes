@@ -5,6 +5,7 @@ const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
 const root = path.resolve(__dirname, "../..");
+const current = require("./fixtures/rust-build-deadlines.json").ci;
 test("native API timeout leaves startup and teardown room after the observed Windows suite", () => {
   const observed = JSON.parse(
     readFileSync(
@@ -53,15 +54,31 @@ const workflowJob = (name) => {
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   return readWorkflowJob(workflow, name);
 };
-const jobBudgetSeconds = (job) => Number(job.match(/\n    timeout-minutes: (\d+)\n/)[1]) * 60;
+const jobBudgetSeconds = (job) => {
+  const value = job.match(/\n    timeout-minutes: (.+)\n/)[1];
+  if (/^\d+$/.test(value)) return Number(value) * 60;
+  const branches = value.match(/&& (\d+) \|\| (\d+)/);
+  assert.ok(branches, value);
+  return Math.max(Number(branches[1]), Number(branches[2])) * 60;
+};
 function stepBudgetSeconds(job, name, platform = "Windows") {
   const step = job.split(`      - name: ${name}\n`)[1]?.split(/\n      - /)[0];
   assert.ok(step, `job must retain ${name}`);
   const value = step.match(/^\s+timeout-minutes: (.+)$/m)?.[1]?.trim();
   if (/^\d+$/.test(value)) return Number(value) * 60;
-  const conditional = value?.match(/^\$\{\{ runner\.os == '([^']+)' && (\d+) \|\| (\d+) \}\}$/);
-  assert.ok(conditional, `${name} must have a bounded literal or platform timeout`);
-  return Number(platform === conditional[1] ? conditional[2] : conditional[3]) * 60;
+  const conditional = value?.match(
+    /^\$\{\{ (?:runner\.os|matrix\.name) == '([^']+)' && (\d+) \|\| (\d+) \}\}$/,
+  );
+  assert.ok(conditional, `${name} must have a bounded literal or selector timeout`);
+  return (
+    Number(
+      value.includes("matrix.name")
+        ? Math.max(Number(conditional[2]), Number(conditional[3]))
+        : platform === conditional[1]
+          ? conditional[2]
+          : conditional[3],
+    ) * 60
+  );
 }
 
 test("quality and package work retain independent bounded component budgets", () => {
@@ -80,16 +97,13 @@ test("quality and package work retain independent bounded component budgets", ()
       stepBudgetSeconds(packages, "Check Cargo packages"),
       stepBudgetSeconds(packages, "Check npm packages"),
     ],
-    [600, 120],
+    [current.packageStep, 120],
   );
-  assert.equal(jobBudgetSeconds(packages), 900);
+  assert.equal(jobBudgetSeconds(packages), current.packageJob);
   const rust = workflowJob("quality-rust");
-  assert.equal(jobBudgetSeconds(rust), 600);
-  assert.equal(stepBudgetSeconds(rust, "Run isolated Rust quality check"), 480);
-  assert.ok(
-    elapsed > jobBudgetSeconds(rust),
-    "historical serial quality work is not one isolated check's budget",
-  );
+  assert.equal(jobBudgetSeconds(rust), current.qualityJob);
+  assert.equal(stepBudgetSeconds(rust, "Run isolated Rust quality check"), current.qualityStep);
+  assert.ok(elapsed > 600, "historical serial quality work exceeded the former ten-minute bound");
   assert.equal(jobBudgetSeconds(workflowJob("quality")), 180);
   for (const name of ["quality-source", "quality-rust", "quality-js", "quality-links"])
     assert.match(workflowJob("quality"), new RegExp(name));
@@ -226,15 +240,18 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   const build = workflowJob("standalone-build");
   const shards = workflowJob("standalone-shards");
   const gate = workflowJob("tests-standalone-lib");
-  assert.equal(stepBudgetSeconds(build, "Build standalone library without a CLI"), 480);
+  assert.equal(
+    stepBudgetSeconds(build, "Build standalone library without a CLI"),
+    current.standaloneBuildStep,
+  );
   const stepBudget = stepBudgetSeconds(shards, stepName);
   assert.equal(stepBudget, 360);
   assert.ok(coldRequired > stepBudget);
   assert.ok(censoredRequired > stepBudget);
-  assert.equal(jobBudgetSeconds(build), 600);
+  assert.equal(jobBudgetSeconds(build), current.standaloneBuildJob);
   assert.equal(jobBudgetSeconds(shards), 480);
   assert.equal(jobBudgetSeconds(gate), 180);
-  assert.match(gate, /needs: \[standalone-build, standalone-shards\]/);
+  assert.match(gate, /needs: \[changes, standalone-build, standalone-shards\]/);
   assert.match(shards, /shard: \[1, 2, 3, 4\]/);
   assert.match(shards, /fail-fast: false/);
   assert.match(shards, /standalone-shards\.cjs run/);
@@ -262,8 +279,8 @@ test("CI archive and release validation preserve the locked full-workspace test 
   for (const flag of ["--locked", "--workspace", "--all-features", "--lib", "--bins", "--tests"])
     assert.ok(helper.includes(JSON.stringify(flag)), `archive must include ${flag}`);
   const docs = workflowJob("docs-tests");
-  assert.doesNotMatch(docs, /needs:|\n    if:|CARGO_LLVM_COV_TARGET_DIR|show-env/);
-  assert.equal(jobBudgetSeconds(docs), 600);
+  assert.doesNotMatch(docs, /CARGO_LLVM_COV_TARGET_DIR|show-env/);
+  assert.equal(jobBudgetSeconds(docs), current.docsJob);
   assert.match(docs, /runs-on: ubuntu-latest/);
   assert.match(docs, /CARGO_TARGET_DIR: \$\{\{ github\.workspace \}\}\/target\/doctests/);
   assert.match(docs, /shared-key: rust-doctests-v1/);
@@ -271,7 +288,7 @@ test("CI archive and release validation preserve the locked full-workspace test 
   assert.match(docs, /cache-workspace-crates: false/);
   assert.match(docs, /uses: \.\/\.github\/actions\/start-test-postgres/);
   assert.match(docs, /run: bash \.github\/scripts\/rust-validation\.sh doc/);
-  assert.equal(stepBudgetSeconds(docs, "Run Rust doctests"), 480);
+  assert.equal(stepBudgetSeconds(docs, "Run Rust doctests"), current.docsStep);
   const manifest = readFileSync(path.join(root, "crates/no-mistakes/Cargo.toml"), "utf8");
   assert.match(manifest, /name = "suite_contracts"/);
   assert.doesNotMatch(
@@ -294,7 +311,7 @@ test("parallel Rust quality retains all-feature, default-feature and no-default 
 
 test("package verification remains independent and required", () => {
   const packages = workflowJob("packages");
-  assert.equal(jobBudgetSeconds(packages), 900);
+  assert.equal(jobBudgetSeconds(packages), current.packageJob);
   assert.match(packages, /run: cargo publish --dry-run --locked -p no-mistakes\n/);
   assert.match(packages, /run: pnpm run pack:check\n/);
   assert.doesNotMatch(workflowJob("quality"), /cargo publish|pnpm run pack:check/);
@@ -311,7 +328,7 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
   ]) {
     const body = workflowJob(name);
     assert.equal(jobBudgetSeconds(body), 180);
-    assert.match(body, /if: \$\{\{ always\(\) \}\}/);
+    assert.match(body, /if: \$\{\{ always\(\)(?: && needs.changes.outputs.rust == 'true')? \}\}/);
     assert.match(body, /RESULTS: \$\{\{ toJSON\(needs\) \}\}/);
     const needs = body
       .match(/needs:\s*\[([^\]]+)\]/)[1]
@@ -417,7 +434,7 @@ test("coverage and standalone producers retain content-verified workspace caches
   }
 });
 
-test("v2 workspace producers restore only the same Cargo configuration and profile", () => {
+test("v2 workspace producers prefer matching manifests before compatible compiler fallbacks", () => {
   const producers = [
     "linux-runtime",
     "native-build",
@@ -438,7 +455,8 @@ test("v2 workspace producers restore only the same Cargo configuration and profi
       .trim()
       .split("\n")
       .map((line) => line.trim());
-    assert.equal(fallbacks.length, 1, name);
+    assert.equal(fallbacks.length, 2, name);
+    assert.equal(fallbacks[1], fallbacks[0].split("${{ hashFiles('Cargo.toml'")[0]);
     assert.equal(primary, `${fallbacks[0]}${"${{ hashFiles('crates/**/*.rs') }}"}`, name);
     assert.ok(fallbacks[0].includes("hashFiles('Cargo.toml'"), name);
     assert.match(fallbacks[0], /workspace-v2-/);

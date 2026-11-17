@@ -5,6 +5,13 @@ const { test } = require("node:test");
 const workflow = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
 const steps = (body) => body.split("      - name: ").slice(1);
+const paths = (step) =>
+  step
+    .split("          path: |\n")[1]
+    .split("\n")
+    .filter((line) => line.startsWith("            "))
+    .map((line) => line.trim())
+    .join("\n");
 const producers = [
   "linux-runtime",
   "native-build",
@@ -31,17 +38,14 @@ test("all large workspace snapshots restore on PRs but save only successful main
     assert.match(save, /env.COLD_BUILD != 'true'/);
     assert.match(save, /outputs.cache-hit != 'true'/);
     assert.match(save, /key: \$\{\{ steps\.[a-z-]+.outputs.cache-primary-key \}\}/);
-    assert.equal(
-      restore.split("          path: |\n")[1].trim(),
-      save.split("          path: |\n")[1].trim(),
-    );
+    assert.equal(paths(restore), paths(save));
     assert.ok(body.indexOf("cargo-cache-inputs.cjs capture") < body.indexOf(save), name);
     assert.doesNotMatch(restore, /profraw|profdata/);
   }
   assert.doesNotMatch(workflow, /uses: actions\/cache@[a-f0-9]{40}/);
 });
 
-test("macOS compiler snapshots retain CGU64 in the sole Cargo configuration fallback", () => {
+test("macOS snapshots prefer CGU64, then fall back across manifest changes", () => {
   for (const name of ["native-build-macos", "native-test-build-macos"]) {
     const restore = steps(job(name)).find((step) => /uses: actions\/cache\/restore@/.test(step));
     assert.match(restore, /key: [^\n]+-cgu64-\$\{\{ hashFiles\('crates\/\*\*\/\*\.rs'\) \}\}/);
@@ -50,7 +54,9 @@ test("macOS compiler snapshots retain CGU64 in the sole Cargo configuration fall
       .trim()
       .split("\n");
     assert.match(fallback[0], /-cgu64-$/);
-    assert.equal(fallback.length, 1);
+    assert.equal(fallback.length, 2);
+    assert.doesNotMatch(fallback[1], /hashFiles/);
+    assert.match(fallback[1], /matrix.target.*cachekey.*env.RUSTFLAGS/);
     assert.match(fallback[0], /hashFiles\('Cargo.toml'/);
   }
 });

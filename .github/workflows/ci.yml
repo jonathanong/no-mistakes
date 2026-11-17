@@ -64,12 +64,13 @@ jobs:
       benchmarks: ${{ github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/ci/cold-build' && !startsWith(github.ref, 'refs/heads/ci/warm-build-') && steps.benchmark-paths.outputs.changed || 'false' }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
       timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
-      # Path metadata only. Docs-only changes still run every non-macOS family.
+      # Path metadata only; Rust and macOS use their own conservative scopes.
       docs-only: ${{ github.event_name == 'pull_request' && steps.docs-only-paths.outputs.docs-only == 'true' }}
       # Pull requests run macOS families only when a path can differ there.
       # That diff starts at the merge base, so base-only edits do not count.
       # Pushes and workflow_dispatch always run them. Release is a separate workflow.
       macos: ${{ github.event_name != 'pull_request' || steps.macos-paths.outputs.macos == 'true' }}
+      rust: ${{ github.event_name != 'pull_request' || steps.macos-paths.outputs.rust != 'false' }}
 
     steps:
       - name: Checkout
@@ -165,6 +166,7 @@ jobs:
 
           if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
             node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -181,10 +183,12 @@ jobs:
               attempts=$((attempts + 1))
               if (( attempts > 4 )); then
                 node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
                 exit 0
               fi
               if ! git fetch --no-tags --deepen=300 origin "$BASE_SHA" "$HEAD_SHA"; then
                 node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+                node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
                 exit 0
               fi
             done
@@ -192,11 +196,13 @@ jobs:
 
           if ! DIFF_BASE=$(node .github/scripts/macos-pr-scope.cjs --diff-base "$GITHUB_EVENT_NAME" "$BASE_SHA" "$HEAD_SHA"); then
             node .github/scripts/macos-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
+            node .github/scripts/rust-pr-scope.cjs --all >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git diff --no-renames --name-status -z "$DIFF_BASE" "$HEAD_SHA" |
-            node .github/scripts/macos-pr-scope.cjs >> "$GITHUB_OUTPUT"
+          git diff --no-renames --name-status -z "$DIFF_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/native-changes"
+          node .github/scripts/macos-pr-scope.cjs < "$RUNNER_TEMP/native-changes" >> "$GITHUB_OUTPUT"
+          node .github/scripts/rust-pr-scope.cjs < "$RUNNER_TEMP/native-changes" >> "$GITHUB_OUTPUT"
   quality-source:
     name: Source policy and tooling tests
     runs-on: ubuntu-latest
@@ -328,14 +334,17 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   quality-rust:
     name: Rust quality (${{ matrix.name }})
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ matrix.name == 'PostgreSQL source identities' && 40 || 25 }}
     strategy:
       fail-fast: false
       matrix:
@@ -381,8 +390,9 @@ jobs:
           shared-key: ${{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Run isolated Rust quality check
-        timeout-minutes: 8
+        timeout-minutes: ${{ matrix.name == 'PostgreSQL source identities' && 30 || 18 }}
         run: ${{ matrix.command }}
       - name: Diagnose Rust disk usage after failure
         if: ${{ failure() || cancelled() }}
@@ -459,7 +469,7 @@ jobs:
         run: node .github/scripts/lychee-gateway.cjs
   quality:
     name: Lint and source checks
-    needs: [quality-source, quality-rust, quality-js, quality-links]
+    needs: [changes, quality-source, quality-rust, quality-js, quality-links]
     if: ${{ always() }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
@@ -468,13 +478,15 @@ jobs:
         timeout-minutes: 1
         env:
           RESULTS: ${{ toJSON(needs) }}
+          RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
         run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result==="skipped" && process.env.RUST_REQUIRED==="false" && name==="quality-rust") continue; if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   packages:
     name: Package checks
     needs: changes
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
@@ -493,13 +505,14 @@ jobs:
           install: false
 
       - name: Install Rust
+        if: ${{ needs.changes.outputs.rust == 'true' }}
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
           toolchain: stable
 
       - name: Cache Rust build artifacts
-        if: ${{ env.COLD_BUILD != 'true' }}
+        if: ${{ needs.changes.outputs.rust == 'true' && env.COLD_BUILD != 'true' }}
         timeout-minutes: 5
         uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
         with:
@@ -511,7 +524,8 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Check Cargo packages
-        timeout-minutes: 10
+        if: ${{ needs.changes.outputs.rust == 'true' }}
+        timeout-minutes: 25
         run: cargo publish --dry-run --locked -p no-mistakes
 
       - name: Check npm packages
@@ -522,10 +536,11 @@ jobs:
         if: ${{ failure() || cancelled() }}
         timeout-minutes: 2
         run: bash .github/scripts/rust-disk-usage.sh "package job failure"
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   linux-runtime:
     name: Build Linux runtime (${{ matrix.role }})
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -573,6 +588,7 @@ jobs:
           key: linux-runtime-workspace-v2-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             linux-runtime-workspace-v2-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            linux-runtime-workspace-v2-${{ matrix.role }}-${{ steps.linux-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/debug
             target/.rustc_info.json
@@ -584,11 +600,11 @@ jobs:
         run: node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/linux-cargo-inputs"
       - name: Build Linux CLI
         if: ${{ (matrix.role == 'cli') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 10
+        timeout-minutes: 25
         run: cargo build --locked -p no-mistakes --bin no-mistakes
       - name: Build Linux N-API addon
         if: ${{ (matrix.role == 'addon') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 10
+        timeout-minutes: 25
         run: |
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
           cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
@@ -865,11 +881,13 @@ jobs:
           path: ${{ runner.temp }}/timeout-policy-browser
           if-no-files-found: warn
           retention-days: 7
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-build:
     name: Native build (${{ matrix.name }})
     needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
@@ -954,6 +972,7 @@ jobs:
           key: native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/debug
             target/.rustc_info.json
@@ -973,9 +992,10 @@ jobs:
       # and Node cdylib. Do not commit that crate-type: Linux coverage should
       # not also link a cdylib.
       # Hosted macOS runs exceeded the former build and Rust step deadlines.
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Build native CLI and N-API addon
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 20
+        timeout-minutes: 35
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
@@ -1032,15 +1052,16 @@ jobs:
           path: |
             target/native-build-diagnostics
 
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-build-macos:
     name: Native build (${{ matrix.name }})
     needs: changes
-    if: ${{ needs.changes.outputs.macos == 'true' }}
+    if: ${{ needs.changes.outputs.macos == 'true' && needs.changes.outputs.rust == 'true' }}
     concurrency:
       group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'ci-macos-main-native-build-macos-all' || format('ci-macos-{0}-native-build-macos-all', github.run_id) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
@@ -1125,6 +1146,7 @@ jobs:
           key: native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
+            native-runtime-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/debug
             target/.rustc_info.json
@@ -1144,9 +1166,10 @@ jobs:
       # and Node cdylib. Do not commit that crate-type: Linux coverage should
       # not also link a cdylib.
       # Hosted macOS runs exceeded the former build and Rust step deadlines.
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Build native CLI and N-API addon
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 20
+        timeout-minutes: 35
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
@@ -1203,11 +1226,13 @@ jobs:
           path: |
             target/native-build-diagnostics
 
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-test-build:
     name: Native Rust compile (${{ matrix.name }})
     needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
@@ -1292,14 +1317,16 @@ jobs:
           key: native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/debug
             target/.rustc_info.json
             ${{ runner.temp }}/nm-cargo-inputs
 
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Precompile native Rust test targets
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 15
+        timeout-minutes: 35
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
@@ -1343,15 +1370,16 @@ jobs:
           path: |
             target/native-test-build-diagnostics
 
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-test-build-macos:
     name: Native Rust compile (${{ matrix.name }})
     needs: changes
-    if: ${{ needs.changes.outputs.macos == 'true' }}
+    if: ${{ needs.changes.outputs.macos == 'true' && needs.changes.outputs.rust == 'true' }}
     concurrency:
       group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'ci-macos-main-native-test-build-macos-all' || format('ci-macos-{0}-native-test-build-macos-all', github.run_id) }}
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
@@ -1436,14 +1464,16 @@ jobs:
           key: native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
+            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/debug
             target/.rustc_info.json
             ${{ runner.temp }}/nm-cargo-inputs
 
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Precompile native Rust test targets
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 22
+        timeout-minutes: 35
         shell: bash
         env:
           NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
@@ -1977,15 +2007,18 @@ jobs:
         timeout-minutes: 1
         env:
           RESULTS: ${{ toJSON(needs) }}
+          RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
           MACOS_REQUIRED: ${{ needs.changes.outputs.macos }}
           MACOS_EVENT: ${{ github.event_name }}
           MACOS_REF: ${{ github.ref }}
         run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; const producer={ "native-rust-tests-macos":"native-test-build-macos", "native-api-tests-macos":"native-build-macos" }; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; if (mainPush && job.result==="skipped" && producer[name] && jobs[producer[name]] && jobs[producer[name]].result==="cancelled") continue; console.error(name+": "+job.result); process.exitCode=1; }'
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); const allow=process.env.MACOS_REQUIRED==="false"; const mainPush=process.env.MACOS_EVENT==="push"&&process.env.MACOS_REF==="refs/heads/main"; const macos=/^(native-build-macos|native-test-build-macos|native-rust-tests-macos|native-api-tests-macos)$/; const producer={ "native-rust-tests-macos":"native-test-build-macos", "native-api-tests-macos":"native-build-macos" }; for (const [name,job] of Object.entries(jobs)) { if (job.result==="success") continue; if (process.env.RUST_REQUIRED==="false" && job.result==="skipped" && /^native-(build|test-build|rust-tests|api-tests)(-macos)?$/.test(name)) continue; if (macos.test(name) && job.result==="skipped" && allow) continue; if (macos.test(name) && job.result==="cancelled" && mainPush) continue; if (mainPush && job.result==="skipped" && producer[name] && jobs[producer[name]] && jobs[producer[name]].result==="cancelled") continue; console.error(name+": "+job.result); process.exitCode=1; }'
   standalone-build:
     name: Build standalone library tests
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
@@ -2030,6 +2063,7 @@ jobs:
           key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
@@ -2042,7 +2076,7 @@ jobs:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 8
+        timeout-minutes: 20
         shell: bash
         run: |
           set -euo pipefail
@@ -2107,8 +2141,8 @@ jobs:
         run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 4
   tests-standalone-lib:
     name: Standalone library tests
-    needs: [standalone-build, standalone-shards]
-    if: ${{ always() }}
+    needs: [changes, standalone-build, standalone-shards]
+    if: ${{ always() && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-slim
     timeout-minutes: 3
     steps:
@@ -2118,11 +2152,13 @@ jobs:
           RESULTS: ${{ toJSON(needs) }}
         run: |
           node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   rust-coverage-build:
     name: Build instrumented Rust tests
     needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 50
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
       CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
@@ -2169,6 +2205,7 @@ jobs:
           key: coverage-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
             coverage-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            coverage-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.coverage-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
           path: |
             target/coverage/target/debug
             target/coverage/target/.rustc_info.json
@@ -2182,9 +2219,10 @@ jobs:
       - name: Test Rust coverage sharding
         timeout-minutes: 2
         run: node --test .github/scripts/rust-coverage-shards.test.cjs .github/scripts/rust-profile-pooling.test.cjs
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Build and archive instrumented Rust tests
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 15
+        timeout-minutes: 40
         shell: bash
         run: |
           set -euo pipefail
@@ -2273,7 +2311,7 @@ jobs:
   tests:
     name: Rust tests and coverage
     needs: [changes, rust-coverage-build, rust-coverage-shards]
-    if: ${{ always() }}
+    if: ${{ always() && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -2488,8 +2526,10 @@ jobs:
         run: test "$BUILD_RESULT" = success && test "$SHARD_RESULT" = success
   docs-tests:
     name: Docs tests
+    needs: changes
+    if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/doctests
     steps:
@@ -2516,7 +2556,7 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
       - name: Run Rust doctests
-        timeout-minutes: 8
+        timeout-minutes: 20
         run: bash .github/scripts/rust-validation.sh doc
       - name: Diagnose Rust disk usage after failure
         if: ${{ failure() }}
@@ -2545,8 +2585,9 @@ jobs:
         timeout-minutes: 1
         env:
           RESULTS: ${{ toJSON(needs) }}
+          RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
         run: |
-          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
+          node -e 'const jobs=JSON.parse(process.env.RESULTS); for(const [name,job] of Object.entries(jobs)) {if(job.result==="skipped" && process.env.RUST_REQUIRED==="false" && /^(docs-tests|tests|tests-standalone-lib)$/.test(name)) continue; if(job.result!=="success") {console.error(name+": "+job.result);process.exitCode=1;}}'
   ast-analysis:
     name: AST analysis
     needs: linux-runtime
@@ -2604,6 +2645,7 @@ jobs:
           fi
           ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
           python3 .ast-grep/check-inline-fixture-writes.py --base "${base}"
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   bench:
     name: Build benchmarks
     needs: changes
@@ -2616,7 +2658,7 @@ jobs:
     # changes CodSpeed's simulated cycles. ubuntu-24.04-arm is one CPU
     # generation, and the uploaded harness must be built for that machine.
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       RAYON_NUM_THREADS: "4"
       # CodSpeed simulation/memory do not need production fat LTO. The release
@@ -2663,8 +2705,9 @@ jobs:
           && sudo mkswap /swapfile-bench
           && sudo swapon /swapfile-bench
 
+      # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Build CPU benchmarks
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: >-
           bash .github/scripts/with-resource-samples.sh
           cargo codspeed build
@@ -2685,7 +2728,7 @@ jobs:
           python3 -m unittest discover -s .github/scripts -p test_frontend_lifecycle_profile.py
 
       - name: Build memory benchmarks
-        timeout-minutes: 5
+        timeout-minutes: 20
         run: >-
           cargo codspeed build
           -p no-mistakes

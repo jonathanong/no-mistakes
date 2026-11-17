@@ -1,0 +1,90 @@
+const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const { spawnSync } = require("node:child_process");
+const path = require("node:path");
+const { test } = require("node:test");
+const { rustRequired, triggersRust } = require("./rust-pr-scope.cjs");
+const workflow = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
+const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+
+for (const file of [
+  "packages/eslint-plugin-no-mistakes/src/rules/example.js",
+  "test-cases/eslint-snippets/fixture/example.ts",
+  "plugins/no-mistakes-rules/skills/example/SKILL.md",
+  "docs/eslint-rules/example.md",
+]) {
+  test(`independent lint input skips Rust: ${file}`, () => assert.equal(triggersRust(file), false));
+}
+for (const file of [
+  "crates/no-mistakes/src/lib.rs",
+  "Cargo.toml",
+  "Cargo.lock",
+  "rust-toolchain.toml",
+  ".cargo/config.toml",
+  ".github/workflows/ci.yml",
+  ".github/scripts/example.cjs",
+  "packages/no-mistakes/index.js",
+  "docs/rules/example.md",
+  "docs/node-api.md",
+  "plugins/no-mistakes/skills/no-mistakes/SKILL.md",
+  "README.md",
+  "test-cases/eslint-snippets/Cargo.toml",
+  "packages/eslint-plugin-no-mistakes/build.rs",
+  "packages/eslint-plugin-no-mistakes/.cargo/config.toml",
+  "test-cases/eslint-snippets/rust-toolchain",
+  "unknown/input.js",
+]) {
+  test(`Rust or unknown input runs Rust: ${file}`, () => assert.equal(triggersRust(file), true));
+}
+test("empty, mixed, deleted and renamed inputs stay conservative", () => {
+  assert.equal(rustRequired([]), true);
+  assert.equal(rustRequired([{ path: "docs/eslint-rules/example.md", status: "D" }]), false);
+  assert.equal(
+    rustRequired([{ path: "docs/eslint-rules/example.md" }, { path: "Cargo.lock" }]),
+    true,
+  );
+  const input = "D\0crates/no-mistakes/src/old.rs\0A\0docs/eslint-rules/old.md\0";
+  const result = spawnSync(process.execPath, [path.join(__dirname, "rust-pr-scope.cjs")], {
+    input,
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "rust=true\n");
+});
+function gate(name, results, required) {
+  const code = job(name).match(/node -e '([^']+)'/)[1];
+  return spawnSync(process.execPath, ["-e", code], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      RESULTS: JSON.stringify(results),
+      RUST_REQUIRED: required,
+      MACOS_REQUIRED: "false",
+      MACOS_EVENT: "pull_request",
+      MACOS_REF: "refs/pull/1/merge",
+    },
+  });
+}
+for (const [name, allowed, forbidden] of [
+  ["quality", "quality-rust", "quality-js"],
+  ["tests-gate", "tests", "javascript-tests"],
+  ["native-tests", "native-test-build", "changes"],
+]) {
+  test(`${name} allows only an intentional Rust skip`, () => {
+    const skipped = { [allowed]: { result: "skipped" }, changes: { result: "success" } };
+    assert.equal(gate(name, skipped, "false").status, 0);
+    for (const required of ["true", ""]) assert.equal(gate(name, skipped, required).status, 1);
+    for (const result of ["failure", "cancelled"])
+      assert.equal(gate(name, { [allowed]: { result } }, "false").status, 1);
+    assert.equal(gate(name, { [forbidden]: { result: "skipped" } }, "false").status, 1);
+    assert.equal(gate(name, { changes: { result: "failure" } }, "false").status, 1);
+  });
+}
+test("scope metadata is PR-only, fail-closed, and artifact merges skip with their producers", () => {
+  assert.match(workflow, /rust:.*github.event_name != 'pull_request'.*outputs.rust != 'false'/);
+  for (const name of ["quality-rust", "standalone-build", "rust-coverage-build", "docs-tests"])
+    assert.match(job(name), /if: \$\{\{ needs.changes.outputs.rust == 'true' \}\}/);
+  for (const name of ["tests", "tests-standalone-lib"])
+    assert.match(job(name), /if: \$\{\{ always\(\) && needs.changes.outputs.rust == 'true' \}\}/);
+  assert.match(workflow, /node --test[^\n]*rust-pr-scope.test.cjs/);
+});
