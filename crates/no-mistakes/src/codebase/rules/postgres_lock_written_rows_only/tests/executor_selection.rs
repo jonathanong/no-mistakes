@@ -245,3 +245,19 @@ fn caller_option_routing_requires_explicit_configuration() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn tagged_option_helpers_preserve_caller_row_key_identity() {
+    let root = fixture("caller-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options-written.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let findings = check_with_files(&root, &config, &[root.join("src/written.ts")]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 12);
+    assert_eq!(findings[0].target.as_deref(), Some(CHECKS[0]));
+}

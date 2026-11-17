@@ -95,6 +95,7 @@ pub(crate) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> Sc
     visitor.track_resource_transactions = options.track_transaction_helpers;
     if visitor.needs_walk() {
         visitor.visit_program(program);
+        visitor.finish_callback_transactions();
         visitor.finish_undeclared_annotations();
         visitor.finish_delayed_receivers();
     }

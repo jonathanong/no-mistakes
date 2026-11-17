@@ -22,6 +22,7 @@ pub(super) struct ScopeCollector {
     factories: HashSet<String>,
     types: HashSet<String>,
     factory_shadows: HashMap<String, Vec<Span>>,
+    callback_candidates: Vec<callback_transactions::Candidate>,
     undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
     provisional_factories: HashMap<String, Vec<u32>>,
     provisional_types: HashMap<String, Vec<u32>>,
@@ -46,6 +47,27 @@ impl ScopeCollector {
         self.scopes.push(span);
         walk(self);
         self.scopes.pop();
+    }
+
+    pub(super) fn finish_callback_transactions(&mut self) {
+        callback_transactions::finalize(
+            std::mem::take(&mut self.callback_candidates),
+            &self.factories,
+            &self.factory_shadows,
+            &mut self.found.transactions,
+        );
+    }
+
+    pub(super) fn record_callback_function_shadow(
+        &mut self,
+        function: &oxc_ast::ast::Function<'_>,
+    ) {
+        callback_transactions::record_function_shadow(
+            function,
+            *self.scopes.last().expect("scope"),
+            &self.factories,
+            &mut self.factory_shadows,
+        );
     }
 }
 

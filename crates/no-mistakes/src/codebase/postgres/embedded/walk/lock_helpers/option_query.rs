@@ -94,7 +94,7 @@ pub(super) fn summarize(
                 access: ExecutorAccess::Object,
                 parameters,
                 span: (call.span.start, call.span.end),
-                sql: crate::codebase::postgres::embedded::sql_text(expression)?,
+                sql: positional_sql(expression)?,
                 line: crate::codebase::ts_source::byte_offset_to_line(
                     source,
                     call.span.start as usize,
@@ -102,4 +102,21 @@ pub(super) fn summarize(
             })
         })
         .collect()
+}
+
+fn positional_sql(expression: &Expression<'_>) -> Option<String> {
+    let Expression::TaggedTemplateExpression(tagged) = expression else {
+        return crate::codebase::postgres::embedded::sql_text(expression);
+    };
+    let mut sql = String::new();
+    for (index, quasi) in tagged.quasi.quasis.iter().enumerate() {
+        if index > 0 {
+            sql.push_str(&format!("${index}"));
+        }
+        sql.push_str(&tags::quasi_text(
+            quasi,
+            tags::is_string_raw_tag_spelling(&tagged.tag),
+        ));
+    }
+    Some(sql)
 }

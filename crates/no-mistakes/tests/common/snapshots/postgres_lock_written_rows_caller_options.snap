@@ -118,5 +118,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": []
     }
+  },
+  "written_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/written.ts",
+          "line": 12,
+          "message": "src/written.ts:12: row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lock locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lock(id, { query: tx });",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "warnings": []
+    }
   }
 }

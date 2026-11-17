@@ -459,7 +459,7 @@ const tx = await beginTransaction();
 await lockItem(id, { query: tx });
 await readItem(id, true, { query: tx });
 await readItem(id, false);
-await write(sql`UPDATE items SET active = true WHERE id = ${id}`, { query: tx });
+await write('UPDATE items SET active = true WHERE id = $1', [id], { query: tx });
 ```
 
 The rule checks each resolved caller. Literal boolean arguments select the SQL

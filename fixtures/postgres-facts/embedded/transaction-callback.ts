@@ -28,4 +28,57 @@ export async function update() {
     tx = ordinary;
     await tx.query("SELECT id FROM items WHERE id = 7 FOR UPDATE");
   });
+  async function shadowedDestructured({ transaction }: { transaction: Function }) {
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 8 FOR UPDATE");
+    });
+  }
+  {
+    const { transaction } = { transaction: ordinary };
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 9 FOR UPDATE");
+    });
+  }
+  {
+    const { ordinary: ignored, ...transaction } = { ordinary: 0, transaction: ordinary };
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 10 FOR UPDATE");
+    });
+  }
+  async function shadowedRest(...transaction: Function[]) {
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 11 FOR UPDATE");
+    });
+  }
+  {
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 12 FOR UPDATE");
+    });
+    function transaction(callback: Function) {}
+  }
+  try {
+    throw new Error("caught");
+  } catch (transaction) {
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 13 FOR UPDATE");
+    });
+  }
+  const namedFunction = function transaction() {
+    return transaction(async (tx) => {
+      return tx.query("SELECT id FROM items WHERE id = 14 FOR UPDATE");
+    });
+  };
+  const namedClass = class transaction {
+    method() {
+      return transaction(async (tx) => {
+        return tx.query("SELECT id FROM items WHERE id = 15 FOR UPDATE");
+      });
+    }
+  };
+  async function shadowedDefault(
+    value = transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 16 FOR UPDATE");
+    }),
+    transaction: Function = ordinary,
+  ) {}
 }

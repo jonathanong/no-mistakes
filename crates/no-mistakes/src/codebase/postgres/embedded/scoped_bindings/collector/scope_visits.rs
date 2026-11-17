@@ -16,6 +16,20 @@ macro_rules! scope_visits {
             self.with_scope(body.span, |this| walk::walk_function_body(this, body));
         }
 
+        fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+            if self.track_resource_transactions {
+                if let Some(param) = &clause.param {
+                    super::callback_transactions::record_pattern_shadows(
+                        &param.pattern,
+                        clause.span,
+                        &self.factories,
+                        &mut self.factory_shadows,
+                    );
+                }
+            }
+            self.with_scope(clause.span, |this| walk::walk_catch_clause(this, clause));
+        }
+
         fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
             self.found.undeclared_this_exclusions.push(block.span);
             self.with_scope(block.span, |this| walk::walk_static_block(this, block));
@@ -25,10 +39,6 @@ macro_rules! scope_visits {
             self.with_scope(switch.span, |this| {
                 walk::walk_switch_statement(this, switch)
             });
-        }
-
-        fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
-            self.with_scope(clause.span, |this| walk::walk_catch_clause(this, clause));
         }
 
         fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {

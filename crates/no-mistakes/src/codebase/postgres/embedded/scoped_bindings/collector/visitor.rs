@@ -45,25 +45,23 @@ impl<'a> Visit<'a> for ScopeCollector {
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.exclude_dynamic_this(function);
         self.record_type_parameters(function.type_parameters.as_deref(), function.span);
+        if self.track_resource_transactions {
+            self.record_callback_function_shadow(function);
+        }
         if function.r#type == oxc_ast::ast::FunctionType::FunctionDeclaration {
             if let Some(id) = &function.id {
                 self.declare_delayed_binding(id);
-                if self.factories.contains(id.name.as_str()) {
-                    callback_transactions::record_shadow(
-                        id.name.as_str(),
-                        *self.scopes.last().expect("scope"),
-                        &mut self.factory_shadows,
-                    );
-                }
             }
         }
         self.delayed.functions.push(function.span);
-        callback_transactions::record_parameter_shadows(
-            &function.params,
-            function.span,
-            &self.factories,
-            &mut self.factory_shadows,
-        );
+        if self.track_resource_transactions {
+            callback_transactions::record_parameter_shadows(
+                &function.params,
+                function.span,
+                &self.factories,
+                &mut self.factory_shadows,
+            );
+        }
         self.bind_params(&function.params, function.span);
         walk::walk_function(self, function, flags);
         self.delayed.functions.pop();
@@ -72,12 +70,14 @@ impl<'a> Visit<'a> for ScopeCollector {
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
         self.record_type_parameters(arrow.type_parameters.as_deref(), arrow.span);
         self.delayed.functions.push(arrow.span);
-        callback_transactions::record_parameter_shadows(
-            &arrow.params,
-            arrow.span,
-            &self.factories,
-            &mut self.factory_shadows,
-        );
+        if self.track_resource_transactions {
+            callback_transactions::record_parameter_shadows(
+                &arrow.params,
+                arrow.span,
+                &self.factories,
+                &mut self.factory_shadows,
+            );
+        }
         self.bind_params(&arrow.params, arrow.span);
         walk::walk_arrow_function_expression(self, arrow);
         self.delayed.functions.pop();
@@ -91,6 +91,13 @@ impl<'a> Visit<'a> for ScopeCollector {
                 class.span
             };
             self.type_shadows.push((name.name.to_string(), span));
+            if self.track_resource_transactions && self.factories.contains(name.name.as_str()) {
+                callback_transactions::record_shadow(
+                    name.name.as_str(),
+                    span,
+                    &mut self.factory_shadows,
+                );
+            }
         }
         self.record_type_parameters(class.type_parameters.as_deref(), class.span);
         self.prepare_class_receivers(class);
@@ -132,12 +139,9 @@ impl<'a> Visit<'a> for ScopeCollector {
 
     fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
         if self.track_resource_transactions && !call.optional {
-            callback_transactions::record(
-                call,
-                &self.factories,
-                &self.factory_shadows,
-                &mut self.found.transactions,
-            );
+            if let Some(candidate) = callback_transactions::candidate(call, &self.factories) {
+                self.callback_candidates.push(candidate);
+            }
         }
         walk::walk_call_expression(self, call);
     }
@@ -151,13 +155,15 @@ impl<'a> Visit<'a> for ScopeCollector {
             }
         }
         // `var` hoists past the block, so only block-scoped kinds are bound.
-        callback_transactions::record_local_shadows(
-            declaration,
-            self.delayed.functions.last().copied(),
-            *self.scopes.last().expect("scope"),
-            &self.factories,
-            &mut self.factory_shadows,
-        );
+        if self.track_resource_transactions {
+            callback_transactions::record_local_shadows(
+                declaration,
+                self.delayed.functions.last().copied(),
+                *self.scopes.last().expect("scope"),
+                &self.factories,
+                &mut self.factory_shadows,
+            );
+        }
         if declaration.kind != VariableDeclarationKind::Var {
             let end = self.scopes.last().expect("program scope").end;
             for declarator in &declaration.declarations {
