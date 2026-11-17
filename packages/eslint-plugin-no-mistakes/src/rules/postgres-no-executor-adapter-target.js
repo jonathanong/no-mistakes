@@ -8,8 +8,14 @@ const { localOptionBody } = require("./postgres-no-executor-adapter-option-local
 const { tsOptionBody } = require("./postgres-no-executor-adapter-option-ts");
 const { allowsCollectionKey } = require("./postgres-no-executor-adapter-collection");
 const { localExecutorType, importedExecutorType } = require("./postgres-no-executor-adapter-type");
+const {
+  localMemberFunction,
+  staticHelperName,
+} = require("./postgres-no-executor-adapter-local-member");
+const { namespaceImport } = require("./postgres-no-executor-adapter-member");
 
-function localFunction(callee, context) {
+function localFunction(callee, context, facts) {
+  if (callee.type === "MemberExpression") return localMemberFunction(callee, context, facts);
   const variable = resolveVariable(callee, context);
   if (
     !variable ||
@@ -86,15 +92,19 @@ function importedTarget(call, index, property, context, options, facts) {
     !services.esTreeNodeToTSNodeMap
   )
     return false;
+  const ts = require("typescript");
   const checker = services.program.getTypeChecker();
   const node = services.esTreeNodeToTSNodeMap.get(call.callee);
+  if (!node) return false;
   const signatures = checker.getTypeAtLocation(node).getCallSignatures();
   if (signatures.length !== 1) return false;
   const declaration = signatures[0].getDeclaration();
   if (!declaration?.body) return false;
-  // The signature must belong to this callee's declaration or const initializer.
+  // The signature must belong to this export's declaration or const initializer.
   // A contextual method type can point at a different, fully annotated body.
-  const target = checker.getAliasedSymbol(checker.getSymbolAtLocation(node));
+  const symbol = checker.getSymbolAtLocation(node.argumentExpression ?? node);
+  if (!symbol) return false;
+  const target = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
   if (
     !target.declarations?.some(
       (candidate) =>
@@ -136,11 +146,19 @@ function importedTarget(call, index, property, context, options, facts) {
   return !writes.eval && !writes.symbols.has(target);
 }
 
+function isImportedHelper(callee, context) {
+  if (callee.type === "MemberExpression") {
+    return staticHelperName(callee) !== null && namespaceImport(callee.object, context);
+  }
+  return (
+    resolveVariable(callee, context)?.defs.some((def) => def.type === "ImportBinding") ?? false
+  );
+}
+
 function acceptsExecutor(call, index, quoteNode, context, options, facts) {
   if (!quoteNode && allowsCollectionKey(call, index, context, facts)) return true;
   if (
     call.type !== "CallExpression" ||
-    call.callee.type !== "Identifier" ||
     call.arguments.some((argument) => argument.type === "SpreadElement")
   )
     return false;
@@ -150,11 +168,11 @@ function acceptsExecutor(call, index, quoteNode, context, options, facts) {
   )
     return false;
   const property = quoteNode?.key.name;
-  const fn = localFunction(call.callee, context);
+  const callee = call.callee;
+  const fn = localFunction(callee, context, facts);
   if (fn) return localTarget(fn, index, property, context, options, facts);
-  const variable = resolveVariable(call.callee, context);
-  if (!variable?.defs.some((def) => def.type === "ImportBinding")) return false;
+  if (!isImportedHelper(callee, context)) return false;
   return importedTarget(call, index, property, context, options, facts);
 }
 
-module.exports = { acceptsExecutor, localFunction };
+module.exports = { acceptsExecutor, isImportedHelper, localFunction };

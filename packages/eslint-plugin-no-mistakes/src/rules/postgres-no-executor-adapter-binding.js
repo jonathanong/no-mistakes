@@ -1,6 +1,6 @@
 "use strict";
 
-const { childNodes, resolveVariable } = require("./postgres-query-text");
+const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 
 // Shared by ref and member. Neither of those modules owns this file, so
 // executorRef can import the member check without a require cycle.
@@ -70,18 +70,26 @@ function constInitializer(identifier, context, seen) {
 
 function isDirectEval(node) {
   if (node?.type !== "CallExpression") return false;
-  const callee = node.callee;
+  const callee = unwrapTs(node.callee);
   return callee?.type === "Identifier" && callee.name === "eval";
 }
 
-function containsDirectEval(root) {
+function includesNode(root, predicate) {
   const stack = childNodes(root);
   while (stack.length) {
     const node = stack.pop();
-    if (isDirectEval(node)) return true;
+    if (predicate(node)) return true;
     stack.push(...childNodes(node));
   }
   return false;
+}
+
+function containsDirectEval(root) {
+  return includesNode(root, isDirectEval);
+}
+
+function containsReceiverAccess(root) {
+  return includesNode(root, (node) => node.type === "ThisExpression" || node.type === "Super");
 }
 
 // A function declaration is stable only when nothing assigns it and no direct
@@ -103,6 +111,8 @@ function stableFunction(identifier, context) {
 module.exports = {
   TS_ASSERTIONS,
   constInitializer,
+  containsDirectEval,
+  containsReceiverAccess,
   stableFunction,
   variableIsImportedExecutor,
   variableIsScopedExecutor,
