@@ -81,4 +81,15 @@ export async function update() {
     }),
     transaction: Function = ordinary,
   ) {}
+  async function parameterEnvironment(
+    pending = transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 17 FOR UPDATE");
+    }),
+  ) {
+    var transaction = ordinary;
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 18 FOR UPDATE");
+    });
+    await pending;
+  }
 }

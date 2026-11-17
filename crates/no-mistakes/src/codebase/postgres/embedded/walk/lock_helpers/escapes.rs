@@ -3,7 +3,7 @@ use crate::fx::FxHashSet;
 use oxc_ast::ast::Expression;
 use oxc_ast::ast::{
     AwaitExpression, CallExpression, Declaration, ExportDeclaration, ExportNamedDeclaration,
-    IdentifierReference, Program, ReturnStatement,
+    IdentifierReference, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 
@@ -35,16 +35,14 @@ impl<'a> Visit<'a> for Uses {
         }
         walk::walk_await_expression(self, expression);
     }
-    fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
-        if let Some(Expression::CallExpression(call)) =
-            statement.argument.as_ref().map(unwrap_ts_wrappers)
-        {
-            self.completed.insert(call.span.start);
-        }
-        walk::walk_return_statement(self, statement);
-    }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if !call.optional && self.completed.contains(&call.span.start) {
+        if !call.optional
+            && self.completed.contains(&call.span.start)
+            && call
+                .arguments
+                .iter()
+                .all(|argument| argument.as_expression().is_some())
+        {
             if let Expression::Identifier(id) = unwrap_ts_wrappers(&call.callee) {
                 self.direct.insert(id.span.start);
             }

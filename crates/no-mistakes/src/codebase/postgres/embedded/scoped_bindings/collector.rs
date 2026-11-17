@@ -27,6 +27,7 @@ pub(super) struct ScopeCollector {
     provisional_factories: HashMap<String, Vec<u32>>,
     provisional_types: HashMap<String, Vec<u32>>,
     scopes: Vec<Span>,
+    var_scopes: Vec<Span>,
     type_shadows: Vec<(String, Span)>,
     classes: Vec<Span>,
     class_methods: HashSet<u32>,

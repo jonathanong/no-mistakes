@@ -10,7 +10,7 @@ pub(super) fn summarize(
     source: &str,
     bindings: &HashSet<String>,
     options: &EmbeddedSqlOptions,
-    tags: &tags::SqlTagNames,
+    functions: &super::super::resolve::LocalFunctions,
 ) -> Option<Vec<Query>> {
     let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) else {
         return None;
@@ -19,13 +19,16 @@ pub(super) fn summarize(
         return None;
     }
     let mut selected = None;
-    for argument in call.arguments.iter().skip(1) {
-        let Expression::Identifier(id) = unwrap_ts_wrappers(argument.as_expression()?) else {
-            continue;
-        };
-        let index = params.iter().position(|param| *param == id.name.as_str())?;
-        if selected.replace(index).is_some() {
-            return None;
+    for (index, argument) in call.arguments.iter().enumerate().skip(1) {
+        match unwrap_ts_wrappers(argument.as_expression()?) {
+            Expression::Identifier(id) => {
+                let index = params.iter().position(|param| *param == id.name.as_str())?;
+                if selected.replace(index).is_some() {
+                    return None;
+                }
+            }
+            Expression::ArrayExpression(_) if index == 1 => {}
+            _ => return None,
         }
     }
     let executor = selected?;
@@ -49,6 +52,7 @@ pub(super) fn summarize(
         }
         expression => vec![(expression, None)],
     };
+    let tags = functions.imported_sql_tags();
     arms.into_iter()
         .map(|(expression, condition)| {
             let expression = unwrap_ts_wrappers(expression);
@@ -59,7 +63,7 @@ pub(super) fn summarize(
                 Expression::TaggedTemplateExpression(tagged) => {
                     if tags::interpolating_untrusted_tag(
                         expression,
-                        &mut |name| params.contains(&name),
+                        &mut |name| params.contains(&name) || functions.is_tag_shadowed(name),
                         tags,
                     ) {
                         return None;

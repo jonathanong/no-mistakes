@@ -501,6 +501,11 @@ fn postgres_lock_written_rows_caller_options_check_json_snapshot() {
         &[
             ("caller_options", "caller-options", "caller-options.yml"),
             (
+                "review_boundaries",
+                "caller-options-review",
+                "caller-options.yml",
+            ),
+            (
                 "written_keys",
                 "caller-options",
                 "caller-options-written.yml",

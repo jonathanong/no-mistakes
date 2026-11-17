@@ -13,7 +13,9 @@ macro_rules! scope_visits {
         }
 
         fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
+            self.var_scopes.push(body.span);
             self.with_scope(body.span, |this| walk::walk_function_body(this, body));
+            self.var_scopes.pop();
         }
 
         fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
@@ -32,7 +34,9 @@ macro_rules! scope_visits {
 
         fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
             self.found.undeclared_this_exclusions.push(block.span);
+            self.var_scopes.push(block.span);
             self.with_scope(block.span, |this| walk::walk_static_block(this, block));
+            self.var_scopes.pop();
         }
 
         fn visit_switch_statement(&mut self, switch: &SwitchStatement<'a>) {

@@ -55,7 +55,7 @@ pub(crate) fn collect_calls<'a>(
             source,
             bindings,
             options,
-            functions.imported_sql_tags(),
+            &functions,
         ),
         incomplete_transaction_owners: Default::default(),
         exited_functions: Default::default(),

@@ -469,6 +469,9 @@ the lock must supply a static inline options object selecting a proven
 transaction; missing options, a non-transaction
 client, and unresolved callers retain findings. A `Client` type annotation alone
 does not prove a transaction.
+Passing a `const` options binding to these helpers remains unresolved; pass the
+static object inline instead. Direct executor calls retain the `const` options
+support described above.
 Exported or escaped option helpers remain unresolved because external callers
 cannot be proven here. Pass inline options at a known transaction call site
 instead. This extension does not generalize arbitrary branches or dynamic SQL.

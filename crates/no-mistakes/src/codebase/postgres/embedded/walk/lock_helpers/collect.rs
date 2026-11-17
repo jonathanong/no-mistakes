@@ -10,7 +10,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
     source: &str,
     bindings: &std::collections::HashSet<String>,
     options: &crate::codebase::postgres::EmbeddedSqlOptions,
-    tags: &crate::codebase::postgres::embedded::tags::SqlTagNames,
+    functions: &super::super::resolve::LocalFunctions,
 ) -> LockHelpers {
     let mut helpers = LockHelpers::default();
     if !enabled {
@@ -51,7 +51,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
                     source,
                     bindings,
                     options,
-                    tags,
+                    functions,
                 )
             }) {
                 if escaped.contains(name)
@@ -79,7 +79,7 @@ fn summarize<'a>(
     source: &str,
     bindings: &std::collections::HashSet<String>,
     options: &crate::codebase::postgres::EmbeddedSqlOptions,
-    tags: &crate::codebase::postgres::embedded::tags::SqlTagNames,
+    functions: &super::super::resolve::LocalFunctions,
 ) -> Option<Helper> {
     if params.rest.is_some() {
         return None;
@@ -135,7 +135,7 @@ fn summarize<'a>(
             return None;
         }
         if let Some(projected) =
-            super::option_query::summarize(call, &params, source, bindings, options, tags)
+            super::option_query::summarize(call, &params, source, bindings, options, functions)
         {
             calls.extend(projected);
         } else {

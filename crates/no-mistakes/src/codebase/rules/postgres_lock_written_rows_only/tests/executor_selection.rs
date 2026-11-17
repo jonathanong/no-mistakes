@@ -261,3 +261,42 @@ fn tagged_option_helpers_preserve_caller_row_key_identity() {
     assert_eq!(findings[0].line, 12);
     assert_eq!(findings[0].target.as_deref(), Some(CHECKS[0]));
 }
+
+#[test]
+fn option_helper_boundaries_retain_unresolved_diagnostics() {
+    let root = fixture("caller-options-review");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let files = [
+        "bare-return",
+        "conflicting",
+        "late-array",
+        "shadowed-string",
+        "spread",
+        "options-binding",
+    ]
+    .map(|name| root.join(format!("src/{name}.ts")));
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    let mut sites: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.file.as_str(), finding.line))
+        .collect();
+    sites.sort();
+    assert_eq!(
+        sites,
+        [
+            ("src/bare-return.ts", 3),
+            ("src/conflicting.ts", 3),
+            ("src/late-array.ts", 3),
+            ("src/options-binding.ts", 9),
+            ("src/shadowed-string.ts", 4),
+            ("src/spread.ts", 3)
+        ],
+        "{findings:?}"
+    );
+}

@@ -158,7 +158,10 @@ impl<'a> Visit<'a> for ScopeCollector {
         if self.track_resource_transactions {
             callback_transactions::record_local_shadows(
                 declaration,
-                self.delayed.functions.last().copied(),
+                self.var_scopes
+                    .last()
+                    .copied()
+                    .or_else(|| self.scopes.first().copied()),
                 *self.scopes.last().expect("scope"),
                 &self.factories,
                 &mut self.factory_shadows,
