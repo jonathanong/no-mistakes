@@ -4,6 +4,7 @@ use crate::codebase::postgres::extract_sql_statement_facts;
 struct Case {
     name: String,
     report: bool,
+    capped: bool,
     start: usize,
     end: usize,
     sql: String,
@@ -17,6 +18,7 @@ fn cases(sql: &str) -> Vec<Case> {
     let mut cases = Vec::new();
     let mut name = String::new();
     let mut report = false;
+    let mut capped = false;
     let mut start = 1;
     let mut body = String::new();
     for (index, line) in sql.lines().enumerate() {
@@ -29,13 +31,16 @@ fn cases(sql: &str) -> Vec<Case> {
                 cases.push(Case {
                     name: std::mem::take(&mut name),
                     report,
+                    capped,
                     start,
                     end: line_no - 1,
                     sql: std::mem::take(&mut body),
                 });
             }
             report = line.starts_with("-- report ");
-            name = rest.to_string();
+            let (case_name, expected_capped) = rest.rsplit_once(" capped=").unwrap();
+            capped = expected_capped.parse().unwrap();
+            name = case_name.to_string();
             start = line_no + 1;
         } else {
             body.push_str(line);
@@ -46,6 +51,7 @@ fn cases(sql: &str) -> Vec<Case> {
         cases.push(Case {
             name,
             report,
+            capped,
             start,
             end: sql.lines().count(),
             sql: body,
@@ -83,8 +89,7 @@ fn reopened_shape_keeps_the_limit_and_recall_cases_still_report() {
             .iter()
             .any(|finding| finding.line >= case.start && finding.line <= case.end);
         assert_eq!(reported, case.report, "{}", case.name);
-        let limit_trusted = !case.report || case.name == "nonunique-join";
-        assert_eq!(candidate_capped(&case.sql), limit_trusted, "{}", case.name);
+        assert_eq!(candidate_capped(&case.sql), case.capped, "{}", case.name);
     }
     assert_eq!(
         findings.len(),

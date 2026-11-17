@@ -1,4 +1,4 @@
--- pass verbatim-table
+-- pass verbatim-table capped=true
 WITH candidates AS (
   SELECT current_flow.id,
     CASE
@@ -20,7 +20,7 @@ SET callback_error = candidates.callback_error
 FROM candidates
 WHERE flows.id = candidates.id;
 
--- pass view-nested
+-- pass view-nested capped=true
 WITH candidates AS (
   SELECT current_flow.id,
     CASE
@@ -47,7 +47,7 @@ terminalized AS (
 )
 SELECT id FROM terminalized;
 
--- pass unkeyed-view
+-- pass unkeyed-view capped=true
 WITH candidates AS (
   SELECT current_flow.id,
     CASE
@@ -69,7 +69,7 @@ SET callback_error = candidates.callback_error
 FROM candidates
 WHERE flows.id = candidates.id;
 
--- pass assignment-case
+-- pass assignment-case capped=true
 WITH candidates AS (
   SELECT current_flow.id,
     CASE
@@ -91,10 +91,10 @@ SET callback_error = candidates.callback_error
 FROM candidates
 WHERE flows.id = candidates.id;
 
--- pass bare-current-timestamp
+-- pass bare-current-timestamp capped=true
 SELECT CURRENT_TIMESTAMP FROM flows LIMIT 1;
 
--- report no-limit
+-- report no-limit capped=false
 WITH candidates AS (
   SELECT current_flow.id
   FROM flows flow
@@ -106,7 +106,7 @@ SET callback_error = NULL
 FROM candidates
 WHERE flows.id = candidates.id;
 
--- report nonunique-join
+-- report nonunique-join capped=true
 WITH candidates AS (
   SELECT current_flow.id
   FROM flows flow
@@ -119,20 +119,20 @@ SET callback_error = NULL
 FROM candidates
 WHERE flows.status = candidates.id;
 
--- report unknown-call
+-- report unknown-call capped=false
 SELECT not_a_builtin(id) FROM flows LIMIT 1;
 
--- report unknown-case
+-- report unknown-case capped=false
 SELECT CASE WHEN true THEN not_a_builtin($1) END FROM flows LIMIT 1;
 
--- report other-schema
+-- report other-schema capped=false
 SELECT app.current_timestamp() FROM flows LIMIT 1;
 
--- report unlimited-current-timestamp
+-- report unlimited-current-timestamp capped=false
 SELECT CURRENT_TIMESTAMP FROM flows;
 
--- report quoted-keyword
+-- report quoted-keyword capped=false
 SELECT "current_timestamp"(id) FROM flows LIMIT 1;
 
--- report qualified-keyword
+-- report qualified-keyword capped=false
 SELECT pg_catalog.current_timestamp() FROM flows LIMIT 1;

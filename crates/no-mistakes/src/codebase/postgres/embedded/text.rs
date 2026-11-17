@@ -1,6 +1,6 @@
 use super::{placeholders, tags};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Expression, TemplateLiteral};
+use oxc_ast::ast::{Expression, TemplateLiteral, UnaryOperator};
 use oxc_syntax::number::ToJsString;
 use std::collections::HashMap;
 
@@ -36,25 +36,26 @@ pub fn executed_query_text(
 }
 
 /// One hole in a template. `space` is inserted only between adjacent value
-/// holes of a tagged template. A `$` already sitting against a numeric or
-/// unknown hole stays a positional parameter (`$` plus these digits).
-pub(in crate::codebase::postgres::embedded) struct RenderedHole {
+/// holes of a tagged template.
+pub(in crate::codebase::postgres) struct RenderedHole {
     pub space: bool,
     pub text: String,
 }
 
-pub(in crate::codebase::postgres::embedded) fn render_hole(
+pub(in crate::codebase::postgres) fn render_hole(
     previous: &str,
     hole: &Expression<'_>,
     index: usize,
     already: &str,
     separate_adjacent: bool,
 ) -> RenderedHole {
-    if previous.ends_with('$') && !tagged_fragment(hole) {
-        return RenderedHole {
-            space: false,
-            text: positional_digits(hole, index),
-        };
+    if previous.ends_with('$') {
+        if let Some(digits) = positional_digits(hole, index) {
+            return RenderedHole {
+                space: false,
+                text: digits,
+            };
+        }
     }
     RenderedHole {
         space: separate_adjacent && !already.is_empty() && previous.is_empty(),
@@ -62,21 +63,32 @@ pub(in crate::codebase::postgres::embedded) fn render_hole(
     }
 }
 
-pub(in crate::codebase::postgres) fn positional_digits(
-    hole: &Expression<'_>,
-    index: usize,
-) -> String {
-    match unwrap_ts_wrappers(hole) {
-        Expression::NumericLiteral(literal) => literal.value.to_js_string(),
-        _ => index.to_string(),
-    }
-}
-
-fn tagged_fragment(hole: &Expression<'_>) -> bool {
-    matches!(
-        unwrap_ts_wrappers(hole),
-        Expression::TaggedTemplateExpression(_)
-    )
+fn positional_digits(hole: &Expression<'_>, index: usize) -> Option<String> {
+    let number = match unwrap_ts_wrappers(hole) {
+        Expression::NumericLiteral(literal) => literal.value,
+        Expression::UnaryExpression(unary)
+            if matches!(
+                unary.operator,
+                UnaryOperator::UnaryPlus | UnaryOperator::UnaryNegation
+            ) =>
+        {
+            let Expression::NumericLiteral(literal) = unwrap_ts_wrappers(&unary.argument) else {
+                return Some(index.to_string());
+            };
+            match unary.operator {
+                UnaryOperator::UnaryNegation => -literal.value,
+                _ => literal.value,
+            }
+        }
+        Expression::TemplateLiteral(_) | Expression::TaggedTemplateExpression(_) => return None,
+        expr if expr.is_literal() => return None,
+        _ => return Some(index.to_string()),
+    };
+    let digits = number.to_js_string();
+    digits
+        .bytes()
+        .all(|byte| byte.is_ascii_digit())
+        .then_some(digits)
 }
 
 /// `use_raw` selects `String.raw`'s own runtime semantics (the literal
