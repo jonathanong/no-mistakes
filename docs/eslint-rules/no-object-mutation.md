@@ -234,7 +234,8 @@ read back from a module-level map, from `Object.values`, or from `.get` is
 shared. Class `this` writes and functions with a declared receiver are allowed unless
 `allowThis` is `false`. Direct `this.field = value` initialization in a
 constructor is allowed even with `allowThis: false` when that class declares the
-instance field. Inherited, undeclared, and static fields, methods, setters,
+instance field, including a private `#field`. Public and private names are distinct.
+Inherited, undeclared, and static fields, methods, setters,
 compound writes, nested functions and arrows, mutator calls, and
 `Object.assign(this, ...)` do not receive this initialization exemption.
 For example, this supports constructor arguments with native type stripping:
@@ -248,6 +249,11 @@ class Failure extends Error {
   }
 }
 ```
+
+Known array receivers include tuple and array `this` annotations, the global
+`Array<T>` type, and subclasses of array-derived classes. A locally declared
+`Array` type does not establish array provenance. Static class methods do not
+inherit array-instance provenance.
 
 A receiver is declared by a TypeScript `this: T` parameter
 or an attached JSDoc `@this {T}` tag. Arrows inherit the enclosing receiver; a

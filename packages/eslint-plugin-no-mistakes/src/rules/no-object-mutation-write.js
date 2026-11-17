@@ -102,16 +102,15 @@ function initializesOwnField(node) {
   if (method?.type !== "MethodDefinition" || method.kind !== "constructor" || method.static) {
     return false;
   }
+  const privateName = member.property.type === "PrivateIdentifier" ? member.property.name : null;
   const key = memberKey(member);
-  return (
-    key !== null &&
-    method.parent.body.some(
-      (field) =>
-        field.type === "PropertyDefinition" &&
-        !field.static &&
-        (field.computed ? literalKey(field.key) : staticKey(field.key)) === key,
-    )
-  );
+  return method.parent.body.some((field) => {
+    if (field.type !== "PropertyDefinition" || field.static) return false;
+    if (privateName !== null) {
+      return field.key.type === "PrivateIdentifier" && field.key.name === privateName;
+    }
+    return key !== null && (field.computed ? literalKey(field.key) : staticKey(field.key)) === key;
+  });
 }
 
 function considerWrite(state, target, node, info) {

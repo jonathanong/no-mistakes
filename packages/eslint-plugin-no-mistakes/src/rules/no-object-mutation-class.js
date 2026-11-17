@@ -24,10 +24,13 @@ function visitClassNode(state, node, scope, role) {
   copyMethods(value, superTag);
   const classEnv = child(scope);
   classEnv.inClass = true;
-  classEnv.arrayThis =
-    node.superClass?.type === "Identifier" &&
-    node.superClass.name === "Array" &&
-    !lookup(scope, "Array");
+  value.arraySubclass = Boolean(
+    superTag?.arraySubclass ||
+    (node.superClass?.type === "Identifier" &&
+      node.superClass.name === "Array" &&
+      !lookup(scope, "Array")),
+  );
+  classEnv.arrayThis = value.arraySubclass;
   if (node.type === "ClassExpression" && node.id) {
     bindName(node.id.name, value, classEnv, "local");
   }
@@ -37,6 +40,7 @@ function visitClassNode(state, node, scope, role) {
   if (decorated) markEscaped(state, value);
   else escapeResult(state, value, scope, role, markEscaped);
   if (prior && prior.kind === "module") {
+    prior.tag.arraySubclass = value.arraySubclass;
     return prior.tag;
   }
   return value;

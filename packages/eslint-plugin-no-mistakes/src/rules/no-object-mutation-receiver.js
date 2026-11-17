@@ -40,6 +40,15 @@ function declaredReceiver(sourceCode, node) {
   });
 }
 
+function globalArrayType(sourceCode, type) {
+  if (type?.type !== "TSTypeReference" || type.typeName.name !== "Array") return false;
+  const identifier = type.typeName;
+  const reference = sourceCode
+    .getScope(identifier)
+    .references.find((item) => item.identifier === identifier);
+  return !reference.resolved?.defs.length;
+}
+
 function functionEnvironment(state, node, scope, tag) {
   const env = child(scope);
   env.ownerEnv = env;
@@ -55,7 +64,8 @@ function functionEnvironment(state, node, scope, tag) {
     ?.typeAnnotation;
   const arrayReceiver =
     receiverType?.type === "TSArrayType" ||
-    (receiverType?.type === "TSTypeReference" && receiverType.typeName.name === "Array") ||
+    receiverType?.type === "TSTupleType" ||
+    globalArrayType(state.context.sourceCode, receiverType) ||
     (declared &&
       annotationTargets(node).some((target) =>
         adjacentAnnotations(state.context.sourceCode, target, "@this").some((type) =>

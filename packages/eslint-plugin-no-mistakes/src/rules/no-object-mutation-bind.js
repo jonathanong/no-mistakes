@@ -12,6 +12,7 @@ function moduleTag(tag) {
     return tag;
   }
   const result = shared("module");
+  if (tag?.arraySubclass) result.arraySubclass = true;
   if (tag?.mutator) result.mutator = { ...tag.mutator, member: shared("module") };
   return result;
 }
