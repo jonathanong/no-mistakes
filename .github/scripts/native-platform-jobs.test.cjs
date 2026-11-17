@@ -61,7 +61,11 @@ test("native platform jobs retain complete six-shard Windows and two-shard macOS
         Array.from({ length: count }, (_, offset) => [offset + 1, count]),
       );
       assert.ok(body.includes("${{ matrix.shard }} ${{ matrix.total }}"));
-      assert.match(body, /actions\/download-artifact@[a-f0-9]{40}/);
+      if (name === "native-api-tests") {
+        assert.match(body, /python .github\/scripts\/download-native-runtime.py/);
+      } else {
+        assert.match(body, /actions\/download-artifact@[a-f0-9]{40}/);
+      }
     }
   }
   for (const suffix of ["", "-macos"]) {
