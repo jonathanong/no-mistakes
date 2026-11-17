@@ -21,6 +21,13 @@ import { cache as client } from '@app/cache';
 const first = await client.get('a');
 const second = await client.get(first.nextKey);
 const values = await Promise.all([client.get('a'), client.ttl('b')]);
+
+async function conditionalReads(enabled: boolean, cached: unknown) {
+  enabled && (await client.get('a'));
+  cached || (await client.get('b'));
+  cached ?? (await client.get('c'));
+  enabled ? await client.get('d') : await client.get('e');
+}
 ```
 
 ## Options
@@ -34,7 +41,7 @@ The options object accepts `clients` (exact local identifier names), `imports` (
 }] }
 ```
 
-Adjacent reads in a module, block, or individual switch case are compared. Supported statement shapes are expression statements, simple assignments, variable declarators (including exported declarations), and a second read written as a return statement. The awaited read may occur inside call arguments, conversions, member access on its result, parentheses, or transparent TypeScript assertions. A read on the left side of `&&`, `||`, or `??`, or in a conditional expression's test, is unconditional and remains eligible.
+Adjacent reads in a module, block, or individual switch case are compared. Supported statement shapes are expression statements, simple assignments, variable declarators (including exported declarations), and a second read written as a return statement. The awaited read may occur inside call arguments, conversions, member access on its result, parentheses, sequence expressions, or transparent TypeScript assertions. For example, `await client.get('a'), ordinary()` followed by `await client.get('b')` is eligible: the sequence contains one unconditional configured read. An ordinary helper call does not establish a visible result dependency. A read on the left side of `&&`, `||`, or `??`, or in a conditional expression's test, is unconditional and remains eligible.
 
 Each candidate declarator or statement expression must contain exactly one configured awaited read outside function boundaries, and it must be unconditional. Multiple configured awaited reads are ambiguous and break adjacency, including when one read is conditional, in a binding-pattern default, or nested in another read's arguments. Reads inside callbacks, arrows, or nested functions do not belong to the containing statement. Reads on the right side of a logical expression, in either conditional branch, in optional-call arguments or optional computed access, or through an optional client call are not unconditional and are not paired. Reading an optional property of an already awaited result does not make the read itself conditional.
 
