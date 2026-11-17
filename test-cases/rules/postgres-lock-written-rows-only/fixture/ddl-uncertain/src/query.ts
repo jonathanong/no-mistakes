@@ -42,3 +42,29 @@ export async function temporaryShadow() {
   await tx.query(`CREATE TEMP TABLE events (id integer)`);
   await tx.query(`ALTER TABLE events ADD COLUMN title text`);
 }
+export async function invalidPartitionKeyword() {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`);
+  await tx.query(`ALTER TABLE jobs DETACH PART jobs_old`);
+}
+export async function invalidPartitionExpression() {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`);
+  await tx.query(`ALTER TABLE jobs DETACH PARTITION 42`);
+}
+export async function dynamicAlterTarget(relation: string) {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`);
+  await tx.query(`ALTER TABLE ${relation} ADD COLUMN title text`);
+}
+export async function dynamicCreateTarget(relation: string) {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`);
+  await tx.query(`CREATE TABLE ${relation} (id integer)`);
+  await tx.query(`DROP TABLE events_old`);
+}
+export async function dynamicPartitionTarget(relation: string) {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`);
+  await tx.query(`ALTER TABLE events ATTACH PARTITION ${relation} FOR VALUES FROM (1) TO (2)`);
+}

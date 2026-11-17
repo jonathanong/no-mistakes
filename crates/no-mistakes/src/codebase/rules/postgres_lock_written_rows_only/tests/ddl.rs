@@ -10,7 +10,7 @@ fn accepts_ddl_ordering_and_guard_proof_reads() {
 
 #[test]
 fn keeps_table_lock_reports_without_ordered_transaction_proof() {
-    for (case, count) in [("ddl-negative", 18), ("ddl-uncertain", 8)] {
+    for (case, count) in [("ddl-negative", 18), ("ddl-uncertain", 13)] {
         let findings = check(&fixture(case), &config()).unwrap();
         let locks = findings
             .iter()
@@ -54,4 +54,17 @@ fn partition_ordering_preserves_other_policies_recovery_uncertainty() {
     assert!(facts.parse_failed);
     assert_eq!(facts.parse_failures.len(), 1);
     assert!(facts.parse_failures[0].head.contains("DETACH PARTITION"));
+}
+
+#[test]
+fn generated_ddl_identifiers_do_not_prove_relationships() {
+    let root = fixture("ddl-dynamic");
+    let config: NoMistakesConfig =
+        serde_yaml::from_slice(&std::fs::read(root.join("../../configs/ddl-dynamic.yml")).unwrap())
+            .unwrap();
+    let findings = check(&root, &config).unwrap();
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some(CHECKS[1])));
 }

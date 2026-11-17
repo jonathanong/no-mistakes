@@ -149,7 +149,7 @@ pub(super) fn recover(
     if action.is_some_and(|at| !guarded_prefix(&tokens[at..start])) {
         return None;
     }
-    if let Some(change) = super::partition::recover_partition_change(
+    if let Some((change, _)) = super::partition::recover_partition_change(
         &tokens[start..],
         original.map(|tokens| &tokens[start..]),
         allow_concurrent_detach,

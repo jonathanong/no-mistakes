@@ -453,6 +453,7 @@ fn postgres_lock_written_rows_ddl_check_json_snapshot() {
             ("catalog", "ddl-catalog", "ddl-catalog.yml"),
             ("negative", "ddl-negative", "checks-fail.yml"),
             ("uncertain", "ddl-uncertain", "checks-fail.yml"),
+            ("dynamic_identifiers", "ddl-dynamic", "ddl-dynamic.yml"),
         ],
     );
 }

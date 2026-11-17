@@ -1,0 +1,7 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "jobs": { "columns": { "id": {} } }
+  }
+}

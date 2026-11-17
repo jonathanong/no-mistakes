@@ -37,3 +37,14 @@ export async function batchedDetach() {
   const tx = await beginTransaction();
   await tx.query(`LOCK TABLE events IN SHARE MODE; SELECT 1 FROM reservations; ALTER TABLE events DETACH PARTITION events_old`);
 }
+export async function tableConstraintGuardDrop() {
+  const tx = await beginTransaction();
+  await tx.query(`CREATE TABLE guards_table (id integer NOT NULL, event_id integer, PRIMARY KEY (id), FOREIGN KEY (event_id) REFERENCES events(id))`);
+  await tx.query(`LOCK TABLE guards_table IN SHARE MODE`);
+  await tx.query(`DROP TABLE events`);
+}
+export async function qualifiedPartitionDetach() {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE public.events_old IN SHARE MODE`);
+  await tx.query(`ALTER TABLE public.events DETACH PARTITION public.events_old`);
+}
