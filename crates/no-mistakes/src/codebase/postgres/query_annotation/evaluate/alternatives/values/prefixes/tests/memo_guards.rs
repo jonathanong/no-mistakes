@@ -79,6 +79,21 @@ fn direct_prefixes_and_wrappers_require_exact_contents() {
 }
 
 #[test]
+fn evaluated_status_does_not_change_the_prefix_walk_summary() {
+    let case = fixture::load("all_container_kinds");
+    let unhandled = Value::Evaluated(Box::new(case.root.clone()), false);
+    let handled = Value::Evaluated(Box::new(case.root.clone()), true);
+
+    assert!(unhandled != handled);
+    assert!(unchanged(&unhandled, &handled));
+    let before =
+        super::super::collect::<false>(&unhandled, case.arena(), &case.definite, &mut None);
+    let after = super::super::collect::<false>(&handled, case.arena(), &case.definite, &mut None);
+    assert!(!before.is_empty());
+    assert_eq!(before, after);
+}
+
+#[test]
 fn every_immutable_container_kind_uses_its_shared_snapshot() {
     let case = fixture::load("all_container_kinds");
     let Value::Record(values, _) = case.root else {

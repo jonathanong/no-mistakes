@@ -210,6 +210,18 @@ also exposes its captured values. Returning `array.push(...)`'s numeric result
 does not expose the array itself. Callbacks reachable on a return path remain
 checked even if the continuing path replaces a callback field or captured binding.
 
+A loop can mutate a value shared by an earlier iteration even when the write
+precedes the escape in source order. Callbacks passed to unresolved calls,
+including `.map` and `.forEach`, may escape; returning a captured outer builder
+does not restore its local ownership. Build a fresh value inside each callback
+instead.
+
+Return-path handling restores fresh-value ownership for continuing paths. It
+retains nested callback escape effects and the escape epoch used to revisit
+loops: restoring those would discard evidence from the terminating path. A
+temporary return escape can therefore request another loop pass without making
+a continuing-path builder shared.
+
 Computed member receivers keep the ownership of their possible children. A local
 literal containing fresh arrays can be filled through either a computed or static
 key before it escapes:
