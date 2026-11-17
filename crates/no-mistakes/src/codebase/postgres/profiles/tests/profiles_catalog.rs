@@ -172,11 +172,13 @@ fn lock_written_rule_declares_optional_catalog_demand() {
             vec!["trigger-schema.json".to_owned()],
         ),
     ] {
+        let mut options: serde_yaml::Value = serde_yaml::from_str(options).unwrap();
+        options["executorNames"] = serde_yaml::Value::Sequence(Vec::new());
         let mut config = NoMistakesConfig::default();
         config.rules.push(RuleDef {
             rule: "postgres-lock-written-rows-only".into(),
             scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(options).unwrap(),
+            options,
             ..RuleDef::default()
         });
         assert_eq!(

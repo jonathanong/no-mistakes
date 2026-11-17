@@ -9,9 +9,9 @@ fn counts_only_matching_parsed_trigger_write_chains() {
     )))
     .unwrap();
     let findings = check(&root, &config).unwrap();
-    assert_eq!(findings.len(), 6, "{findings:?}");
+    assert_eq!(findings.len(), 9, "{findings:?}");
     let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(lines, [29, 35, 41, 47, 53, 59]);
+    assert_eq!(lines, [29, 35, 41, 47, 53, 59, 65, 71, 77]);
     assert!(findings
         .iter()
         .all(|finding| finding.target.as_deref() == Some(CHECKS[0])));
@@ -20,7 +20,7 @@ fn counts_only_matching_parsed_trigger_write_chains() {
 #[test]
 fn omitted_catalog_keeps_trigger_relations_unproven() {
     let findings = check(&fixture("trigger-writes"), &config()).unwrap();
-    assert_eq!(findings.len(), 10, "{findings:?}");
+    assert_eq!(findings.len(), 13, "{findings:?}");
     assert!(findings
         .iter()
         .all(|finding| finding.target.as_deref() == Some(CHECKS[0])));

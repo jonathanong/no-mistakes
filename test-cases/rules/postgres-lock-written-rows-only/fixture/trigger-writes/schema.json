@@ -5,7 +5,7 @@
     "log": {
       "triggers": {
         "log_bump_latest": {
-          "definition": "CREATE TRIGGER log_bump_latest AFTER INSERT ON log FOR EACH ROW EXECUTE FUNCTION log_bump_latest()"
+          "definition": "CREATE TRIGGER log_bump_latest AFTER INSERT ON log FOR EACH ROW EXECUTE FUNCTION public.log_bump_latest()"
         }
       }
     },
@@ -71,7 +71,23 @@
     },
     "conditional_r": {},
     "untouched_r": {},
-    "plain_log": {}
+    "plain_log": {},
+    "disabled_log": {
+      "triggers": {}
+    },
+    "disabled_r": {},
+    "dropped_log": {
+      "triggers": {}
+    },
+    "dropped_r": {},
+    "foreign_log": {
+      "triggers": {
+        "foreign_bump": {
+          "definition": "CREATE TRIGGER foreign_bump AFTER INSERT ON foreign_log FOR EACH ROW EXECUTE FUNCTION audit.foreign_bump()"
+        }
+      }
+    },
+    "foreign_r": {}
   },
   "functions": {
     "log_bump_latest()": {
@@ -100,6 +116,16 @@
     },
     "conditional_log_bump()": {
       "definition": "CREATE FUNCTION conditional_log_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE conditional_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "disabled_bump()": {
+      "definition": "CREATE FUNCTION disabled_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE disabled_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END; $$"
+    },
+    "dropped_bump()": {
+      "definition": "CREATE FUNCTION dropped_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE dropped_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END; $$"
+    },
+    "foreign_bump()": {
+      "definition": "CREATE FUNCTION foreign_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE foreign_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END; $$"
     }
-  }
+  },
+  "schema": "public"
 }

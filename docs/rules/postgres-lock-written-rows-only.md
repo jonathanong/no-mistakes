@@ -166,6 +166,8 @@ matching row key. A trigger on an unwritten source table, an unmatched event or
 column, a `WHEN` condition, or a body that cannot be analyzed contributes no
 write evidence, so an otherwise unwritten lock remains reported. Without a
 catalog, the rule uses only its existing direct and helper write evidence.
+The catalog generator omits disabled and replica-only triggers; unattached
+functions and dropped triggers supply no write evidence.
 
 ## Counterexample
 

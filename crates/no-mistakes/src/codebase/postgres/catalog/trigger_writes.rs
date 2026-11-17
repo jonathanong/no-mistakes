@@ -83,6 +83,17 @@ fn function_writes(body: &str, language: Option<&str>) -> Option<Vec<CatalogTrig
         _ => return None,
     };
     let statements = crate::codebase::postgres::parse::parse_postgres_sql(sql).ok()?;
+    if statements.iter().any(|statement| {
+        !matches!(
+            statement,
+            Statement::Insert(_)
+                | Statement::Update(_)
+                | Statement::Delete(_)
+                | Statement::Query(_)
+        )
+    }) {
+        return None;
+    }
     let mut collector = Writes(Vec::new());
     for statement in statements {
         let _ = statement.visit(&mut collector);
