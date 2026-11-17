@@ -847,7 +847,7 @@ WITH RECURSIVE ancestors AS (
 SELECT * FROM ancestors;
 ```
 
-A value interpolation in a parameterizing SQL tag, including `${max + 1}`,
+A value interpolation in a parameterized SQL tag, including `${max + 1}`,
 becomes a bound parameter and can supply this cap. The source expression is
 not SQL text. This still requires the catalog key proof below; without it,
 the recursive lookup remains reported. A suppression on a query proven bounded
