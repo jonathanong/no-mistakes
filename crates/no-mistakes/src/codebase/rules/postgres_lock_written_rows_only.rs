@@ -62,6 +62,11 @@ pub(crate) fn check_with_files_sources_and_facts(
         RULE_ID,
         |rule| {
             let mut compiled = compile(&rule.try_rule_options()?)?;
+            if let Some(path) = compiled.schema_catalog_path.as_deref() {
+                if super::selected_schema_catalog(root, config, rule, facts, path)?.is_none() {
+                    compiled.schema_catalog_path = None;
+                }
+            }
             compiled.allow_audit = Some(super::allow_audit::AllowAudit::new(
                 root,
                 config,

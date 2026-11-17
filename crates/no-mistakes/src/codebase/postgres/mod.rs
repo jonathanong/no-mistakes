@@ -54,6 +54,7 @@ pub use catalog::{
     CatalogUnique, CatalogView, GeneratedKind, PartitionKey, PartitionKeyElement,
     PartitionStrategy, RelationKind, ResolvedArbiter, SchemaCatalog, TriggerEvent, TriggerTiming,
 };
+pub(crate) use catalog::{CatalogTriggerWrite, CatalogTriggerWrites};
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
     postgres_sql_paths,

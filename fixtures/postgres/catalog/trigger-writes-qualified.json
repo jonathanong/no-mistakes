@@ -1,0 +1,54 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {},
+      "triggers": {
+        "touch": {
+          "definition": "CREATE TRIGGER touch AFTER INSERT ON orders EXECUTE FUNCTION public.touch()"
+        }
+      }
+    },
+    "foreign_orders": {
+      "relationKind": "table",
+      "columns": {},
+      "triggers": {
+        "touch": {
+          "definition": "CREATE TRIGGER touch AFTER INSERT ON foreign_orders EXECUTE FUNCTION audit.touch()"
+        }
+      }
+    },
+    "same_orders": {
+      "relationKind": "table",
+      "columns": {},
+      "triggers": {
+        "touch": {
+          "definition": "CREATE TRIGGER touch AFTER INSERT ON same_orders EXECUTE FUNCTION public.same()"
+        }
+      }
+    },
+    "audit_orders": {
+      "relationKind": "table",
+      "columns": {},
+      "triggers": {
+        "touch": {
+          "definition": "CREATE TRIGGER touch AFTER INSERT ON audit_orders EXECUTE FUNCTION audit.same()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "touch()": {
+      "definition": "CREATE FUNCTION touch() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET value = 1; $$"
+    },
+    "public.same()": {
+      "definition": "CREATE FUNCTION public.same() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET value = 1; $$"
+    },
+    "audit.same()": {
+      "definition": "CREATE FUNCTION audit.same() RETURNS trigger LANGUAGE sql AS $$ UPDATE audit_accounts SET value = 1; $$"
+    }
+  }
+}

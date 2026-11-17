@@ -133,6 +133,40 @@ a preflight check. A lock
 without later DDL, DML alone, or DDL in another transaction still reports. An
 unrelated locked relation that is never read before the DDL also reports.
 
+## Trigger-derived writes
+
+Set optional `schemaCatalogPath` to a PostgreSQL schema catalog JSON file, relative
+to the analyzed root, to include trigger effects in transaction write sets:
+
+```yaml
+options:
+  importSpecifier: "@example/db"
+  executorFactoryNames: [beginTransaction]
+  schemaCatalogPath: schema.json
+```
+
+For example, the catalog can describe an `AFTER INSERT ON log` trigger whose
+function performs `UPDATE r SET latest = NEW.id WHERE id = NEW.r_id`. This
+transaction then writes the locked relation through that trigger:
+
+```ts
+const tx = await beginTransaction();
+await tx.query('SELECT id FROM r WHERE id = $1 FOR UPDATE', [id]);
+await tx.query('INSERT INTO log (id, r_id) VALUES ($2, $1)', [id, next]);
+```
+
+The triggering statement must write the trigger's source relation with the
+matching `INSERT`, `UPDATE`, or `DELETE` event. An `UPDATE OF selected` trigger
+contributes writes only when the statement assigns `selected`. Trigger effects
+can fire further triggers; cycles are guarded and traversal stops after 32
+trigger hops.
+Static writes in SQL and simple PL/pgSQL function bodies contribute their target
+relations. These facts establish relation writes without claiming a proven
+matching row key. A trigger on an unwritten source table, an unmatched event or
+column, a `WHEN` condition, or a body that cannot be analyzed contributes no
+write evidence, so an otherwise unwritten lock remains reported. Without a
+catalog, the rule uses only its existing direct and helper write evidence.
+
 ## Counterexample
 
 ```ts

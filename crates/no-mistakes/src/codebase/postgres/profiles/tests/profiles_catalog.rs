@@ -61,6 +61,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-column-requires-trigger",
             "postgres-conflict-ordering",
             "postgres-lock-ordering",
+            "postgres-lock-written-rows-only",
             "postgres-required-comments",
             "postgres-materialized-view-shape",
             "postgres-duplicate-function-body",
@@ -158,5 +159,29 @@ fn rule_config(rule: &str) -> NoMistakesConfig {
             ..Default::default()
         }],
         ..Default::default()
+    }
+}
+
+#[test]
+fn lock_written_rule_declares_optional_catalog_demand() {
+    for (options, expected) in [
+        ("{}", Vec::<String>::new()),
+        ("schemaCatalogPath: ''", Vec::new()),
+        (
+            "schemaCatalogPath: trigger-schema.json",
+            vec!["trigger-schema.json".to_owned()],
+        ),
+    ] {
+        let mut config = NoMistakesConfig::default();
+        config.rules.push(RuleDef {
+            rule: "postgres-lock-written-rows-only".into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options).unwrap(),
+            ..RuleDef::default()
+        });
+        assert_eq!(
+            configured_schema_catalog_paths(&config, SCHEMA_CATALOG_RULE_IDS).unwrap(),
+            expected
+        );
     }
 }

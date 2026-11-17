@@ -14,6 +14,7 @@ use std::{
 mod ddl;
 mod output;
 mod rows;
+mod triggers;
 mod writes;
 use output::{Output, Site};
 use rayon::prelude::*;
@@ -25,10 +26,16 @@ pub(super) fn scan(
     sources: &SourceStore,
     facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let catalog = options
+        .schema_catalog_path
+        .as_deref()
+        .map(|path| facts.prepared().postgres_schema_catalog(path))
+        .transpose()?;
+    let triggers = triggers::Triggers::new(catalog);
     let all: anyhow::Result<Vec<_>> = files
         .par_iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
-        .map(|path| scan_file(root, options, path, sources, facts))
+        .map(|path| scan_file(root, options, path, sources, facts, &triggers))
         .collect();
     let mut output = Output::new(options, facts);
     for findings in all? {
@@ -42,6 +49,7 @@ fn scan_file(
     path: &Path,
     sources: &SourceStore,
     facts: &dyn SqlFactContext,
+    triggers: &triggers::Triggers<'_>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let mut output = Output::new(options, facts);
     let embedded = facts.prepared().embedded_sql(path, &options.embedded)?;
@@ -102,6 +110,7 @@ fn scan_file(
         .collect();
     let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
     let mut writes = writes::Writes::default();
+    let mut trigger_relations: BTreeMap<u32, BTreeSet<String>> = BTreeMap::new();
     for (index, call) in embedded.calls.iter().enumerate() {
         if let Some(id) = call.transaction_id {
             if let Some(versions) = grouped.get(&index) {
@@ -109,6 +118,10 @@ fn scan_file(
                     && call.execution_unconditional
                     && call.executor_transaction_known
                 {
+                    trigger_relations
+                        .entry(id)
+                        .or_default()
+                        .extend(triggers.relations(&versions[0].lock_writes.trigger_writes));
                     for write in &versions[0].lock_writes.writes {
                         writes.insert(id, write, call);
                     }
@@ -163,6 +176,11 @@ fn scan_file(
                     if unresolved.contains(&id) {
                         output.unresolved(&site, "transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set");
                     } else if let Some(relation) = &lock.relation {
+                        if trigger_relations.get(&id).is_some_and(|relations| {
+                            relations.contains(triggers.canonical(relation))
+                        }) {
+                            continue;
+                        }
                         let (candidates, ambiguous) = writes.for_relation(id, relation);
                         rows::check(&mut output, &site, lock, candidates, relation, ambiguous);
                     } else {

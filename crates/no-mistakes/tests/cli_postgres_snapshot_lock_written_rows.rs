@@ -457,3 +457,15 @@ fn postgres_lock_written_rows_ddl_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_trigger_writes_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_trigger_writes",
+        &[
+            ("trigger_effects", "trigger-writes", "trigger-writes.yml"),
+            ("without_catalog", "trigger-writes", "checks-fail.yml"),
+            ("depth_bound", "trigger-depth", "trigger-writes.yml"),
+        ],
+    );
+}

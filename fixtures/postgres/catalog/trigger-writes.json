@@ -1,0 +1,56 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {},
+      "triggers": {
+        "touch": {
+          "definition": "CREATE TRIGGER touch AFTER INSERT OR UPDATE OF total ON orders FOR EACH ROW EXECUTE FUNCTION touch()"
+        },
+        "broken": {
+          "definition": "CREATE TRIGGER broken AFTER INSERT ON orders EXECUTE FUNCTION broken()"
+        },
+        "dynamic": {
+          "definition": "CREATE TRIGGER dynamic AFTER DELETE ON orders EXECUTE FUNCTION dynamic()"
+        },
+        "sql_touch": {
+          "definition": "CREATE TRIGGER sql_touch AFTER DELETE ON orders EXECUTE FUNCTION sql_touch()"
+        },
+        "conditional": {
+          "definition": "CREATE TRIGGER conditional AFTER INSERT ON orders FOR EACH ROW WHEN (NEW.total > 0) EXECUTE FUNCTION touch()"
+        },
+        "unicode": {
+          "definition": "CREATE TRIGGER unicode AFTER INSERT ON orders EXECUTE FUNCTION unicode()"
+        }
+      }
+    },
+    "other_orders": {
+      "relationKind": "table",
+      "columns": {},
+      "triggers": {
+        "touch_again": {
+          "definition": "CREATE TRIGGER touch_again AFTER DELETE ON other_orders EXECUTE FUNCTION touch()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "touch()": {
+      "definition": "CREATE FUNCTION touch() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET BALANCE = balance + 1; INSERT INTO audit (id) VALUES (1) ON CONFLICT (id) DO UPDATE SET count = 2; DELETE FROM expired; RETURN NEW; END; $$"
+    },
+    "broken()": {
+      "definition": "CREATE FUNCTION broken() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET balance = 1; unsupported thing; RETURN NEW; END; $$"
+    },
+    "dynamic()": {
+      "definition": "CREATE FUNCTION dynamic() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN EXECUTE 'UPDATE accounts SET balance = 1'; RETURN NEW; END; $$"
+    },
+    "sql_touch()": {
+      "definition": "CREATE FUNCTION sql_touch() RETURNS trigger LANGUAGE sql AS $$ UPDATE accounts SET touched = true; $$"
+    },
+    "unicode()": {
+      "definition": "CREATE FUNCTION unicode() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET balance = 1; 🦀 $$"
+    }
+  }
+}

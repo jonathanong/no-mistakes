@@ -5,6 +5,7 @@ pub(crate) use ddl::DdlEvent;
 mod helpers;
 mod row_locks;
 mod scope;
+mod trigger_writes;
 use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
 use helpers::{access, generated_name};
@@ -17,6 +18,7 @@ pub(crate) struct LockWriteFacts {
     pub ddl_recovery_complete: bool,
     pub locks: Vec<RowAccess>,
     pub writes: Vec<RowAccess>,
+    pub trigger_writes: Vec<crate::codebase::postgres::CatalogTriggerWrite>,
     pub table_locks: Vec<Option<String>>,
     pub transaction_boundary: bool,
     pub relation_identity_changed: bool,
@@ -106,6 +108,7 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
         ControlFlow::Continue(())
     }
     fn pre_visit_statement(&mut self, statement: &Statement) -> ControlFlow<()> {
+        trigger_writes::collect(statement, &mut self.out.trigger_writes);
         match statement {
             Statement::CreateTable(table) if table.temporary => {
                 self.out.relation_identity_changed = true

@@ -84,6 +84,7 @@ pub(super) fn triggers(
     path: &str,
     table: &str,
     snapshot: &SnapshotTable,
+    identities: &mut BTreeMap<String, String>,
 ) -> Result<Vec<CatalogTrigger>> {
     snapshot
         .triggers
@@ -94,6 +95,7 @@ pub(super) fn triggers(
                     "schemaCatalogPath {path}: table {table} trigger {name} has an unreadable definition"
                 )
             })?;
+            identities.insert(name.clone(), parsed.function_identity);
             Ok(CatalogTrigger {
                 name: name.clone(),
                 timing: parsed.timing,

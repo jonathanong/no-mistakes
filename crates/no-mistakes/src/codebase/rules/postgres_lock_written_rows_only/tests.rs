@@ -18,6 +18,7 @@ mod placeholder_provenance;
 mod proof;
 mod returning_commit;
 mod sql_forms;
+mod trigger_writes;
 
 fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     check_with_files(root, config, &[root.join("src/query.ts")])

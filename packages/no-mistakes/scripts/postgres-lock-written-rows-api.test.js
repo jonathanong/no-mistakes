@@ -17,6 +17,8 @@ const cases = [
   ["ddl-guard", "checks-fail.yml", 0],
   ["ddl-catalog", "ddl-catalog.yml", 1],
   ["ddl-negative", "checks-fail.yml", 18],
+
+  ["trigger-writes", "trigger-writes.yml", 6],
 ];
 
 for (const [fixture, config, count] of cases) {
