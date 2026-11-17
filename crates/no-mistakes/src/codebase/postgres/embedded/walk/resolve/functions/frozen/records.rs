@@ -24,7 +24,7 @@ pub(super) fn record_values(object: &ObjectExpression<'_>, source: &str) -> Opti
     let mut objects = Vec::new();
     for property in &object.properties {
         let (key, value) = field(property)?;
-        if let Some(inner) = nested_record(value) {
+        if let Some(inner) = frozen_object(value) {
             objects.push((key, nested(inner, source)?));
         } else {
             strings.push((key, sql_of(value, source)?));
@@ -54,14 +54,6 @@ pub(super) fn frozen_object<'a>(expr: &'a Expression<'a>) -> Option<&'a ObjectEx
         Expression::ObjectExpression(object) => Some(object),
         _ => None,
     }
-}
-
-fn nested_record<'a>(value: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
-    let value = unwrap_ts_wrappers(value);
-    if let Expression::ObjectExpression(object) = value {
-        return Some(object);
-    }
-    frozen_object(value)
 }
 
 fn freeze_argument<'a>(call: &'a oxc_ast::ast::CallExpression<'a>) -> Option<&'a Expression<'a>> {

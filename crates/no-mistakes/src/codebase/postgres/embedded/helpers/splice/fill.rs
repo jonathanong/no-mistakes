@@ -11,9 +11,6 @@ use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
 use crate::fx::FxHashMap;
 use std::ops::Range;
 
-/// `caller` with every hole replaced by each combination of its alternatives.
-/// A hole that appears twice takes the same alternative both times. Sites that
-/// share a group take the same alternative index instead of a product.
 pub(super) fn fill_all(
     caller: &RecoveredSql,
     holes: &Holes,

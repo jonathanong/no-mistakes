@@ -41,6 +41,9 @@ fn helper(
     let (record, key) = guard::guarded_record(body)?;
     let values = records.iter().find(|(name, _)| name == record)?.1.clone();
     let lowered = simple_params(params)?;
+    if lowered.iter().any(|param| param.name == record) {
+        return None;
+    }
     let index = lowered.iter().position(|param| param.name == key)?;
     match values {
         Values::Strings(pairs) => {

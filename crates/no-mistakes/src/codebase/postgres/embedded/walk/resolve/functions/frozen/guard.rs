@@ -37,10 +37,13 @@ fn ident_arg<'a>(argument: &'a ast::Argument<'a>) -> Option<&'a str> {
     Some(id.name.as_str())
 }
 
-/// Guards then `return record[key]`. Each guard is `!Object.hasOwn(record, key)`,
-/// `typeof key !== 'string'`, or `||` of those. At least one `hasOwn` must match.
-/// A guard throws or returns early; it does not return SQL text.
 pub(super) fn guarded_record<'a>(body: &'a ast::FunctionBody<'a>) -> Option<(&'a str, &'a str)> {
+    guarded_record_with_span(body).map(|(record, key, _)| (record, key))
+}
+
+pub(super) fn guarded_record_with_span<'a>(
+    body: &'a ast::FunctionBody<'a>,
+) -> Option<(&'a str, &'a str, u32)> {
     let (last, guards) = body.statements.as_slice().split_last()?;
     let ast::Statement::ReturnStatement(returned) = last else {
         return None;
@@ -48,7 +51,7 @@ pub(super) fn guarded_record<'a>(body: &'a ast::FunctionBody<'a>) -> Option<(&'a
     if guards.is_empty() {
         return None;
     }
-    let (record, key) = returned_record(returned)?;
+    let (record, key, start) = returned_record(returned)?;
     let mut saw_own = false;
     for statement in guards {
         let ast::Statement::IfStatement(guard) = statement else {
@@ -61,7 +64,7 @@ pub(super) fn guarded_record<'a>(body: &'a ast::FunctionBody<'a>) -> Option<(&'a
             return None;
         }
     }
-    saw_own.then_some((record, key))
+    saw_own.then_some((record, key, start))
 }
 
 fn guard_mentions(test: &Expression<'_>, record: &str, key: &str, saw_own: &mut bool) -> bool {
@@ -136,7 +139,7 @@ fn early_return(returned: &ast::ReturnStatement<'_>) -> bool {
     }
 }
 
-fn returned_record<'a>(returned: &'a ast::ReturnStatement<'a>) -> Option<(&'a str, &'a str)> {
+fn returned_record<'a>(returned: &'a ast::ReturnStatement<'a>) -> Option<(&'a str, &'a str, u32)> {
     let Expression::ComputedMemberExpression(member) =
         unwrap_ts_wrappers(returned.argument.as_ref()?)
     else {
@@ -148,5 +151,5 @@ fn returned_record<'a>(returned: &'a ast::ReturnStatement<'a>) -> Option<(&'a st
     let Expression::Identifier(key) = unwrap_ts_wrappers(&member.expression) else {
         return None;
     };
-    Some((object.name.as_str(), key.name.as_str()))
+    Some((object.name.as_str(), key.name.as_str(), object.span.start))
 }
