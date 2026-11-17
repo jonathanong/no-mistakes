@@ -1,8 +1,8 @@
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
 
 const RULE: &str = "postgres-lock-written-rows-only";
 
-fn snapshot(name: &str, cases: &[(&str, &str, &str)]) {
+fn snapshot(name: &str, cases: &[(&str, &str, &str)]) -> serde_json::Value {
     let rows = cases
         .iter()
         .map(|(label, fixture, config)| {
@@ -13,7 +13,7 @@ fn snapshot(name: &str, cases: &[(&str, &str, &str)]) {
             )
         })
         .collect::<Vec<_>>();
-    assert_saved_fixture(name, &rows);
+    assert_saved_fixture_report(name, &rows, &[], &[])
 }
 
 #[test]
@@ -391,4 +391,54 @@ fn postgres_lock_written_rows_conditional_close_check_json_snapshot() {
             "conditional-close-coverage.yml",
         )],
     );
+}
+
+#[test]
+fn postgres_lock_written_rows_factory_alias_check_json_snapshot() {
+    let report = snapshot(
+        "postgres_lock_written_rows_factory_alias",
+        &[
+            ("const_alias", "factory-const-alias", "checks-fail.yml"),
+            (
+                "const_alias_options",
+                "factory-const-alias",
+                "factory-alias-options.yml",
+            ),
+            (
+                "reassigned_alias",
+                "factory-reassigned-alias",
+                "checks-fail.yml",
+            ),
+            (
+                "reassigned_alias_options",
+                "factory-reassigned-alias",
+                "factory-alias-options.yml",
+            ),
+            ("escaped_alias", "factory-escaped-alias", "checks-fail.yml"),
+            (
+                "escaped_alias_options",
+                "factory-escaped-alias",
+                "factory-alias-options.yml",
+            ),
+        ],
+    );
+    let findings = report["const_alias"]["report"]["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report}");
+    assert_eq!(findings[0]["line"], 5);
+    assert_eq!(findings[0]["target"], "row-lock-unwritten-relation");
+    assert_eq!(report["const_alias"], report["const_alias_options"]);
+    assert!(report["reassigned_alias"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert_eq!(
+        report["reassigned_alias"],
+        report["reassigned_alias_options"]
+    );
+    let escaped = report["escaped_alias"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(escaped.len(), 1, "{report}");
+    assert_eq!(escaped[0]["target"], "unanalyzable");
+    assert_eq!(report["escaped_alias"], report["escaped_alias_options"]);
 }

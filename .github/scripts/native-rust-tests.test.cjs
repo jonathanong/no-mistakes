@@ -196,8 +196,9 @@ test("native workflow compiles independent archives and consumers never build Ru
   ];
   const apiSource = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
   for (const file of apiFiles) assert.ok(apiSource.includes(`"${file}"`));
+  assert.match(rust, /actions\/download-artifact@[a-f0-9]{40}/);
+  assert.match(api, /python .github\/scripts\/download-native-runtime.py/);
   for (const consumer of [rust, api]) {
-    assert.match(consumer, /actions\/download-artifact@[a-f0-9]{40}/);
     assert.doesNotMatch(
       consumer,
       /cargo (build|test)|native-test-archive.cjs build|build-native.cjs/,

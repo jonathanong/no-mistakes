@@ -79,6 +79,17 @@ The current validation graph is organized as follows:
   producer or shard fails. Artifact transfer and per-job setup remain part of
   elapsed PR wall time.
 
+Native API consumers use the [runtime downloader](../../.github/scripts/download-native-runtime.py)
+instead of a JavaScript artifact action so completed transfers do not depend on
+an action process draining its event loop. It selects the exact platform artifact
+from the validated producer run, verifies the archive against its SHA256 metadata,
+and closes network, archive, and temporary-file resources before returning.
+Transient download failures receive bounded retries with backoff; digest failures
+remain fatal. The downloader reports metadata, transfer, checksum, extraction,
+and total timings to distinguish network stalls from completion stalls. Its
+internal deadline leaves room before the workflow step deadline; a stalled
+transfer still fails the required native API gate.
+
 Coverage reports pass every archived test executable explicitly to LLVM. Cargo's
 new output layout uses metadata markers to distinguish test binaries from build
 script outputs; the archive omits those markers. An implicit directory scan can
@@ -830,17 +841,47 @@ was not instrumented, so its cause remains unproven. Production lock behavior,
 CLI/N-API contracts, and rule diagnostics are unchanged; rule-output snapshots
 and public-surface additions do not apply to this test-infrastructure change.
 
+The readable-watchdog regression uses a parent/child start handshake instead of
+assuming the final timeout snapshot will be delivered before exit. Timeout
+snapshot collection has a 75 ms bound and stderr delivery is best-effort, so
+runner scheduling can legitimately omit a final progress line even when the
+pipe is readable (issue #3539). The parent drains stderr concurrently. In progress
+mode it must receive a real snapshot with the active `analysis.waiting` span;
+plain and timings modes publish a readiness marker. The helper blocks on stdin
+until the parent acknowledges readiness, then arms the unchanged 150 ms watchdog
+inside the active span. Startup has its own bounded wait, exit still has a
+four-second backstop, and failures kill and reap the helper. The test still
+requires exit 124, the timeout diagnostic, and progress only when enabled.
+No fixture input is synthesized: this regression exercises process ordering
+through the existing Rust test helper, in both the library and native macOS
+harnesses. Repeat the exact test binary under CPU contention to exercise the
+handshake without rebuilding or configuring retries.
+
 Each real-addon step writes Vitest JSON to `target/native-api-tests.json`.
 The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
 slowest tests to the job summary and writes every test's status and duration to
 `target/native-api-tests-durations.csv`. The `native-api-tests-*` artifacts retain
 the JSON, CSV, and Markdown summary, including available results after failures.
+Real-addon files run one at a time through the
+[Vitest configuration](../../vitest.config.js). Each native process owns a Rayon
+pool that can use the available CPUs; parallel test-file forks would measure
+competition between those pools as part of an individual test's wall time.
+Ordinary JavaScript tests keep file parallelism, and each native analysis keeps
+its configured Rayon parallelism. Native shards and independent CI jobs can
+still run concurrently. This timing isolation also avoids charging several
+files for the same local scheduling delay. It cannot exclude pauses imposed by
+the host, so retained wall timings remain diagnostic evidence rather than a
+CPU-work measurement.
+
 A passing test that takes 5,000 ms or more fails this timing check on Linux and
 macOS. Windows runs the helper with `--report-only`: a threshold breach emits a
 workflow warning and remains visible in the summary and artifacts, without
 failing an otherwise passing test run. Missing or malformed reports still fail
 on every platform. The existing Vitest timeouts and test-failure gates remain
-unchanged; no test retries are configured.
+unchanged; no test retries are configured. The
+[timing integration test](../../.github/scripts/native-api-timing.integration.test.cjs)
+runs a saved delayed body through Vitest and verifies that the enforced reporter
+rejects its real measured duration while retaining the report artifacts.
 
 Name independent fixture cases separately in real-addon parity matrices. Each case
 retains all job/API variants and assertions; the per-test timing gate and
@@ -850,6 +891,16 @@ advise and ignore policies; main run `42637458882` took 5,073.4 ms and failed
 the 5,000 ms gate. Registering each policy independently retains all twelve
 analyses, CJS/ESM and CLI parity checks, suppressions and work-count assertions.
 The timing threshold and enforcement modes are unchanged.
+
+The local-action-checkout parity matrix also registers its six saved fixtures
+independently. One bundled test ran four async API analyses and one CLI process
+per fixture (30 analyses and six CLI launches in total). Discovery can invoke
+local `git ls-files`; checkout references in fixture YAML do not perform network
+access or clone repositories. Issue #3515 recorded a passing 6,643 ms bundled
+case rejected by the 5,000 ms gate under runner load. Each fixture now retains
+CJS/ESM `check`, CJS/ESM `analyzeProject`, CLI output and exit-status assertions,
+including passing and suppressed controls. All six cases still run in the
+real-addon suite under the same 5,000 ms gate; no exemption or retry is added.
 
 Test CI cancels superseded in-progress runs only for pull requests. An active
 main run can finish and upload Rust coverage when another merge lands. GitHub's
