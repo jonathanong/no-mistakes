@@ -1,0 +1,14 @@
+{
+  "failedRun": 44004134708,
+  "failedJob": 133775413204,
+  "runnerCpus": 4,
+  "runnerRamGiB": 16,
+  "cargoBuildJobs": 1,
+  "historicalActionsUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/43349743109",
+  "mustRemainChecked": [
+    "https://github.com/jonathanong/no-mistakes/actions/runs/433497431090",
+    "https://github.com/jonathanong/no-mistakes/issues/3514",
+    "https://github.com/jonathanong/no-mistakes/pull/3533",
+    "https://github.com/another/project/actions/runs/43349743109"
+  ]
+}

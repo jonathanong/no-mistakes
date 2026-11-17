@@ -1,0 +1,22 @@
+{
+  "issue": 3514,
+  "ci": {
+    "nativeBuildStep": 2100,
+    "testPrecompileStep": 2100,
+    "nativeBuildJob": 2700,
+    "standaloneBuildStep": 1200,
+    "standaloneBuildJob": 1800,
+    "packageStep": 1500,
+    "packageJob": 2100,
+    "qualityStep": 1800,
+    "qualityJob": 2400,
+    "docsStep": 1200,
+    "docsJob": 1800
+  },
+  "censored": [
+    { "workflow": "ci", "job": "native-test-build-macos", "step": "Precompile native Rust test targets", "seconds": 1333, "run": 43919796161 },
+    { "workflow": "ci", "job": "rust-coverage-build", "step": "Build and archive instrumented Rust tests", "seconds": 1500, "run": 43925528010, "source": "issue comment; job metadata unavailable" },
+    { "workflow": "ci", "job": "quality-rust", "step": "Run isolated Rust quality check", "seconds": 871, "run": 43971597460 },
+    { "workflow": "release", "job": "validate-rust", "step": "Build Rust tests", "seconds": 3027, "run": 43940838628 }
+  ]
+}

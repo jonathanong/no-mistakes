@@ -145,5 +145,6 @@ module.exports = {
   TRIGGER_PREFIXES,
   diffBase,
   macosRequired,
+  readChangedFiles,
   triggersMacos,
 };

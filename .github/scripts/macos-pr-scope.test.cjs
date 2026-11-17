@@ -216,7 +216,7 @@ test("pull requests gate macOS families and aggregates accept only that skip", (
   ]) {
     assert.match(
       workflowJob(source, name),
-      /if: \$\{\{ needs\.changes\.outputs\.macos == 'true' \}\}/,
+      /if: \$\{\{ needs\.changes\.outputs\.macos == 'true'(?: && needs\.changes\.outputs\.rust == 'true')? \}\}/,
     );
   }
   for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
@@ -444,7 +444,10 @@ test("pull requests compare macOS paths from the merge base", () => {
     const workflowHead = git(repo, ["rev-parse", "HEAD"]);
     const workflowBase = run("", ["--diff-base", "pull_request", base, workflowHead], repo);
     assert.equal(workflowBase.status, 0, workflowBase.stderr);
-    assert.equal(run(nameStatus(repo, workflowBase.stdout.trim(), workflowHead)).stdout, "macos=true\n");
+    assert.equal(
+      run(nameStatus(repo, workflowBase.stdout.trim(), workflowHead)).stdout,
+      "macos=true\n",
+    );
 
     git(repo, ["checkout", "-q", "--orphan", "unrelated"]);
     writeFileSync(path.join(repo, "README.md"), "unrelated\n");

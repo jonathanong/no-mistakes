@@ -10,3 +10,7 @@
 ^https://github\.com/jonathanong/no-mistakes/runs/116245579477$
 # Vercel challenge returns 429 for HEAD and GET on this README project profile (verified 2026-11-12).
 ^https://app[.]codspeed[.]io/jonathanong/no-mistakes[?]utm_source=badge$
+
+# Historical Actions measurement: CI returned HTTP 502 after gateway retries
+# in run 44004134708; verified HTTP 200 and a successful run via API on 2026-11-17.
+^https://github\.com/jonathanong/no-mistakes/actions/runs/43349743109$

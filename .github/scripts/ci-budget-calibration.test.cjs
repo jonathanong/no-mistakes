@@ -6,6 +6,7 @@ const { test } = require("node:test");
 const { summarize, markdown } = require("./report-native-api-tests.cjs");
 
 const root = path.resolve(__dirname, "../..");
+const current = require("./fixtures/rust-build-deadlines.json").ci;
 const observed = (name) =>
   JSON.parse(
     readFileSync(path.join(root, "test-cases/rust-validation/fixture", `${name}.json`), "utf8"),
@@ -71,8 +72,8 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(buildRequired > 600);
   assert.ok(rustRequired > 900);
   assert.ok(nativeStepBudget(buildName) >= buildRequired);
-  assert.ok(nativeStepBudget(buildName) <= 1200);
-  assert.equal(nativeStepBudget(precompileName), 900);
+  assert.ok(nativeStepBudget(buildName) <= current.nativeBuildStep);
+  assert.equal(nativeStepBudget(precompileName), current.testPrecompileStep);
   assert.ok(nativeStepBudget(buildName) + nativeStepBudget(rustName) >= rustRequired);
   assert.ok(nativeStepBudget(rustName) <= 540);
   assert.ok(
@@ -100,8 +101,8 @@ test("same-head macOS timeout keeps censored evidence and bounded build headroom
   );
   assert.equal(data.rustCache.result, "exact hit on both attempts");
   assert.ok(data.unavailable.includes("CPU utilization samples"));
-  assert.equal(nativeStepBudget(buildName), 1200);
-  assert.equal(nativeStepBudget(precompileName), 900);
+  assert.equal(nativeStepBudget(buildName), current.nativeBuildStep);
+  assert.equal(nativeStepBudget(precompileName), current.testPrecompileStep);
   assert.ok(jobBudget(job("native-tests")) <= 180);
   assert.equal(nativeStepBudget(rustName), 540);
   assert.equal(nativeStepBudget(apiName), 600);
@@ -214,8 +215,8 @@ test("native deadlines reserve bounded progress beyond the latest censored macOS
     rust.every((entry) => entry.progress.some((line) => /passing until timeout/.test(line))),
   );
   assert.match(api.apiFailure, /report.*absent/);
-  assert.equal(nativeStepBudget(buildName), 1200);
-  assert.equal(nativeStepBudget(precompileName), 900);
+  assert.equal(nativeStepBudget(buildName), current.nativeBuildStep);
+  assert.equal(nativeStepBudget(precompileName), current.testPrecompileStep);
   assert.equal(nativeStepBudget(rustName), 540);
   assert.equal(nativeStepBudget(apiName), 600);
   assert.ok(nativeStepBudget(apiName) >= api.apiSeconds + 120);
@@ -281,8 +282,10 @@ test("native build and test precompile deadlines use measured censored progress"
     failedRun,
     aggregateObservedEvidenceSeconds: aggregate,
   } = evidence;
-  assert.equal(build, caps.nativeBuildStep);
-  assert.ok(precompile <= caps.testPrecompileStep);
+  assert.ok(build >= caps.nativeBuildStep);
+  assert.equal(build, current.nativeBuildStep);
+  assert.ok(precompile >= caps.testPrecompileStep);
+  assert.equal(precompile, current.testPrecompileStep);
   assert.equal(execution, caps.platformRustStep);
   assert.equal(api, caps.apiStep);
   assert.ok(

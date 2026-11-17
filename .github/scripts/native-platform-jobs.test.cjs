@@ -5,21 +5,22 @@ const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
 const source = readFileSync(path.resolve(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflowJob(source, name);
+const nativeSteps = (name) =>
+  job(name)
+    .split("    steps:\n")[1]
+    .replace(/^  #[^\n]*(?:\n|$)/gm, "")
+    .trim();
 const families = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
 
 test("each platform retains identical native steps without sharing a producer barrier", () => {
   for (const name of families) {
-    const windows = job(name).split("    steps:\n")[1];
-    const macos = job(`${name}-macos`).split("    steps:\n")[1];
+    const windows = nativeSteps(name);
+    const macos = nativeSteps(`${name}-macos`);
     assert.equal(
       windows,
       macos
         .replaceAll("-cgu64-", "-")
-        .replaceAll("-macos.outputs.artifact-run-id", ".outputs.artifact-run-id")
-        .replace(
-          "- name: Precompile native Rust test targets\n        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}\n        timeout-minutes: 22",
-          "- name: Precompile native Rust test targets\n        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}\n        timeout-minutes: 15",
-        ),
+        .replaceAll("-macos.outputs.artifact-run-id", ".outputs.artifact-run-id"),
     );
     for (const [suffix, os] of [
       ["", "windows-2025"],
@@ -81,7 +82,10 @@ test("native aggregate requires all eight platform producer and consumer jobs", 
     .map((name) => name.trim())
     .filter(Boolean)
     .sort();
-  assert.deepEqual(needs, ["changes", ...families.flatMap((name) => [name, `${name}-macos`])].sort());
+  assert.deepEqual(
+    needs,
+    ["changes", ...families.flatMap((name) => [name, `${name}-macos`])].sort(),
+  );
   assert.match(body, /name: Native tests\n/);
   assert.match(body, /if: \$\{\{ always\(\) \}\}/);
 });
