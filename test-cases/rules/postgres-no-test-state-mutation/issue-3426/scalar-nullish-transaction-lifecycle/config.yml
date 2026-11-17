@@ -2,9 +2,9 @@ rules:
   - rule: postgres-no-test-state-mutation
     scope: repository
     options:
-      importSpecifier: db
-      executorNames: []
-      executorFactoryNames: [beginTransaction]
-      trustedSqlTags: [{ module: sql-template-strings, name: default }]
-      testGlobs: ["test-helpers/**/*.mts"]
-      unanalyzableSql: advise
+      importSpecifier: '@data-stores/psql'
+      executorFactoryNames: [beginTransaction, beginBoundedTransaction]
+      executorTypeNames: [TransactionQuery, QueryExecutor, PoolClient, QueryOptions, OwnedTransaction, Pool]
+      testGlobs: ['**/*.test.{ts,tsx,mts}', '**/*.spec.{ts,tsx,mts}', '**/vitest.setup*.{ts,mts}']
+      helperRoots: ['**/test-helpers/**/*.{ts,mts}']
+      unanalyzable: advise

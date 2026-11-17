@@ -109,4 +109,14 @@ coercion to SQL text happens at the template boundary. Parameterized SQL tags
 continue to bind interpolated values instead of splicing numeric text. Unknown
 alternatives and arithmetic that cannot be proved still retain uncertainty.
 
+### Scalar record members in parameterized tags
+
+A parameterized tag keeps fields of an imported helper's fresh scalar record as
+value binds, including fields selected by scalar ternaries. A speculative frozen
+record lookup must not make those values opaque. The prepared helper program must
+prove one direct object-literal return with unique own data fields, scalar inputs,
+and no calls, spreads, accessors, prototype changes, or nested containers. Ordinary
+string templates and relation holes retain their existing identifier requirements.
+Frozen records behind validated keys still supply correlated SQL identifiers.
+
 [PostgreSQL fact sources](../postgres-facts.md)

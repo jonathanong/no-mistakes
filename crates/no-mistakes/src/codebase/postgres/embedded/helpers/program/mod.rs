@@ -11,6 +11,7 @@ use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::R
 
 pub(crate) mod exec;
 pub(crate) mod lower;
+mod scalar_record;
 
 /// Physical position of an expression in the helper's own module.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,13 +40,16 @@ pub(crate) struct Program {
     /// Parameter index that selects `frozen_entries`. `None` for ordinary bodies.
     pub(crate) frozen_key: Option<usize>,
     pub(crate) frozen_entries: Vec<FrozenEntry>,
+    pub(crate) scalar_fields: Vec<String>,
 }
 
 impl Program {
     pub(crate) fn new(params: Vec<Param>, body: Vec<Stmt>) -> Self {
+        let scalar_fields = scalar_record::fields(&params, &body);
         Self {
             params,
             body,
+            scalar_fields,
             frozen_key: None,
             frozen_entries: Vec::new(),
         }

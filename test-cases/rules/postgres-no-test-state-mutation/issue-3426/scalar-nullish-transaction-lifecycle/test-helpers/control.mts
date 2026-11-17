@@ -1,4 +1,4 @@
-import { beginTransaction } from 'db'
+import { beginTransaction } from '@data-stores/psql'
 import sql from 'sql-template-strings'
 
 export async function forbiddenMutation() {

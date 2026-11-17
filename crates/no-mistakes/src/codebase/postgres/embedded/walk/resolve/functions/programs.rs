@@ -63,7 +63,7 @@ fn insert(
     lowered: HelperProgram,
     always_throws: bool,
 ) {
-    if always_throws || lowered.contributes_sql() {
+    if always_throws || lowered.contributes_sql() || !lowered.scalar_fields.is_empty() {
         programs.insert(name.to_string(), std::sync::Arc::new(lowered));
     }
 }

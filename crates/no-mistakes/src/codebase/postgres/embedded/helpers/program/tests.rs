@@ -16,6 +16,8 @@ mod lowering;
 mod raw_sql;
 #[path = "tests/recovery.rs"]
 mod recovery;
+#[path = "tests/scalar_records.rs"]
+mod scalar_records;
 #[path = "tests/values.rs"]
 mod values;
 

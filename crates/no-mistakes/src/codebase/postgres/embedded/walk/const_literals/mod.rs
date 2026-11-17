@@ -130,7 +130,7 @@ impl ScopeVisitor<'_> {
             Expression::TemplateLiteral(template) => self.spliced_template(template, depth - 1),
             Expression::Identifier(ident) => super::imported::constants::identifier_piece(self, ident),
             Expression::StaticMemberExpression(member) => {
-                super::frozen_alias::splice_member(self, member, placeholder)
+                super::frozen_alias::splice_member(self, member, placeholder, crate::codebase::postgres::embedded::helpers::SiteKind::PlainClause)
             },
             Expression::CallExpression(call) => super::imported::clause::piece(self, call),
             _ => None,

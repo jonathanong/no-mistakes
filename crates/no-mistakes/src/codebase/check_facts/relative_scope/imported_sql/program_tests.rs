@@ -178,7 +178,8 @@ fn missing_modules_and_void_programs_fail_closed() {
         ..site
     };
     let filled = shared.fill(0, &options, &path, &duplicate).unwrap();
-    assert_eq!(filled.len(), 1);
+    assert_eq!(filled.texts.len(), 1);
+    assert!(filled.contributes_sql);
     // A proven throw has no replacement SQL. It must not become an empty
     // imported-hole variant in the public extraction result.
     shared.cache.insert(

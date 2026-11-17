@@ -21,8 +21,8 @@ pub(crate) mod helpers;
 mod options;
 mod placeholders;
 pub(crate) use placeholders::{
-    count_placeholders, publish_placeholders_with_positions, renumber_placeholders, INTERNAL_BIND,
-    INTERNAL_PLACEHOLDER,
+    count_placeholders, internal_bind, publish_placeholders_with_positions, renumber_placeholders,
+    INTERNAL_BIND, INTERNAL_PLACEHOLDER,
 };
 pub(crate) mod relative;
 pub(crate) mod undeclared;

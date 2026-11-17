@@ -1,4 +1,4 @@
-//! Cross-file holes for a const bound to an imported frozen-record helper.
+//! Cross-file member holes for consts bound to imported record helpers.
 use super::imported;
 use super::state::FrozenAlias;
 use super::variants::Recovered;
@@ -39,9 +39,10 @@ pub(super) fn splice_member(
     visitor: &ScopeVisitor<'_>,
     member: &StaticMemberExpression<'_>,
     placeholder: u32,
+    kind: SiteKind,
 ) -> Option<String> {
     imported::constants::namespace::piece(visitor, member, false)
-        .or_else(|| member_index(visitor, member).map(sentinel::encode))
+        .or_else(|| member_index(visitor, member, kind).map(sentinel::encode))
         .or_else(|| visitor.spliced_member(member, placeholder))
 }
 
@@ -49,7 +50,11 @@ pub(super) fn member_hole(
     visitor: &ScopeVisitor<'_>,
     member: &StaticMemberExpression<'_>,
 ) -> Option<Vec<Recovered>> {
-    marker(visitor, member_index(visitor, member)?, member.span.start)
+    marker(
+        visitor,
+        member_index(visitor, member, SiteKind::PlainClause)?,
+        member.span.start,
+    )
 }
 
 pub(super) fn call_hole(
@@ -92,7 +97,11 @@ fn marker(visitor: &ScopeVisitor<'_>, index: usize, origin: u32) -> Option<Vec<R
     Some(vec![value])
 }
 
-fn member_index(visitor: &ScopeVisitor<'_>, member: &StaticMemberExpression<'_>) -> Option<usize> {
+fn member_index(
+    visitor: &ScopeVisitor<'_>,
+    member: &StaticMemberExpression<'_>,
+    kind: SiteKind,
+) -> Option<usize> {
     let Expression::Identifier(object) = unwrap_ts_wrappers(&member.object) else {
         return None;
     };
@@ -102,7 +111,7 @@ fn member_index(visitor: &ScopeVisitor<'_>, member: &StaticMemberExpression<'_>)
         ImportedSite {
             local: alias.local.clone(),
             member: Some(member.property.name.to_string()),
-            kind: SiteKind::PlainClause,
+            kind,
             args: alias.args.clone(),
             value_used: true,
             line: byte_offset_to_line(visitor.source, member.span.start as usize),

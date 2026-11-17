@@ -72,6 +72,7 @@ pub(crate) enum SiteArg {
 pub(crate) enum SiteKind {
     Sql,
     PlainClause,
+    ParameterizedMember,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

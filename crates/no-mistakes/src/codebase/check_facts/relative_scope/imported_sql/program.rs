@@ -20,6 +20,11 @@ mod frame;
 mod frozen;
 use frame::Frame;
 
+pub(super) struct Filled {
+    pub(super) texts: Vec<RecoveredSql>,
+    pub(super) contributes_sql: bool,
+}
+
 /// Profile index, executor module, helper module, helper, arguments.
 type Key = (usize, PathBuf, PathBuf, String, Vec<SiteArg>);
 
@@ -105,15 +110,21 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         options: &EmbeddedSqlOptions,
         from: &Path,
         site: &ImportedSite,
-    ) -> Option<Vec<RecoveredSql>> {
+    ) -> Option<Filled> {
         if site.constant.is_none() && site.member.is_some() {
             return frozen::member(self, options, from, site);
         }
         if site.constant.is_some() {
-            return super::constants::recovered(self, options, from, site).map(|text| vec![text]);
+            return super::constants::recovered(self, options, from, site).map(|text| Filled {
+                texts: vec![text],
+                contributes_sql: true,
+            });
         }
         if let Some(text) = self.summary_text(options, from, site) {
-            return Some(vec![text]);
+            return Some(Filled {
+                texts: vec![text],
+                contributes_sql: true,
+            });
         }
         let mut frame = Frame::new(self, profile, options, from);
         let outcomes = match frame.call(&site.local, &site.args) {
@@ -125,13 +136,16 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         for outcome in outcomes {
             let text = match site.kind {
                 SiteKind::Sql => hole_text(outcome, builder, site.value_used)?,
-                SiteKind::PlainClause => clause_text(outcome)?,
+                SiteKind::PlainClause | SiteKind::ParameterizedMember => clause_text(outcome)?,
             };
             if !texts.contains(&text) {
                 texts.push(text);
             }
         }
-        (!texts.is_empty()).then_some(texts)
+        (!texts.is_empty()).then_some(Filled {
+            texts,
+            contributes_sql: true,
+        })
     }
 }
 

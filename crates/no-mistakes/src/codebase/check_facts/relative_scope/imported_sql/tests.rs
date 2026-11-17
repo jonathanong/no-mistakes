@@ -24,6 +24,9 @@ mod plain_clause;
 #[path = "tests/hasown.rs"]
 mod hasown;
 
+#[path = "tests/scalar_records.rs"]
+mod scalar_records;
+
 #[path = "tests/reopen_shapes.rs"]
 mod reopen_shapes;
 

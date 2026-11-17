@@ -3,7 +3,7 @@
 
 use super::super::super::ScopeVisitor;
 use super::untrusted_tag;
-use crate::codebase::postgres::embedded::helpers::sentinel;
+use crate::codebase::postgres::embedded::helpers::{sentinel, SiteKind};
 use crate::codebase::postgres::embedded::tags::{self, quasi_text};
 use crate::codebase::postgres::embedded::{
     placeholders::{internal_bind, internal_placeholder},
@@ -101,7 +101,12 @@ fn piece(
             {
                 return None;
             }
-            super::super::super::frozen_alias::splice_member(visitor, member, placeholder)
+            let kind = if sentinel::in_relation_slot(prefix, prefix.len()) {
+                SiteKind::PlainClause
+            } else {
+                SiteKind::ParameterizedMember
+            };
+            super::super::super::frozen_alias::splice_member(visitor, member, placeholder, kind)
         }
         _ => None,
     }?;

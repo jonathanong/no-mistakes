@@ -109,8 +109,7 @@ fn complete(
                     pending.span,
                     std::mem::take(&mut shared.failures),
                 );
-                if let Some(call) = call {
-                    let lines = pending.sites.iter().map(|(_, site)| site.line).collect();
+                if let Some((call, lines)) = call {
                     completed.push((path.clone(), profile, pending.span, call, lines));
                 }
             }
@@ -128,10 +127,15 @@ fn complete_call(
     profile: usize,
     options: &EmbeddedSqlOptions,
     pending: &PendingImportedSql,
-) -> Option<EmbeddedSqlCall> {
+) -> Option<(EmbeddedSqlCall, Vec<u32>)> {
     let mut holes = FxHashMap::default();
+    let mut lines = Vec::new();
     for (index, site) in &pending.sites {
-        holes.insert(*index, shared.fill(profile, options, path, site)?);
+        let filled = shared.fill(profile, options, path, site)?;
+        if filled.contributes_sql {
+            lines.push(site.line);
+        }
+        holes.insert(*index, filled.texts);
     }
     let budget = if pending
         .sites
@@ -142,5 +146,7 @@ fn complete_call(
     } else {
         MAX_EMBEDDED_SQL_VARIANTS
     };
-    splice_imported_sql_grouped(&pending.template, &holes, &pending.correlation, budget)
+    let call =
+        splice_imported_sql_grouped(&pending.template, &holes, &pending.correlation, budget)?;
+    Some((call, lines))
 }

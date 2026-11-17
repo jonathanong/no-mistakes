@@ -68,6 +68,12 @@ executor settings are inherited. Existing parameterized tags keep their binding
 semantics. Every mutating alternative still reports, including under
 `unanalyzable: ignore`; any unknown alternative keeps the residual opaque.
 
+Parameterized SQL retains ordinary scalar-record fields returned by imported
+helpers as value binds. Scalar ternaries in those fields, conditional setup before
+the transaction, optional-chain defaults, and nullish Date values do not introduce
+an opaque SQL tail. The complete statement remains checked, including a forbidden
+mutation appended after its CTEs.
+
 Source-visible synchronous helpers may return one of several fixed SQL
 statements from a `switch`. A default that always throws adds no SQL variant,
 including when it calls a prepared imported function whose body is proved to
