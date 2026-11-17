@@ -1,0 +1,110 @@
+[
+  {
+    "name": "an absent compiler cap",
+    "change": {
+      "env": {
+        "CARGO_BUILD_JOBS": null
+      }
+    },
+    "expected": ["CARGO_BUILD_JOBS"]
+  },
+  {
+    "name": "four competing compiler jobs",
+    "change": {
+      "env": {
+        "CARGO_BUILD_JOBS": "4"
+      }
+    },
+    "expected": ["CARGO_BUILD_JOBS"]
+  },
+  {
+    "name": "uncapped test workers",
+    "change": {
+      "env": {
+        "RUST_TEST_THREADS": null
+      }
+    },
+    "expected": ["RUST_TEST_THREADS"]
+  },
+  {
+    "name": "uncapped analysis workers",
+    "change": {
+      "env": {
+        "RAYON_NUM_THREADS": null
+      }
+    },
+    "expected": ["RAYON_NUM_THREADS"]
+  },
+  {
+    "name": "a build without resource samples",
+    "change": {
+      "step": "Build Rust tests",
+      "replace": "bash \"$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh\" ",
+      "with": ""
+    },
+    "expected": ["Build Rust tests"]
+  },
+  {
+    "name": "a sampler from historical tagged source",
+    "change": {
+      "step": "Run Rust tests",
+      "replace": "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh",
+      "with": ".github/scripts/with-resource-samples.sh"
+    },
+    "expected": ["Run Rust tests"]
+  },
+  {
+    "name": "Clippy without all feature coverage",
+    "change": {
+      "step": "Run Clippy",
+      "replace": " --all-features",
+      "with": ""
+    },
+    "expected": ["Run Clippy"]
+  },
+  {
+    "name": "doctests replaced with ordinary tests",
+    "change": {
+      "step": "Run Rust doctests",
+      "replace": "rust-validation.sh\" doc",
+      "with": "rust-validation.sh\" test"
+    },
+    "expected": ["Run Rust doctests"]
+  },
+  {
+    "name": "package verification without the lockfile",
+    "change": {
+      "step": "Check Cargo packages",
+      "replace": " --locked",
+      "with": ""
+    },
+    "expected": ["Check Cargo packages"]
+  },
+  {
+    "name": "missing compiler provenance",
+    "change": {
+      "step": "Record Rust resource budget",
+      "replace": "rustc -vV",
+      "with": ""
+    },
+    "expected": ["budget:rustc -vV"]
+  },
+  {
+    "name": "larger default test codegen units",
+    "change": {
+      "env": {
+        "CARGO_PROFILE_TEST_CODEGEN_UNITS": "16"
+      }
+    },
+    "expected": ["CARGO_PROFILE_TEST_CODEGEN_UNITS"]
+  },
+  {
+    "name": "missing development codegen partitioning",
+    "change": {
+      "env": {
+        "CARGO_PROFILE_DEV_CODEGEN_UNITS": null
+      }
+    },
+    "expected": ["CARGO_PROFILE_DEV_CODEGEN_UNITS"]
+  }
+]

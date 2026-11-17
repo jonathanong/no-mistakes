@@ -359,13 +359,14 @@ test("release publication requires both parallel validation suites", () => {
     assert.match(suite, /tar -xzf prepared-release\/release-source.tgz/);
     assert.doesNotMatch(suite, /continue-on-error|npm publish|cargo publish --locked/);
   }
+  const sampled = 'bash "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh" ';
   for (const command of [
     "cargo fmt --all -- --check",
-    "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings",
-    'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" build',
-    'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test',
-    'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" doc',
-    "cargo publish --dry-run --locked -p no-mistakes",
+    sampled + "cargo clippy --locked --workspace --all-targets --all-features -- -D warnings",
+    sampled + 'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" build',
+    sampled + 'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test',
+    sampled + 'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" doc',
+    sampled + "cargo publish --dry-run --locked -p no-mistakes",
     "pnpm run build:js",
   ])
     assert.ok(rust.includes(`run: ${command}\n`), command);
