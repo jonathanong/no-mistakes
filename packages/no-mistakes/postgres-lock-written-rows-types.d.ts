@@ -22,6 +22,10 @@ export interface PostgresLockWrittenRowsWriteSet {
   relations: string[];
   reason?: string;
 }
+/** A configured executor option property that selects the transaction client. */
+export interface PostgresLockWrittenRowsExecutorOption {
+  name: string;
+}
 /** Configuration for the opt-in `postgres-lock-written-rows-only` check. */
 export interface PostgresLockWrittenRowsOnlyOptions {
   include?: string[];
@@ -39,6 +43,8 @@ export interface PostgresLockWrittenRowsOnlyOptions {
   executorOptionProperties?: string[];
   /** Root-relative catalog for DDL relations; complete coverage enables trigger inference. */
   schemaCatalogPath?: string;
+  /** Adds routing property names to executorOptionProperties. Empty by default. */
+  executorOptions?: PostgresLockWrittenRowsExecutorOption[];
   trustedSqlTags?: { module: string; name: string }[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;

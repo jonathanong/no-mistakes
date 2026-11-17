@@ -39,13 +39,13 @@ mod tags;
 mod text;
 pub(crate) use tags::matches_trusted_sql_import;
 pub use text::{executed_query_text, sql_text};
-pub(super) use text::{positional_digits, unpublished_sql_text};
+pub(super) use text::{render_hole, unpublished_sql_text};
 pub(crate) mod walk;
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
 };
-pub use options::{EmbeddedSqlOptions, SqlIdentifierAssertion, TrustedSqlTag};
+pub use options::{EmbeddedSqlOptions, ExecutorOption, SqlIdentifierAssertion, TrustedSqlTag};
 pub(crate) use relative::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeScope,
 };
@@ -147,6 +147,8 @@ mod value_hole_tests;
 #[path = "embedded/variants/tests.rs"]
 mod variants_tests;
 
+#[cfg(test)]
+mod transaction_callback_tests;
 #[cfg(test)]
 mod transaction_tests;
 

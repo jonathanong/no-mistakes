@@ -69,6 +69,7 @@ struct EmbeddedSqlRuleOptions {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     executor_option_properties: Vec<String>,
+    executor_options: Vec<crate::codebase::postgres::embedded::ExecutorOption>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
     sql_literal_helpers: Vec<String>,
     raw_sql_tags: Vec<TrustedSqlTag>,

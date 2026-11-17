@@ -487,7 +487,10 @@ supported generated identifier shape, or an explicit trusted helper contract:
   an exported array literal). A `.map` callback may return only its own
   parameters, members of them, and literal text; a callback that reads any
   outer value stays unbounded (`pass-catalog-map-join`,
-  `fail-catalog-open-callback`). Cross-file writes to an exported array are
+  `fail-catalog-open-callback`). An inline literal array also works for a
+  callback that builds a fragment from its own parameters and literal text.
+  For example, `` ['id', 'status'].map(column => `COUNT(${column})`).join(', ') ``
+  builds a bounded SQL fragment. Cross-file writes to an exported array are
   [`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md)
   findings.
   The same proof covers a module constant built from a closed literal metadata
@@ -516,15 +519,21 @@ For example, `const accountFilter = accountId ? "AND id = $2::uuid" : ""`
 may appear after `WHERE expires_at < $1` beside a guarded derived table name.
 At max effort the identifier proof checks each hole independently, including
 immutable aliases of literal alternatives, even with `unanalyzableSql: ignore`.
-The guarded table stays clean; an unchecked string table in the same statement
-is reported. A parameter declared with a finite string-literal union is bounded,
-including an exported parameter: `kind: "orders" | "refunds"` may appear in
-`SELECT 1 FROM ${kind}_accounts`. This trusts the declared parameter contract,
-as executor-type selection does. Parentheses and resolvable module-level finite type aliases
-preserve that contract, including assertions through those finite aliases.
-Conflicting declarations stay unbounded.
-Reassignment, an unresolved type, a union containing
-`string`, or widening through `as string` does not establish this proof.
+The guarded table stays clean and the rule reports an unchecked string table in
+the same statement.
+
+At max effort, a required parameter declared with a finite string-literal
+union is bounded, including in an exported function. For example,
+`kind: "orders" | "refunds"` may appear in `SELECT 1 FROM ${kind}_accounts`.
+The rule trusts this declared parameter contract. Parentheses and resolvable
+module-level finite type aliases preserve it, including assertions through
+those aliases. Conflicting declarations, reassignment, an unresolved type,
+a union that includes `string`, or widening through `as string` leave the
+parameter unbounded. Optional or defaulted parameters and casts of external
+data stay unbounded. See
+[closed identifier values](../postgres-facts/closed-identifiers.md) for the
+recovery limits.
+
 A helper that returns `record[key]` for a non-literal key is
 also quiet: value-flow records that computed member as unknown, and an unknown
 helper return is a finite validator. An `Object.hasOwn` throw in front of
@@ -533,9 +542,6 @@ that return does not add a separate proof. It is what lets
 literal. A field read of that unknown return is not an open identifier.
 `postgres-no-test-state-mutation` and `postgres-bounded-statements` may still
 enumerate each literal of that union.
-[closed identifier values](../postgres-facts/closed-identifiers.md) states the
-recovery limits. A union that includes `string`, an optional or defaulted
-parameter, or a cast of external data stays unbounded.
 
 ## Composed parameterized fragments
 

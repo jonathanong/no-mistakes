@@ -3,14 +3,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "appended_helper_fragment": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "tests/mutation.test.mts",
+          "line": 5,
+          "message": "tests/mutation.test.mts:5: executed test SQL uses pg_sleep; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "return sql`pg_sleep(1)`;",
+          "target": "pg_sleep"
+        }
+      ],
       "warnings": []
     }
   }

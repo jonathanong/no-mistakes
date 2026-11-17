@@ -7,6 +7,8 @@ const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const cases = [
   ["resource-transactions", "checks-fail.yml", 1],
   ["resource-options", "resource-options.yml", 4],
+  ["caller-options", "caller-options.yml", 13],
+  ["caller-options", "caller-options-written.yml", 1],
   ["hashed-advisory", "checks-fail.yml", 4],
   ["helper-unwritten", "checks-fail.yml", 1],
   ["helper-written", "checks-fail.yml", 0],
@@ -29,7 +31,7 @@ const cases = [
 
 for (const [fixture, config, count] of cases) {
   test(
-    `compiled written-row locks ${fixture} preserve CLI, async and batched parity`,
+    `compiled written-row locks ${fixture} (${config}) preserve CLI, async and batched parity`,
     { skip: !addon?.endsWith(".node") },
     async () => {
       const cjs = require("../index.js");

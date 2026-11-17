@@ -1,0 +1,8 @@
+---
+source: crates/no-mistakes/src/codebase/postgres/embedded/positional_parameter_tests.rs
+---
+[
+  "SELECT $10, $1, $100, $4, $2",
+  "SELECT $sql_placeholder_1, $1, $sql_placeholder_3, $sql_placeholder_4, $2",
+  "SELECT $sql_placeholder_1, $sql_placeholder_2, $sql_placeholder_3, $10, $1"
+]

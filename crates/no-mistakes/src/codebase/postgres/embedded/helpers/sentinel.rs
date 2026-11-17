@@ -1,5 +1,7 @@
 use std::ops::Range;
 
+mod value_context;
+
 /// A Unicode noncharacter: it never appears in real SQL and differs from the
 /// internal placeholder's `U+10FFFF`, so placeholder counting and renumbering
 /// ignore it.
@@ -72,6 +74,10 @@ pub(crate) fn value_position(text: &str) -> bool {
     if word.eq_ignore_ascii_case("limit") || word.eq_ignore_ascii_case("offset") {
         return true;
     }
+    group_value(trimmed) || value_context::recognizes(trimmed, tail, word)
+}
+
+fn group_value(trimmed: &str) -> bool {
     let Some(open) = trimmed.rfind('(') else {
         return false;
     };
@@ -95,6 +101,11 @@ pub(crate) fn value_position(text: &str) -> bool {
         return false;
     }
     !word.is_empty()
+        && ![
+            "and", "or", "not", "where", "having", "on", "when", "then", "else", "select",
+        ]
+        .iter()
+        .any(|keyword| word.eq_ignore_ascii_case(keyword))
 }
 
 fn last_ident(text: &str) -> &str {

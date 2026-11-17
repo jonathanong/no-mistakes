@@ -26,6 +26,12 @@ pub(super) struct WriteSet {
     pub reason: Option<String>,
 }
 pub(super) fn validate(options: &Options) -> anyhow::Result<()> {
+    for option in &options.executor_options {
+        anyhow::ensure!(
+            !option.name.trim().is_empty(),
+            "{RULE_ID}: executorOptions name must be nonempty"
+        );
+    }
     for check in options.checks.keys() {
         anyhow::ensure!(
             CHECKS.contains(&check.as_str()),

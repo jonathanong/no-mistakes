@@ -1,4 +1,5 @@
 use super::{expression, Expr};
+use crate::codebase::postgres::embedded::render_hole;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TaggedTemplateExpression, TemplateLiteral};
 
@@ -49,18 +50,14 @@ pub(super) fn tagged(
         for (index, quasi) in value.quasi.quasis.iter().enumerate() {
             if index > 0 {
                 let previous = crate::ast::template_quasi_text(&value.quasi.quasis[index - 1]);
-                let text = if previous.ends_with('$') {
-                    super::super::super::embedded::positional_digits(
-                        &value.quasi.expressions[index - 1],
-                        index,
-                    )
-                } else {
-                    format!(
-                        "{}{index}",
-                        super::super::super::embedded::INTERNAL_PLACEHOLDER
-                    )
-                };
-                parts.push(Expr::Text(text));
+                let rendered = render_hole(
+                    &previous,
+                    &value.quasi.expressions[index - 1],
+                    index,
+                    "",
+                    false,
+                );
+                parts.push(Expr::Text(rendered.text));
             }
             parts.push(Expr::Text(
                 crate::ast::template_quasi_text(quasi).into_owned(),

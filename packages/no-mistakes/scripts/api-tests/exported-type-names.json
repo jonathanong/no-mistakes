@@ -204,6 +204,7 @@
   "PostgresJsonRelationIdsOptions",
   "PostgresLockWrittenRowsAllow",
   "PostgresLockWrittenRowsCheck",
+  "PostgresLockWrittenRowsExecutorOption",
   "PostgresLockWrittenRowsOnlyOptions",
   "PostgresLockWrittenRowsSeverity",
   "PostgresLockWrittenRowsWriteSet",

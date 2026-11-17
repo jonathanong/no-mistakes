@@ -1,8 +1,8 @@
-use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 
 const RULE: &str = "postgres-lock-written-rows-only";
 
-fn snapshot(name: &str, cases: &[(&str, &str, &str)]) -> serde_json::Value {
+pub(super) fn snapshot(name: &str, cases: &[(&str, &str, &str)]) -> serde_json::Value {
     let rows = cases
         .iter()
         .map(|(label, fixture, config)| {
@@ -446,50 +446,45 @@ fn postgres_lock_written_rows_factory_alias_check_json_snapshot() {
 }
 
 #[test]
-fn postgres_lock_written_rows_ddl_check_json_snapshot() {
+fn postgres_lock_written_rows_caller_options_check_json_snapshot() {
     snapshot(
-        "postgres_lock_written_rows_ddl",
+        "postgres_lock_written_rows_caller_options",
         &[
-            ("related", "ddl-related", "checks-fail.yml"),
-            ("guard", "ddl-guard", "checks-fail.yml"),
-            ("catalog", "ddl-catalog", "ddl-catalog.yml"),
-            ("negative", "ddl-negative", "checks-fail.yml"),
-            ("uncertain", "ddl-uncertain", "checks-fail.yml"),
-            ("dynamic_identifiers", "ddl-dynamic", "ddl-dynamic.yml"),
+            ("caller_options", "caller-options", "caller-options.yml"),
+            (
+                "coverage_forms",
+                "caller-options-coverage",
+                "caller-options.yml",
+            ),
+            (
+                "coverage_written_keys",
+                "caller-options-coverage",
+                "caller-options-written.yml",
+            ),
+            (
+                "review_boundaries",
+                "caller-options-review",
+                "caller-options.yml",
+            ),
+            (
+                "written_keys",
+                "caller-options",
+                "caller-options-written.yml",
+            ),
         ],
     );
 }
 
 #[test]
-fn postgres_lock_written_rows_trigger_writes_check_json_snapshot() {
-    snapshot(
-        "postgres_lock_written_rows_trigger_writes",
-        &[
-            ("trigger_effects", "trigger-writes", "trigger-writes.yml"),
-            ("without_catalog", "trigger-writes", "checks-fail.yml"),
-            (
-                "excluded_catalog",
-                "trigger-writes",
-                "trigger-catalog-excluded.yml",
-            ),
-            (
-                "missing_catalog",
-                "trigger-writes",
-                "trigger-catalog-missing.yml",
-            ),
-            ("depth_bound", "trigger-depth", "trigger-writes.yml"),
-            ("upsert", "trigger-upsert", "trigger-writes.yml"),
-            ("composite", "trigger-composite", "trigger-writes.yml"),
-            (
-                "dynamic_setting",
-                "trigger-dynamic-setting",
-                "trigger-writes.yml",
-            ),
-            (
-                "replication_role",
-                "trigger-replication-role",
-                "trigger-writes.yml",
-            ),
-        ],
+fn postgres_configured_transaction_callbacks_check_json_snapshot() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("fixtures/postgres-transaction-callbacks");
+    assert_saved_fixture(
+        "postgres_configured_transaction_callbacks",
+        &[(
+            "callbacks",
+            root,
+            rules_path(RULE, "configs", "callback-coverage.yml"),
+        )],
     );
 }

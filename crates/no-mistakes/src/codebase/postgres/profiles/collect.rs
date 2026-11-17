@@ -34,6 +34,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 &options.executor_type_names,
             )
             .with_executor_option_properties(&options.executor_option_properties)
+            .with_executor_options(&options.executor_options)
             .with_trusted_sql_tags(&options.trusted_sql_tags);
             if *rule_id == "postgres-require-query-annotation" {
                 profile = profile.with_sql_literal_helpers(&options.sql_literal_helpers);
