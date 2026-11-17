@@ -3,6 +3,7 @@ use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlKind};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression};
+mod applications;
 mod collect;
 mod escapes;
 mod invocation;
@@ -62,7 +63,7 @@ impl<'a> ScopeVisitor<'a> {
         };
         for query in helper.calls {
             if specialize::enabled(call, &query) == Some(false) {
-                self.applied_lock_helper_spans.insert(query.span);
+                self.lock_helper_applications.entry(query.span).or_default();
                 continue;
             }
             let mut fact = EmbeddedSqlCall::default();
@@ -91,18 +92,16 @@ impl<'a> ScopeVisitor<'a> {
                     Parameter::Unknown => None,
                 })
                 .collect();
-            self.applied_lock_helper_spans.insert(query.span);
+            self.lock_helper_applications
+                .entry(query.span)
+                .or_default()
+                .push(self.calls.len());
             self.calls.push(fact);
             self.call_spans.push((call.span.start, call.span.end));
             if self.track_order {
                 self.confirmed_order.push(self.next_seq);
             }
             self.next_seq += 1;
-        }
-    }
-    pub(super) fn mark_lock_helper_definitions(&mut self) {
-        for (call, span) in self.calls.iter_mut().zip(&self.call_spans) {
-            call.helper_definition = self.applied_lock_helper_spans.contains(span);
         }
     }
 }

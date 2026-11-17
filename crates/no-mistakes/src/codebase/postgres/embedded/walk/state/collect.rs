@@ -45,7 +45,7 @@ pub(crate) fn collect_calls<'a>(
     let mut visitor = ScopeVisitor {
         #[cfg(feature = "test-instrumentation")]
         lock_summary_passes: 0,
-        applied_lock_helper_spans: Default::default(),
+        lock_helper_applications: Default::default(),
         awaited_lock_helper_calls: Default::default(),
         imported_lock_helpers: Vec::new(),
         lock_helpers: super::super::lock_helpers::collect(

@@ -65,9 +65,12 @@ requires an update or delete of that same user in `tx`; an update of a membershi
 does not satisfy the lock. Diagnostics name the helper and its lock line.
 Straight-line helpers can call other supported local helpers. Their parameterized
 locks and writes are composed at each invocation through a known transaction,
-including a caller that passes its `TransactionQuery` parameter onward. A type
-annotation alone does not prove a transaction; unrelated transaction instances
-and different keys remain distinct. Recursive helper cycles remain unresolved.
+including a caller that passes its `TransactionQuery` parameter onward.
+A helper with a plain executor parameter, no transaction caller, and no configured
+executor-option path keeps its findings at the helper statement, including
+line suppression there. Its ordinary callers do not multiply those findings.
+A type annotation alone does not prove a transaction; unrelated transaction
+instances and different keys remain distinct. Recursive helper cycles remain unresolved.
 
 At the known transaction caller, helper effects require a direct
 `await helper(...)` (including `return await`).
