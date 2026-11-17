@@ -18,8 +18,8 @@ fn postgres_closed_identifiers_frozen_followups_check_json_snapshot() {
         .expect("rule findings array");
     assert_eq!(
         findings.len(),
-        18,
-        "nine opaque queries, two rules: {findings:?}"
+        20,
+        "ten opaque queries, two rules: {findings:?}"
     );
     for file in [
         "tests/shallow-mutation.test.ts",
@@ -33,6 +33,7 @@ fn postgres_closed_identifiers_frozen_followups_check_json_snapshot() {
     for line in [30, 31, 32, 33] {
         assert_opaque(findings, "tests/non-sync-helpers.test.ts", Some(line));
     }
+    assert_opaque(findings, "tests/selection-budget.test.ts", Some(27));
     assert_eq!(
         findings
             .iter()

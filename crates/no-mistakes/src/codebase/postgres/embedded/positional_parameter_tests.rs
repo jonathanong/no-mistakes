@@ -56,6 +56,65 @@ fn dollar_hole_stays_a_positional_parameter() {
 }
 
 #[test]
+fn direct_text_keeps_ineligible_positional_suffixes_opaque() {
+    let path = super::tests::fixture("positional-suffixes-direct.ts");
+    let source = std::fs::read_to_string(&path).expect("fixture");
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = crate::ast::parse(&path, &allocator, &source, oxc_span::SourceType::ts());
+    let expressions: Vec<_> = parsed
+        .program
+        .body
+        .iter()
+        .filter_map(|statement| match statement {
+            oxc_ast::ast::Statement::ExpressionStatement(statement) => Some(&statement.expression),
+            _ => None,
+        })
+        .collect();
+    let actual: Vec<_> = expressions
+        .iter()
+        .map(|expr| super::sql_text(expr).expect("SQL text"))
+        .collect();
+    insta::with_settings!({
+        snapshot_path => format!("{}/tests/common/snapshots", env!("CARGO_MANIFEST_DIR")),
+        prepend_module_to_snapshot => false,
+        omit_expression => true,
+    }, {
+        insta::assert_snapshot!(
+            "postgres_positional_suffixes_direct",
+            serde_json::to_string_pretty(&actual).unwrap()
+        );
+    });
+    let sql = super::unpublished_sql_text(expressions[0]).expect("internal SQL text");
+    let origins = super::source_positions::origins::expression(expressions[0], &source, &sql);
+    let expected = ["1.5", "1e21", "\"12\""];
+    let marker_origins: Vec<_> = super::placeholders::markers(&sql)
+        .map(|(at, _, _)| origins[at] as usize)
+        .collect();
+    assert_eq!(
+        marker_origins,
+        expected.map(|literal| source.find(literal).expect("fixture interpolation")),
+    );
+}
+
+#[test]
+fn ineligible_positional_suffixes_do_not_advance_generated_binds() {
+    let actual = sqls(
+        super::tests::fixture("positional-suffixes.ts"),
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    insta::with_settings!({
+        snapshot_path => format!("{}/tests/common/snapshots", env!("CARGO_MANIFEST_DIR")),
+        prepend_module_to_snapshot => false,
+        omit_expression => true,
+    }, {
+        insta::assert_snapshot!(
+            "postgres_positional_suffixes_parameterized",
+            serde_json::to_string_pretty(&actual).unwrap()
+        );
+    });
+}
+
+#[test]
 fn append_chains_stay_parseable() {
     let sqls = sqls(
         case("postgres-lock-ordering", "append-chains", "src/query.ts"),

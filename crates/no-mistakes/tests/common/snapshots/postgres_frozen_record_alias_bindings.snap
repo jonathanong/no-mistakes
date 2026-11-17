@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "only_const_aliases_are_resolved": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "test-helpers/write.mts",
+          "line": 14,
+          "message": "test-helpers/write.mts:14: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(sql`INSERT INTO impacts (id, ${config.column}) VALUES ($1, $2)`);",
+          "target": "test-state-mutation"
+        },
+        {
+          "file": "test-helpers/write.mts",
+          "line": 21,
+          "message": "test-helpers/write.mts:21: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: invalid-sql",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(sql`INSERT INTO impacts (id, ${config.column}) VALUES ($1, $2)`);",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -68,7 +68,13 @@ A parameter may also use a union when **every** member is a configured executor
 type imported from the configured module or `typeof` a configured executor
 named import from that module. `QueryExecutor | typeof read` and `typeof read`
 are proven; `QueryExecutor | ((statement: unknown) => unknown)` is not. This
-works for same-file helpers and, with typed linting, imported helpers. SQL
+works for same-file helpers and, with typed linting, imported helpers. Namespace
+imports also qualify: `db.QueryExecutor | typeof db.read` for
+`import * as db from "@example/db"`. Parentheses around members or the entire
+union do not change proof. Every member must still match: mixed callable types,
+same-spelled exports from another module, shadowed namespace bindings, and
+nested namespace paths remain unproven. A type-only namespace import can prove
+a configured type but cannot prove a runtime `typeof` executor. SQL
 checks recognize these proven parameters inside the helper. A `typeof` executor
 import follows the same exact `importSpecifier` boundary as `executorNames`;
 configured type imports may also come from its subpaths. With explicit

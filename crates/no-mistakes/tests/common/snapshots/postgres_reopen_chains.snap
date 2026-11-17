@@ -3,38 +3,65 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
   "append_chains": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/violation.ts",
+          "line": 8,
+          "message": "src/violation.ts:8: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(sql`SELECT id FROM work`.append(scopeSql(ids)).append(sql` FOR UPDATE`));",
+          "target": "lock-ordering"
+        }
+      ],
       "warnings": []
     }
   },
   "numeric_const_limit": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/violation.ts",
+          "line": 6,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(sql`INSERT INTO participants (conversation_id, user_id, role) SELECT ${cid}, u, r FROM unnest(${userIds}::uuid[], ${roles}::text[]) AS t(u, r) LIMIT ${HARD_MAX} ON CONFLICT DO NOTHING`);",
+          "target": "targetless-arbiter"
+        }
+      ],
       "warnings": []
     }
   },
   "positional_parameters": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "src/violation.ts",
+          "line": 5,
+          "message": "src/violation.ts:5: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "const text = `SELECT id FROM jobs WHERE id = ANY($${1}::uuid[]) FOR UPDATE`;",
+          "target": "lock-ordering"
+        }
+      ],
       "warnings": []
     }
   }

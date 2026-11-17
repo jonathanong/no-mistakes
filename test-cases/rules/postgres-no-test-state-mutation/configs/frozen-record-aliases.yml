@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - test-helpers/**/*.mts
+      - tests/**/*.test.mts
+    options:
+      importSpecifier: db
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [TransactionQuery]
+      testGlobs: ["**/*.test.mts"]
+      helperRoots: ["test-helpers/**/*.mts"]
+      unanalyzable: advise

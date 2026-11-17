@@ -1,0 +1,1236 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "value_positions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/value-positions.ts",
+          "line": 13,
+          "message": "src/value-positions.ts:13: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT id FROM widgets WHERE slug LIKE ${value} AND name ILIKE ${value}`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 14,
+          "message": "src/value-positions.ts:14: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT id FROM widgets WHERE slug BETWEEN ${value} AND ${value}`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 15,
+          "message": "src/value-positions.ts:15: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT id FROM widgets WHERE slug BETWEEN 'a' AND 'z' AND ${condition}`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 16,
+          "message": "src/value-positions.ts:16: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT name || ${value} FROM widgets`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 18,
+          "message": "src/value-positions.ts:18: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT id FROM widgets WHERE (slug, name) > (${value}, ${value})`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 20,
+          "message": "src/value-positions.ts:20: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT ${column} FROM ${relation} AS w ORDER BY ${sortColumn}, w.${column}`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 21,
+          "message": "src/value-positions.ts:21: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(templateSql`SELECT ${column} FROM widgets`);",
+          "target": "table:widgets"
+        },
+        {
+          "file": "src/value-positions.ts",
+          "line": 23,
+          "message": "src/value-positions.ts:23: SELECT can return every row of widgets; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "query(sql`SELECT id FROM widgets WHERE (slug, name) > ((${value}), (${value}))`);",
+          "target": "table:widgets"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1042,
+            1091
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1042,
+            1091
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1042,
+            1091
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1038,
+            952
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1038,
+            952
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1038,
+            952
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1095,
+            1171
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1095,
+            1171
+          ],
+          "status": "proven-clear",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1095,
+            1171
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1175,
+            1255
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1175,
+            1255
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1175,
+            1255
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            316,
+            375
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            316,
+            375
+          ],
+          "status": "proven-clear",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            316,
+            375
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            379,
+            462
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            379,
+            462
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            379,
+            462
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            466,
+            541
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            466,
+            541
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            466,
+            541
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            545,
+            627
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            545,
+            627
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            545,
+            627
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            631,
+            679
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            631,
+            679
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            631,
+            679
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            683,
+            791
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            683,
+            791
+          ],
+          "status": "proven-clear",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            683,
+            791
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            795,
+            871
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            795,
+            871
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            795,
+            871
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            875,
+            948
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            875,
+            948
+          ],
+          "status": "proven-clear",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/value-positions.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "rawSqlTags": [
+              {
+                "module": "@example/db",
+                "name": "sql"
+              }
+            ],
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            875,
+            948
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

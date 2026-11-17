@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [src/value-positions.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      rawSqlTags:
+        - module: "@example/db"
+          name: sql
+      unanalyzableSql: advise
