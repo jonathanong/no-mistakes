@@ -9,8 +9,14 @@ const rule = "no-consecutive-unbatched-reads";
 const readMethods = ["get", "ttl", "exists"];
 const clients = { clients: ["kv"], readMethods };
 const imports = { imports: [{ source: "@app/cache", imported: "cache" }], readMethods };
-const names = ["reads-nested-expressions", "reads-nested-boundaries"];
-const expectedLines = [5, 10, 15, 20, 25, 30, 35, 41, 46, 50, 54, 59, 64, 70];
+const expected = {
+  "reads-nested-expressions": [5, 10, 15, 20, 25, 30, 35, 41, 46, 50, 54, 59, 64, 70],
+  "reads-nested-boundaries": [],
+  "reads-sequence-expression": [5],
+  "reads-switch-case": [7],
+  "reads-first-conditional": [],
+};
+const names = Object.keys(expected);
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture/client-contracts");
 
 function findings(name, options) {
@@ -30,7 +36,7 @@ describe("nested awaited client reads", () => {
         const diagnostics = findings(name, options);
         assert.deepEqual(
           diagnostics.map(({ line }) => line),
-          name === names[0] ? expectedLines : [],
+          expected[name],
           name,
         );
         rows.push({ file: `client-contracts/${name}.ts`, options, findings: diagnostics });
@@ -64,7 +70,9 @@ describe("nested awaited client reads", () => {
           labels[0].span.line,
         ])
         .sort((left, right) => left[0].localeCompare(right[0]) || left[1] - right[1]),
-      expectedLines.map((line) => [`${names[0]}.ts`, line]),
+      names
+        .flatMap((name) => expected[name].map((line) => [`${name}.ts`, line]))
+        .sort((left, right) => left[0].localeCompare(right[0]) || left[1] - right[1]),
     );
   });
 });
