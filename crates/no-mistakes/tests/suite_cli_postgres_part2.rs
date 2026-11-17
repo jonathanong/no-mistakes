@@ -151,6 +151,8 @@ mod cli_postgres_snapshot_empty_before_prefix_source;
 mod cli_postgres_snapshot_identifier_aliased_guards;
 #[path = "cli_postgres_snapshot_imported_builders.rs"]
 mod cli_postgres_snapshot_imported_builders;
+#[path = "cli_postgres_snapshot_factory_alias_rejections.rs"]
+mod cli_postgres_snapshot_factory_alias_rejections;
 #[path = "cli_postgres_snapshot_lock_written_rows.rs"]
 mod cli_postgres_snapshot_lock_written_rows;
 #[path = "cli_postgres_snapshot_low_executor_shapes.rs"]

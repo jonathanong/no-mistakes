@@ -146,6 +146,7 @@ impl<'a> ScopeVisitor<'a> {
         self.initialize_detached_query(declaration, self.declaring_const);
         if self.executor_options.track_transaction_helpers {
             self.note_transaction_options(declaration);
+            self.note_transaction_candidates(declaration);
         }
         if let ast::BindingPattern::BindingIdentifier(name) = &declaration.id {
             self.bind_undeclared_declaration(

@@ -427,10 +427,12 @@ fn postgres_lock_written_rows_factory_alias_check_json_snapshot() {
     assert_eq!(findings[0]["line"], 5);
     assert_eq!(findings[0]["target"], "row-lock-unwritten-relation");
     assert_eq!(report["const_alias"], report["const_alias_options"]);
-    assert!(report["reassigned_alias"]["report"]["rules"]
+    let reassigned = report["reassigned_alias"]["report"]["rules"]
         .as_array()
-        .unwrap()
-        .is_empty());
+        .unwrap();
+    assert_eq!(reassigned.len(), 1, "{report}");
+    assert_eq!(reassigned[0]["line"], 6);
+    assert_eq!(reassigned[0]["target"], "unanalyzable");
     assert_eq!(
         report["reassigned_alias"],
         report["reassigned_alias_options"]
