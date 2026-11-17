@@ -1,0 +1,14 @@
+[
+  ".github/scripts",
+  ".github/workflows",
+  ".husky/pre-push",
+  ".no-mistakes.yml",
+  "Cargo.toml",
+  "clippy.toml",
+  "crates/no-mistakes/Cargo.toml",
+  "fixtures/cargo-lint-policy/fixture",
+  "packages/no-mistakes/scripts/production-exports-test-only-api.test.js",
+  "rust-toolchain.toml",
+  "test-cases/rust-snapshot-references/fixture",
+  "test-cases/rust-validation/fixture"
+]
