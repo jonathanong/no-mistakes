@@ -1,0 +1,58 @@
+[
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 14,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 3,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 28,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 3,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 68,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 3,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 14,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 8,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 16,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 13,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 49,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 17,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 52,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 18,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 53,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-receivers.ts",
+    "line": 21,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  }
+]

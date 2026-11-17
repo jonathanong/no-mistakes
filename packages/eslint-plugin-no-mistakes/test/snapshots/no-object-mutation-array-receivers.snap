@@ -1,0 +1,127 @@
+[
+  {
+    "file": "no-object-mutation-array-receivers.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-array-receiver-controls.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "allowThis": false
+      }
+    ]
+  },
+  {
+    "file": "no-object-mutation-array-receiver-import.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "allowThis": false
+      }
+    ]
+  },
+  {
+    "file": "no-object-mutation-array-receivers.ts",
+    "findings": [
+      {
+        "column": 14,
+        "endColumn": 26,
+        "endLine": 3,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 3,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 42,
+        "endLine": 3,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 3,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 68,
+        "endColumn": 86,
+        "endLine": 3,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 3,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 14,
+        "endColumn": 24,
+        "endLine": 8,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 8,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 16,
+        "endColumn": 27,
+        "endLine": 13,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 13,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 49,
+        "endColumn": 63,
+        "endLine": 17,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 17,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 52,
+        "endColumn": 64,
+        "endLine": 18,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 18,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 53,
+        "endColumn": 63,
+        "endLine": 21,
+        "file": "no-object-mutation-array-receivers.ts",
+        "line": 21,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "allowThis": false
+      }
+    ]
+  }
+]

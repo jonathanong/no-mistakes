@@ -64,12 +64,19 @@ function visitCall(state, node, scope, role) {
     for (const argument of mutation.otherArgs) {
       remembered.push(visitArgument(state, argument, scope, argRole));
     }
-    considerWrite(state, target, node, {
-      viaCall: true,
-      objectNode: mutation.targetNode,
-      scope,
-      remembered,
-    });
+    if (
+      !(
+        mutation.arrayReceiver &&
+        unwrap(mutation.targetNode)?.type === "ThisExpression" &&
+        !target.isArray
+      )
+    )
+      considerWrite(state, target, node, {
+        viaCall: true,
+        objectNode: mutation.targetNode,
+        scope,
+        remembered,
+      });
     if (readOnlyFresh(target)) {
       return target;
     }

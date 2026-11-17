@@ -51,9 +51,9 @@ describe("no-object-mutation method aliases", () => {
   });
   it("honors allowThis and dotted allow paths on saved receiver aliases", () => {
     const code = fixture("no-object-mutation-method-options.ts");
-    assert.deepEqual(messages(code, rule, undefined, "fixture.ts"), mutations(2));
-    assert.deepEqual(messages(code, rule, { allowThis: false }, "fixture.ts"), mutations(3));
-    assert.deepEqual(messages(code, rule, { allow: ["rows.allowed"] }, "fixture.ts"), mutations(1));
+    assert.deepEqual(messages(code, rule, undefined, "fixture.ts"), mutations(1));
+    assert.deepEqual(messages(code, rule, { allowThis: false }, "fixture.ts"), mutations(1));
+    assert.deepEqual(messages(code, rule, { allow: ["rows.allowed"] }, "fixture.ts"), mutations(0));
   });
   it("preserves ordinary method-object reads and writes", () => {
     const code = fixture("no-object-mutation-method-properties.ts");

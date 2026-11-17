@@ -88,6 +88,13 @@ function append(rows, otherRows, row) {
 }
 ```
 
+Bare `this.push(...)`, `this.pop()`, and the other listed array mutator calls
+are not presumed to mutate an array when the receiver is unknown. This includes
+stream methods in object literals and ordinary functions. Known array receivers
+and explicit array-method forwarding such as `Array.prototype.push.call(this, x)`
+retain normal reporting. Calls on members such as `this.items.push(x)` and
+`Object.assign(this, ...)` also retain normal reporting.
+
 A conditional escape counts: `if (cond) sink(box); box.a = 1` is still a write
 after the object may have escaped.
 
@@ -225,7 +232,30 @@ closure that itself escapes. Calling that closure does not escape the builder
 unless the call passes the object out. `Map` and `Set` are allowed. A value
 read back from a module-level map, from `Object.values`, or from `.get` is
 shared. Class `this` writes and functions with a declared receiver are allowed unless
-`allowThis` is `false`. A receiver is declared by a TypeScript `this: T` parameter
+`allowThis` is `false`. Direct `this.field = value` initialization in a
+constructor is allowed even with `allowThis: false` when that class declares the
+instance field, including a private `#field`. Public and private names are distinct.
+Inherited, undeclared, and static fields, methods, setters,
+compound writes, nested functions and arrows, mutator calls, and
+`Object.assign(this, ...)` do not receive this initialization exemption.
+For example, this supports constructor arguments with native type stripping:
+
+```ts
+class Failure extends Error {
+  readonly reason: unknown;
+  constructor(reason: unknown) {
+    super("failure");
+    this.reason = reason;
+  }
+}
+```
+
+Known array receivers include tuple and array `this` annotations, the global
+`Array<T>` type, and subclasses of array-derived classes. A locally declared
+`Array` type does not establish array provenance. Static class methods do not
+inherit array-instance provenance.
+
+A receiver is declared by a TypeScript `this: T` parameter
 or an attached JSDoc `@this {T}` tag. Arrows inherit the enclosing receiver; a
 nested regular function must declare its own. `this` in a plain function without
 a declared receiver is reported. `this` in an undeclared object method is reported
@@ -267,7 +297,7 @@ export function update() {
 | `imported`   | `true`  | The same for imported bindings and their members.                                                                                                                                                                                                                         |
 | `parameters` | `true`  | The same for parameters and values reached from them.                                                                                                                                                                                                                     |
 | `calls`      | `true`  | `Object.assign`, `Object.defineProperty`, `Object.defineProperties`, and `Object.setPrototypeOf`, including those `Object` methods via `.call`, `.apply`, and `.bind`. `Reflect.set` and `Reflect.defineProperty`. `push`, `pop`, `shift`, `unshift`, `splice`, `sort`, `reverse`, `fill`, and `copyWithin`, including those array methods via `.call` and `.apply`. |
-| `allowThis`  | `true`  | Allow `this` writes inside a class body, or in functions and methods declaring a TypeScript `this: T` parameter or attached JSDoc `@this {T}`. Arrows inherit that receiver; nested regular functions need their own declaration.                                                                                                                                                                                            |
+| `allowThis`  | `true`  | Allow `this` writes inside a class body, or in functions and methods declaring a TypeScript `this: T` parameter or attached JSDoc `@this {T}`. Arrows inherit that receiver; nested regular functions need their own declaration. With `false`, direct constructor `this.field = value` initialization of an own declared instance field remains allowed; nested callbacks, other writes, and mutator calls retain reporting.                                                                                                                                                                                            |
 | `allow`      | `[]`    | Root names or dotted paths. `tables` allows `tables[key]`. `tables.users` allows `tables.users.id` but not a computed `tables[key]`.                                                                                                                                      |
 
 ## Fix
