@@ -138,10 +138,7 @@ impl ScopeVisitor<'_> {
         &mut self,
         declaration: &VariableDeclarator<'_>,
     ) {
-        if !self.executor_options.track_transaction_helpers
-            || self.executor_options.executor_option_properties.is_empty()
-            || !self.declaring_const
-        {
+        if !self.executor_options.track_transaction_helpers || !self.declaring_const {
             return;
         }
         let (BindingPattern::BindingIdentifier(name), Some(init)) =
