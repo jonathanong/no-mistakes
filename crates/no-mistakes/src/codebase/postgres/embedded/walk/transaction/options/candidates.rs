@@ -59,15 +59,19 @@ impl ScopeVisitor<'_> {
         expression: &Expression<'_>,
     ) {
         if self.executor_options.track_transaction_helpers && self.candidate_value(expression) {
-            if let Some(scope) = self.capture_scope(name) {
-                self.transaction_options
-                    .candidates
-                    .aliases
-                    .entry(scope)
-                    .or_default()
-                    .insert(name.to_string());
-            }
+            self.mark_transaction_candidate(name);
         }
+    }
+
+    fn mark_transaction_candidate(&mut self, name: &str) {
+        self.capture_scope(name).into_iter().for_each(|scope| {
+            self.transaction_options
+                .candidates
+                .aliases
+                .entry(scope)
+                .or_default()
+                .insert(name.to_string());
+        });
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_transaction_candidates(
@@ -119,14 +123,7 @@ impl ScopeVisitor<'_> {
                         continue;
                     };
                     if fields.contains(key.as_ref()) {
-                        if let Some(scope) = self.capture_scope(name.name.as_str()) {
-                            self.transaction_options
-                                .candidates
-                                .aliases
-                                .entry(scope)
-                                .or_default()
-                                .insert(name.name.to_string());
-                        }
+                        self.mark_transaction_candidate(name.name.as_str());
                     }
                 }
             }

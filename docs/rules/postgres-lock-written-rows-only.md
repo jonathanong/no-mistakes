@@ -330,8 +330,8 @@ and `executorOptionProperties`:
 
 ```ts
 await using transaction = await beginTransaction();
-const execute = transaction;
-await execute('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+const query = transaction;
+await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
 await transaction('UPDATE items SET active = true WHERE id = $1', [id]);
 ```
 
@@ -346,7 +346,8 @@ under `unanalyzableSql: fail`; the configured unanalyzable policy still applies.
 disposal; a later matching write does not make that lock safe. Saved negative
 controls cover these boundaries with executor-option selectors off and on.
 Unrelated callbacks remain outside this scope when stored beside configured
-executors, including computed/default destructuring and mutable holders.
+executors, including numeric/computed/default destructuring, empty holders, and
+mutable holders.
 
 `executorOptionProperties` defaults to `[]`. Configure explicit property names
 (such as `[query]`) when an executor accepts an inline options object that routes

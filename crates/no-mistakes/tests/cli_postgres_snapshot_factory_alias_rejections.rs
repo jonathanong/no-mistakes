@@ -46,8 +46,20 @@ fn postgres_factory_alias_rejections_check_json_snapshot() {
         );
     }
     assert_eq!(findings.len(), 9, "{report}");
-    assert!(!findings.iter().any(|finding| matches!(
-        finding["file"].as_str(),
-        Some("src/accepted.ts" | "src/ordinary.ts" | "src/shadowed.ts")
-    )));
+    for file in [
+        "accepted.ts",
+        "exact-query-alias.ts",
+        "ordinary.ts",
+        "shadowed.ts",
+        "unrelated-fields.ts",
+        "numeric-fields.ts",
+        "empty-holder.ts",
+    ] {
+        assert!(
+            findings
+                .iter()
+                .all(|finding| finding["file"] != format!("src/{file}")),
+            "{file} must remain clean: {report}"
+        );
+    }
 }
