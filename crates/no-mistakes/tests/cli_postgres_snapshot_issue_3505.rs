@@ -27,9 +27,10 @@ fn postgres_identifier_parameterized_fragments_check_json_snapshot() {
         &[],
     );
     let findings = negative["max"]["report"]["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 3, "{negative}");
+    assert_eq!(findings.len(), 4, "{negative}");
     for (marker, target) in [
         ("DIRECT_TABLE", "process.env.DIRECT_TABLE"),
+        ("FROM ${q.text}", "q"),
         ("text write", "q"),
         ("property write", "q"),
     ] {

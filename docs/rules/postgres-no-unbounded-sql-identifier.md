@@ -545,6 +545,10 @@ is SQL text with bind placeholders. The default and `SQL` imports from
 This includes immutable local or module-const fragments, `.append()` chains
 of proven fragments, statement-level appends, and resolved synchronous helper
 returns. The proof preserves the matching `.values` bind array.
+Appending an unbounded raw string does not establish that proof, even through a
+helper that calls `.append(table)` on an empty `sql` tagged template. Its `.text`
+in a relation slot such as `FROM ${q.text}` remains an unbounded identifier source.
+Supplying `q.values` does not make the raw table name bounded.
 Executor calls inside bind expressions are checked independently.
 The identifier rule does not diagnose missing or mismatched bind arrays. A
 parameterized `.text` fragment does not turn an executor's separate options
