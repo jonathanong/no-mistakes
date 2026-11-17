@@ -106,7 +106,7 @@ test("benchmark PRs use artifact transport while main may save and probe the han
 
 test("pnpm stores restore on PRs but save only on main", () => {
   const setups = steps(workflow).filter((step) => /uses: pnpm\/setup@/.test(step));
-  assert.equal(setups.length, 15);
+  assert.equal(setups.length, 30);
   for (const step of setups) {
     assert.match(step, /cache: true/);
     assert.match(step, /save-cache: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);

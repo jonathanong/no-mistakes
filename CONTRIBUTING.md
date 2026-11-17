@@ -116,6 +116,11 @@ and functions with at least 80% structural similarity. CI runs the same jscpd
 check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)
 for its scope and how to fix findings.
 
+CI retries pnpm/Node.js setup on every operating system and the coverage-shard
+build-artifact download once after a five-second backoff. Each attempt has a
+two-minute deadline; an exhausted retry fails the job. These retries cover
+transport failures during setup, never failing tests or entire CI runs.
+
 CI and release builds use workspace profiles with Rust debug metadata disabled;
 debug assertions stay enabled. Native Rust and real-addon tests run on Windows
 and macOS, while instrumented Rust coverage runs in six Linux shards and
