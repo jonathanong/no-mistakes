@@ -830,6 +830,22 @@ was not instrumented, so its cause remains unproven. Production lock behavior,
 CLI/N-API contracts, and rule diagnostics are unchanged; rule-output snapshots
 and public-surface additions do not apply to this test-infrastructure change.
 
+The readable-watchdog regression uses a parent/child start handshake instead of
+assuming the final timeout snapshot will be delivered before exit. Timeout
+snapshot collection has a 75 ms bound and stderr delivery is best-effort, so
+runner scheduling can legitimately omit a final progress line even when the
+pipe is readable (issue #3539). The parent drains stderr concurrently. In progress
+mode it must receive a real snapshot with the active `analysis.waiting` span;
+plain and timings modes publish a readiness marker. The helper blocks on stdin
+until the parent acknowledges readiness, then arms the unchanged 150 ms watchdog
+inside the active span. Startup has its own bounded wait, exit still has a
+four-second backstop, and failures kill and reap the helper. The test still
+requires exit 124, the timeout diagnostic, and progress only when enabled.
+No fixture input is synthesized: this regression exercises process ordering
+through the existing Rust test helper, in both the library and native macOS
+harnesses. Repeat the exact test binary under CPU contention to exercise the
+handshake without rebuilding or configuring retries.
+
 Each real-addon step writes Vitest JSON to `target/native-api-tests.json`.
 The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
 slowest tests to the job summary and writes every test's status and duration to
