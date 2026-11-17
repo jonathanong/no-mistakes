@@ -1,0 +1,77 @@
+[
+  {
+    "file": "no-object-mutation-iteration-escapes/controls.js",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-iteration-escapes/loop.js",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 20,
+        "endLine": 4,
+        "file": "no-object-mutation-iteration-escapes/loop.js",
+        "line": 4,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-iteration-escapes/callbacks.js",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 4,
+        "file": "no-object-mutation-iteration-escapes/callbacks.js",
+        "line": 4,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 25,
+        "endLine": 7,
+        "file": "no-object-mutation-iteration-escapes/callbacks.js",
+        "line": 7,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 25,
+        "endLine": 14,
+        "file": "no-object-mutation-iteration-escapes/callbacks.js",
+        "line": 14,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 17,
+        "file": "no-object-mutation-iteration-escapes/callbacks.js",
+        "line": 17,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  }
+]
