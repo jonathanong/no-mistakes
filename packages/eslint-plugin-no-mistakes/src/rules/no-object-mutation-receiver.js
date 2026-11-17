@@ -46,6 +46,7 @@ function functionEnvironment(state, node, scope, tag) {
   env.functionEnv = env;
   env.fnTag = tag;
   env.pending = [];
+  env.returned = [];
   const arrow = node.type === "ArrowFunctionExpression";
   const classMethod =
     node.parent?.type === "MethodDefinition" || node.parent?.type === "TSAbstractMethodDefinition";

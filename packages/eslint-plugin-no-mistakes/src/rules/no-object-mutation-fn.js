@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const { functionEnvironment } = require("./no-object-mutation-receiver");
 const { bindName, bindPattern } = require("./no-object-mutation-bind");
 const {
@@ -52,13 +53,8 @@ function visitFunction(state, node, scope, role) {
       bindName(node.id.name, tag, scope, "local");
     }
   }
-  if (role === "escape") {
-    escapeFunction(state, tag);
-  }
-  if (!existing) {
-    return tag;
-  }
-  return lookup(scope, node.id.name)?.tag || tag;
+  escapeResult(state, tag, scope, role, escapeFunction);
+  return existing ? lookup(scope, node.id.name)?.tag || tag : tag;
 }
 
 function walkFunctionBody(state, node, scope, tag) {
@@ -80,6 +76,7 @@ function walkFunctionBody(state, node, scope, tag) {
   } else {
     api.visit(state, body, fnEnv, "escape");
   }
+  for (const { tag: value, key, value: escaped } of fnEnv.returned) value[key] = escaped;
   flushPending(state, fnEnv);
 }
 
@@ -119,14 +116,16 @@ function callFunction(state, tag) {
 }
 
 function escapeFunction(state, tag) {
-  if (!tag || tag.didEscape) {
+  if (!tag) {
     return;
   }
+  const escaped = tag.didEscape;
   tag.didEscape = true;
   ensureWalked(state, tag);
   for (const fresh of tag.captured) {
     markEscaped(state, fresh);
   }
+  if (escaped) return;
   for (const write of tag.deferred) {
     report(state, write.node, write.objectNode, write.viaCall);
   }

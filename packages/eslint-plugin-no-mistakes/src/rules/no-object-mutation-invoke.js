@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const { callFunction } = require("./no-object-mutation-fn");
 const { reducerCallback } = require("./no-object-mutation-reduce");
 const { iteratedContents } = require("./no-object-mutation-read");
@@ -53,7 +54,7 @@ function visitKnownCall(state, node, scope, role) {
       callFunction(state, callback);
     }
     seed.ownerEnv = scope.ownerEnv;
-    if (role === "escape") api.releaseEscaping(state, seed);
+    escapeResult(state, seed, scope, role);
     return seed;
   }
   const values = memberCall(node, "values");
@@ -112,7 +113,7 @@ function visitKnownCall(state, node, scope, role) {
         member: unknown(),
       },
     };
-    if (role === "escape") api.releaseEscaping(state, tag);
+    escapeResult(state, tag, scope, role);
     return tag;
   }
   const tag = boundTag(source);
@@ -124,9 +125,7 @@ function visitKnownCall(state, node, scope, role) {
       "escape",
     );
   }
-  if (role === "escape") {
-    api.releaseEscaping(state, tag);
-  }
+  escapeResult(state, tag, scope, role);
   return tag;
 }
 

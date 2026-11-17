@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { escapeResult } = require("./no-object-mutation-result");
 const {
   visitArray,
   visitAssignment,
@@ -104,7 +105,7 @@ function visitExpression(state, node, scope, role) {
         memberKey(node),
         node.object,
       );
-      if (role === "escape") api.releaseEscaping(state, member);
+      escapeResult(state, member, scope, role);
       return member;
     }
     case "ObjectExpression":
