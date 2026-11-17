@@ -862,12 +862,26 @@ The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
 slowest tests to the job summary and writes every test's status and duration to
 `target/native-api-tests-durations.csv`. The `native-api-tests-*` artifacts retain
 the JSON, CSV, and Markdown summary, including available results after failures.
+Real-addon files run one at a time through the
+[Vitest configuration](../../vitest.config.js). Each native process owns a Rayon
+pool that can use the available CPUs; parallel test-file forks would measure
+competition between those pools as part of an individual test's wall time.
+Ordinary JavaScript tests keep file parallelism, and each native analysis keeps
+its configured Rayon parallelism. Native shards and independent CI jobs can
+still run concurrently. This timing isolation also avoids charging several
+files for the same local scheduling delay. It cannot exclude pauses imposed by
+the host, so retained wall timings remain diagnostic evidence rather than a
+CPU-work measurement.
+
 A passing test that takes 5,000 ms or more fails this timing check on Linux and
 macOS. Windows runs the helper with `--report-only`: a threshold breach emits a
 workflow warning and remains visible in the summary and artifacts, without
 failing an otherwise passing test run. Missing or malformed reports still fail
 on every platform. The existing Vitest timeouts and test-failure gates remain
-unchanged; no test retries are configured.
+unchanged; no test retries are configured. The
+[timing integration test](../../.github/scripts/native-api-timing.integration.test.cjs)
+runs a saved delayed body through Vitest and verifies that the enforced reporter
+rejects its real measured duration while retaining the report artifacts.
 
 Name independent fixture cases separately in real-addon parity matrices. Each case
 retains all job/API variants and assertions; the per-test timing gate and

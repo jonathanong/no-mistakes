@@ -6,8 +6,8 @@ module.exports = defineConfig({
     globals: true,
     // Native environment access must see each compiled worker's private runtime directory.
     pool: "forks",
-    // Linux setup gives native forks distinct locks; other platforms share one.
-    fileParallelism: !compiledNative || process.platform === "linux",
+    // Each native process owns a Rayon pool; overlap would time competing pools.
+    fileParallelism: !compiledNative,
     testTimeout: compiledNative ? 20_000 : 5_000,
     setupFiles: ["tests/js/setup.js"],
     include: [

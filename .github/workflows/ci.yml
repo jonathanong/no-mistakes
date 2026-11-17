@@ -341,6 +341,9 @@ jobs:
       - name: Test bounded native runtime download
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/scripts -p test_download_native_runtime.py
+      - name: Test native timing isolation and regression detection
+        timeout-minutes: 2
+        run: node --test .github/scripts/native-api-timing.integration.test.cjs
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   quality-rust:
     name: Rust quality (${{ matrix.name }})
