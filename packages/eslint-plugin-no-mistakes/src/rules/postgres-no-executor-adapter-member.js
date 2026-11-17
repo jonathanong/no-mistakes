@@ -58,7 +58,7 @@ function patternKey(property) {
 
 // `import * as db` then `db.read` is the named export. A computed identifier
 // key is not that export. The module source has to be the configured module.
-function namespaceImport(identifier, context, options) {
+function namespaceImport(identifier, context, importSpecifier) {
   const variable = resolveVariable(identifier, context);
   if (!variable || variable.defs.length !== 1) {
     return false;
@@ -71,7 +71,7 @@ function namespaceImport(identifier, context, options) {
   if (declaration?.importKind === "type") {
     return false;
   }
-  if (options.importSpecifier && declaration?.source?.value !== options.importSpecifier) {
+  if (importSpecifier && declaration?.source?.value !== importSpecifier) {
     return false;
   }
   return true;
@@ -90,7 +90,7 @@ function namespaceExecutor(node, context, options) {
   if (object?.type !== "Identifier") {
     return null;
   }
-  if (!namespaceImport(object, context, options)) {
+  if (!namespaceImport(object, context, options.importSpecifier)) {
     return null;
   }
   return { name: context.sourceCode.getText(node), kind: "member", aliasable: false };
@@ -133,7 +133,10 @@ function destructuredKey(identifier, declarator, key, context, bindings, options
   if (object?.type !== "Identifier") {
     return null;
   }
-  if (namespaceImport(object, context, options) && options.executorNames.includes(key)) {
+  if (
+    namespaceImport(object, context, options.importSpecifier) &&
+    options.executorNames.includes(key)
+  ) {
     return { name: identifier.name, kind: "identifier", aliasable: true };
   }
   if (
@@ -149,4 +152,5 @@ module.exports = {
   destructuredExecutor,
   isProvenQueryMember,
   namespaceExecutor,
+  namespaceImport,
 };

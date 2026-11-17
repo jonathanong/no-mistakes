@@ -1,7 +1,7 @@
 "use strict";
 
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
-const { localFunction } = require("./postgres-no-executor-adapter-target");
+const { isImportedHelper, localFunction } = require("./postgres-no-executor-adapter-target");
 const { literalSql, tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe, tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
@@ -153,12 +153,12 @@ function importedVisible(call, index, property, context, options, facts) {
 }
 
 function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts) {
-  if (call.type !== "CallExpression" || call.callee.type !== "Identifier") return null;
+  if (call.type !== "CallExpression") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
   if (quoteNode && (quoteNode.type !== "Property" || quoteNode.computed)) return null;
-  const fn = localFunction(call.callee, context);
+  const fn = localFunction(call.callee, context, facts);
   if (!fn)
-    return accepted
+    return accepted && isImportedHelper(call.callee, context)
       ? (importedVisible(call, index, quoteNode?.key.name, context, options, facts) ?? false)
       : null;
   if (fn.params.some((param) => param.type === "RestElement")) return false;

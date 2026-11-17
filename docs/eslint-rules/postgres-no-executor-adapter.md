@@ -41,6 +41,29 @@ destructured properties without property defaults are supported. A shadowed type
 name cannot prove the configured type. Forwarding callbacks still report,
 including `load((statement) => read(statement))`.
 
+A same-file `const` object literal can expose a method, arrow, or function
+property. The receiver must stay private and closed: every reference must be a
+direct call of a known own function property, using a static property name.
+Literal string or template keys are supported. Aliasing, exporting, returning,
+or passing the receiver elsewhere, property writes, spreads, getters, duplicate
+keys, optional calls, `this`/`super` access, and direct `eval` keep the target
+unproven. Transparent TypeScript casts do not bypass the direct `eval` guard. A `let` receiver or a dynamically selected property also keeps reporting.
+
+```ts
+const helpers = {
+  load(query: QueryExecutor) { return query("SELECT id FROM orders"); },
+};
+helpers.load(read);
+helpers["load"](read);
+```
+
+With typed ESLint, a direct namespace import can also name a stable exported
+function or `const` function initializer, such as `helpers.load(read)` after
+`import * as helpers from "./helpers"`. The implementation and configured
+executor parameter type must be available in the TypeScript program. A namespace
+alias or an imported mutable object does not establish this proof. These helper
+targets do not add executor names or imports to the configured discovery scope.
+
 A parameter may also use a union when **every** member is a configured executor
 type imported from the configured module or `typeof` a configured executor
 named import from that module. `QueryExecutor | typeof read` and `typeof read`
