@@ -244,7 +244,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
           prefix-key: v1-rust-release
           shared-key: validate
@@ -572,7 +572,7 @@ jobs:
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
-        uses: Swatinem/rust-cache@c8037a86dde8214a8310e9f54a8fc61ab362aa31 # v2
+        uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
           prefix-key: v1-rust-release
           shared-key: release-${{ matrix.target }}
