@@ -191,6 +191,6 @@ fn macos_and_windows_releases_use_parallel_codegen_and_thin_lto_before_cache_res
     // Windows MSVC and ARM macOS are the slowest targets: they get extra headroom.
     let slow =
         "(matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin')";
-    assert!(native.contains(&format!("timeout-minutes: ${{{{ {slow} && 100 || 80 }}}}")));
-    assert!(native.contains(&format!("timeout-minutes: ${{{{ {slow} && 75 || 45 }}}}")));
+    assert!(native.contains(&format!("timeout-minutes: ${{{{ {slow} && 120 || 100 }}}}")));
+    assert!(native.contains(&format!("timeout-minutes: ${{{{ {slow} && 90 || 65 }}}}")));
 }

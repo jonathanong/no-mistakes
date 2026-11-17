@@ -41,18 +41,18 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   const body = job[0];
   assert.match(body, /^ {4}needs:\n {6}- prepare$/m, "native builds must start after prepare");
   // Windows MSVC and ARM macOS are the slowest, most variable targets, so they
-  // get extra headroom; Linux targets keep 80/45 minutes.
+  // get extra headroom; Linux targets keep 100/65 minutes.
   const slow =
     "(matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin')";
   assert.ok(
-    body.includes(`\n    timeout-minutes: \${{ ${slow} && 100 || 80 }}\n`),
-    "native builds keep an 80-minute job envelope (100 for Windows and ARM macOS)",
+    body.includes(`\n    timeout-minutes: \${{ ${slow} && 120 || 100 }}\n`),
+    "native builds keep a 100-minute job envelope (120 for Windows and ARM macOS)",
   );
   assert.ok(
     body.includes(
-      `\n      - name: Build CLI and N-API addon\n        timeout-minutes: \${{ ${slow} && 75 || 45 }}\n`,
+      `\n      - name: Build CLI and N-API addon\n        timeout-minutes: \${{ ${slow} && 90 || 65 }}\n`,
     ),
-    "combined compile keeps a 45-minute cold-build budget (75 for Windows and ARM macOS)",
+    "combined compile keeps a 65-minute cold-build budget (90 for Windows and ARM macOS)",
   );
   const stepTimeouts = [...body.matchAll(/^ {8}timeout-minutes: (\d+)$/gm)].map((timeout) =>
     Number(timeout[1]),
@@ -332,8 +332,8 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
     assert.doesNotMatch(stepEnv, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
   }
   for (const [name, minutes] of [
-    ["Build native CLI and N-API addon", 20],
-    ["Precompile native Rust test targets", 15],
+    ["Build native CLI and N-API addon", 35],
+    ["Precompile native Rust test targets", 35],
     ["Run platform-specific Rust tests", 9],
     ["Run real N-API API test", 10],
   ]) {

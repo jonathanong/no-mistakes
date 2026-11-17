@@ -67,7 +67,7 @@ const DOCS_SUITE = /^crates\/no-mistakes\/tests\/(docs_|support\/docs_|mermaid_v
 const RELATIVE_DOC = /(?:\.\.\/){2,}((?:docs\/[\w./-]+|[A-Z_]+)\.mdx?)\b/g;
 const JOINED_DOC = /["']docs["'],\s*((?:["'][\w.-]+["'],\s*)*["'][\w.-]+\.mdx?["'])/g;
 
-function repositoryDocReads() {
+function repositoryDocReads(includeDocsSuite = false) {
   const listed = spawnSync(
     "git",
     [
@@ -85,7 +85,12 @@ function repositoryDocReads() {
   assert.equal(listed.status, 0, listed.stderr);
   const reads = [];
   for (const file of listed.stdout.split("\0")) {
-    if (!file || DOCS_SUITE.test(file) || file.endsWith("docs-only-scope.test.js")) continue;
+    if (
+      !file ||
+      (!includeDocsSuite && DOCS_SUITE.test(file)) ||
+      file.endsWith("docs-only-scope.test.js")
+    )
+      continue;
     const source = readFileSync(join(repoRoot, file), "utf8");
     for (const [, doc] of source.matchAll(RELATIVE_DOC)) reads.push({ file, doc });
     for (const [, parts] of source.matchAll(JOINED_DOC)) {
@@ -104,13 +109,18 @@ test("docs that tests outside the docs suite read always run every test job", ()
   }
 });
 
-test("docs-only pull requests still run the docs contract suite", () => {
+test("Rust documentation paths still run the docs contract suite", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   assert.match(workflow, /rust-coverage-shards\.cjs archive/);
   const docs = workflow.split("\n  docs-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   assert.match(docs, /run: bash \.github\/scripts\/rust-validation\.sh doc/);
   assert.match(docs, /shared-key: rust-doctests-v1/);
-  assert.doesNotMatch(docs, /needs:|\n    if:/);
+  assert.match(docs, /needs: changes/);
+  assert.match(docs, /if: \$\{\{ needs\.changes\.outputs\.rust == 'true' \}\}/);
+  const { triggersRust } = require("../../.github/scripts/rust-pr-scope.cjs");
+  for (const { file, doc } of repositoryDocReads(true)) {
+    if (file.startsWith("crates/")) assert.equal(triggersRust(doc), true, `${file} reads ${doc}`);
+  }
   const coverage = workflow.split("\n  rust-coverage-build:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   assert.doesNotMatch(coverage, /rust-validation\.sh doc/);
   assert.match(workflow, /docs-only: \$\{\{ github\.event_name == 'pull_request' &&/);
