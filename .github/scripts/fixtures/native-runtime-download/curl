@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+import base64
+import os
+from pathlib import Path
+import sys
+
+root = Path(os.environ["NATIVE_DOWNLOAD_FIXTURES"])
+args = sys.argv[1:]
+if "--output" in args:
+    artifact_id = args[-1].split("/")[-2]
+    Path(args[args.index("--output") + 1]).write_bytes(
+        base64.b64decode((root / f"{artifact_id}.zip.base64").read_bytes()))
+else:
+    print((root / "linux-metadata.json").read_text())

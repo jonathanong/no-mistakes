@@ -194,8 +194,11 @@ test("native workflow compiles independent archives and consumers never build Ru
     "guarded-array-receiver-api",
     "forbidden-dependencies-globs-api",
   ];
-  const apiSource = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
-  for (const file of apiFiles) assert.ok(apiSource.includes(`"${file}"`));
+  const { platformFiles } = require("./native-api-files.cjs");
+  assert.deepEqual(
+    platformFiles,
+    apiFiles.map((file) => `packages/no-mistakes/scripts/${file}.test.js`),
+  );
   assert.match(rust, /actions\/download-artifact@[a-f0-9]{40}/);
   assert.match(api, /python .github\/scripts\/download-native-runtime.py/);
   for (const consumer of [rust, api]) {

@@ -22,7 +22,8 @@ The current validation graph is organized as follows:
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
   Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the
-  configured floors. Real-addon behavior remains in its own job.
+  configured floors. Linux real-addon cases run in isolated matrix jobs, using
+  the shared case partitioning script even for tests registered through umbrella imports.
 - Rust coverage builds instrumented test binaries once, then runs six test
   shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
@@ -81,9 +82,11 @@ The current validation graph is organized as follows:
 
 Native API consumers use the [runtime downloader](../../.github/scripts/download-native-runtime.py)
 instead of a JavaScript artifact action so completed transfers do not depend on
-an action process draining its event loop. It selects the exact platform artifact
-from the validated producer run, verifies the archive against its SHA256 metadata,
-and closes network, archive, and temporary-file resources before returning.
+an action process draining its event loop. Platform jobs select their exact
+target artifact; Linux supplies its CLI and addon names in one invocation so
+both components share one deadline. Each artifact comes from the validated
+producer run and is verified against its SHA256 metadata. The downloader closes
+network, archive, and temporary-file resources before returning.
 Transient download failures receive bounded retries with backoff; digest failures
 remain fatal. The downloader reports metadata, transfer, checksum, extraction,
 and total timings to distinguish network stalls from completion stalls. Its
@@ -939,6 +942,17 @@ through the existing Rust test helper, in both the library and native macOS
 harnesses. Repeat the exact test binary under CPU contention to exercise the
 handshake without rebuilding or configuring retries.
 
+Linux real-addon jobs select the full Linux inventory in the
+[shared file catalog](../../.github/scripts/native-api-files.cjs), while the
+platform jobs keep their narrower inventory. The
+[case partitioning script](../../.github/scripts/native-api-shards.cjs) collects actual test
+names, including umbrella imports, before partitioning them. Splitting files
+alone leaves the large umbrella suite concentrated in one job. Each Linux
+matrix member retains serial file execution and its enforced timing report;
+the `JavaScript tests` aggregate requires the whole matrix to succeed. Shard
+artifacts include the collected inventory and selected names so omissions and
+duplicate execution can be checked.
+
 Each real-addon step writes Vitest JSON to `target/native-api-tests.json`.
 The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
 slowest tests to the job summary and writes every test's status and duration to
@@ -1149,3 +1163,109 @@ individually, retaining each async CJS, ESM, batch, and CLI assertion. The
 5,000 ms gate still fails Linux and macOS, Windows still reports threshold
 warnings, and missing or malformed reports still fail everywhere. The larger
 API step budget does not change any test deadline or the timing gate.
+
+
+## Linux real-addon aggregate budget measurement
+
+[Main run 44093497081](https://github.com/jonathanong/no-mistakes/actions/runs/44093497081/job/134076443238)
+on source `44ce3c4aec` recorded 895 passing tests in 24 files. Vitest reported
+240.91 seconds, with 237.452 seconds summed across test bodies; no test reached
+the enforced five-second threshold. The action step ran from 13:34:56 to
+13:38:58 UTC and failed its four-minute bound. Its 242-second wrapper interval
+includes cancellation grace and is a censored step outcome, not a successful
+step budget. One umbrella file accounted for 167.621 seconds of test-body work.
+
+A single local paired observation used those exact CI-produced debug CLI and
+addon artifacts, Node 24.22.3, Linux x64, 24 available CPUs, and 32 GB RAM.
+The serial command completed all 895 tests in 108.32 seconds wall time. The four
+case-shard commands completed in 30.46, 34.59, 30.17, and 29.36 seconds,
+including collection. They ran sequentially on this shared machine, with
+serial files inside each shard. Their completed-test identities partitioned
+the same 895 cases exactly once, with no failures or five-second breaches.
+The longest observed isolated shard was 34.59 seconds; this is not a measured
+hosted parallel-job elapsed time or a guaranteed tail bound. The workflow keeps the
+existing step bound and timing threshold. Separate hosted jobs avoid competing
+native thread pools while allowing the aggregate work to run concurrently.
+
+Native-image loading was instrumented around Node's image-loader call in each
+of the 24 fresh file-worker processes. Including additional child loads, 38
+loads totaled 86.020 ms. In a separate 24-process probe, median/max native-image
+load was 2.395/2.650 ms, JS facade load 6.795/9.725 ms, and the first async
+analysis 14.830/17.556 ms. A second identical analysis took 11.552/15.725 ms.
+Both analyses matched the saved `fixtures/napi/real-addon-dependencies` report.
+These process-cold measurements did not flush the host page cache; the small
+fixture probe diagnoses startup, not the cost of every parity scenario. Native
+image loading is small compared with the accumulated analysis, CLI parity,
+fixture handling, and assertions in the measured file bodies.
+
+The per-file table separates observed test-body time from the local native
+image load. A lazy native load may occur inside a test body, so the columns are
+not disjoint phases and must not be added together.
+
+<details>
+<summary>Per-file observed timings</summary>
+
+| File | Tests | CI body (s) | Local serial body (s) | Local worker native load (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| `real-napi-api.test.js` | 552 | 167.621 | 72.948 | 2.594 |
+| `vitest-project-setups-api.test.js` | 69 | 16.772 | 9.267 | 2.979 |
+| `postgres-expression-arbiter-api.test.js` | 34 | 12.669 | 4.860 | 2.430 |
+| `guarded-array-receiver-api.test.js` | 28 | 8.578 | 3.148 | 2.371 |
+| `foreign-receiver-declaration-order-api.test.js` | 23 | 8.457 | 2.881 | 2.523 |
+| `preserved-provenance-api.test.js` | 34 | 6.769 | 3.425 | 2.418 |
+| `sql-verdicts-api.test.js` | 42 | 4.939 | 3.173 | 2.263 |
+| `forward-receiver-alias-api.test.js` | 12 | 4.676 | 2.319 | 2.605 |
+| `unused-disable-directives-api.test.js` | 12 | 1.640 | 0.982 | 2.453 |
+| `postgres-procedural-loop-coverage-api.test.js` | 8 | 0.847 | 0.436 | 2.379 |
+| `local-action-checkout-api.test.js` | 6 | 0.709 | 0.446 | 2.314 |
+| `postgres-source-api.test.js` | 36 | 0.644 | 0.344 | 2.389 |
+| `namespace-types-api.test.js` | 2 | 0.569 | 0.349 | 2.593 |
+| `compiled-api-runtime.test.js` | 7 | 0.497 | 0.329 | 2.254 |
+| `type-import-order-api.test.js` | 1 | 0.419 | 0.251 | 2.383 |
+| `annex-b-for-in-api.test.js` | 1 | 0.353 | 0.211 | 2.298 |
+| `forbidden-dependencies-globs-api.test.js` | 1 | 0.324 | 0.193 | 2.445 |
+| `exported-value-receiver-api.test.js` | 3 | 0.304 | 0.183 | 2.421 |
+| `lexical-member-replacement-api.test.js` | 2 | 0.246 | 0.161 | 2.303 |
+| `doc-consistency-api.test.js` | 2 | 0.194 | 0.120 | 2.448 |
+| `planning-impact-cli.test.js` | 17 | 0.097 | 0.057 | 2.281 |
+| `postgres-quantified-api.test.js` | 1 | 0.059 | 0.030 | 2.292 |
+| `postgres-procedural-utility-completeness-api.test.js` | 1 | 0.039 | 0.022 | 2.434 |
+| `postgres-procedural-occurrence-api.test.js` | 1 | 0.032 | 0.021 | 2.382 |
+
+</details>
+
+Artifact provenance: addon SHA-256
+`ffbecc83cd8db48240eaf0cc3499ee8a5580317de15083b15d1422d14dee6dcc`;
+CLI SHA-256
+`823c101f95f0a8bcdcc5266c14e9dbcf6e31a8356166e85064729e4ea2a9bd16`.
+The local sample used the complete original Linux file inventory. Test setup,
+artifact downloads, dependency installation, and producer compilation are
+outside the measured commands. Coverage remains measured in CI.
+
+
+### Verified Linux runtime transfer
+
+[PR run 44112883638](https://github.com/jonathanong/no-mistakes/actions/runs/44112883638)
+completed both artifact transfers and SHA checks in two Linux shards, then kept
+the download action process alive until the three-minute deadline. Transfer
+completion took 7.29 and 9.38 seconds; idle time after the final success message
+was 172.096 and 169.892 seconds. Successful siblings returned 18–32 ms after
+that message. The logs establish a post-success process-lifecycle stall; they
+do not identify the retained handle.
+
+The Linux API consumer and AST analysis use the same bounded downloader as
+the platform consumers.
+AST analysis requests only the CLI artifact and preserves the producer run ID and
+artifact digest checks without adding dependency installation.
+The API consumer’s explicit CLI/addon names share the existing 110-second deadline across
+metadata, transfer, checksum, and extraction; the workflow step remains bounded
+at three minutes. Missing, expired, ambiguous, or invalid-digest artifacts fail
+closed, and unsafe ZIP paths remain rejected. Per-artifact and cumulative phase
+timings distinguish transfer work from process completion.
+
+One local download of those exact failed-run artifacts completed successfully
+in 20.647 seconds wall time: metadata 1.061 seconds, transfer 18.056 seconds,
+checksum 0.060 seconds, and extraction 1.435 seconds (20.622 seconds measured
+inside the helper). Both downloaded components passed CLI and async API smoke
+checks. This is one local observation with the host and network limits stated
+above, not a hosted tail estimate.

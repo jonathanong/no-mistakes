@@ -1,4 +1,4 @@
-"""Download one native runtime with bounded I/O and verified archive integrity."""
+"""Download exact native runtime artifacts within one verified, bounded invocation."""
 import hashlib
 import json
 import os
@@ -38,7 +38,7 @@ def metadata(url, token, deadline):
     return json.loads(result.stdout)
 
 
-def resolve_artifact(repo, run_id, target, token, deadline):
+def resolve_artifact(repo, run_id, name, token, deadline):
     matches = []
     for page in range(1, 11):
         url = (f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts"
@@ -47,7 +47,7 @@ def resolve_artifact(repo, run_id, target, token, deadline):
         artifacts = payload.get("artifacts")
         if not isinstance(artifacts, list):
             raise DownloadError("invalid artifact catalog")
-        matches.extend(a for a in artifacts if a.get("name") == f"native-runtime-{target}")
+        matches.extend(a for a in artifacts if a.get("name") == name)
         if len(matches) > 1:
             raise DownloadError("ambiguous native runtime artifact")
         if len(artifacts) < 100:
@@ -112,42 +112,53 @@ def extract(archive, destination, deadline):
                 output.chmod(mode)
 
 
-def main():
+def main(artifact_names=()):
     started = time.monotonic()
     timings = {name: 0 for name in ("metadata", "download", "digest", "extraction")}
     stage = "metadata"
     stage_started = started
     success = False
+    completed = []
+    temporary = None
     try:
         repo = os.environ["GITHUB_REPOSITORY"]
         run_id = os.environ["NATIVE_RUNTIME_RUN_ID"]
-        target = os.environ["NATIVE_RUNTIME_TARGET"]
         token = os.environ["GH_TOKEN"]
         if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo) or not run_id.isdigit():
             raise DownloadError("invalid repository or run id")
-        if not re.fullmatch(r"[\w.-]+", target) or not token:
-            raise DownloadError("invalid target or missing token")
+        names = list(artifact_names)
+        if not names:
+            target = os.environ["NATIVE_RUNTIME_TARGET"]
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", target):
+                raise DownloadError("invalid native runtime target")
+            names = [f"native-runtime-{target}"]
+        if (not token or len(set(names)) != len(names)
+                or any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name) for name in names)):
+            raise DownloadError("invalid or duplicate artifact names or missing token")
         deadline = Deadline()
-        artifact = resolve_artifact(repo, run_id, target, token, deadline)
-        timings[stage] = time.monotonic() - stage_started
-        with tempfile.TemporaryDirectory(prefix="native-runtime-") as temporary:
-            archive = Path(temporary) / "runtime.zip"
-            stage = "download"
-            stage_started = time.monotonic()
-            download(repo, artifact, token, archive, deadline)
-            timings[stage] = time.monotonic() - stage_started
-            stage = "digest"
-            stage_started = time.monotonic()
-            verify(archive, artifact["digest"], deadline)
-            timings[stage] = time.monotonic() - stage_started
-            stage = "extraction"
-            stage_started = time.monotonic()
-            extract(archive, Path("target/debug"), deadline)
-            timings[stage] = time.monotonic() - stage_started
+        for artifact_name in names:
+            artifact_timings = {}
+            for stage in timings:
+                stage_started = time.monotonic()
+                if stage == "metadata":
+                    artifact = resolve_artifact(repo, run_id, artifact_name, token, deadline)
+                    temporary = tempfile.TemporaryDirectory(prefix="native-runtime-")
+                    archive = Path(temporary.name) / "runtime.zip"
+                elif stage == "download":
+                    download(repo, artifact, token, archive, deadline)
+                elif stage == "digest":
+                    verify(archive, artifact["digest"], deadline)
+                else:
+                    extract(archive, Path("target/debug"), deadline)
+                elapsed = time.monotonic() - stage_started
+                timings[stage] += elapsed
+                artifact_timings[stage] = elapsed
+            temporary.cleanup()
+            completed.append({"name": artifact_name, "seconds": artifact_timings})
         success = True
         return 0
     except Exception as error:
-        timings[stage] = time.monotonic() - stage_started
+        timings[stage] += time.monotonic() - stage_started
         detail = str(error) if isinstance(error, (DownloadError, TimeoutError)) else ""
         if isinstance(error, subprocess.CalledProcessError):
             detail = f"curl exit status {error.returncode}"
@@ -157,9 +168,11 @@ def main():
               f"{type(error).__name__}: {detail}", file=sys.stderr)
         return 1
     finally:
-        print(json.dumps({"success": success, "seconds": {
+        if temporary is not None:
+            temporary.cleanup()
+        print(json.dumps({"success": success, "artifacts": completed, "seconds": {
             **timings, "total": time.monotonic() - started}}), flush=True)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

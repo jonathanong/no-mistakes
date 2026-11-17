@@ -1,0 +1,194 @@
+[
+  {
+    "file": "packages/no-mistakes/scripts/real-napi-api.test.js",
+    "name": "compiled synthetic case 0 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/real-napi-api.test.js",
+    "name": "compiled synthetic case 0 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/unused-disable-directives-api.test.js",
+    "name": "compiled synthetic case 1 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/unused-disable-directives-api.test.js",
+    "name": "compiled synthetic case 1 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/sql-verdicts-api.test.js",
+    "name": "compiled synthetic case 2 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/sql-verdicts-api.test.js",
+    "name": "compiled synthetic case 2 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js",
+    "name": "compiled synthetic case 3 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js",
+    "name": "compiled synthetic case 3 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/guarded-array-receiver-api.test.js",
+    "name": "compiled synthetic case 4 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/guarded-array-receiver-api.test.js",
+    "name": "compiled synthetic case 4 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/forward-receiver-alias-api.test.js",
+    "name": "compiled synthetic case 5 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/forward-receiver-alias-api.test.js",
+    "name": "compiled synthetic case 5 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/lexical-member-replacement-api.test.js",
+    "name": "compiled synthetic case 6 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/lexical-member-replacement-api.test.js",
+    "name": "compiled synthetic case 6 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/exported-value-receiver-api.test.js",
+    "name": "compiled synthetic case 7 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/exported-value-receiver-api.test.js",
+    "name": "compiled synthetic case 7 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/namespace-types-api.test.js",
+    "name": "compiled synthetic case 8 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/namespace-types-api.test.js",
+    "name": "compiled synthetic case 8 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/preserved-provenance-api.test.js",
+    "name": "compiled synthetic case 9 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/preserved-provenance-api.test.js",
+    "name": "compiled synthetic case 9 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/vitest-project-setups-api.test.js",
+    "name": "compiled synthetic case 10 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/vitest-project-setups-api.test.js",
+    "name": "compiled synthetic case 10 (1)"
+  },
+  {
+    "file": "tests/js/compiled-api-runtime.test.js",
+    "name": "compiled synthetic case 11 (0)"
+  },
+  {
+    "file": "tests/js/compiled-api-runtime.test.js",
+    "name": "compiled synthetic case 11 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/annex-b-for-in-api.test.js",
+    "name": "compiled synthetic case 12 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/annex-b-for-in-api.test.js",
+    "name": "compiled synthetic case 12 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js",
+    "name": "compiled synthetic case 13 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js",
+    "name": "compiled synthetic case 13 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/type-import-order-api.test.js",
+    "name": "compiled synthetic case 14 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/type-import-order-api.test.js",
+    "name": "compiled synthetic case 14 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/planning-impact-cli.test.js",
+    "name": "compiled synthetic case 15 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/planning-impact-cli.test.js",
+    "name": "compiled synthetic case 15 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-source-api.test.js",
+    "name": "compiled synthetic case 16 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-source-api.test.js",
+    "name": "compiled synthetic case 16 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js",
+    "name": "compiled synthetic case 17 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js",
+    "name": "compiled synthetic case 17 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-quantified-api.test.js",
+    "name": "compiled synthetic case 18 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-quantified-api.test.js",
+    "name": "compiled synthetic case 18 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js",
+    "name": "compiled synthetic case 19 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js",
+    "name": "compiled synthetic case 19 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js",
+    "name": "compiled synthetic case 20 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js",
+    "name": "compiled synthetic case 20 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js",
+    "name": "compiled synthetic case 21 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js",
+    "name": "compiled synthetic case 21 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/doc-consistency-api.test.js",
+    "name": "compiled synthetic case 22 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/doc-consistency-api.test.js",
+    "name": "compiled synthetic case 22 (1)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+    "name": "compiled synthetic case 23 (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+    "name": "compiled synthetic case 23 (1)"
+  }
+]
