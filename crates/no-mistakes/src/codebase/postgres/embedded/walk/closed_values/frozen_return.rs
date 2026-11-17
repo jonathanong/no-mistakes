@@ -57,7 +57,11 @@ fn selected<'a>(
         }
         return Some(entries.iter().map(|entry| (entry, Vec::new())).collect());
     };
-    let mut chosen: Vec<Chosen<'a>> = Vec::new();
+    choose(keys, entries)
+}
+
+fn choose(keys: Vec<Arm>, entries: &[FrozenEntry]) -> Option<Vec<Chosen<'_>>> {
+    let mut chosen: Vec<Chosen<'_>> = Vec::new();
     for key in keys {
         let Node::Text(text) = &key.node else {
             return None;
@@ -77,3 +81,7 @@ fn selected<'a>(
     }
     Some(chosen)
 }
+
+#[cfg(test)]
+#[path = "frozen_return_tests.rs"]
+mod tests;

@@ -56,7 +56,9 @@ non-key column can still be unbounded.
   64-entry record, and does not publish a shorter prefix. A same-file dynamic
   key still uses the 16-alternative budget, so a larger same-file record stays
   opaque instead of publishing a prefix. A product of alternatives past the
-  budget stays opaque.
+  budget stays opaque. Same-file selection checks that budget before building
+  the result objects because distinct key paths can select the same entry
+  while still carrying different choices for later SQL interpolation.
 - Configured assertion calls with a literal string array or intrinsic `Set`
   allowlist, including a local unmodified collection or const alias.
 - A source-visible same-file helper whose local literal membership guard throws
