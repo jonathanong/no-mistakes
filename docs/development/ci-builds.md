@@ -82,9 +82,11 @@ The current validation graph is organized as follows:
 
 Native API consumers use the [runtime downloader](../../.github/scripts/download-native-runtime.py)
 instead of a JavaScript artifact action so completed transfers do not depend on
-an action process draining its event loop. It selects the exact platform artifact
-from the validated producer run, verifies the archive against its SHA256 metadata,
-and closes network, archive, and temporary-file resources before returning.
+an action process draining its event loop. Platform jobs select their exact
+target artifact; Linux supplies its CLI and addon names in one invocation so
+both components share one deadline. Each artifact comes from the validated
+producer run and is verified against its SHA256 metadata. The downloader closes
+network, archive, and temporary-file resources before returning.
 Transient download failures receive bounded retries with backoff; digest failures
 remain fatal. The downloader reports metadata, transfer, checksum, extraction,
 and total timings to distinguish network stalls from completion stalls. Its
@@ -1173,3 +1175,28 @@ CLI SHA-256
 The local sample used the complete original Linux file inventory. Test setup,
 artifact downloads, dependency installation, and producer compilation are
 outside the measured commands. Coverage remains measured in CI.
+
+
+### Verified Linux runtime transfer
+
+[PR run 44112883638](https://github.com/jonathanong/no-mistakes/actions/runs/44112883638)
+completed both artifact transfers and SHA checks in two Linux shards, then kept
+the download action process alive until the three-minute deadline. Transfer
+completion took 7.29 and 9.38 seconds; idle time after the final success message
+was 172.096 and 169.892 seconds. Successful siblings returned 18–32 ms after
+that message. The logs establish a post-success process-lifecycle stall; they
+do not identify the retained handle.
+
+The Linux consumer uses the same bounded downloader as the platform consumers.
+Its explicit CLI/addon names share the existing 110-second deadline across
+metadata, transfer, checksum, and extraction; the workflow step remains bounded
+at three minutes. Missing, expired, ambiguous, or invalid-digest artifacts fail
+closed, and unsafe ZIP paths remain rejected. Per-artifact and cumulative phase
+timings distinguish transfer work from process completion.
+
+One local download of those exact failed-run artifacts completed successfully
+in 20.647 seconds wall time: metadata 1.061 seconds, transfer 18.056 seconds,
+checksum 0.060 seconds, and extraction 1.435 seconds (20.622 seconds measured
+inside the helper). Both downloaded components passed CLI and async API smoke
+checks. This is one local observation with the host and network limits stated
+above, not a hosted tail estimate.

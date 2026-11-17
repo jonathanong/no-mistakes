@@ -1,4 +1,4 @@
-const { workflowJob } = require("./workflow-contract.cjs");
+const { workflowJob, readWorkflow } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const { readFileSync } = require("node:fs");
@@ -166,8 +166,13 @@ test("Linux CLI and addon producers preserve their commands and publish separate
   assert.match(body, /path: \$\{\{ matrix.binary \}\}/);
   assert.equal([...body.matchAll(/uses: actions\/upload-artifact@/g)].length, 1);
   assert.match(job("linux-api-tests"), /needs: linux-runtime/);
-  assert.match(job("linux-api-tests"), /pattern: linux-runtime-\*/);
-  assert.match(job("linux-api-tests"), /merge-multiple: true/);
+  const download = readWorkflow(path.join(root, ".github/workflows/ci.yml")).jobs[
+    "linux-api-tests"
+  ].steps.find((step) => step.name === "Download Linux runtime");
+  assert.equal(
+    download.run,
+    "python3 .github/scripts/download-native-runtime.py linux-runtime-cli linux-runtime-addon",
+  );
   assert.match(job("ast-analysis"), /name: linux-runtime-cli/);
   assert.doesNotMatch(job("ast-analysis"), /pattern: linux-runtime|name: linux-runtime-addon/);
 });

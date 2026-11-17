@@ -58,3 +58,18 @@ test("JavaScript aggregate fails when the Linux N-API matrix fails or skips", ()
     }
   }
 });
+
+test("Linux shards use one bounded verified download for both runtime components", () => {
+  const download = linuxApi.steps.find((step) => step.name === "Download Linux runtime");
+  assert.equal(download["timeout-minutes"], 3);
+  assert.equal(
+    download.env.NATIVE_RUNTIME_RUN_ID,
+    "${{ needs.linux-runtime.outputs.artifact-run-id }}",
+  );
+  assert.equal(download.env.GH_TOKEN, "${{ github.token }}");
+  assert.equal(
+    download.run,
+    "python3 .github/scripts/download-native-runtime.py linux-runtime-cli linux-runtime-addon",
+  );
+  assert.equal(download.uses, undefined);
+});

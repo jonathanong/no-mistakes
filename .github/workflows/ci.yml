@@ -759,13 +759,10 @@ jobs:
         run: pnpm run build:js
       - name: Download Linux runtime
         timeout-minutes: 3
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          run-id: ${{ needs.linux-runtime.outputs.artifact-run-id }}
-          github-token: ${{ github.token }}
-          pattern: linux-runtime-*
-          merge-multiple: true
-          path: target/debug
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATIVE_RUNTIME_RUN_ID: ${{ needs.linux-runtime.outputs.artifact-run-id }}
+        run: python3 .github/scripts/download-native-runtime.py linux-runtime-cli linux-runtime-addon
       - name: Restore CLI executable mode
         timeout-minutes: 3
         run: chmod +x target/debug/no-mistakes
