@@ -1,6 +1,6 @@
 ---
 name: git-rules
-description: "Load before committing, staging, rebasing, pushing, writing a PR description, editing docs, or stating a claim about production behavior. Lists the defects to avoid and the patterns that need a stated reason: staging, history rewrites, hooks, scope, evidence for claims."
+description: "Load before committing, staging, rebasing, pushing, writing a PR description, changing behavior that docs describe, or stating a claim about production behavior. Lists the defects to avoid and the patterns that need a stated reason: staging, history rewrites, hooks, scope, evidence for claims."
 ---
 
 # Git and change rules

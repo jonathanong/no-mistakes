@@ -1,6 +1,6 @@
 ---
 name: react-rules
-description: "Load before writing or reviewing React components, hooks, or a Next.js page, layout, route handler, or server action. Lists the defects to avoid and the patterns that need a stated reason: rendering, server and client boundaries, data fetching, caching, metadata, scripts, routing, accessibility."
+description: "Load before writing or reviewing React components, hooks, or a Next.js page, layout, or route handler. Lists the defects to avoid and the patterns that need a stated reason: rendering, server and client boundaries, caching, metadata, scripts, routing, accessibility."
 ---
 
 # React and Next.js rules
