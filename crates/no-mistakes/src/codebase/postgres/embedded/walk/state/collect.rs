@@ -7,7 +7,6 @@ use crate::codebase::postgres::embedded::{
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 use std::collections::{BTreeMap, HashSet};
-
 pub(crate) fn collect_calls<'a>(
     program: &Program<'a>,
     source: &'a str,
@@ -197,6 +196,5 @@ pub(crate) fn collect_calls<'a>(
         unproven_member_query_spans: visitor.unproven_member_query_spans,
     }
 }
-
 #[cfg(all(test, feature = "test-instrumentation"))]
 mod summary_pass_tests;
