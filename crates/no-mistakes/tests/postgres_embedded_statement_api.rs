@@ -45,6 +45,7 @@ fn public_call_versions_are_readable_and_legacy_construction_is_explicit() {
         execution_unconditional: false,
         execution_awaited: false,
         execution_scope: 0,
+        execution_range: (0, 0),
         bound_value_origins: Vec::new(),
         bound_value_sql: None,
         bound_parameters: Vec::new(),

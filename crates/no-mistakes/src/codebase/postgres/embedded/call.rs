@@ -21,6 +21,8 @@ pub struct EmbeddedSqlCall {
     #[doc(hidden)]
     pub execution_scope: u32,
     #[doc(hidden)]
+    pub execution_range: (u32, u32),
+    #[doc(hidden)]
     pub bound_value_origins: Vec<(u32, u32, u32)>,
     #[doc(hidden)]
     pub bound_value_sql: Option<String>,

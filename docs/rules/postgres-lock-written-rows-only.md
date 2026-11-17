@@ -125,7 +125,8 @@ await tx.query("DROP TABLE events_archive");
 ```
 
 These proofs require known transaction membership, unconditional execution,
-and directly awaited executor calls in the same function. Reads inside
+and directly awaited executor calls in the same function. Nested executor calls
+in a callee or argument do not establish a sequential DDL proof. Reads inside
 CTE-bearing queries do not
 establish a guard proof. A read before the lock or after the DDL does not protect
 a preflight check. A lock

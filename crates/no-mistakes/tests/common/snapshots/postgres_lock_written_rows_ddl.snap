@@ -166,10 +166,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/query.ts",
+          "line": 89,
+          "message": "src/query.ts:89: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`, (await tx.query(`ALTER TABLE jobs ADD COLUMN title text`), []));",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
           "line": 9,
           "message": "src/query.ts:9: table-lock: LOCK TABLE widens contention; lock only the row being written",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "src/query.ts:93: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`, (await tx.query(`SELECT 1 FROM jobs`), []));",
           "target": "table-lock"
         }
       ],

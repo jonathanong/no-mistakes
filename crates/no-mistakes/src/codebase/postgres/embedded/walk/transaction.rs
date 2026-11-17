@@ -18,7 +18,10 @@ pub(super) fn annotate(
         .last()
         .copied()
         .unwrap_or(0);
-    fact.execution_scope = owner;
+    if visitor.executor_options.track_transaction_helpers {
+        fact.execution_scope = owner;
+        fact.execution_range = (call.span.start, call.span.end);
+    }
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);

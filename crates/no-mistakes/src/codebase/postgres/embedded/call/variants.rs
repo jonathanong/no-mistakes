@@ -125,6 +125,7 @@ impl EmbeddedSqlCall {
                             execution_unconditional: self.execution_unconditional,
                             execution_awaited: self.execution_awaited,
                             execution_scope: self.execution_scope,
+                            execution_range: self.execution_range,
                             bound_parameters: self.bound_parameters.clone(),
                             bound_value_origins: self.bound_value_origins.clone(),
                             bound_value_sql: self.bound_value_sql.clone(),

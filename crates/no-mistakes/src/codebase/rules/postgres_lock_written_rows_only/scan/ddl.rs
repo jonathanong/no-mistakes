@@ -9,9 +9,13 @@ pub(super) fn exemptions(
     unresolved: &BTreeSet<u32>,
     catalog: Option<&SchemaCatalog>,
 ) -> BTreeSet<(usize, usize)> {
+    let overlapping = overlapping_transactions(calls);
     let mut transactions: BTreeMap<(u32, u32), Vec<(usize, &DdlEvent)>> = BTreeMap::new();
     for (index, call) in calls.iter().enumerate() {
-        let Some(id) = call.transaction_id.filter(|id| !unresolved.contains(id)) else {
+        let Some(id) = call
+            .transaction_id
+            .filter(|id| !unresolved.contains(id) && !overlapping.contains(id))
+        else {
             continue;
         };
         if call.helper_definition
@@ -99,4 +103,28 @@ fn related(catalog: &SchemaCatalog, left: &str, right: &str) -> bool {
         || catalog
             .relation(right)
             .is_some_and(|table| links(table, left))
+}
+
+fn overlapping_transactions(calls: &[EmbeddedSqlCall]) -> BTreeSet<u32> {
+    let mut ranges: BTreeMap<(u32, u32), Vec<(u32, u32)>> = BTreeMap::new();
+    for call in calls {
+        if let Some(transaction) = call.transaction_id {
+            if !call.helper_definition {
+                ranges
+                    .entry((transaction, call.execution_scope))
+                    .or_default()
+                    .push(call.execution_range);
+            }
+        }
+    }
+    ranges
+        .into_iter()
+        .filter_map(|((transaction, _), mut spans)| {
+            spans.sort_unstable();
+            spans
+                .windows(2)
+                .any(|pair| pair[0].1 > pair[1].0)
+                .then_some(transaction)
+        })
+        .collect()
 }

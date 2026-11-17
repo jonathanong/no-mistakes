@@ -84,3 +84,12 @@ export async function concurrentBodies() {
     (async () => { await tx.query(`ALTER TABLE jobs ADD COLUMN title text`); })(),
   ]);
 }
+export async function ddlEvaluatedBeforeOuterLock() {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`, (await tx.query(`ALTER TABLE jobs ADD COLUMN title text`), []));
+}
+export async function proofReadEvaluatedBeforeOuterLock() {
+  const tx = await beginTransaction();
+  await tx.query(`LOCK TABLE jobs IN SHARE MODE`, (await tx.query(`SELECT 1 FROM jobs`), []));
+  await tx.query(`DROP TABLE events_old`);
+}

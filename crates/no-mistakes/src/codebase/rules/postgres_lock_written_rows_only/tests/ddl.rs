@@ -10,7 +10,7 @@ fn accepts_ddl_ordering_and_guard_proof_reads() {
 
 #[test]
 fn keeps_table_lock_reports_without_ordered_transaction_proof() {
-    for (case, count) in [("ddl-negative", 16), ("ddl-uncertain", 8)] {
+    for (case, count) in [("ddl-negative", 18), ("ddl-uncertain", 8)] {
         let findings = check(&fixture(case), &config()).unwrap();
         let locks = findings
             .iter()
