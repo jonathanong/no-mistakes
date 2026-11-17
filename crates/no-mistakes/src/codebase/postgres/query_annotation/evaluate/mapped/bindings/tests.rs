@@ -66,11 +66,14 @@ fn equal_capture_refresh_keeps_shared_bindings_and_builder_indexes() {
     evaluator.refresh_captured_bindings();
     assert!(evaluator.scopes[1].get("missing") == Some(&Value::Unknown));
     assert!(!std::ptr::eq(&*evaluator.scopes[1], &*scope));
-    assert!(!evaluator.scopes[1].builder_index_initialized());
+    assert!(evaluator.scopes[1].builder_index_initialized());
+    assert!(evaluator.scopes[1].contains_builders(&FxHashSet::from_iter([7])));
     assert!(!scope.contains_key("missing"));
     evaluator.scopes[0].insert("builder".into(), Value::Unknown);
     evaluator.refresh_captured_bindings();
     assert!(evaluator.scopes[1]["builder"] == Value::Unknown);
+    assert!(!evaluator.scopes[1].contains_builders(&FxHashSet::from_iter([7])));
+    assert!(scope.contains_builders(&FxHashSet::from_iter([7])));
     assert!(matches!(scope["builder"], Value::Prefix(_, _, Some(7))));
 }
 

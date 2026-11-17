@@ -103,50 +103,16 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut disconnected_common,
                 &mut private_disconnected,
             );
-            {
-                let mut comparisons = scopes
-                    .iter()
-                    .zip(&self.scopes)
-                    .filter(|(before, after)| {
-                        !precise_records
-                            && before.contains_reference()
-                            && !super::values::unchanged_without_arguments(before, after)
-                    })
-                    .peekable();
-                // Peek retains the first eligible scope without a second scan.
-                if comparisons.peek().is_some() {
-                    super::super::super::progress::trace(
-                        "postgres.annotation.prefix_compare_arm",
-                        path,
-                        None,
-                        || {
-                            let mut work = super::values::Walk::new();
-                            for (before, after) in comparisons {
-                                for (name, value) in before.reference_bindings() {
-                                    // An arm can drop a name the other branch still has.
-                                    if !precise_records {
-                                        super::values::changes(
-                                            value,
-                                            super::bindings::binding_or_unproven(after, name),
-                                            super::arena::Arena {
-                                                objects: &objects,
-                                                extras: &extra_slots,
-                                            },
-                                            super::arena::Arena {
-                                                objects: &self.argument_objects,
-                                                extras: &self.argument_extra_slots,
-                                            },
-                                            &mut changed,
-                                            &self.definite_deleted_argument_slots,
-                                            &mut work,
-                                        );
-                                    }
-                                }
-                            }
-                        },
-                    );
-                }
-            }
+            self.compare_alternative_prefixes(
+                &scopes,
+                super::arena::Arena {
+                    objects: &objects,
+                    extras: &extra_slots,
+                },
+                precise_records,
+                path,
+                &mut changed,
+            );
             super::freshness::unchanged(
                 &mut fresh_joined,
                 &self.fresh_mapped_parameters,

@@ -8,6 +8,7 @@ use std::{
 struct Data {
     values: Vec<Value>,
     references: OnceLock<Edges>,
+    contains_reference: OnceLock<bool>,
 }
 
 impl Clone for Data {
@@ -15,6 +16,7 @@ impl Clone for Data {
         Self {
             values: self.copy_values(),
             references: OnceLock::new(),
+            contains_reference: OnceLock::new(),
         }
     }
 }
@@ -53,6 +55,20 @@ impl DenseSlots {
         })
     }
 
+    pub(super) fn contains_reference(&self) -> bool {
+        if let Some(edges) = self.cached_references() {
+            return !edges.identities.is_empty() || !edges.arguments.is_empty();
+        }
+        *self.0.contains_reference.get_or_init(|| {
+            if let Some(observer) =
+                crate::diagnostics::current().filter(|observer| observer.verbose())
+            {
+                observer.increment("postgres.annotation.dense_prefix_summary_builds", 1);
+            }
+            self.iter().any(Value::contains_reference)
+        })
+    }
+
     pub(super) fn shared(&self) -> bool {
         Arc::strong_count(&self.0) > 1
     }
@@ -74,6 +90,7 @@ impl From<Vec<Value>> for DenseSlots {
         Self(Arc::new(Data {
             values,
             references: OnceLock::new(),
+            contains_reference: OnceLock::new(),
         }))
     }
 }
@@ -87,6 +104,7 @@ impl DerefMut for DenseSlots {
     fn deref_mut(&mut self) -> &mut Self::Target {
         let data = Arc::make_mut(&mut self.0);
         data.references.take();
+        data.contains_reference.take();
         &mut data.values
     }
 }

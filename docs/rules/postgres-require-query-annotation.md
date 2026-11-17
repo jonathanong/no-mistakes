@@ -537,6 +537,26 @@ initialization cache was removed after downstream validation found higher CPU
 cost when excluded callers repeatedly imported large in-scope helpers. Scope
 pruning does not imply that excluded dependencies initialize only once per run.
 
+At max effort, branch joins skip comparing an unchanged immutable value when
+it contains no runtime argument references. Direct reference summaries are
+memoized in memory for those immutable values; mutations invalidate the
+summaries. Function frames inherit the captured scope's immutable direct-edge
+summary. Adding direct references extends that summary; changing or removing
+reference identities invalidates it. Values carrying runtime argument references keep
+their contextual comparison, so shared helper imports do not merge independent
+root states. Dense-argument snapshots also memoize whether their slots contain
+builder or argument identities. An empty summary with no sparse slots proves
+the incoming prefix map empty. Warm direct-edge summaries supply the same proof
+without another walk. Dense writes invalidate the memo; nested arguments and
+sparse slots keep their contextual comparisons. The
+`postgres.annotation.prefix_unchanged_binding_skips` counter counts both kinds of
+omitted binding comparisons; `postgres.annotation.dense_prefix_summary_builds`
+counts new dense-slot boolean summaries.
+The saved [multi-root walk workload](../../fixtures/performance/annotation-multi-root-shared-walks/README.md)
+checks annotated calls, an unannotated query, excluded unrelated roots and actual
+prefix work. Timing samples run with observer diagnostics disabled; counter
+samples run separately.
+
 Branch comparison first collects the incoming binding's builder prefixes. If
 that map is empty, it skips collecting the arm's replacement value: this
 comparison only taints identities present in the incoming map.

@@ -13,9 +13,16 @@ fn saved_reference_binding_index_retains_findings_and_reduces_comparisons() {
     );
     assert_eq!(off, on);
     assert!(disabled.work.is_empty());
-    // Legacy main performs 148 comparisons, including unrelated scalar/function bindings.
-    let comparisons = enabled.work["postgres.annotation.prefix_walks"];
-    assert!(comparisons > 0 && comparisons <= 24, "{comparisons}");
+    assert_eq!(
+        enabled.work["postgres.annotation.prefix_unchanged_binding_skips"],
+        5
+    );
+    assert_eq!(enabled.work["postgres.annotation.prefix_walks"], 0);
+    assert_eq!(enabled.work["postgres.annotation.prefix_nodes"], 0);
+    assert_eq!(
+        enabled.work["postgres.annotation.prefix_walks_completed"],
+        enabled.work["postgres.annotation.prefix_walks"]
+    );
     assert_eq!(expected["rules"].as_array().unwrap().len(), 2);
     assert_eq!(expected["rules"][0]["line"], 42);
     assert_eq!(expected["rules"][1]["line"], 43);

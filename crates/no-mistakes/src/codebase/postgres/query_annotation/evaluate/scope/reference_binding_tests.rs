@@ -1,7 +1,7 @@
 use super::binding_scan_count::SCANS as REFERENCE_BINDING_SCANS;
 use super::*;
 
-fn saved_function() -> Value {
+pub(super) fn saved_function() -> Value {
     use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
     let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("helper-tracing-callback-profile/reads.mts");

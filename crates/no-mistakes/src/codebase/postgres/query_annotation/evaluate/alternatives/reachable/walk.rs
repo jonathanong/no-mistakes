@@ -34,7 +34,7 @@ pub(super) fn collect<const WARM: bool>(
                 if let Some(origins) = captured.get(&env) {
                     extend_capture_edges!(found, origins);
                 }
-                let cached = WARM.then(|| scopes[env].cached_references()).flatten();
+                let cached = WARM.then(|| scopes[env].references());
                 if let Some(edges) = cached {
                     extend(&mut found, edges);
                 } else {
@@ -54,7 +54,7 @@ pub(super) fn collect<const WARM: bool>(
             if found.arguments.insert(id) {
                 found.identities.insert(id);
                 let slots = &arena.objects[&id];
-                let cached = WARM.then(|| slots.cached_references()).flatten();
+                let cached = WARM.then(|| slots.references());
                 if let Some(edges) = cached {
                     extend(&mut found, edges);
                 } else {

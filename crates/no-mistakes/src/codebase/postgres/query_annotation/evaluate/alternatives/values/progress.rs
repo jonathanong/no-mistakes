@@ -13,7 +13,8 @@ pub(in super::super) struct Walk {
     comparisons: u64,
     completed: u64,
     after_empty_skips: u64,
-    published: [u64; 5],
+    unchanged_bindings: u64,
+    published: [u64; 6],
 }
 
 impl Walk {
@@ -27,8 +28,13 @@ impl Walk {
             comparisons: 0,
             completed: 0,
             after_empty_skips: 0,
-            published: [0; 5],
+            unchanged_bindings: 0,
+            published: [0; 6],
         })
+    }
+
+    pub(in super::super) fn unchanged_binding(&mut self) {
+        self.unchanged_bindings += 1;
     }
 
     pub(super) fn after_empty_skip(&mut self) {
@@ -69,6 +75,7 @@ impl Walk {
             self.nodes,
             self.containers,
             self.after_empty_skips,
+            self.unchanged_bindings,
         ];
         if totals == self.published {
             return;
@@ -79,6 +86,7 @@ impl Walk {
             "postgres.annotation.prefix_nodes",
             "postgres.annotation.prefix_containers",
             "postgres.annotation.prefix_after_empty_skips",
+            "postgres.annotation.prefix_unchanged_binding_skips",
         ];
         for ((name, value), previous) in names.into_iter().zip(totals).zip(self.published) {
             self.observer.increment(name, value - previous);

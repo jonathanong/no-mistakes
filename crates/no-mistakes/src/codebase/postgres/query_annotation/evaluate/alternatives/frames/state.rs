@@ -23,7 +23,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
     let roots = (0..scopes.len()).collect::<Vec<_>>();
     let empty_captures = CapturedBindings::default();
     let captured = capture_edges_for_all_roots(captured, scopes.len(), &empty_captures);
-    // Peek at existing summaries; cold snapshots keep the shared raw visitor.
+    // Immutable direct edges are shared across snapshot walks; mutable edges stay live.
     let reachable = reachable::collect_warm_from_roots(
         scopes,
         reachable::RootSeeds {

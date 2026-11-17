@@ -42,11 +42,8 @@ fn immutable_scope_scan_work_is_initial_plus_changed_bindings() {
         .expect("prefix-cached heap walks must contribute timing");
     assert_eq!(timing.kind, crate::diagnostics::TimingKind::Parallel);
     let work = snapshot.work;
-    assert_eq!(work["postgres.annotation.prefix_scope_scans"], 129);
-    assert_eq!(
-        work["postgres.annotation.prefix_binding_scans"],
-        128 * 64 + 65
-    );
+    assert_eq!(work["postgres.annotation.prefix_scope_scans"], 128);
+    assert_eq!(work["postgres.annotation.prefix_binding_scans"], 128 * 64);
 }
 
 #[test]

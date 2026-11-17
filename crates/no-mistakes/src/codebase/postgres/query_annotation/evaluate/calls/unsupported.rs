@@ -25,7 +25,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             locals.insert(name.clone(), Value::Unknown);
         }
         scopes::bind_this(&mut locals, function, receiver);
-        let mut scope = self.environment(locals);
+        let mut scope = self.environment_scope(locals);
         self.register_mappings(scope, captured, function, mapping);
         self.register_captured_bindings(scope, captured, function);
         self.steps(&function.body, function_path, &mut scope, depth, false);

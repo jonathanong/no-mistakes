@@ -1,0 +1,8 @@
+{
+  "roots": 260,
+  "excludedRoots": 8,
+  "finding": {
+    "file": "src/entry-00.mts",
+    "line": 5
+  }
+}

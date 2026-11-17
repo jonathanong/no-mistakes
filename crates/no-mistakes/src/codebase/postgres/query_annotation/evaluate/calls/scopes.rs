@@ -1,6 +1,6 @@
-use super::super::{Function, Value};
+use super::super::{Function, Scope, Value};
 use crate::codebase::postgres::query_annotation::Step;
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::fx::FxHashSet;
 
 pub(in crate::codebase::postgres::query_annotation::evaluate) struct Shadows<'a> {
     names: FxHashSet<&'a str>,
@@ -56,13 +56,25 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn shadow_names_in
     shadowed
 }
 
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn has_legacy_branch(
+    function: &Function,
+    precise_records: bool,
+) -> bool {
+    !precise_records
+        && function
+            .body
+            .iter()
+            .any(|step| matches!(step, Step::Branch(_, _, _)))
+}
+
 /// A callee's declarations shadow captured bindings even when a bare var
 /// has no initializer. The caller restores actual parameters after this step,
 /// so parameter redeclarations still preserve their runtime argument values.
 pub(in crate::codebase::postgres::query_annotation::evaluate) fn locals(
-    captured: &FxHashMap<String, Value>,
+    captured: &Scope,
     function: &Function,
-) -> FxHashMap<String, Value> {
+) -> Scope {
+    captured.references();
     let mut locals = captured.clone();
     for step in &function.body {
         match step {
@@ -88,7 +100,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn locals(
 }
 
 pub(in crate::codebase::postgres::query_annotation::evaluate) fn arguments(
-    locals: &mut FxHashMap<String, Value>,
+    locals: &mut Scope,
     function: &Function,
     value: Value,
 ) {
@@ -101,7 +113,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn arguments(
 /// Non-arrow calls take `this` from the member or index receiver. A bare call
 /// has no receiver. Arrows keep the lexical `this` already copied into locals.
 pub(in crate::codebase::postgres::query_annotation::evaluate) fn bind_this(
-    locals: &mut FxHashMap<String, Value>,
+    locals: &mut Scope,
     function: &Function,
     receiver: Option<&Value>,
 ) {

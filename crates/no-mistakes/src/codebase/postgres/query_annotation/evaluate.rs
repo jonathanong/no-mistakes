@@ -80,8 +80,14 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
         values: FxHashMap<String, Value>,
     ) -> Environment {
+        self.environment_scope(values.into())
+    }
+    pub(in crate::codebase::postgres::query_annotation) fn environment_scope(
+        &mut self,
+        values: Scope,
+    ) -> Environment {
         let id = self.scopes.len();
-        self.scopes.push(values.into());
+        self.scopes.push(values);
         id
     }
     pub(super) fn expr(

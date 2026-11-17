@@ -2,7 +2,11 @@ use super::super::Value;
 use super::arena::Arena;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::FxHashSet;
+mod empty_arguments;
 mod prefixes;
+pub(super) use empty_arguments::prefix_free_argument;
+mod unchanged;
+pub(super) use unchanged::unchanged;
 mod progress;
 pub(super) use progress::Walk;
 
