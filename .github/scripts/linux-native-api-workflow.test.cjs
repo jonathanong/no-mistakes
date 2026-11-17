@@ -8,6 +8,16 @@ const root = path.resolve(__dirname, "../..");
 const workflow = parse(readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8"));
 
 test("Linux N-API cases run in three bounded shards with the existing failure gate", () => {
+  const quality = workflow.jobs["quality-source"];
+  const setupIndex = quality.steps.findIndex((entry) => entry.name === "Install pnpm dependencies");
+  const parityIndex = quality.steps.findIndex((entry) => entry.name === "Check Rust validation parity");
+  assert.ok(setupIndex >= 0 && parityIndex > setupIndex);
+  assert.match(quality.steps[parityIndex].run, /linux-native-api-workflow\.test\.cjs/);
+  assert.doesNotMatch(
+    readFileSync(path.join(__dirname, "build-native.test.cjs"), "utf8"),
+    /linux-native-api-workflow\.test\.cjs/,
+  );
+
   const job = workflow.jobs["linux-api-tests"];
   assert.ok(job);
   assert.equal(job.needs, "linux-runtime");

@@ -131,32 +131,36 @@ test(
 
 // Ordinary discovery skips native behavior; keep its real-addon CI bridge explicit.
 test("CI registers inline acquisitions and mutable receiver cases exactly once", () => {
-  const workflow = readFileSync(join(__dirname, "../../../.github/workflows/ci.yml"), "utf8");
-  const steps = workflow
-    .split("      - name: Run real N-API API test")
-    .slice(1)
-    .map((section) => section.split("\n      - name:")[0]);
+  const { parse } = require("yaml");
+  const workflow = parse(
+    readFileSync(join(__dirname, "../../../.github/workflows/ci.yml"), "utf8"),
+  );
+  const steps = Object.values(workflow.jobs)
+    .flatMap((job) => job.steps || [])
+    .filter((step) => step.name === "Run real N-API API test");
   const bridge = readFileSync(join(__dirname, "real-napi-api.test.js"), "utf8");
   assert.ok(bridge.includes('require("./inline-owned-member-api.test.js");'));
   assert.equal(steps.length, 3, "Linux, Windows, and macOS addon steps");
   const nativeFiles = require("../../../.github/scripts/native-api-shards.cjs").files;
-  for (const step of steps) {
-    assert.match(step, /NO_MISTAKES_TEST_NAPI_ADDON_PATH=/u);
-    assert.match(step, /pnpm exec vitest run|node \.github\/scripts\/native-api-shards\.cjs/u);
+  const linuxFiles = require("../../../.github/scripts/native-api-linux-files.cjs");
+  const entries = steps.map((step) => {
+    const explicitAddon = step.env?.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
     assert.ok(
-      step.includes("packages/no-mistakes/scripts/real-napi-api.test.js") ||
-        (step.includes("native-api-shards.cjs") &&
-          nativeFiles.includes("packages/no-mistakes/scripts/real-napi-api.test.js")),
+      (typeof explicitAddon === "string" && explicitAddon.endsWith("no-mistakes.node")) ||
+        /NO_MISTAKES_TEST_NAPI_ADDON_PATH=/u.test(step.run),
+      "each native step supplies its compiled addon path",
     );
-  }
-
-  const entries = steps.map((step) =>
-    step.includes("native-api-shards.cjs")
-      ? nativeFiles
-      : [...step.matchAll(/(?:packages|tests)\/[\w./-]+\.test\.(?:js|mjs)/gu)].map(
+    assert.match(step.run, /pnpm exec vitest run|node \.github\/scripts\/native-api-shards\.cjs/u);
+    const selected = step.run.includes("native-api-shards.cjs")
+      ? /(?:^|\s)linux(?:\s|$)/u.test(step.run)
+        ? linuxFiles
+        : nativeFiles
+      : [...step.run.matchAll(/(?:packages|tests)\/[\w./-]+\.test\.(?:js|mjs)/gu)].map(
           ([entry]) => entry,
-        ),
-  );
+        );
+    assert.ok(selected.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+    return selected;
+  });
   const mutable = "packages/no-mistakes/scripts/mutable-receiver-api.test.js";
   const child = spawnSync(
     process.execPath,
