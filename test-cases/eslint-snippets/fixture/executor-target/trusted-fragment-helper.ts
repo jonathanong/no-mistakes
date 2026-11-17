@@ -37,3 +37,7 @@ export function visibleLetScalar(query: QueryExecutor, id: number) {
   let scalar = id;
   return query(sql`SELECT * FROM t WHERE id = ${scalar}`);
 }
+
+export function hiddenMember(where: { id: unknown }, query: QueryExecutor) {
+  return query(sql`SELECT * FROM t WHERE ${where.id}`);
+}

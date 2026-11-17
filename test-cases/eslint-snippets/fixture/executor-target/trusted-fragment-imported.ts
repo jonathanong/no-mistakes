@@ -3,6 +3,7 @@ import { sql } from "@example/sql";
 import {
   hiddenAlias,
   hiddenDefaultFragment,
+  hiddenMember,
   hiddenParameter,
   hiddenReassigned,
   hiddenWrittenParameter,
@@ -45,3 +46,9 @@ function callWithMaybeUndefined(value: boolean | undefined) {
   visibleDefaultScalar(read, value);
 }
 callWithMaybeUndefined(undefined);
+
+hiddenParameter(`literal`, read);
+hiddenParameter(`id = ${scalarArg}`, read);
+hiddenParameter(null, read);
+hiddenParameter({ id: 1 }, read);
+hiddenMember({ id: sql`id = 1` }, read);

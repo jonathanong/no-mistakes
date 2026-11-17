@@ -73,8 +73,12 @@ it("snapshots union executor proof and both reporting modes", async () => {
     expect(lines).toEqual([19, 20, 23]);
   }
   for (const [name, typed, expected] of [
-    ["trusted-fragment-local.ts", false, [46, 47, 49, 51, 52, 53, 54, 55, 57, 64, 88]],
-    ["trusted-fragment-imported.ts", true, [14, 15, 17, 19, 20, 21, 22, 23, 25, 32, 44]],
+    ["trusted-fragment-local.ts", false, [46, 47, 49, 51, 52, 53, 54, 55, 57, 64, 88, 94, 96, 101]],
+    [
+      "trusted-fragment-imported.ts",
+      true,
+      [15, 16, 18, 20, 21, 22, 23, 24, 26, 33, 45, 51, 53, 54],
+    ],
   ]) {
     const lines = languageOptionsFindings({
       ...testCase(name, "forwarding-only", typed),

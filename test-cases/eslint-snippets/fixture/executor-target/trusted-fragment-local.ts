@@ -89,3 +89,13 @@ function callWithMaybeUndefined(value: boolean | undefined) {
   visibleDefaultScalar(read, value);
 }
 callWithMaybeUndefined(undefined);
+
+hiddenParameter(`literal`, read);
+hiddenParameter(`id = ${scalarArg}`, read);
+hiddenParameter(null, read);
+hiddenParameter({ id: 1 }, read);
+
+function hiddenMember(where: { id: unknown }, query: QueryExecutor) {
+  return query(sql`SELECT * FROM t WHERE ${where.id}`);
+}
+hiddenMember({ id: sql`id = 1` }, read);
