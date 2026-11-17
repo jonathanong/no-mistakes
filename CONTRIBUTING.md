@@ -118,9 +118,9 @@ for its scope and how to fix findings.
 
 CI and release builds use workspace profiles with Rust debug metadata disabled;
 debug assertions stay enabled. Native Rust and real-addon tests run on Windows
-and macOS, while instrumented Rust coverage runs in six Linux shards and
-standalone library tests run in four. These profiles are not a promise that a
-job meets a particular runtime. For local debugging, use
+and macOS; real-addon tests also run on Linux. Instrumented Rust coverage runs
+in six Linux shards and standalone library tests run in four. These profiles are
+not a promise that a job meets a particular runtime. For local debugging, use
 `CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
 
 Release validation uses `.github/scripts/rust-validation.sh` for locked
@@ -230,10 +230,12 @@ one code generation unit. Compile-time and runtime differences require
 measurements on the same platform; Linux benchmarks do not establish the macOS
 or Windows tradeoff.
 
-Real-addon API tests and platform Rust tests each run in six Windows shards
-and two macOS shards. The macOS Rust plan uses observed outlier weights to
-balance cases; unknown cases remain included with a default weight. The per-test
-timing checks and diagnostic reports
+Linux real-addon API cases run in three shards; Windows and macOS real-addon
+API tests run in six and two shards respectively. Platform Rust tests use the
+same six Windows and two macOS shard counts. Linux case sharding keeps the
+expanded API suite in bounded test steps without changing the per-test timing
+check. The macOS Rust plan uses observed outlier weights to balance
+cases; unknown cases remain included with a default weight. Diagnostic reports
 remain in force. The prior serial-test and aggregate timeout measurements are
 historical; the [CI build guide](docs/development/ci-builds.md#parallel-ci-layout-and-measured-baseline)
 records the earlier baseline, completed parallel measurements, and the cache

@@ -9,9 +9,6 @@ test("native API shards collect every legacy file including the large real addon
   assert.equal(files.length, 7);
   assert.equal(new Set(files).size, 7);
   assert.ok(files.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
-  const source = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
-  assert.match(source, /"list",\s*\.\.\.files,\s*"--no-static-parse"/);
-  assert.match(source, /"run",\s*\.\.\.files,\s*`--testNamePattern=/);
 });
 
 test("case shards partition all collected names exactly once with regex escaping", () => {
@@ -52,47 +49,80 @@ test("API case partition rejects empty, invalid and oversized inventories", () =
   );
 });
 
-test("native API runner collects dynamic cases and executes case filters without rebuilding", () => {
-  const os = require("node:os");
-  const { spawnSync } = require("node:child_process");
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-api-shards-"));
-  fs.cpSync(path.resolve(__dirname, "../../test-cases/native-api-shards/fixture"), directory, {
-    recursive: true,
-  });
-  const script = path.join(__dirname, "native-api-shards.cjs");
-  const invoke = (index, env = {}) =>
-    spawnSync(process.execPath, ["driver.cjs", script, String(index), "3"], {
-      cwd: directory,
-      encoding: "utf8",
-      env: { ...process.env, ...env },
+for (const scope of [undefined, "linux"]) {
+  test(`native API runner transports ${scope || "default"} files and partitions dynamic cases`, () => {
+    const os = require("node:os");
+    const { spawnSync } = require("node:child_process");
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "native-api-shards-"));
+    fs.cpSync(path.resolve(__dirname, "../../test-cases/native-api-shards/fixture"), directory, {
+      recursive: true,
     });
-  try {
-    const executed = [];
-    for (let index = 1; index <= 3; index++) {
-      const result = invoke(index);
-      assert.equal(result.status, 0, result.stderr);
-      executed.push(
-        ...JSON.parse(
-          fs.readFileSync(path.join(directory, "target/native-api-tests.json"), "utf8"),
-        ),
+    const script = path.join(__dirname, "native-api-shards.cjs");
+    const invoke = (index, env = {}) =>
+      spawnSync(
+        process.execPath,
+        ["driver.cjs", script, String(index), "3", ...(scope ? [scope] : [])],
+        {
+          cwd: directory,
+          encoding: "utf8",
+          env: { ...process.env, ...env },
+        },
       );
+    try {
+      const executed = [];
+      for (let index = 1; index <= 3; index++) {
+        const result = invoke(index);
+        assert.equal(result.status, 0, result.stderr);
+        executed.push(
+          ...JSON.parse(
+            fs.readFileSync(path.join(directory, "target/native-api-tests.json"), "utf8"),
+          ),
+        );
+      }
+      const sorted = (rows) => rows.map((row) => `${row.file}:${row.name}`).sort();
+      assert.deepEqual(sorted(executed), sorted(inventory));
+      const commands = fs
+        .readFileSync(path.join(directory, "commands.jsonl"), "utf8")
+        .trim()
+        .split("\n")
+        .map(JSON.parse);
+      assert.equal(commands.length, 6);
+      for (const args of commands) {
+        const selectedFiles = scope ? require("./native-api-linux-files.cjs") : files;
+        assert.deepEqual(args.slice(1, 1 + selectedFiles.length), selectedFiles);
+        assert.ok(args.includes("--coverage=false"));
+        if (args[0] === "list") assert.ok(args.includes("--no-static-parse"));
+        else assert.ok(args.some((arg) => arg.startsWith("--testNamePattern=")));
+        assert.ok(!args.some((arg) => arg.includes("cargo")));
+      }
+      const failed = invoke(1, { NATIVE_API_FIXTURE_EXIT: "17" });
+      assert.equal(failed.status, 17, failed.stderr);
+    } finally {
+      fs.rmSync(directory, { recursive: true, force: true });
     }
-    const sorted = (rows) => rows.map((row) => `${row.file}:${row.name}`).sort();
-    assert.deepEqual(sorted(executed), sorted(inventory));
-    const commands = fs
-      .readFileSync(path.join(directory, "commands.jsonl"), "utf8")
-      .trim()
-      .split("\n")
-      .map(JSON.parse);
-    assert.equal(commands.length, 6);
-    for (const args of commands) {
-      assert.deepEqual(args.slice(1, 8), files);
-      assert.ok(args.includes("--coverage=false"));
-      assert.ok(!args.some((arg) => arg.includes("cargo")));
-    }
-    const failed = invoke(1, { NATIVE_API_FIXTURE_EXIT: "17" });
-    assert.equal(failed.status, 17, failed.stderr);
-  } finally {
-    fs.rmSync(directory, { recursive: true, force: true });
-  }
+  });
+}
+
+test("Linux inventory preserves all 24 selected native API test files", () => {
+  const linuxFiles = require("./native-api-linux-files.cjs");
+  assert.equal(linuxFiles.length, 24);
+  assert.equal(new Set(linuxFiles).size, 24);
+  assert.ok(linuxFiles.includes("tests/js/compiled-api-runtime.test.js"));
+  for (const file of files) assert.ok(linuxFiles.includes(file), file);
+  const linuxInventory = require("../../test-cases/native-api-shards/linux-inventory.json");
+  assert.deepEqual(linuxInventory.map((row) => row.file).sort(), [...linuxFiles].sort());
+  const plans = [1, 2, 3].map((index) => partition(linuxInventory, index, 3));
+  for (const row of linuxInventory)
+    assert.equal(plans.filter((plan) => new RegExp(plan.pattern).test(row.name)).length, 1);
+});
+
+test("native API CLI rejects an unknown file scope", () => {
+  const { spawnSync } = require("node:child_process");
+  const result = spawnSync(
+    process.execPath,
+    [path.join(__dirname, "native-api-shards.cjs"), "1", "3", "other"],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /scope must be linux or omitted/);
 });

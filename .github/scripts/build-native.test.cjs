@@ -335,6 +335,7 @@ for (const logFailure of ["open", "midwrite"]) {
 require("./native-rust-tests.test.cjs");
 require("./native-test-artifacts.test.cjs");
 require("./native-api-shards.test.cjs");
+require("./linux-native-api-workflow.test.cjs");
 require("./native-rust-partition.test.cjs");
 require("./build-artifact-source.test.cjs");
 
