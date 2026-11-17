@@ -76,12 +76,8 @@ pub(super) fn eligible<'a>(
     let Some(ValueExpression::Call(start, end)) = resolve(bindings, file, &binding.value) else {
         return false;
     };
-    let Some(index) = calls.get(&(*start, *end)) else {
-        return false;
-    };
-    let tag = &ts.value_flow.calls[*index];
-    if tag.arguments.len() <= 1 || !binding_tag::is_bind_tag(bindings, file, tag) {
-        return false;
-    }
-    true
+    calls.get(&(*start, *end)).is_some_and(|index| {
+        let tag = &ts.value_flow.calls[*index];
+        tag.arguments.len() > 1 && binding_tag::is_bind_tag(bindings, file, tag)
+    })
 }

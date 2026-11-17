@@ -97,3 +97,34 @@ export function aliasCall(id: string) {
   mutate(alias);
   readAliasCall(statement);
 }
+export function opaqueProjection() {
+  const statement = `${makeQuery().text}`;
+  readOpaqueProjection(statement);
+}
+export function wrongProjection(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const statement = `${q.values}`;
+  readWrongProjection(statement);
+}
+export function objectBuilder() {
+  const q = { text: 'SELECT 1', values: [] };
+  const statement = `${q.text}`;
+  readObjectBuilder(statement);
+}
+export function nonmemberValues(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const statement = `${q.text}`;
+  readNonmemberValues(statement, []);
+}
+export async function awaitedEscape(id: string) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const statement = `${q.text}`;
+  readAwaitedEscape(statement);
+  return await q;
+}
+export function conditionalEscape(id: string, choose: boolean) {
+  const q = sql`SELECT * FROM items WHERE id = ${id}`;
+  const statement = `${q.text}`;
+  readConditionalEscape(statement);
+  return choose ? q : null;
+}

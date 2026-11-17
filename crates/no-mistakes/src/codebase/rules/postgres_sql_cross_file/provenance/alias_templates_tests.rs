@@ -92,6 +92,12 @@ fn immutable_template_aliases_keep_bind_pairing_and_scoped_builder_identity() {
             ("readExportedAlias", None),
             ("readExportedObject", None),
             ("readReturned", None),
+            ("readOpaqueProjection", None),
+            ("readWrongProjection", None),
+            ("readObjectBuilder", None),
+            ("readNonmemberValues", Some("q".into())),
+            ("readAwaitedEscape", None),
+            ("readConditionalEscape", None),
         ])
     );
 }
