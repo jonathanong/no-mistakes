@@ -276,7 +276,7 @@ jobs:
           exit "$fail"
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
+        run: node --test .github/scripts/coverage-build-resources.test.cjs .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
       - name: Test PostgreSQL setup policy
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
@@ -2160,6 +2160,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     env:
+      CARGO_BUILD_JOBS: "1"
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
       CARGO_LLVM_COV_TARGET_DIR: ${{ github.workspace }}/target/coverage/target
     outputs:
@@ -2224,12 +2225,21 @@ jobs:
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 40
         shell: bash
+        env:
+          CACHE_PRIMARY_KEY: ${{ steps.coverage-workspace-cache.outputs.cache-primary-key }}
+          CACHE_MATCHED_KEY: ${{ steps.coverage-workspace-cache.outputs.cache-matched-key }}
+          CACHE_HIT: ${{ steps.coverage-workspace-cache.outputs.cache-hit }}
         run: |
           set -euo pipefail
+          printf 'coverage cache: primary=%s matched=%s exact=%s\n' "$CACHE_PRIMARY_KEY" "$CACHE_MATCHED_KEY" "$CACHE_HIT"
+          printf 'Cargo jobs=%s incremental=%s\n' "$CARGO_BUILD_JOBS" "$CARGO_INCREMENTAL"
+          free -m
+          rustc -vV
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-coverage-cargo-inputs"
-          node .github/scripts/rust-coverage-shards.cjs archive target/coverage-bundle
+          printf 'Instrumented RUSTFLAGS=%s\n' "$RUSTFLAGS"
+          bash .github/scripts/with-resource-samples.sh node .github/scripts/rust-coverage-shards.cjs archive target/coverage-bundle
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-coverage-cargo-inputs"
       - name: Save verified workspace artifacts
         if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.coverage-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
