@@ -4,9 +4,11 @@
 
 [`postgres catalog`](../cli/postgres.md) generates the tool-owned JSON directly from
 PostgreSQL, without an application snapshot producer. Complete coverage is accepted
-by every catalog check. Explicit ordering coverage is accepted only by conflict/lock
-ordering checks; full-schema checks reject it. For one database, conflict and lock
-ordering report identical findings from either coverage.
+by every catalog check. Explicit ordering coverage is accepted by conflict/lock
+ordering checks and `postgres-lock-written-rows-only`; full-schema checks reject it.
+The written-row lock check uses only the relationships present in that catalog.
+For one database, conflict and lock ordering report identical findings from
+either coverage.
 
 Prepared row-bound facts are explicit demand. `CheckFactPlan.postgres_bounds` is
 requested by `postgres-bounded-statements` and retained when plans are merged.

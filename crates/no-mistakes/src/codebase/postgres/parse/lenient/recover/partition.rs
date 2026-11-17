@@ -1,5 +1,5 @@
 use super::super::keyword_of;
-use sqlparser::ast::{AlterTableOperation, Statement};
+use sqlparser::ast::{AlterTableOperation, Expr, Partition, Statement};
 use sqlparser::dialect::GenericDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
@@ -12,7 +12,7 @@ pub(super) fn recover_partition_change(
     chunk: &[Token],
     original: Option<&[TokenWithSpan]>,
     allow_concurrent_detach: bool,
-) -> Option<Statement> {
+) -> Option<(Statement, bool)> {
     let dialect = GenericDialect {};
     let mut parser = match original {
         Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens.to_vec()),
@@ -25,13 +25,14 @@ pub(super) fn recover_partition_change(
     let [operation] = table.operations.as_slice() else {
         return None;
     };
-    match operation {
-        AlterTableOperation::AttachPartition { .. } => {
+    let partition = match operation {
+        AlterTableOperation::AttachPartition { partition } => {
             if !partition_bound_suffix(&mut parser) {
                 return None;
             }
+            partition
         }
-        AlterTableOperation::DetachPartition { .. } => {
+        AlterTableOperation::DetachPartition { partition } => {
             let next = parser.peek_token().token;
             if !matches!(next, Token::EOF) {
                 if !matches!(next, Token::Word(ref word) if word.quote_style.is_none()
@@ -50,10 +51,15 @@ pub(super) fn recover_partition_change(
                     return None;
                 }
             }
+            partition
         }
         _ => return None,
-    }
-    Some(statement)
+    };
+    let named = matches!(
+        partition,
+        Partition::Expr(Expr::Identifier(_) | Expr::CompoundIdentifier(_))
+    );
+    Some((statement, named))
 }
 
 // The generic dialect stops after the partition name. Validate the remaining

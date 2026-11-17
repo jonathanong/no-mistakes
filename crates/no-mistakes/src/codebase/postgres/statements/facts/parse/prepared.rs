@@ -43,6 +43,10 @@ pub(super) fn extract(
         ),
         Err(_) => {
             let parsed = parse_postgres_sql_lenient_with_sources(sql, prepared.normalized());
+            let partition_complete = parsed.iter().any(|statement| statement.partition_complete)
+                && parsed
+                    .iter()
+                    .all(|statement| statement.complete || statement.partition_complete);
             let parse_failures: Vec<_> =
                 crate::codebase::postgres::migration::recovery_failures(&parsed)
                     .into_iter()
@@ -66,7 +70,7 @@ pub(super) fn extract(
                 .into_iter()
                 .map(|located| (located.statement, located.source))
                 .unzip();
-            super::super::projection::extract(
+            let mut facts = super::super::projection::extract(
                 sql,
                 &prepared,
                 &statements,
@@ -86,7 +90,9 @@ pub(super) fn extract(
                 parse_failed,
                 collect_bounds,
                 placeholder_positions,
-            )
+            );
+            facts.lock_writes.ddl_recovery_complete = partition_complete;
+            facts
         }
     }
 }

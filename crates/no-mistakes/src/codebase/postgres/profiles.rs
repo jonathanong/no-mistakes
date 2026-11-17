@@ -36,6 +36,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
 /// [`PREPARED_EMBEDDED_SQL_RULE_IDS`].
 #[doc(hidden)]
 pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
+    "postgres-lock-written-rows-only",
     "postgres-column-check-constraints",
     "postgres-column-requires-trigger",
     "postgres-conflict-ordering",

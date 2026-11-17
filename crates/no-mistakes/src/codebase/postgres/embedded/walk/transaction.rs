@@ -10,6 +10,7 @@ pub(super) fn annotate(
     fact: &mut EmbeddedSqlCall,
 ) {
     super::stable_binds::annotate(visitor, call, fact);
+    fact.execution_awaited = visitor.awaited_lock_helper_calls.contains(&call.span.start);
     fact.lock_scope_analysis = visitor.executor_options.track_transaction_helpers;
     let owner = visitor
         .member_query_proof
@@ -17,6 +18,10 @@ pub(super) fn annotate(
         .last()
         .copied()
         .unwrap_or(0);
+    if visitor.executor_options.track_transaction_helpers {
+        fact.execution_scope = owner;
+        fact.execution_range = (call.span.start, call.span.end);
+    }
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);

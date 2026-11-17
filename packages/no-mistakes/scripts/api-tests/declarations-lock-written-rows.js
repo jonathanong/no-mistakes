@@ -16,6 +16,7 @@ test("lock-written-rows options expose named checks, policies, exceptions and wr
     "checks?: Partial<Record<PostgresLockWrittenRowsCheck, PostgresLockWrittenRowsSeverity>>;",
     "executorNames?: string[];",
     "executorOptionProperties?: string[];",
+    "schemaCatalogPath?: string;",
     "extraExecutorNames?: string[];",
     "excludeExecutorNames?: string[];",
     "allow?: PostgresLockWrittenRowsAllow[];",

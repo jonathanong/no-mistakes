@@ -30,16 +30,22 @@ catalog's schema. Ordinary partition leaves with only inherited key clones are
 omitted; leaves with their own primary or foreign key are retained with only
 their local constraints. Handwritten snapshots may also set `partitionOf` to
 identify partition children; explicit key facts on a leaf are interpreted as
-that leaf's own constraints.
+that leaf's own constraints. Ordinary inheritance records a sorted
+`inheritedFrom` array of immediate parent names, schema-qualified when needed;
+partition parents stay in `partitionOf`. Older catalogs omit `inheritedFrom`
+and provide no ordinary inheritance evidence. The DDL purpose proof in
+`postgres-lock-written-rows-only` uses these relationships and foreign keys.
 
 `postgres-key-column-types` reads primary-key columns, foreign-key referencing
 columns, enum types, and partition relationships. `postgres-finite-text-columns` reads column types, foreign keys, and `CHECK`
 definitions from the catalog. `postgres-array-columns` reads column `data_type`
 values and enum names from it. A rule that needs more than ordering facts rejects an
 ordering catalog with `schemaCatalogPath <path> has ordering-only coverage; this
-rule requires a complete schema catalog`; only `postgres-conflict-ordering` and
-`postgres-lock-ordering` accept it. Both keep resolving arbiters from valid, ready,
-unique or primary btree indexes only. `tables()`, `table(name)`, `functions()`,
+rule requires a complete schema catalog`; `postgres-conflict-ordering`,
+`postgres-lock-ordering`, and `postgres-lock-written-rows-only` accept it. The
+written-row lock check uses only relationships present in the catalog; missing
+links do not justify a lock. The ordering checks keep resolving arbiters from
+valid, ready, unique or primary btree indexes only. `tables()`, `table(name)`, `functions()`,
 `enums()`, and `views()` expose the rest of the catalog. Iterators are in
 name order. Function order follows the catalog key. Tables are indexed by
 normalized name, so `table(name)` and `relation(name)` find a quoted key such as

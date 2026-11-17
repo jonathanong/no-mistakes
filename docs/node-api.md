@@ -882,7 +882,9 @@ membership follows the configured unanalyzable policy.
 `PostgresLockWrittenRowsOnlyOptions.executorOptionProperties` selects static inline
 executor-routing options (for example `{ query: tx }`); it defaults to `[]`.
 Configured factory bindings support `const`, `using`, and `await using`.
-
+`PostgresLockWrittenRowsOnlyOptions.schemaCatalogPath` optionally supplies schema
+relationships for table locks that order later DDL in the same transaction.
+Guard-relation reads before later DDL do not require a catalog.
 
 The [`postgres-column-check-constraints`](rules/postgres-column-check-constraints.md)
 catalog rule maps `check` to the existing async `check()` runtime export and

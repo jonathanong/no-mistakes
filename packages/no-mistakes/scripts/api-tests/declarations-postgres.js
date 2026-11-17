@@ -104,6 +104,7 @@ test("generatePostgresCatalog declarations separate complete and ordering catalo
   }
   assert.match(types, /export interface PostgresCatalogFunction \{[^}]*returnsSet\?: boolean;/);
   assert.match(types, /export interface PostgresCatalogTable \{[^}]*partitionOf\?: string;/);
+  assert.match(types, /export interface PostgresCatalogTable \{[^}]*inheritedFrom\?: string\[\];/);
   for (const fact of ["foreignKeys", "checkConstraints", "triggers", "physicalPartition"]) {
     assert.match(types, new RegExp(`  ${fact}: `));
   }

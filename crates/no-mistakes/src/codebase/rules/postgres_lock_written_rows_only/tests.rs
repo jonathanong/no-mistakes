@@ -1,6 +1,8 @@
 use super::*;
 
 mod binding_control_flow;
+mod catalog_errors;
+mod ddl;
 mod executor_selection;
 mod flow_coverage;
 mod four_joined_aliases;

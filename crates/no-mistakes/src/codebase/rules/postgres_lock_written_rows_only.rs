@@ -20,6 +20,7 @@ pub(super) const CHECKS: [&str; 4] = [
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct Options {
+    schema_catalog_path: String,
     include: Vec<String>,
     exclude: Vec<String>,
     import_specifier: String,
@@ -36,6 +37,7 @@ struct Options {
     write_sets: Vec<WriteSet>,
 }
 struct CompiledOptions {
+    schema_catalog_path: Option<String>,
     paths: super::RuleGlobFilter,
     embedded: EmbeddedSqlOptions,
     unanalyzable: Mode,
@@ -103,6 +105,8 @@ fn compile(options: &Options) -> Result<CompiledOptions> {
             .with_trusted_sql_tags(&options.trusted_sql_tags);
     embedded.track_transaction_helpers = true;
     Ok(CompiledOptions {
+        schema_catalog_path: (!options.schema_catalog_path.is_empty())
+            .then(|| options.schema_catalog_path.clone()),
         paths: super::RuleGlobFilter::new(RULE_ID, &options.include, &options.exclude)?,
         embedded,
         incomplete_files: dashmap::DashSet::new(),

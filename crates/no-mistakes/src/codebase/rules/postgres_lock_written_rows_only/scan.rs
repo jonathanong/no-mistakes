@@ -11,6 +11,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
 };
+mod ddl;
 mod output;
 mod rows;
 mod writes;
@@ -55,6 +56,11 @@ fn scan_file(
     if !CHECKS.iter().any(|check| enabled(check)) {
         return Ok(output.into_findings());
     }
+    let catalog = options
+        .schema_catalog_path
+        .as_deref()
+        .map(|path| facts.prepared().postgres_ordering_catalog(path))
+        .transpose()?;
     let check_written = enabled(CHECKS[0]);
     let check_outside = enabled(CHECKS[3]);
     let mut grouped: BTreeMap<usize, Vec<&SqlStatementFileFacts>> = BTreeMap::new();
@@ -75,7 +81,7 @@ fn scan_file(
                 || grouped.get(index).is_none_or(|versions| {
                     versions.len() != 1
                         || versions.iter().any(|version| {
-                            version.parse_failed
+                            (version.parse_failed && !version.lock_writes.ddl_recovery_complete)
                                 || version
                                     .lock_writes
                                     .writes
@@ -94,6 +100,7 @@ fn scan_file(
         })
         .filter_map(|(_, call)| call.transaction_id)
         .collect();
+    let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
     let mut writes = writes::Writes::default();
     for (index, call) in embedded.calls.iter().enumerate() {
         if let Some(id) = call.transaction_id {
@@ -119,14 +126,20 @@ fn scan_file(
             call,
         };
         let Some(versions) = grouped.get(&index).filter(|versions| {
-            !call.is_unanalyzable() && !versions.iter().any(|version| version.parse_failed)
+            !call.is_unanalyzable()
+                && !versions.iter().any(|version| {
+                    version.parse_failed && !version.lock_writes.ddl_recovery_complete
+                })
         }) else {
             output.unresolved(&site, "executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked");
             continue;
         };
         for version in versions {
             let access = &version.lock_writes;
-            for relation in &access.table_locks {
+            for (lock, relation) in access.table_locks.iter().enumerate() {
+                if exemptions.contains(&(index, lock)) {
+                    continue;
+                }
                 output.emit(
                     &site,
                     CHECKS[1],

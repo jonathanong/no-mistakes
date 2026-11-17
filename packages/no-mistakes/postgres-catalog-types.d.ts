@@ -81,6 +81,8 @@ export interface PostgresCatalogTable {
   relationKind: "table" | "partitioned table";
   /** Optional parent table for hand-authored snapshots that include partition leaves. */
   partitionOf?: string;
+  /** Ordinary inheritance parents; absent when none are recorded. */
+  inheritedFrom?: string[];
   columns: Record<string, PostgresCatalogColumn>;
   primaryKey: { columns: string[] } | null;
   uniqueConstraints: Record<string, { columns: string[] }>;

@@ -1,0 +1,425 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 19,
+          "message": "src/query.ts:19: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE other.events IN SHARE MODE`);",
+          "target": "table-lock"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_identifiers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE sql_placeholder_1 IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 16,
+          "message": "src/query.ts:16: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE sql_placeholder_1 IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE sql_placeholder_1 IN SHARE MODE`);",
+          "target": "table-lock"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "guard": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "negative": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 14,
+          "message": "src/query.ts:14: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 19,
+          "message": "src/query.ts:19: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM jobs; LOCK TABLE jobs IN SHARE MODE; DROP TABLE events_old`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 23,
+          "message": "src/query.ts:23: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE; DROP TABLE events_old; SELECT 1 FROM jobs`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 27,
+          "message": "src/query.ts:27: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE jobs ADD COLUMN title text; LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 37,
+          "message": "src/query.ts:37: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 43,
+          "message": "src/query.ts:43: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE alpha.jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 48,
+          "message": "src/query.ts:48: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 54,
+          "message": "src/query.ts:54: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 60,
+          "message": "src/query.ts:60: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 65,
+          "message": "src/query.ts:65: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "void tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 70,
+          "message": "src/query.ts:70: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 76,
+          "message": "src/query.ts:76: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 83,
+          "message": "src/query.ts:83: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "(async () => { await tx.query(`LOCK TABLE jobs IN SHARE MODE`); })(),",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 89,
+          "message": "src/query.ts:89: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`, (await tx.query(`ALTER TABLE jobs ADD COLUMN title text`), []));",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "src/query.ts:93: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`, (await tx.query(`SELECT 1 FROM jobs`), []));",
+          "target": "table-lock"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "related": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "uncertain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 15,
+          "message": "src/query.ts:15: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 16,
+          "message": "src/query.ts:16: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 21,
+          "message": "src/query.ts:21: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 27,
+          "message": "src/query.ts:27: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE; COMMIT; ALTER TABLE jobs ADD COLUMN title text`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 31,
+          "message": "src/query.ts:31: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE events IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE events ATTACH PARTITION`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 36,
+          "message": "src/query.ts:36: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE events IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 37,
+          "message": "src/query.ts:37: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE events DETACH PARTITION events_old trailing`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 41,
+          "message": "src/query.ts:41: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE events IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 47,
+          "message": "src/query.ts:47: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 48,
+          "message": "src/query.ts:48: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE jobs DETACH PART jobs_old`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 52,
+          "message": "src/query.ts:52: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 53,
+          "message": "src/query.ts:53: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE jobs DETACH PARTITION 42`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 57,
+          "message": "src/query.ts:57: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 58,
+          "message": "src/query.ts:58: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE ${relation} ADD COLUMN title text`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 62,
+          "message": "src/query.ts:62: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 63,
+          "message": "src/query.ts:63: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`CREATE TABLE ${relation} (id integer)`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 68,
+          "message": "src/query.ts:68: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 69,
+          "message": "src/query.ts:69: unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`ALTER TABLE events ATTACH PARTITION ${relation} FOR VALUES FROM (1) TO (2)`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 9,
+          "message": "src/query.ts:9: table-lock: LOCK TABLE widens contention; lock only the row being written",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`LOCK TABLE jobs IN SHARE MODE`);",
+          "target": "table-lock"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

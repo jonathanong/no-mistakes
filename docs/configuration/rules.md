@@ -572,7 +572,10 @@ in unused-entry accounting. Unresolved SQL and transaction membership follow
 `{ query: tx.query }` overrides at configured executors. An unresolved override
 follows the unanalyzable policy and is never classified as autocommit.
 Configured factory bindings support `const`, `using`, and `await using` with
-block scope. See the rule page for helper summaries and supported proof limits.
+block scope. Optional `schemaCatalogPath` supplies schema relationships for
+table locks that order later DDL. A read of a locked guard relation before later
+DDL in the same transaction also establishes that purpose without a catalog.
+See the rule page for helper summaries and supported proof limits.
 
 [`postgres-column-check-constraints`](../rules/postgres-column-check-constraints.md)
 uses an optional `schemaCatalogPath`, explicit `columns` entries with `pattern`,

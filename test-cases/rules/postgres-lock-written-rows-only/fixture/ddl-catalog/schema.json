@@ -1,0 +1,33 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "public.events": {},
+    "public.events_old": {
+      "partitionOf": "public.events"
+    },
+    "public.reservations": {
+      "foreignKeys": {
+        "reservations_event_fk": {
+          "referencedTable": "public.events"
+        }
+      }
+    },
+    "other.events": {},
+    "public.inherited_events": {
+      "inheritedFrom": [
+        "public.events"
+      ]
+    },
+    "public.external_guard": {
+      "inheritedFrom": [
+        "shared.parent"
+      ],
+      "foreignKeys": {
+        "external_fk": {
+          "referencedTable": "shared.events"
+        }
+      }
+    }
+  }
+}

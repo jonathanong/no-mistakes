@@ -232,7 +232,9 @@ fn an_ordering_catalog_is_rejected_by_every_rule_that_needs_complete_facts() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if matches!(
             *rule,
-            "postgres-conflict-ordering" | "postgres-lock-ordering"
+            "postgres-conflict-ordering"
+                | "postgres-lock-ordering"
+                | "postgres-lock-written-rows-only"
         ) {
             assert!(
                 !stderr.contains("ordering-only coverage"),

@@ -13,6 +13,10 @@ const cases = [
   ["helper-imported-unwritten", "checks-fail.yml", 1],
   ["helper-imported-written", "checks-fail.yml", 0],
   ["atomic-cte", "checks-fail.yml", 4],
+  ["ddl-related", "checks-fail.yml", 0],
+  ["ddl-guard", "checks-fail.yml", 0],
+  ["ddl-catalog", "ddl-catalog.yml", 1],
+  ["ddl-negative", "checks-fail.yml", 18],
 ];
 
 for (const [fixture, config, count] of cases) {
