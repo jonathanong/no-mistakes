@@ -81,19 +81,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Value::Unknown
             } else if parameterized && index % 2 == 1 {
                 match part {
-                    Expr::Text(text) => Value::Prefix(
-                        if !relation
-                            && text.starts_with(
-                                crate::codebase::postgres::embedded::INTERNAL_PLACEHOLDER,
-                            )
-                        {
+                    Expr::Text(text) => {
+                        let placeholder = text
+                            .starts_with(crate::codebase::postgres::embedded::INTERNAL_PLACEHOLDER);
+                        let invalid_position = placeholder
+                            && matches!(&prefix, Value::Prefix(text, _, _) if text.ends_with('$'));
+                        let text = if placeholder && !relation && !invalid_position {
                             format!("{}1", crate::codebase::postgres::embedded::INTERNAL_BIND)
                         } else {
                             text.clone()
-                        },
-                        true,
-                        None,
-                    ),
+                        };
+                        Value::Prefix(text, !invalid_position, None)
+                    }
                     _ => self.expr(part, path, env, depth, generic),
                 }
             } else {

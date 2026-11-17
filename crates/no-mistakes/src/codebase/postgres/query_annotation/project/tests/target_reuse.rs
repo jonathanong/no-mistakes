@@ -1,6 +1,33 @@
 use super::*;
 
 #[test]
+fn imported_tag_does_not_project_an_ineligible_positional_suffix_as_a_value_bind() {
+    let mut files = prepared_fixture("helper-tracing-positional-suffixes", &["entry", "builder"]);
+    let entry = files
+        .keys()
+        .find(|path| path.ends_with("entry.mts"))
+        .unwrap()
+        .clone();
+    let builder = entry.with_file_name("builder.mts");
+    let projected = super::super::project_executed(&mut files, |specifier, _| {
+        (specifier == "./builder.mjs").then(|| builder.clone())
+    });
+    let source = files[&entry].source.as_deref().unwrap();
+    let key = |call: &str| {
+        let start = source.find(call).unwrap() as u32;
+        (entry.clone(), (start, start + call.len() as u32))
+    };
+    let valid = projected[&key("query(validSql())")].as_ref().unwrap();
+    assert_eq!(valid.len(), 1);
+    assert_eq!(valid[0].text, "SELECT $10, $1");
+    assert!(valid[0].only_value_placeholders);
+    assert_eq!(
+        projected[&key("query(invalidSql())")],
+        Err("unresolved-sql-fragment"),
+    );
+}
+
+#[test]
 fn targets_and_indexes_are_shared_across_profiles_and_parallel_evaluators() {
     let mut files = prepared();
     let candidates = files
