@@ -136,6 +136,7 @@ fn statements_without_chunk_tokens_are_not_orphan_chunks() {
         recovered_functions: Vec::new(),
         policy_arbiter: None,
         complete: true,
+        partition_complete: false,
         chunk_tokens: None,
         recovery_failure: None,
     };

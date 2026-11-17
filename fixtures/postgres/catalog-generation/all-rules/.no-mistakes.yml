@@ -128,3 +128,12 @@ rules:
       include: ["src/**/*.ts"]
       sqlInclude: ["sql/**/*.sql"]
       executorNames: [query]
+
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      include: ["src/table-lock.ts"]
+      checks:
+        table-lock: fail

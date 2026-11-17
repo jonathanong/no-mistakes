@@ -28,3 +28,30 @@ fn uses_prepared_catalog_relationships_without_suffix_collisions() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 19);
 }
+
+#[test]
+fn partition_ordering_preserves_other_policies_recovery_uncertainty() {
+    let path = fixture("ddl-related").join("src/query.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let config = config();
+    let compiled = compile(&config.rules[0].try_rule_options().unwrap()).unwrap();
+    let embedded = crate::codebase::postgres::extract_embedded_sql_from_source(
+        &path,
+        &source,
+        &compiled.embedded,
+    );
+    let call = embedded
+        .calls
+        .iter()
+        .find(|call| {
+            call.sql_text
+                .as_deref()
+                .is_some_and(|sql| sql.starts_with("ALTER TABLE events DETACH"))
+        })
+        .unwrap();
+    let facts =
+        crate::codebase::postgres::extract_sql_statement_facts_for_embedded_call(call).unwrap();
+    assert!(facts.parse_failed);
+    assert_eq!(facts.parse_failures.len(), 1);
+    assert!(facts.parse_failures[0].head.contains("DETACH PARTITION"));
+}

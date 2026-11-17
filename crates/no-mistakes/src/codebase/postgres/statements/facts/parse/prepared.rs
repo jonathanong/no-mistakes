@@ -43,6 +43,10 @@ pub(super) fn extract(
         ),
         Err(_) => {
             let parsed = parse_postgres_sql_lenient_with_sources(sql, prepared.normalized());
+            let partition_complete = parsed.iter().any(|statement| statement.partition_complete)
+                && parsed
+                    .iter()
+                    .all(|statement| statement.complete || statement.partition_complete);
             let parse_failures: Vec<_> =
                 crate::codebase::postgres::migration::recovery_failures(&parsed)
                     .into_iter()
@@ -66,11 +70,6 @@ pub(super) fn extract(
                 .into_iter()
                 .map(|located| (located.statement, located.source))
                 .unzip();
-            let partition_complete = parse_failures.is_empty()
-                && orphans.is_empty()
-                && !complete.is_empty() && complete.iter().all(|complete| *complete)
-                && statements.iter().any(|statement| matches!(statement, sqlparser::ast::Statement::AlterTable(table)
-                    if matches!(table.operations.as_slice(), [sqlparser::ast::AlterTableOperation::AttachPartition { .. } | sqlparser::ast::AlterTableOperation::DetachPartition { .. }])));
             let mut facts = super::super::projection::extract(
                 sql,
                 &prepared,

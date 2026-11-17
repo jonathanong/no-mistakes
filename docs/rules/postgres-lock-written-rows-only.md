@@ -250,7 +250,8 @@ the project's PostgreSQL scope when the rule inherits one.
 `schemaCatalogPath` defaults to absent. When supplied, it names a root-relative
 PostgreSQL schema catalog used to connect DDL targets to locked relations
 through partitioning, inheritance, and foreign keys.
-Guard-read proofs do not require a catalog.
+Guard-read proofs do not require a catalog. Ordering-only catalogs are accepted,
+but absent relationship metadata cannot prove that two relations are linked.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required
