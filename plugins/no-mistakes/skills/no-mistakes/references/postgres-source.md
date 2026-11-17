@@ -209,9 +209,10 @@ apply to this rule. Configure transaction factories through `executorFactoryName
 for `const`, `using`, and `await using` bindings, or a simple first parameter
 of a direct factory callback. Configure `executorOptions: [{ name: query }]`
 (or `executorOptionProperties: [query]`) when a wrapper routes its transaction
-through an inline options object. Local, unexported option helpers can forward
+through an inline options object. These property names leave bare executor
+binding resolution unchanged. Local, unexported option helpers can forward
 optional options and specialize literal boolean flags; unknown callers or flags
-retain findings. Directly await static executor-parameter lock helpers and pass matching
+retain findings, including helpers with no resolved callers. Directly await static executor-parameter lock helpers and pass matching
 executor parameters; imported helpers and re-exports reuse prepared summaries.
 Hashed global advisory keys are checked, while atomic lock/write CTEs on the
 same relation are accepted. Table locks can order later DDL in the same

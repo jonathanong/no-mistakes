@@ -1,0 +1,143 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "with_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/anonymous.ts",
+          "line": 3,
+          "message": "src/anonymous.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 1 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/arrays.ts",
+          "line": 6,
+          "message": "src/arrays.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write('SELECT id FROM users WHERE id = $1 FOR UPDATE', [getId()], options);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/reassigned.ts",
+          "line": 8,
+          "message": "src/reassigned.ts:8: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory; helper lockReassigned locks at line 3",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockReassigned({ query: tx });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/uncalled.ts",
+          "line": 3,
+          "message": "src/uncalled.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE company_id = ${cid} AND id = ${uid} FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/uncalled.ts",
+          "line": 6,
+          "message": "src/uncalled.ts:6: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 1 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/uncalled.ts",
+          "line": 9,
+          "message": "src/uncalled.ts:9: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 2 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "without_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/anonymous.ts",
+          "line": 3,
+          "message": "src/anonymous.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 1 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/arrays.ts",
+          "line": 3,
+          "message": "src/arrays.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write('SELECT id FROM users WHERE id = $1 FOR UPDATE', [id], options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/arrays.ts",
+          "line": 6,
+          "message": "src/arrays.ts:6: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write('SELECT id FROM users WHERE id = $1 FOR UPDATE', [getId()], options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/called.ts",
+          "line": 3,
+          "message": "src/called.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = ${id} FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/reassigned.ts",
+          "line": 3,
+          "message": "src/reassigned.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 1 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/uncalled.ts",
+          "line": 3,
+          "message": "src/uncalled.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE company_id = ${cid} AND id = ${uid} FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/uncalled.ts",
+          "line": 6,
+          "message": "src/uncalled.ts:6: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 1 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        },
+        {
+          "file": "src/uncalled.ts",
+          "line": 9,
+          "message": "src/uncalled.ts:9: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await write(sql`SELECT id FROM users WHERE id = 2 FOR UPDATE`, options);",
+          "target": "row-lock-outside-transaction"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

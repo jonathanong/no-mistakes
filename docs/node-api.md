@@ -891,7 +891,8 @@ membership follows the configured unanalyzable policy.
 `PostgresLockWrittenRowsOnlyOptions.executorOptions` selects executor-routing
 properties with entries such as `{ name: "query" }` for `{ query: tx }`.
 It defaults to `[]` and combines with the existing `executorOptionProperties`
-string list. Repeated names are deduplicated; names must be nonempty.
+string list. Repeated names are deduplicated; names must be nonempty. These
+property names leave same-spelled local executor bindings unchanged.
 Configured factory bindings support `const`, `using`, and `await using`.
 `PostgresLockWrittenRowsOnlyOptions.schemaCatalogPath` optionally supplies schema
 relationships for table locks that order later DDL in the same transaction.
@@ -899,7 +900,8 @@ Guard-relation reads before later DDL do not require a catalog. Complete catalog
 also supply trigger-derived write evidence; ordering-only catalogs do not.
 Direct imported factory callbacks also establish transaction membership for a
 simple first parameter. Local, unexported option helpers specialize literal
-boolean arguments; unresolved callers and unknown flags retain findings.
+boolean arguments; unresolved callers and unknown flags retain findings. Zero
+resolved callers never establish transaction membership.
 
 The [`postgres-column-check-constraints`](rules/postgres-column-check-constraints.md)
 catalog rule maps `check` to the existing async `check()` runtime export and

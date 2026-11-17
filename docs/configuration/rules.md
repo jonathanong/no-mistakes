@@ -571,6 +571,7 @@ in unused-entry accounting. Unresolved SQL and transaction membership follow
 for example, `[{ name: query }]` selects inline `{ query: tx }` or
 `{ query: tx.query }` overrides at configured executors. An unresolved override
 follows the unanalyzable policy and is never classified as autocommit.
+Property names do not change how same-spelled local executor bindings resolve.
 Names must be nonempty. The existing `executorOptionProperties: [query]` form
 remains supported; both lists combine and repeated names are deduplicated.
 Configured factory bindings support `const`, `using`, and `await using` with
@@ -582,7 +583,8 @@ catalogs do not.
 Direct callbacks passed to a configured imported transaction factory can provide
 the transaction client. Local, unexported helpers can forward an options parameter
 and select SQL with a literal boolean argument at each caller. Unknown callers
-and flags do not establish safe transaction membership.
+and flags do not establish safe transaction membership. A helper with no resolved
+callers cannot establish that proof either.
 See the rule page for helper summaries and supported proof limits.
 
 [`postgres-column-check-constraints`](../rules/postgres-column-check-constraints.md)

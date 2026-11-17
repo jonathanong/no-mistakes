@@ -410,7 +410,8 @@ mutable holders.
 
 `executorOptions` defaults to `[]`. Configure the properties that select a client
 at your imported executors. No option-property routing is inferred without this
-configuration:
+configuration. These names select properties in an options argument; bare
+executor binding resolution remains independent, including same-spelled aliases:
 
 ```yaml
 executorOptions:
@@ -467,14 +468,21 @@ arm, so a non-transaction caller passing `false` does not enable the lock. An
 unknown flag cannot prove that the lock is disabled. Every caller that enables
 the lock must supply a static inline options object selecting a proven
 transaction; missing options, a non-transaction
-client, and unresolved callers retain findings. A `Client` type annotation alone
+client, and unresolved callers retain findings. At least one resolved caller is
+required; a helper with no resolved callers cannot prove transaction membership.
+A transaction binding reassigned to a pool before the helper call also fails
+that proof. A `Client` type annotation alone
 does not prove a transaction.
 Passing a `const` options binding to these helpers remains unresolved; pass the
 static object inline instead. Direct executor calls retain the `const` options
 support described above.
-Exported or escaped option helpers remain unresolved because external callers
-cannot be proven here. Pass inline options at a known transaction call site
-instead. This extension does not generalize arbitrary branches or dynamic SQL.
+Exported or escaped option helpers retain findings because external callers
+cannot be proven here. An opaque whole-options parameter forwarded to an imported
+executor keeps that executor's default non-transaction classification until a
+supported caller proves routing. Its row lock reports
+`row-lock-outside-transaction`; an explicit unknown property such as
+`{ query: unknownClient }` still follows the unanalyzable policy. Pass inline
+options at a known transaction call site instead. This extension does not generalize arbitrary branches or dynamic SQL.
 
 ### Stale SQL suppressions
 

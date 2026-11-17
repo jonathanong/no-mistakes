@@ -86,10 +86,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unsafe.ts",
           "line": 14,
-          "message": "src/unsafe.ts:14: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/unsafe.ts:14: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         },
         {
           "file": "src/unsafe.ts",
@@ -102,18 +102,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unsafe.ts",
           "line": 3,
-          "message": "src/unsafe.ts:3: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/unsafe.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         },
         {
           "file": "src/unsafe.ts",
           "line": 6,
-          "message": "src/unsafe.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/unsafe.ts:6: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         }
       ],
       "warnings": []
@@ -147,10 +147,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unsupported.ts",
           "line": 15,
-          "message": "src/unsupported.ts:15: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/unsupported.ts:15: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(sql`SELECT id FROM items WHERE id = ${id.toString()} FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         },
         {
           "file": "src/unsupported.ts",
@@ -163,10 +163,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/unsupported.ts",
           "line": 6,
-          "message": "src/unsupported.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/unsupported.ts:6: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(!flag ? sql`SELECT id FROM items FOR UPDATE` : sql`SELECT id FROM items`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         },
         {
           "file": "src/unsupported.ts",
@@ -221,10 +221,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/bare-return.ts",
           "line": 3,
-          "message": "src/bare-return.ts:3: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/bare-return.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "return write(sql`SELECT id FROM items FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         },
         {
           "file": "src/conflicting.ts",
@@ -237,10 +237,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/exports.ts",
           "line": 3,
-          "message": "src/exports.ts:3: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/exports.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         },
         {
           "file": "src/late-array.ts",
@@ -269,10 +269,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/spread.ts",
           "line": 3,
-          "message": "src/spread.ts:3: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "message": "src/spread.ts:3: row-lock-outside-transaction: row lock in autocommit is released immediately; move the lock and write into the same transaction",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await write(sql`SELECT id FROM items FOR UPDATE`, opts);",
-          "target": "unanalyzable"
+          "target": "row-lock-outside-transaction"
         }
       ],
       "warnings": []

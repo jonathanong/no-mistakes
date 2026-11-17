@@ -8,7 +8,7 @@ fn configured_transaction_callback_parameters_are_scoped_transactions() {
         .with_scoped_executors(&["transaction".into()], &[]);
     options.track_transaction_helpers = true;
     let calls = extract_embedded_sql_from_source(&path, &source, &options).calls;
-    assert_eq!(calls.len(), 23, "{calls:?}");
+    assert_eq!(calls.len(), 24, "{calls:?}");
     assert!(calls[0].executor_transaction_known, "{:?}", calls[0]);
     assert!(calls[0].transaction_id.is_some(), "{:?}", calls[0]);
     assert_eq!(calls[0].transaction_line, Some(4));
@@ -37,4 +37,29 @@ fn configured_transaction_callback_parameters_are_scoped_transactions() {
     assert_eq!(calls[20].transaction_id, None);
     assert_eq!(calls[21].transaction_id, None);
     assert_eq!(calls[22].transaction_id, None);
+    assert!(calls[23].transaction_id.is_some(), "{:?}", calls[23]);
+    assert!(calls[23].executor_transaction_known);
+}
+
+#[test]
+fn option_property_configuration_preserves_callable_transaction_aliases() {
+    let path = crate::test_support::rule_fixture_root("postgres-lock-written-rows-only")
+        .join("caller-options-followup/src/alias.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let mut options = EmbeddedSqlOptions::configured("@example/db", &[])
+        .with_scoped_executors(&["beginTransaction".into()], &[])
+        .with_trusted_sql_tags(&[super::TrustedSqlTag {
+            module: "@example/db".into(),
+            name: "sql".into(),
+        }]);
+    options.track_transaction_helpers = true;
+    let without = extract_embedded_sql_from_source(&path, &source, &options).calls;
+    let options = options.with_executor_option_properties(&["query".into()]);
+    let with = extract_embedded_sql_from_source(&path, &source, &options).calls;
+    assert_eq!(without.len(), 1, "{without:?}");
+    assert_eq!(with.len(), 1, "{with:?}");
+    assert_eq!(without[0].transaction_id, with[0].transaction_id);
+    assert!(with[0].executor_transaction_known, "{with:?}");
+    assert!(with[0].transaction_id.is_some(), "{with:?}");
+    assert_eq!(without[0].sql_text, with[0].sql_text);
 }

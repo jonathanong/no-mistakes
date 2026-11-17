@@ -115,3 +115,13 @@ export async function update() {
     });
   }
 }
+
+export async function caughtOrdinary() {
+  try {
+    throw new Error("ordinary");
+  } catch (ordinary) {
+    await transaction(async (tx) => {
+      await tx.query("SELECT id FROM items WHERE id = 24 FOR UPDATE");
+    });
+  }
+}
