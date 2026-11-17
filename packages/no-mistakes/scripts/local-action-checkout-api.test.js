@@ -4,21 +4,24 @@ const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 
-test(
-  "local action checkout prerequisites agree across async Node APIs and CLI",
-  { skip: !addon?.endsWith(".node") },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const base = join(__dirname, "../../../test-cases/rules/github-actions-local-action-checkout");
-    for (const [fixture, expected] of [
-      ["unit", 12],
-      ["locations", 7],
-      ["named-job", 1],
-      ["exclusions", 1],
-      ["pass", 0],
-      ["suppressed", 0],
-    ]) {
+for (const [fixture, expected] of [
+  ["unit", 12],
+  ["locations", 7],
+  ["named-job", 1],
+  ["exclusions", 1],
+  ["pass", 0],
+  ["suppressed", 0],
+]) {
+  test(
+    `local action checkout prerequisites agree across async Node APIs and CLI: ${fixture}`,
+    { skip: !addon?.endsWith(".node") },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const base = join(
+        __dirname,
+        "../../../test-cases/rules/github-actions-local-action-checkout",
+      );
       const options = {
         root: join(base, "fixture", fixture),
         config: join(base, "configs/default.yml"),
@@ -44,6 +47,6 @@ test(
       assert.equal(child.error, undefined);
       assert.equal(child.status, expected > 0 ? 1 : 0, child.stderr);
       assert.deepEqual(JSON.parse(child.stdout), report);
-    }
-  },
-);
+    },
+  );
+}
