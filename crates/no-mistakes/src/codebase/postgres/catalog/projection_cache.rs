@@ -4,6 +4,7 @@ use std::sync::{Arc, OnceLock};
 
 #[derive(Debug, Default)]
 pub(super) struct ProjectionCache {
+    pub(super) trigger_writes: OnceLock<Vec<super::CatalogTriggerWrites>>,
     pub(super) scalar_function_names: OnceLock<Arc<BTreeSet<Vec<String>>>>,
     pub(super) view_projections: OnceLock<ViewProjections>,
 }

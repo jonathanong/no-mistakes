@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {},
+    "orders": {
+      "triggers": {
+        "orders_insert": {
+          "definition": "CREATE TRIGGER orders_insert AFTER INSERT ON orders FOR EACH ROW EXECUTE FUNCTION orders_insert()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "orders_insert": {
+      "definition": "CREATE FUNCTION orders_insert() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET latest = NEW.id WHERE id = NEW.id; RETURN NEW; END $$"
+    }
+  }
+}

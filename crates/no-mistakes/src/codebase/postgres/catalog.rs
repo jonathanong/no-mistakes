@@ -36,6 +36,8 @@ mod table_scope;
 #[cfg(test)]
 mod tests;
 mod trigger;
+mod trigger_writes;
+pub(crate) use trigger_writes::{CatalogTriggerWrite, CatalogTriggerWrites};
 mod view_definition;
 mod view_relation;
 
@@ -71,6 +73,7 @@ pub struct SchemaCatalog {
     model_tables: BTreeMap<String, CatalogTable>,
     relation_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     functions: BTreeMap<String, CatalogFunction>,
+    trigger_function_identities: BTreeMap<String, BTreeMap<String, String>>,
     projections:
         std::sync::Arc<std::sync::OnceLock<std::sync::Arc<projection_cache::ProjectionCache>>>,
     enums: BTreeMap<String, CatalogEnum>,

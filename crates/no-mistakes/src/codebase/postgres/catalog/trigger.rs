@@ -11,6 +11,7 @@ pub(super) struct ParsedTrigger {
     pub(super) update_columns: Vec<String>,
     pub(super) for_each_row: bool,
     pub(super) function: String,
+    pub(super) function_identity: String,
     pub(super) arguments: Vec<String>,
     pub(super) when: Option<String>,
 }
@@ -43,7 +44,11 @@ pub(super) fn parse_trigger(definition: &str) -> Result<ParsedTrigger, String> {
     if !(cursor.eat_kw("function") || cursor.eat_kw("procedure")) {
         return Err("expected function or procedure".to_string());
     }
+    cursor.skip_ws();
+    let function_start = cursor.index;
     let function = cursor.take_qualified()?;
+    let function_identity =
+        super::names::normalize_table_name(definition[function_start..cursor.index].trim());
     let arguments = cursor.take_arguments()?;
     let _ = cursor.eat_char(';');
     cursor.skip_ws();
@@ -56,6 +61,7 @@ pub(super) fn parse_trigger(definition: &str) -> Result<ParsedTrigger, String> {
         update_columns,
         for_each_row,
         function,
+        function_identity,
         arguments,
         when,
     })

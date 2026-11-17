@@ -1,0 +1,36 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {},
+    "wrong_accounts": {},
+    "orders": {
+      "triggers": {
+        "total": {
+          "definition": "CREATE TRIGGER total AFTER UPDATE OF total ON orders FOR EACH ROW EXECUTE FUNCTION total()"
+        },
+        "amount": {
+          "definition": "CREATE TRIGGER amount AFTER UPDATE OF amount ON orders FOR EACH ROW EXECUTE FUNCTION amount()"
+        }
+      }
+    },
+    "chain_start": {
+      "triggers": {
+        "chain": {
+          "definition": "CREATE TRIGGER chain AFTER INSERT ON chain_start FOR EACH ROW EXECUTE FUNCTION chain()"
+        }
+      }
+    }
+  },
+  "functions": {
+    "total": {
+      "definition": "CREATE FUNCTION total() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE accounts SET latest = NEW.id WHERE id = NEW.id; RETURN NEW; END; $$"
+    },
+    "amount": {
+      "definition": "CREATE FUNCTION amount() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE wrong_accounts SET latest = NEW.id WHERE id = NEW.id; RETURN NEW; END; $$"
+    },
+    "chain": {
+      "definition": "CREATE FUNCTION chain() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE orders SET total.amount = 1 WHERE id = NEW.id; RETURN NEW; END; $$"
+    }
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "log": {
+      "triggers": {
+        "log_bump_latest": {
+          "definition": "CREATE TRIGGER log_bump_latest AFTER INSERT ON log FOR EACH ROW EXECUTE FUNCTION public.log_bump_latest()"
+        }
+      }
+    },
+    "r": {},
+    "updates": {
+      "triggers": {
+        "updates_bump_latest": {
+          "definition": "CREATE TRIGGER updates_bump_latest AFTER UPDATE OF selected ON updates FOR EACH ROW EXECUTE FUNCTION updates_bump_latest()"
+        }
+      }
+    },
+    "chain_start": {
+      "triggers": {
+        "chain_insert_middle": {
+          "definition": "CREATE TRIGGER chain_insert_middle AFTER INSERT ON chain_start FOR EACH ROW EXECUTE FUNCTION chain_insert_middle()"
+        }
+      }
+    },
+    "chain_middle": {
+      "triggers": {
+        "chain_update_final": {
+          "definition": "CREATE TRIGGER chain_update_final AFTER INSERT ON chain_middle FOR EACH ROW EXECUTE FUNCTION chain_update_final()"
+        }
+      }
+    },
+    "chain_final": {},
+    "cycle_start": {
+      "triggers": {
+        "cycle_update_middle": {
+          "definition": "CREATE TRIGGER cycle_update_middle AFTER UPDATE ON cycle_start FOR EACH ROW EXECUTE FUNCTION cycle_update_middle()"
+        }
+      }
+    },
+    "cycle_middle": {
+      "triggers": {
+        "cycle_update_start": {
+          "definition": "CREATE TRIGGER cycle_update_start AFTER UPDATE ON cycle_middle FOR EACH ROW EXECUTE FUNCTION cycle_update_start()"
+        }
+      }
+    },
+    "unused_log": {
+      "triggers": {
+        "unused_log_bump": {
+          "definition": "CREATE TRIGGER unused_log_bump AFTER INSERT ON unused_log FOR EACH ROW EXECUTE FUNCTION unused_log_bump()"
+        }
+      }
+    },
+    "unused_r": {},
+    "broken_log": {
+      "triggers": {
+        "broken_log_bump": {
+          "definition": "CREATE TRIGGER broken_log_bump AFTER INSERT ON broken_log FOR EACH ROW EXECUTE FUNCTION broken_log_bump()"
+        }
+      }
+    },
+    "broken_r": {},
+    "conditional_log": {
+      "triggers": {
+        "conditional_log_bump": {
+          "definition": "CREATE TRIGGER conditional_log_bump AFTER INSERT ON conditional_log FOR EACH ROW WHEN (NEW.r_id IS NOT NULL) EXECUTE FUNCTION conditional_log_bump()"
+        }
+      }
+    },
+    "conditional_r": {},
+    "untouched_r": {},
+    "plain_log": {},
+    "disabled_log": {
+      "triggers": {}
+    },
+    "disabled_r": {},
+    "dropped_log": {
+      "triggers": {}
+    },
+    "dropped_r": {},
+    "foreign_log": {
+      "triggers": {
+        "foreign_bump": {
+          "definition": "CREATE TRIGGER foreign_bump AFTER INSERT ON foreign_log FOR EACH ROW EXECUTE FUNCTION audit.foreign_bump()"
+        }
+      }
+    },
+    "foreign_r": {}
+  },
+  "functions": {
+    "log_bump_latest()": {
+      "definition": "CREATE FUNCTION log_bump_latest() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "updates_bump_latest()": {
+      "definition": "CREATE FUNCTION updates_bump_latest() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "chain_insert_middle()": {
+      "definition": "CREATE FUNCTION chain_insert_middle() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO chain_middle (id, r_id) VALUES (NEW.id, NEW.r_id); RETURN NEW; END $$;"
+    },
+    "chain_update_final()": {
+      "definition": "CREATE FUNCTION chain_update_final() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE chain_final SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "cycle_update_middle()": {
+      "definition": "CREATE FUNCTION cycle_update_middle() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE cycle_middle SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "cycle_update_start()": {
+      "definition": "CREATE FUNCTION cycle_update_start() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE cycle_start SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "unused_log_bump()": {
+      "definition": "CREATE FUNCTION unused_log_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE unused_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "broken_log_bump()": {
+      "definition": "CREATE FUNCTION broken_log_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN EXECUTE dynamic_statement; RETURN NEW; END $$;"
+    },
+    "conditional_log_bump()": {
+      "definition": "CREATE FUNCTION conditional_log_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE conditional_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END $$;"
+    },
+    "disabled_bump()": {
+      "definition": "CREATE FUNCTION disabled_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE disabled_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END; $$"
+    },
+    "dropped_bump()": {
+      "definition": "CREATE FUNCTION dropped_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE dropped_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END; $$"
+    },
+    "foreign_bump()": {
+      "definition": "CREATE FUNCTION foreign_bump() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN UPDATE foreign_r SET latest = NEW.id WHERE id = NEW.r_id; RETURN NEW; END; $$"
+    }
+  },
+  "schema": "public"
+}

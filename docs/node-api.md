@@ -3,6 +3,14 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+Configured [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
+accepts optional `schemaCatalogPath` through `PostgresLockWrittenRowsOnlyOptions`.
+Async `check()` and `analyzeProject()` check reports use the same prepared catalog
+for DDL relationships and, with complete coverage, the same event-filtered trigger
+write effects as CLI `check`, including `UPDATE OF` columns and bounded transitive
+chains. Configure the catalog path in the rule's
+YAML options; the existing async `checkJson` binding and report shape are unchanged.
+
 Configured [`postgres-sql-statement-policy`](rules/postgres-sql-statement-policy.md)
 runs through async `check({ root, config })` and `analyzeProject()` check reports.
 Omitting `options.bannedStatements` uses the seven default statement kinds;
