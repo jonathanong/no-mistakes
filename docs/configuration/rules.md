@@ -572,6 +572,8 @@ for example, `[{ name: query }]` selects inline `{ query: tx }` or
 `{ query: tx.query }` overrides at configured executors. An unresolved override
 follows the unanalyzable policy and is never classified as autocommit.
 Property names do not change how same-spelled local executor bindings resolve.
+An opaque whole-options parameter does not establish a property override by
+name; without caller proof it retains the configured executor's default.
 Names must be nonempty. The existing `executorOptionProperties: [query]` form
 remains supported; both lists combine and repeated names are deduplicated.
 Configured factory bindings support `const`, `using`, and `await using` with

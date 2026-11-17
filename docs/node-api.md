@@ -901,7 +901,8 @@ also supply trigger-derived write evidence; ordering-only catalogs do not.
 Direct imported factory callbacks also establish transaction membership for a
 simple first parameter. Local, unexported option helpers specialize literal
 boolean arguments; unresolved callers and unknown flags retain findings. Zero
-resolved callers never establish transaction membership.
+resolved callers never establish transaction membership. An opaque whole-options
+parameter without caller proof retains the configured executor's default.
 
 The [`postgres-column-check-constraints`](rules/postgres-column-check-constraints.md)
 catalog rule maps `check` to the existing async `check()` runtime export and
