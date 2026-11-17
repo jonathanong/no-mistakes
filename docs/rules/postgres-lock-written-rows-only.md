@@ -65,9 +65,12 @@ requires an update or delete of that same user in `tx`; an update of a membershi
 does not satisfy the lock. Diagnostics name the helper and its lock line.
 Straight-line helpers can call other supported local helpers. Their parameterized
 locks and writes are composed at each invocation through a known transaction,
-including a caller that passes its `TransactionQuery` parameter onward. A type
-annotation alone does not prove a transaction; unrelated transaction instances
-and different keys remain distinct. Recursive helper cycles remain unresolved.
+including a caller that passes its `TransactionQuery` parameter onward.
+A helper with a plain executor parameter, no transaction caller, and no configured
+executor-option path keeps its findings at the helper statement, including
+line suppression there. Its ordinary callers do not multiply those findings.
+A type annotation alone does not prove a transaction; unrelated transaction
+instances and different keys remain distinct. Recursive helper cycles remain unresolved.
 
 At the known transaction caller, helper effects require a direct
 `await helper(...)` (including `return await`).
@@ -76,6 +79,8 @@ A plain `return helper(...)` or discarded promise is unanalyzable because an
 summarized helper, each executor call must itself be awaited or returned. Helper
 SQL must be a string literal or an interpolation-free untagged template. Tagged
 templates and JavaScript interpolations remain unanalyzable in helper summaries.
+Executor-option helpers described below also support configured SQL tags with
+static parameter placeholders and a boolean parameter selecting between SQL arms.
 SQL binding arrays must use identifiers or static primitive values. Compute
 dynamic values at the caller and pass plain helper parameters; calls, assignments,
 and property reads inside bindings could hide transaction side effects.
@@ -285,9 +290,17 @@ project scope, configure `importSpecifier` or explicit `executorNames`.
 `include` and `exclude` default to empty and narrow the selected file scope.
 `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to
 empty; factories identify transaction executor bindings declared with `const`,
-`using`, or `await using`. Callback transaction membership is unresolved and
-follows the unanalyzable policy. With an import specifier, executor names default
-to `query`, `read`, and `write`.
+`using`, or `await using`. A direct, non-optional call of an imported configured
+factory also recognizes an arrow or function expression in its first argument:
+the callback's first simple identifier parameter is the transaction. Member
+callees, shadowed factory names, referenced callbacks, and destructured callback
+parameters do not establish this proof. Reassigning the callback parameter
+invalidates its transaction proof. Case-block shadows apply only after the
+switch discriminant, which is evaluated in the outer environment. Namespace
+blocks own their `var` bindings, including declarations inside nested blocks;
+those bindings do not shadow an imported factory outside the namespace.
+With an import specifier, executor names
+default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
 The two options are mutually exclusive, including when either list is empty.
 `extraExecutorNames` defaults to absent and `excludeExecutorNames` defaults to
@@ -383,8 +396,8 @@ and `executorOptionProperties`:
 
 ```ts
 await using transaction = await beginTransaction();
-const execute = transaction;
-await execute('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
+const query = transaction;
+await query('SELECT id FROM items WHERE id = $1 FOR UPDATE', [id]);
 await transaction('UPDATE items SET active = true WHERE id = $1', [id]);
 ```
 
@@ -392,9 +405,38 @@ A reassigned `let` alias or an alias passed to another function before execution
 does not prove transaction membership. Keep the executor in an unchanged local
 `const` binding to make the lock and matching write provable.
 
-`executorOptionProperties` defaults to `[]`. Configure explicit property names
-(such as `[query]`) when an executor accepts an inline options object that routes
-SQL to another executor:
+Pool aliases, conditional transaction/pool receivers, property or destructured
+receivers, and aliases read before transaction initialization do not establish
+transaction membership. A lock reached through one of these forms retains an `unanalyzable` finding
+under `unanalyzableSql: fail`; the configured unanalyzable policy still applies. An alias also cannot extend a transaction past commit or resource
+disposal; a later matching write does not make that lock safe. Saved negative
+controls cover these boundaries with executor-option selectors off and on.
+Unrelated callbacks remain outside this scope when stored beside configured
+executors, including numeric/computed/default destructuring, empty holders, and
+mutable holders.
+
+`executorOptions` defaults to `[]`. Configure the properties that select a client
+at your imported executors. No option-property routing is inferred without this
+configuration. These names select properties in an options argument; bare
+executor binding resolution remains independent, including same-spelled aliases:
+
+```yaml
+executorOptions:
+  - name: query
+```
+
+A bare call remains a binding lookup even when its name matches a configured
+property. This call has no options argument to select:
+
+```ts
+await using transaction = await beginTransaction();
+const query = transaction;
+await query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);
+```
+
+Names must be nonempty. The existing `executorOptionProperties: [query]` form
+remains supported. Both lists combine, and repeated names are deduplicated.
+An executor can accept an inline options object that routes SQL to a transaction:
 
 ```ts
 await using tx = await beginTransaction();
@@ -416,6 +458,49 @@ Unknown values, getters, computed properties, spreads, mutations, and conflictin
 overrides follow the unanalyzable policy; they never establish autocommit
 membership. Use a static object and the configured transaction binding to make
 routing clear.
+
+Local, unexported straight-line helpers can forward an optional options parameter
+to a configured executor. With `sql` configured in `trustedSqlTags`, for example:
+
+```ts
+async function lockItem(id: string, opts?: { query?: Client }) {
+  await write(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`, opts);
+}
+async function readItem(id: string, forUpdate: boolean, opts?: { query?: Client }) {
+  await read(forUpdate
+    ? sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`
+    : sql`SELECT id FROM items WHERE id = ${id}`, opts);
+}
+
+const tx = await beginTransaction();
+await lockItem(id, { query: tx });
+await readItem(id, true, { query: tx });
+await readItem(id, false);
+await write('UPDATE items SET active = true WHERE id = $1', [id], { query: tx });
+```
+
+The rule checks each resolved caller. Literal boolean arguments select the SQL
+arm, so a non-transaction caller passing `false` does not enable the lock. An
+unknown flag cannot prove that the lock is disabled. Every caller that enables
+the lock must supply a static inline options object selecting a proven
+transaction; missing options, a non-transaction
+client, and unresolved callers retain findings. At least one resolved caller is
+required; a helper with no resolved callers cannot prove transaction membership.
+A proven transaction caller never hides an unresolved helper invocation,
+regardless of the order of those calls.
+A transaction binding reassigned to a pool before the helper call also fails
+that proof. A `Client` type annotation alone
+does not prove a transaction.
+Passing a `const` options binding to these helpers remains unresolved; pass the
+static object inline instead. Direct executor calls retain the `const` options
+support described above.
+Exported or escaped option helpers retain findings because external callers
+cannot be proven here. An opaque whole-options parameter forwarded to an imported
+executor keeps that executor's default non-transaction classification until a
+supported caller proves routing. Its row lock reports
+`row-lock-outside-transaction`; an explicit unknown property such as
+`{ query: unknownClient }` still follows the unanalyzable policy. Pass inline
+options at a known transaction call site instead. This extension does not generalize arbitrary branches or dynamic SQL.
 
 ### Stale SQL suppressions
 

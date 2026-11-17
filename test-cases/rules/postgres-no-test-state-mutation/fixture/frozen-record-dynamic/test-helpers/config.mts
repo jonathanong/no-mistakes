@@ -1,6 +1,6 @@
 const friendConfigs = Object.freeze({
-  vote: { table: "users", column: "user_id" },
-  tag: { table: "posts", column: "post_id" },
+  vote: Object.freeze({ table: "users", column: "user_id" }),
+  tag: Object.freeze({ table: "posts", column: "post_id" }),
 } as const);
 
 export function getFriendConfig(name: string) {

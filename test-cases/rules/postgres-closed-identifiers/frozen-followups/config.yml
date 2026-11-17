@@ -1,0 +1,22 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - tests/**/*.ts
+    options:
+      testGlobs: ["tests/**/*.test.ts"]
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      rawSqlTags: [{ module: "@example/raw-sql", name: sql }]
+      unanalyzable: report
+  - rule: postgres-bounded-statements
+    scope: repository
+    include:
+      - tests/**/*.ts
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      rawSqlTags: [{ module: "@example/raw-sql", name: sql }]
+      unanalyzable: report

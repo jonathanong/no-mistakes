@@ -1,0 +1,13 @@
+---
+source: crates/no-mistakes/tests/cli_postgres_snapshot_appended_fragment.rs
+---
+[
+  [
+    "appended-scope-fragment",
+    "SELECT id FROM sources WHERE id = ANY($1::uuid[]) FOR UPDATE"
+  ],
+  [
+    "appended-fragment",
+    "SELECT pg_sleep(1)"
+  ]
+]

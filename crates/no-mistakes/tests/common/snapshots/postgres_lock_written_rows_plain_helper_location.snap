@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "plain_helper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 10,
+          "message": "src/query.ts:10: constant-advisory-lock: constant advisory key serializes unrelated writes; use a key derived from the written row",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await client.query(`SELECT pg_advisory_lock(hashtextextended('k',0))`)",
+          "target": "constant-advisory-lock"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

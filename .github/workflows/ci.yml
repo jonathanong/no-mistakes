@@ -211,8 +211,26 @@ jobs:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -276,7 +294,10 @@ jobs:
           exit "$fail"
       - name: Check Rust validation parity
         timeout-minutes: 2
-        run: node --test .github/scripts/coverage-build-resources.test.cjs .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
+        run: node --test .github/scripts/coverage-build-resources.test.cjs .github/scripts/release-rust-resources.test.cjs .github/scripts/rust-validation.test.cjs .github/scripts/rust-coverage-floors.test.cjs .github/scripts/preserve-rust-profiles.test.cjs .github/scripts/publish-npm.test.cjs .github/scripts/build-native.test.cjs
+      - name: Test release parity invocation without tooling dependencies
+        timeout-minutes: 2
+        run: node --test .github/scripts/release-parity-invocation.test.cjs
       - name: Test PostgreSQL setup policy
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/actions/start-test-postgres -p 'test_*.py'
@@ -334,16 +355,16 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
-        run: node --test .github/scripts/lychee-gateway.test.cjs
+        run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
       - name: Test bounded native runtime download
         timeout-minutes: 2
         run: python3 -m unittest discover -s .github/scripts -p test_download_native_runtime.py
       - name: Test native timing isolation and regression detection
         timeout-minutes: 2
-        run: node --test .github/scripts/native-api-timing.integration.test.cjs
+        run: node --test .github/scripts/native-api-timing.integration.test.cjs .github/scripts/native-api-shards.test.cjs .github/scripts/linux-api-shards-workflow.test.cjs
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   quality-rust:
     name: Rust quality (${{ matrix.name }})
@@ -424,8 +445,26 @@ jobs:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -444,6 +483,7 @@ jobs:
     timeout-minutes: 8
     env:
       LYCHEE_REPORT: lychee/out.md
+      LYCHEE_GATEWAY_WAIT: "10,20"
       # docs/performance/2238/39488578982/README.md and tables.md are hash-locked by checksums.json.
       LYCHEE_ARGS: >-
         --no-progress
@@ -468,11 +508,21 @@ jobs:
         with:
           args: ${{ env.LYCHEE_ARGS }}
           fail: true
+          token: ${{ github.token }}
           output: lychee/out.md
       - name: Retry transient gateway errors
         if: ${{ steps.links.outcome == 'failure' }}
         timeout-minutes: 2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/lychee-gateway.cjs
+      - name: Preserve final documentation link report
+        if: ${{ !cancelled() && steps.links.outcome == 'failure' }}
+        timeout-minutes: 1
+        run: |
+          if [ -f "$LYCHEE_REPORT" ]; then
+            cat "$LYCHEE_REPORT" >> "$GITHUB_STEP_SUMMARY"
+          fi
   quality:
     name: Lint and source checks
     needs: [changes, quality-source, quality-rust, quality-js, quality-links]
@@ -501,8 +551,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -651,8 +720,26 @@ jobs:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -692,8 +779,26 @@ jobs:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -729,16 +834,40 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
   linux-api-tests:
-    name: Linux N-API tests
+    name: Linux N-API tests (${{ matrix.shard }}/4)
     needs: linux-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      NATIVE_API_SHARD: ${{ matrix.shard }}
     steps:
       - name: Checkout
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -753,13 +882,10 @@ jobs:
         run: pnpm run build:js
       - name: Download Linux runtime
         timeout-minutes: 3
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          run-id: ${{ needs.linux-runtime.outputs.artifact-run-id }}
-          github-token: ${{ github.token }}
-          pattern: linux-runtime-*
-          merge-multiple: true
-          path: target/debug
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATIVE_RUNTIME_RUN_ID: ${{ needs.linux-runtime.outputs.artifact-run-id }}
+        run: python3 .github/scripts/download-native-runtime.py linux-runtime-cli linux-runtime-addon
       - name: Restore CLI executable mode
         timeout-minutes: 3
         run: chmod +x target/debug/no-mistakes
@@ -768,33 +894,7 @@ jobs:
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          pnpm exec vitest run
-          packages/no-mistakes/scripts/real-napi-api.test.js
-          packages/no-mistakes/scripts/unused-disable-directives-api.test.js
-          packages/no-mistakes/scripts/sql-verdicts-api.test.js
-          packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js
-          packages/no-mistakes/scripts/guarded-array-receiver-api.test.js
-          packages/no-mistakes/scripts/forward-receiver-alias-api.test.js
-          packages/no-mistakes/scripts/lexical-member-replacement-api.test.js
-          packages/no-mistakes/scripts/exported-value-receiver-api.test.js
-          packages/no-mistakes/scripts/namespace-types-api.test.js
-          packages/no-mistakes/scripts/preserved-provenance-api.test.js
-          packages/no-mistakes/scripts/vitest-project-setups-api.test.js
-          tests/js/compiled-api-runtime.test.js
-          packages/no-mistakes/scripts/annex-b-for-in-api.test.js
-          packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js
-          packages/no-mistakes/scripts/type-import-order-api.test.js
-          packages/no-mistakes/scripts/planning-impact-cli.test.js
-          packages/no-mistakes/scripts/postgres-source-api.test.js
-          packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js
-          packages/no-mistakes/scripts/postgres-quantified-api.test.js
-          packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js
-          packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js
-          packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js
-          packages/no-mistakes/scripts/doc-consistency-api.test.js
-          packages/no-mistakes/scripts/local-action-checkout-api.test.js
-          --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json
-          --coverage=false
+          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 4 linux
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
@@ -805,11 +905,13 @@ jobs:
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: native-api-tests-linux
+          name: native-api-tests-linux-${{ matrix.shard }}
           if-no-files-found: error
           retention-days: 7
           path: |
             target/native-api-tests.json
+            target/native-api-inventory.json
+            target/native-api-shard.json
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 
@@ -850,8 +952,27 @@ jobs:
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: ${{ matrix.runtime }}
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: ${{ matrix.runtime }}
@@ -940,8 +1061,27 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1114,8 +1254,27 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1285,8 +1444,27 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1432,8 +1610,27 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1632,8 +1829,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1716,8 +1932,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1812,8 +2047,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1925,8 +2179,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up pnpm and Node.js
-        timeout-minutes: 5
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -2304,8 +2577,26 @@ jobs:
         uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
         with:
           tool: cargo-nextest@0.9.151
-      - name: Download instrumented Rust tests
-        timeout-minutes: 5
+      - name: Download instrumented Rust tests (attempt 1 of 2)
+        id: coverage-download
+        continue-on-error: true
+        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          run-id: ${{ needs.rust-coverage-build.outputs.artifact-run-id }}
+          github-token: ${{ github.token }}
+          name: rust-coverage-build
+          path: target/coverage-bundle
+      - name: Back off before coverage download attempt 2 of 2
+        if: ${{ !cancelled() && steps.coverage-download.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          echo "Coverage download attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+      - name: Retry instrumented Rust test download
+        if: ${{ !cancelled() && steps.coverage-download.outcome == 'failure' }}
+        timeout-minutes: 2
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           run-id: ${{ needs.rust-coverage-build.outputs.artifact-run-id }}
@@ -2626,12 +2917,10 @@ jobs:
 
       - name: Download Linux runtime
         timeout-minutes: 3
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          run-id: ${{ needs.linux-runtime.outputs.artifact-run-id }}
-          github-token: ${{ github.token }}
-          name: linux-runtime-cli
-          path: target/debug
+        env:
+          NATIVE_RUNTIME_RUN_ID: ${{ needs.linux-runtime.outputs.artifact-run-id }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/download-native-runtime.py linux-runtime-cli
       - name: Restore CLI executable mode
         timeout-minutes: 3
         run: chmod +x target/debug/no-mistakes

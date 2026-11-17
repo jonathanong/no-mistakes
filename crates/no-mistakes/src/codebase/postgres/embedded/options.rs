@@ -21,6 +21,12 @@ pub struct SqlIdentifierAssertion {
     pub allowlist_argument: usize,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExecutorOption {
+    pub name: String,
+}
+
 /// Configurable executor import matching. Empty defaults select no executors.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -129,6 +135,14 @@ impl EmbeddedSqlOptions {
     /// Select transaction executor overrides from explicit options properties.
     pub fn with_executor_option_properties(mut self, properties: &[String]) -> Self {
         self.executor_option_properties = sorted_unique(properties);
+        self
+    }
+
+    pub fn with_executor_options(mut self, options: &[ExecutorOption]) -> Self {
+        self.executor_option_properties
+            .extend(options.iter().map(|option| option.name.clone()));
+        self.executor_option_properties.sort();
+        self.executor_option_properties.dedup();
         self
     }
 

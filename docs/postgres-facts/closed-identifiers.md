@@ -1,5 +1,7 @@
 # Closed identifier values in SQL
 
+<!-- cspell:words ILIKE -->
+
 At max effort, SQL recovery can enumerate a closed set of string values used in
 raw SQL construction. Each resulting statement is checked independently. A
 finite set is evidence about possible text, not evidence that the statements
@@ -28,17 +30,21 @@ non-key column can still be unbounded.
   (`!=` counts), or `if` of those tests combined with `||`. A guard throws or
   returns early (`return`, `return null`, `return undefined`, or `void`); it
   does not return SQL text. At least one `Object.hasOwn` check names that
-  record and key. String values enumerate like a switch. Nested records,
-  including a field that is itself `Object.freeze` of literal fields, keep one
+  record and key. Only synchronous, ordinary helpers are supported; async and
+  generator helpers stay opaque. String values enumerate like a switch. Object-valued entries must
+  each use `Object.freeze` on their literal fields: freezing only the outer record
+  leaves returned entries mutable, including through imported callers. Frozen
+  entries keep one
   choice for every field when the caller binds the helper result to a const,
   including across imports. A second call with the same closed key keeps that
   key's choices, so a field from one call does not pair with another entry
   from the second call. Distinct keys still cross. A key union that includes
   a missing member stays opaque instead of publishing the matches. A
-  `record[key]` read outside that helper, a property write on the returned
-  object, or passing that object into a call
-  stays opaque. The binding is dropped when its scope exits, so a later
-  parameter of the same name is not the earlier record. A literal or
+  `record[key]` read anywhere except the helper's direct return, a property write
+  on the returned object, or passing that object into a call stays opaque. The binding is dropped when its scope exits, so a later
+  parameter of the same name is not the earlier record. Unrelated local bindings
+  with the same spelling do not invalidate the module record; a helper parameter
+  that shadows it cannot certify that record. A literal or
   literal-union argument selects the matching entries, and a no-substitution
   template counts as a literal value. A type-only union is not this proof.
   Extra statements, an exported, mutated, or escaped record, a shadowed
@@ -50,11 +56,52 @@ non-key column can still be unbounded.
   64-entry record, and does not publish a shorter prefix. A same-file dynamic
   key still uses the 16-alternative budget, so a larger same-file record stays
   opaque instead of publishing a prefix. A product of alternatives past the
-  budget stays opaque.
+  budget stays opaque. Same-file selection checks that budget before building
+  the result objects because distinct key paths can select the same entry
+  while still carrying different choices for later SQL interpolation.
 - Configured assertion calls with a literal string array or intrinsic `Set`
   allowlist, including a local unmodified collection or const alias.
 - A source-visible same-file helper whose local literal membership guard throws
   before returning a permitted value.
+
+Frozen-record eligibility is checked before reference walking. Only supported,
+private frozen literals need the lexical proof; ordinary constants do not
+trigger a reference walk.
+
+## Imported helper recovery
+
+The embedded SQL walk cannot inspect an imported helper's return value. It
+places a private marker containing the helper site's index where the helper's
+SQL text would appear. A marker-only string is a speculative call result; it
+does not establish that the helper builds SQL. Marker ranges retain their
+source order so later expansion can correlate repeated sites.
+
+The marker is a reserved Unicode code point distinct from the internal
+placeholder marker. This lets placeholder counting and renumbering ignore it. Before
+extraction publishes facts, finalization removes every marker. An unresolved
+identifier marker becomes `sql_placeholder_N` while retaining the statement's
+suffix, such as the `WHERE` clause after `SELECT * FROM ${name}`. An unresolved
+fragment splice becomes dynamic and retains only its verified SQL prefix;
+any recovered placeholder position past that cut is dropped. Variants containing
+unresolved markers are discarded. Complete pending-call templates are retained privately for imported-helper resolution.
+
+When a pending template is resolved, each marker is filled with an alternative
+from its helper site. Repeated occurrences of one site use the same choice.
+Sites in one correlation group also share an alternative index, avoiding
+impossible cross-pairs; distinct groups form combinations. Expansion returns
+opaque when the choices do not align or exceed the alternative budget. A
+boundary inside a marker cannot be carried through expansion; otherwise the
+boundary is recomputed after filling and placeholder renumbering.
+
+Value-hole classification recognizes comparison and arithmetic operands,
+`LIKE`/`ILIKE`, both bounds of `BETWEEN`, concatenation operands, `LIMIT`/`OFFSET`,
+`VALUES` entries across multiple rows, row-comparison operands, and function
+arguments. The added predicate and tuple contexts use PostgreSQL tokens so
+operator-like text inside strings or comments does not establish those contexts.
+The `AND` after a complete `BETWEEN` stays a boolean-fragment boundary. Column lists following `INTO`, `UPDATE`, or `TABLE`
+are excluded; a function after `FROM` or `JOIN` still has value arguments.
+These are specific exclusions, not a general proof of identifier position. For example, a column hole in
+`CREATE INDEX idx ON users (${column})` is not excluded by this classifier.
 
 Casts alone do not establish a domain. A type assertion on a closed parameter
 is erased before the argument is read, so `pick(kind as Key)` stays on the same
@@ -62,7 +109,7 @@ arms as `pick(kind)`. Widened, optional, defaulted, reassigned, or otherwise
 unstable parameters remain opaque. A transformed argument, such as a
 conditional, does not keep the parameter's choices, and neither does a `let`
 binding after a later assignment. A method call or template around the
-parameter is not a closed value, so `pick(kind.trim())` and `` pick(`${kind}`) ``
+parameter is not a closed value, so `pick(kind.trim())` and ``pick(`${kind}`)``
 stay reported. A helper call that produces no arm stays opaque as well. An
 empty literal `Set` admits no identifier. An empty result does not clear the
 statement. An unresolved helper body,
@@ -188,6 +235,25 @@ trusted-tag module matching policy. Import aliases work. Its explicit raw
 contract takes precedence if the same tag was also selected as a parameterized
 tag. Do not configure parameterized libraries as raw tags. An unknown raw hole
 remains opaque; it is not silently replaced by a bound parameter.
+
+A raw select-list hole can name a projection identifier or supply SQL text, so
+recovery preserves that interpretation. Use a parameterized tag to express a
+scalar select-list value instead of relying on a raw string to distinguish the
+two meanings.
+
+### Explicit positional holes
+
+In direct template rendering and parameterized tag composition, `$${index}`
+preserves a positional parameter for a numeric literal that prints as decimal
+digits or an unresolved index expression. The same test applies to signed
+numeric literals. For example, `1e2` prints `100` and `+10` prints `10`.
+Numbers whose printed form contains a fraction, exponent, or minus sign and
+known nonnumeric literals retain structural uncertainty. These structural holes
+do not advance generated value-bind ordinals, and their source positions still
+point to the original interpolation.
+For a scalar value, use a parameterized tag without a literal `$` before the
+hole. Invalid positional construction remains subject to the configured
+unanalyzable-SQL policy.
 
 ## Findings, suppression, and API parity
 

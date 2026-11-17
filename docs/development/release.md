@@ -18,6 +18,34 @@ A native or root failure therefore prevents publishing a plugin whose matching
 job succeeds. A failed channel can still leave an earlier channel published;
 resume the same tagged version to complete the release instead of bumping again.
 
+## Recover validation after preparation
+
+Preparation can push the version commit and tag before validation fails. For
+example, after the `0.109.73` validation failure in #3552, dispatch the corrected
+workflow from fixed `main` with `resume_version: 0.109.73`. The prepare job
+validates and archives the existing tag, without a new bump, commit, or tag.
+Current workflow tooling and resource limits validate that original source.
+A normal patch dispatch instead prepares the next patch version; it does not
+repair the earlier release automatically. Do not move or delete the prepared tag.
+
+The Rust parity suite runs from a separate validation-tools checkout without
+installed JavaScript dependencies. PR CI replays the release workflow's actual
+parity command from a historical source fixture with the same isolated layout
+and rejects external package loads. YAML-dependent workflow assertions run in
+the dedicated CI contract tests after dependency installation.
+
+A rerun of the old failed run retains its original workflow implementation.
+Recovery that needs a workflow fix therefore uses a new dispatch after the fix
+lands. npm and Cargo publication retain their exact-version checks and skip
+versions already published to those registries. A new dispatch rebuilds GitHub
+release assets and uploads them with `--clobber`, replacing existing assets.
+Their contents and
+checksums can change for the same version. No recovery dispatch is triggered
+automatically.
+
+See [the Rust resource budget](ci-builds.md#release-rust-resource-budget) for the
+compilation and test worker limits and memory-pressure diagnostics.
+
 ## npm retry and backfill safety
 
 Every npm channel uses publish tooling from the running workflow commit, even

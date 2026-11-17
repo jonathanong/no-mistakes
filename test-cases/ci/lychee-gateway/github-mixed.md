@@ -1,0 +1,11 @@
+# Summary
+
+| Status | Count |
+|--------|-------|
+| ⏳ Timeouts | 0 |
+| 🚫 Errors | 2 |
+
+## Errors per input
+
+* [503] <https://github.com/example/project/pull/1> (at 1:1) | Rejected status code: 503
+* [404] <https://github.com/example/project/pull/1/missing> (at 1:1) | Rejected status code: 404

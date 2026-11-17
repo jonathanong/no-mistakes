@@ -566,6 +566,12 @@ Executor roots and evaluation remain unchanged. The diagnostic counter
 `postgres.annotation.prefix_after_empty_skips` counts omitted replacement walks;
 attempted and completed comparisons still include them.
 
+The immutable-value shortcut compares only facts used by that prefix walk.
+The `Evaluated` handled marker does not affect a builder prefix, and a
+reference-free incoming value contributes no builder identity to taint. These
+cases can skip prefix comparison without treating the values as generally
+equivalent during evaluation.
+
 No state persists between runs. Use the [annotation diagnostics](../cli/diagnostics.md)
 to compare roots before/after scoping and actual module-cache work.
 

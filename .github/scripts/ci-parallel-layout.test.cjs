@@ -166,10 +166,6 @@ test("Linux CLI and addon producers preserve their commands and publish separate
   assert.match(body, /path: \$\{\{ matrix.binary \}\}/);
   assert.equal([...body.matchAll(/uses: actions\/upload-artifact@/g)].length, 1);
   assert.match(job("linux-api-tests"), /needs: linux-runtime/);
-  assert.match(job("linux-api-tests"), /pattern: linux-runtime-\*/);
-  assert.match(job("linux-api-tests"), /merge-multiple: true/);
-  assert.match(job("ast-analysis"), /name: linux-runtime-cli/);
-  assert.doesNotMatch(job("ast-analysis"), /pattern: linux-runtime|name: linux-runtime-addon/);
 });
 
 test("Linux role caches restore content sidecars after shared dependencies and before compilation", () => {

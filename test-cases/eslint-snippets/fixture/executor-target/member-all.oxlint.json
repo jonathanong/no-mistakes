@@ -1,0 +1,21 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "categories": {
+    "correctness": "off"
+  },
+  "rules": {
+    "no-mistakes/postgres-no-executor-adapter": [
+      "error",
+      {
+        "importSpecifier": "@example/db",
+        "executorTypeNames": ["QueryExecutor"],
+        "mode": "all"
+      }
+    ]
+  }
+}

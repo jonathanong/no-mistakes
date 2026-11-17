@@ -1,4 +1,5 @@
 use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+use super::cli_postgres_snapshot_lock_written_rows::snapshot;
 
 #[test]
 fn postgres_lock_written_rows_catalog_reconciliation_check_json_snapshot() {
@@ -26,4 +27,53 @@ fn postgres_lock_written_rows_catalog_reconciliation_check_json_snapshot() {
     );
     assert_eq!(report["ordering"]["report"]["rules"][0]["line"], 11);
     assert_eq!(report["ignored_check"]["exitCode"], 0);
+}
+
+#[test]
+fn postgres_lock_written_rows_ddl_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_ddl",
+        &[
+            ("related", "ddl-related", "checks-fail.yml"),
+            ("guard", "ddl-guard", "checks-fail.yml"),
+            ("catalog", "ddl-catalog", "ddl-catalog.yml"),
+            ("negative", "ddl-negative", "checks-fail.yml"),
+            ("uncertain", "ddl-uncertain", "checks-fail.yml"),
+            ("dynamic_identifiers", "ddl-dynamic", "ddl-dynamic.yml"),
+        ],
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_trigger_writes_check_json_snapshot() {
+    snapshot(
+        "postgres_lock_written_rows_trigger_writes",
+        &[
+            ("trigger_effects", "trigger-writes", "trigger-writes.yml"),
+            ("without_catalog", "trigger-writes", "checks-fail.yml"),
+            (
+                "excluded_catalog",
+                "trigger-writes",
+                "trigger-catalog-excluded.yml",
+            ),
+            (
+                "missing_catalog",
+                "trigger-writes",
+                "trigger-catalog-missing.yml",
+            ),
+            ("depth_bound", "trigger-depth", "trigger-writes.yml"),
+            ("upsert", "trigger-upsert", "trigger-writes.yml"),
+            ("composite", "trigger-composite", "trigger-writes.yml"),
+            (
+                "dynamic_setting",
+                "trigger-dynamic-setting",
+                "trigger-writes.yml",
+            ),
+            (
+                "replication_role",
+                "trigger-replication-role",
+                "trigger-writes.yml",
+            ),
+        ],
+    );
 }

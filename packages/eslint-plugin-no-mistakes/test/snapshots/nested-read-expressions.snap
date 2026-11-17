@@ -183,6 +183,72 @@
     }
   },
   {
+    "file": "client-contracts/reads-sequence-expression.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-sequence-expression.ts",
+        "line": 5,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      }
+    ],
+    "options": {
+      "clients": [
+        "kv"
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-switch-case.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 42,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-switch-case.ts",
+        "line": 7,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      }
+    ],
+    "options": {
+      "clients": [
+        "kv"
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-first-conditional.ts",
+    "findings": [],
+    "options": {
+      "clients": [
+        "kv"
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
     "file": "client-contracts/reads-nested-expressions.ts",
     "findings": [
       {
@@ -356,6 +422,81 @@
   },
   {
     "file": "client-contracts/reads-nested-boundaries.ts",
+    "findings": [],
+    "options": {
+      "imports": [
+        {
+          "imported": "cache",
+          "source": "@app/cache"
+        }
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-sequence-expression.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-sequence-expression.ts",
+        "line": 5,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      }
+    ],
+    "options": {
+      "imports": [
+        {
+          "imported": "cache",
+          "source": "@app/cache"
+        }
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-switch-case.ts",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 42,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/client-contracts/reads-switch-case.ts",
+        "line": 7,
+        "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+        "messageId": "unbatchedReads",
+        "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+        "severity": 2
+      }
+    ],
+    "options": {
+      "imports": [
+        {
+          "imported": "cache",
+          "source": "@app/cache"
+        }
+      ],
+      "readMethods": [
+        "get",
+        "ttl",
+        "exists"
+      ]
+    }
+  },
+  {
+    "file": "client-contracts/reads-first-conditional.ts",
     "findings": [],
     "options": {
       "imports": [

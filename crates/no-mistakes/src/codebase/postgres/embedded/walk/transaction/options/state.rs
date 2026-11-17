@@ -24,6 +24,7 @@ pub(in crate::codebase::postgres::embedded::walk) struct State {
         super::super::super::transaction_flow::Completed,
     pub(in crate::codebase::postgres::embedded::walk) if_depth: usize,
     pub(in crate::codebase::postgres::embedded::walk) suspended: usize,
+    pub(super) candidates: super::candidates::State,
     objects: FxHashMap<NonZeroU32, Captured>,
     aliases: FxHashMap<NonZeroU32, Captured>,
     reads: RefCell<FxHashSet<u32>>,

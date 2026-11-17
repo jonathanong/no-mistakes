@@ -1,0 +1,175 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "no_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/conditional.ts",
+          "line": 5,
+          "message": "src/conditional.ts:5: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/destructured.ts",
+          "line": 6,
+          "message": "src/destructured.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pool-member.ts",
+          "line": 6,
+          "message": "src/pool-member.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pool-reassigned.ts",
+          "line": 6,
+          "message": "src/pool-reassigned.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pool.ts",
+          "line": 4,
+          "message": "src/pool.ts:4: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/post-commit.ts",
+          "line": 6,
+          "message": "src/post-commit.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/post-disposal.ts",
+          "line": 8,
+          "message": "src/post-disposal.ts:8: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pre-transaction.ts",
+          "line": 5,
+          "message": "src/pre-transaction.ts:5: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/property.ts",
+          "line": 6,
+          "message": "src/property.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "with_options": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/conditional.ts",
+          "line": 5,
+          "message": "src/conditional.ts:5: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/destructured.ts",
+          "line": 6,
+          "message": "src/destructured.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pool-member.ts",
+          "line": 6,
+          "message": "src/pool-member.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q.query(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pool-reassigned.ts",
+          "line": 6,
+          "message": "src/pool-reassigned.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pool.ts",
+          "line": 4,
+          "message": "src/pool.ts:4: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/post-commit.ts",
+          "line": 6,
+          "message": "src/post-commit.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/post-disposal.ts",
+          "line": 8,
+          "message": "src/post-disposal.ts:8: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/pre-transaction.ts",
+          "line": 5,
+          "message": "src/pre-transaction.ts:5: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/property.ts",
+          "line": 6,
+          "message": "src/property.ts:6: unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await q(`SELECT id FROM items WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -44,10 +44,14 @@ fn abandoned_gate_skips_snapshot_publish() {
 
 #[test]
 fn unstarted_snapshot_takes_the_incomplete_line() {
-    let output = ProgressOutput::stderr();
+    let (output, captured) = captured_output();
     let gate = Mutex::new(SnapshotPhase::Open);
     abandon_timeout_snapshot(&gate, &output);
     assert_eq!(*gate.lock().unwrap(), SnapshotPhase::Abandoned);
+    assert_eq!(
+        captured.recv_timeout(Duration::from_secs(2)).unwrap(),
+        INCOMPLETE_LINE
+    );
 }
 
 #[test]
@@ -72,4 +76,62 @@ fn stalled_progress_snapshot_does_not_hold_timeout_exit() {
     );
     assert!(started.elapsed() < Duration::from_secs(1));
     drop(held);
+}
+
+fn captured_output() -> (Arc<ProgressOutput>, mpsc::Receiver<String>) {
+    struct Capture(mpsc::Sender<String>);
+    impl std::io::Write for Capture {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            self.0
+                .send(String::from_utf8(bytes.to_vec()).unwrap())
+                .unwrap();
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let (sender, receiver) = mpsc::channel();
+    let output = ProgressOutput::start(Ok(Capture(sender)));
+    output.emit("ready".into());
+    assert_eq!(
+        receiver.recv_timeout(Duration::from_secs(2)).unwrap(),
+        "ready"
+    );
+    (output, receiver)
+}
+
+#[test]
+fn timeout_payload_includes_the_active_progress_phase() {
+    let observer = InvocationObserver::with_progress(false, true);
+    observer.trace("analysis.waiting", TimingKind::Parallel, || {
+        let partial = partial_snapshot(&observer);
+        assert!(
+            partial.starts_with("[PARTIAL] timeout snapshot:"),
+            "{partial}"
+        );
+        let progress = observer.render_progress_text().unwrap();
+        let snapshot: serde_json::Value =
+            serde_json::from_str(progress.strip_prefix("[progress] ").unwrap()).unwrap();
+        assert!(snapshot["active"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|span| span["phase"] == serde_json::json!(["analysis.waiting"])));
+    });
+}
+
+#[test]
+fn abandoned_published_snapshot_reports_incomplete_without_late_progress() {
+    let observer = InvocationObserver::with_progress(false, true);
+    let (output, captured) = captured_output();
+    let gate = Mutex::new(SnapshotPhase::Published);
+    abandon_timeout_snapshot(&gate, &output);
+    assert_eq!(*gate.lock().unwrap(), SnapshotPhase::Abandoned);
+    assert_eq!(
+        captured.recv_timeout(Duration::from_secs(2)).unwrap(),
+        INCOMPLETE_LINE
+    );
+    assert!(!publish_timeout_snapshot(&observer, &output, &gate));
+    assert!(captured.try_recv().is_err());
 }

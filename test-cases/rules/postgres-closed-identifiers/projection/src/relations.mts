@@ -9,8 +9,8 @@ export function getRelationTable(name: string) {
 }
 
 const relationConfigs = Object.freeze({
-  vote: { table: "users", column: "user_id" },
-  tag: { table: "posts", column: "post_id" },
+  vote: Object.freeze({ table: "users", column: "user_id" }),
+  tag: Object.freeze({ table: "posts", column: "post_id" }),
 } as const);
 
 export function getConfig(name: string) {

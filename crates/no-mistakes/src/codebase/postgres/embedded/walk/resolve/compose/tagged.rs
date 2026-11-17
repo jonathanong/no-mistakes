@@ -7,7 +7,7 @@ use crate::codebase::postgres::embedded::helpers::{sentinel, SiteKind};
 use crate::codebase::postgres::embedded::tags::{self, quasi_text};
 use crate::codebase::postgres::embedded::{
     placeholders::{internal_bind, internal_placeholder},
-    text::positional_digits,
+    text::render_hole,
     unpublished_sql_text,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -41,7 +41,7 @@ fn splice(visitor: &ScopeVisitor<'_>, tagged: &TaggedTemplateExpression<'_>) -> 
             continue;
         };
         if before.ends_with('$') {
-            out.push_str(&positional_digits(hole, index + 1));
+            out.push_str(&render_hole(&before, hole, index + 1, &out, false).text);
         } else if let Some(piece) = piece(
             visitor,
             hole,

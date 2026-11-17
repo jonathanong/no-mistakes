@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -40,16 +42,18 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         if "--output" in argv:
             archive = Path(argv[argv.index("--output") + 1])
             self.archive_paths.append(archive)
+            artifact_id = argv[-1].split("/")[-2]
+            name = artifact_id if artifact_id in ("124", "125") else self.archive_name
             with archive.open("wb") as output:
                 output.write(base64.b64decode(
-                    (FIXTURES / f"{self.archive_name}.zip.base64").read_bytes()))
+                    (FIXTURES / f"{name}.zip.base64").read_bytes()))
             return subprocess.CompletedProcess(argv, 0)
         return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
 
-    def run_main(self):
+    def run_main(self, names=()):
         output, errors = io.StringIO(), io.StringIO()
         with redirect_stdout(output), redirect_stderr(errors):
-            code = download.main()
+            code = download.main(names)
         return code, json.loads(output.getvalue()), errors.getvalue()
 
     def test_success_extracts_verified_runtime_and_cleans_archive(self):
@@ -77,7 +81,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
 
     def test_metadata_has_separate_bounded_timeout(self):
         with patch.object(download.subprocess, "run", side_effect=self.transport):
-            result = download.resolve_artifact("example/repository", "456", "test-target",
+            result = download.resolve_artifact("example/repository", "456", "native-runtime-test-target",
                                                "test-token", download.Deadline())
         self.assertEqual(result["id"], 123)
         argv, options = self.calls[0]
@@ -119,14 +123,14 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
                 self.metadata["artifacts"] = artifacts
                 with patch.object(download.subprocess, "run", side_effect=self.transport):
                     with self.assertRaises(download.DownloadError):
-                        download.resolve_artifact("example/repository", "456", "test-target",
+                        download.resolve_artifact("example/repository", "456", "native-runtime-test-target",
                                                    "test-token", download.Deadline())
 
     def test_catalog_is_bounded_to_ten_pages(self):
         self.metadata = {"artifacts": [{"name": "other"}] * 100}
         with patch.object(download.subprocess, "run", side_effect=self.transport):
             with self.assertRaises(download.DownloadError):
-                download.resolve_artifact("example/repository", "456", "test-target",
+                download.resolve_artifact("example/repository", "456", "native-runtime-test-target",
                                            "test-token", download.Deadline())
         self.assertEqual(len(self.calls), 10)
         self.assertTrue(self.calls[-1][0][-1].endswith("per_page=100&page=10"))
@@ -147,6 +151,102 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertFalse(report["success"])
         self.assertGreaterEqual(report["seconds"]["total"], 0)
         self.assertIn("TimeoutExpired", errors)
+
+    def test_linux_components_complete_through_real_process_without_network(self):
+        fixtures = Path("transport")
+        shutil.copytree(FIXTURES, fixtures)
+        (fixtures / "curl").chmod(0o755)
+        env = {**os.environ, "PATH": str(fixtures.resolve()) + os.pathsep + os.environ["PATH"],
+               "NATIVE_DOWNLOAD_FIXTURES": str(fixtures.resolve())}
+        result = subprocess.run([sys.executable, str(Path(download.__file__).resolve()),
+                                 "linux-runtime-cli", "linux-runtime-addon"],
+                                env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(report["success"])
+        self.assertEqual([row["name"] for row in report["artifacts"]],
+                         ["linux-runtime-cli", "linux-runtime-addon"])
+        self.assertEqual(Path("target/debug/no-mistakes").read_text(),
+                         "linux-runtime-cli fixture\\n")
+        self.assertEqual(Path("target/debug/no-mistakes.node").read_text(),
+                         "linux-runtime-addon fixture\\n")
+        for stage in ("metadata", "download", "digest", "extraction"):
+            self.assertAlmostEqual(report["seconds"][stage],
+                                   sum(row["seconds"][stage] for row in report["artifacts"]))
+
+    def test_cli_only_consumer_completes_without_extracting_addon(self):
+        fixtures = Path("transport")
+        shutil.copytree(FIXTURES, fixtures)
+        (fixtures / "curl").chmod(0o755)
+        env = {**os.environ, "PATH": str(fixtures.resolve()) + os.pathsep + os.environ["PATH"],
+               "NATIVE_DOWNLOAD_FIXTURES": str(fixtures.resolve())}
+        result = subprocess.run([sys.executable, str(Path(download.__file__).resolve()),
+                                 "linux-runtime-cli"],
+                                env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(report["success"])
+        self.assertEqual([row["name"] for row in report["artifacts"]], ["linux-runtime-cli"])
+        self.assertEqual(Path("target/debug/no-mistakes").read_text(),
+                         "linux-runtime-cli fixture\\n")
+        self.assertFalse(Path("target/debug/no-mistakes.node").exists())
+
+    def test_explicit_names_reject_duplicates_and_invalid_names_before_transport(self):
+        for names in (["linux-runtime-cli"] * 2, [""], ["../runtime"], ["runtime/name"]):
+            with self.subTest(names=names), patch.object(download.subprocess, "run") as transport:
+                code, report, _ = self.run_main(names)
+                self.assertEqual(code, 1)
+                self.assertFalse(report["success"])
+                transport.assert_not_called()
+
+    def test_linux_catalog_missing_duplicate_expired_and_bad_digest_fail(self):
+        saved = json.loads((FIXTURES / "linux-metadata.json").read_text())
+        first, second = saved["artifacts"]
+        for artifacts in ([first], [first, second, second],
+                          [first, {**second, "expired": True}],
+                          [first, {**second, "digest": None}]):
+            with self.subTest(artifacts=artifacts):
+                self.metadata = {"artifacts": artifacts}
+                with patch.object(download.subprocess, "run", side_effect=self.transport):
+                    with self.assertRaises(download.DownloadError):
+                        download.resolve_artifact("example/repository", "456",
+                                                  "linux-runtime-addon", "test-token", download.Deadline())
+
+    def test_second_linux_component_digest_mismatch_never_extracts_addon(self):
+        self.metadata = json.loads((FIXTURES / "linux-metadata.json").read_text())
+        self.metadata["artifacts"][1]["digest"] = "sha256:" + "0" * 64
+        with patch.object(download.subprocess, "run", side_effect=self.transport):
+            code, report, errors = self.run_main(["linux-runtime-cli", "linux-runtime-addon"])
+        self.assertEqual(code, 1)
+        self.assertFalse(report["success"])
+        self.assertEqual([row["name"] for row in report["artifacts"]], ["linux-runtime-cli"])
+        self.assertTrue(Path("target/debug/no-mistakes").is_file())
+        self.assertFalse(Path("target/debug/no-mistakes.node").exists())
+        self.assertEqual(len(self.calls), 4)
+        self.assertTrue(all(not archive.exists() for archive in self.archive_paths))
+        self.assertIn("SHA256 mismatch", errors)
+
+    def test_linux_components_share_one_overall_deadline(self):
+        self.metadata = json.loads((FIXTURES / "linux-metadata.json").read_text())
+        now = [0]
+        original = self.transport
+        def transport(argv, **kwargs):
+            result = original(argv, **kwargs)
+            if "--output" in argv:
+                now[0] = 109 if argv[-1].endswith("/124/zip") else 112
+            elif len(self.calls) == 3:
+                now[0] = 111
+            return result
+        with patch.object(download.time, "monotonic", side_effect=lambda: now[0]), \
+                patch.object(download.subprocess, "run", side_effect=transport):
+            code, report, errors = self.run_main(["linux-runtime-cli", "linux-runtime-addon"])
+        self.assertEqual(code, 1)
+        self.assertFalse(report["success"])
+        self.assertEqual(len(report["artifacts"]), 1)
+        self.assertEqual(len(self.calls), 3)
+        self.assertTrue(Path("target/debug/no-mistakes").is_file())
+        self.assertFalse(Path("target/debug/no-mistakes.node").exists())
+        self.assertIn("110 seconds", errors)
 
 
 if __name__ == "__main__":

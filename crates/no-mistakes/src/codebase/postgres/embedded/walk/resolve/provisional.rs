@@ -9,7 +9,10 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
     visitor: &mut ScopeVisitor<'_>,
     call: &CallExpression<'_>,
 ) {
-    if visitor.has_query_capture(&call.callee) || visitor.executor_alias_callee(&call.callee) {
+    if visitor.has_query_capture(&call.callee)
+        || visitor.executor_alias_callee(&call.callee)
+        || visitor.is_transaction_candidate(&call.callee)
+    {
         let span = oxc_span::GetSpan::span(&call.callee);
         push_confirmed(
             visitor,
@@ -27,6 +30,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         let broad = visitor.bindings.contains(MEMBER_QUERY_OPT_IN);
         let uncertain = visitor.uncertain_detached_member(receiver);
         if broad
+            || visitor.is_transaction_candidate(receiver)
             || uncertain
             || (visitor.proven_executor(receiver) && (!namespace || visitor.query_binding))
         {

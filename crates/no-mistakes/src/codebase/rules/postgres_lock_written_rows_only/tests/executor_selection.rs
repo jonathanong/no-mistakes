@@ -177,3 +177,170 @@ fn executor_option_metadata_rejects_conflicting_overrides_and_ended_aliases() {
     assert!(!call.executor_transaction_known);
     assert!(call.transaction_id.is_none());
 }
+
+#[test]
+fn configured_caller_options_specialize_transaction_and_boolean_parameters() {
+    let root = fixture("caller-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let findings = check_with_files(
+        &root,
+        &config,
+        &[
+            root.join("src/query.ts"),
+            root.join("src/unsafe.ts"),
+            root.join("src/nested.ts"),
+        ],
+    )
+    .unwrap();
+    let mut lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file.ends_with("query.ts"))
+        .map(|finding| finding.line)
+        .collect();
+    lines.sort();
+    assert_eq!(lines, [14, 15, 16, 17, 18, 19, 28], "{findings:?}");
+    let mut unsafe_lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file.ends_with("unsafe.ts"))
+        .map(|finding| finding.line)
+        .collect();
+    unsafe_lines.sort();
+    assert_eq!(unsafe_lines, [3, 6, 10, 14, 26], "{findings:?}");
+    let nested_lines: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.file.ends_with("nested.ts"))
+        .map(|finding| finding.line)
+        .collect();
+    assert_eq!(nested_lines, [11], "{findings:?}");
+}
+
+#[test]
+fn caller_option_routing_requires_explicit_configuration() {
+    let root = fixture("caller-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options.yml");
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    config.rules[0]
+        .options
+        .as_mapping_mut()
+        .unwrap()
+        .remove(serde_yaml::Value::String("executorOptions".into()));
+    let findings = check(&root, &config).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file.ends_with("query.ts")
+                && finding.line == 10
+                && finding.target.as_deref() == Some(CHECKS[3])),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn tagged_option_helpers_preserve_caller_row_key_identity() {
+    let root = fixture("caller-options");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options-written.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let findings = check_with_files(&root, &config, &[root.join("src/written.ts")]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 12);
+    assert_eq!(findings[0].target.as_deref(), Some(CHECKS[0]));
+}
+
+#[test]
+fn option_helper_boundaries_retain_unresolved_diagnostics() {
+    let root = fixture("caller-options-review");
+    let path = root
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("configs/caller-options.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let files = [
+        "bare-return",
+        "conflicting",
+        "exports",
+        "late-array",
+        "shadowed-string",
+        "spread",
+        "options-binding",
+    ]
+    .map(|name| root.join(format!("src/{name}.ts")));
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    let mut sites: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.file.as_str(), finding.line))
+        .collect();
+    sites.sort();
+    assert_eq!(
+        sites,
+        [
+            ("src/bare-return.ts", 3),
+            ("src/conflicting.ts", 3),
+            ("src/exports.ts", 3),
+            ("src/late-array.ts", 3),
+            ("src/options-binding.ts", 9),
+            ("src/shadowed-string.ts", 4),
+            ("src/spread.ts", 3)
+        ],
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn option_helper_sql_forms_preserve_keys_and_reject_unknown_arms() {
+    let root = fixture("caller-options-coverage");
+    let configs = root.parent().unwrap().parent().unwrap().join("configs");
+    let files =
+        ["unsupported", "forwarded", "written"].map(|name| root.join(format!("src/{name}.ts")));
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&configs.join("caller-options.yml")))
+            .unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    let mut sites: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.file.as_str(), finding.line))
+        .collect();
+    sites.sort();
+    assert_eq!(
+        sites,
+        [
+            ("src/forwarded.ts", 9),
+            ("src/unsupported.ts", 3),
+            ("src/unsupported.ts", 6),
+            ("src/unsupported.ts", 9),
+            ("src/unsupported.ts", 12),
+            ("src/unsupported.ts", 15)
+        ],
+        "{findings:?}"
+    );
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&configs.join("caller-options-written.yml")))
+            .unwrap();
+    let mut findings = check_with_files(&root, &config, &files).unwrap();
+    findings.sort_by_key(|finding| finding.line);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.line, finding.target.as_deref()))
+            .collect::<Vec<_>>(),
+        [(16, Some(CHECKS[0])), (17, Some(CHECKS[0]))],
+        "{findings:?}"
+    );
+}

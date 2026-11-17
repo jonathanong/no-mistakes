@@ -2,15 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const files = [
-  "real-napi-api",
-  "unused-disable-directives-api",
-  "sql-verdicts-api",
-  "postgres-procedural-occurrence-api",
-  "postgres-procedural-loop-coverage-api",
-  "guarded-array-receiver-api",
-  "forbidden-dependencies-globs-api",
-].map((name) => `packages/no-mistakes/scripts/${name}.test.js`);
+const { platformFiles, linuxFiles } = require("./native-api-files.cjs");
 
 function key(name) {
   return name.replaceAll(" > ", " ");
@@ -48,9 +40,15 @@ function partition(inventory, index, count, platform = process.platform) {
 function run(
   index,
   count,
-  execute = spawnSync,
-  cli = path.join(path.dirname(require.resolve("vitest/package.json")), "vitest.mjs"),
+  {
+    execute = spawnSync,
+    cli = path.join(path.dirname(require.resolve("vitest/package.json")), "vitest.mjs"),
+    suite = "platform",
+  } = {},
 ) {
+  if (suite !== "platform" && suite !== "linux")
+    throw new Error("native API suite must be platform or linux");
+  const files = suite === "linux" ? linuxFiles : platformFiles;
   fs.mkdirSync("target", { recursive: true });
   const invoke = (args) => {
     const result = execute(process.execPath, [cli, ...args], {
@@ -90,11 +88,14 @@ function run(
 
 if (require.main === module) {
   try {
-    if (process.argv.length !== 4) throw new Error("usage: native-api-shards.cjs <shard> <count>");
-    run(Number(process.argv[2]), Number(process.argv[3]));
+    if (process.argv.length < 4 || process.argv.length > 5)
+      throw new Error("usage: native-api-shards.cjs <shard> <count> [linux]");
+    if (process.argv[4] && process.argv[4] !== "linux")
+      throw new Error("native API CLI suite must be linux when supplied");
+    run(Number(process.argv[2]), Number(process.argv[3]), { suite: process.argv[4] });
   } catch (error) {
     console.error(error.message);
     process.exitCode = error.status || 1;
   }
 }
-module.exports = { files, key, partition, run };
+module.exports = { key, partition, run };

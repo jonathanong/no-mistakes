@@ -11,6 +11,8 @@ use std::sync::Arc;
 mod guard;
 mod records;
 mod refs;
+#[cfg(test)]
+mod tests;
 use records::Values;
 
 pub(super) fn install<'a>(
@@ -41,6 +43,9 @@ fn helper(
     let (record, key) = guard::guarded_record(body)?;
     let values = records.iter().find(|(name, _)| name == record)?.1.clone();
     let lowered = simple_params(params)?;
+    if lowered.iter().any(|param| param.name == record) {
+        return None;
+    }
     let index = lowered.iter().position(|param| param.name == key)?;
     match values {
         Values::Strings(pairs) => {
@@ -97,17 +102,25 @@ fn simple_params(params: &ast::FormalParameters<'_>) -> Option<Vec<Param>> {
 }
 
 fn module_records(module: &ast::Program<'_>, source: &str) -> Vec<(String, Values)> {
+    module_records_with(module, source, refs::references_allowed)
+}
+
+fn module_records_with(
+    module: &ast::Program<'_>,
+    source: &str,
+    mut references_allowed: impl FnMut(&ast::Program<'_>, &str) -> bool,
+) -> Vec<(String, Values)> {
     let mut records = Vec::new();
     for statement in &module.body {
         let Some((name, init)) = module_const(statement) else {
             continue;
         };
-        if exported(module, name) || !refs::references_allowed(module, name) {
-            continue;
-        }
         let Some(values) = freeze_values(init, source) else {
             continue;
         };
+        if exported(module, name) || !references_allowed(module, name) {
+            continue;
+        }
         records.push((name.to_string(), values));
     }
     records

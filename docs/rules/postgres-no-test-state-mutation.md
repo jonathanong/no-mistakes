@@ -57,7 +57,10 @@ and may throw or return early. A string record with more than 16 entries stays
 opaque. A nested object record may hold up to 64 entries. A closed key
 enumerates the entries it selects. An imported helper called with a dynamic
 key enumerates every nested-object entry and does not publish a shorter
-prefix. A same-file dynamic key still uses the 16-alternative budget. A
+prefix. An imported record helper result is followed through a `const` alias.
+A `let` alias stays opaque, including when it is reassigned before the query;
+keep the selected record immutable so its fields describe the executed SQL.
+A same-file dynamic key still uses the 16-alternative budget. A
 `record[key]` read outside that helper, a
 property write on the returned object, or passing that object into a call stays
 opaque, and the binding does not outlive its scope. Rule-local

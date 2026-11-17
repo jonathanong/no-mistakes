@@ -881,18 +881,28 @@ rule runs through the existing asynchronous `check()` API and the same rule
 configuration as `no-mistakes check`; it adds no runtime export. Its public
 contracts are `PostgresLockWrittenRowsOnlyOptions`,
 `PostgresLockWrittenRowsCheck`, `PostgresLockWrittenRowsSeverity`,
-`PostgresLockWrittenRowsAllow`, and `PostgresLockWrittenRowsWriteSet`.
+`PostgresLockWrittenRowsAllow`, `PostgresLockWrittenRowsWriteSet`, and
+`PostgresLockWrittenRowsExecutorOption`.
 `PostgresLockWrittenRowsOnlyOptions` includes `executorNames`,
 `extraExecutorNames`, and `excludeExecutorNames` with the selection contract
 above. Per-check severity defaults to `advise`. Unresolved SQL or transaction
 membership follows the configured unanalyzable policy.
 
-`PostgresLockWrittenRowsOnlyOptions.executorOptionProperties` selects static inline
-executor-routing options (for example `{ query: tx }`); it defaults to `[]`.
+`PostgresLockWrittenRowsOnlyOptions.executorOptions` selects executor-routing
+properties with entries such as `{ name: "query" }` for `{ query: tx }`.
+It defaults to `[]` and combines with the existing `executorOptionProperties`
+string list. Repeated names are deduplicated; names must be nonempty. These
+property names leave same-spelled local executor bindings unchanged.
 Configured factory bindings support `const`, `using`, and `await using`.
 `PostgresLockWrittenRowsOnlyOptions.schemaCatalogPath` optionally supplies schema
 relationships for table locks that order later DDL in the same transaction.
-Guard-relation reads before later DDL do not require a catalog.
+Guard-relation reads before later DDL do not require a catalog. Complete catalogs
+also supply trigger-derived write evidence; ordering-only catalogs do not.
+Direct imported factory callbacks also establish transaction membership for a
+simple first parameter. Local, unexported option helpers specialize literal
+boolean arguments; unresolved callers and unknown flags retain findings. Zero
+resolved callers never establish transaction membership. An opaque whole-options
+parameter without caller proof retains the configured executor's default.
 
 The [`postgres-column-check-constraints`](rules/postgres-column-check-constraints.md)
 catalog rule maps `check` to the existing async `check()` runtime export and

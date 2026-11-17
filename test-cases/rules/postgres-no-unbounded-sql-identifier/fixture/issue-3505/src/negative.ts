@@ -100,3 +100,13 @@ export async function unsafeAppendHelperRelation(table: string) {
   const q = appendRaw(table);
   return read(`SELECT * FROM ${q.text}`, q.values);
 }
+
+function mixedReturn(flag: boolean, table: string) {
+  if (flag) return sql`SELECT * FROM items`;
+  return table;
+}
+
+export async function mixedHelperRelation(flag: boolean, table: string) {
+  const q = mixedReturn(flag, table);
+  return read(`/* mixed helper relation */ SELECT * FROM ${q.text}`, q.values);
+}

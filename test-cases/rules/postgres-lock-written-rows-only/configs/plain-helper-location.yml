@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorTypeNames: [PoolClient]
+      checks:
+        constant-advisory-lock: fail

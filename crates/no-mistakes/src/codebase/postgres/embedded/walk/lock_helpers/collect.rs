@@ -8,11 +8,19 @@ pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
     program: &'a Program<'a>,
     enabled: bool,
     source: &str,
+    bindings: &std::collections::HashSet<String>,
+    options: &crate::codebase::postgres::EmbeddedSqlOptions,
+    functions: &super::super::resolve::LocalFunctions,
 ) -> LockHelpers {
     let mut helpers = LockHelpers::default();
     if !enabled {
         return helpers;
     }
+    let escaped = if options.executor_option_properties.is_empty() {
+        Default::default()
+    } else {
+        super::escapes::names(program)
+    };
     let reassigned =
         super::super::resolve::functions::reassigned::ReassignedNames::collect(program);
     for _ in 0..program.body.len() {
@@ -35,11 +43,25 @@ pub(in crate::codebase::postgres::embedded::walk) fn collect<'a>(
             if reassigned.contains(name) || helpers.contains_key(name) {
                 continue;
             }
-            if let Some(helper) = function
-                .body
-                .as_ref()
-                .and_then(|body| summarize(&function.params, body, &helpers, source))
-            {
+            if let Some(helper) = function.body.as_ref().and_then(|body| {
+                summarize(
+                    &function.params,
+                    body,
+                    &helpers,
+                    source,
+                    bindings,
+                    options,
+                    functions,
+                )
+            }) {
+                if escaped.contains(name)
+                    && helper
+                        .calls
+                        .iter()
+                        .any(|query| query.option_property.is_some())
+                {
+                    continue;
+                }
                 helpers.insert(name.to_owned(), helper);
                 added = true;
             }
@@ -55,6 +77,9 @@ fn summarize<'a>(
     body: &'a FunctionBody<'a>,
     helpers: &LockHelpers,
     source: &str,
+    bindings: &std::collections::HashSet<String>,
+    options: &crate::codebase::postgres::EmbeddedSqlOptions,
+    functions: &super::super::resolve::LocalFunctions,
 ) -> Option<Helper> {
     if params.rest.is_some() {
         return None;
@@ -93,7 +118,7 @@ fn summarize<'a>(
             return None;
         }
         if let Expression::Identifier(id) = unwrap_ts_wrappers(&call.callee) {
-            if !params.contains(&id.name.as_str()) {
+            if !params.contains(&id.name.as_str()) && !bindings.contains(id.name.as_str()) {
                 let helper = helpers.get(id.name.as_str())?;
                 let projected = super::parameters::compose(helper, call, &params)?;
                 if calls.len() + projected.len() > 256 {
@@ -109,7 +134,13 @@ fn summarize<'a>(
         if calls.len() >= 256 {
             return None;
         }
-        calls.push(super::query::summarize(call, &params, source)?);
+        if let Some(projected) =
+            super::option_query::summarize(call, &params, source, bindings, options, functions)
+        {
+            calls.extend(projected);
+        } else {
+            calls.push(super::query::summarize(call, &params, source)?);
+        }
         if matches!(statement, Statement::ReturnStatement(_)) {
             break;
         }

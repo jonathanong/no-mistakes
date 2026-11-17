@@ -30,6 +30,7 @@ struct Options {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     executor_option_properties: Vec<String>,
+    executor_options: Vec<crate::codebase::postgres::embedded::ExecutorOption>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
     unanalyzable_sql: String,
     checks: BTreeMap<String, Mode>,
@@ -106,6 +107,7 @@ fn compile(options: &Options) -> Result<CompiledOptions> {
                 &options.executor_type_names,
             )
             .with_executor_option_properties(&options.executor_option_properties)
+            .with_executor_options(&options.executor_options)
             .with_trusted_sql_tags(&options.trusted_sql_tags);
     embedded.track_transaction_helpers = true;
     Ok(CompiledOptions {

@@ -77,6 +77,7 @@ fn validates_accounting_options() {
         "allow: [{reason: empty}]",
         "writeSets: [{file: src.ts}]",
         "checks: {unknown: fail}",
+        "executorOptions: [{name: ' '}]",
     ] {
         let options: Options = serde_yaml::from_str(yaml).unwrap();
         assert!(compile(&options).is_err(), "{yaml}");

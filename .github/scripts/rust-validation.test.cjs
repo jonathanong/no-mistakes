@@ -148,7 +148,7 @@ test("release retains the shared all-feature test and doctest scopes", () => {
   );
   assert.match(
     workflow,
-    /run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
+    /cargo clippy --locked --workspace --all-targets --all-features -- -D warnings/,
   );
   for (const [, value] of workflow.matchAll(/CARGO_PROFILE_(?:DEV|TEST)_DEBUG: (.+)/g))
     assert.equal(value, '"0"');
