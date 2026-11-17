@@ -25,12 +25,11 @@ Supported argument shapes:
 - template literals
 - identifiers bound in scope (`const q = \`SELECT ...\`; query(q)`)
 
-Template interpolations become `sql_placeholder_N` (1-based, in source
-order). The first quasi is copied as-is; each later quasi is prefixed with
-the next placeholder. User-authored text that happens to contain the
-`sql_placeholder_` substring is not renumbered when fragments are joined.
-This is the lock-ordering `sqlText` contract. It is intentionally different
-from a runtime-query helper, which joins quasis with `?`.
+Value interpolations in a parameterized tag become `$N` binds, in the same
+order as the driver parameters. Untagged interpolations and unresolved
+identifier holes use `sql_placeholder_N` instead. Generated markers retain
+their provenance when fragments are joined; authored `$N` and
+`sql_placeholder_N` text is not renumbered.
 
 A same-file `const` string, no-substitution template, or `as const` scalar is
 spliced into that placeholder instead, including nested untagged templates up
@@ -67,7 +66,40 @@ identifier that is bound or assigned a fragment anywhere in the file. The
 binding lookup is file-wide and scope-insensitive, so a name reused for a
 plain value elsewhere in the file also fails closed. Rules with
 `unanalyzableSql: fail` report calls whose complete alternatives cannot be
-recovered instead of reading the fragment as a bind value.
+recovered instead of reading the fragment as a bind value. An unresolved
+fragment splice, including `.append` of an unknown fragment, is not published
+as `sql_placeholder_N`. Public dynamic facts stop at the verified statement
+prefix before that fragment; text after it is not joined across the missing SQL.
+The complete pending template retains the suffix for successful later recovery.
+A fragment before any known statement publishes no SQL prefix.
+An unresolved identifier interpolation, including a
+frozen-record field, stays `sql_placeholder_N` until its alternatives are
+known. Every value interpolation in a parameterized tag is a `$N` bind,
+including numeric and string constants and arguments to a table-valued
+function after `FROM`. One sequence covers the entire statement, including
+appended local and imported helper fragments. Identifier holes and raw SQL
+fragments do not consume value-bind numbers. Identifier placeholders retain the
+tail after them; resolved fragments restore the complete pending template. A resolved string constant, including a template that
+builds one, stays that bind when the hole is a value. It is not copied into
+the statement as text. An imported number or other non-SQL value, including
+one referenced from a helper that is appended later, stays a bind too. It does
+not leave the statement dynamic, and it does not drop the SQL around it. A
+nested tagged template, a declared SQL fragment, or an identifier taken from a
+closed record still splices. A `$` written
+immediately before a numeric or unknown hole is a positional parameter, with
+the hole's own digits when it is a numeric literal and the hole index
+otherwise, and with no separator. A separator is inserted only between two
+adjacent value holes of a tagged template. An adjacent empty fragment, or one
+that starts with its own punctuation, is spliced unchanged. Scalar values in
+`SELECT` projections and `CASE` arms remain binds, including imported constants
+and empty or punctuation-leading strings; their text never becomes SQL syntax.
+
+For example, `SQL` followed by the template
+`` `SELECT ${id} FROM generate_series(1, ${HARD_MAX}) LIMIT ${HARD_MAX}` ``
+recovers `SELECT $1 FROM generate_series(1, $2) LIMIT $3`, even when
+`HARD_MAX` is imported. A reconstructed statement keeps exact rule evidence;
+generated bind markers alone do not create an opaque SQL tail. A genuinely
+unresolved SQL fragment still retains uncertainty.
 
 Numeric literal alternatives inside untagged template holes are stringified using
 JavaScript number formatting, including radix and exponent literals. For example,
@@ -76,5 +108,15 @@ Numeric zero retains its falsy value while evaluating logical alternatives;
 coercion to SQL text happens at the template boundary. Parameterized SQL tags
 continue to bind interpolated values instead of splicing numeric text. Unknown
 alternatives and arithmetic that cannot be proved still retain uncertainty.
+
+### Scalar record members in parameterized tags
+
+A parameterized tag keeps fields of an imported helper's fresh scalar record as
+value binds, including fields selected by scalar ternaries. A speculative frozen
+record lookup must not make those values opaque. The prepared helper program must
+prove one direct object-literal return with unique own data fields, scalar inputs,
+and no calls, spreads, accessors, prototype changes, or nested containers. Ordinary
+string templates and relation holes retain their existing identifier requirements.
+Frozen records behind validated keys still supply correlated SQL identifiers.
 
 [PostgreSQL fact sources](../postgres-facts.md)

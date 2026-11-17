@@ -65,6 +65,15 @@ fn postgres_closed_identifiers_check_json_snapshot() {
             }),
             "{mode} lost the known mutation beside an opaque branch: {rows:?}"
         );
+        assert!(
+            rows.iter().any(|row| {
+                row["target"] == "DROP TABLE"
+                    && row["sourceLine"]
+                        .as_str()
+                        .is_some_and(|line| line.contains("frozenDrop"))
+            }),
+            "{mode} lost the frozen-record mutation: {rows:?}"
+        );
         assert!(!rows.iter().any(|row| {
             row["sourceLine"]
                 .as_str()
@@ -77,7 +86,7 @@ fn postgres_closed_identifiers_check_json_snapshot() {
             .iter()
             .filter(|row| row["target"] == "unanalyzable-sql" || row["target"] == "unanalyzable")
             .count(),
-        42,
+        66,
         "every unknown source must remain opaque for both rules: {opaque:?}"
     );
 }

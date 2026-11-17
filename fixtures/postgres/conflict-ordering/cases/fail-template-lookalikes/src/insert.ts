@@ -26,6 +26,16 @@ export function userAuthoredPlainString() {
 export function userAuthoredNextToInterpolation(accountId: string) {
   return query(sql`
     INSERT INTO sessions (id, account_id)
+    SELECT sql_placeholder_1, ${accountId}
+    WHERE true
+    ON CONFLICT (id) DO NOTHING
+  `);
+}
+
+// A bound arbiter key stays constant even when a different projection is a column.
+export function constantArbiterNextToAuthoredColumn(accountId: string) {
+  return query(sql`
+    INSERT INTO sessions (id, account_id)
     SELECT ${accountId}, sql_placeholder_1
     WHERE true
     ON CONFLICT (id) DO NOTHING

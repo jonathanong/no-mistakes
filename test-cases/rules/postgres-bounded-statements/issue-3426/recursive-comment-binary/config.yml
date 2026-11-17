@@ -1,0 +1,11 @@
+reportUnusedDisableDirectives: report
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@app/db"
+      executorNames: [query]
+      trustedSqlTags: [{ module: sql-template-strings, name: default }]
+      schemaCatalogPath: schema.json
+      unanalyzableSql: advise

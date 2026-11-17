@@ -1,0 +1,109 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "p": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "primary_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id",
+              "opclass": "uuid_ops",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "s": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "p_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "kind": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 3
+        },
+        "a_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 4
+        },
+        "b_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 5
+        },
+        "image_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 6
+        }
+      },
+      "indexes": {
+        "primary_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id",
+              "opclass": "uuid_ops",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {},
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "functions": {}
+}

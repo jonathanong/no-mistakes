@@ -1,5 +1,9 @@
 # `postgres-no-offset`
 
+Scalar holes in parameterized tags remain value binds in every expression
+position, including imported constants in `SELECT` and `CASE`. They retain
+exact SQL evidence, so an `OFFSET` finding cannot be hidden by a constant hole.
+
 `executorNames` replaces the default `[query, read, write]` list; it does not
 extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
 and add names. Setting both options is a configuration error. When a replacement

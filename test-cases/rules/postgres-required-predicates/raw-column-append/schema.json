@@ -1,0 +1,35 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "candidates": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "batch_id": {
+          "dataType": "uuid"
+        },
+        "owner_id": {
+          "dataType": "uuid"
+        }
+      },
+      "indexes": {},
+      "uniqueConstraints": {},
+      "primaryKey": null
+    },
+    "sources": {
+      "columns": {
+        "item_id": {
+          "dataType": "uuid"
+        },
+        "visible": {
+          "dataType": "boolean"
+        }
+      },
+      "indexes": {},
+      "uniqueConstraints": {},
+      "primaryKey": null
+    }
+  }
+}

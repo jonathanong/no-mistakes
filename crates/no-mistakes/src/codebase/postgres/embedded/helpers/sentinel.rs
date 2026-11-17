@@ -60,3 +60,92 @@ pub(crate) fn prefix(text: &str) -> &str {
         .first()
         .map_or(text, |(range, _)| &text[..range.start])
 }
+
+pub(crate) fn in_identifier_slot(text: &str, hole_start: usize) -> bool {
+    identifier_slot(text, hole_start, true)
+}
+
+pub(crate) fn in_relation_slot(text: &str, hole_start: usize) -> bool {
+    identifier_slot(text, hole_start, false)
+}
+
+/// A value hole: comparison or arithmetic operand, `LIMIT`/`OFFSET`,
+/// `VALUES` list, or function argument. A column list after
+/// `INTO`/`UPDATE`/`TABLE` is not one. A relation function after
+/// `FROM` or `JOIN` still takes value arguments.
+pub(crate) fn value_position(text: &str) -> bool {
+    let trimmed = text.trim_end();
+    let Some(tail) = trimmed.chars().next_back() else {
+        return false;
+    };
+    if matches!(tail, '=' | '<' | '>' | '+' | '-' | '*' | '/') {
+        return true;
+    }
+    let word = last_ident(trimmed);
+    if word.eq_ignore_ascii_case("limit") || word.eq_ignore_ascii_case("offset") {
+        return true;
+    }
+    let Some(open) = trimmed.rfind('(') else {
+        return false;
+    };
+    if trimmed[open + 1..].contains(')') {
+        return false;
+    }
+    let inside = trimmed[open + 1..].trim_end();
+    if !(inside.is_empty() || inside.ends_with(',')) {
+        return false;
+    }
+    let before = trimmed[..open].trim_end();
+    let word = last_ident(before);
+    if word.eq_ignore_ascii_case("values") {
+        return true;
+    }
+    let prev = ident_before(before, word);
+    if ["into", "update", "table"]
+        .iter()
+        .any(|keyword| prev.eq_ignore_ascii_case(keyword))
+    {
+        return false;
+    }
+    !word.is_empty()
+}
+
+fn last_ident(text: &str) -> &str {
+    let end = text.trim_end();
+    let start = end
+        .rfind(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+        .map(|at| at + end[at..].chars().next().map(char::len_utf8).unwrap_or(0))
+        .unwrap_or(0);
+    &end[start..]
+}
+
+fn ident_before<'a>(text: &'a str, word: &str) -> &'a str {
+    let head = text.trim_end();
+    last_ident(
+        head.get(..head.len().saturating_sub(word.len()))
+            .unwrap_or(""),
+    )
+}
+
+fn identifier_slot(text: &str, hole_start: usize, columns: bool) -> bool {
+    let before = &text[..hole_start];
+    let Some(ch) = before.chars().next_back() else {
+        return false;
+    };
+    let head = if ch.is_ascii_alphanumeric() || ch == '_' {
+        before.trim_end_matches(|c: char| c.is_ascii_alphanumeric() || c == '_')
+    } else if ch.is_whitespace() {
+        before
+    } else {
+        return false;
+    };
+    let word = head
+        .trim_end()
+        .rsplit(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+        .find(|word| !word.is_empty())
+        .unwrap_or("");
+    (columns && word.eq_ignore_ascii_case("select"))
+        || ["from", "join", "update", "into", "table"]
+            .iter()
+            .any(|keyword| word.eq_ignore_ascii_case(keyword))
+}

@@ -14,14 +14,15 @@ mod bindings;
 mod byte_origins;
 mod call;
 pub use byte_origins::SqlByteOrigins;
+pub(crate) use call::MAX_FROZEN_OBJECT_SQL_VARIANTS;
 pub use call::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
 mod dml_kind;
 pub(crate) mod helpers;
 mod options;
 mod placeholders;
 pub(crate) use placeholders::{
-    count_placeholders, publish_placeholders_with_positions, renumber_placeholders,
-    INTERNAL_PLACEHOLDER,
+    count_placeholders, internal_bind, publish_placeholders_with_positions, renumber_placeholders,
+    INTERNAL_BIND, INTERNAL_PLACEHOLDER,
 };
 pub(crate) mod relative;
 pub(crate) mod undeclared;
@@ -37,8 +38,8 @@ pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
 mod text;
 pub(crate) use tags::matches_trusted_sql_import;
-pub(super) use text::unpublished_sql_text;
 pub use text::{executed_query_text, sql_text};
+pub(super) use text::{positional_digits, unpublished_sql_text};
 pub(crate) mod walk;
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::{
@@ -131,6 +132,8 @@ mod imported_sql_tag_tests;
 #[cfg(test)]
 mod nested_sql_fragment_tests;
 #[cfg(test)]
+mod positional_parameter_tests;
+#[cfg(test)]
 mod resolution_gaps_tests;
 #[cfg(test)]
 mod scoped_bindings_tests;
@@ -138,6 +141,8 @@ mod scoped_bindings_tests;
 mod trusted_sql_tag_tests;
 #[cfg(test)]
 mod undeclared_tests;
+#[cfg(test)]
+mod value_hole_tests;
 #[cfg(test)]
 #[path = "embedded/variants/tests.rs"]
 mod variants_tests;
@@ -150,3 +155,7 @@ mod exact_origins_tests;
 
 #[cfg(test)]
 mod template_recovery_fixture_tests;
+
+#[cfg(test)]
+#[path = "embedded/placeholder_bind_tests.rs"]
+mod placeholder_bind_tests;

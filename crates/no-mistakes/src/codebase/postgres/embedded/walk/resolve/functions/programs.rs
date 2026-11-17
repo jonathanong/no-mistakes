@@ -63,7 +63,7 @@ fn insert(
     lowered: HelperProgram,
     always_throws: bool,
 ) {
-    if always_throws || lowered.contributes_sql() {
+    if always_throws || lowered.contributes_sql() || !lowered.scalar_fields.is_empty() {
         programs.insert(name.to_string(), std::sync::Arc::new(lowered));
     }
 }
@@ -115,6 +115,19 @@ impl super::LocalFunctions {
 
     pub(crate) fn has_program(&self, name: &str) -> bool {
         self.programs.contains_key(name) || self.guarded_identifiers.contains_key(name)
+    }
+
+    /// Parameter index and entries of a frozen-record object return.
+    pub(crate) fn frozen_object(
+        &self,
+        name: &str,
+    ) -> Option<(
+        usize,
+        &[crate::codebase::postgres::embedded::helpers::program::FrozenEntry],
+    )> {
+        let program = self.programs.get(name)?;
+        let index = program.frozen_key?;
+        (!program.frozen_entries.is_empty()).then_some((index, program.frozen_entries.as_slice()))
     }
 }
 

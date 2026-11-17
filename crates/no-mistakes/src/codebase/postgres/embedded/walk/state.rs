@@ -11,6 +11,15 @@ use collected::CollectedCalls;
 mod fragment;
 pub(crate) use collect::collect_calls;
 #[derive(Clone)]
+pub(super) struct FrozenAlias {
+    pub(super) scope: usize,
+    pub(super) name: String,
+    pub(super) local: String,
+    pub(super) span: u32,
+    pub(super) args: Vec<helpers::SiteArg>,
+}
+
+#[derive(Clone)]
 pub(crate) struct BindingState {
     pub(super) value_identity: Option<std::num::NonZeroU32>,
     pub(super) builder_identity: Option<std::num::NonZeroU32>,
@@ -116,4 +125,6 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) exported_constants:
         crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
     pub(super) plain: super::plain_returns::PlainState,
+    pub(super) frozen_aliases: Vec<FrozenAlias>,
+    pub(super) site_groups: std::cell::RefCell<crate::fx::FxHashMap<usize, u32>>,
 }

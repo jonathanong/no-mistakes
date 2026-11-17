@@ -49,11 +49,12 @@ pub(in crate::codebase::postgres::embedded) fn expression(
             literal.span.start + 1,
             false,
         ),
-        Expression::TemplateLiteral(template) => template_origins(template, source, false),
+        Expression::TemplateLiteral(template) => template_origins(template, source, false, false),
         Expression::TaggedTemplateExpression(tagged) => template_origins(
             &tagged.quasi,
             source,
             super::super::tags::is_string_raw_tag_spelling(&tagged.tag),
+            true,
         ),
         _ => vec![expr.span().start; sql.len()],
     }
@@ -63,15 +64,28 @@ fn template_origins(
     template: &oxc_ast::ast::TemplateLiteral<'_>,
     source: &str,
     raw_mode: bool,
+    separate_adjacent: bool,
 ) -> Vec<u32> {
     let mut origins = Vec::new();
+    let mut already = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
         if index > 0 {
-            let marker = super::super::placeholders::internal_placeholder(index);
-            origins.extend(std::iter::repeat_n(
-                template.expressions[index - 1].span().start,
-                marker.len(),
-            ));
+            let previous = super::super::tags::quasi_text(&template.quasis[index - 1], raw_mode);
+            let hole = &template.expressions[index - 1];
+            let rendered = super::super::text::render_hole(
+                &previous,
+                hole,
+                index,
+                &already,
+                separate_adjacent,
+            );
+            let start = hole.span().start;
+            if rendered.space {
+                origins.push(start);
+                already.push(' ');
+            }
+            origins.extend(std::iter::repeat_n(start, rendered.text.len()));
+            already.push_str(&rendered.text);
         }
         let raw = &source[quasi.span.start as usize..quasi.span.end as usize];
         let decoded = super::super::tags::quasi_text(quasi, raw_mode);
@@ -81,6 +95,7 @@ fn template_origins(
             quasi.span.start,
             raw_mode || quasi.value.cooked.is_none(),
         ));
+        already.push_str(&decoded);
     }
     origins
 }

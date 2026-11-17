@@ -1,5 +1,11 @@
 # `postgres-lock-ordering`
 
+Parameterized value holes, including imported numeric constants inside
+appended helpers, retain a single `$N` sequence across the complete statement.
+Statement-form `.append()` and `.append()` of raw string text preserve that
+SQL text. Known SQL is parsed normally; a genuinely unresolved fragment stays
+opaque rather than producing a parse error from a substituted fragment.
+
 `executorNames` replaces the default `[query, read, write]` list; it does not
 extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
 and add names. Setting both options is a configuration error. When a replacement
@@ -63,6 +69,14 @@ rules:
 configuration error).
 `schemaCatalogPath` is optional; when present it must be a repository-relative
 catalog generated with [`no-mistakes postgres catalog`](../cli/postgres.md).
+
+A multi-row lock whose relations are all absent from that catalog does not
+fail the unique-key check. A placeholder or a closed set of names the catalog
+does not list is not evidence that the `ORDER BY` is wrong. Check each
+recovered name, and report only when a name the catalog does contain lacks
+the key order. A `FOR UPDATE OF` list that names both a catalog relation and
+an unknown relation still fails closed. A placeholder whose source position
+was recovered still reports the interpolated-relation finding.
 
 Counterexample: `query(\`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE\`)`without`ORDER BY`or`SKIP LOCKED`. Unparseable `FOR UPDATE` SQL is a
 separate diagnostic so lock statements stay parseable.
@@ -199,6 +213,13 @@ Executor calls without statically recovered SQL follow `options.unanalyzable`:
 
 The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore`
 keep their names.
+
+An appended fragment that stays unresolved is not recovered SQL and is not
+rewritten into a `sql_placeholder_N`. Only the verified statement prefix before
+the fragment is published; joining a missing predicate to a later `AND` would
+fabricate invalid SQL. The complete pending template retains the suffix for
+successful helper recovery. An identifier hole stays a placeholder and retains
+the text after it. The call stays dynamic and follows `unanalyzableSql`.
 
 Recovered SQL containing `FOR UPDATE` that fails to parse always produces an
 `unparseable` finding, including under `ignore` and `advise`. That SQL may hold

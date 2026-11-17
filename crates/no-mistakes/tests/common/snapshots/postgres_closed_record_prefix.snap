@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "nested_freeze_and_lock_prefix": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "test-helpers/lock.mts",
+          "line": 11,
+          "message": "test-helpers/lock.mts:11: postgres-no-test-state-mutation application #0 has unresolved SQL for test-state-mutation: opaque-sql-tail; known SQL prefix \"/* lockReference */ LOCK TABLE sql_placeholder_1 IN ACCESS EXCLUSIVE MODE\"",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(",
+          "target": "test-state-mutation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

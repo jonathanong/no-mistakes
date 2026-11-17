@@ -63,11 +63,12 @@ impl LocalFunctions {
                     &mut |tag| visitor.shadowed_locally(tag) || self.is_tag_shadowed(tag),
                     self.imported_sql_tags(),
                 )?;
-                let positions = source_positions::for_expression(
+                let positions = source_positions::for_rendered_expression(
                     argument,
                     visitor.source,
                     call.span.start as usize,
                     call_line,
+                    Some(&base),
                 );
                 (base, positions, call_line)
             }

@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      importSpecifier: "@app/db"
+      executorNames: [query]
+      trustedSqlTags: [{ module: sql-template-strings, name: default }]
+      schemaCatalogPath: schema.json
+      unanalyzableSql: advise

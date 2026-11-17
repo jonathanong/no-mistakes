@@ -1,0 +1,787 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "with_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 28,
+          "message": "src/recursive-comment-binary.ts:28: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts JOIN w ON w.parent_id = posts.id",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 37,
+          "message": "src/recursive-comment-binary.ts:37: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "FROM posts JOIN w ON w.parent_id = posts.id WHERE w.depth < ${max + 1} OR posts.parent_id IS NOT NULL",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 9,
+          "message": "directive for `postgres-bounded-statements` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-bounded-statements: depth is capped for this ancestry walk",
+          "target": "postgres-bounded-statements"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1159,
+            926
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1159,
+            926
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1159,
+            926
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1237,
+            1528
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1237,
+            1528
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1237,
+            1528
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            148,
+            513
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            148,
+            513
+          ],
+          "status": "proven-clear",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            148,
+            513
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            596,
+            856
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            596,
+            856
+          ],
+          "status": "proven-clear",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            596,
+            856
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "without_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 16,
+          "message": "src/recursive-comment-binary.ts:16: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, parent_id, 0 AS depth FROM posts WHERE id = ${start}",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 25,
+          "message": "src/recursive-comment-binary.ts:25: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, parent_id, 0 AS depth FROM posts WHERE id = ${start}",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 34,
+          "message": "src/recursive-comment-binary.ts:34: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, parent_id, 0 AS depth FROM posts WHERE id = ${start}",
+          "target": "table:posts"
+        },
+        {
+          "file": "src/recursive-comment-binary.ts",
+          "line": 6,
+          "message": "src/recursive-comment-binary.ts:6: SELECT can return every row of posts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
+          "rule": "postgres-bounded-statements",
+          "sourceLine": "SELECT id, parent_id, 0 AS depth FROM posts WHERE id = ${start}",
+          "target": "table:posts"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1159,
+            926
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1159,
+            926
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1159,
+            926
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1237,
+            1528
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1237,
+            1528
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            1237,
+            1528
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            148,
+            513
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            148,
+            513
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            148,
+            513
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            596,
+            856
+          ],
+          "status": "proven-clear",
+          "subcheck": "delete"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            596,
+            856
+          ],
+          "status": "proven-clear",
+          "subcheck": "update"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/recursive-comment-binary.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-bounded-statements",
+          "span": [
+            596,
+            856
+          ],
+          "status": "violation",
+          "subcheck": "select"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

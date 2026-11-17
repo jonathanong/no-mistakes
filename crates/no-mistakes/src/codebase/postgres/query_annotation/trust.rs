@@ -10,11 +10,12 @@ mod visitor;
 use oxc_ast::ast::{ImportDeclarationSpecifier, Program, Statement};
 use std::collections::{BTreeSet, HashSet};
 
-pub(super) fn collect(
+pub(super) fn collect_tags(
     program: &Program<'_>,
     options: &super::super::EmbeddedSqlOptions,
-) -> BTreeSet<String> {
+) -> (BTreeSet<String>, BTreeSet<String>) {
     let mut trusted = conventional::collect(program);
+    let mut parameterized = BTreeSet::new();
     // Runtime module bindings replace a same-named trusted import, including
     // destructuring and TypeScript import-equals declarations.
     for name in bindings::function_scope(&program.body) {
@@ -39,6 +40,7 @@ pub(super) fn collect(
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(value) => &value.local,
             };
             trusted.remove(local.name.as_str());
+            parameterized.remove(local.name.as_str());
             let valid = match specifier {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(_) => {
                     import.source.value == "sql-template-strings"
@@ -58,6 +60,15 @@ pub(super) fn collect(
             };
             if valid {
                 trusted.insert(local.name.to_string());
+                let raw = matches!(specifier, ImportDeclarationSpecifier::ImportSpecifier(value)
+                if super::super::embedded::matches_trusted_sql_import(
+                    crate::ast::js_literal(&import.source).as_ref(),
+                    crate::ast::module_export_name(&value.imported).as_ref(),
+                    &options.raw_sql_tags,
+                ));
+                if import.source.value == "sql-template-strings" && !raw {
+                    parameterized.insert(local.name.to_string());
+                }
             }
         }
     }
@@ -66,7 +77,7 @@ pub(super) fn collect(
             trusted.insert(name);
         }
     }
-    trusted
+    (trusted, parameterized)
 }
 
 /// `const local = require("sql-template-strings")` is the CommonJS form of the

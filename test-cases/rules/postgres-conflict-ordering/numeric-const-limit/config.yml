@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    include: [src/insert.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql

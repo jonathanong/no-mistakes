@@ -24,6 +24,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) unmodeled_calls: Vec<Expr>,
     pub(super) branch_calls: crate::fx::FxHashSet<(u32, u32)>,
     pub(super) trusted_tags: BTreeSet<String>,
+    pub(super) parameterized_tags: BTreeSet<String>,
     pub(super) legacy_tag_spans: BTreeMap<String, u32>,
     pub(super) raw_tag_reassigned: bool,
     pub(super) mapped_arguments: crate::fx::FxHashSet<u32>,

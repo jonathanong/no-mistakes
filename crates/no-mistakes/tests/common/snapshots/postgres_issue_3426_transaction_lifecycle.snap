@@ -1,0 +1,216 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "transaction_lifecycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "test-helpers/control.mts",
+          "line": 7,
+          "message": "test-helpers/control.mts:7: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(sql`TRUNCATE TABLE t`)",
+          "target": "TRUNCATE"
+        },
+        {
+          "file": "test-helpers/mutation-tail.mts",
+          "line": 70,
+          "message": "test-helpers/mutation-tail.mts:70: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "; TRUNCATE TABLE m",
+          "target": "TRUNCATE"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/control.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginBoundedTransaction",
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "OwnedTransaction",
+              "Pool",
+              "PoolClient",
+              "QueryExecutor",
+              "QueryOptions",
+              "TransactionQuery"
+            ],
+            "importSpecifier": "@data-stores/psql",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            226,
+            254
+          ],
+          "status": "violation",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/make.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginBoundedTransaction",
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "OwnedTransaction",
+              "Pool",
+              "PoolClient",
+              "QueryExecutor",
+              "QueryOptions",
+              "TransactionQuery"
+            ],
+            "importSpecifier": "@data-stores/psql",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            1358,
+            3609
+          ],
+          "status": "proven-clear",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/minimal.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginBoundedTransaction",
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "OwnedTransaction",
+              "Pool",
+              "PoolClient",
+              "QueryExecutor",
+              "QueryOptions",
+              "TransactionQuery"
+            ],
+            "importSpecifier": "@data-stores/psql",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            262,
+            337
+          ],
+          "status": "proven-clear",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/mutation-tail.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginBoundedTransaction",
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "OwnedTransaction",
+              "Pool",
+              "PoolClient",
+              "QueryExecutor",
+              "QueryOptions",
+              "TransactionQuery"
+            ],
+            "importSpecifier": "@data-stores/psql",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            1363,
+            3643
+          ],
+          "status": "violation",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "test-helpers/sibling-sku.mts",
+          "profile": {
+            "executorFactoryNames": [
+              "beginBoundedTransaction",
+              "beginTransaction"
+            ],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [
+              "OwnedTransaction",
+              "Pool",
+              "PoolClient",
+              "QueryExecutor",
+              "QueryOptions",
+              "TransactionQuery"
+            ],
+            "importSpecifier": "@data-stores/psql",
+            "trustedSqlTags": []
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            231,
+            317
+          ],
+          "status": "proven-clear",
+          "subcheck": "test-state-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -50,6 +50,14 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn walk_closed_call(&mut self, call: &ast::CallExpression<'a>) {
+        for argument in &call.arguments {
+            if let Some(ast::Expression::Identifier(id)) = argument
+                .as_expression()
+                .map(crate::codebase::ts_source::unwrap_ts_wrappers)
+            {
+                self.invalidate_record_object(id.name.as_str());
+            }
+        }
         let reads = self.literal_objects.read_spans.len();
         self.exempt_closed_assertion(call);
         self.visit_finite_call(call);

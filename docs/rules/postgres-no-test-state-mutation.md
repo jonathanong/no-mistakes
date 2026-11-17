@@ -50,13 +50,29 @@ scanning raw `.sql` files.
 At max effort, [closed identifier values](../postgres-facts/closed-identifiers.md)
 can supply finite SQL alternatives through raw append operations and untagged
 templates. Direct stable literal-union parameters, complete literal-return
-switches, and immutable lookup records are supported. Rule-local
+switches, immutable lookup records, and a module-private frozen literal record
+returned through an `Object.hasOwn` guard are supported, including a nested
+`Object.freeze` of literal fields. The guard may also test `typeof key !== 'string'`
+and may throw or return early. A string record with more than 16 entries stays
+opaque. A nested object record may hold up to 64 entries. A closed key
+enumerates the entries it selects. An imported helper called with a dynamic
+key enumerates every nested-object entry and does not publish a shorter
+prefix. A same-file dynamic key still uses the 16-alternative budget. A
+`record[key]` read outside that helper, a
+property write on the returned object, or passing that object into a call stays
+opaque, and the binding does not outlive its scope. Rule-local
 `sqlIdentifierAssertions` selects named imports with a literal allowlist argument;
 `rawSqlTags` explicitly selects tags that insert text instead of binding values.
 Both default to `[]`. These analysis contracts remain rule-local when project
 executor settings are inherited. Existing parameterized tags keep their binding
 semantics. Every mutating alternative still reports, including under
 `unanalyzable: ignore`; any unknown alternative keeps the residual opaque.
+
+Parameterized SQL retains ordinary scalar-record fields returned by imported
+helpers as value binds. Scalar ternaries in those fields, conditional setup before
+the transaction, optional-chain defaults, and nullish Date values do not introduce
+an opaque SQL tail. The complete statement remains checked, including a forbidden
+mutation appended after its CTEs.
 
 Source-visible synchronous helpers may return one of several fixed SQL
 statements from a `switch`. A default that always throws adds no SQL variant,

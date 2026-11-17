@@ -130,6 +130,8 @@ pub(crate) fn collect_calls<'a>(
         clause_unions: crate::fx::fx_set(),
         exported_constants: Default::default(),
         plain: Default::default(),
+        frozen_aliases: Vec::new(),
+        site_groups: Default::default(),
     };
     visitor.visit_program(program);
     visitor.flush_plain_returns();
@@ -144,6 +146,7 @@ pub(crate) fn collect_calls<'a>(
     visitor.discard_direct_forwarded_bodies();
     super::super::observability::record(&visitor.calls);
     let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
+    let site_groups = visitor.site_groups.borrow().clone();
     let pending_imported = helpers::finalize::finalize(
         helpers::finalize::Walked {
             calls: &mut visitor.calls,
@@ -154,6 +157,7 @@ pub(crate) fn collect_calls<'a>(
             fragment_variants: &mut visitor.fragment_variants,
         },
         &sites,
+        &site_groups,
     );
     let diagnostic_member_sequences = visitor
         .member_query_proof

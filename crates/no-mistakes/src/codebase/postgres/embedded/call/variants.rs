@@ -5,6 +5,9 @@ use std::borrow::Cow;
 /// Default variant budget; append exploration also retains every singleton.
 pub const MAX_EMBEDDED_SQL_VARIANTS: usize = 16;
 
+/// One alternative per entry of an imported frozen object record.
+pub(crate) const MAX_FROZEN_OBJECT_SQL_VARIANTS: usize = 64;
+
 /// One complete alternative, with its own physical origin and generated binds.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmbeddedSqlVariant {

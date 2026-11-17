@@ -1,0 +1,86 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured_tag": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tests/scalar-nullish.test.ts",
+          "line": 20,
+          "message": "tests/scalar-nullish.test.ts:20: executed test SQL uses TRUNCATE; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests",
+          "rule": "postgres-no-test-state-mutation",
+          "sourceLine": "await query(sql`TRUNCATE TABLE t`);",
+          "target": "TRUNCATE"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "tests/scalar-nullish.test.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "@app/sql",
+                "name": "sql"
+              }
+            ]
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            195,
+            522
+          ],
+          "status": "proven-clear",
+          "subcheck": "test-state-mutation"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "tests/scalar-nullish.test.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "@app/sql",
+                "name": "sql"
+              }
+            ]
+          },
+          "rule": "postgres-no-test-state-mutation",
+          "span": [
+            579,
+            607
+          ],
+          "status": "violation",
+          "subcheck": "test-state-mutation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

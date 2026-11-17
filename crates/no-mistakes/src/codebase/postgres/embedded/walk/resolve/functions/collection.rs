@@ -36,7 +36,7 @@ pub(super) fn collect(
     let mut tag_shadows = TagShadows::collect(program, trusted_sql_tags, &sql_statement_types);
     tag_shadows.configure_raw(program, raw_sql_tags, &sql_statement_types);
     let templates = template_helpers(program, source, &reassigned);
-    let programs = programs::lower_all(
+    let mut programs = programs::lower_all(
         program,
         source,
         &raw,
@@ -44,6 +44,7 @@ pub(super) fn collect(
         &reassigned,
         &sql_statement_types,
     );
+    super::frozen::install(program, source, &raw, &mut programs);
     let mut resolved = FxHashMap::default();
     let mut parameter_builders = HashMap::new();
     for name in raw.keys().copied() {

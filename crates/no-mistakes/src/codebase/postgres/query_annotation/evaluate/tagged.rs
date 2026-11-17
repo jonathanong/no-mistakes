@@ -2,6 +2,8 @@ use super::{concat, Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
+mod finish;
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn tag_trusted(&self, tag: &str, path: &Path, env: Environment) -> bool {
         let file = &self.files[path];
@@ -44,6 +46,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 }
             })
             .collect::<Vec<_>>();
+        let parameterized = trusted_tag && self.files[path].facts.parameterized_tags.contains(tag);
         let trusted_raw = tag == "String.raw" && trusted_tag;
         let interpolation_mutates = effects
             .iter()
@@ -72,8 +75,27 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     || effects
                         .get(1 + index / 2)
                         .is_some_and(|effect| self.tag_helper(effect, path, *env)));
+            let relation = matches!(&prefix, Value::Prefix(text, _, _)
+                if crate::codebase::postgres::embedded::helpers::sentinel::in_relation_slot(text, text.len()));
             let value = if fragment {
                 Value::Unknown
+            } else if parameterized && index % 2 == 1 {
+                match part {
+                    Expr::Text(text) => Value::Prefix(
+                        if !relation
+                            && text.starts_with(
+                                crate::codebase::postgres::embedded::INTERNAL_PLACEHOLDER,
+                            )
+                        {
+                            format!("{}1", crate::codebase::postgres::embedded::INTERNAL_BIND)
+                        } else {
+                            text.clone()
+                        },
+                        true,
+                        None,
+                    ),
+                    _ => self.expr(part, path, env, depth, generic),
+                }
             } else {
                 self.expr(part, path, env, depth, generic)
             };
@@ -87,35 +109,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
             prefix = concat(prefix, value);
         }
-        let trusted = self.tag_trusted(tag, path, *env);
-        let name = if tag == "String.raw" { "String" } else { tag };
-        let legacy = self.files[path].facts.legacy_tag_spans.get(name).is_some_and(|start| {
-            let local = self.scopes[*env].get(name);
-            local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner.as_path() == path && function.start == *start)
-        });
-        if !trusted && !legacy {
-            self.invalidate_opaque_builders(&values);
-            self.opaque_callbacks(&values, depth);
-        }
-        if trusted || legacy {
-            if let Value::Prefix(_, _, id) = &mut prefix {
-                if tag != "String.raw" || legacy {
-                    *id = Some(self.next_builder);
-                    self.next_builder += 1;
-                }
-            }
-            // Reuse the existing local-tag contract only for this annotation
-            // prefix; no complete-SQL fact is promoted for structural rules.
-            if legacy
-                && matches!(values.first(), Some(Value::Function(function, _, _)) if function.asynchronous)
-            {
-                Value::Promise(Box::new(prefix))
-            } else {
-                prefix
-            }
-        } else {
-            Value::Unknown
-        }
+        self.finish_tagged(tag, path, *env, &values, depth, prefix)
     }
 
     fn tag_helper(&self, expression: &Expr, path: &Path, env: Environment) -> bool {

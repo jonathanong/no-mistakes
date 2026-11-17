@@ -7,3 +7,6 @@ rules:
       include: [src/fragments.mts]
       bannedShapes: [keyset-only-sweep]
       importSpecifier: "@example/db"
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql

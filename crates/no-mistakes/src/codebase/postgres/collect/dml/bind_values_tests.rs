@@ -71,8 +71,8 @@ fn repeated_parameter_fields_keep_distinct_sql_placeholders_and_shared_identity(
         panic!("one saved executor call");
     };
     let sql = call.sql_text.as_deref().unwrap();
-    assert!(sql.contains("m.user_id >= sql_placeholder_2"));
-    assert!(sql.contains("m.user_id <= sql_placeholder_3"));
+    assert!(sql.contains("m.user_id >= $2"));
+    assert!(sql.contains("m.user_id <= $3"));
     assert_eq!(call.bound_value_sql, call.sql_text);
     let binds = super::collect(call, &path);
     assert_eq!(binds.len(), 4, "{call:#?}");

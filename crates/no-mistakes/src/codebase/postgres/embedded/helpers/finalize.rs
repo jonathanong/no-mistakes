@@ -1,18 +1,17 @@
 //! End-of-walk step: no hole marker may reach a public fact.
-//!
-//! A call that still holds markers is reduced to exactly what the walk
-//! produced before imported helpers were modeled: `Dynamic`, keeping only a
-//! verified leading statement. When the whole call could be complete, the
-//! marker-bearing form is kept aside for the projection step.
+//! Unfilled calls stay dynamic. Identifier holes keep `sql_placeholder_N` and
+//! the rest of the statement. An unresolved fragment ends the verified prefix.
 
 use super::sentinel;
 use super::split::coordinate;
 use super::summary::{ImportedSite, PendingImportedSql};
 use crate::codebase::postgres::embedded::relative::PendingRelativeCall;
-use crate::codebase::postgres::embedded::walk::resolve::has_known_leading_statement;
 use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use std::collections::BTreeMap;
+
+mod policy;
+use policy::trimmed_prefix;
 
 pub(crate) struct Walked<'a> {
     pub(crate) calls: &'a mut [EmbeddedSqlCall],
@@ -23,14 +22,18 @@ pub(crate) struct Walked<'a> {
     pub(crate) fragment_variants: &'a mut [Vec<EmbeddedSqlVariant>],
 }
 
-pub(crate) fn finalize(walked: Walked<'_>, sites: &[ImportedSite]) -> Vec<PendingImportedSql> {
+pub(crate) fn finalize(
+    walked: Walked<'_>,
+    sites: &[ImportedSite],
+    groups: &crate::fx::FxHashMap<usize, u32>,
+) -> Vec<PendingImportedSql> {
     let mut pending = Vec::new();
     for (call, span) in walked.calls.iter_mut().zip(walked.call_spans) {
-        pending.extend(take_pending(call, *span, sites));
+        pending.extend(take_pending(call, *span, sites, groups));
     }
     for relative in walked.pending_calls.iter_mut() {
         let span = walked.pending_spans.get(&relative.seq).copied();
-        pending.extend(span.and_then(|span| take_pending(&mut relative.call, span, sites)));
+        pending.extend(span.and_then(|span| take_pending(&mut relative.call, span, sites, groups)));
     }
     for fragment in walked.fragments.iter_mut() {
         if !fragment.sql_text.as_deref().is_some_and(sentinel::contains) {
@@ -65,6 +68,7 @@ fn take_pending(
     call: &mut EmbeddedSqlCall,
     span: (u32, u32),
     sites: &[ImportedSite],
+    groups: &crate::fx::FxHashMap<usize, u32>,
 ) -> Option<PendingImportedSql> {
     let in_text = call.sql_text.as_deref().is_some_and(sentinel::contains);
     let in_variants = call
@@ -81,8 +85,6 @@ fn take_pending(
         && call.variants.len() == 1
         && !call.variants_truncated()
         && call.sql_text.as_deref() == Some(call.variants[0].sql_text.as_str());
-    // Either the call's own text is a complete statement, or each of its
-    // complete alternatives is and the legacy text holds no hole.
     let complete = if call.variants.is_empty() {
         in_text && call.kind != EmbeddedSqlKind::Dynamic
     } else {
@@ -94,7 +96,7 @@ fn take_pending(
         template.sql_source_positions.clear();
         template.recovered_placeholder_positions.clear();
     }
-    scrub(call);
+    publish_call(call, sites);
     if !complete {
         return None;
     }
@@ -103,11 +105,59 @@ fn take_pending(
         .iter()
         .chain(template.variants.iter().map(|variant| &variant.sql_text));
     let sites = used_sites(texts, sites)?;
+    let correlation = groups
+        .iter()
+        .filter(|(index, _)| sites.iter().any(|(seen, _)| seen == *index))
+        .map(|(index, group)| (*index, *group))
+        .collect();
     Some(PendingImportedSql {
         span,
         template,
         sites,
+        correlation,
     })
+}
+
+fn publish_call(call: &mut EmbeddedSqlCall, sites: &[ImportedSite]) {
+    let source = call.sql_text.clone().or_else(|| {
+        call.variants
+            .first()
+            .map(|variant| variant.sql_text.clone())
+    });
+    call.variants.clear();
+    call.kind = EmbeddedSqlKind::Dynamic;
+    let Some(text) = source else {
+        call.sql_text = None;
+        return;
+    };
+    if let Some((range, _)) = sentinel::find_all(&text).first() {
+        let cut = coordinate(&text, range.start);
+        call.sql_source_positions
+            .retain(|position| (position.sql_line, position.sql_column) < cut);
+        call.recovered_placeholder_positions
+            .retain(|position| *position < cut);
+    }
+    let published = policy::publish(&text, sites);
+    call.sql_text = Some(published).filter(|text| {
+        let trimmed = text.trim();
+        !trimmed.is_empty() && !placeholder_only(trimmed)
+    });
+}
+
+/// A helper call with no surrounding statement is not public SQL.
+fn placeholder_only(text: &str) -> bool {
+    let mut rest = text;
+    while let Some(stripped) = rest.strip_prefix("sql_placeholder_") {
+        let digits = stripped.bytes().take_while(u8::is_ascii_digit).count();
+        if digits == 0 {
+            return false;
+        }
+        rest = stripped[digits..].trim_start();
+        if rest.is_empty() {
+            return true;
+        }
+    }
+    false
 }
 
 fn used_sites<'a>(
@@ -123,38 +173,4 @@ fn used_sites<'a>(
         }
     }
     Some(used)
-}
-
-/// What a call with an unrecoverable helper holds: only the verified leading
-/// statement that precedes the first hole.
-fn scrub(call: &mut EmbeddedSqlCall) {
-    call.variants.clear();
-    call.kind = EmbeddedSqlKind::Dynamic;
-    if !call.sql_text.as_deref().is_some_and(sentinel::contains) {
-        return;
-    }
-    let text = call.sql_text.take().unwrap_or_default();
-    let Some((kept, cut)) = trimmed_prefix(&text) else {
-        call.sql_source_positions.clear();
-        call.recovered_placeholder_positions.clear();
-        return;
-    };
-    call.sql_source_positions
-        .retain(|position| (position.sql_line, position.sql_column) < cut);
-    call.recovered_placeholder_positions
-        .retain(|position| *position < cut);
-    call.sql_text = Some(kept);
-}
-
-/// Prefix before the first hole, plus the SQL coordinate where that prefix ends.
-fn trimmed_prefix(text: &str) -> Option<(String, (u32, u32))> {
-    let prefix = sentinel::prefix(text);
-    let kept = keep_prefix(text)?;
-    Some((kept, coordinate(text, prefix.len())))
-}
-
-/// The prefix before the first hole, when it is a known statement.
-fn keep_prefix(text: &str) -> Option<String> {
-    let prefix = sentinel::prefix(text);
-    has_known_leading_statement(prefix).then(|| prefix.to_string())
 }

@@ -89,6 +89,17 @@ fn scalar_key(expr: &Expr, scope: &Scope, positions: PlaceholderPositions<'_>) -
                 .map(|id| format!("binding:{id}"))
         }
         Expr::Value(value) => match &value.value {
+            Value::Placeholder(_)
+                if scope.bind_values.contains_key(&(
+                    value.span.start.line as u32,
+                    value.span.start.column as u32,
+                )) =>
+            {
+                scope
+                    .bind_values
+                    .get(&(value.span.start.line as u32, value.span.start.column as u32))
+                    .map(|id| format!("binding:{id}"))
+            }
             Value::Placeholder(name)
                 if !name.starts_with('$')
                     || name.len() == 1

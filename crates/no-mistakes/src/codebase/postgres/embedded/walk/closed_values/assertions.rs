@@ -76,6 +76,9 @@ fn helper_values(
     name: &str,
     depth: u8,
 ) -> Option<Vec<Arm>> {
+    if let Some(arms) = super::frozen_return::arms(visitor, call, name, depth) {
+        return Some(arms);
+    }
     if !visitor.functions.has_program(name) {
         return None;
     }

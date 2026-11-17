@@ -38,7 +38,9 @@ rules:
 
 At max effort, [closed identifier values](../postgres-facts/closed-identifiers.md)
 can expand raw SQL construction into at most 16 alternatives. Correlated record
-fields keep the same key choice. A helper return keeps the choices of the
+fields keep the same key choice, including a frozen literal record returned
+through an `Object.hasOwn` guard. That guard may also test `typeof key !== 'string'`
+and may throw or return early. A helper return keeps the choices of the
 arguments that selected it, so a record field and a helper selected by the same
 literal-union argument do not publish the cross pairs. Each statement must
 independently satisfy its catalog/key bounds; one bounded variant does not
@@ -844,6 +846,12 @@ WITH RECURSIVE ancestors AS (
 )
 SELECT * FROM ancestors;
 ```
+
+A value interpolation in a parameterized SQL tag, including `${max + 1}`,
+becomes a bound parameter and can supply this cap. The source expression is
+not SQL text. This still requires the catalog key proof below; without it,
+the recursive lookup remains reported. A suppression on a query proven bounded
+by these conditions is unused.
 
 Without the cap, a cycle can revisit the same key forever, so the recursive
 lookup remains reported; add a conjunctive depth cap to fix it. The catalog must

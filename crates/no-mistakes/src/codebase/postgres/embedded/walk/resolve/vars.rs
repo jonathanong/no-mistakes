@@ -63,11 +63,12 @@ pub(super) fn record_declarator(
             .filter(|provenance| sql.as_deref() == Some(provenance.sql.as_str()))
             .map(|provenance| provenance.positions)
             .unwrap_or_else(|| {
-                super::super::super::source_positions::for_expression(
+                super::super::super::source_positions::for_rendered_expression(
                     init,
                     visitor.source,
                     ident.span.start as usize,
                     line,
+                    sql.as_deref(),
                 )
             })
     };

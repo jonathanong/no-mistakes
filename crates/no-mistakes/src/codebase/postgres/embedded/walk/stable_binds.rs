@@ -66,7 +66,7 @@ pub(super) fn annotate(
     let Some(argument) = call.arguments.first().and_then(Argument::as_expression) else {
         return;
     };
-    let Some(raw) = super::super::unpublished_sql_text(argument) else {
+    let Some(raw) = super::resolve::compose::static_fragment(argument, visitor) else {
         return;
     };
     let source =

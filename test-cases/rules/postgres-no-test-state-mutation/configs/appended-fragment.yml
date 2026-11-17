@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include:
+      - test-helpers/keys.mts
+      - tests/impact.test.mts
+    options:
+      importSpecifier: db
+      testGlobs: ["**/*.test.mts"]
+      helperRoots: ["test-helpers/**/*.mts"]
+      unanalyzable: advise

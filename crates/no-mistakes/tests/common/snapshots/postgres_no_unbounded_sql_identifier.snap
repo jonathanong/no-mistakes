@@ -2414,6 +2414,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "pass_computed_member_return": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "pass_conditional_literals": {
     "exitCode": 0,
     "report": {
@@ -2511,6 +2523,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "pass_finite_domain_assertion": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_hasown_record": {
     "exitCode": 0,
     "report": {
       "advisories": [],

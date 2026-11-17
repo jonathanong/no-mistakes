@@ -1,0 +1,28 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "posts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "parent_id": {
+          "dataType": "uuid",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "indexes": {},
+      "uniqueConstraints": {},
+      "primaryKey": null
+    }
+  },
+  "views": {},
+  "enums": {},
+  "functions": {}
+}

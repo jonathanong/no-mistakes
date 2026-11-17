@@ -2,6 +2,11 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
+#[path = "integration_registration.rs"]
+mod integration_registration;
+#[path = "integration_registration_tests.rs"]
+mod integration_registration_tests;
+
 #[test]
 fn every_integration_source_is_registered_once() {
     let crate_root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -9,26 +14,18 @@ fn every_integration_source_is_registered_once() {
     let manifest: toml::Value =
         toml::from_str(&std::fs::read_to_string(crate_root.join("Cargo.toml")).unwrap()).unwrap();
     assert_eq!(manifest["package"]["autotests"].as_bool(), Some(false));
-    let mut registrations = BTreeMap::<String, usize>::new();
-    let module_path = regex::Regex::new(r#"(?m)^#\[path = "([^"]+\.rs)"\]$"#).unwrap();
+    let mut sources = Vec::new();
     for target in manifest["test"].as_array().unwrap() {
         // Feature-gating a suite would silently drop formerly unconditional tests.
         assert!(target.get("required-features").is_none());
-        let path = target["path"].as_str().unwrap();
-        let source = crate_root.join(path);
+        let source = crate_root.join(target["path"].as_str().unwrap());
         assert_eq!(source.parent(), Some(tests.as_path()));
-        *registrations
-            .entry(source.file_name().unwrap().to_str().unwrap().to_string())
-            .or_default() += 1;
-        if target["name"].as_str().unwrap().starts_with("suite_") {
-            for captures in module_path.captures_iter(&std::fs::read_to_string(source).unwrap()) {
-                if captures[1].starts_with("support/") || captures[1].starts_with("common/") {
-                    continue;
-                }
-                *registrations.entry(captures[1].to_string()).or_default() += 1;
-            }
-        }
+        sources.push((
+            source,
+            target["name"].as_str().unwrap().starts_with("suite_"),
+        ));
     }
+    let registrations = integration_registration::collect(&tests, &sources).unwrap();
     let expected: BTreeMap<_, _> = std::fs::read_dir(&tests)
         .unwrap()
         .map(|entry| entry.unwrap().path())

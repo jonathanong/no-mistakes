@@ -49,8 +49,7 @@ fn legacy_executor_call(
                 sql_text,
                 kind: binding
                     .as_ref()
-                    .map(|binding| binding.kind)
-                    .unwrap_or(EmbeddedSqlKind::Dynamic),
+                    .map_or(EmbeddedSqlKind::Dynamic, |binding| binding.kind),
                 sql_source_positions: binding
                     .as_ref()
                     .map(|binding| binding.sql_source_positions.clone())
@@ -71,11 +70,12 @@ fn legacy_executor_call(
                 })
                 .or_else(|| super::compose::parameter_source_positions(argument, visitor))
                 .unwrap_or_else(|| {
-                    super::super::super::source_positions::for_expression(
+                    super::super::super::source_positions::for_rendered_expression(
                         argument,
                         visitor.source,
                         call.span.start as usize,
                         line,
+                        sql.as_deref(),
                     )
                 });
             if let Some(positions) = sql

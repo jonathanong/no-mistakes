@@ -105,11 +105,7 @@ fn cased_sql_export_from_sql_template_strings_stays_trusted() {
     let calls = calls("configured-sql-tag-cased-export.ts");
     assert_eq!(calls.len(), 1, "{calls:?}");
     assert_eq!(calls[0].kind, EmbeddedSqlKind::Inline);
-    assert!(calls[0]
-        .sql_text
-        .as_deref()
-        .unwrap()
-        .contains("sql_placeholder_1"));
+    assert!(calls[0].sql_text.as_deref().unwrap().contains("$1"));
     assert!(finding_lines("configured-sql-tag-cased-export.ts").is_empty());
 }
 

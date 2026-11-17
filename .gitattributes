@@ -1,4 +1,9 @@
 *.snap text eol=lf
+test-cases/rules/postgres-lock-ordering/cross-module-claim/src/** text eol=lf
+test-cases/rules/postgres-lock-ordering/statement-append/src/** text eol=lf
+test-cases/rules/postgres-required-predicates/raw-column-append/src/** text eol=lf
+test-cases/rules/postgres-conflict-ordering/imported-limit/src/** text eol=lf
+fixtures/postgres-facts/embedded/parameterized-imported-values/*.mts text eol=lf
 test-cases/rule-recall-audit/fixture/storybook/required-props-malformed/src/Card.tsx text eol=lf
 # Bytes from these fixtures are span-counted or quoted into check JSON.
 # Windows autocrlf would move the span and embed CR in the TOML error.
@@ -63,3 +68,6 @@ test-cases/rules/github-actions-max-inline-script-lines/fixture/unreadable/.gith
 test-cases/rule-recall-audit/fixture/timeout-literals/multiline-allow-crlf/.github/workflows/ci.test.mts -text -whitespace
 fixtures/check/sql-helper-prerequisite/helper.ts text eol=lf
 test-cases/rules/postgres-required-predicates/fixture/nullable-executors/** text eol=lf
+test-cases/rules/postgres-no-test-state-mutation/issue-3426/** text eol=lf
+test-cases/rules/postgres-lock-ordering/issue-3426/** text eol=lf
+test-cases/rules/postgres-bounded-statements/issue-3426/** text eol=lf

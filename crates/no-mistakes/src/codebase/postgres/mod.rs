@@ -72,7 +72,7 @@ pub(crate) use embedded::helpers::{
         exec::{run as run_helper_program, Callee, Callees, Outcome, Ret, MAX_CALL_DEPTH},
         Program as HelperProgram,
     },
-    splice::splice as splice_imported_sql,
+    splice::splice_grouped as splice_imported_sql_grouped,
     ImportedSite, PendingImportedSql, SiteArg, SiteKind,
 };
 pub(crate) use embedded::walk::resolve::functions::provenance::RecoveredSql;
@@ -86,6 +86,7 @@ pub use embedded::{
 };
 pub(crate) use embedded::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, retain_unproven_spans,
+    MAX_FROZEN_OBJECT_SQL_VARIANTS,
 };
 pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,

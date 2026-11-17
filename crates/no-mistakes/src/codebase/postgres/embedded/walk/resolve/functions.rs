@@ -4,6 +4,7 @@ mod call;
 mod collect;
 mod collection;
 mod exports;
+mod frozen;
 mod identifier_clauses;
 mod parameter;
 mod positions;

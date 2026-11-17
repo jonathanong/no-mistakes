@@ -1,6 +1,6 @@
 use super::rewrite;
 use crate::codebase::postgres::embedded::placeholders::{
-    publish_placeholders, INTERNAL_PLACEHOLDER,
+    publish_placeholders, renumber_placeholders, INTERNAL_PLACEHOLDER,
 };
 
 #[test]
@@ -18,13 +18,13 @@ fn short_origins_do_not_panic() {
     // marker, or the tail, and an empty list drops every span.
     let prefixed = format!("SELECT {INTERNAL_PLACEHOLDER}1");
     assert_eq!(
-        super::rewrite_impl(&prefixed, &[9], 0, true),
+        super::rewrite_impl(&prefixed, &[9], 0.into(), true),
         Vec::<u32>::new()
     );
 
     let placeholder = format!("{INTERNAL_PLACEHOLDER}1 tail");
     assert_eq!(
-        super::rewrite_impl(&placeholder, &[], 1, false),
+        super::rewrite_impl(&placeholder, &[], 1.into(), false),
         Vec::<u32>::new()
     );
 }
@@ -43,4 +43,19 @@ fn rewrite_asserts_on_short_prefixed_origins() {
 fn rewrite_asserts_on_empty_origins() {
     let placeholder = format!("{INTERNAL_PLACEHOLDER}1 tail");
     rewrite(&placeholder, &[], 1, false);
+}
+
+#[test]
+fn bind_origin_rewriting_tracks_published_and_renumbered_widths() {
+    let sql = format!(
+        "SELECT {}, {}",
+        crate::codebase::postgres::embedded::placeholders::internal_bind(1),
+        crate::codebase::postgres::embedded::placeholders::internal_bind(2)
+    );
+    let origins = vec![13; sql.len()];
+    let shifted = renumber_placeholders(&sql, 9);
+    let shifted_origins = super::rewrite(&sql, &origins, 9, false);
+    assert_eq!(shifted_origins.len(), shifted.len());
+    let published = super::rewrite(&shifted, &shifted_origins, 0, true);
+    assert_eq!(published.len(), publish_placeholders(shifted).len());
 }

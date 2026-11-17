@@ -9,6 +9,45 @@ impl ScopeVisitor<'_> {
             if let Some(frame) = self.literal_objects.closed.frames.get_mut(i) {
                 frame.remove(name);
             }
+            self.frozen_aliases
+                .retain(|alias| alias.scope != i || alias.name != name);
+        }
+    }
+
+    /// Drops a helper-returned record object after a property write or a call
+    /// escape. `Object.hasOwn(record, key)` is not that object.
+    pub(in crate::codebase::postgres::embedded::walk) fn invalidate_record_object(
+        &mut self,
+        name: &str,
+    ) {
+        let Some(index) = self
+            .scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
+        else {
+            return;
+        };
+        let helper_object = self
+            .literal_objects
+            .closed
+            .frames
+            .get(index)
+            .and_then(|frame| frame.get(name))
+            .is_some_and(|arms| {
+                arms.iter().any(|arm| {
+                    matches!(arm.node, Node::Object(_))
+                        && arm
+                            .choices
+                            .iter()
+                            .any(|(choice, _)| choice & super::HELPER_OBJECT_CHOICE != 0)
+                })
+            });
+        let alias = self
+            .frozen_aliases
+            .iter()
+            .any(|alias| alias.scope == index && alias.name == name);
+        if helper_object || alias {
+            self.forget_closed(name);
         }
     }
 
@@ -76,9 +115,13 @@ impl ScopeVisitor<'_> {
         scope: usize,
         name: &str,
     ) {
+        if let Expression::Identifier(id) = unwrap_ts_wrappers(init) {
+            self.invalidate_record_object(id.name.as_str());
+        }
         if matches!(unwrap_ts_wrappers(init), Expression::StringLiteral(_)) {
             return;
         }
+        super::super::frozen_alias::note(self, init, scope, name);
         let Some(mut arms) = expression(self, init, 8) else {
             return;
         };

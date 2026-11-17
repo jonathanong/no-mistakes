@@ -5,6 +5,11 @@ use crate::fx::FxHashMap;
 use oxc_ast::ast::*;
 use oxc_span::GetSpan;
 use std::collections::{BTreeMap, HashMap};
+
+/// Helper-object mark. Type-annotation keys use bit 62, and `select` copies
+/// those choices onto an indexed record, so this mark must not share that bit.
+const HELPER_OBJECT_CHOICE: u64 = 1 << 61;
+
 mod assertions;
 #[cfg(test)]
 mod controls_tests;
@@ -19,6 +24,7 @@ mod extra_escape_tests;
 mod fixture;
 #[cfg(test)]
 mod followup_tests;
+mod frozen_return;
 #[cfg(test)]
 mod member_ownership_tests;
 mod members;
@@ -26,6 +32,10 @@ mod members;
 mod parent_fields_tests;
 mod state;
 use expression::expression;
+#[cfg(test)]
+mod hasown_edge_tests;
+#[cfg(test)]
+mod hasown_tests;
 #[cfg(test)]
 mod tests;
 mod types;

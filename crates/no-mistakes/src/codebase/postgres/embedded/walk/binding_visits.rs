@@ -39,6 +39,16 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     fn walk_builder_write_member(&mut self, member: &ast::MemberExpression<'a>) {
+        let object = match member {
+            ast::MemberExpression::StaticMemberExpression(value) => Some(&value.object),
+            ast::MemberExpression::ComputedMemberExpression(value) => Some(&value.object),
+            ast::MemberExpression::PrivateFieldExpression(_) => None,
+        };
+        if let Some(ast::Expression::Identifier(id)) =
+            object.map(|object| crate::codebase::ts_source::unwrap_ts_wrappers(object))
+        {
+            self.invalidate_record_object(id.name.as_str());
+        }
         match member {
             ast::MemberExpression::StaticMemberExpression(value)
                 if value.property.name == "query" =>

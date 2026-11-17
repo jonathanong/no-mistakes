@@ -39,6 +39,20 @@ export function unboundedTables(table: "users" | "posts") {
   return query(rawSql`/* unboundedTables */ SELECT 1 FROM ${table}`);
 }
 
+const frozenCommands = Object.freeze({
+  keep: "SELECT 1",
+  drop: "DROP TABLE posts", // frozenDrop
+} as const);
+
+function frozenCommand(kind: string) {
+  if (!Object.hasOwn(frozenCommands, kind)) throw new Error(`unknown ${kind}`);
+  return frozenCommands[kind as keyof typeof frozenCommands]; // frozenDrop
+}
+
+export function frozenDrop(kind: string) {
+  return query(sql`/* frozenDrop */ `.append(frozenCommand(kind)));
+}
+
 export function suppressedDrop(table: "users" | "posts") {
   // no-mistakes-disable-next-line postgres-no-test-state-mutation
   return query(sql`/* suppressedDrop */ DROP TABLE `.append(table));

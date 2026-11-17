@@ -22,7 +22,7 @@ fn default_import_from_sql_template_strings_is_inline() {
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Inline);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("INSERT INTO url_content_types (mime_type) VALUES (sql_placeholder_1)")
+        Some("INSERT INTO url_content_types (mime_type) VALUES ($1)")
     );
 }
 
@@ -32,7 +32,7 @@ fn renamed_default_import_from_sql_template_strings_is_inline() {
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Inline);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT * FROM topics WHERE id = sql_placeholder_1")
+        Some("SELECT * FROM topics WHERE id = $1")
     );
 }
 
@@ -42,7 +42,7 @@ fn helper_tagged_by_sql_template_strings_default_import_is_composed() {
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT * FROM topics WHERE id = sql_placeholder_1")
+        Some("SELECT * FROM topics WHERE id = $1")
     );
 }
 
@@ -58,7 +58,7 @@ fn named_sql_import_from_sql_template_strings_is_inline() {
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Inline);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT * FROM topics WHERE id = sql_placeholder_1")
+        Some("SELECT * FROM topics WHERE id = $1")
     );
 }
 
@@ -68,7 +68,7 @@ fn default_as_import_from_sql_template_strings_is_inline() {
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Inline);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT * FROM topics WHERE id = sql_placeholder_1")
+        Some("SELECT * FROM topics WHERE id = $1")
     );
 }
 

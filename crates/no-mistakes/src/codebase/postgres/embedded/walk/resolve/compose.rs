@@ -8,6 +8,7 @@ use oxc_ast::ast::{BinaryOperator, Expression};
 
 mod builder;
 mod provenance;
+mod tagged;
 pub(in crate::codebase::postgres::embedded::walk) use provenance::helper_provenance;
 mod parameter_positions;
 pub(in crate::codebase::postgres::embedded::walk) use builder::{
@@ -45,7 +46,7 @@ pub(super) fn classify_init(
             kind_for_const(crate::ast::js_literal(literal).into_owned(), is_const)
         }
         Expression::TaggedTemplateExpression(_) => {
-            kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
+            kind_for_const(tagged::text(expr, visitor).unwrap_or_default(), is_const)
         }
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
@@ -91,8 +92,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }
-        Expression::TaggedTemplateExpression(_) if untrusted_tag(expr, visitor) => None,
-        Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
+        Expression::TaggedTemplateExpression(_) => tagged::text(expr, visitor),
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
         Expression::Identifier(ident) => {

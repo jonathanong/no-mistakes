@@ -10,11 +10,6 @@ use helpers::{append_argument, is_identifier};
 /// Resolves a fluent `.append()` chain (or `+` composition, or a call into
 /// a same-file statically-composed function) into its SQL text.
 ///
-/// `lookup` resolves a bare-identifier call target (a same-file function
-/// name) to its own resolved body text, or `None` when it isn't one.
-/// `is_shadowed` reports whether a name is currently bound to something
-/// other than its global meaning (e.g. the trusted `sql` tag shadowed by a
-/// same-file helper's own parameter) — see [`interpolating_untrusted_tag`].
 /// `imported_sql_tags` are local names of a default import from
 /// `sql-template-strings`, or of a configured named SQL tag.
 /// `depth` bounds recursion so a cyclic or pathological chain fails closed
@@ -87,7 +82,15 @@ pub(super) fn tagged_sql(
     if interpolating_untrusted_tag(expr, is_shadowed, imported_sql_tags) {
         None
     } else {
-        unpublished_sql_text(expr)
+        let sql = unpublished_sql_text(expr)?;
+        Some(match unwrap_ts_wrappers(expr) {
+            Expression::TaggedTemplateExpression(tagged)
+                if imported_sql_tags.parameterizes_all(&tagged.tag) =>
+            {
+                super::super::super::placeholders::parameterize_values(&sql)
+            }
+            _ => sql,
+        })
     }
 }
 

@@ -7,14 +7,21 @@ use super::{Holes, RecoveredSql};
 use crate::codebase::postgres::embedded::placeholders::{
     count_placeholders, publish_placeholders, renumber_placeholders,
 };
-use crate::codebase::postgres::embedded::{EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS};
+use crate::codebase::postgres::embedded::EmbeddedSqlVariant;
+use crate::fx::FxHashMap;
 use std::ops::Range;
 
 /// `caller` with every hole replaced by each combination of its alternatives.
-/// A hole that appears twice takes the same alternative both times.
-pub(super) fn fill_all(caller: &RecoveredSql, holes: &Holes) -> Option<Vec<RecoveredSql>> {
+/// A hole that appears twice takes the same alternative both times. Sites that
+/// share a group take the same alternative index instead of a product.
+pub(super) fn fill_all(
+    caller: &RecoveredSql,
+    holes: &Holes,
+    groups: &FxHashMap<usize, u32>,
+    budget: usize,
+) -> Option<Vec<RecoveredSql>> {
     Some(
-        fill_with_boundaries(caller, holes, None)?
+        fill_with_boundaries(caller, holes, None, groups, budget)?
             .into_iter()
             .map(|(sql, _)| sql)
             .collect(),
@@ -25,23 +32,29 @@ pub(super) fn fill_with_boundaries(
     caller: &RecoveredSql,
     holes: &Holes,
     boundary: Option<usize>,
+    groups: &FxHashMap<usize, u32>,
+    budget: usize,
 ) -> Option<Vec<(RecoveredSql, Option<usize>)>> {
     let markers = sentinel::find_all(&caller.sql);
     let mut sites: Vec<usize> = markers.iter().map(|(_, site)| *site).collect();
     sites.sort_unstable();
     sites.dedup();
-    let mut combos: Vec<Vec<&RecoveredSql>> = vec![Vec::new()];
-    for site in &sites {
-        let alternatives = holes.get(site).filter(|texts| !texts.is_empty())?;
-        let mut next = Vec::with_capacity(combos.len() * alternatives.len());
+    let leaders = leaders(&sites, groups);
+    if !aligned(&sites, &leaders, holes, groups) {
+        return None;
+    }
+    let mut combos: Vec<Vec<usize>> = vec![Vec::new()];
+    for site in &leaders {
+        let count = holes.get(site)?.len();
+        let mut next = Vec::with_capacity(combos.len() * count);
         for combo in &combos {
-            for text in alternatives {
+            for index in 0..count {
                 let mut extended = combo.clone();
-                extended.push(text);
+                extended.push(index);
                 next.push(extended);
             }
         }
-        if next.len() > MAX_EMBEDDED_SQL_VARIANTS {
+        if next.len() > budget {
             return None;
         }
         combos = next;
@@ -51,23 +64,14 @@ pub(super) fn fill_with_boundaries(
         .map(|(range, _)| range.clone())
         .collect::<Vec<_>>();
     let (pieces, _) = split(caller, &ranges);
-    // Which combination slot fills each marker, in text order.
-    let slots: Vec<usize> = markers
-        .iter()
-        .map(|(_, site)| {
-            sites
-                .binary_search(site)
-                .expect("every marker's site is collected")
-        })
-        .collect();
     combos
         .iter()
         .map(|combo| {
             let mut parts = Vec::with_capacity(pieces.len() * 2);
             let mut pieces = pieces.iter().cloned();
             parts.extend(pieces.next());
-            for ((slot, piece), (range, _)) in slots.iter().zip(pieces).zip(&markers) {
-                let mut replacement = combo[*slot].clone();
+            for ((range, site), piece) in markers.iter().zip(pieces) {
+                let mut replacement = chosen(holes, &leaders, groups, combo, *site).clone();
                 replacement.invocations.inherit(
                     &caller.invocations,
                     range.start,
@@ -79,11 +83,65 @@ pub(super) fn fill_with_boundaries(
             Some((
                 compose(parts)?,
                 boundary.and_then(|boundary| {
-                    filled_boundary(caller, &markers, &sites, combo, boundary)
+                    filled_boundary(caller, &markers, holes, &leaders, groups, combo, boundary)
                 }),
             ))
         })
         .collect()
+}
+
+fn leaders(sites: &[usize], groups: &FxHashMap<usize, u32>) -> Vec<usize> {
+    let mut seen = Vec::new();
+    let mut out = Vec::new();
+    for site in sites {
+        if let Some(group) = groups.get(site) {
+            if !seen.contains(group) {
+                seen.push(*group);
+                out.push(*site);
+            }
+        } else {
+            out.push(*site);
+        }
+    }
+    out
+}
+
+fn aligned(
+    sites: &[usize],
+    leaders: &[usize],
+    holes: &Holes,
+    groups: &FxHashMap<usize, u32>,
+) -> bool {
+    sites.iter().all(|site| {
+        let leader = leaders[leader_slot(*site, leaders, groups)];
+        match (holes.get(&leader), holes.get(site)) {
+            (Some(lead), Some(follow)) => !lead.is_empty() && lead.len() == follow.len(),
+            _ => false,
+        }
+    })
+}
+
+fn leader_slot(site: usize, leaders: &[usize], groups: &FxHashMap<usize, u32>) -> usize {
+    let leader = groups.get(&site).map_or(site, |group| {
+        leaders
+            .iter()
+            .find(|candidate| groups.get(*candidate) == Some(group))
+            .copied()
+            .unwrap_or(site)
+    });
+    leaders
+        .binary_search(&leader)
+        .expect("every marker's site is collected")
+}
+
+fn chosen<'a>(
+    holes: &'a Holes,
+    leaders: &[usize],
+    groups: &FxHashMap<usize, u32>,
+    combo: &[usize],
+    site: usize,
+) -> &'a RecoveredSql {
+    &holes[&site][combo[leader_slot(site, leaders, groups)]]
 }
 
 pub(super) fn internal_boundary(variant: &EmbeddedSqlVariant) -> Option<usize> {
@@ -102,12 +160,14 @@ pub(super) fn internal_boundary(variant: &EmbeddedSqlVariant) -> Option<usize> {
 fn filled_boundary(
     caller: &RecoveredSql,
     markers: &[(Range<usize>, usize)],
-    sites: &[usize],
-    combo: &[&RecoveredSql],
+    holes: &Holes,
+    leaders: &[usize],
+    groups: &FxHashMap<usize, u32>,
+    combo: &[usize],
     boundary: usize,
 ) -> Option<usize> {
     let mut prefix = String::new();
-    let (mut start, mut binds) = (0, 0);
+    let (mut start, mut binds) = (0, Default::default());
     for (range, site) in markers {
         if range.start >= boundary {
             break;
@@ -116,15 +176,22 @@ fn filled_boundary(
             return None;
         }
         append(&mut prefix, &caller.sql[start..range.start], &mut binds);
-        let slot = sites.binary_search(site).ok()?;
-        append(&mut prefix, &combo[slot].sql, &mut binds);
+        append(
+            &mut prefix,
+            &chosen(holes, leaders, groups, combo, *site).sql,
+            &mut binds,
+        );
         start = range.end;
     }
     append(&mut prefix, caller.sql.get(start..boundary)?, &mut binds);
     Some(publish_placeholders(prefix).len())
 }
 
-fn append(prefix: &mut String, text: &str, binds: &mut u32) {
+fn append(
+    prefix: &mut String,
+    text: &str,
+    binds: &mut crate::codebase::postgres::embedded::placeholders::Counts,
+) {
     prefix.push_str(&renumber_placeholders(text, *binds));
     *binds += count_placeholders(text);
 }

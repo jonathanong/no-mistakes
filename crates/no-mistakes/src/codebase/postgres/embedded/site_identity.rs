@@ -20,7 +20,14 @@ impl Invocations {
         }
     }
 
-    pub(crate) fn append(&mut self, suffix: &Self, sql: &str, binds: u32, prefix: usize) {
+    pub(crate) fn append(
+        &mut self,
+        suffix: &Self,
+        sql: &str,
+        binds: impl Into<placeholders::Counts>,
+        prefix: usize,
+    ) {
+        let binds = binds.into();
         if suffix.is_empty() {
             return;
         }
@@ -28,7 +35,7 @@ impl Invocations {
             .extend(suffix.iter().map(|&(start, end, site)| {
                 let offset = |at| {
                     prefix
-                        + if binds == 0 {
+                        + if binds == placeholders::Counts::default() {
                             at
                         } else {
                             placeholders::renumber_placeholders(&sql[..at], binds).len()
@@ -81,7 +88,7 @@ impl Invocations {
     }
 
     pub(crate) fn publish(mut self, sql: &str) -> Self {
-        if self.is_empty() || !sql.contains(placeholders::INTERNAL_PLACEHOLDER) {
+        if self.is_empty() || placeholders::markers(sql).next().is_none() {
             return self;
         }
         for (start, end, _) in self.ranges() {

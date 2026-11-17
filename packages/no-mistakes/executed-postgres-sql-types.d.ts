@@ -42,7 +42,7 @@ export interface ExecutedPostgresSql {
   /** One-based line of the executor call. */
   line: number;
   annotation: string | null;
-  /** Interpolations are represented by sql_placeholder_N markers. */
+  /** Parameterizing tag binds use $N; other recovered holes use sql_placeholder_N. */
   sqlText: string | null;
   /** False when full SQL could not be proven, including generated binds. */
   complete: boolean;

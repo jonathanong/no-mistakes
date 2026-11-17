@@ -130,7 +130,7 @@ fn explicitly_raw_tags_enumerate_while_parameterized_tags_keep_bind_values() {
     );
     assert_eq!(
         facts.calls[1].sql_text.as_deref(),
-        Some("SELECT * FROM users WHERE name = sql_placeholder_1")
+        Some("SELECT * FROM users WHERE name = $1")
     );
     assert!(facts.calls[2].variants.is_empty());
     assert!(facts.calls[2].is_unanalyzable());

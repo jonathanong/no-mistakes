@@ -1,0 +1,558 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "cross_module_claim": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/claim.ts",
+          "line": 15,
+          "message": "src/claim.ts:15: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return query(SQL`SELECT work.id FROM work WHERE work.id = ANY(${ids}::uuid[]) ORDER BY work.record_id FOR UPDATE OF work`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/claim.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            810,
+            925
+          ],
+          "status": "proven-clear",
+          "subcheck": "row-lock-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/claim.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            810,
+            925
+          ],
+          "status": "violation",
+          "subcheck": "catalog-key-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/claim.ts",
+          "helperLines": [
+            9
+          ],
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            222,
+            743
+          ],
+          "status": "proven-clear",
+          "subcheck": "catalog-key-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/claim.ts",
+          "helperLines": [
+            9
+          ],
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            222,
+            743
+          ],
+          "status": "proven-clear",
+          "subcheck": "row-lock-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "imported_limit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/insert.ts",
+          "line": 11,
+          "message": "multi-row ON CONFLICT must order its INSERT source by catalog arbiter r.user_id ASC NULLS LAST",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(SQL`WITH requested AS (SELECT u.user_id, u.role FROM unnest(${userIds}::uuid[], ${roles}::text[]) AS u(user_id, role)), existing AS (SELECT p.user_id FROM participants p WHERE p.conversation_id = ${conversationId} ORDER BY p.user_id LIMIT ${HARD_MAX}) INSERT INTO participants (conversation_id, user_id, role) SELECT ${conversationId}, r.user_id, r.role FROM requested r ON CONFLICT (conversation_id, user_id) DO NOTHING`);",
+          "target": "missing-canonical-order"
+        },
+        {
+          "file": "src/root-cause.ts",
+          "line": 11,
+          "message": "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
+          "rule": "postgres-conflict-ordering",
+          "sourceLine": "return query(SQL`WITH input AS (SELECT * FROM unnest(${userIds}::uuid[], ${roles}::text[]) AS incoming(user_id, role)), census AS (SELECT count(*)::int AS total FROM (SELECT 1 FROM participants WHERE conversation_id = ${cid} LIMIT ${HARD_MAX}) capped), free_slots AS (SELECT slot FROM generate_series(1, ${HARD_MAX}) AS slot), inserted AS (INSERT INTO participants (conversation_id, user_id, role) SELECT ${cid}, i.user_id, i.role FROM input i ON CONFLICT DO NOTHING RETURNING user_id) SELECT count(*) FROM inserted`);",
+          "target": "targetless-arbiter"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/insert.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-conflict-ordering",
+          "span": [
+            1232,
+            804
+          ],
+          "status": "violation",
+          "subcheck": "canonical-conflict-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/insert.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-conflict-ordering",
+          "span": [
+            268,
+            696
+          ],
+          "status": "violation",
+          "subcheck": "canonical-conflict-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/root-cause.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-conflict-ordering",
+          "span": [
+            1398,
+            888
+          ],
+          "status": "violation",
+          "subcheck": "canonical-conflict-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/root-cause.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-conflict-ordering",
+          "span": [
+            269,
+            779
+          ],
+          "status": "violation",
+          "subcheck": "canonical-conflict-order"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "raw_column_append": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/list.ts",
+          "import": "c.owner_id",
+          "line": 14,
+          "message": "src/list.ts:14: SELECT on candidates does not constrain required column owner_id",
+          "rule": "postgres-required-predicates",
+          "sourceLine": "SQL`SELECT c.id FROM candidates c WHERE c.batch_id = ${batchId} AND `.append(discoverable(\"c.id\")).append(SQL` ORDER BY c.id LIMIT 50`),",
+          "target": "candidates"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/list.ts",
+          "helperLines": [
+            14
+          ],
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            457,
+            608
+          ],
+          "status": "violation",
+          "subcheck": "relation:candidates:column:owner_id"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/list.ts",
+          "helperLines": [
+            8
+          ],
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-required-predicates",
+          "span": [
+            174,
+            391
+          ],
+          "status": "violation",
+          "subcheck": "relation:candidates:column:owner_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "statement_append": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "return db.query(SQL`SELECT placement.id FROM placements placement WHERE placement.id = ANY(${ids}::uuid[]) ORDER BY placement.surface_id FOR UPDATE OF placement`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/lock.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            675,
+            830
+          ],
+          "status": "proven-clear",
+          "subcheck": "row-lock-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/lock.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            675,
+            830
+          ],
+          "status": "violation",
+          "subcheck": "catalog-key-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/lock.ts",
+          "helperLines": [
+            10
+          ],
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            594,
+            608
+          ],
+          "status": "proven-clear",
+          "subcheck": "catalog-key-order"
+        },
+        {
+          "advisory": false,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exhaustive-union",
+          "file": "src/lock.ts",
+          "helperLines": [
+            10
+          ],
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query",
+              "read",
+              "write"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@example/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            594,
+            608
+          ],
+          "status": "proven-clear",
+          "subcheck": "row-lock-order"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

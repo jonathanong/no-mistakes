@@ -7,8 +7,10 @@ pub(super) fn collect(
     source: &str,
     options: &super::super::EmbeddedSqlOptions,
 ) -> QueryAnnotationFileFacts {
+    let (trusted_tags, parameterized_tags) = super::trust::collect_tags(program, options);
     let mut facts = QueryAnnotationFileFacts {
-        trusted_tags: super::trust::collect(program, options),
+        trusted_tags,
+        parameterized_tags,
         array_prototype_exposed: super::trust::array_prototype_exposed(program),
         legacy_tag_spans: super::trust::legacy_local_tags(program),
         roots: steps(&program.body, source),
@@ -25,6 +27,9 @@ pub(super) fn collect(
     let reassigned = super::trust::reassigned(program);
     facts.raw_tag_reassigned = reassigned.contains("String");
     facts.trusted_tags.retain(|name| !reassigned.contains(name));
+    facts
+        .parameterized_tags
+        .retain(|name| !reassigned.contains(name));
     for (name, value) in &mut facts.globals {
         if reassigned.contains(name) {
             *value = Expr::Unknown;

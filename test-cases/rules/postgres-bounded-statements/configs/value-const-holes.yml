@@ -1,0 +1,42 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    include: [src/values.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      rawSqlTags:
+        - module: "@example/db"
+          name: sql
+      unanalyzableSql: advise
+  - rule: postgres-lock-ordering
+    scope: repository
+    include: [src/values.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+  - rule: postgres-required-predicates
+    scope: repository
+    include: [src/values.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql
+      relations:
+        - table: reports
+          requireColumns: [tenant_id]
+  - rule: postgres-conflict-ordering
+    scope: repository
+    include: [src/values.ts]
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      trustedSqlTags:
+        - module: "@example/db"
+          name: sql

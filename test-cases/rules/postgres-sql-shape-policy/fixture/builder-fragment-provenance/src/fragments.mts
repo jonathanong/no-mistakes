@@ -1,4 +1,4 @@
-import sql from 'sql-template-strings'
+import { sql } from '@example/db'
 
 export function generatedCursor(after: string) { // The marker-shaped projection is a real column.
   return sql`SELECT sql_placeholder_1 FROM orders WHERE id > ${after} ORDER BY id LIMIT 10`

@@ -8,24 +8,34 @@ pub(super) fn project_calls(
     let mut statements = Vec::new();
     for call in calls {
         if call.variants.is_empty() {
+            let values_only = call.kind != EmbeddedSqlKind::Dynamic
+                && only_value_binds(
+                    call.sql_text.as_deref(),
+                    &call.recovered_placeholder_positions,
+                );
             statements.push(statement(
                 file_name,
                 call.line,
                 call.sql_text,
                 call.kind != EmbeddedSqlKind::Dynamic
                     && call.recovered_placeholder_positions.is_empty(),
-                false,
+                values_only,
                 call.kind,
             ));
         } else {
             let truncated = call.variants_truncated();
             for variant in call.variants {
+                let values_only = !truncated
+                    && only_value_binds(
+                        Some(&variant.sql_text),
+                        &variant.recovered_placeholder_positions,
+                    );
                 let mut projected = statement(
                     file_name,
                     call.line,
                     Some(variant.sql_text),
                     !truncated && variant.recovered_placeholder_positions.is_empty(),
-                    false,
+                    values_only,
                     if truncated {
                         EmbeddedSqlKind::Dynamic
                     } else {
@@ -40,6 +50,31 @@ pub(super) fn project_calls(
         }
     }
     statements
+}
+
+fn only_value_binds(text: Option<&str>, positions: &[(u32, u32)]) -> bool {
+    let Some(text) = text.filter(|_| !positions.is_empty()) else {
+        return false;
+    };
+    let (mut line, mut column, mut found) = (1, 1, 0);
+    for character in text.chars() {
+        if positions.get(found) == Some(&(line, column)) {
+            if character != '$' {
+                return false;
+            }
+            found += 1;
+            if found == positions.len() {
+                return true;
+            }
+        }
+        if character == '\n' {
+            line += 1;
+            column = 1;
+        } else {
+            column += 1;
+        }
+    }
+    false
 }
 
 #[cfg(test)]

@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    options:
+      importSpecifier: '@data-stores/psql'
+      executorFactoryNames: [beginTransaction, beginBoundedTransaction]
+      executorTypeNames: [TransactionQuery, QueryExecutor, PoolClient, QueryOptions, OwnedTransaction, Pool]
+      testGlobs: ['**/*.test.{ts,tsx,mts}', '**/*.spec.{ts,tsx,mts}', '**/vitest.setup*.{ts,mts}']
+      helperRoots: ['**/test-helpers/**/*.{ts,mts}']
+      unanalyzable: advise

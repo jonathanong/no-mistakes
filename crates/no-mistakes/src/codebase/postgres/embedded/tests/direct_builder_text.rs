@@ -25,7 +25,7 @@ fn direct_builder_text_preserves_the_view_probe_and_appended_bind() {
     assert!(!call.variants[0].append_sites.is_empty());
     let sql = call.sql_text.as_deref().expect("complete composed SQL");
     assert!(sql.contains("JOIN plain_view v ON v.id = COALESCE(t.parent_id, t.id)"));
-    assert!(sql.contains("WHERE t.id = sql_placeholder_"));
+    assert!(sql.contains("WHERE t.id = $1"));
     assert_eq!(call.recovered_placeholder_positions.len(), 1);
     let facts = extract_sql_statement_facts_for_embedded_call(call).expect("statement facts");
     assert!(!facts.parse_failed, "{facts:#?}");

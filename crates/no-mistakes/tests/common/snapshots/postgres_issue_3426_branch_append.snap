@@ -1,0 +1,159 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "branch_append": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/branch-append.ts",
+          "line": 9,
+          "message": "src/branch-append.ts:9: postgres-lock-ordering application #0 has unresolved SQL for catalog-key-order, row-lock-order: opaque-sql-tail; known SQL prefix \"SELECT s.id FROM s JOIN p ON p.id = s.p_id WHERE \"",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(st);",
+          "target": "catalog-key-order, row-lock-order"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/branch-append.ts",
+          "line": 13,
+          "message": "src/branch-append.ts:13: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "sourceLine": "await query(sql`SELECT p.id FROM p WHERE p.id = ANY(${ids}::uuid[]) FOR UPDATE OF p`);",
+          "target": "lock-ordering"
+        }
+      ],
+      "sqlVerdicts": [
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/branch-append.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            434,
+            513
+          ],
+          "status": "violation",
+          "subcheck": "catalog-key-order"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "evidence": "exact",
+          "file": "src/branch-append.ts",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "rule": "postgres-lock-ordering",
+          "span": [
+            434,
+            513
+          ],
+          "status": "violation",
+          "subcheck": "row-lock-order"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "file": "src/branch-append.ts",
+          "knownPrefix": "SELECT s.id FROM s JOIN p ON p.id = s.p_id WHERE ",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "residualReasons": [
+            "opaque-sql-tail"
+          ],
+          "rule": "postgres-lock-ordering",
+          "span": [
+            359,
+            368
+          ],
+          "status": "abstain",
+          "subcheck": "catalog-key-order"
+        },
+        {
+          "advisory": true,
+          "application": {
+            "index": 0
+          },
+          "file": "src/branch-append.ts",
+          "knownPrefix": "SELECT s.id FROM s JOIN p ON p.id = s.p_id WHERE ",
+          "profile": {
+            "executorFactoryNames": [],
+            "executorNames": [
+              "query"
+            ],
+            "executorTypeNames": [],
+            "importSpecifier": "@app/db",
+            "trustedSqlTags": [
+              {
+                "module": "sql-template-strings",
+                "name": "default"
+              }
+            ]
+          },
+          "residualReasons": [
+            "opaque-sql-tail"
+          ],
+          "rule": "postgres-lock-ordering",
+          "span": [
+            359,
+            368
+          ],
+          "status": "abstain",
+          "subcheck": "row-lock-order"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

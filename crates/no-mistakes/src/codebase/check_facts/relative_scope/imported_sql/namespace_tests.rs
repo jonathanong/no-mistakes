@@ -129,7 +129,7 @@ fn namespace_constant_fill_preserves_one_origin_per_sql_byte() {
                 continue;
             }
             if let Some(texts) = shared.fill(0, options, caller, site) {
-                for text in texts {
+                for text in texts.texts {
                     assert!(!text.sql.is_empty());
                     assert_eq!(text.origins.len(), text.sql.len(), "{}", text.sql);
                     recovered += 1;
