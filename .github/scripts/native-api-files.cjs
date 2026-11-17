@@ -1,0 +1,38 @@
+const platformFiles = [
+  "real-napi-api",
+  "unused-disable-directives-api",
+  "sql-verdicts-api",
+  "postgres-procedural-occurrence-api",
+  "postgres-procedural-loop-coverage-api",
+  "guarded-array-receiver-api",
+  "forbidden-dependencies-globs-api",
+].map((name) => `packages/no-mistakes/scripts/${name}.test.js`);
+
+const linuxFiles = [
+  "packages/no-mistakes/scripts/real-napi-api.test.js",
+  "packages/no-mistakes/scripts/unused-disable-directives-api.test.js",
+  "packages/no-mistakes/scripts/sql-verdicts-api.test.js",
+  "packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js",
+  "packages/no-mistakes/scripts/guarded-array-receiver-api.test.js",
+  "packages/no-mistakes/scripts/forward-receiver-alias-api.test.js",
+  "packages/no-mistakes/scripts/lexical-member-replacement-api.test.js",
+  "packages/no-mistakes/scripts/exported-value-receiver-api.test.js",
+  "packages/no-mistakes/scripts/namespace-types-api.test.js",
+  "packages/no-mistakes/scripts/preserved-provenance-api.test.js",
+  "packages/no-mistakes/scripts/vitest-project-setups-api.test.js",
+  "tests/js/compiled-api-runtime.test.js",
+  "packages/no-mistakes/scripts/annex-b-for-in-api.test.js",
+  "packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js",
+  "packages/no-mistakes/scripts/type-import-order-api.test.js",
+  "packages/no-mistakes/scripts/planning-impact-cli.test.js",
+  "packages/no-mistakes/scripts/postgres-source-api.test.js",
+  "packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js",
+  "packages/no-mistakes/scripts/postgres-quantified-api.test.js",
+  "packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js",
+  "packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js",
+  "packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js",
+  "packages/no-mistakes/scripts/doc-consistency-api.test.js",
+  "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
+];
+
+module.exports = { platformFiles, linuxFiles };

@@ -3,4 +3,10 @@ function workflowJob(workflow, name) {
   if (!body) throw new Error(`workflow must retain the ${name} job`);
   return body;
 }
-module.exports = { workflowJob };
+function readWorkflow(file) {
+  const { readFileSync } = require("node:fs");
+  const { parse } = require("yaml");
+  return parse(readFileSync(file, "utf8"));
+}
+
+module.exports = { workflowJob, readWorkflow };

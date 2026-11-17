@@ -343,7 +343,7 @@ jobs:
         run: python3 -m unittest discover -s .github/scripts -p test_download_native_runtime.py
       - name: Test native timing isolation and regression detection
         timeout-minutes: 2
-        run: node --test .github/scripts/native-api-timing.integration.test.cjs
+        run: node --test .github/scripts/native-api-timing.integration.test.cjs .github/scripts/native-api-shards.test.cjs .github/scripts/linux-api-shards-workflow.test.cjs
   # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   quality-rust:
     name: Rust quality (${{ matrix.name }})
@@ -729,10 +729,16 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
   linux-api-tests:
-    name: Linux N-API tests
+    name: Linux N-API tests (${{ matrix.shard }}/4)
     needs: linux-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      NATIVE_API_SHARD: ${{ matrix.shard }}
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -768,33 +774,7 @@ jobs:
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          pnpm exec vitest run
-          packages/no-mistakes/scripts/real-napi-api.test.js
-          packages/no-mistakes/scripts/unused-disable-directives-api.test.js
-          packages/no-mistakes/scripts/sql-verdicts-api.test.js
-          packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js
-          packages/no-mistakes/scripts/guarded-array-receiver-api.test.js
-          packages/no-mistakes/scripts/forward-receiver-alias-api.test.js
-          packages/no-mistakes/scripts/lexical-member-replacement-api.test.js
-          packages/no-mistakes/scripts/exported-value-receiver-api.test.js
-          packages/no-mistakes/scripts/namespace-types-api.test.js
-          packages/no-mistakes/scripts/preserved-provenance-api.test.js
-          packages/no-mistakes/scripts/vitest-project-setups-api.test.js
-          tests/js/compiled-api-runtime.test.js
-          packages/no-mistakes/scripts/annex-b-for-in-api.test.js
-          packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js
-          packages/no-mistakes/scripts/type-import-order-api.test.js
-          packages/no-mistakes/scripts/planning-impact-cli.test.js
-          packages/no-mistakes/scripts/postgres-source-api.test.js
-          packages/no-mistakes/scripts/postgres-expression-arbiter-api.test.js
-          packages/no-mistakes/scripts/postgres-quantified-api.test.js
-          packages/no-mistakes/scripts/postgres-procedural-utility-completeness-api.test.js
-          packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js
-          packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js
-          packages/no-mistakes/scripts/doc-consistency-api.test.js
-          packages/no-mistakes/scripts/local-action-checkout-api.test.js
-          --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json
-          --coverage=false
+          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 4 linux
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
@@ -805,11 +785,13 @@ jobs:
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: native-api-tests-linux
+          name: native-api-tests-linux-${{ matrix.shard }}
           if-no-files-found: error
           retention-days: 7
           path: |
             target/native-api-tests.json
+            target/native-api-inventory.json
+            target/native-api-shard.json
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 

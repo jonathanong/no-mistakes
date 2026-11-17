@@ -291,7 +291,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   assert.match(defender, /'\.rustup'/);
   assert.match(body, /Run native CLI smoke test/);
   assert.ok(
-    require("../../.github/scripts/native-api-shards.cjs").files.includes(
+    require("../../.github/scripts/native-api-files.cjs").platformFiles.includes(
       "packages/no-mistakes/scripts/real-napi-api.test.js",
     ),
   );
