@@ -1,6 +1,7 @@
 "use strict";
 
 const rules = {
+  "no-top-level-await": require("./rules/no-top-level-await"),
   "restricted-api-usage": require("./rules/restricted-api-usage"),
   "no-consecutive-unbatched-reads": require("./rules/no-consecutive-unbatched-reads"),
   "require-top-level-registration": require("./rules/require-top-level-registration"),

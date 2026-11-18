@@ -85,3 +85,6 @@ See [options and examples](../../docs/eslint-rules/require-options-on-imported-c
 See [options and examples](../../docs/eslint-rules/restricted-api-usage.md).
 
 Opt-in client contracts: [`no-consecutive-unbatched-reads`](../../docs/eslint-rules/no-consecutive-unbatched-reads.md) configures adjacent awaited read batching; [`require-top-level-registration`](../../docs/eslint-rules/require-top-level-registration.md) configures owner-module lifecycle registration. Both support ESLint/Oxlint and have no product defaults.
+
+`no-top-level-await` is an opt-in rule for asynchronous module evaluation.
+See [options and examples](../../docs/eslint-rules/no-top-level-await.md).

@@ -1,0 +1,346 @@
+[
+  {
+    "file": "unsafe.mjs",
+    "findings": [
+      {
+        "column": 22,
+        "endColumn": 40,
+        "endLine": 1,
+        "file": "unsafe.mjs",
+        "line": 1,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 16,
+        "endColumn": 34,
+        "endLine": 2,
+        "file": "unsafe.mjs",
+        "line": 2,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 52,
+        "endLine": 3,
+        "file": "unsafe.mjs",
+        "line": 3,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 32,
+        "endLine": 4,
+        "file": "unsafe.mjs",
+        "line": 4,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 24,
+        "endColumn": 40,
+        "endLine": 5,
+        "file": "unsafe.mjs",
+        "line": 5,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 15,
+        "endLine": 6,
+        "file": "unsafe.mjs",
+        "line": 6,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 20,
+        "endLine": 8,
+        "file": "unsafe.mjs",
+        "line": 8,
+        "message": "Initialize in main",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "custom message",
+    "options": {
+      "message": "Initialize in main"
+    }
+  },
+  {
+    "file": "guards.mjs",
+    "findings": [
+      {
+        "column": 47,
+        "endColumn": 63,
+        "endLine": 1,
+        "file": "guards.mjs",
+        "line": 1,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 26,
+        "endColumn": 37,
+        "endLine": 2,
+        "file": "guards.mjs",
+        "line": 2,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 24,
+        "endColumn": 35,
+        "endLine": 3,
+        "file": "guards.mjs",
+        "line": 3,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 36,
+        "endColumn": 47,
+        "endLine": 4,
+        "file": "guards.mjs",
+        "line": 4,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 28,
+        "endColumn": 39,
+        "endLine": 5,
+        "file": "guards.mjs",
+        "line": 5,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 34,
+        "endLine": 7,
+        "file": "guards.mjs",
+        "line": 7,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 38,
+        "endColumn": 49,
+        "endLine": 7,
+        "file": "guards.mjs",
+        "line": 7,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 24,
+        "endColumn": 35,
+        "endLine": 8,
+        "file": "guards.mjs",
+        "line": 8,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "guards.mjs",
+    "options": null
+  },
+  {
+    "file": "safe.mjs",
+    "findings": [],
+    "name": "safe.mjs",
+    "options": null
+  },
+  {
+    "file": "safe.mjs",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 7,
+        "file": "safe.mjs",
+        "line": 7,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 18,
+        "endColumn": 53,
+        "endLine": 8,
+        "file": "safe.mjs",
+        "line": 8,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "strict guard",
+    "options": {
+      "allowInImportMetaMain": false
+    }
+  },
+  {
+    "file": "suppression-file.mjs",
+    "findings": [],
+    "name": "suppression-file.mjs",
+    "options": null
+  },
+  {
+    "file": "suppressions.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 19,
+        "endLine": 5,
+        "file": "suppressions.mjs",
+        "line": 5,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "suppressions.mjs",
+    "options": null
+  },
+  {
+    "file": "unsafe.mjs",
+    "findings": [
+      {
+        "column": 22,
+        "endColumn": 40,
+        "endLine": 1,
+        "file": "unsafe.mjs",
+        "line": 1,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 16,
+        "endColumn": 34,
+        "endLine": 2,
+        "file": "unsafe.mjs",
+        "line": 2,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 52,
+        "endLine": 3,
+        "file": "unsafe.mjs",
+        "line": 3,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 20,
+        "endColumn": 32,
+        "endLine": 4,
+        "file": "unsafe.mjs",
+        "line": 4,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 24,
+        "endColumn": 40,
+        "endLine": 5,
+        "file": "unsafe.mjs",
+        "line": 5,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 4,
+        "endColumn": 15,
+        "endLine": 6,
+        "file": "unsafe.mjs",
+        "line": 6,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 20,
+        "endLine": 8,
+        "file": "unsafe.mjs",
+        "line": 8,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "unsafe.mjs",
+    "options": null
+  },
+  {
+    "file": "wrapped.ts",
+    "findings": [
+      {
+        "column": 23,
+        "endColumn": 35,
+        "endLine": 2,
+        "file": "wrapped.ts",
+        "line": 2,
+        "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+        "messageId": "topLevelAwait",
+        "ruleId": "no-mistakes/no-top-level-await",
+        "severity": 2
+      }
+    ],
+    "name": "wrapped.ts",
+    "options": null
+  }
+]
