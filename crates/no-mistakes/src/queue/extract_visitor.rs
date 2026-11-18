@@ -8,6 +8,7 @@ use std::path::Path;
 
 mod bindings;
 mod helpers;
+mod waits;
 
 pub(super) struct QueueVisitor<'a> {
     pub path: &'a Path,
@@ -25,6 +26,8 @@ pub(super) struct QueueVisitor<'a> {
     pub worker_factories: HashMap<String, (usize, usize)>,
     pub job_frames: Vec<JobFrame>,
     pub record_waits: bool,
+    pub scoping: Option<&'a oxc_semantic::Scoping>,
+    pub wait_aliases: crate::fx::FxHashMap<oxc_syntax::symbol::SymbolId, u32>,
     pub current_case: Option<String>,
     pub namespace_imports: HashMap<String, String>,
     /// `(processor span start, end, worker index)` for factory and `new Worker` processors.
@@ -53,13 +56,10 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        self.note_wait_call(call);
         if let Expression::StaticMemberExpression(member) = &call.callee {
             let method = member.property.name.as_str();
-            if method == "addAndWait" || method == "waitUntilFinished" {
-                if self.record_waits {
-                    super::extract_factory::note_wait(self, call);
-                }
-            } else if let Expression::Identifier(object) = &member.object {
+            if let Expression::Identifier(object) = &member.object {
                 if method == "add" && self.flow_bindings.contains(object.name.as_str()) {
                     let recorded = self.facts.producers.len();
                     record_flow(
@@ -150,6 +150,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_variable_declaration(&mut self, decl: &oxc_ast::ast::VariableDeclaration<'a>) {
+        self.note_wait_aliases(decl);
         super::extract_factory::visit_variable_declaration(self, decl);
     }
 

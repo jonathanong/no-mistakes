@@ -311,3 +311,6 @@ mod cli_check_rules_test_no_live_repository_scan_test_origins;
 
 #[path = "cli_check_rules_test_no_live_repository_scan_issue_3354.rs"]
 mod cli_check_rules_test_no_live_repository_scan_issue_3354;
+
+#[path = "cli_check_queue_waits.rs"]
+mod cli_check_queue_waits;

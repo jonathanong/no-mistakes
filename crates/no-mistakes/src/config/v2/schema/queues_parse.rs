@@ -19,6 +19,7 @@ where
 {
     if roles.enqueue.is_empty()
         && roles.worker.is_empty()
+        && roles.enqueue_and_wait.is_empty()
         && roles.queue.iter().all(|factory| factory.name == 0)
     {
         let names = roles
@@ -58,6 +59,7 @@ where
                 processor: factory.processor,
             })
             .collect(),
+        enqueue_and_wait: roles.enqueue_and_wait.clone(),
     }
     .serialize(serializer)
 }
@@ -75,6 +77,8 @@ struct RolesBody {
     queue: Vec<QueueEntry>,
     enqueue: Vec<EnqueueInput>,
     worker: Vec<WorkerInput>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    enqueue_and_wait: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -151,6 +155,7 @@ impl FactoriesInput {
                         processor: spec.processor,
                     })
                     .collect(),
+                enqueue_and_wait: body.enqueue_and_wait,
                 ..QueueFactoryRoles::default()
             },
         }

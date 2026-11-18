@@ -4,6 +4,8 @@ use crate::codebase::ts_source::module_facts;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::{path::Path, sync::Arc};
 
+mod queue_waits;
+
 pub(crate) fn collect_file_facts_from_program(
     path: &Path,
     plan: TsFactPlan,
@@ -34,6 +36,9 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     semantic: Option<&oxc_semantic::SemanticBuilderReturn<'_>>,
 ) -> TsFileFacts {
     let (parse_error, stored_source) = source_state;
+    let (record_waits, queue_semantic) =
+        queue_waits::prepare(path, plan, context, source, program, semantic.is_none());
+    let semantic = semantic.or(queue_semantic.as_ref());
     let module_bindings = (plan.module_bindings || plan.call_arguments).then(|| {
         Arc::new(match semantic {
             Some(built) => module_facts::extract_from_semantic(
@@ -78,7 +83,11 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         None
     };
     let domain = if plan.has_domain_facts() || plan.call_sites {
-        domain::collect_domain_facts(program, path, source, plan, context)
+        let scoping = semantic
+            .filter(|_| record_waits)
+            .map(|built| built.semantic.scoping());
+        let queue_waits = (record_waits, scoping);
+        domain::collect_domain_facts(program, path, source, plan, context, queue_waits)
     } else {
         domain::DomainFacts::default()
     };

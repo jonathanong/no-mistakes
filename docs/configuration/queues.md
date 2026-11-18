@@ -28,6 +28,7 @@ queues:
       - { callee: createBulkEnqueueFunction, queue: 0, job: 1 }
     worker:
       - { callee: createWorker, name: 0, processor: 1 }
+    enqueueAndWait: [submitForResult]
 ```
 
 ```yaml
@@ -68,10 +69,13 @@ An imported module with multiple callables stays wildcard when the processor
 callable cannot be selected statically. Only a direct imported processor argument
 contributes imported names; namespace references inside an inline processor do
 not narrow that processor. The `enqueues` and `workers` globs scope the files
-that participate in a project. `waitScopes` limits `addAndWait` and
-`waitUntilFinished` findings, including `this.queue.addAndWait`, for that
-project. An empty list checks every file of the project, and a file outside
-every project stays checked. A project root matches only that directory:
+that participate in a project. `factories.enqueueAndWait` lists the exact names
+of functions that enqueue a job and wait for its result, such as
+`submitForResult(...)`. Names match bare identifier callees and default to an empty list. `waitScopes` limits that
+project's findings for these calls and for built-in
+[`enqueue-and-wait` patterns](../cli/queues-check.md). An empty list checks
+every file of the project, and a file outside every project stays checked.
+A project root matches only that directory:
 `root: api` covers `api/...` and does not cover `lib/api/...`.
 `cluster` gives producers and workers a shared
 queue namespace. Two factories with the same callee and different argument
