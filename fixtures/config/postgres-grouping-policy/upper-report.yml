@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    options:
+      executorNames: []
+      unanalyzableSql: " REPORT "

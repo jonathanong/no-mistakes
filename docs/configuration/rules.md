@@ -105,11 +105,12 @@ valid. Legacy PostgreSQL applications that historically ignored this
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 also consumes the shared policy, but deliberately stays advisory only: its
 query rewrites need review and benchmarks even when the shape is proven.
-Shared or rule-level canonical `unanalyzable: report` and legacy
-`unanalyzableSql: fail` (rule or project) all emit the same non-failing advice as
-`advise`. `ignore` suppresses SQL diagnostic advice, while proven grouping
-advisories remain. Canonical rule options take precedence over the legacy alias
-and shared defaults, and an invalid alias is still rejected.
+Shared or rule-level canonical `unanalyzable: report`, rule-level legacy
+`unanalyzableSql: report`, and legacy `unanalyzableSql: fail` (rule or project)
+all emit the same non-failing advice as `advise`. `ignore` suppresses SQL
+diagnostic advice, while proven grouping advisories remain. Canonical rule
+options take precedence over the legacy alias and shared defaults, and an invalid
+alias is still rejected.
 
 PostgreSQL member calls whose imported receiver type comes from the configured
 executor module but is missing from `executorTypeNames` also use this shared

@@ -89,3 +89,35 @@ fn postgres_grouping_unanalyzable_policy_parity_check_json_snapshot() {
         assert_eq!(reports[name], reports[expected], "{name}: {reports}");
     }
 }
+
+#[test]
+fn postgres_grouping_unanalyzable_sql_report_alias_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "unanalyzable");
+    let policies = [
+        ("advise", true),
+        ("rule-sql-report", true),
+        ("rule-sql-upper-report", true),
+        ("shared-ignore-rule-sql-report", true),
+        ("canonical-ignore-rule-sql-report", false),
+        ("ignore", false),
+    ];
+    let cases: Vec<_> = policies
+        .iter()
+        .map(|(name, _)| (*name, root.clone(), root.join(format!("{name}.yml"))))
+        .collect();
+    let reports = assert_saved_fixture_report(
+        "postgres_grouping_unanalyzable_sql_report_alias",
+        &cases,
+        &[],
+        &[],
+    );
+    for (name, diagnostic_expected) in policies {
+        assert_result(&reports[name], diagnostic_expected);
+        let expected = if diagnostic_expected {
+            "advise"
+        } else {
+            "ignore"
+        };
+        assert_eq!(reports[name], reports[expected], "{name}: {reports}");
+    }
+}

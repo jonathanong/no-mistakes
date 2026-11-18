@@ -101,13 +101,17 @@ impl NoMistakesConfig {
             let shared: Option<Unanalyzable> = option(rule, "unanalyzable")?;
             let has_alias = rule.options.get("unanalyzableSql").is_some();
             let inherited = self.unanalyzable.or(self.unanalyzable_sql);
-            let grouping_fail_alias = rule.rule == "postgres-grouping-not-aggregation"
+            let grouping_advisory_alias = rule.rule == "postgres-grouping-not-aggregation"
                 && rule
                     .options
                     .get("unanalyzableSql")
                     .and_then(serde_yaml::Value::as_str)
-                    .is_some_and(|value| value.trim().eq_ignore_ascii_case("fail"));
-            if (shared.is_some() || (!has_alias && inherited.is_some()) || grouping_fail_alias)
+                    .is_some_and(|value| {
+                        ["fail", "report"]
+                            .iter()
+                            .any(|mode| value.trim().eq_ignore_ascii_case(mode))
+                    });
+            if (shared.is_some() || (!has_alias && inherited.is_some()) || grouping_advisory_alias)
                 && sql_policy_rule(&rule.rule)
             {
                 let value = match policy.unanalyzable {
