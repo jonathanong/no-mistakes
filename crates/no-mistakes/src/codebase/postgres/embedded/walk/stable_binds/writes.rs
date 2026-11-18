@@ -1,3 +1,4 @@
+use super::ParameterFields;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
 use oxc_ast::ast::*;
@@ -9,6 +10,7 @@ pub(in crate::codebase::postgres::embedded::walk) struct Writes {
     opaque: bool,
     escaped: FxHashSet<String>,
     calls: Vec<oxc_span::Span>,
+    suspensions: Vec<oxc_span::Span>,
     reads: std::collections::HashMap<String, std::collections::HashMap<String, u32>>,
 }
 
@@ -55,7 +57,7 @@ impl<'a> Visit<'a> for Writes {
         self.escaped.insert(id.name.to_string());
     }
     fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
-        if let Expression::Identifier(root) = &member.object {
+        if let Expression::Identifier(root) = unwrap_ts_wrappers(&member.object) {
             self.opaque |= matches!(root.name.as_str(), "eval" | "arguments");
             self.reads
                 .entry(root.name.to_string())
@@ -74,10 +76,16 @@ impl<'a> Visit<'a> for Writes {
     }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.calls.push(call.span);
+        if let Some(member) = unwrap_ts_wrappers(&call.callee).as_member_expression() {
+            self.escaped.extend(super::receiver_name(member.object()));
+        }
         walk::walk_call_expression(self, call);
     }
     fn visit_tagged_template_expression(&mut self, expression: &TaggedTemplateExpression<'a>) {
         self.calls.push(expression.span);
+        if let Some(member) = unwrap_ts_wrappers(&expression.tag).as_member_expression() {
+            self.escaped.extend(super::receiver_name(member.object()));
+        }
         walk::walk_tagged_template_expression(self, expression);
     }
     fn visit_new_expression(&mut self, expression: &NewExpression<'a>) {
@@ -85,18 +93,15 @@ impl<'a> Visit<'a> for Writes {
         walk::walk_new_expression(self, expression);
     }
     fn visit_await_expression(&mut self, expression: &AwaitExpression<'a>) {
+        self.suspensions.push(expression.span);
         self.calls.push(expression.span);
         walk::walk_await_expression(self, expression);
     }
     fn visit_yield_expression(&mut self, expression: &YieldExpression<'a>) {
+        self.suspensions.push(expression.span);
         self.calls.push(expression.span);
         walk::walk_yield_expression(self, expression);
     }
-}
-
-pub(in crate::codebase::postgres::embedded::walk) struct ParameterFields {
-    pub fields: std::collections::HashMap<String, u32>,
-    pub calls: Vec<oxc_span::Span>,
 }
 
 fn primitive(ty: &TSType<'_>) -> bool {
@@ -166,6 +171,7 @@ impl Writes {
                     ParameterFields {
                         fields,
                         calls: self.calls.clone(),
+                        suspensions: self.suspensions.clone(),
                     },
                 ))
             })

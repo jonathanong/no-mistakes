@@ -39,7 +39,6 @@ fn independent_and_unproven_guards_retain_each_sql_combination() {
         (2, "reassigned parameter"),
         (4, "open string type"),
         (5, "numeric type"),
-        (6, "opaque condition"),
     ] {
         let mut variants = texts(&calls[index]);
         variants.sort_unstable();
@@ -77,4 +76,20 @@ fn unsupported_operands_and_exhausted_predicate_budgets_keep_both_arms() {
         );
         assert!(!calls[index].variants_truncated(), "{description}");
     }
+}
+
+#[test]
+fn independent_opaque_tail_keeps_both_outcomes_within_each_finite_mode() {
+    let calls = calls("variants-correlated-finite-guards.ts");
+    let mut variants = texts(&calls[6]);
+    variants.sort_unstable();
+    assert_eq!(
+        variants,
+        [
+            "SELECT 1",
+            "SELECT 1 /* gadgets */",
+            "SELECT 1 /* widgets */"
+        ]
+    );
+    assert!(!calls[6].variants_truncated());
 }

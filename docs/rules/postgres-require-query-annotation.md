@@ -103,13 +103,30 @@ those versions from the shared extractor instead of its separate helper-prefix
 traversal. Every version must start with an annotation or be an exempt
 transaction statement.
 
-At max effort, append guards that compare the same stable string-union parameter
-share its finite choices. Strict string equality/inequality, negation, and
-short-circuit `&&`/`||` tests keep only feasible combinations, including paths
-that skip an append. For example, a `mode` of `'widgets' | 'gadgets' | 'all'`
-can select either table or both with `UNION ALL` without inventing an empty
-CTE or omitting the union between two selections. Conditions on unrelated values
-remain independent; unknown or reassigned inputs retain conservative alternatives.
+At max effort, append guards that compare the same stable closed string-union
+parameter, supported parameter member such as `options.mode`, or immutable read
+alias such as `const mode = options.mode` share its finite choices. Strict string
+equality/inequality, negation, and short-circuit `&&`/`||` tests keep only feasible
+combinations, including paths that skip an append. For example, a `mode` of
+`'widgets' | 'gadgets' | 'all'` can select either table or both with `UNION ALL`
+without inventing an empty CTE or omitting the union between two selections.
+
+An independent `if (options.after)` tail still has both outcomes for each mode:
+three mode choices times two tail outcomes. Mixed finite and unknown conditions
+such as `options.mode === 'widgets' && options.after` preserve the feasible mode
+paths and both independent outcomes where reached. A missing annotation on any
+reachable version still reports; a malformed independent SQL tail is not made
+valid by mode correlation. This is a bounded proof for supported stable reads,
+not a guarantee about arbitrary runtime objects. Writes to the member, receiver
+escape before the guards, and open `string` types do not establish finite member
+correlation. Receiver methods, member-valued tags, and escapes from parameter
+initializers also retain conservative alternatives. Direct member reads after
+`await` or `yield` stay conservative; an immutable alias captured before suspension
+keeps its finite value. Unresolved namespace bindings that span declaration blocks
+or can be extended from other files do not fall through to an enclosing finite
+alias. Unknown or reassigned inputs
+remain conservative. See
+[finite SQL alternatives](../postgres-facts/finite-sql-alternatives.md).
 
 Recovery is capped at 16 versions; a missing annotation
 on only one path is still reported at that branch's physical source location,

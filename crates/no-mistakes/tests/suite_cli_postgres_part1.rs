@@ -179,3 +179,6 @@ mod cli_postgres_snapshot_reopen_shapes;
 mod cli_postgres_snapshot_require_query_annotation;
 #[path = "cli_postgres_snapshot_required_comments.rs"]
 mod cli_postgres_snapshot_required_comments;
+
+#[path = "cli_check_rules_postgres_variants/correlated_member_guards.rs"]
+mod correlated_member_guards;

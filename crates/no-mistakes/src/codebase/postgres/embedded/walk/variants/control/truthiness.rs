@@ -87,7 +87,10 @@ pub(super) fn finite_branches(
             }
         }
     }
-    if !values.iter().any(|value| !value.choices.is_empty()) {
+    if !values
+        .iter()
+        .any(|value| value.choices.iter().any(|(id, _)| id & (1 << 62) != 0))
+    {
         return None;
     }
     Some(value_paths(values, paths, id, truth_arm, |value| {

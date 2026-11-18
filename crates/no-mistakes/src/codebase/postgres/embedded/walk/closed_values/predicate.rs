@@ -1,8 +1,9 @@
 use super::expression::compatible;
 use super::{expression, Arm, Node, Recovered, ScopeVisitor, MAX_EMBEDDED_SQL_VARIANTS};
-use crate::codebase::postgres::embedded::walk::variants::ValueKind;
+use crate::codebase::postgres::embedded::walk::variants::{conditions::choice_id, ValueKind};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, Expression, LogicalOperator, UnaryOperator};
+use oxc_span::GetSpan;
 
 pub(super) fn recover(
     visitor: &ScopeVisitor<'_>,
@@ -14,7 +15,7 @@ pub(super) fn recover(
     match unwrap_ts_wrappers(test) {
         Expression::BooleanLiteral(value) => Some(vec![boolean(value.value, Vec::new())]),
         Expression::UnaryExpression(unary) if unary.operator == UnaryOperator::LogicalNot => {
-            let mut values = recover(visitor, &unary.argument, child_depth, constraints)?;
+            let mut values = logical_operand(visitor, &unary.argument, child_depth, constraints)?;
             for value in &mut values {
                 value.value = ValueKind::Boolean(!value.truth());
             }
@@ -36,10 +37,10 @@ pub(super) fn recover(
         Expression::LogicalExpression(logical) if logical.operator != LogicalOperator::Coalesce => {
             let take_right = logical.operator == LogicalOperator::And;
             let mut result = Vec::new();
-            for left in recover(visitor, &logical.left, child_depth, constraints)? {
+            for left in logical_operand(visitor, &logical.left, child_depth, constraints)? {
                 if left.truth() == take_right {
                     let path = merge_choices(constraints, &left.choices);
-                    for mut right in recover(visitor, &logical.right, child_depth, &path)? {
+                    for mut right in logical_operand(visitor, &logical.right, child_depth, &path)? {
                         right.choices = merge_choices(&left.choices, &right.choices);
                         push(&mut result, right)?;
                     }
@@ -63,7 +64,9 @@ fn strings(
     let operand = unwrap_ts_wrappers(operand);
     if !matches!(
         operand,
-        Expression::Identifier(_) | Expression::StringLiteral(_)
+        Expression::Identifier(_)
+            | Expression::StringLiteral(_)
+            | Expression::StaticMemberExpression(_)
     ) {
         return None;
     }
@@ -125,4 +128,42 @@ fn push(values: &mut Vec<Recovered>, value: Recovered) -> Option<()> {
         values.push(value);
     }
     (values.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(())
+}
+
+fn logical_operand(
+    visitor: &ScopeVisitor<'_>,
+    test: &Expression<'_>,
+    depth: u8,
+    constraints: &[(u64, u32)],
+) -> Option<Vec<Recovered>> {
+    if let Some(values) = recover(visitor, test, depth, constraints) {
+        return Some(values);
+    }
+    if depth == 0 {
+        return None;
+    }
+    let operand = unwrap_ts_wrappers(test);
+    if let Some(values) = strings(visitor, operand, depth) {
+        return Some(
+            values
+                .into_iter()
+                .filter(|(_, choices)| compatible(choices, constraints))
+                .map(|(text, choices)| boolean(!text.is_empty(), choices))
+                .collect(),
+        );
+    }
+    let (id, truth_arm) = match operand {
+        Expression::Identifier(_) => choice_id(visitor, test, test.span().start),
+        Expression::StaticMemberExpression(_) => (u64::from(test.span().start) | (1 << 60), 1),
+        _ => return None,
+    };
+    Some(
+        [(false, 1 - truth_arm), (true, truth_arm)]
+            .into_iter()
+            .filter_map(|(truth, arm)| {
+                let choices = vec![(id, arm)];
+                compatible(&choices, constraints).then(|| boolean(truth, choices))
+            })
+            .collect(),
+    )
 }

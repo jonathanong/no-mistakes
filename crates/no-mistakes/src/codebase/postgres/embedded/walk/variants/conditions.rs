@@ -53,7 +53,7 @@ pub(super) fn selected_case(statement: &SwitchStatement<'_>) -> Option<u32> {
     Some(default)
 }
 
-pub(super) fn choice_id(
+pub(in crate::codebase::postgres::embedded::walk) fn choice_id(
     visitor: &super::super::ScopeVisitor<'_>,
     expr: &Expression<'_>,
     fallback: u32,

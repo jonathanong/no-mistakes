@@ -1,0 +1,58 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "max_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 105,
+          "message": "src/query.ts:105: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 5 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(statement);",
+          "target": "sql-composition"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 121,
+          "message": "src/query.ts:121: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 3 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(statement);",
+          "target": "sql-composition"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 55,
+          "message": "src/query.ts:55: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 5 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(statement);",
+          "target": "sql-composition"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 74,
+          "message": "src/query.ts:74: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 5 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(statement);",
+          "target": "sql-composition"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 90,
+          "message": "src/query.ts:90: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 5 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "query(statement);",
+          "target": "sql-composition"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -1,6 +1,6 @@
 use super::*;
 
-fn strings(ty: &TSType<'_>) -> Option<Vec<String>> {
+pub(super) fn strings(ty: &TSType<'_>) -> Option<Vec<String>> {
     match ty {
         TSType::TSLiteralType(literal) => match &literal.literal {
             TSLiteral::StringLiteral(value) => {
@@ -23,6 +23,7 @@ impl ScopeVisitor<'_> {
         &mut self,
         param: &FormalParameter<'_>,
     ) {
+        self.note_closed_parameter_members(param);
         let BindingPattern::BindingIdentifier(id) = &param.pattern else {
             return;
         };

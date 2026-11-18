@@ -13,6 +13,7 @@ impl<'a> ScopeVisitor<'a> {
 
     pub(super) fn walk_namespace_scope(&mut self, block: &ast::TSModuleBlock<'a>) {
         self.push_scope();
+        self.shadow_namespace_types(block);
         self.var_scopes.push(self.scopes.len().saturating_sub(1));
         resolve::hoist_vars(&block.body, self);
         resolve::record_statements(&block.body, self);
@@ -37,6 +38,7 @@ impl<'a> ScopeVisitor<'a> {
             .flatten()
             .map(|id| id.name.as_str());
         let mut writes = super::stable_binds::Writes::default();
+        super::stable_binds::parameter_effects(&mut writes, &function.params);
         if let Some(body) = &function.body {
             oxc_ast_visit::Visit::visit_function_body(&mut writes, body);
         }
@@ -46,6 +48,7 @@ impl<'a> ScopeVisitor<'a> {
             .extend(writes.fields(&function.params));
         self.enter_plain_function(declaration_name, function.span.start);
         self.push_scope();
+        self.shadow_parameter_generics(function.type_parameters.as_deref());
         self.record_params(&function.params);
         // A named function expression shadows outer helpers only in its own
         // body. LocalFunctions does not resolve through this self-reference,
@@ -86,14 +89,19 @@ impl<'a> ScopeVisitor<'a> {
         let private_name = (class.r#type == oxc_ast::ast::ClassType::ClassExpression)
             .then_some(class.id.as_ref())
             .flatten();
-        if let Some(name) = private_name {
+        let scoped = private_name.is_some() || class.type_parameters.is_some();
+        if scoped {
             self.push_scope();
+            self.shadow_parameter_generics(class.type_parameters.as_deref());
+        }
+        if let Some(name) = private_name {
             self.bind_self_name(name.name.as_str());
+            self.shadow_parameter_type(name.name.as_str());
         }
         // The private class name shadows outer bindings in heritage expressions,
         // computed keys and method bodies; it must not escape the expression.
         walk::walk_class(self, class);
-        if private_name.is_some() {
+        if scoped {
             self.pop_scope();
         }
     }
@@ -113,12 +121,14 @@ impl<'a> ScopeVisitor<'a> {
 
     pub(super) fn walk_arrow_scope(&mut self, arrow: &ast::ArrowFunctionExpression<'a>) {
         let mut writes = super::stable_binds::Writes::default();
+        super::stable_binds::parameter_effects(&mut writes, &arrow.params);
         oxc_ast_visit::Visit::visit_arrow_function_body(&mut writes, &arrow.body);
         self.stable_primitives
             .extend(writes.parameters(&arrow.params));
         self.stable_parameter_fields
             .extend(writes.fields(&arrow.params));
         self.push_scope();
+        self.shadow_parameter_generics(arrow.type_parameters.as_deref());
         self.record_params(&arrow.params);
         self.enter_function();
         self.enter_plain_function(None, arrow.span.start);
