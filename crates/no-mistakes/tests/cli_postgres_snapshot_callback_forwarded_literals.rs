@@ -176,6 +176,7 @@ fn postgres_imported_callback_append_check_json_snapshot() {
             ("callers.mts", 13),
             ("callers.mts", 23),
             ("callers.mts", 26),
+            ("callers.mts", 30),
             ("guards.mts", 9),
             ("guards.mts", 15),
             ("guards.mts", 20),

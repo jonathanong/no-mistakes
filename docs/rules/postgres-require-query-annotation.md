@@ -72,7 +72,11 @@ including across an imported helper. An imported helper may also conditionally
 append tails to its incoming statement in place before forwarding that same
 statement: ``if (afterId) statement.append(sql` AND id > ${afterId}`)`` followed
 by ``statement.append(sql` ORDER BY id LIMIT ${limit + 1}`)`` and
-`return await query(statement)`. Each caller must supply a fresh trusted tagged
+`return await query(statement)`. The callback call may instead bind its
+result (`const result = await query(statement)`), destructure it
+(`const { rows } = await query(statement)`), or stand alone
+(`await query(statement);`); the call must pass the appended builder itself.
+Each caller must supply a fresh trusted tagged
 literal with a static leading annotation. Appends before initialization, shared
 or opaque arguments, replacement, prepend, and unsupported uses remain unproven
 or report their known missing annotation. This reuses the local callback proof

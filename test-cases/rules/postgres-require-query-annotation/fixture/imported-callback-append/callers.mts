@@ -1,5 +1,5 @@
 import { read } from './db.mjs';
-import { page, replaced, prepended, nested, escaped } from './pager.mjs';
+import { page, replaced, prepended, nested, escaped, pageRows, pageBound, pageStatement, otherBuilder } from './pager.mjs';
 import { sql, type SqlStatement } from './sql.mjs';
 export const first = (after?: string) => page(sql`/* pageWidgets */ SELECT id FROM widgets WHERE TRUE`, after, 50, statement => read(statement));
 export const second = (after?: string) => page(sql`/* pageGadgets */ SELECT id FROM gadgets WHERE TRUE`, after, 50, statement => read(statement));
@@ -24,3 +24,7 @@ export const shared = () => {
 };
 export const nestedTails = (after?: string) => nested(sql`/* nested */ SELECT id FROM widgets`, after, 1, statement => read(statement));
 export const escapedInput = (after?: string) => escaped(sql`/* escaped */ SELECT id FROM widgets`, after, statement => read(statement));
+export const destructured = (after?: string) => pageRows(sql`/* destructured */ SELECT id FROM widgets`, after, 50, statement => read(statement).then(() => ({ rows: [] })));
+export const bound = (after?: string) => pageBound(sql`/* bound */ SELECT id FROM widgets`, after, statement => read(statement));
+export const bare = (after?: string) => pageStatement(sql`/* bare */ SELECT id FROM widgets`, after, statement => read(statement));
+export const differentBuilder = (after?: string) => otherBuilder(sql`/* appended */ SELECT id FROM widgets`, sql`SELECT id FROM gadgets`, after, statement => read(statement));

@@ -12,30 +12,23 @@ pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Optio
     {
         return None;
     }
-    let Step::Return(mut returned) = summary.body.last()?.clone() else {
-        return None;
-    };
-    if let Expr::Await(inner) = returned {
-        returned = *inner;
-    }
-    let Expr::Call { callee, args, .. } = returned else {
-        return None;
-    };
-    let Expr::Name(callback) = *callee else {
-        return None;
-    };
-    let [Expr::Name(payload)] = args.as_slice() else {
-        return None;
-    };
-    let callback = summary.params.iter().position(|name| name == &callback)?;
-    let payload_index = summary.params.iter().position(|name| name == payload)?;
+    let (site, callback, payload) = call_site(summary)?;
+    let payload_index = summary.params.iter().position(|name| name == &payload)?;
     let mut tags = Vec::new();
     let mut body = Vec::with_capacity(summary.body.len());
-    for step in &summary.body {
+    for (index, step) in summary.body.iter().enumerate() {
+        if index > site
+            && !matches!(
+                step,
+                Step::Return(_) | Step::Bind(_, _) | Step::Var(_) | Step::Reserve(_)
+            )
+        {
+            return None;
+        }
         if let Step::Branch(test, left, right) = step {
             if !pure(test, &mut tags)
-                || !arm(left, payload, &mut tags)
-                || !arm(right, payload, &mut tags)
+                || !arm(left, &payload, &mut tags)
+                || !arm(right, &payload, &mut tags)
             {
                 return None;
             }
@@ -65,6 +58,36 @@ pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Optio
         body,
         tags,
     })
+}
+
+// The callback call may be returned, bound, or a bare statement; only the SQL
+// built in place before it matters, never its result.
+fn call_site(summary: &Function) -> Option<(usize, usize, String)> {
+    summary
+        .body
+        .iter()
+        .enumerate()
+        .rev()
+        .find_map(|(index, step)| {
+            let (Step::Return(expr) | Step::Bind(_, expr) | Step::Effect(expr)) = step else {
+                return None;
+            };
+            let Expr::Call { callee, args, .. } = awaited(expr) else {
+                return None;
+            };
+            let (Expr::Name(callback), [Expr::Name(payload)]) = (&**callee, args.as_slice()) else {
+                return None;
+            };
+            let callback = summary.params.iter().position(|name| name == callback)?;
+            Some((index, callback, payload.clone()))
+        })
+}
+
+fn awaited(expr: &Expr) -> &Expr {
+    match expr {
+        Expr::Await(inner) => inner,
+        _ => expr,
+    }
 }
 
 fn arm(steps: &[Step], payload: &str, tags: &mut Vec<String>) -> bool {
