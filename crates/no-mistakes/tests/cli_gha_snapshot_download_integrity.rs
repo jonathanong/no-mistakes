@@ -55,6 +55,11 @@ fn github_actions_download_integrity_scopes_and_sequencing_match_snapshot() {
             &["fail"][..],
         ),
         (
+            "github_actions_download_integrity_builtin_writes",
+            "builtin-writes",
+            &["fail"][..],
+        ),
+        (
             "github_actions_download_integrity_shell_source",
             "shell-source",
             &["fail", "shell-source", "shell-source-low"][..],

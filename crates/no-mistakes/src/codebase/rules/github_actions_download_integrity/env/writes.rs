@@ -36,33 +36,42 @@ pub(super) fn observe(mut words: &[Word], mut mark: impl FnMut(&str)) -> Option<
 
 fn observe_builtin(name: &str, args: &[Word], mark: &mut impl FnMut(&str)) -> Option<()> {
     match name {
-        "." | "source" | "eval" => return None,
-        "printf" => {
-            if let Some(attached) = args.first().and_then(|word| word.text.strip_prefix("-v")) {
-                let target = if attached.is_empty() {
-                    &args.get(1)?.text
-                } else {
-                    attached
-                };
-                mark(variable_name(target)?);
-            }
-        }
+        "." | "source" | "eval" => None,
+        "printf" => printf_target(args, mark),
         "declare" | "local" | "typeset" | "export" | "readonly" | "unset" => {
-            declaration_targets(name, args, mark)?;
+            declaration_targets(name, args, mark)
         }
-        "read" => input_targets(args, "REPLY", "dinNptu", mark)?,
-        "mapfile" | "readarray" => input_targets(args, "MAPFILE", "cdnOsu", mark)?,
-        "for" | "select" => {
-            mark(variable_name(&args.first()?.text)?);
-        }
-        "getopts" => {
-            if let Some(target) = args.get(1) {
-                mark(variable_name(&target.text)?);
-                mark("OPTARG");
-                mark("OPTIND");
-            }
-        }
-        _ => {}
+        "read" => input_targets(args, "REPLY", "dinNptu", mark),
+        "mapfile" | "readarray" => input_targets(args, "MAPFILE", "cdnOsu", mark),
+        "for" | "select" => loop_target(args, mark),
+        "getopts" => getopts_targets(args, mark),
+        _ => Some(()),
+    }
+}
+
+fn printf_target(args: &[Word], mark: &mut impl FnMut(&str)) -> Option<()> {
+    let Some(attached) = args.first().and_then(|word| word.text.strip_prefix("-v")) else {
+        return Some(());
+    };
+    let target = if attached.is_empty() {
+        &args.get(1)?.text
+    } else {
+        attached
+    };
+    mark(variable_name(target)?);
+    Some(())
+}
+
+fn loop_target(args: &[Word], mark: &mut impl FnMut(&str)) -> Option<()> {
+    mark(variable_name(&args.first()?.text)?);
+    Some(())
+}
+
+fn getopts_targets(args: &[Word], mark: &mut impl FnMut(&str)) -> Option<()> {
+    if let Some(target) = args.get(1) {
+        mark(variable_name(&target.text)?);
+        mark("OPTARG");
+        mark("OPTIND");
     }
     Some(())
 }

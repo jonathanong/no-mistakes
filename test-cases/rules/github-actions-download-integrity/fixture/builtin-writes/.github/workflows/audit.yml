@@ -1,0 +1,55 @@
+name: Audit
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          OPTION: https://downloads.example.com/getopts-target
+          OPTARG: https://downloads.example.com/getopts-argument
+          OPTIND: https://downloads.example.com/getopts-index
+          CONTROL_URL: https://downloads.example.com/getopts-control
+        run: |
+          getopts 'u:' OPTION -u https://api.github.com/tool
+          curl "$OPTION"
+          curl "$OPTARG"
+          curl "$OPTIND"
+          curl "$CONTROL_URL"
+      - env:
+          MAPFILE: https://downloads.example.com/mapfile-default
+          CONTROL_URL: https://downloads.example.com/mapfile-control
+        run: |
+          mapfile -t <<< https://api.github.com/tool
+          curl "$MAPFILE"
+          curl "$CONTROL_URL"
+      - env:
+          TOOL_URL: https://downloads.example.com/readarray-target
+          CONTROL_URL: https://downloads.example.com/readarray-control
+        run: |
+          readarray -tn1 TOOL_URL <<< https://api.github.com/tool
+          curl "$TOOL_URL"
+          curl "$CONTROL_URL"
+      - env:
+          REPLY: https://downloads.example.com/read-default
+          TOOL_URL: https://downloads.example.com/read-array
+          CONTROL_URL: https://downloads.example.com/read-control
+        run: |
+          read -r <<< https://api.github.com/tool
+          read -a TOOL_URL <<< https://api.github.com/tool
+          curl "$REPLY"
+          curl "$TOOL_URL"
+          curl "$CONTROL_URL"
+      - env:
+          TOOL_URL: https://downloads.example.com/builtin-printf-target
+          CONTROL_URL: https://downloads.example.com/builtin-printf-control
+        run: |
+          builtin printf -vTOOL_URL '%s' https://api.github.com/tool
+          curl "$TOOL_URL"
+          curl "$CONTROL_URL"
+      - env:
+          TOOL_URL: https://downloads.example.com/read-only-builtins
+        run: |
+          printf '%s\n' TOOL_URL
+          declare -p TOOL_URL
+          unset -f TOOL_URL
+          curl "$TOOL_URL"
