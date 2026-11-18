@@ -1,3 +1,4 @@
+mod append_callback;
 mod calls;
 mod children;
 mod functions;

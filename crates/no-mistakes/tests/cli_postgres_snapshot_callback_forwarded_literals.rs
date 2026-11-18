@@ -130,3 +130,83 @@ fn postgres_imported_callback_prefix_check_json_snapshot() {
         }
     }
 }
+
+#[test]
+fn postgres_imported_callback_append_check_json_snapshot() {
+    const RULE: &str = "postgres-require-query-annotation";
+    let root = rules_path(RULE, "fixture", "imported-callback-append");
+    let cases = ["advise", "report", "ignore"].map(|policy| {
+        (
+            policy,
+            root.clone(),
+            rules_path(
+                RULE,
+                "configs",
+                &format!("imported-callback-append-{policy}.yml"),
+            ),
+        )
+    });
+    let reports =
+        assert_saved_fixture_report("postgres_imported_callback_append", &cases, &[], &[]);
+    for policy in ["advise", "report", "ignore"] {
+        let report = &reports[policy]["report"];
+        assert_eq!(reports[policy]["exitCode"], 1);
+        assert_eq!(report["warnings"], serde_json::json!([]));
+        let mut sites = report["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|finding| {
+                (
+                    finding["file"].as_str().unwrap(),
+                    finding["line"].as_u64().unwrap(),
+                )
+            })
+            .collect::<Vec<_>>();
+        sites.sort_unstable();
+        let known = vec![
+            ("callers.mts", 6),
+            ("callers.mts", 9),
+            ("native-callers.mts", 12),
+        ];
+        let mut all = known.clone();
+        all.extend([
+            ("callers.mts", 7),
+            ("callers.mts", 8),
+            ("callers.mts", 13),
+            ("callers.mts", 23),
+            ("guards.mts", 9),
+            ("guards.mts", 15),
+            ("guards.mts", 20),
+            ("guards.mts", 21),
+            ("guards.mts", 29),
+            ("guards.mts", 35),
+            ("guards.mts", 40),
+            ("guards.mts", 46),
+            ("native-callers.mts", 13),
+        ]);
+        all.sort_unstable();
+        assert_eq!(
+            sites,
+            if policy == "report" { &all } else { &known }.clone(),
+            "{policy}: {report}"
+        );
+        let mut advisories = report["advisories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|finding| {
+                (
+                    finding["file"].as_str().unwrap(),
+                    finding["line"].as_u64().unwrap(),
+                )
+            })
+            .collect::<Vec<_>>();
+        advisories.sort_unstable();
+        assert_eq!(
+            advisories,
+            if policy == "advise" { all } else { vec![] },
+            "{policy}: {report}"
+        );
+    }
+}

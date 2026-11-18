@@ -92,6 +92,7 @@ fn scalar_capture_invalidation_preserves_the_warm_refresh_epoch() {
         asynchronous: false,
         arrow: true,
         self_name: None,
+        append_callback: None,
     };
     // The original capture loop took this mutable view even though no scalar
     // binding could be rewritten. Its logical state is the refresh oracle.

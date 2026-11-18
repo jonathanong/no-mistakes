@@ -58,6 +58,7 @@ fn every_prefix_reachable_value_kind_is_conservative() {
             asynchronous: false,
             arrow: false,
             self_name: None,
+            append_callback: None,
         }),
         std::path::PathBuf::from("helper.mts").into(),
         0,

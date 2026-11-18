@@ -39,14 +39,19 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
         .as_ref()
         .map(|body| super::super::statements::steps(&body.statements, source))
         .unwrap_or_default();
-    Expr::Function(function(
+    let mut summary = function(
         &value.params,
         body,
         !value.generator,
         value.r#async,
         false,
         value.span.start,
-    ))
+    );
+    if summary.supported {
+        let proof = super::append_callback::collect(value, &summary).map(std::sync::Arc::new);
+        std::sync::Arc::make_mut(&mut summary).append_callback = proof;
+    }
+    Expr::Function(summary)
 }
 
 pub(super) fn function(
@@ -88,5 +93,6 @@ pub(super) fn function(
         asynchronous,
         arrow,
         self_name: None,
+        append_callback: None,
     })
 }

@@ -82,6 +82,7 @@ fn environment_memo_follows_nested_functions_and_detached_writes() {
             asynchronous: false,
             arrow: false,
             self_name: None,
+            append_callback: None,
         }),
         std::path::PathBuf::from("helper.ts").into(),
         7,
@@ -120,6 +121,7 @@ fn prepared_function_summaries_remain_shared_across_expression_snapshots() {
         asynchronous: false,
         arrow: false,
         self_name: None,
+        append_callback: None,
     });
     let expression = Expr::Function(function.clone());
     let Expr::Function(snapshot) = expression.clone() else {

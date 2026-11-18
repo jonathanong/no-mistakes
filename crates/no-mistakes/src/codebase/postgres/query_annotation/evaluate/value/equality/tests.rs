@@ -17,6 +17,7 @@ fn function() -> Value {
             asynchronous: false,
             arrow: false,
             self_name: None,
+            append_callback: None,
         }),
         std::path::PathBuf::from("helper.mts").into(),
         7,
