@@ -473,3 +473,12 @@ mod logical;
 
 #[path = "tests/mutable_append_loops.rs"]
 mod mutable_append_loops;
+
+#[path = "tests/correlated_member_guards.rs"]
+mod correlated_member_guards;
+
+#[path = "tests/named_member_guards.rs"]
+mod named_member_guards;
+
+#[path = "tests/member_guard_edges.rs"]
+mod member_guard_edges;

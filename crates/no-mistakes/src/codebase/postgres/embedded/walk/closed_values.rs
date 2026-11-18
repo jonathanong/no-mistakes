@@ -28,6 +28,7 @@ mod frozen_return;
 #[cfg(test)]
 mod member_ownership_tests;
 mod members;
+mod parameter_members;
 #[cfg(test)]
 mod parent_fields_tests;
 mod predicate;
@@ -39,6 +40,7 @@ mod hasown_edge_tests;
 mod hasown_tests;
 #[cfg(test)]
 mod tests;
+mod type_names;
 mod types;
 
 #[derive(Clone)]

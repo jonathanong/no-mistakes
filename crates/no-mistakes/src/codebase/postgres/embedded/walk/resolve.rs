@@ -70,6 +70,7 @@ pub(super) fn for_each_bound_identifier<'a>(
 
 pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut ScopeVisitor<'_>) {
     for statement in statements {
+        visitor.record_parameter_types(statement);
         match statement {
             Statement::VariableDeclaration(declaration) => {
                 record_variable_declaration(declaration, visitor);

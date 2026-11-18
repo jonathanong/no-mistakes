@@ -74,6 +74,9 @@ impl<'a> Visit<'a> for Writes {
     }
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.calls.push(call.span);
+        if let Some(member) = unwrap_ts_wrappers(&call.callee).as_member_expression() {
+            self.escaped.extend(super::receiver_name(member.object()));
+        }
         walk::walk_call_expression(self, call);
     }
     fn visit_tagged_template_expression(&mut self, expression: &TaggedTemplateExpression<'a>) {

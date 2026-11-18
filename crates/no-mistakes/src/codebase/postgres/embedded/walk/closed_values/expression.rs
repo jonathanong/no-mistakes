@@ -59,16 +59,20 @@ pub(super) fn expression(
     }
     match expr {
         Expression::Identifier(id) => lookup(visitor, id.name.as_str()),
-        Expression::StaticMemberExpression(member) if !member.optional => select(
-            expression(visitor, &member.object, depth - 1)?,
-            vec![Arm {
-                node: Node::Text(member.property.name.to_string()),
-                choices: vec![],
-                root: None,
-                provenance: None,
-                type_annotation: false,
-            }],
-        ),
+        Expression::StaticMemberExpression(member) if !member.optional => {
+            super::parameter_members::recover_member(visitor, member, depth).or_else(|| {
+                select(
+                    expression(visitor, &member.object, depth - 1)?,
+                    vec![Arm {
+                        node: Node::Text(member.property.name.to_string()),
+                        choices: vec![],
+                        root: None,
+                        provenance: None,
+                        type_annotation: false,
+                    }],
+                )
+            })
+        }
         Expression::ComputedMemberExpression(member) if !member.optional => select(
             expression(visitor, &member.object, depth - 1)?,
             expression(visitor, &member.expression, depth - 1)?,

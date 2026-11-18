@@ -36,10 +36,10 @@ pub(super) fn recover(
         Expression::LogicalExpression(logical) if logical.operator != LogicalOperator::Coalesce => {
             let take_right = logical.operator == LogicalOperator::And;
             let mut result = Vec::new();
-            for left in recover(visitor, &logical.left, child_depth, constraints)? {
+            for left in logical_operand(visitor, &logical.left, child_depth, constraints)? {
                 if left.truth() == take_right {
                     let path = merge_choices(constraints, &left.choices);
-                    for mut right in recover(visitor, &logical.right, child_depth, &path)? {
+                    for mut right in logical_operand(visitor, &logical.right, child_depth, &path)? {
                         right.choices = merge_choices(&left.choices, &right.choices);
                         push(&mut result, right)?;
                     }
@@ -63,7 +63,9 @@ fn strings(
     let operand = unwrap_ts_wrappers(operand);
     if !matches!(
         operand,
-        Expression::Identifier(_) | Expression::StringLiteral(_)
+        Expression::Identifier(_)
+            | Expression::StringLiteral(_)
+            | Expression::StaticMemberExpression(_)
     ) {
         return None;
     }
@@ -125,4 +127,34 @@ fn push(values: &mut Vec<Recovered>, value: Recovered) -> Option<()> {
         values.push(value);
     }
     (values.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(())
+}
+
+fn logical_operand(
+    visitor: &ScopeVisitor<'_>,
+    test: &Expression<'_>,
+    depth: u8,
+    constraints: &[(u64, u32)],
+) -> Option<Vec<Recovered>> {
+    if let Some(values) = recover(visitor, test, depth, constraints) {
+        return Some(values);
+    }
+    if depth == 0
+        || !matches!(
+            unwrap_ts_wrappers(test),
+            Expression::Identifier(_) | Expression::StaticMemberExpression(_)
+        )
+    {
+        return None;
+    }
+    let id = u64::from(oxc_span::GetSpan::span(test).start) | (1 << 60);
+    Some(
+        [false, true]
+            .into_iter()
+            .enumerate()
+            .filter_map(|(arm, truth)| {
+                let choices = vec![(id, arm as u32)];
+                compatible(&choices, constraints).then(|| boolean(truth, choices))
+            })
+            .collect(),
+    )
 }

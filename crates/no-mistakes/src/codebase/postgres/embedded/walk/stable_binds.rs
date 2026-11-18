@@ -93,3 +93,14 @@ pub(super) fn annotate(
     }
     fact.bound_value_sql = Some(published);
 }
+
+fn receiver_name(expression: &Expression<'_>) -> Option<String> {
+    let mut expression = unwrap_ts_wrappers(expression);
+    while let Some(member) = expression.as_member_expression() {
+        expression = unwrap_ts_wrappers(member.object());
+    }
+    match expression {
+        Expression::Identifier(root) => Some(root.name.to_string()),
+        _ => None,
+    }
+}

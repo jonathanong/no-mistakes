@@ -40,6 +40,28 @@ fragments contribute their own SQL text and generated
 placeholders are renumbered in composition order. Ordinary value interpolations
 remain binds.
 
+At maximum effort, repeated strict string equality/inequality tests on a stable
+closed string-union parameter share one finite choice. This also applies to a
+stable parameter member such as `options.mode` and a local immutable read alias
+such as `const mode = options.mode`. Negation and short-circuit `&&` / `||`
+tests preserve the same choices. The proof is limited to supported reads whose
+member and receiver remain stable; a type annotation alone does not prove an
+arbitrary object's runtime behavior. A written member, a receiver that escapes
+before the guards, or an open `string` member cannot establish this correlation.
+
+Independent conditions remain independent even when read from the same receiver.
+For example, with
+`options: { mode: 'widgets' | 'gadgets' | 'all'; after?: string }`, mode guards
+can choose one selection or both with `UNION ALL`, while an
+`if (options.after)` append retains both tail outcomes for each mode: three mode
+choices times two tail outcomes. A mixed test such as
+`options.mode === 'widgets' && options.after` must retain that independent truthy
+or falsy choice within the feasible mode paths. An unknown condition does not
+justify dropping its append or inventing incompatible mode combinations. An
+invalid SQL tail remains subject to checking on every reachable alternative;
+finite mode recovery does not validate that tail. This does not close the value
+set of `options.after`, and the existing 16-version cap is unchanged.
+
 Object and array destructuring assignments discard the earlier SQL snapshot
 of every identifier they write, including nested, renamed, computed, rest and
 default targets and TypeScript target wrappers. Subsequent calls remain
