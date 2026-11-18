@@ -140,6 +140,19 @@ it("preserves forwarding-only projections through stable assertions and configur
     );
   }
   rows.push(...forwardingRows);
+  const freshErrorRows = snapshotSuite(rule, languageOptions, {
+    valid: [testCase("fresh-error.ts", "forwarding-only")],
+    invalid: [
+      testCase("fresh-error-controls.ts", "forwarding-only"),
+      testCase("fresh-error-assign-write.ts", "forwarding-only"),
+      testCase("fresh-error-helper-write-control.ts", "forwarding-only"),
+      testCase("fresh-error-prototype-write.ts", "forwarding-only"),
+      testCase("fresh-error-object-prototype-write.ts", "forwarding-only"),
+      testCase("fresh-error-alias-prototype-write.ts", "forwarding-only"),
+    ],
+  });
+  expect(freshErrorRows.map((row) => row.findings.length)).toEqual([0, 12, 1, 1, 1, 1, 1]);
+  rows.push(...freshErrorRows);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-assertion-projections.snap",
   );

@@ -464,7 +464,17 @@ run(0 ?? read, account);
   `asserts value` or `asserts value is T` must assert the parameter at the exact
   position where the object is passed directly. Ambient declarations are
   trusted as typed contracts. Visible implementations must use only simple
-  guards, throws, and bare returns; calls, writes, and captures are unproven.
+  guards, throws, and bare returns; other calls, writes, and captures are
+  unproven. A throw may decorate a fresh built-in error with scalar metadata:
+  `throw Object.assign(new Error("assertion failed"), { status })`.
+  This requires the unchanged built-in `Object.assign`, `Object`, and `Error`
+  in both the assertion module and its caller. Prototype references and
+  escapes of these intrinsics remain unproven because inherited setters can
+  run during assignment. Metadata must be own, static data properties with
+  literal or proven primitive parameter values; getters,
+  spreads, computed keys, and object values remain unproven. This writes only
+  the fresh error, not the asserted object. General `Object.assign` calls,
+  including writes to an assertion parameter, remain unproven.
   Guards can check the parameter itself, such as `if (!value)`, but cannot read
   object fields. A field check such as `typeof value.id !== "string"` remains
   unproven even when TypeScript narrows the object; optional fields also fail

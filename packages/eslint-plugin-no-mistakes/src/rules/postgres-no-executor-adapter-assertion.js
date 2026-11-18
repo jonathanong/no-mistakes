@@ -2,13 +2,17 @@
 
 const { safeOtherArguments } = require("./postgres-no-executor-adapter-nonwriting-arguments");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
+const {
+  assertionThrownValue,
+  literal,
+} = require("./postgres-no-executor-adapter-assertion-thrown");
 
 const {
   stableCallSignature,
   assertionDeclaration,
 } = require("./postgres-no-executor-adapter-assertion-target");
 
-function nonWritingAssertionBody(declaration, checker, ts, facts, program, constructors) {
+function nonWritingAssertionBody(declaration, checker, ts, facts, program, intrinsics) {
   if (!declaration.body)
     return (
       declaration.getSourceFile().isDeclarationFile ||
@@ -23,18 +27,8 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program, const
   }
   const writes = sourceWrites(declaration.getSourceFile(), checker, facts, program);
 
-  function literal(node) {
-    return (
-      ts.isStringLiteral(node) ||
-      ts.isNumericLiteral(node) ||
-      node.kind === ts.SyntaxKind.TrueKeyword ||
-      node.kind === ts.SyntaxKind.FalseKeyword ||
-      node.kind === ts.SyntaxKind.NullKeyword
-    );
-  }
-
   function guard(node) {
-    if (literal(node)) return true;
+    if (literal(node, ts)) return true;
     if (ts.isIdentifier(node)) return parameters.has(checker.getSymbolAtLocation(node));
     if (ts.isParenthesizedExpression(node) || ts.isTypeOfExpression(node))
       return guard(node.expression);
@@ -54,26 +48,6 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program, const
     return false;
   }
 
-  function thrownValue(node) {
-    if (literal(node)) return true;
-    if (
-      !ts.isNewExpression(node) ||
-      !ts.isIdentifier(node.expression) ||
-      node.expression.text !== "Error" ||
-      !node.arguments?.every(literal)
-    )
-      return false;
-    const symbol = checker.getSymbolAtLocation(node.expression);
-    constructors.add(symbol);
-    return Boolean(
-      symbol?.declarations?.length &&
-      !writes.symbols.has(symbol) &&
-      symbol.declarations.every((entry) =>
-        program.isSourceFileDefaultLibrary(entry.getSourceFile()),
-      ),
-    );
-  }
-
   function statement(node) {
     if (ts.isBlock(node)) return node.statements.every(statement);
     if (ts.isIfStatement(node))
@@ -82,7 +56,16 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program, const
         statement(node.thenStatement) &&
         (!node.elseStatement || statement(node.elseStatement))
       );
-    if (ts.isThrowStatement(node)) return thrownValue(node.expression);
+    if (ts.isThrowStatement(node))
+      return assertionThrownValue(
+        node.expression,
+        checker,
+        ts,
+        program,
+        writes,
+        parameters,
+        intrinsics,
+      );
     if (ts.isReturnStatement(node)) return !node.expression;
     return ts.isEmptyStatement(node);
   }
@@ -103,17 +86,18 @@ function tsAssertionArgument(call, index, checker, ts, facts, program) {
   const declaration = assertionDeclaration(signature, checker, ts);
   const bodies = (facts.nonWritingAssertionBodies ??= new WeakMap());
   if (!bodies.has(declaration)) {
-    const constructors = new Set();
-    const safe = nonWritingAssertionBody(declaration, checker, ts, facts, program, constructors);
-    bodies.set(declaration, { safe, constructors });
+    const intrinsics = new Set();
+    const safe = nonWritingAssertionBody(declaration, checker, ts, facts, program, intrinsics);
+    bodies.set(declaration, { safe, intrinsics });
   }
   const proof = bodies.get(declaration);
   const writes = sourceWrites(call.getSourceFile(), checker, facts, program);
   return (
     proof.safe &&
-    [...proof.constructors].every(
+    [...proof.intrinsics].every(
       (symbol) =>
         !writes.symbols.has(symbol) &&
+        !writes.escapedSymbols.has(symbol) &&
         symbol.declarations.every((entry) => !writes.declarations.has(entry)),
     )
   );

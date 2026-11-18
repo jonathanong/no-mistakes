@@ -19,6 +19,17 @@ function createCollectionEscape(checker, program, result) {
     if (!node || escapedValueNodes.has(node)) return;
     escapedValueNodes.add(node);
     if (node.getFirstToken?.()?.getText() === "typeof") return;
+    const intrinsic = checker.getSymbolAtLocation(node);
+    if (
+      ["Error", "Object"].includes(intrinsic?.getName()) &&
+      intrinsic.declarations?.length &&
+      intrinsic.declarations.every((entry) =>
+        program.isSourceFileDefaultLibrary(entry.getSourceFile()),
+      )
+    ) {
+      result.escapedSymbols.add(intrinsic);
+      return;
+    }
     if (
       (node.name?.text ?? node.argumentExpression?.text) === "prototype" &&
       builtinCollection(checker.getTypeAtLocation(node))
@@ -87,6 +98,8 @@ function createCollectionEscape(checker, program, result) {
     return valid ? { collection, name, wrapper } : null;
   }
   function visit(node) {
+    if ((node.name?.text ?? node.argumentExpression?.text) === "prototype" && node.expression)
+      escapeValue(node.expression);
     if (["=", "&&=", "||=", "??="].includes(node.operatorToken?.getText()) && node.right)
       escapeValue(node.right);
     if (node.initializer && node.name) {
