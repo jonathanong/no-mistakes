@@ -17,6 +17,25 @@ impl CheckFactMap {
             .calls
             .get(&span)
     }
+    pub(crate) fn proven_query_annotation_prefix(
+        &self,
+        path: &std::path::Path,
+        options: &crate::codebase::postgres::EmbeddedSqlOptions,
+        span: (u32, u32),
+    ) -> Option<&Option<String>> {
+        let facts = &self
+            .ts
+            .get(path)?
+            .query_annotation
+            .iter()
+            .find(|(profile, _)| profile == options)?
+            .1;
+        facts
+            .proven_call_prefixes
+            .contains(&span)
+            .then(|| facts.calls.get(&span))
+            .flatten()
+    }
     #[doc(hidden)]
     pub fn postgres_schema_file(
         &self,

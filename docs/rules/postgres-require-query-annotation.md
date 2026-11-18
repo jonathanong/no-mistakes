@@ -65,6 +65,17 @@ project catalog and source session. Package-local TypeScript aliases resolve fro
 the importing file's project; an explicit `--tsconfig` deliberately overrides that
 ownership for every importer.
 
+A source-proven helper may forward a statement argument through an inline
+callback such as `statement => read(statement)`. The leading literal comment
+survives at max effort when the helper supplies that statement to the callback,
+including across an imported helper. Each invocation keeps its own argument:
+an annotated caller cannot prove an unannotated caller. A completed literal
+comment also survives later template interpolations. A missing comment remains
+a finding; an unresolved leading prefix or interpolated comment name follows
+`unanalyzableSql`. Unsupported callback parameter writes also remain
+unresolved under that policy. Advisory verdicts retain unknown external inputs,
+even when a known local invocation of that callback is annotated.
+
 Helper evaluation shares immutable function summaries, binding snapshots, and
 nested value containers. Builder lookup indexes and reference-free or environment-free container
 checks are memoized and invalidated on writes; speculative entrypoints retain

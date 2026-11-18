@@ -14,6 +14,7 @@ struct CallUpdate {
     path: PathBuf,
     span: CallSpan,
     value: Option<String>,
+    proven_prefix: bool,
 }
 
 pub(super) type SourceEvents =
@@ -47,6 +48,7 @@ pub(super) fn reduce_with_sources(
         // its contextual preference; executed SQL must include every
         // reachable invocation before it certifies a complete statement.
         let contextual = !collect_executed && events.iter().any(|(generic, _)| !generic);
+        let all_invocations = !contextual || events.iter().all(|(generic, _)| !generic);
         if !sources.is_empty() {
             let failures = sources
                 .remove(&(path.clone(), span))
@@ -102,6 +104,7 @@ pub(super) fn reduce_with_sources(
                 .insert((path.clone(), span), reason.map_or(Ok(alternatives), Err));
         }
         let values = values.into_iter().map(prefix).collect::<Vec<_>>();
+        let proven_prefix = all_invocations && values.iter().all(Option::is_some);
         // Every analyzable invocation must satisfy the rule. One favorable
         // callback callsite must never hide another unannotated/opaque one.
         let value = values
@@ -116,7 +119,12 @@ pub(super) fn reduce_with_sources(
                     values.into_iter().flatten().next()
                 }
             });
-        projection.calls.push(CallUpdate { path, span, value });
+        projection.calls.push(CallUpdate {
+            path,
+            span,
+            value,
+            proven_prefix,
+        });
     }
     projection
 }
@@ -143,7 +151,13 @@ pub(super) fn apply(
             .sql_source_prerequisites
             .record(&key, span, failures);
     }
-    for CallUpdate { path, span, value } in projection.calls {
+    for CallUpdate {
+        path,
+        span,
+        value,
+        proven_prefix,
+    } in projection.calls
+    {
         let file = files
             .get_mut(&originals[&path])
             .expect("projected source remains in the prepared map");
@@ -153,6 +167,11 @@ pub(super) fn apply(
             .find(|(profile, _)| profile == options)
             .expect("projected annotation profile remains prepared");
         facts.calls.insert(span, value);
+        if proven_prefix {
+            facts.proven_call_prefixes.insert(span);
+        } else {
+            facts.proven_call_prefixes.remove(&span);
+        }
     }
     // Later profiles replace earlier values for the same projected call.
     projected.append(&mut projection.executed);
