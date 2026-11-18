@@ -1,0 +1,646 @@
+[
+  {
+    "file": "no-locale-less-date-format/undefined-locale.mjs",
+    "findings": [],
+    "name": "allowUndefinedLocale permits global undefined",
+    "options": {
+      "allowUndefinedLocale": true
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/known-undefined.mjs",
+    "findings": [],
+    "name": "allowUndefinedLocale permits void expressions",
+    "options": {
+      "allowUndefinedLocale": true
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/missing-locale.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 3,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 5,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 6,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 7,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 8,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 8,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 9,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 9,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 10,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 10,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "allowUndefinedLocale still rejects missing arguments",
+    "options": {
+      "allowUndefinedLocale": true
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/custom-methods.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/custom-methods.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to formatDate so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/custom-methods.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to formatDate so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "custom methods replace defaults",
+    "options": {
+      "methods": [
+        "formatDate"
+      ]
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/custom-methods.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/custom-methods.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to formatDate so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "custom methods respect allowUndefinedLocale",
+    "options": {
+      "allowUndefinedLocale": true,
+      "methods": [
+        "formatDate"
+      ]
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/default-parameter.mjs",
+    "findings": [
+      {
+        "column": 40,
+        "endColumn": 76,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/default-parameter.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "default parameter global undefined is not shadowed by body var",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/unknown-locale.mjs",
+    "findings": [],
+    "name": "dynamic computed keys and first argument spreads stay unknown",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/missing-locale.mjs",
+    "findings": [],
+    "name": "empty methods disables default method matching",
+    "options": {
+      "methods": []
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/undefined-locale.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 37,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 65,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 65,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 3,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 40,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 5,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 6,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "explicit false rejects global undefined",
+    "options": {
+      "allowUndefinedLocale": false
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/explicit-locale.mjs",
+    "findings": [],
+    "name": "explicit locales arrays and direct helper functions are allowed",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/undefined-locale.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 37,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 65,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 65,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 3,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 40,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 5,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 44,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/undefined-locale.mjs",
+        "line": 6,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "global undefined is rejected by default",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/matching-receivers.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/matching-receivers.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/matching-receivers.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 27,
+        "endLine": 14,
+        "file": "no-locale-less-date-format/matching-receivers.mjs",
+        "line": 14,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 40,
+        "endLine": 15,
+        "file": "no-locale-less-date-format/matching-receivers.mjs",
+        "line": 15,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 35,
+        "endLine": 18,
+        "file": "no-locale-less-date-format/matching-receivers.mjs",
+        "line": 18,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "matching methods include Number custom objects and unknown receivers",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/missing-locale.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 3,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 29,
+        "endLine": 4,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 4,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 5,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 5,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 6,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 7,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 7,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 35,
+        "endLine": 8,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 8,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 9,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 9,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 10,
+        "file": "no-locale-less-date-format/missing-locale.mjs",
+        "line": 10,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "missing locale across default methods and optional or computed calls",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/shadowed-undefined.mjs",
+    "findings": [],
+    "name": "shadowed undefined is an explicit locale",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/wrapped.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 38,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/wrapped.ts",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 46,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/wrapped.ts",
+        "line": 2,
+        "message": "Pass an explicit locale to toLocaleDateString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 54,
+        "endLine": 3,
+        "file": "no-locale-less-date-format/wrapped.ts",
+        "line": 3,
+        "message": "Pass an explicit locale to toLocaleTimeString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "TypeScript wrappers preserve method and locale classification",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/known-undefined.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 1,
+        "file": "no-locale-less-date-format/known-undefined.mjs",
+        "line": 1,
+        "message": "Pass an explicit locale to toLocaleString so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "void expressions are rejected while aliases and local bindings stay unknown",
+    "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/dynamic-scope.js",
+    "findings": [],
+    "name": "with and direct eval leave undefined references unknown",
+    "options": null,
+    "rule": "no-locale-less-date-format",
+    "sourceType": "script"
+  }
+]

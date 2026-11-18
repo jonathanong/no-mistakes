@@ -3,7 +3,7 @@ import ts from "typescript";
 import { expect, it } from "vitest";
 import { __dirname } from "./helpers.mjs";
 
-it("checks the exported executor adapter mode and options", () => {
+it("checks the exported rule option types", () => {
   const program = ts.createProgram([resolve(__dirname, "option-types.ts")], {
     noEmit: true,
     skipLibCheck: true,

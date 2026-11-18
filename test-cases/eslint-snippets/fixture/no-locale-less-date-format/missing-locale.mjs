@@ -1,0 +1,10 @@
+new Date().toLocaleString();
+new Date().toLocaleDateString();
+new Date().toLocaleTimeString();
+new Date()?.toLocaleString();
+new Date().toLocaleDateString?.();
+new Date()?.toLocaleTimeString?.();
+new Date()["toLocaleString"]();
+new Date()[`toLocaleDateString`]();
+new Date()?.["toLocaleTimeString"]?.();
+new Date()[`toLocale\u0053tring`]();

@@ -25,6 +25,7 @@ const rules = {
   "no-import-only-test-files": require("./rules/no-import-only-test-files"),
   "no-inline-noop-promise-catch": require("./rules/no-inline-noop-promise-catch"),
   "no-placeholder-never-type-exports": require("./rules/no-placeholder-never-type-exports"),
+  "no-locale-less-date-format": require("./rules/no-locale-less-date-format"),
   "no-vitest-sequential": require("./rules/no-vitest-sequential"),
   "playwright-consistent-attribute": require("./rules/playwright-consistent-attribute"),
   "playwright-defaults": require("./rules/playwright-defaults"),

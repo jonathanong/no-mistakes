@@ -1,5 +1,6 @@
 import plugin, {
   type NoTopLevelAwaitOptions,
+  type NoLocaleLessDateFormatOptions,
   type PostgresNoExecutorAdapterMode,
   type PostgresNoExecutorAdapterOptions,
 } from "../src/index.js";
@@ -11,6 +12,19 @@ export const options: PostgresNoExecutorAdapterOptions = {
   executorTypeNames: ["QueryExecutor"],
   mode,
 };
+export const dateFormatOptions: NoLocaleLessDateFormatOptions = {
+  methods: ["toLocaleDateString"],
+  allowUndefinedLocale: true,
+};
+export const defaultDateFormatOptions: pluginRequire.NoLocaleLessDateFormatOptions = {};
+
+// @ts-expect-error Methods must be an array of strings.
+export const invalidMethods: NoLocaleLessDateFormatOptions = { methods: [1] };
+export const invalidAllowUndefinedLocale: NoLocaleLessDateFormatOptions = {
+  // @ts-expect-error The undefined-locale option must be boolean.
+  allowUndefinedLocale: "true",
+};
+
 export const rule = plugin.rules?.["postgres-no-executor-adapter"];
 export const commonJsRule = pluginRequire.rules?.["postgres-no-executor-adapter"];
 
