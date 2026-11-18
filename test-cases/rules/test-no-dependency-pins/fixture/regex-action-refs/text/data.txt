@@ -1,0 +1,1 @@
+Expected pattern: /vendor\/sample@v4/

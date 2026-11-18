@@ -97,6 +97,20 @@ malformed version prefixes are not matched.
 
 ## Action refs
 
+In JavaScript and TypeScript files, the default action-ref check also decodes
+statically recognized regex literals containing only literal text and optional
+outer `^` / `$` anchors. Escaped slashes (`\/`) and dots (`\.`) become literal characters,
+so `/vendor\/sample@v4/` and `/^vendor\/sample@v1\.2\.3$/` pin concrete
+versions just like string assertions. Regex flags do not change this check.
+Comments, quoted regex text, and JSX text are not decoded. Custom patterns
+continue to match raw source only.
+
+Shape checks such as `/@v\d+/` stay allowed. Character classes, alternation,
+groups, quantifiers, wildcard dots, and other escapes are outside the decoding
+contract; `/vendor\/sample@v(4|5)/` and `/vendor\/sample@v[45]/` do not name a
+concrete pin. The dotted all-zero placeholder exemption also applies after
+decoding, including `/vendor\/sample@v0\.0\.0/`.
+
 An action ref is reported whole, as `owner/repo/path@ref`: for example
 `github/codeql-action/init@v3` or
 `my-org/example-repo/.github/workflows/reusable.yml@v1`, not its last two

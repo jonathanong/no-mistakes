@@ -137,7 +137,7 @@ fn custom_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> {
 ///
 /// The search resumes at the end of the pin rather than the end of the match,
 /// so the separator that closed one pin can open the next.
-fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> {
+pub(super) fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> {
     if pattern
         .line_context
         .as_ref()

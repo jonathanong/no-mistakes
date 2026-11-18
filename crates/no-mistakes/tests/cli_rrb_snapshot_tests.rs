@@ -56,6 +56,59 @@ fn test_no_dependency_pins_json_matches_snapshot() {
 }
 
 #[test]
+fn test_no_dependency_pins_regex_check_json_snapshot() {
+    let directory = "test-no-dependency-pins/fixture/regex-action-refs";
+    let report = super::check_json_snapshot::assert_saved_fixture_report(
+        "test_no_dependency_pins_regex",
+        &[
+            c(
+                "defaults",
+                &format!("{directory}/defaults"),
+                ".no-mistakes.yml",
+            ),
+            c("custom", &format!("{directory}/custom"), ".no-mistakes.yml"),
+            c("non_js", &format!("{directory}/text"), ".no-mistakes.yml"),
+        ],
+        &[],
+        &[],
+    );
+    let findings = report["defaults"]["report"]["rules"].as_array().unwrap();
+    let mut sites = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    sites.sort_unstable();
+    assert_eq!(
+        sites,
+        [
+            ("jsx.test.tsx", 2),
+            ("lookalikes.test.mts", 4),
+            ("lookalikes.test.mts", 7),
+            ("pins.test.mts", 1),
+            ("pins.test.mts", 2),
+            ("pins.test.mts", 4),
+            ("pins.test.mts", 5),
+            ("pins.test.mts", 6),
+            ("pins.test.mts", 14),
+            ("pins.test.mts", 26),
+        ]
+    );
+    assert_eq!(
+        report["custom"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(report["non_js"]["report"]["rules"], serde_json::json!([]));
+}
+
+#[test]
 fn invalid_utf8_test_file_rules_json_matches_snapshot() {
     assert_saved_fixture(
         "invalid_utf8_test_file_rules",

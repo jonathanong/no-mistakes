@@ -1,10 +1,13 @@
+mod control_conditions;
 mod lex_state;
 mod type_arguments;
 
-use lex_state::{follows_control_condition, LexState};
+use control_conditions::follows_control_condition;
+use lex_state::LexState;
 #[derive(Default)]
 pub(super) struct SourceRanges {
     pub(super) assertions: Vec<(usize, usize)>,
+    pub(super) regexes: Vec<(usize, usize)>,
     pub(super) non_code: Vec<(usize, usize)>,
 }
 
@@ -31,6 +34,10 @@ fn source_ranges_with_type_arguments(content: &str, allow_type_arguments: bool) 
             continue;
         }
         match byte {
+            b'#' if index == 0 && next == Some(b'!') => {
+                lex.line_comment = true;
+                lex.enter_non_code(index);
+            }
             b'/' if next == Some(b'/') => {
                 lex.line_comment = true;
                 lex.enter_non_code(index);
@@ -111,6 +118,7 @@ fn source_ranges_with_type_arguments(content: &str, allow_type_arguments: bool) 
     lex.finish_non_code(bytes.len(), &mut non_code_ranges);
     ranges.sort_unstable_by_key(|(start, _)| *start);
     SourceRanges {
+        regexes: lex.regexes,
         assertions: ranges,
         non_code: non_code_ranges,
     }
