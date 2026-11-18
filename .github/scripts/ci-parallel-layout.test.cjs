@@ -1,4 +1,4 @@
-const { readWorkflow, workflowJob } = require("./workflow-contract.cjs");
+const { workflowJob } = require("./workflow-contract.cjs");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const { readFileSync } = require("node:fs");
@@ -92,31 +92,10 @@ test("JavaScript shards merge coverage under the normal unchanged threshold conf
   assert.match(job("javascript-shards"), /runs-on: ubuntu-latest/);
   assert.match(job("javascript-shards"), /include-hidden-files: true/);
   assert.match(job("javascript-shards"), /path: \.vitest\/blob/);
+  assert.match(job("javascript-coverage"), /path: \.vitest\/blob/);
   assert.match(job("javascript-coverage"), /vitest --merge-reports --coverage/);
   assert.doesNotMatch(job("javascript-coverage"), /vitest-shard.config/);
   assert.match(job("javascript-coverage"), /needs.javascript-shards.result/);
-});
-
-test("JavaScript coverage downloads every shard from this run with digest verification", () => {
-  const { jobs } = readWorkflow(path.join(root, ".github/workflows/ci.yml"));
-  const shards = jobs["javascript-shards"];
-  const coverage = jobs["javascript-coverage"];
-  const upload = shards.steps.find((step) => step.name === "Upload JavaScript shard report");
-  const download = coverage.steps.find((step) => step.name === "Download JavaScript shard reports");
-  const names = shards.strategy.matrix.shard.map((shard) =>
-    upload.with.name.replace("${{ matrix.shard }}", String(shard)),
-  );
-  assert.deepEqual(download.run.trim().split(/\s+/), [
-    "python3",
-    ".github/scripts/download-native-runtime.py",
-    "--output-directory",
-    upload.with.path,
-    ...names,
-  ]);
-  assert.equal(coverage.permissions.actions, "read");
-  assert.equal(download.env.GH_TOKEN, "${{ github.token }}");
-  assert.equal(download.env.NATIVE_RUNTIME_RUN_ID, "${{ github.run_id }}");
-  assert.equal(download["timeout-minutes"], 3);
 });
 
 test("documentation tests cannot delay coverage archive consumers", () => {

@@ -34,9 +34,15 @@ for (const config of ["default", "ts", "blanket", "custom", "none", "excluded", 
         const pending = cjs.check(options);
         assert.ok(pending instanceof Promise);
         const report = await pending;
-        assert.equal(esm.check, cjs.check);
-        assert.equal(esm.analyzeProject, cjs.analyzeProject);
+        assert.deepEqual(
+          normalizeCheckFailurePaths(await esm.check(options)),
+          normalizeCheckFailurePaths(report),
+        );
         const request = { ...options, reports: [{ type: "check" }] };
+        assert.deepEqual(
+          normalizeCheckFailurePaths((await cjs.analyzeProject(request)).reports[0].result),
+          normalizeCheckFailurePaths(report),
+        );
         assert.deepEqual(
           normalizeCheckFailurePaths((await esm.analyzeProject(request)).reports[0].result),
           normalizeCheckFailurePaths(report),

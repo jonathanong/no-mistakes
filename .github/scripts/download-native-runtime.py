@@ -1,5 +1,4 @@
-"""Download exact workflow artifacts within one verified, bounded invocation."""
-import argparse
+"""Download exact native runtime artifacts within one verified, bounded invocation."""
 import hashlib
 import json
 import os
@@ -13,9 +12,6 @@ import time
 import zipfile
 
 
-DEFAULT_OUTPUT_DIRECTORY = Path("target/debug")
-
-
 class DownloadError(RuntimeError):
     pass
 
@@ -27,7 +23,7 @@ class Deadline:
     def remaining(self):
         remaining = self.end - time.monotonic()
         if remaining <= 0:
-            raise TimeoutError("artifact download exceeded 110 seconds")
+            raise TimeoutError("native runtime download exceeded 110 seconds")
         return remaining
 
 
@@ -53,13 +49,13 @@ def resolve_artifact(repo, run_id, name, token, deadline):
             raise DownloadError("invalid artifact catalog")
         matches.extend(a for a in artifacts if a.get("name") == name)
         if len(matches) > 1:
-            raise DownloadError("ambiguous artifact")
+            raise DownloadError("ambiguous native runtime artifact")
         if len(artifacts) < 100:
             break
     else:
         raise DownloadError("artifact catalog exceeds 10 pages")
     if len(matches) != 1 or matches[0].get("expired"):
-        raise DownloadError("artifact missing or expired")
+        raise DownloadError("native runtime artifact missing or expired")
     artifact = matches[0]
     if not re.fullmatch(r"sha256:[0-9a-fA-F]{64}", artifact.get("digest") or ""):
         raise DownloadError("artifact requires a SHA256 digest")
@@ -85,7 +81,7 @@ def verify(archive, expected, deadline):
             deadline.remaining()
             digest.update(chunk)
     if digest.hexdigest() != expected.split(":", 1)[1].lower():
-        raise DownloadError("artifact SHA256 mismatch")
+        raise DownloadError("native runtime SHA256 mismatch")
 
 
 def extract(archive, destination, deadline):
@@ -97,9 +93,9 @@ def extract(archive, destination, deadline):
             path = PurePosixPath(name)
             if ("\\" in name or path.is_absolute() or ".." in path.parts
                     or ":" in name or stat.S_ISLNK(entry.external_attr >> 16)):
-                raise DownloadError("unsafe artifact archive path")
+                raise DownloadError("unsafe native runtime archive path")
             if not (destination / name).resolve().is_relative_to(destination):
-                raise DownloadError("artifact archive escapes destination")
+                raise DownloadError("native runtime archive escapes destination")
         for entry in entries:
             deadline.remaining()
             output = destination / entry.filename
@@ -116,7 +112,7 @@ def extract(archive, destination, deadline):
                 output.chmod(mode)
 
 
-def main(artifact_names=(), output_directory=DEFAULT_OUTPUT_DIRECTORY):
+def main(artifact_names=()):
     started = time.monotonic()
     timings = {name: 0 for name in ("metadata", "download", "digest", "extraction")}
     stage = "metadata"
@@ -153,7 +149,7 @@ def main(artifact_names=(), output_directory=DEFAULT_OUTPUT_DIRECTORY):
                 elif stage == "digest":
                     verify(archive, artifact["digest"], deadline)
                 else:
-                    extract(archive, output_directory, deadline)
+                    extract(archive, Path("target/debug"), deadline)
                 elapsed = time.monotonic() - stage_started
                 timings[stage] += elapsed
                 artifact_timings[stage] = elapsed
@@ -168,7 +164,7 @@ def main(artifact_names=(), output_directory=DEFAULT_OUTPUT_DIRECTORY):
             detail = f"curl exit status {error.returncode}"
         if isinstance(error, subprocess.TimeoutExpired):
             detail = "overall 110-second deadline exhausted"
-        print(f"artifact download failed during {stage}: "
+        print(f"native runtime download failed during {stage}: "
               f"{type(error).__name__}: {detail}", file=sys.stderr)
         return 1
     finally:
@@ -179,8 +175,4 @@ def main(artifact_names=(), output_directory=DEFAULT_OUTPUT_DIRECTORY):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-directory", type=Path, default=DEFAULT_OUTPUT_DIRECTORY)
-    parser.add_argument("artifact_names", nargs="*")
-    arguments = parser.parse_args()
-    sys.exit(main(arguments.artifact_names, arguments.output_directory))
+    sys.exit(main(sys.argv[1:]))

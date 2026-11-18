@@ -93,12 +93,6 @@ and total timings to distinguish network stalls from completion stalls. Its
 internal deadline leaves room before the workflow step deadline; a stalled
 transfer still fails the required native API gate.
 
-JavaScript coverage uses the same downloader for its explicit shard reports,
-selecting `.vitest/blob` as the output directory. All reports share one internal
-deadline and retain digest and archive-path checks. The merge runs only after
-successful download completion, so an incomplete transfer cannot produce a
-passing coverage result.
-
 Coverage reports pass every archived test executable explicitly to LLVM. Cargo's
 new output layout uses metadata markers to distinguish test binaries from build
 script outputs; the archive omits those markers. An implicit directory scan can
@@ -993,12 +987,10 @@ rejects its real measured duration while retaining the report artifacts.
 
 The [forbidden-lint-suppression parity matrix](../../packages/no-mistakes/scripts/api-tests/forbidden-lint-suppressions-native.js)
 runs each case outside the checkout so discovery can use the saved fixture
-without reading the checkout's Git index. Each case runs CommonJS standalone,
-ESM batched, and CLI calls and compares their full reports. Strict export-identity
-assertions prove the ESM and CommonJS entrypoints share both functions, avoiding
-duplicate scans through the same function objects. Canonicalizing the fixture
-path keeps parser-failure paths consistent when the operating system exposes an
-aliased temporary directory.
+without reading the checkout's Git index. Each case still runs the standalone,
+batched, and CLI calls and compares their full reports. Canonicalizing the
+fixture path keeps parser-failure paths consistent when the operating system
+exposes an aliased temporary directory.
 
 Name independent fixture cases separately in real-addon parity matrices. Each case
 retains all job/API variants and assertions; the per-test timing gate and

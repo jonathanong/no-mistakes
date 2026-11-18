@@ -773,7 +773,6 @@ jobs:
     runs-on: ubuntu-slim
     timeout-minutes: 8
     permissions:
-      actions: read
       contents: read
       id-token: write
     steps:
@@ -811,12 +810,11 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Download JavaScript shard reports
         timeout-minutes: 3
-        env:
-          GH_TOKEN: ${{ github.token }}
-          NATIVE_RUNTIME_RUN_ID: ${{ github.run_id }}
-        run: >-
-          python3 .github/scripts/download-native-runtime.py --output-directory .vitest/blob
-          javascript-shard-1 javascript-shard-2 javascript-shard-3 javascript-shard-4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: javascript-shard-*
+          path: .vitest/blob
+          merge-multiple: true
       - name: Enforce merged JavaScript coverage
         timeout-minutes: 5
         run: pnpm exec vitest --merge-reports --coverage --reporter=default --reporter=github-actions
