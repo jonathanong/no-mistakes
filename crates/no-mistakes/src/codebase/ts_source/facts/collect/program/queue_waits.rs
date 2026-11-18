@@ -1,0 +1,28 @@
+use super::{TsFactContext, TsFactPlan};
+use crate::queue::extract::{needs_wait_scoping, waits_in_scope};
+use oxc_ast::ast::Program;
+use oxc_semantic::{SemanticBuilder, SemanticBuilderReturn};
+use std::path::Path;
+
+pub(super) fn prepare<'a>(
+    path: &Path,
+    plan: TsFactPlan,
+    context: &TsFactContext,
+    source: &str,
+    program: &'a Program<'a>,
+    needs_semantic: bool,
+) -> (bool, Option<SemanticBuilderReturn<'a>>) {
+    let record_waits = plan.queue_project
+        && waits_in_scope(
+            path,
+            &context.root,
+            &context.queue_factory_roles.wait_scopes,
+        );
+    let semantic = (needs_semantic && record_waits && needs_wait_scoping(source)).then(|| {
+        SemanticBuilder::new()
+            .with_build_nodes(true)
+            .with_check_syntax_error(true)
+            .build(program)
+    });
+    (record_waits, semantic)
+}

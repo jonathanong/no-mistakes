@@ -37,6 +37,7 @@ fn fused_trpc_calls(source: &str) -> Vec<TrpcCallFact> {
             ..TsFactPlan::default()
         },
         &TsFactContext::default(),
+        (false, None),
     )
     .trpc_calls
 }

@@ -17,6 +17,7 @@ pub(crate) fn source_may_have_queue_facts(
             .iter()
             .any(|factory| factory.callee.is_empty())
         || roles.worker.iter().any(|factory| factory.callee.is_empty())
+        || roles.enqueue_and_wait.iter().any(String::is_empty)
     {
         return true;
     }
@@ -50,6 +51,10 @@ pub(crate) fn source_may_have_queue_facts(
             .worker
             .iter()
             .any(|factory| contains_bytes(haystack, factory.callee.as_bytes()))
+        || roles
+            .enqueue_and_wait
+            .iter()
+            .any(|name| contains_bytes(haystack, name.as_bytes()))
 }
 
 #[cfg(test)]

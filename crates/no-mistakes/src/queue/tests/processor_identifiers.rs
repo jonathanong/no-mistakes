@@ -54,7 +54,7 @@ fn identifier_processor_shadowing_and_mutation_do_not_borrow_another_body() {
     .queues
     .factories;
     let facts = crate::ast::with_program(&root.join("workers/named.mts"), &source, |program, _| {
-        crate::queue::extract::extract_program_with_factories(
+        super::extract::extract_program_with_factories(
             &root.join("workers/named.mts"),
             &source,
             program,
@@ -80,7 +80,7 @@ fn identifier_processor_shadowing_and_mutation_do_not_borrow_another_body() {
     let source = std::fs::read_to_string(root.join("workers/mutated.mts")).unwrap();
     let facts =
         crate::ast::with_program(&root.join("workers/mutated.mts"), &source, |program, _| {
-            crate::queue::extract::extract_program_with_factories(
+            super::extract::extract_program_with_factories(
                 &root.join("workers/mutated.mts"),
                 &source,
                 program,
@@ -95,7 +95,7 @@ fn identifier_processor_shadowing_and_mutation_do_not_borrow_another_body() {
     let source = std::fs::read_to_string(root.join("workers/scopes.mts")).unwrap();
     let facts =
         crate::ast::with_program(&root.join("workers/scopes.mts"), &source, |program, _| {
-            crate::queue::extract::extract_program_with_factories(
+            super::extract::extract_program_with_factories(
                 &root.join("workers/scopes.mts"),
                 &source,
                 program,

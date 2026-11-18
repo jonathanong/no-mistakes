@@ -1,0 +1,321 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "api/routes/escaped.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "q['\\x61\\x64\\x64AndWait']();"
+        },
+        {
+          "file": "api/routes/escaped.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "escaped();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 10,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(queue[\"waitUntilFinished\"]);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 11,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(wait);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 13,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "captured();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 15,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(copied);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 16,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(queue.addAndWait, queue.waitUntilFinished);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 17,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "(queue[\"addAndWait\"] as Function)();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addAndWait(\"direct\");"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue[\"addAndWait\"](\"computed\");"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 5,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue[`waitUntilFinished`]();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 7,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "wait(\"alias\");"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 8,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "finish();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 9,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(queue.addAndWait);"
+        },
+        {
+          "file": "api/routes/wrapper.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submitForResult();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unconfigured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "api/routes/escaped.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "q['\\x61\\x64\\x64AndWait']();"
+        },
+        {
+          "file": "api/routes/escaped.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "escaped();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 10,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(queue[\"waitUntilFinished\"]);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 11,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(wait);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 13,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "captured();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 15,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(copied);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 16,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(queue.addAndWait, queue.waitUntilFinished);"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 17,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "(queue[\"addAndWait\"] as Function)();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addAndWait(\"direct\");"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue[\"addAndWait\"](\"computed\");"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 5,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue[`waitUntilFinished`]();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 7,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "wait(\"alias\");"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 8,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "finish();"
+        },
+        {
+          "file": "api/routes/positive.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 9,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(queue.addAndWait);"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

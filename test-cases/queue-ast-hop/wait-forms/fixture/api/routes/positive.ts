@@ -1,0 +1,17 @@
+declare const queue: any;
+declare function run(...callbacks: any[]): void;
+queue.addAndWait("direct");
+queue["addAndWait"]("computed");
+queue[`waitUntilFinished`]();
+const { addAndWait: wait, waitUntilFinished: finish } = queue;
+wait("alias");
+finish();
+run(queue.addAndWait);
+run(queue["waitUntilFinished"]);
+run(wait);
+const captured = queue.addAndWait;
+captured();
+const copied = wait;
+run(copied);
+run(queue.addAndWait, queue.waitUntilFinished);
+(queue["addAndWait"] as Function)();

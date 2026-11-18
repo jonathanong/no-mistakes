@@ -51,6 +51,7 @@ pub(crate) fn collect_domain_facts<'a>(
     source: &str,
     plan: TsFactPlan,
     context: &TsFactContext,
+    (record_waits, scoping): (bool, Option<&oxc_semantic::Scoping>),
 ) -> DomainFacts {
     let route_file = route_file_name(path, context);
     let route_ref_facts = if plan.route_refs {
@@ -80,13 +81,14 @@ pub(crate) fn collect_domain_facts<'a>(
         .then(|| extract_queue_usage_from_program(program, source));
     let (queue_create_line, queue_name) = queue_factory_facts(program, path, source, plan, context);
     let queue_project = plan.queue_project.then(|| {
-        crate::queue::extract::extract_program_with_factories(
+        crate::queue::extract::extract_program_with_scoping(
             path,
             source,
             program,
             &context.queue_project_factory_names,
             &context.queue_factory_roles,
-            &context.root,
+            record_waits,
+            scoping,
         )
     });
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();

@@ -1,4 +1,4 @@
-/// Queue, enqueue, and worker factories declared in `queues.factories`.
+/// Queue factories and wrapper calls declared in `queues.factories`.
 ///
 /// A bare list of names stays the queue-factory form: each name is a call whose
 /// first argument is the queue name. The object form names the argument index
@@ -8,6 +8,7 @@ pub struct QueueFactoryRoles {
     pub queue: Vec<QueueNameFactory>,
     pub enqueue: Vec<EnqueueFactory>,
     pub worker: Vec<WorkerFactory>,
+    pub enqueue_and_wait: Vec<String>,
     /// Each project's `queues.waitScopes`, prefixed like other project globs.
     /// An empty scope list means every file of that project.
     pub wait_scopes: Vec<ProjectWaitScopes>,
@@ -68,6 +69,7 @@ impl QueueFactoryRoles {
         self.queue.extend(other.queue.clone());
         self.enqueue.extend(other.enqueue.clone());
         self.worker.extend(other.worker.clone());
+        self.enqueue_and_wait.extend(other.enqueue_and_wait.clone());
         wait::merge(&mut self.wait_scopes, &other.wait_scopes);
         self.dedup_callees();
         Ok(())
@@ -92,6 +94,8 @@ impl QueueFactoryRoles {
             .sort_by(|left, right| left.callee.cmp(&right.callee));
         self.worker
             .dedup_by(|left, right| left.callee == right.callee);
+        self.enqueue_and_wait.sort();
+        self.enqueue_and_wait.dedup();
         wait::dedup(&mut self.wait_scopes);
     }
 }

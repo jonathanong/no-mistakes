@@ -1,4 +1,5 @@
 mod collisions;
+mod extract;
 mod factory_detectors;
 mod factory_false_positives;
 mod factory_reexports;
@@ -9,6 +10,7 @@ mod processor_identifiers;
 mod resolver;
 pub(crate) mod session_lang;
 mod shared_facts;
+mod wait_forms;
 mod wait_scopes;
 use super::*;
 use crate::queue::extract_model::FileFacts;

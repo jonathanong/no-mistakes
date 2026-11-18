@@ -1,0 +1,10 @@
+version: 2
+projects:
+  api:
+    root: api
+    queues:
+      enqueues: ['**/*.ts']
+      waitScopes: ['routes/**']
+queues:
+  factories:
+    enqueueAndWait: [submitForResult]

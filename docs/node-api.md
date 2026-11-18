@@ -426,6 +426,8 @@ remain failures. See
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
+`queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Explicit wrapper names come from `queues.factories.enqueueAndWait` in the discovered configuration, with the same project `waitScopes`.
+
 ## Runtime exports
 
 | Runtime export | API |

@@ -123,6 +123,8 @@ pub(crate) use project::{
 mod tests;
 #[cfg(test)]
 mod tests_check_timing;
+#[cfg(test)]
+mod tests_queue_waits;
 
 include!("napi_api/primitive_bindings.rs");
 

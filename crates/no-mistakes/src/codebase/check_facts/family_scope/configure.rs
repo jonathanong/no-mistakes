@@ -112,6 +112,7 @@ fn queue_scope(
     plan: &CheckFactPlan,
 ) -> FamilyPathScope {
     let mut seeds = BTreeSet::new();
+    let waits = std::cell::OnceCell::new();
     for path in files {
         if !matches!(
             path.extension().and_then(|ext| ext.to_str()),
@@ -127,7 +128,13 @@ fn queue_scope(
             &source,
             &plan.queue_factory_names,
             &plan.queue_factory_roles,
-        ) {
+        ) || (source.contains('\\')
+            && waits
+                .get_or_init(|| {
+                    crate::queue::extract::WaitScopes::new(&plan.queue_factory_roles.wait_scopes)
+                })
+                .matches(path, root))
+        {
             seeds.insert(normalize_path(path));
         }
     }
