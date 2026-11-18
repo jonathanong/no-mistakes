@@ -55,7 +55,7 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
           variable.references.some((ref) => ref.isWrite() && !ref.init) ||
           (field !== null &&
             !(call.arguments[index] && projectedScalar(call.arguments[index], null, context)) &&
-            objectMutation(variable, executorVariable, allowedProperty))
+            objectMutation(variable, executorVariable, allowedProperty, null, context))
         )
           requirements.push(null);
       } else if (fields.has(variable)) {
@@ -160,6 +160,7 @@ function tsHoleSafe(
               facts,
               executorSymbol,
               allowedProperty,
+              program,
             ))
         )
           requirements.push(null);
