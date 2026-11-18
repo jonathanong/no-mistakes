@@ -48,6 +48,13 @@ tests preserve the same choices. The proof is limited to supported reads whose
 member and receiver remain stable; a type annotation alone does not prove an
 arbitrary object's runtime behavior. A written member, a receiver that escapes
 before the guards, or an open `string` member cannot establish this correlation.
+Receiver methods and member-valued tags can mutate the receiver, so they also
+prevent this proof. Escapes in parameter initializers count before the body starts.
+Direct member reads after `await` or `yield` stay conservative because the caller
+can mutate the receiver while execution is suspended. An immutable alias captured
+before suspension retains its finite value. Namespace type bindings take
+precedence over enclosing aliases. Merged bindings and bindings that other files
+can extend stay conservative when their owner cannot be established.
 
 Independent conditions remain independent even when read from the same receiver.
 For example, with

@@ -13,6 +13,7 @@ impl<'a> ScopeVisitor<'a> {
 
     pub(super) fn walk_namespace_scope(&mut self, block: &ast::TSModuleBlock<'a>) {
         self.push_scope();
+        self.shadow_namespace_types(block);
         self.var_scopes.push(self.scopes.len().saturating_sub(1));
         resolve::hoist_vars(&block.body, self);
         resolve::record_statements(&block.body, self);
@@ -37,6 +38,7 @@ impl<'a> ScopeVisitor<'a> {
             .flatten()
             .map(|id| id.name.as_str());
         let mut writes = super::stable_binds::Writes::default();
+        super::stable_binds::parameter_effects(&mut writes, &function.params);
         if let Some(body) = &function.body {
             oxc_ast_visit::Visit::visit_function_body(&mut writes, body);
         }
@@ -119,6 +121,7 @@ impl<'a> ScopeVisitor<'a> {
 
     pub(super) fn walk_arrow_scope(&mut self, arrow: &ast::ArrowFunctionExpression<'a>) {
         let mut writes = super::stable_binds::Writes::default();
+        super::stable_binds::parameter_effects(&mut writes, &arrow.params);
         oxc_ast_visit::Visit::visit_arrow_function_body(&mut writes, &arrow.body);
         self.stable_primitives
             .extend(writes.parameters(&arrow.params));

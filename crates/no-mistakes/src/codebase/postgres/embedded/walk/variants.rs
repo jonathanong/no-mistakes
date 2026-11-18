@@ -4,7 +4,7 @@ use crate::codebase::postgres::embedded::{
 mod append_decisions;
 mod append_effects;
 mod conditional;
-mod conditions;
+pub(in crate::codebase::postgres::embedded::walk) mod conditions;
 pub(super) mod control;
 mod effects;
 mod escape_effects;

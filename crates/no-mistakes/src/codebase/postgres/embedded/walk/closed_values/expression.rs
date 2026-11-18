@@ -60,7 +60,7 @@ pub(super) fn expression(
     match expr {
         Expression::Identifier(id) => lookup(visitor, id.name.as_str()),
         Expression::StaticMemberExpression(member) if !member.optional => {
-            super::parameter_members::recover_member(visitor, member, depth).or_else(|| {
+            super::parameter_members::recover_member(visitor, member).or_else(|| {
                 select(
                     expression(visitor, &member.object, depth - 1)?,
                     vec![Arm {

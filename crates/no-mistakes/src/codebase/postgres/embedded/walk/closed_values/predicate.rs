@@ -1,8 +1,9 @@
 use super::expression::compatible;
 use super::{expression, Arm, Node, Recovered, ScopeVisitor, MAX_EMBEDDED_SQL_VARIANTS};
-use crate::codebase::postgres::embedded::walk::variants::ValueKind;
+use crate::codebase::postgres::embedded::walk::variants::{conditions::choice_id, ValueKind};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, Expression, LogicalOperator, UnaryOperator};
+use oxc_span::GetSpan;
 
 pub(super) fn recover(
     visitor: &ScopeVisitor<'_>,
@@ -14,7 +15,7 @@ pub(super) fn recover(
     match unwrap_ts_wrappers(test) {
         Expression::BooleanLiteral(value) => Some(vec![boolean(value.value, Vec::new())]),
         Expression::UnaryExpression(unary) if unary.operator == UnaryOperator::LogicalNot => {
-            let mut values = recover(visitor, &unary.argument, child_depth, constraints)?;
+            let mut values = logical_operand(visitor, &unary.argument, child_depth, constraints)?;
             for value in &mut values {
                 value.value = ValueKind::Boolean(!value.truth());
             }
@@ -138,21 +139,29 @@ fn logical_operand(
     if let Some(values) = recover(visitor, test, depth, constraints) {
         return Some(values);
     }
-    if depth == 0
-        || !matches!(
-            unwrap_ts_wrappers(test),
-            Expression::Identifier(_) | Expression::StaticMemberExpression(_)
-        )
-    {
+    if depth == 0 {
         return None;
     }
-    let id = u64::from(oxc_span::GetSpan::span(test).start) | (1 << 60);
+    let operand = unwrap_ts_wrappers(test);
+    if let Some(values) = strings(visitor, operand, depth) {
+        return Some(
+            values
+                .into_iter()
+                .filter(|(_, choices)| compatible(choices, constraints))
+                .map(|(text, choices)| boolean(!text.is_empty(), choices))
+                .collect(),
+        );
+    }
+    let (id, truth_arm) = match operand {
+        Expression::Identifier(_) => choice_id(visitor, test, test.span().start),
+        Expression::StaticMemberExpression(_) => (u64::from(test.span().start) | (1 << 60), 1),
+        _ => return None,
+    };
     Some(
-        [false, true]
+        [(false, 1 - truth_arm), (true, truth_arm)]
             .into_iter()
-            .enumerate()
-            .filter_map(|(arm, truth)| {
-                let choices = vec![(id, arm as u32)];
+            .filter_map(|(truth, arm)| {
+                let choices = vec![(id, arm)];
                 compatible(&choices, constraints).then(|| boolean(truth, choices))
             })
             .collect(),

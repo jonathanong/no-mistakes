@@ -119,7 +119,13 @@ reachable version still reports; a malformed independent SQL tail is not made
 valid by mode correlation. This is a bounded proof for supported stable reads,
 not a guarantee about arbitrary runtime objects. Writes to the member, receiver
 escape before the guards, and open `string` types do not establish finite member
-correlation; unknown or reassigned inputs retain conservative alternatives. See
+correlation. Receiver methods, member-valued tags, and escapes from parameter
+initializers also retain conservative alternatives. Direct member reads after
+`await` or `yield` stay conservative; an immutable alias captured before suspension
+keeps its finite value. Unresolved namespace bindings that span declaration blocks
+or can be extended from other files do not fall through to an enclosing finite
+alias. Unknown or reassigned inputs
+remain conservative. See
 [finite SQL alternatives](../postgres-facts/finite-sql-alternatives.md).
 
 Recovery is capped at 16 versions; a missing annotation

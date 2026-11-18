@@ -3,8 +3,16 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::*;
 
+mod parameter_effects;
+pub(super) use parameter_effects::parameter_effects;
 mod writes;
-pub(super) use writes::{ParameterFields, Writes};
+pub(super) use writes::Writes;
+
+pub(super) struct ParameterFields {
+    pub fields: std::collections::HashMap<String, u32>,
+    pub calls: Vec<oxc_span::Span>,
+    pub suspensions: Vec<oxc_span::Span>,
+}
 
 fn origins(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> Vec<(u32, u32)> {
     let Some(Expression::TaggedTemplateExpression(tag)) = call

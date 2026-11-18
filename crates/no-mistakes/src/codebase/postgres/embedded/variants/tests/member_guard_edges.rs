@@ -18,6 +18,12 @@ fn unsupported_parameter_members_keep_all_guard_combinations() {
         "decorated parameter",
         "later block alias shadowing a closed alias",
         "receiver method can mutate the guarded member",
+        "tagged receiver method can mutate the guarded member",
+        "sibling parameter initializer escapes the receiver",
+        "destructured sibling initializer escapes the receiver",
+        "arrow sibling initializer escapes the receiver",
+        "member union above the variant budget",
+        "numeric literal opens a string member union",
     ];
     assert_eq!(calls.len(), cases.len());
 

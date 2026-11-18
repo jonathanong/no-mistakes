@@ -69,6 +69,7 @@ pub(super) fn for_each_bound_identifier<'a>(
 }
 
 pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut ScopeVisitor<'_>) {
+    visitor.record_namespace_types(statements);
     for statement in statements {
         visitor.record_parameter_types(statement);
         match statement {

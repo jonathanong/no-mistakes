@@ -28,6 +28,7 @@ mod frozen_return;
 #[cfg(test)]
 mod member_ownership_tests;
 mod members;
+mod namespace_types;
 mod parameter_members;
 #[cfg(test)]
 mod parent_fields_tests;
@@ -61,14 +62,18 @@ struct Arm {
 #[derive(Default)]
 pub(super) struct ClosedValues {
     frames: Vec<FxHashMap<String, Vec<Arm>>>,
+    type_frames: Vec<FxHashMap<String, Vec<String>>>,
+    namespace_shadows: FxHashMap<u32, std::sync::Arc<crate::fx::FxHashSet<String>>>,
     assertions: FxHashMap<String, crate::codebase::postgres::embedded::SqlIdentifierAssertion>,
 }
 impl ClosedValues {
     pub(super) fn push(&mut self) {
         self.frames.push(FxHashMap::default());
+        self.type_frames.push(FxHashMap::default());
     }
     pub(super) fn pop(&mut self) {
         self.frames.pop();
+        self.type_frames.pop();
     }
     pub(super) fn roots(
         &self,

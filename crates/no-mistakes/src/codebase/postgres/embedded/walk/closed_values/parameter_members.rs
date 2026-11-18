@@ -4,10 +4,6 @@ fn member_key(identity: u32) -> String {
     format!("\0parameter-member:{identity}")
 }
 
-fn alias_key(name: &str) -> String {
-    format!("\0parameter-type:{name}")
-}
-
 fn strings(visitor: &ScopeVisitor<'_>, ty: &TSType<'_>, depth: u8) -> Option<Vec<String>> {
     let depth = depth.checked_sub(1)?;
     match ty {
@@ -29,29 +25,21 @@ fn strings(visitor: &ScopeVisitor<'_>, ty: &TSType<'_>, depth: u8) -> Option<Vec
                     }
                 }
             }
-            (!values.is_empty()).then_some(values)
+            Some(values)
         }
         TSType::TSTypeReference(reference) if reference.type_arguments.is_none() => {
             let TSTypeName::IdentifierReference(name) = &reference.type_name else {
                 return None;
             };
-            let key = alias_key(name.name.as_str());
-            let arms = visitor
+            visitor
                 .literal_objects
                 .closed
-                .frames
+                .type_frames
                 .iter()
                 .rev()
-                .find_map(|frame| frame.get(&key))?;
-            if arms.is_empty() {
-                return None;
-            }
-            arms.iter()
-                .map(|arm| match &arm.node {
-                    Node::Text(text) => Some(text.clone()),
-                    _ => None,
-                })
-                .collect()
+                .find_map(|frame| frame.get(name.name.as_str()))
+                .filter(|values| !values.is_empty())
+                .cloned()
         }
         _ => None,
     }
@@ -76,9 +64,12 @@ impl ScopeVisitor<'_> {
         &mut self,
         name: &str,
     ) {
-        if let Some(frame) = self.literal_objects.closed.frames.last_mut() {
-            frame.insert(alias_key(name), Vec::new());
-        }
+        self.literal_objects
+            .closed
+            .type_frames
+            .last_mut()
+            .expect("closed type scope")
+            .insert(name.to_string(), Vec::new());
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_parameter_type_alias(
@@ -90,15 +81,15 @@ impl ScopeVisitor<'_> {
             .is_none()
             .then(|| super::types::strings(&alias.type_annotation))
             .flatten();
-        let values = values
-            .map(|values| arms(values, alias.id.span.start))
-            .unwrap_or_default();
-        if let Some(frame) = self.literal_objects.closed.frames.last_mut() {
-            frame
-                .entry(alias_key(alias.id.name.as_str()))
-                .and_modify(Vec::clear)
-                .or_insert(values);
-        }
+        let values = values.unwrap_or_default();
+        self.literal_objects
+            .closed
+            .type_frames
+            .last_mut()
+            .expect("closed type scope")
+            .entry(alias.id.name.to_string())
+            .and_modify(Vec::clear)
+            .or_insert(values);
     }
 
     pub(super) fn note_closed_parameter_members(&mut self, param: &FormalParameter<'_>) {
@@ -142,20 +133,19 @@ impl ScopeVisitor<'_> {
             };
             fields.push((member_key(*identity), arms(values, *identity)));
         }
-        if let Some(frame) = self.literal_objects.closed.frames.last_mut() {
-            frame.extend(fields);
-        }
+        self.literal_objects
+            .closed
+            .frames
+            .last_mut()
+            .expect("closed value scope")
+            .extend(fields);
     }
 }
 
 pub(super) fn recover_member(
     visitor: &ScopeVisitor<'_>,
     member: &StaticMemberExpression<'_>,
-    depth: u8,
 ) -> Option<Vec<Arm>> {
-    if depth == 0 || member.optional {
-        return None;
-    }
     let Expression::Identifier(root) = unwrap_ts_wrappers(&member.object) else {
         return None;
     };
@@ -167,6 +157,13 @@ pub(super) fn recover_member(
     let parameter = visitor
         .stable_parameter_fields
         .get(&(binding.value_identity?.get() - 1))?;
+    if parameter
+        .suspensions
+        .iter()
+        .any(|span| span.end <= member.span.start)
+    {
+        return None;
+    }
     let identity = parameter.fields.get(member.property.name.as_str())?;
     visitor
         .literal_objects
