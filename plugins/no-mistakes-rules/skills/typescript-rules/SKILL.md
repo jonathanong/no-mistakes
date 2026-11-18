@@ -27,7 +27,6 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT compare, hash, lock, or cache identities in non-normalized form.
 - MUST NOT reuse one variable, key, or flag across concurrent calls so a later call overwrites an earlier one.
 - MUST NOT add an option without forwarding it through every caller and helper.
-- SHOULD NOT use `delete obj.prop`; build a new object without the key.
 
 ## Static analysis and dead code
 

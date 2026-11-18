@@ -18,11 +18,10 @@ and loads only when that topic comes up.
 | `github-actions-rules` | Pinning, permissions, timeouts, polling, required checks |
 | `dependency-rules` | Manifests, lockfiles, publishing, Dependabot |
 | `security-rules` | Secrets, auth, SSRF, injection, API shape |
-| `git-rules` | Commits, rebases, PRs, docs, evidence |
 | `infra-rules` | Infrastructure as code, runtime, ops scripts, shell |
 | `integrations-rules` | Third-party APIs, webhooks, retries, payload mapping |
 | `rollout-rules` | Feature flags, deploy order, API and message compatibility, tables, services and write paths no entry point reaches |
-| `observability-rules` | Logs, metrics, alerts, context binding |
+| `observability-rules` | Logs, metrics, alerts, context binding, evidence for claims |
 | `native-app-rules` | Swift and .NET apps |
 
 Many rules are enforced by the `no-mistakes` CLI checks and

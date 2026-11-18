@@ -265,7 +265,7 @@ The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 topics (`testing`, `postgresql`, `queue`, `github-actions`) with 14 cases
 between them (`testing` and `github-actions` have three, the others four),
 plus four off-topic guards. Every case
-exposes all 16 plugin skills.
+exposes all installed plugin skills.
 
 - **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
   test, worker, workflow). The prompt never names the rule; breaking one
@@ -289,10 +289,14 @@ they cannot establish a content-score gain. Do not replace cases or add scale
 pressure just to make an unprimed model fail. Keep the same task pressure in
 both arms and retain the content graders as regression checks.
 
-`skill-fired` here checks the specific topic skill among the 16, not whether the
+`skill-fired` here checks the specific topic skill among the installed skills, not whether the
 plugin fired at all.
 
 ### Current trigger comparison
+
+The results below measure the earlier 16-skill inventory. The current plugin
+contains 15 skills after #3587; it has not been re-measured. Cases and graders
+are unchanged. See [history](HISTORY.md).
 
 Measured 2026-11-17 on `77413ee9411801db8de00cb94d2cb348d1e30283`
 (release 0.109.78), Claude plugin eval 2.1.325, Sonnet 5.5 agent and Opus 5.5
