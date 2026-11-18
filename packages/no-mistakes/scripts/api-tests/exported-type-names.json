@@ -334,6 +334,7 @@
   "QueueJobNode",
   "QueueProducer",
   "QueueReport",
+  "QueueWaitFindingKind",
   "QueueWorker",
   "ReactAggregatedFacts",
   "ReactCallsite",
