@@ -411,3 +411,56 @@ test("catalog views expose indexes with the same named contract as tables", () =
     /export interface PostgresCatalogView \{[^}]*indexes\?: Record<string, PostgresCatalogIndex>;/,
   );
 });
+
+test("queue wait finding kinds are public without narrowing other queue findings", () => {
+  const declarations = readFileSync(join(packageRoot, "queue-report-types.d.ts"), "utf8");
+  assert.match(
+    declarations,
+    /export type QueueWaitFindingKind = "enqueue-and-wait" \| "enqueue-and-wait-declaration";/,
+  );
+  assert.match(declarations, /export interface QueueCheckFinding \{\s*kind: string;/);
+  assert.match(
+    readFileSync(join(packageRoot, "report-types.d.ts"), "utf8"),
+    /export \* from "\.\/queue-report-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/report-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
+  );
+});
+
+test("queue wait kinds compile when imported from the package root", { timeout: 20_000 }, () => {
+  const { createRequire } = require("node:module");
+  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+  const ts = dependencyRequire("typescript");
+  const { repositoryRoot } = require("./api-tests/context");
+  const program = ts.createProgram(
+    [join(repositoryRoot, "fixtures", "node-api", "queue-wait-kinds", "public.mts")],
+    {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      baseUrl: repositoryRoot,
+      paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
+      ignoreDeprecations: "6.0",
+    },
+  );
+  assert.deepEqual(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export type \{ QueueWaitFindingKind \} from "\.\/queue-report-types";/,
+  );
+});

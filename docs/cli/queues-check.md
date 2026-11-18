@@ -17,6 +17,7 @@ connected. `check` is empty when the graph is consistent. Findings use these
 | `unmatched-worker-unresolved-producers` | A producer for this handler did not resolve, so the handler is not known to be dead. The message names those producer lines. A producer with neither a resolved queue nor a resolved job is listed on every unmatched worker. |
 | `self-dedup-enqueue` | A processor enqueues its own job on its own queue with `deduplication.id` or `jobId` taken from the active job. The job binding is a parameter named `job`, or otherwise the processor's first parameter: `task.id` / `task.deduplicationId`, or a destructured `{ name, id }`. A nested callback is not that binding unless one of its parameters is named `job`. A local function or `const` callback passed by name is tied to its configured worker even when declared earlier. A copied `const id = task.id` or `const id = task.deduplicationId` remains a job token within its lexical scope, as does a destructured `const { id } = task` or `const { deduplicationId } = task`. A defaulted binding such as `const { deduplicationId: dedup = "fallback" } = task` is not a token. Unrelated values and shadowed parameters do not. A configured enqueue factory does the same check on its `options` argument. The queue drops that add while the job is active. Publish a new id, or enqueue a different job. The same job name on a different queue is not a finding. If the worker queue or the target queue does not resolve, the check abstains and emits a diagnostic. |
 | `enqueue-and-wait` | Waiting on a job result holds a worker or request slot. Return control instead of blocking on the result. The check covers calls to `addAndWait`, `waitUntilFinished`, and explicitly configured wrappers. |
+| `enqueue-and-wait-declaration` | An explicitly matched wait-wrapper declaration is forbidden by `queues.factories.forbidEnqueueAndWaitDeclarations`. Replace it with enqueue-only behavior; the fix hint is included in `message`. Disabled by default. |
 | `debounce-ttl` | `deduplication: { mode: "debounce", ttl }` sets a `ttl` that debounce mode ignores. Remove `ttl`, or use a mode that reads it. |
 | `empty-glob` | A configured `enqueues` or `workers` glob matches no file. Fix the glob or remove it. An empty list still disables that side and is not a finding. |
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
@@ -26,8 +27,21 @@ and literal computed members such as `queue["addAndWait"](...)`. It also
 follows immutable local destructured aliases, such as
 `const { addAndWait: wait } = queue`, after their declarations, when called or passed as direct arguments.
 A captured member such as `const wait = queue.addAndWait` and immutable alias copies are followed too. Passing the member itself, as in `wrap(queue.addAndWait)`, is a finding because the recipient may invoke it. Ordinary property reads, dynamic keys, defaulted destructuring, and mutable or shadowed aliases do not establish a wait.
-Configure exact wrapper call names in `queues.factories.enqueueAndWait` and
-limit the findings with [`projects.<name>.queues.waitScopes`](../configuration/queues.md).
+Exact wrapper names in `queues.factories.enqueueAndWait` use the same
+member, static computed member, import alias, immutable local alias, and
+direct callback-reference handling as the built-in methods. Local aliases
+must be `const` bindings with stable symbols, no writes, and uses after their
+declarations; dynamic keys do not establish a wait.
+
+Configure additional wrapper-name patterns with
+`queues.factories.enqueueAndWaitPatterns` (Rust `regex` syntax; default `[]`).
+Enable `queues.factories.forbidEnqueueAndWaitDeclarations` (default `false`)
+to reject matching wrapper declarations even without a call. Both kinds of
+wait finding respect [`projects.<name>.queues.waitScopes`](../configuration/queues.md).
+For example, replace a forbidden `submitForResult` wrapper with an enqueue-only
+`submit` function and return control to the caller. Fix guidance remains in
+`message`; these options add no JSON fields. With both new options off,
+existing output is preserved except for the expanded exact-wrapper recognition.
 
 Local processor functions declared before `createWorker("jobs", handler)` use
 the same job binding as inline callbacks. A local copy such as

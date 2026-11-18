@@ -25,7 +25,8 @@ mod string_or_list;
 mod tests_config;
 
 pub use queues::{
-    EnqueueFactory, ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, WorkerFactory,
+    EnqueueFactory, ProjectWaitScopes, QueueFactoryRoles, QueueNameFactory, QueueWaitPatterns,
+    WorkerFactory,
 };
 
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};

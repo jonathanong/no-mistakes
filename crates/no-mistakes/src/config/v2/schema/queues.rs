@@ -9,6 +9,8 @@ pub struct QueueFactoryRoles {
     pub enqueue: Vec<EnqueueFactory>,
     pub worker: Vec<WorkerFactory>,
     pub enqueue_and_wait: Vec<String>,
+    pub enqueue_and_wait_patterns: QueueWaitPatterns,
+    pub forbid_enqueue_and_wait_declarations: bool,
     /// Each project's `queues.waitScopes`, prefixed like other project globs.
     /// An empty scope list means every file of that project.
     pub wait_scopes: Vec<ProjectWaitScopes>,
@@ -18,6 +20,9 @@ pub struct QueueFactoryRoles {
 mod wait;
 
 pub use wait::ProjectWaitScopes;
+#[path = "queues_patterns.rs"]
+mod patterns;
+pub use patterns::QueueWaitPatterns;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueueNameFactory {
@@ -41,6 +46,11 @@ pub struct WorkerFactory {
 }
 
 impl QueueFactoryRoles {
+    pub(crate) fn is_wait_wrapper(&self, name: &str) -> bool {
+        self.enqueue_and_wait.iter().any(|item| item == name)
+            || self.enqueue_and_wait_patterns.matches(name)
+    }
+
     pub fn queue_names(&self) -> Vec<String> {
         let mut names = self
             .queue
@@ -70,6 +80,9 @@ impl QueueFactoryRoles {
         self.enqueue.extend(other.enqueue.clone());
         self.worker.extend(other.worker.clone());
         self.enqueue_and_wait.extend(other.enqueue_and_wait.clone());
+        self.enqueue_and_wait_patterns
+            .merge(&other.enqueue_and_wait_patterns)?;
+        self.forbid_enqueue_and_wait_declarations |= other.forbid_enqueue_and_wait_declarations;
         wait::merge(&mut self.wait_scopes, &other.wait_scopes);
         self.dedup_callees();
         Ok(())

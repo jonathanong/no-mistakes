@@ -8,6 +8,7 @@ use std::path::Path;
 
 mod bindings;
 mod helpers;
+mod wait_wrappers;
 mod waits;
 
 pub(super) struct QueueVisitor<'a> {
@@ -52,6 +53,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
+        self.note_wait_variable(decl);
         self.note_variable(decl);
     }
 
@@ -135,6 +137,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
         func: &oxc_ast::ast::Function<'a>,
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
+        self.note_wait_function(func);
         super::extract_factory::visit_function(self, func, flags);
     }
 

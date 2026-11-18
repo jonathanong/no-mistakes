@@ -7,11 +7,16 @@ use std::path::Path;
 
 pub(crate) use crate::queue::extract_model::{FileFacts, ProducerSite, WorkerSite};
 
-pub(crate) fn needs_wait_scoping(source: &str) -> bool {
-    source.contains("const")
-        && (source.contains("addAndWait")
-            || source.contains("waitUntilFinished")
-            || source.contains('\\'))
+pub(crate) fn needs_wait_scoping(
+    source: &str,
+    roles: &crate::config::v2::schema::QueueFactoryRoles,
+) -> bool {
+    !roles.enqueue_and_wait.is_empty()
+        || !roles.enqueue_and_wait_patterns.is_empty()
+        || source.contains("const")
+            && (source.contains("addAndWait")
+                || source.contains("waitUntilFinished")
+                || source.contains('\\'))
 }
 
 pub(crate) fn extract_program_with_scoping(

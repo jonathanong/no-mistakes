@@ -18,7 +18,10 @@ pub(super) fn prepare<'a>(
             &context.root,
             &context.queue_factory_roles.wait_scopes,
         );
-    let semantic = (needs_semantic && record_waits && needs_wait_scoping(source)).then(|| {
+    let semantic = (needs_semantic
+        && record_waits
+        && needs_wait_scoping(source, &context.queue_factory_roles))
+    .then(|| {
         SemanticBuilder::new()
             .with_build_nodes(true)
             .with_check_syntax_error(true)

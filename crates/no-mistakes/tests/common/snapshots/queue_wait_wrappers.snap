@@ -1,0 +1,447 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "ban": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "api/routes/bare-reference.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "registerCallback(enqueueReviewAndWait);"
+        },
+        {
+          "file": "api/routes/callback-reference.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(client.enqueueCrawlUrlAndWait);"
+        },
+        {
+          "file": "api/routes/computed-string.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client[\"enqueueReviewAndWait\"]();"
+        },
+        {
+          "file": "api/routes/computed-template.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client[`enqueueCrawlUrlAndWait`]();"
+        },
+        {
+          "file": "api/routes/const-alias-chain.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "retry();"
+        },
+        {
+          "file": "api/routes/declaration-arrow.ts",
+          "job": null,
+          "kind": "enqueue-and-wait-declaration",
+          "line": 1,
+          "message": "declaring blocking wrapper `enqueueCrawlUrlAndWait` permits waiting across queues; enqueue without waiting and continue from a completion event",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "export const enqueueCrawlUrlAndWait = () => {};"
+        },
+        {
+          "file": "api/routes/declaration-expression.ts",
+          "job": null,
+          "kind": "enqueue-and-wait-declaration",
+          "line": 1,
+          "message": "declaring blocking wrapper `enqueueOtherAndWait` permits waiting across queues; enqueue without waiting and continue from a completion event",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "export const enqueueOtherAndWait = function () {};"
+        },
+        {
+          "file": "api/routes/declaration-function.ts",
+          "job": null,
+          "kind": "enqueue-and-wait-declaration",
+          "line": 1,
+          "message": "declaring blocking wrapper `enqueueReviewAndWait` permits waiting across queues; enqueue without waiting and continue from a completion event",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "export function enqueueReviewAndWait() {}"
+        },
+        {
+          "file": "api/routes/destructured-const.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/direct-const-alias.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/exact-bare.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueueReviewAndWait();"
+        },
+        {
+          "file": "api/routes/exact-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client.enqueueCrawlUrlAndWait();"
+        },
+        {
+          "file": "api/routes/import-alias.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/legacy-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addAndWait();"
+        },
+        {
+          "file": "api/routes/pattern-bare.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueueReportAndWait();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exact": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "api/routes/bare-reference.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "registerCallback(enqueueReviewAndWait);"
+        },
+        {
+          "file": "api/routes/callback-reference.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(client.enqueueCrawlUrlAndWait);"
+        },
+        {
+          "file": "api/routes/computed-string.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client[\"enqueueReviewAndWait\"]();"
+        },
+        {
+          "file": "api/routes/computed-template.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client[`enqueueCrawlUrlAndWait`]();"
+        },
+        {
+          "file": "api/routes/const-alias-chain.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "retry();"
+        },
+        {
+          "file": "api/routes/destructured-const.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/direct-const-alias.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/exact-bare.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueueReviewAndWait();"
+        },
+        {
+          "file": "api/routes/exact-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client.enqueueCrawlUrlAndWait();"
+        },
+        {
+          "file": "api/routes/import-alias.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/legacy-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addAndWait();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "legacy-unconfigured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "api/routes/legacy-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addAndWait();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "patterns": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "api/routes/bare-reference.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "registerCallback(enqueueReviewAndWait);"
+        },
+        {
+          "file": "api/routes/callback-reference.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "run(client.enqueueCrawlUrlAndWait);"
+        },
+        {
+          "file": "api/routes/computed-string.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client[\"enqueueReviewAndWait\"]();"
+        },
+        {
+          "file": "api/routes/computed-template.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client[`enqueueCrawlUrlAndWait`]();"
+        },
+        {
+          "file": "api/routes/const-alias-chain.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 4,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "retry();"
+        },
+        {
+          "file": "api/routes/destructured-const.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/direct-const-alias.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 3,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/exact-bare.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueueReviewAndWait();"
+        },
+        {
+          "file": "api/routes/exact-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "client.enqueueCrawlUrlAndWait();"
+        },
+        {
+          "file": "api/routes/import-alias.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "submit();"
+        },
+        {
+          "file": "api/routes/legacy-member.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "queue.addAndWait();"
+        },
+        {
+          "file": "api/routes/pattern-bare.ts",
+          "job": null,
+          "kind": "enqueue-and-wait",
+          "line": 2,
+          "message": "waiting on a job result holds a worker or request slot across queues",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "enqueueReportAndWait();"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

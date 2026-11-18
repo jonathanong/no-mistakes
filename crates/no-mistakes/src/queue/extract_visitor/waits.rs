@@ -8,8 +8,6 @@ impl<'a> QueueVisitor<'a> {
     pub(super) fn note_wait_call(&mut self, call: &CallExpression<'a>) {
         if self.record_waits
             && (self.wait_value(&call.callee)
-                || matches!(call.callee.get_inner_expression(), Expression::Identifier(id)
-                    if self.roles.enqueue_and_wait.iter().any(|name| name == id.name.as_str()))
                 || call.arguments.iter().any(|arg| {
                     arg.as_expression()
                         .is_some_and(|expression| self.wait_value(expression))
@@ -42,7 +40,7 @@ impl<'a> QueueVisitor<'a> {
                             continue;
                         }
                         if crate::ast::property_key_name(&property.key)
-                            .is_some_and(|name| wait_method(&name))
+                            .is_some_and(|name| self.wait_name(&name))
                         {
                             if let BindingPattern::BindingIdentifier(id) = &property.value {
                                 self.insert_wait_alias(id, declarator.span.end);
@@ -55,7 +53,22 @@ impl<'a> QueueVisitor<'a> {
         }
     }
 
-    fn insert_wait_alias(&mut self, id: &BindingIdentifier<'a>, end: u32) {
+    pub(super) fn note_wait_import(
+        &mut self,
+        id: &BindingIdentifier<'_>,
+        imported: &str,
+        end: u32,
+    ) {
+        if self.record_waits && self.roles.is_wait_wrapper(imported) {
+            self.insert_wait_alias(id, end);
+        }
+    }
+
+    fn wait_name(&self, name: &str) -> bool {
+        wait_method(name) || self.roles.is_wait_wrapper(name)
+    }
+
+    fn insert_wait_alias(&mut self, id: &BindingIdentifier<'_>, end: u32) {
         let Some((scoping, symbol)) = self.scoping.zip(id.symbol_id.get()) else {
             return;
         };
@@ -71,11 +84,12 @@ impl<'a> QueueVisitor<'a> {
     fn wait_value(&self, expression: &Expression<'a>) -> bool {
         match expression.get_inner_expression() {
             Expression::StaticMemberExpression(member) => {
-                wait_method(member.property.name.as_str())
+                self.wait_name(member.property.name.as_str())
             }
             Expression::ComputedMemberExpression(member) => {
-                crate::ast::computed_property_name(member).is_some_and(|name| wait_method(&name))
+                crate::ast::computed_property_name(member).is_some_and(|name| self.wait_name(&name))
             }
+            Expression::Identifier(id) if self.roles.is_wait_wrapper(id.name.as_str()) => true,
             Expression::Identifier(id) => self
                 .scoping
                 .zip(id.reference_id.get())
