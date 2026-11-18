@@ -23,7 +23,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/actions/tool/action.yml",
           "line": 7,
-          "message": ".github/actions/tool/action.yml:7: job `composite` step 2 downloads `https://downloads.example.com/inline` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/actions/tool/action.yml:7: job `composite` step 2 downloads `https://downloads.example.com/inline` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "run: curl https://downloads.example.com/inline -o inline",
           "target": "composite"
@@ -44,7 +44,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/actions/tool/action.yml",
           "line": 7,
-          "message": ".github/actions/tool/action.yml:7: job `composite` step 2 downloads `https://downloads.example.com/inline` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/actions/tool/action.yml:7: job `composite` step 2 downloads `https://downloads.example.com/inline` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "run: curl https://downloads.example.com/inline -o inline",
           "target": "composite"
@@ -52,7 +52,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/actions/tool/install.sh",
           "line": 2,
-          "message": ".github/actions/tool/install.sh:2: shell script downloads `https://downloads.example.com/tool` with `curl` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/actions/tool/install.sh:2: shell script downloads `https://downloads.example.com/tool` with `curl` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl -fsSL https://downloads.example.com/tool -o tool",
           "target": "shell"
@@ -60,7 +60,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/scripts/install.sh",
           "line": 2,
-          "message": ".github/workflows/scripts/install.sh:2: shell script downloads `https://downloads.example.com/workflow-tool` with `wget` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/workflows/scripts/install.sh:2: shell script downloads `https://downloads.example.com/workflow-tool` with `wget` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "wget https://downloads.example.com/workflow-tool -O workflow-tool",
           "target": "shell"
@@ -81,7 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/actions/tool/action.yml",
           "line": 7,
-          "message": ".github/actions/tool/action.yml:7: job `composite` step 2 downloads `https://downloads.example.com/inline` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/actions/tool/action.yml:7: job `composite` step 2 downloads `https://downloads.example.com/inline` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "run: curl https://downloads.example.com/inline -o inline",
           "target": "composite"
@@ -97,7 +97,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/actions/tool/install.sh",
           "line": 2,
-          "message": ".github/actions/tool/install.sh:2: shell script downloads `https://downloads.example.com/tool` with `curl` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/actions/tool/install.sh:2: shell script downloads `https://downloads.example.com/tool` with `curl` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl -fsSL https://downloads.example.com/tool -o tool",
           "target": "shell"
@@ -105,7 +105,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/scripts/install.sh",
           "line": 2,
-          "message": ".github/workflows/scripts/install.sh:2: shell script downloads `https://downloads.example.com/workflow-tool` with `wget` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/workflows/scripts/install.sh:2: shell script downloads `https://downloads.example.com/workflow-tool` with `wget` and does not verify the bytes in this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "wget https://downloads.example.com/workflow-tool -O workflow-tool",
           "target": "shell"

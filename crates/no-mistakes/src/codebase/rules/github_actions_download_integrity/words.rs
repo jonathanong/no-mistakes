@@ -8,6 +8,8 @@ pub(super) struct Word {
 }
 
 pub(super) struct Command {
+    // The preceding separator's character offset plus one, or zero at script start.
+    pub(super) anchor: usize,
     pub(super) dynamic: bool,
     pub(super) words: Vec<Word>,
 }
@@ -97,9 +99,11 @@ fn flush_word(
 
 fn flush_command(current: &mut Command, commands: &mut Vec<Command>) {
     if current.dynamic || !current.words.is_empty() {
+        let anchor = current.anchor;
         commands.push(std::mem::replace(
             current,
             Command {
+                anchor,
                 dynamic: false,
                 words: Vec::new(),
             },

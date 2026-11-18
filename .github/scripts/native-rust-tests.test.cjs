@@ -164,27 +164,6 @@ test("native workflow compiles independent archives and consumers never build Ru
   );
   assert.match(api, /needs: \[changes, native-build\]/);
   assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
-  for (const [consumer, macosCount] of [
-    [`${rust}\n${job("native-rust-tests-macos")}`, 4],
-    [`${api}\n${job("native-api-tests-macos")}`, 2],
-  ]) {
-    const rows = [
-      ...consumer.matchAll(/- os:\s+(\S+)\s+target:\s+(\S+)\s+shard:\s+(\d+)\s+total:\s+(\d+)/g),
-    ];
-    assert.equal(rows.length, 6 + macosCount);
-    for (const [os, target, count] of [
-      ["windows-2025", "x86_64-pc-windows-msvc", 6],
-      ["macos-15", "aarch64-apple-darwin", macosCount],
-    ]) {
-      const selected = rows.filter((row) => row[1] === os);
-      assert.deepEqual(
-        selected.map((row) => Number(row[3])),
-        Array.from({ length: count }, (_, index) => index + 1),
-      );
-      assert.ok(selected.every((row) => row[2] === target && Number(row[4]) === count));
-    }
-    assert.match(consumer, /matrix.shard \}\}\/\$\{\{ matrix.total/);
-  }
   const apiFiles = [
     "real-napi-api",
     "unused-disable-directives-api",

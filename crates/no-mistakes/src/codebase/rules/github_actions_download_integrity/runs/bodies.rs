@@ -121,7 +121,8 @@ fn windows_runner(labels: &Value) -> bool {
         let label = label.to_ascii_lowercase();
         return label == "windows" || label.starts_with("windows-");
     }
-    labels
-        .as_sequence()
-        .is_some_and(|labels| labels.iter().any(windows_runner))
+    if let Some(labels) = labels.as_sequence() {
+        return labels.iter().any(windows_runner);
+    }
+    labels.get("labels").is_some_and(windows_runner)
 }

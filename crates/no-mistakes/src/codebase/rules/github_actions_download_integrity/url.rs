@@ -117,19 +117,26 @@ fn skip_line(line: &str) -> bool {
 
 fn unquoted_hash(line: &str) -> Option<&str> {
     let mut quote = None;
+    let mut escaped = false;
+    let mut starts_word = true;
     for (index, ch) in line.char_indices() {
-        if let Some(active) = quote {
+        if std::mem::take(&mut escaped) {
+            continue;
+        }
+        if ch == '\\' && quote != Some('\'') {
+            escaped = true;
+            starts_word = false;
+        } else if let Some(active) = quote {
             if ch == active {
                 quote = None;
             }
-            continue;
-        }
-        if ch == '"' || ch == '\'' {
+        } else if matches!(ch, '"' | '\'') {
             quote = Some(ch);
-            continue;
-        }
-        if ch == '#' {
+            starts_word = false;
+        } else if ch == '#' && starts_word {
             return Some(&line[index + 1..]);
+        } else {
+            starts_word = ch.is_whitespace() || ";&|()<>".contains(ch);
         }
     }
     None

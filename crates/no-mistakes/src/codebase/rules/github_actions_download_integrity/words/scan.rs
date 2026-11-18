@@ -33,6 +33,7 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
         word_quoted_expansion: None,
         quoting: None,
         current: Command {
+            anchor: 0,
             dynamic: false,
             words: Vec::new(),
         },
@@ -121,6 +122,7 @@ impl<'a> Scan<'a> {
             Some(heredoc::Look::Document { index, opener }) => {
                 self.flush_word();
                 flush_command(&mut self.current, &mut self.commands);
+                self.current.anchor = self.index + 1;
                 self.pending = Some(opener);
                 self.index = index;
                 true
@@ -136,7 +138,7 @@ impl<'a> Scan<'a> {
             && self
                 .index
                 .checked_sub(1)
-                .is_none_or(|prev| !matches!(self.chars[prev], '>' | '<'))
+                .is_none_or(|prev| !matches!(self.chars[prev], '>' | '<') || self.escaped_at(prev))
             && self.chars.get(self.index + 1) != Some(&'>')
             && !self.escaped();
         if !matches!(ch, '\n' | ';' | '|') && !double_ampersand && !background {
@@ -144,6 +146,7 @@ impl<'a> Scan<'a> {
         }
         self.flush_word();
         flush_command(&mut self.current, &mut self.commands);
+        self.current.anchor = self.index + 1;
         if ch == '\n' {
             if let Some(opener) = self.pending.take() {
                 let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);

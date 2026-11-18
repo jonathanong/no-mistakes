@@ -7,7 +7,7 @@ use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 
 pub(super) fn expand_uppercase(script: &str) -> String {
-    prepare_max_script(script).unwrap_or_else(|| script.to_owned())
+    prepare_max_script(script).map_or_else(|| script.to_owned(), |rewrite| rewrite.text)
 }
 
 pub(super) fn download_hits(script: &str, helpers: &[String]) -> Vec<Hit> {

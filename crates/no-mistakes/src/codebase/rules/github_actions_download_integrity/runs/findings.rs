@@ -47,7 +47,7 @@ fn finding(
             "in this step"
         };
         format!(
-            "downloads `{url}` with `{command}` and does not verify the bytes {when}. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`."
+            "downloads `{url}` with `{command}` and does not verify the bytes {when}. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`."
         )
     };
     RuleFinding {

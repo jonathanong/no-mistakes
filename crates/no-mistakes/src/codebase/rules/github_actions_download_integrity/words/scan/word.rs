@@ -47,7 +47,9 @@ impl Scan<'_> {
         if ch != '$' || !matches!(self.chars.get(self.index + 1), Some(&'(' | &'{')) {
             return false;
         }
-        self.current.dynamic = true;
+        self.current.dynamic |= self.chars[self.index + 1] == '('
+            || self.quoting != Some('"')
+            || self.word_quoted_expansion.is_none();
         if self.word.is_empty() {
             self.word_line = self.line;
         }
@@ -56,7 +58,11 @@ impl Scan<'_> {
     }
 
     pub(super) fn escaped(&self) -> bool {
-        self.chars[..self.index]
+        self.escaped_at(self.index)
+    }
+
+    pub(super) fn escaped_at(&self, index: usize) -> bool {
+        self.chars[..index]
             .iter()
             .rev()
             .take_while(|character| **character == '\\')

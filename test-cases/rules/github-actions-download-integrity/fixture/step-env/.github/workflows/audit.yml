@@ -72,6 +72,61 @@ jobs:
         shell: bash
         run: curl "$TOOL_URL" -o tool
       - run: "curl -fsSL \\\r\nhttps://downloads.example.com/crlf -o tool"
+      - env:
+          TOOL_URL: https://downloads.example.com/read-only-label
+        run: |
+          echo TOOL_URL
+          echo TOOL_URL=x
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/printf-target
+        run: |
+          printf -v TOOL_URL '%s' https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/dynamic-printf-target
+        run: |
+          name=TOOL_URL
+          printf -v "$name" '%s' https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/unrelated-printf-target
+          OTHER_URL: https://downloads.example.com/overwritten-by-printf
+        run: |
+          printf -v OTHER_URL '%s' https://api.github.com/tool
+          curl "$OTHER_URL" -o other
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/attached-printf-target
+        run: |
+          printf -vTOOL_URL '%s' https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/read-target
+        run: |
+          read -r -pPrompt TOOL_URL
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/read-prompt
+        run: |
+          read -r -p TOOL_URL unrelated
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/unset-target
+        run: |
+          unset -v TOOL_URL
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/loop-target
+        run: |
+          for TOOL_URL in https://api.github.com/tool; do :; done
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/nameref-target
+        run: |
+          declare -n ref=TOOL_URL
+          ref=https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
   powershell:
     runs-on: ubuntu-latest
     defaults:
@@ -90,4 +145,23 @@ jobs:
       - env:
           TOOL_URL: https://downloads.example.com/explicit-bash-on-windows
         shell: bash
+        run: curl "$TOOL_URL" -o tool
+  windows-runner-group:
+    runs-on:
+      group: build-runners
+      labels: [self-hosted, Windows]
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/windows-mapped-labels
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/bash-on-windows-mapped-labels
+        shell: bash
+        run: curl "$TOOL_URL" -o tool
+  windows-runner-label:
+    runs-on:
+      labels: windows-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/windows-mapped-label
         run: curl "$TOOL_URL" -o tool

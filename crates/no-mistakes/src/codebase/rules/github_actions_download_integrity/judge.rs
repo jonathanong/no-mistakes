@@ -34,8 +34,8 @@ pub(super) fn scan_script(
     let env = env
         .filter(|env| !low && !env.is_empty())
         .and_then(|env| UrlBindings::new(env, script, &raw));
-    let (parsed, original) = match expanded {
-        Some(expanded) => (words::parse_ordered(&expanded, strict), Some(raw)),
+    let (parsed, original) = match &expanded {
+        Some(expanded) => (words::parse_ordered(&expanded.text, strict), Some(raw)),
         None => (raw, None),
     };
     if parsed.unterminated_heredoc {
@@ -44,12 +44,18 @@ pub(super) fn scan_script(
     let mut hits = Vec::new();
     let binding = OnceCell::new();
     let mut pending_start = 0;
-    let command_count = parsed.commands.len();
-    for (index, mut command) in parsed.commands.into_iter().enumerate() {
-        let original_command = match &original {
-            Some(raw) if raw.commands.len() == command_count => raw.commands.get(index),
-            Some(_) => None,
-            None => Some(&command),
+    for mut command in parsed.commands {
+        let original_command = match (&expanded, &original) {
+            (Some(expanded), Some(raw)) => {
+                expanded.original_anchor(command.anchor).and_then(|anchor| {
+                    let index = raw
+                        .commands
+                        .binary_search_by_key(&anchor, |command| command.anchor)
+                        .ok()?;
+                    raw.commands.get(index)
+                })
+            }
+            _ => Some(&command),
         };
         if strict
             && original_command.is_some_and(verify::command_verifies)
@@ -95,6 +101,9 @@ pub(super) fn scan_script(
                     }
                 });
             if let Some((word, url)) = unknown {
+                if strict {
+                    pending_start = hits.len();
+                }
                 hits.push(Hit {
                     url: url.to_string(),
                     line: word.line,
@@ -112,6 +121,9 @@ pub(super) fn scan_script(
             }
             let url = env.and_then(|env| env.resolve(word, url)).unwrap_or(url);
             let Some(parsed) = url::http_url(url) else {
+                if strict && dynamic(url) {
+                    pending_start = next_pending;
+                }
                 continue;
             };
             if parsed.checksum {

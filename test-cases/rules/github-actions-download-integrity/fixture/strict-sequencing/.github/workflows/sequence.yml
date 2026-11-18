@@ -36,3 +36,47 @@ jobs:
           curl https://downloads.example.com/before-check-alias -o tool
           "$CHECK" -c tool.sha256
       - run: curl https://downloads.example.com/background -o tool & curl https://downloads.example.com/foreground -o next; sha256sum -c next.sha256
+      - run: |
+          curl https://downloads.example.com/before-dynamic -o first
+          curl "$SECOND_URL" -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/before-mixed -o first
+          curl -- "$SECOND_URL" https://downloads.example.com/mixed -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/before-dynamic-host -o first
+          curl "https://${DOWNLOAD_HOST}/second" -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/escaped-redirection -o file\>& curl https://downloads.example.com/foreground -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/redirection-ok -o first 2>&1
+          sha256sum -c first.sha256 2>&1
+      - run: |
+          curl https://downloads.example.com/quoted-checksum -o first
+          sha256sum -c "${ARTIFACT}.sha256"
+      - run: |
+          curl https://downloads.example.com/command-substitution-checksum -o first
+          sha256sum -c "$(choose_checksum)"
+      - run: |
+          curl https://downloads.example.com/backtick-checksum -o first
+          sha256sum -c "`choose_checksum`"
+      - run: |
+          echo note# integrity-check: skip reason=not-a-comment
+          curl https://downloads.example.com/comment-word -o first
+      - run: |
+          echo note # integrity-check: skip reason=real-comment
+          curl https://downloads.example.com/comment-skips -o first
+      - run: |
+          NOTE='a;b'
+          echo $NOTE; curl https://downloads.example.com/preserved-check -o first; sha256sum -c first.sha256
+      - run: |
+          NOTE='a;sha256sum -c first.sha256'
+          curl https://downloads.example.com/injected-check -o first; echo $NOTE
+      - env:
+          TOOL_URL: https://downloads.example.com/preserved-env
+        run: |
+          NOTE='a;b'
+          echo $NOTE; curl "${TOOL_URL}" -o first

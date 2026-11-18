@@ -108,14 +108,17 @@ policy you intend to enforce; the scanner reads source and never executes it.
 Selected scripts use the same host, checksum, helper, and suppression policy
 as inline scripts, with findings on the script’s own lines. A reasoned
 `# integrity-check: skip reason=<slug>` anywhere in a selected shell source
-skips that source’s downloads.
+skips that source’s downloads. The `#` must begin a shell comment at a word
+boundary; `echo note# integrity-check: skip reason=fixture` is an ordinary
+argument and does not skip analysis.
 
 `strictSequencing` defaults to `false`. The default accepts a supported checksum
-command anywhere in the same script. When enabled, each untrusted non-checksum download
-must have a supported checksum command after it and before the next unrelated
-non-checksum download command, including one from a trusted host. Downloading a checksum sidecar does not interrupt that
-window. This is a lexical ordering check, not shell control-flow or proof that
-the checksum file describes the downloaded bytes. Multiple URLs in one
+command anywhere in the same script. When enabled, each untrusted non-checksum
+download must have a supported checksum command after it and before the next unrelated
+non-checksum download command, including one from a trusted host. Downloading a
+checksum sidecar does not interrupt that window. An unresolved dynamic download candidate also closes the window; only
+a proven checksum sidecar keeps it open. This is a lexical ordering check, not
+shell control-flow or proof that the checksum file describes the downloaded bytes. Multiple URLs in one
 downloader command share one verification window.
 
 ```yaml
@@ -311,7 +314,7 @@ jobs:
 literal `BASE_URL="https://example.invalid/base"` followed by `curl "$BASE_URL/tool.tgz"`
 is the same download. Two assignments, or `BASE_URL="$(...)"`, are not expanded.
 
-A checksum check whose arguments contain command substitution (`$(...)` or backticks), including inside double quotes, cannot establish static integrity verification. Use a literal checksum file or another statically analyzable check. Single-quoted substitution text is literal.
+A checksum check whose arguments contain command substitution (`$(...)` or backticks), including inside double quotes, cannot establish static integrity verification. Quoted parameter references such as `"${ARTIFACT}.sha256"` remain supported. Use a literal checksum file or another statically analyzable check. Single-quoted substitution text is literal.
 
 ## Suppression
 
