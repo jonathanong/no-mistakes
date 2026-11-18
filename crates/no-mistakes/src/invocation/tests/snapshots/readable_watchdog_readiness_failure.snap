@@ -1,0 +1,8 @@
+---
+source: crates/no-mistakes/src/invocation/tests/progress.rs
+expression: normalized
+---
+helper must publish readiness before arming its watchdog: channel is empty and sending half is closed
+mode=progress elapsed_ms=<elapsed> readiness=None acknowledgement=None
+child stderr:
+helper exited before emitting a progress snapshot
