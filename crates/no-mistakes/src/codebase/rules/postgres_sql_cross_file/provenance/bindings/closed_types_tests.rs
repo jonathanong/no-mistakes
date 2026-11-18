@@ -189,3 +189,6 @@ fn parameter(name: &str, type_reference: Option<ValueType>) -> ValueParameter {
         type_reference,
     }
 }
+
+#[path = "finite_tuple_contract_tests.rs"]
+mod finite_tuple_contract;
