@@ -12,8 +12,11 @@ declare const unchecked: any;
 declare const unknownCheck: unknown;
 declare const unionCheck: ((value: unknown) => asserts value) | ((value: Input) => asserts value);
 
-declare function overloaded(value: unknown): asserts value;
-declare function overloaded(value: unknown, code: number): asserts value;
+function overloaded(value: unknown): asserts value;
+function overloaded(value: unknown, code: number): asserts value;
+function overloaded(value: unknown, code?: number): asserts value {
+  (value as Input).id = "changed";
+}
 
 declare function rebound(value: unknown): asserts value;
 rebound = writeInAssertion;

@@ -465,15 +465,25 @@ run(0 ?? read, account);
   position where the object is passed directly. Ambient declarations are
   trusted as typed contracts. Visible implementations must use only simple
   guards, throws, and bare returns; calls, writes, and captures are unproven.
+  Guards can check the parameter itself, such as `if (!value)`, but cannot read
+  object fields. A field check such as `typeof value.id !== "string"` remains
+  unproven even when TypeScript narrows the object; optional fields also fail
+  the ordinary reader proof. A built-in `Error` constructor must remain
+  unchanged in both the assertion module and its caller.
+  Overloaded assertions qualify only when every call signature asserts the
+  same argument position. A visible implementation must still pass the body
+  proof, and mixed assertion/boolean overloads remain unproven.
   An assertion about another argument, an ordinary boolean return, `any`, or
-  `unknown` does not establish
-  this proof. Passing the same object again in another argument remains
+  `unknown` does not establish this proof. Passing the same object again in
+  another argument remains
   unproven. Other arguments must satisfy the side-effect-free scalar checks
   above. Assertions do not widen the caller-side projection contract: every
   caller union member must still provide the required scalar field.
 - `nonWritingCallees` defaults to `[]`. Each entry has `module` and `export`;
   use `export: "default"` for a default import or the exported name for a
-  named import. Matching uses the exact import binding, never the local name.
+  named import. Stable function declarations and `const` function initializers
+  are supported. Matching uses the exact import binding, never the local name;
+  type-only import or re-export paths cannot prove a runtime callee.
   A shadowed binding or an import from another module does not match.
   This is an explicit trust boundary: configure only functions you trust not
   to mutate, retain, or capture the directly passed object. A configured
@@ -594,10 +604,11 @@ function load(notice: Notice | undefined) {
 }
 ```
 
-Here the assertion export has an `asserts value` signature. The type at
-`notice.id` must narrow to `Notice`; the wider input annotation alone cannot
-prove that projection. A signature `asserts value is Notice` can similarly
-narrow to the required data shape. A cast is not a substitute, and a subsequent
+Here the assertion export has an `asserts value` signature. At `notice.id`,
+the receiver `notice` must narrow from `Notice | undefined` to `Notice`.
+The rule then checks that `id` is a required scalar field, with type `string`;
+the wider input annotation alone cannot prove that projection. A signature
+`asserts value is Notice` can similarly narrow to the required data shape. A cast is not a substitute, and a subsequent
 write or escape invalidates the proof. A configured helper returning `void` or
 boolean preserves the non-writing contract but supplies no TypeScript narrowing
 itself.

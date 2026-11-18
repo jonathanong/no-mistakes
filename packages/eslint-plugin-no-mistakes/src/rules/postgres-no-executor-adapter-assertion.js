@@ -3,80 +3,12 @@
 const { safeOtherArguments } = require("./postgres-no-executor-adapter-nonwriting-arguments");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 
-function writtenNamespaces(writes, checker, ts, facts) {
-  const cache = (facts.writtenAssertionNamespaces ??= new WeakMap());
-  if (cache.has(writes)) return cache.get(writes);
-  const modules = new Set();
-  for (const symbol of writes.symbols) {
-    if (
-      symbol.flags & ts.SymbolFlags.Alias &&
-      symbol.declarations?.length === 1 &&
-      ts.isNamespaceImport(symbol.declarations[0])
-    )
-      modules.add(checker.getImmediateAliasedSymbol(symbol));
-  }
-  cache.set(writes, modules);
-  return modules;
-}
+const {
+  stableCallSignature,
+  assertionDeclaration,
+} = require("./postgres-no-executor-adapter-assertion-target");
 
-function stableTarget(symbol, callerWrites, checker, ts, facts, program) {
-  const seen = new Set();
-  while (symbol?.declarations?.length === 1 && !seen.has(symbol)) {
-    seen.add(symbol);
-    const declaration = symbol.declarations[0];
-    if (ts.isTypeOnlyImportOrExportDeclaration(declaration)) return null;
-    const source = declaration.getSourceFile();
-    const writes = sourceWrites(source, checker, facts, program);
-    const module = checker.getSymbolAtLocation(source);
-    if (
-      writes.eval ||
-      writes.symbols.has(symbol) ||
-      writes.declarations.has(declaration) ||
-      callerWrites.symbols.has(symbol) ||
-      callerWrites.declarations.has(declaration) ||
-      (module &&
-        (writtenNamespaces(callerWrites, checker, ts, facts).has(module) ||
-          writtenNamespaces(writes, checker, ts, facts).has(module)))
-    )
-      return null;
-    if (!(symbol.flags & ts.SymbolFlags.Alias)) return declaration;
-    symbol = checker.getImmediateAliasedSymbol(symbol);
-  }
-  return null;
-}
-
-function stableCallSignature(call, checker, ts, facts, program) {
-  const callee = call.expression;
-  if (
-    !ts.isIdentifier(callee) ||
-    call.questionDotToken ||
-    call.arguments.some((value) => ts.isSpreadElement(value))
-  )
-    return null;
-  const callerWrites = sourceWrites(call.getSourceFile(), checker, facts, program);
-  if (callerWrites.eval) return null;
-
-  const type = checker.getTypeAtLocation(callee);
-  if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Union)) return null;
-  const signatures = checker.getSignaturesOfType(type, ts.SignatureKind.Call);
-  if (signatures.length !== 1) return null;
-  const signature = checker.getResolvedSignature(call);
-  const declaration = signature?.getDeclaration();
-  if (
-    !declaration ||
-    signatures[0].getDeclaration() !== declaration ||
-    !ts.isFunctionDeclaration(declaration) ||
-    declaration.asteriskToken ||
-    declaration.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
-  )
-    return null;
-  const symbol = checker.getSymbolAtLocation(callee);
-  return stableTarget(symbol, callerWrites, checker, ts, facts, program) === declaration
-    ? signature
-    : null;
-}
-
-function nonWritingAssertionBody(declaration, checker, ts, facts, program) {
+function nonWritingAssertionBody(declaration, checker, ts, facts, program, constructors) {
   if (!declaration.body)
     return (
       declaration.getSourceFile().isDeclarationFile ||
@@ -132,6 +64,7 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program) {
     )
       return false;
     const symbol = checker.getSymbolAtLocation(node.expression);
+    constructors.add(symbol);
     return Boolean(
       symbol?.declarations?.length &&
       !writes.symbols.has(symbol) &&
@@ -158,7 +91,7 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program) {
 }
 
 function tsAssertionArgument(call, index, checker, ts, facts, program) {
-  const signature = stableCallSignature(call, checker, ts, facts, program);
+  const signature = stableCallSignature(call, checker, ts, facts, program, index);
   if (!signature) return false;
   const predicate = checker.getTypePredicateOfSignature(signature);
   if (
@@ -167,11 +100,23 @@ function tsAssertionArgument(call, index, checker, ts, facts, program) {
     !safeOtherArguments(call, index, checker, ts, facts, program)
   )
     return false;
-  const declaration = signature.getDeclaration();
+  const declaration = assertionDeclaration(signature, checker, ts);
   const bodies = (facts.nonWritingAssertionBodies ??= new WeakMap());
-  if (!bodies.has(declaration))
-    bodies.set(declaration, nonWritingAssertionBody(declaration, checker, ts, facts, program));
-  return bodies.get(declaration);
+  if (!bodies.has(declaration)) {
+    const constructors = new Set();
+    const safe = nonWritingAssertionBody(declaration, checker, ts, facts, program, constructors);
+    bodies.set(declaration, { safe, constructors });
+  }
+  const proof = bodies.get(declaration);
+  const writes = sourceWrites(call.getSourceFile(), checker, facts, program);
+  return (
+    proof.safe &&
+    [...proof.constructors].every(
+      (symbol) =>
+        !writes.symbols.has(symbol) &&
+        symbol.declarations.every((entry) => !writes.declarations.has(entry)),
+    )
+  );
 }
 
 module.exports = { stableCallSignature, tsAssertionArgument };

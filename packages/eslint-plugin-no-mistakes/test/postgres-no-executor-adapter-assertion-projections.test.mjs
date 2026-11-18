@@ -21,6 +21,8 @@ const options = {
 };
 const nonWritingCallees = [
   { module: "@example/assertions", export: "default" },
+  { module: "@example/arrow-assertions", export: "checkArrow" },
+  { module: "@example/arrow-assertions", export: "checkFunction" },
   { module: "@example/assertions", export: "namedCheck" },
   { module: "@example/assertions", export: "unchecked" },
   { module: "@example/assertions", export: "unknownCheck" },
@@ -61,6 +63,9 @@ it("preserves forwarding-only projections through stable assertions and configur
       testCase("negative.ts", "all"),
       testCase("guard-proofs.ts", "forwarding-only"),
       testCase("configured-direct-named.ts", "forwarding-only", { configured: true }),
+      testCase("overload-proofs.ts", "forwarding-only"),
+      testCase("configured-arrow.ts", "forwarding-only", { configured: true }),
+      testCase("error-clean.ts", "forwarding-only"),
     ],
     invalid: [
       testCase("configured.ts", "forwarding-only"),
@@ -75,10 +80,16 @@ it("preserves forwarding-only projections through stable assertions and configur
       testCase("configured-reassignment.ts", "forwarding-only", { configured: true }),
       testCase("guard-controls.ts", "forwarding-only"),
       testCase("configured-type-only.ts", "forwarding-only", { configured: true }),
+      testCase("overload-controls.ts", "forwarding-only"),
+      testCase("overload-namespace-write.ts", "forwarding-only"),
+      testCase("type-only-star-control.ts", "forwarding-only"),
+      testCase("configured-arrow.ts", "forwarding-only"),
+      testCase("error-direct-write.ts", "forwarding-only"),
+      testCase("error-property-write.ts", "forwarding-only"),
     ],
   });
   expect(rows.map((row) => row.findings.length)).toEqual([
-    0, 0, 0, 0, 0, 0, 2, 2, 2, 17, 2, 1, 1, 4, 8, 2, 12, 2,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 17, 2, 1, 1, 4, 8, 2, 12, 2, 5, 2, 1, 2, 1, 1,
   ]);
   const mutationFindings = languageOptionsFindings({
     ...testCase("negative.ts", "forwarding-only"),
@@ -86,7 +97,8 @@ it("preserves forwarding-only projections through stable assertions and configur
     rule: "no-object-mutation",
   });
   expect(mutationFindings.map(({ line, ruleId }) => [line, ruleId])).toEqual([
-    [29, "no-mistakes/no-object-mutation"],
+    [18, "no-mistakes/no-object-mutation"],
+    [32, "no-mistakes/no-object-mutation"],
   ]);
   const negativeRow = rows.find(
     (row) => row.kind === "invalid" && row.file.endsWith("/negative.ts"),

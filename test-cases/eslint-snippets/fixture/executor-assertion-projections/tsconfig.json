@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
     "strict": true,
+    "esModuleInterop": true,
     "target": "ES2022",
     "paths": {
+      "@example/guard-overloads": ["./guard-overloads.d.ts"],
+      "@example/arrow-assertions": ["./configured-arrow-helpers.ts"],
       "@example/db": ["./db.ts"],
       "@example/sql": ["./sql.ts"],
       "@example/assertions": ["./configured-helpers.d.ts"],
