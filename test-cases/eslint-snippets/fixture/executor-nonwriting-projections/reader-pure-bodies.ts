@@ -42,3 +42,15 @@ export function acceptsTypeCheck(input: Input) {
   typedReader(input);
   return byId(read, input.id);
 }
+
+export function projectionAfterScalarParameter(input: Input, score: number) {
+  matchesThreshold(input, score, null);
+  return byId(read, input.id);
+}
+
+export function projectionAfterScalarAlias(input: Input) {
+  const base = 1;
+  const score = base;
+  matchesThreshold(input, (score as number), null);
+  return byId(read, input.id);
+}

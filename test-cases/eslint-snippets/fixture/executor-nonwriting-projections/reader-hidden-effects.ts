@@ -59,3 +59,26 @@ export function acceptsLocalScalarLogic(input: Input) {
   pureReader(input, 1);
   return byId(read, input.id);
 }
+
+function checksEnabled(input: Input, enabled: boolean) {
+  return enabled && input.id !== "";
+}
+
+function changesSharedInput() {
+  shared.id = "changed";
+  return true;
+}
+
+function byEffectfulArgument(input: Input) {
+  checksEnabled(input, changesSharedInput());
+  return byId(read, input.id);
+}
+
+function byGetterArgument(input: Input) {
+  checksEnabled(input, box.flag);
+  return byId(read, input.id);
+}
+
+export function runWithEffectfulArguments() {
+  return [byEffectfulArgument(shared), byGetterArgument(shared)];
+}

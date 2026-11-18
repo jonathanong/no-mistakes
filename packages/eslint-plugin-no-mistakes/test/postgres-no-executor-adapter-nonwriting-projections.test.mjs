@@ -60,6 +60,7 @@ it("snapshots nonwriting projection boundaries and mode controls", async () => {
       testCase("reader-boundaries.ts", "all"),
       testCase("reader-hidden-effects.ts", "all"),
       testCase("reader-unsupported-bodies.ts", "all"),
+      testCase("reader-argument-boundaries.ts", "all"),
     ],
     invalid: [
       testCase("negative.ts", "forwarding-only"),
@@ -68,11 +69,12 @@ it("snapshots nonwriting projection boundaries and mode controls", async () => {
       testCase("reader-boundaries.ts", "forwarding-only"),
       testCase("reader-hidden-effects.ts", "forwarding-only"),
       testCase("reader-unsupported-bodies.ts", "forwarding-only"),
+      testCase("reader-argument-boundaries.ts", "forwarding-only"),
     ],
   };
   const rows = snapshotSuite(rule, languageOptions, suite);
   expect(rows.map((row) => row.findings.length)).toEqual([
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 2, 3, 22, 3, 9,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 2, 3, 22, 5, 9, 7,
   ]);
   const hiddenEffects = rows.find(
     (row) => row.kind === "invalid" && row.file.endsWith("/reader-hidden-effects.ts"),
@@ -81,6 +83,8 @@ it("snapshots nonwriting projection boundaries and mode controls", async () => {
     [35, "passed"],
     [40, "passed"],
     [45, "passed"],
+    [74, "passed"],
+    [79, "passed"],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-nonwriting-projections.snap",

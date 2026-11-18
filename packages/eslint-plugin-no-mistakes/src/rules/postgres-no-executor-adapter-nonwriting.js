@@ -1,5 +1,7 @@
 "use strict";
 
+const { safeOtherArguments } = require("./postgres-no-executor-adapter-nonwriting-arguments");
+
 const { pureReaderBody } = require("./postgres-no-executor-adapter-nonwriting-body");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
@@ -93,7 +95,7 @@ function tsNonWritingArgument(call, index, checker, ts, facts, program) {
   while (ts.isParenthesizedExpression(argument)) argument = argument.expression;
   if (!ts.isIdentifier(argument)) return false;
   const declaration = directTarget(call, checker, ts, facts, program);
-  if (!declaration) return false;
+  if (!declaration || !safeOtherArguments(call, index, checker, ts, facts, program)) return false;
   const readers = (facts.nonWritingReaders ??= new WeakMap());
   let byIndex = readers.get(declaration);
   if (!byIndex) {

@@ -447,7 +447,10 @@ run(0 ?? read, account);
   Its body must consist of scalar expressions, constants, returns, and simple
   `if`/block control flow. Other calls, external property reads, writes, deferred
   code, and loops remain unproven, even when the formal parameter itself is not
-  assigned. This applies before or after the projection, also
+  assigned. Other arguments must also be side-effect-free scalar literals,
+  unwritten primitive parameters, or bounded scalar `const` initializer chains;
+  calls and property/getter reads in those arguments remain unproven.
+  This applies before or after the projection, also
   across source imports. A readonly annotation alone is not evidence: mutable
   implementations, ambient declarations, unknown/`any` callees, captures,
   storage, aliases, and field writes remain unproven. Default/rest/optional
