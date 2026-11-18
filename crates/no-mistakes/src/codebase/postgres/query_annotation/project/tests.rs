@@ -32,6 +32,21 @@ fn prepared() -> FileIdMap<CheckFileFacts> {
 }
 
 fn prepared_fixture(name: &str, names: &[&str]) -> FileIdMap<CheckFileFacts> {
+    prepared_fixture_with_profiles(
+        name,
+        names,
+        &[
+            EmbeddedSqlOptions::configured("@app/db", &[]),
+            EmbeddedSqlOptions::configured("@app/other", &[]),
+        ],
+    )
+}
+
+fn prepared_fixture_with_profiles(
+    name: &str,
+    names: &[&str],
+    profiles: &[EmbeddedSqlOptions],
+) -> FileIdMap<CheckFileFacts> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-require-query-annotation/fixture")
         .join(name)
@@ -42,46 +57,40 @@ fn prepared_fixture(name: &str, names: &[&str]) -> FileIdMap<CheckFileFacts> {
         .map(|name| {
             let path = root.join(format!("{name}.mts"));
             let source = std::fs::read_to_string(&path).unwrap();
-            let file = crate::ast::with_program(&path, &source, |program, _| {
-                let profiles = [
-                    EmbeddedSqlOptions::configured("@app/db", &[]),
-                    EmbeddedSqlOptions::configured("@app/other", &[]),
-                ];
-                CheckFileFacts {
-                    ts: Arc::new(collect_file_facts_from_program(
-                        &path,
-                        TsFactPlan {
-                            imports: true,
-                            module_bindings: true,
-                            ..Default::default()
-                        },
-                        &TsFactContext::default(),
-                        &source,
-                        program,
-                        None,
-                        None,
-                    )),
-                    query_annotation: profiles
-                        .iter()
-                        .map(|options| {
-                            (
-                                options.clone(),
-                                query_annotation::collect(program, &source, options),
-                            )
-                        })
-                        .collect(),
-                    embedded_sql: profiles
-                        .iter()
-                        .map(|options| {
-                            (
-                                options.clone(),
-                                extract_embedded_sql_from_program(&path, program, &source, options),
-                            )
-                        })
-                        .collect(),
-                    source: Some(source.clone().into()),
-                    ..Default::default()
-                }
+            let file = crate::ast::with_program(&path, &source, |program, _| CheckFileFacts {
+                ts: Arc::new(collect_file_facts_from_program(
+                    &path,
+                    TsFactPlan {
+                        imports: true,
+                        module_bindings: true,
+                        ..Default::default()
+                    },
+                    &TsFactContext::default(),
+                    &source,
+                    program,
+                    None,
+                    None,
+                )),
+                query_annotation: profiles
+                    .iter()
+                    .map(|options| {
+                        (
+                            options.clone(),
+                            query_annotation::collect(program, &source, options),
+                        )
+                    })
+                    .collect(),
+                embedded_sql: profiles
+                    .iter()
+                    .map(|options| {
+                        (
+                            options.clone(),
+                            extract_embedded_sql_from_program(&path, program, &source, options),
+                        )
+                    })
+                    .collect(),
+                source: Some(source.clone().into()),
+                ..Default::default()
             })
             .unwrap();
             (path, file)
@@ -136,3 +145,6 @@ mod event_prerequisites;
 
 #[path = "tests/multi_root_work.rs"]
 mod multi_root_work;
+
+#[path = "tests/imported_prefixes_tests.rs"]
+mod imported_prefixes_tests;

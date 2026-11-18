@@ -23,8 +23,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         if trusted || legacy {
             if let Value::Prefix(_, _, id) = &mut prefix {
                 if tag != "String.raw" || legacy {
-                    *id = Some(self.next_builder);
+                    let builder = self.next_builder;
+                    *id = Some(builder);
                     self.next_builder += 1;
+                    if trusted {
+                        self.record_builder_tag(builder, tag, path);
+                    }
                 }
             }
             // Reuse the existing local-tag contract only for this annotation

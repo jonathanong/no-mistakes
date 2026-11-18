@@ -42,6 +42,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),

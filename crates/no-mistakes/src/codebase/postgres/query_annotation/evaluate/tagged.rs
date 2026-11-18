@@ -3,6 +3,7 @@ use crate::codebase::postgres::query_annotation::Expr;
 use std::path::{Path, PathBuf};
 
 mod finish;
+mod origins;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn tag_trusted(&self, tag: &str, path: &Path, env: Environment) -> bool {
@@ -35,7 +36,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) -> Value {
         let (depth, generic) = context;
         let trusted_tag = self.tag_trusted(tag, path, *env);
-        let values = effects
+        let mut values = effects
             .iter()
             .enumerate()
             .map(|(index, effect)| {
@@ -67,8 +68,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         }
         let mut prefix = Value::Prefix(String::new(), true, None);
         for (index, part) in parts.iter().enumerate() {
-            // A trusted tag's odd parts are generated binds. A nested builder
-            // instead splices SQL, whose leading text must stay unknown here.
+            // Configured tags can splice a builder. Keep only the leading
+            // text because the composed statement has no complete SQL proof.
             let fragment = tag != "String.raw"
                 && index % 2 == 1
                 && (values.get(1 + index / 2).is_some_and(has_builder)
@@ -78,7 +79,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             let relation = matches!(&prefix, Value::Prefix(text, _, _)
                 if crate::codebase::postgres::embedded::helpers::sentinel::in_relation_slot(text, text.len()));
             let value = if fragment {
-                Value::Unknown
+                if index == 1
+                    && trusted_tag
+                    && !parameterized
+                    && !interpolation_mutates
+                    && !self.files[path].facts.precise_records
+                    && matches!(&prefix, Value::Prefix(text, true, _) if text.trim().is_empty())
+                {
+                    self.leading_fragment_prefix(tag, path, values.get_mut(1))
+                } else {
+                    Value::Unknown
+                }
             } else if parameterized && index % 2 == 1 {
                 match part {
                     Expr::Text(text) => {

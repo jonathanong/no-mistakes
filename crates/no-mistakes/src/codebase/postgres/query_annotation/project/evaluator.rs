@@ -29,6 +29,7 @@ pub(super) fn new<'a, F>(
         active_callback_functions: Default::default(),
         active_callback_executions: Default::default(),
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),

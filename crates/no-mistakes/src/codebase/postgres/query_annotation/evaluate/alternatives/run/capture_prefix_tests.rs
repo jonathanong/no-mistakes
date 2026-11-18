@@ -66,6 +66,7 @@ fn alternatives_do_not_clone_an_unchanged_prefix_capture_during_resolver_work() 
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: FxHashMap::from_iter([(1, origins)]),

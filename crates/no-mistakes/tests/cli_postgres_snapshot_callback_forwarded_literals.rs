@@ -69,3 +69,64 @@ fn postgres_callback_forwarded_literals_check_json_snapshot() {
         assert_eq!(advisory_sites, expected_advisories, "{policy}: {report}");
     }
 }
+
+#[test]
+fn postgres_imported_callback_prefix_check_json_snapshot() {
+    const RULE: &str = "postgres-require-query-annotation";
+    let root = rules_path(RULE, "fixture", "imported-callback-prefix");
+    let cases = ["advise", "report", "ignore"].map(|policy| {
+        (
+            policy,
+            root.clone(),
+            rules_path(
+                RULE,
+                "configs",
+                &format!("imported-callback-prefix-{policy}.yml"),
+            ),
+        )
+    });
+    let reports =
+        assert_saved_fixture_report("postgres_imported_callback_prefix", &cases, &[], &[]);
+    for policy in ["advise", "report", "ignore"] {
+        let report = &reports[policy]["report"];
+        assert_eq!(reports[policy]["exitCode"], 1);
+        assert_eq!(report["warnings"], serde_json::json!([]));
+        for category in ["rules", "advisories"] {
+            let mut sites = report[category]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|finding| {
+                    (
+                        finding["file"].as_str().unwrap(),
+                        finding["line"].as_u64().unwrap(),
+                    )
+                })
+                .collect::<Vec<_>>();
+            sites.sort_unstable();
+            let known = vec![("callers.mts", 9), ("callers.mts", 10), ("callers.mts", 11)];
+            let unresolved = vec![
+                ("callers.mts", 14),
+                ("guards.mts", 8),
+                ("guards.mts", 9),
+                ("guards.mts", 10),
+                ("guards.mts", 12),
+                ("guards.mts", 15),
+                ("guards.mts", 16),
+                ("guards.mts", 18),
+            ];
+            let mut expected = if category == "rules" || policy == "advise" {
+                known
+            } else {
+                vec![]
+            };
+            if category == "rules" && policy == "report"
+                || category == "advisories" && policy == "advise"
+            {
+                expected.extend(unresolved);
+            }
+            expected.sort_unstable();
+            assert_eq!(sites, expected, "{policy} {category}: {report}");
+        }
+    }
+}
