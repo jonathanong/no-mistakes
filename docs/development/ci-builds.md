@@ -997,10 +997,8 @@ retains all job/API variants and assertions; the per-test timing gate and
 platform API-step deadlines continue to apply. Reports then identify the slow case.
 The annotation append case previously bundled twelve analyses across report,
 advise and ignore policies; main run `42637458882` took 5,073.4 ms and failed
-the 5,000 ms gate. Each policy runs one standalone analysis and both CLI modes,
-retaining suppressions and work-count assertions. The imported-builder cases likewise keep
-both CLI job counts. Strict export-identity assertions verify ESM shares the
-CommonJS function, so each case avoids executing that same analysis twice.
+the 5,000 ms gate. Registering each policy independently retains all twelve
+analyses, CJS/ESM and CLI parity checks, suppressions and work-count assertions.
 The timing threshold and enforcement modes are unchanged.
 
 The local-action-checkout parity matrix also registers its six saved fixtures
