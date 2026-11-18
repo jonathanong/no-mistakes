@@ -50,7 +50,7 @@ for (const policy of ["report", "advise", "ignore"]) {
           assert.match(finding.message, /one local const/);
         }
       }
-      assert.deepEqual(await esm.check({ root, config }), report);
+      assert.equal(esm.check, cjs.check);
       for (const observed of [false, true]) {
         const args = [
           "check",
@@ -86,6 +86,7 @@ test(
   async () => {
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
+    assert.equal(esm.check, cjs.check);
     const base = join(__dirname, "../../../test-cases/rules/postgres-require-query-annotation");
     const cli =
       process.env.NO_MISTAKES_TEST_CLI_PATH ||
@@ -113,9 +114,6 @@ test(
       const locations = (findings) => findings.map(({ file, line }) => [file, line]);
       assert.deepEqual(locations(report.rules), missing, configName);
       assert.deepEqual(locations(policyAdvisories(report)), advisory, configName);
-      const esmPending = esm.check({ root, config });
-      assert.ok(esmPending instanceof Promise);
-      assert.deepEqual(await esmPending, report);
       for (const jobs of [1, 2]) {
         const child = spawnSync(
           cli,
