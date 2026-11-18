@@ -83,7 +83,13 @@ still contain separate executor calls that require their own annotations.
 
 Callback forwarding through a straight-line helper substitutes the statement and
 callback arguments at each analyzable callsite. Imported helpers use the same
-proof. A configured custom tag can preserve the leading builder's annotation
+proof. A conditional in-place append helper also keeps a fresh caller literal's
+head when the local reference proof permits only tail appends and forwarding the
+same parameter. Both ``statement.append(sql` ORDER BY id LIMIT ${limit + 1}`)``
+and a guarded tail may precede `return await query(statement)`. Shared or opaque
+arguments, appends before initialization, replacement, and prepending do not gain
+this proof. Conditional tails remain incomplete SQL.
+A configured custom tag can preserve the leading builder's annotation
 when that builder occupies the first interpolation after an empty or whitespace
 segment, with suffix fragments after it. Interpolation effects must leave that
 builder intact, and its originating tag must resolve to the same provider and

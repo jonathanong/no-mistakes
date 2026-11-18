@@ -1,3 +1,4 @@
+mod append_callback;
 pub(super) mod async_suspension;
 mod budget;
 mod collections;

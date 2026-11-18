@@ -39,6 +39,58 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
         .as_ref()
         .map(|body| super::super::statements::steps(&body.statements, source))
         .unwrap_or_default();
+    let mut summary = function(
+        &value.params,
+        body,
+        !value.generator,
+        value.r#async,
+        false,
+        value.span.start,
+    );
+    summary_proof(value, source, &mut summary);
+    Expr::Function(summary)
+}
+
+// The proof may come from a lowering the general summary does not use, so a
+// function the evaluator treats as unsupported elsewhere stays unsupported.
+fn summary_proof(
+    value: &oxc_ast::ast::Function<'_>,
+    source: &str,
+    summary: &mut std::sync::Arc<Function>,
+) {
+    if !summary
+        .body
+        .iter()
+        .any(|step| matches!(step, Step::Branch(..)))
+    {
+        return;
+    }
+    let candidate = if summary.supported {
+        summary.clone()
+    } else if summary
+        .body
+        .iter()
+        .any(|step| matches!(step, Step::Unsupported))
+    {
+        let Some(body) = value.body.as_ref() else {
+            return;
+        };
+        let alt = super::super::statements::append_steps(&body.statements, source);
+        let Expr::Function(alt) = function_from(value, alt) else {
+            return;
+        };
+        if !alt.supported {
+            return;
+        }
+        alt
+    } else {
+        return;
+    };
+    let proof = super::append_callback::collect(value, &candidate).map(std::sync::Arc::new);
+    std::sync::Arc::make_mut(summary).append_callback = proof;
+}
+
+fn function_from(value: &oxc_ast::ast::Function<'_>, body: Vec<Step>) -> Expr {
     Expr::Function(function(
         &value.params,
         body,
@@ -88,5 +140,6 @@ pub(super) fn function(
         asynchronous,
         arrow,
         self_name: None,
+        append_callback: None,
     })
 }

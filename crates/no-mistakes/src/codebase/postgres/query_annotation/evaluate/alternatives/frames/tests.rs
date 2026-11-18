@@ -13,6 +13,7 @@ fn function_value(env: Environment) -> Value {
             asynchronous: false,
             arrow: false,
             self_name: None,
+            append_callback: None,
         }),
         std::path::PathBuf::from("helper.ts").into(),
         env,

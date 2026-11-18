@@ -93,6 +93,23 @@ pub(super) fn summaries(
 }
 
 fn summarize(function: &Function<'_>, trusted_tags: &FxHashSet<Span>) -> Option<Summary> {
+    let names = parameters(function)?;
+    let body = function.body.as_ref()?;
+    let summaries = (0..names.len())
+        .filter_map(|callback| {
+            Uses::inspect(body, names.clone(), callback, trusted_tags)
+                .map(|payload| Summary { callback, payload })
+        })
+        .collect::<Vec<_>>();
+    let [summary] = summaries.as_slice() else {
+        return None;
+    };
+    Some(*summary)
+}
+
+pub(in crate::codebase::postgres::query_annotation) fn parameters<'f>(
+    function: &'f Function<'_>,
+) -> Option<Vec<&'f str>> {
     if function.generator || function.params.rest.is_some() {
         return None;
     }
@@ -112,15 +129,5 @@ fn summarize(function: &Function<'_>, trusted_tags: &FxHashSet<Span>) -> Option<
     if names.is_empty() || names.len() > 8 {
         return None;
     }
-    let body = function.body.as_ref()?;
-    let summaries = (0..names.len())
-        .filter_map(|callback| {
-            Uses::inspect(body, names.clone(), callback, trusted_tags)
-                .map(|payload| Summary { callback, payload })
-        })
-        .collect::<Vec<_>>();
-    let [summary] = summaries.as_slice() else {
-        return None;
-    };
-    Some(*summary)
+    Some(names)
 }

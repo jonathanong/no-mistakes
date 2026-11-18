@@ -68,7 +68,24 @@ ownership for every importer.
 A source-proven helper may forward a statement argument through an inline
 callback such as `statement => read(statement)`. The leading literal comment
 survives at max effort when the helper supplies that statement to the callback,
-including across an imported helper. For a named tag imported through
+including across an imported helper. An imported helper may also conditionally
+append tails to its incoming statement in place before forwarding that same
+statement: ``if (afterId) statement.append(sql` AND id > ${afterId}`)`` followed
+by ``statement.append(sql` ORDER BY id LIMIT ${limit + 1}`)`` and
+`return await query(statement)`. The callback call may instead bind its
+result (`const result = await query(statement)`), destructure it
+(`const { rows } = await query(statement)`), or stand alone
+(`await query(statement);`); the call must pass the appended builder itself.
+A destructure may use only plain, possibly nested bindings, never defaults,
+computed keys, or non-identifier rest targets. After the call, only the result
+may be read (`return rows`, `return result.rows`); another call, an append, or
+any reference to the builder leaves the helper unproven.
+Each caller must supply a fresh trusted tagged
+literal with a static leading annotation. Appends before initialization, shared
+or opaque arguments, replacement, prepend, and unsupported uses remain unproven
+or report their known missing annotation. This reuses the local callback proof
+and prepared module resolution without recovering complete SQL.
+For a named tag imported through
 `trustedSqlTags`, the callback payload may also be a template whose first
 interpolation is the statement builder, followed by suffix fragments. The first
 static segment must be empty or whitespace, and the builder must retain a known
@@ -382,10 +399,10 @@ name, an imported factory combined with later effect helpers, and a call inside
 a loop remain unresolved. An `assert(user, 401)` statement inside an
 append-only helper body does not disturb its proof.
 
-A builder handed to a callback through a higher-order helper
-(``page(options, query, async statement => read(statement))``) is not
-proven: the executor receives a parameter alias, not the annotated binding, so
-the finding stays. Call the executor on the local builder instead.
+A higher-order helper with an unproven callback payload remains unresolved.
+Keep the caller's fresh annotated literal and the helper's append-only forwarding
+within the supported proof described above, or call the executor on a local
+annotated builder.
 
 A function-local `let` or `const` may also start with finite conditional fresh
 builders. Every arm and every reassignment must have a literal annotation and

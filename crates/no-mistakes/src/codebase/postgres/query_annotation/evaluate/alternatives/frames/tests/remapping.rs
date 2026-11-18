@@ -23,6 +23,7 @@ fn remapping_changes_function_environments_only_in_written_snapshot() {
             asynchronous: false,
             arrow: false,
             self_name: None,
+            append_callback: None,
         }),
         std::path::PathBuf::from("helper.ts").into(),
         7,

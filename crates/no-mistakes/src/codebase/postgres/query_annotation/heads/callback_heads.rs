@@ -1,7 +1,7 @@
 //! Exact inline callback forwarding through one prepared source helper hop.
 mod caller;
-mod producer;
-mod uses;
+pub(in crate::codebase::postgres::query_annotation) mod producer;
+pub(in crate::codebase::postgres::query_annotation) mod uses;
 #[cfg(test)]
 #[path = "callback_heads/uses_tests.rs"]
 mod uses_tests;

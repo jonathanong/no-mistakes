@@ -6,7 +6,7 @@ mod assignments;
 mod async_returns;
 mod bindings;
 mod branch_assignments;
-mod callback_heads;
+pub(in crate::codebase::postgres::query_annotation) mod callback_heads;
 mod captured_prefix;
 mod collect;
 mod conditional;

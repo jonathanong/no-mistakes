@@ -18,6 +18,7 @@ fn scalar_case() -> fixture::Case {
                 asynchronous: false,
                 arrow: true,
                 self_name: None,
+                append_callback: None,
             }),
             std::path::PathBuf::from("callback.mts").into(),
             0,

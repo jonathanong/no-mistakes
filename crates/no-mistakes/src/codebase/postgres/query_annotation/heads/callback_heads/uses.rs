@@ -5,7 +5,7 @@ use oxc_ast::ast::{self, Expression};
 use oxc_ast_visit::Visit;
 mod visit;
 
-pub(super) struct Uses<'a, 't> {
+pub(in crate::codebase::postgres::query_annotation) struct Uses<'a, 't> {
     params: Vec<&'a str>,
     callback: usize,
     allowed_callback: FxHashSet<u32>,
@@ -21,7 +21,7 @@ pub(super) struct Uses<'a, 't> {
 }
 
 impl<'a, 't> Uses<'a, 't> {
-    pub(super) fn inspect(
+    pub(in crate::codebase::postgres::query_annotation) fn inspect(
         body: &ast::FunctionBody<'a>,
         params: Vec<&'a str>,
         callback: usize,

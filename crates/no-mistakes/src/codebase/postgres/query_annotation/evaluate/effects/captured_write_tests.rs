@@ -27,6 +27,7 @@ fn function(arrow: bool) -> Function {
         asynchronous: false,
         arrow,
         self_name: Some("self".into()),
+        append_callback: None,
     }
 }
 fn legacy(evaluator: &mut TestEvaluator<'_>, function: &Function) {

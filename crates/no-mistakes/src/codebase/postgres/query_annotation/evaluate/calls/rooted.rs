@@ -133,11 +133,15 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 Value::Unknown
             };
         };
-        if !function.supported
-            || scopes::has_legacy_branch(
-                &function,
-                self.files[function_path.as_path()].facts.precise_records,
-            )
+        let append_body = self.append_callback_body(
+            &function,
+            (args, &arguments),
+            (path, *env),
+            (&function_path, captured),
+        );
+        let precise = self.files[function_path.as_path()].facts.precise_records;
+        if append_body.is_none()
+            && (!function.supported || scopes::has_legacy_branch(&function, precise))
         {
             return self.unsupported_call(
                 &function,
@@ -172,7 +176,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             && function.asynchronous
             && async_suspension::has_suspension(&function.body);
         let prior_events = suspended.then(|| async_suspension::event_lengths(&self.events));
-        let value = self.steps(&function.body, &function_path, &mut scope, depth, false);
+        let body = append_body.unwrap_or(&function.body);
+        let value = self.steps(body, &function_path, &mut scope, depth, false);
         if let Some(prior_events) = prior_events {
             // The evaluator does not schedule post-await work. Whether the
             // caller awaits this promise or reads a shared builder first is

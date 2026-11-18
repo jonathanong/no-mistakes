@@ -104,6 +104,14 @@ pub(super) struct Function {
     pub asynchronous: bool,
     pub arrow: bool,
     pub self_name: Option<String>,
+    pub append_callback: Option<std::sync::Arc<AppendCallback>>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(super) struct AppendCallback {
+    pub payload: usize,
+    pub body: Vec<Step>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
