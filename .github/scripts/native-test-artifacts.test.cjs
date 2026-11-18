@@ -203,29 +203,25 @@ for (const platform of ["macOS", "Windows"]) {
         assert.equal(manifest.entries.length, targets(platform).length);
         fs.rmSync(path.join(directory, "target/debug"), { recursive: true });
         fs.rmSync(path.join(directory, "bin/cargo"));
-        if (platform === "macOS") {
-          for (const index of [1, 2]) {
-            const weighted = invoke(["run", String(index), "2"]);
-            assert.equal(weighted.status, 0, weighted.stderr);
-            const report = JSON.parse(
-              fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
-            );
-            assert.equal(report.scheduling.strategy, "macOS-two-shard-outlier-LPT");
+        const shardCount = platform === "macOS" ? 4 : 6;
+        const results = [];
+        for (let index = 1; index <= shardCount; index++) {
+          const run = invoke(["run", String(index), String(shardCount)]);
+          assert.equal(run.status, 0, run.stderr);
+          const report = JSON.parse(
+            fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
+          );
+          assert.equal(report.count, shardCount);
+          if (platform === "macOS") {
+            assert.equal(report.scheduling.strategy, "macOS-outlier-LPT");
             assert.equal(report.scheduling.defaultWeight, 1);
             assert.equal(report.scheduling.caseWeights.length, report.plan.length);
             assert.ok(
               report.scheduling.caseWeights.every((row) => row.source === "unmeasured-placeholder"),
             );
+          } else {
+            assert.equal(report.scheduling, undefined);
           }
-          fs.rmSync(path.join(directory, "executions.jsonl"));
-        }
-        const results = [];
-        for (let index = 1; index <= 6; index++) {
-          const run = invoke(["run", String(index), "6"]);
-          assert.equal(run.status, 0, run.stderr);
-          const report = JSON.parse(
-            fs.readFileSync(path.join(directory, "target/native-rust-shard.json"), "utf8"),
-          );
           assert.equal(report.index, index);
           assert.deepEqual(
             report.batches.flatMap((batch) => batch.names).sort(),

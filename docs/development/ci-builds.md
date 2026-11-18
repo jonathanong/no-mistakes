@@ -35,8 +35,8 @@ The current validation graph is organized as follows:
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
-  Windows runs six Rust shards and six real-addon API shards; macOS runs two of
-  each, with every selected case still executed once.
+  Windows runs six Rust shards and six real-addon API shards; macOS runs four
+  Rust shards and two real-addon API shards. Every selected case executes once.
   On a pull request, those macOS jobs run only when
   `.github/scripts/macos-pr-scope.cjs` reports a path that can differ on macOS:
   native or N-API bindings, `packages/no-mistakes` platform packages, Cargo
@@ -387,23 +387,31 @@ query-annotation snapshots, 78.3 for the additional bounded-statement snapshots,
 73.6 for transformed-UUID snapshots, and 71.5 for unanalyzable-schema snapshots.
 The old modulo plan placed four of these five cases together in shard 1.
 
-macOS's two Rust shards now assign the longest known outliers first to the
+macOS's four Rust shards assign the longest known outliers first to the
 least-loaded shard. The [cost policy](../../.github/scripts/native-rust-costs.json)
 records the source notices and completion timestamps. It uses floored
 lower-bound weights, stable harness
 names and full test names; ties use stable test identity and shard index.
 Unmeasured and new cases receive a default weight of one and remain included.
-Those weights are scheduling units, not predicted seconds. The archived
-373-case inventory produces 185/188 selected cases with equal 430-unit loads,
+Those weights are scheduling units, not predicted seconds. With two shards, the
+archived 373-case inventory produces 185/188 selected cases with equal 430-unit loads,
 separating bounded-statement and query-annotation work. Each selected case
 still runs exactly once, with the original filters, batching and flags.
 Windows retains its existing six-shard assignments.
 
-The existing harness batching already avoids spawning a process per case.
-Adding runners would repeat checkout, runtime setup and artifact downloads
-(roughly 50–85 seconds per shard in the measured runs), and earlier runs showed
-macOS queues. The first change therefore balances work across two shards rather than
-increasing that overhead. Actual batch and end-to-end durations remain the
+Run [44320403158](https://github.com/jonathanong/no-mistakes/actions/runs/44320403158)
+at `be0ea45cd` selected 228/230 cases with 473/472 heuristic weight units across
+two shards. The first PostgreSQL batch took 509.739 seconds for 121 cases on
+shard 1 and 150.913 seconds for 122 cases on shard 2. Shard 1 exhausted its
+nine-minute test-step budget during its next batch. Four weighted Rust shards
+bound the assigned work more narrowly while retaining the same step timeout,
+complete case inventory, original filters, batching, and flags. Runtime benefit
+of the four-shard layout is unmeasured.
+
+The existing harness batching avoids spawning a process per case. Additional
+runners repeat checkout, runtime setup and artifact downloads (roughly 50–85
+seconds per shard in the historical measured runs), and macOS queues remain a
+capacity constraint. Actual batch and end-to-end durations remain the
 acceptance evidence; estimated loads do not establish a ten-minute result.
 
 The first completed follow-up run,
@@ -465,9 +473,9 @@ run `43378356388`, but was absent from the repository cache inventory before
 this run finished. The inventory contained roughly 12.7 GB of active caches at
 inspection. A cache key cannot guarantee retention under repository-wide cache
 pressure. Subsequent macOS Rust shards waited as long as 7m57s before starting;
-in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
-macOS matrices use two shards per family to reduce repeated setup and runner
-contention, while Windows retains six.
+in the previous completed run, API shards waited 8m23s to 12m02s. In that measured
+layout, the macOS matrices used two shards per family to reduce repeated setup and runner
+contention, while Windows retained six.
 
 A later completed run,
 [`43389713210`](https://github.com/jonathanong/no-mistakes/actions/runs/43389713210)

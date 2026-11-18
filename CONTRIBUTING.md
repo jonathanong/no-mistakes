@@ -239,9 +239,9 @@ Linux real-addon cases use isolated jobs and retain serial files within each
 job so native thread pools do not compete. The shared file catalog and case
 partitioning script keep umbrella imports visible; see the
 [Linux API measurements](docs/development/ci-builds.md#linux-real-addon-aggregate-budget-measurement).
-Real-addon API tests and platform Rust tests each run in six Windows shards
-and two macOS shards. The macOS Rust plan uses observed outlier weights to
-balance cases; unknown cases remain included with a default weight. The per-test
+Real-addon API tests run in six Windows shards and two macOS shards. Platform
+Rust tests run in six Windows shards and four macOS shards. The macOS Rust plan
+uses observed outlier weights to balance cases; unknown cases remain included with a default weight. The per-test
 timing checks and diagnostic reports
 remain in force. The prior serial-test and aggregate timeout measurements are
 historical; the [CI build guide](docs/development/ci-builds.md#parallel-ci-layout-and-measured-baseline)
