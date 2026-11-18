@@ -50,7 +50,10 @@ describe.skipIf(process.platform !== "linux")("public SDK policy closure regress
     },
   );
   it("preserves asynchronous factory receiver, valid injected hooks and data-driven row identities", async () => {
-    const result = await fixture(fixtureSource("review-closure.test-22.txt"));
+    const result = await fixture(
+      fixtureSource("review-closure.test-22.txt"),
+      fixtureTemplate("review-closure-valid-config.txt"),
+    );
     expect(result.code, result.output).toBe(0);
     expect(result.marker).toBe("continued");
     expect(result.forcedCleanup).toBe(false);

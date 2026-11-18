@@ -19,6 +19,16 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-17 — trim the rules plugin (#3587)
+
+Removed the Git process skill and the TypeScript object-property deletion
+style rule. Moved the six Evidence rules unchanged into observability and
+extended that skill's description to cover production claims and measured
+results. The control, describe, and entry variants now use the remaining
+15 skills. Cases and graders are unchanged. No paid evals were run; the
+recorded trigger comparison measures the earlier 16-skill inventory and
+has not been re-measured after this change.
+
 ## 2026-11-17 — retain ceiling cases; reject queue trigger candidate (#3379)
 
 Decision superseding the issue's case-replacement plan: case selection does

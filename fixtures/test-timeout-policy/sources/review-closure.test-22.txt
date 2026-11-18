@@ -4,10 +4,10 @@
         if (value !== row) throw new Error('ROW_IDENTITY_CHANGED')
         test('row body', continued)
       })
-      suite('injected', { timeout: 250 }, async (injected) => {
+      suite('injected', { timeout: 5000 }, async (injected) => {
         await Promise.resolve()
-        injected.beforeAll(() => {}, 20)
-        injected.afterAll(() => {}, 20)
+        injected.beforeAll(() => {}, 5000)
+        injected.afterAll(() => {}, 5000)
         injected('injected body', continued)
       })
     

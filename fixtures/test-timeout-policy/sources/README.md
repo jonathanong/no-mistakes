@@ -9,3 +9,8 @@ case; the template reader never evaluates source text.
 The child project receives a private temporary directory because Vitest writes
 runtime receipts and optimizer artifacts. Those runtime outputs and generated
 policy facade modules remain actual SDK/product output, not fixture inputs.
+
+The asynchronous factory compatibility case uses a local five-second budget
+for its tests and hooks. It checks callback identity and successful injected
+registration, not elapsed time; its marker writes must tolerate runner load.
+The shared short-deadline fixtures and the policy maximum are unchanged.
