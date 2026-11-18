@@ -52,6 +52,7 @@ pub(crate) enum GuardKind {
     ClosedSet {
         collection: String,
         method: SetMethod,
+        scope: Option<usize>,
     },
     Assertion {
         callee: String,
@@ -110,4 +111,11 @@ pub(crate) enum GuardSubject {
         owner: CallableId,
         index: usize,
     },
+}
+
+#[derive(Debug)]
+pub(crate) struct GuardCall {
+    pub(crate) index: usize,
+    pub(crate) subject: Option<ValueExpression>,
+    pub(crate) collection_scope: Option<usize>,
 }

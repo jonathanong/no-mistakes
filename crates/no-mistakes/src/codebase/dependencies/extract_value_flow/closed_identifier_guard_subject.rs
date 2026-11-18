@@ -1,6 +1,34 @@
 use super::*;
 
 impl ImportCollector {
+    pub(crate) fn record_finite_guard_call(
+        &mut self,
+        call: &oxc_ast::ast::CallExpression<'_>,
+        index: usize,
+    ) {
+        let subject = reference::some_subject(call).map(|(name, offset)| ValueExpression::Named {
+            scope: self.callee_binding_scope(&name),
+            name,
+            offset,
+            context: self.current_function_id(),
+        });
+        let collection_scope = match call.callee.get_inner_expression() {
+            Expression::StaticMemberExpression(member) => {
+                reference::identifier_name(&member.object)
+                    .and_then(|name| self.callee_binding_scope(&name))
+            }
+            _ => None,
+        };
+        self.finite_guard_calls.insert(
+            call.span.start,
+            GuardCall {
+                index,
+                subject,
+                collection_scope,
+            },
+        );
+    }
+
     pub(super) fn push_call_guard(
         &mut self,
         call: &oxc_ast::ast::CallExpression<'_>,
@@ -9,28 +37,23 @@ impl ImportCollector {
         until: u32,
         kind: GuardKind,
     ) {
-        let some = matches!(kind, GuardKind::ClosedSet { .. })
-            .then(|| reference::some_subject(call))
-            .flatten();
-        let value = if let Some((name, offset)) = some {
-            ValueExpression::Named {
-                scope: self.callee_binding_scope(&name),
-                name,
-                offset,
-                context: self.current_function_id(),
-            }
-        } else {
-            let Some(value) = self
-                .finite_guard_call_indexes
-                .get(&call.span.start)
-                .and_then(|index| self.value_flow.calls.get(*index))
-                .and_then(|value| value.arguments.get(argument))
-            else {
-                return;
-            };
-            value.clone()
+        let Some(captured) = self.finite_guard_calls.get(&call.span.start) else {
+            return;
         };
-        let Some((name, scope, members)) = reference::value(&value) else {
+        let value = if matches!(kind, GuardKind::ClosedSet { .. }) {
+            captured.subject.as_ref()
+        } else {
+            None
+        }
+        .or_else(|| {
+            self.value_flow
+                .calls
+                .get(captured.index)?
+                .arguments
+                .get(argument)
+        });
+        let Some(value) = value else { return };
+        let Some((name, scope, members)) = reference::value(value) else {
             return;
         };
         if self.collect_identifier_provenance

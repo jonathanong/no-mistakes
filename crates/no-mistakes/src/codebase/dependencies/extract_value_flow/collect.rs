@@ -150,8 +150,7 @@ impl ImportCollector {
         self.note_text_call_origins(call, &value_call);
         self.note_array_push(&value_call, true);
         self.note_closed_registry_call(call);
-        self.finite_guard_call_indexes
-            .insert(call.span.start, self.value_flow.calls.len());
+        self.record_finite_guard_call(call, self.value_flow.calls.len());
         self.value_flow.calls.push(value_call);
     }
 }

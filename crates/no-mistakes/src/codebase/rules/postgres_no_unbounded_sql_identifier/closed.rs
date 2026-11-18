@@ -123,7 +123,16 @@ fn guard_applies(
     guard: &FiniteIdentifierGuard,
 ) -> bool {
     match &guard.kind {
-        GuardKind::ClosedSet { collection, method } => {
+        GuardKind::ClosedSet {
+            collection,
+            method,
+            scope,
+        } => {
+            if scope
+                .is_some_and(|scope| bindings.value(file, scope, collection, u32::MAX).is_none())
+            {
+                return false;
+            }
             let kind = match method {
                 SetMethod::Has => RegistryKind::Set,
                 SetMethod::Includes => RegistryKind::Array,

@@ -96,8 +96,7 @@ impl ImportCollector {
                     declared_at,
                     keys,
                     kind,
-                    const_tuple: declarator.type_annotation.is_none()
-                        && super::super::literal_const_tuple(init),
+                    const_tuple: declarator.type_annotation.is_none() && const_tuple(init),
                 });
         }
         if let Some(source) = self.bounded_source(init) {
@@ -161,3 +160,11 @@ pub(super) fn literal_string(expr: &Expression<'_>) -> Option<String> {
 #[cfg(test)]
 #[path = "closed_identifiers_tests.rs"]
 mod tests;
+
+fn const_tuple(expression: &Expression<'_>) -> bool {
+    match expression {
+        Expression::TSSatisfiesExpression(satisfies) => const_tuple(&satisfies.expression),
+        Expression::ParenthesizedExpression(inner) => const_tuple(&inner.expression),
+        _ => super::super::literal_const_tuple(expression),
+    }
+}

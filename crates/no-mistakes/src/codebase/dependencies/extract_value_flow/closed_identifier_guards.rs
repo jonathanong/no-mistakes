@@ -36,6 +36,9 @@ impl ImportCollector {
                 return;
             };
             if let Some(collection) = reference::identifier_name(&member.object) {
+                let Some(captured) = self.finite_guard_calls.get(&call.span.start) else {
+                    return;
+                };
                 let method = if member.property.name == "has" {
                     SetMethod::Has
                 } else {
@@ -46,7 +49,11 @@ impl ImportCollector {
                     0,
                     statement.span().end,
                     until,
-                    GuardKind::ClosedSet { collection, method },
+                    GuardKind::ClosedSet {
+                        collection,
+                        method,
+                        scope: captured.collection_scope,
+                    },
                 );
             }
         });

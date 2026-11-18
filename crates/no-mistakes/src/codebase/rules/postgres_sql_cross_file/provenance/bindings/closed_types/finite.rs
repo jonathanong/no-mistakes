@@ -1,5 +1,7 @@
 use super::*;
 
+mod tuples;
+
 impl Bindings<'_> {
     pub(crate) fn finite_string_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
         self.numeric_parameter_bounds_only
@@ -73,20 +75,6 @@ impl Bindings<'_> {
             }
             _ => false,
         }
-    }
-
-    fn finite_tuple(&self, file: &Path, name: &str) -> bool {
-        use crate::codebase::dependencies::extract::{unique_closed_collection, RegistryKind};
-        self.facts.get_ts_facts(file).is_some_and(|ts| {
-            unique_closed_collection(&ts.value_flow, name, RegistryKind::Array)
-                && ts
-                    .value_flow
-                    .closed_string_registries
-                    .iter()
-                    .any(|registry| {
-                        registry.name == name && registry.scope == 0 && registry.const_tuple
-                    })
-        })
     }
 
     pub(in super::super) fn widened_finite_string_flow(

@@ -360,7 +360,9 @@ supported generated identifier shape, or an explicit trusted helper contract:
 - A required parameter annotated with a local finite indexed-access
   type, such as `type Variety = (typeof VARIETIES)[number]`, where
   `const VARIETIES = ["painted", "plain"] as const` is a module-level tuple of
-  string literals. Direct annotations and local type-alias chains also work.
+  string literals. Direct annotations, parentheses, local type-alias chains,
+  and an `as const satisfies readonly string[]` initializer also work.
+  An unrelated same-name parameter does not shadow the module tuple.
   Ordinary arrays, widened `string[]` or `readonly string[]` annotations,
   assignments to the parameter, mutable bindings, mixed/dynamic/spread elements,
   shadowed names, and
@@ -400,6 +402,8 @@ supported generated identifier shape, or an explicit trusted helper contract:
   only strict equality between that parameter and the guarded identifier
   (either operand order). Async callbacks, coercive equality, compound
   predicates, and a failure branch that continues do not validate the value.
+  The guard retains its subject and collection scopes, including through
+  nested blocks; a class that shadows the collection does not prove membership.
   A `return` that exits the callable also works. `ALLOWED`
   must be one `const` built-in `Set` of string literals, and `ALLOWED_LIST` one `const`
   array of string literals. The array may be imported from a unique literal

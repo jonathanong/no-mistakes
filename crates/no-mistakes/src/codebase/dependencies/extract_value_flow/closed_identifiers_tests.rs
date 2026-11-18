@@ -133,6 +133,7 @@ fn closed_domain_facts_reject_open_shapes() {
                 GuardKind::ClosedSet {
                     ref collection,
                     method: SetMethod::Has,
+                    ..
                 } if collection == "ALLOWED"
             )
     }));
@@ -142,6 +143,7 @@ fn closed_domain_facts_reject_open_shapes() {
             GuardKind::ClosedSet {
                 ref collection,
                 method: SetMethod::Includes,
+                ..
             } if collection == "KEEP_ARRAY"
         )
     }));

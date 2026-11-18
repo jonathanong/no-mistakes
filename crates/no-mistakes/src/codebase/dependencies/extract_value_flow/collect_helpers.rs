@@ -25,6 +25,7 @@ impl ImportCollector {
         use oxc_ast::ast::TSType;
         match annotation {
             _ if finite_string_type(annotation) => ValueType::FiniteStringLiterals,
+            TSType::TSParenthesizedType(inner) => self.annotation_shape(&inner.type_annotation),
             TSType::TSTypeReference(reference) => {
                 let Some(name) = type_reference_name(reference) else {
                     return ValueType::Unknown;

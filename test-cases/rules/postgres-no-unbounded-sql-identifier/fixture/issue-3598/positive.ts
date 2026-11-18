@@ -27,3 +27,24 @@ export function someReturn(kind: string) {
   if (!VARIETIES.some(item => kind === item)) return;
   return read(`SELECT id FROM ${kind}_widgets LIMIT 10`);
 }
+export function parenthesized(kind: ((typeof VARIETIES)[number])) {
+  return read(`SELECT id FROM ${kind}_widgets LIMIT 10`);
+}
+const SATISFIED = ["painted", "plain"] as const satisfies readonly string[];
+export function satisfied(kind: (typeof SATISFIED)[number]) {
+  return read(`SELECT id FROM ${kind}_widgets LIMIT 10`);
+}
+export function nested(input: string) {
+  {
+    const table = input;
+    if (!VARIETIES.some(item => item === table)) throw new Error("Unknown variety");
+    return read(`SELECT id FROM ${table}_widgets LIMIT 10`);
+  }
+}
+export function nestedShadow(table: string, input: string) {
+  {
+    const table = input;
+    if (!VARIETIES.some(item => item === table)) throw new Error("Unknown variety");
+    return read(`SELECT id FROM ${table}_widgets LIMIT 10`);
+  }
+}
