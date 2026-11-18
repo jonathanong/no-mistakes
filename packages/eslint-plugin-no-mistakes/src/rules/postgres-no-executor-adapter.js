@@ -20,6 +20,7 @@ const {
   resolvePassed,
 } = require("./postgres-no-executor-adapter-passed");
 const { acceptsExecutor } = require("./postgres-no-executor-adapter-target");
+const { directOption } = require("./postgres-no-executor-adapter-direct");
 const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
 const RULE_ID = "postgres-no-executor-adapter";
 
@@ -105,6 +106,7 @@ module.exports = rule(
         visitFresh(expr, call, index, nested || Boolean(quoteNode));
         return;
       }
+      if (!nested && directOption(expr, call, index, quoteNode, context, bindings, options)) return;
       if (expr.type === "ConditionalExpression") {
         const leaves = executorLeaves(expr, context, bindings, options);
         // Every branch is an executor, so the conditional callee itself is judged.
