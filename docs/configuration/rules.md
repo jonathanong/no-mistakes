@@ -432,8 +432,8 @@ rule stays off until a configuration lists it. `options.shellSourceInclude`
 executing them or following workflow invocations. Without a Git index, no
 additional shell sources are scanned. `options.strictSequencing`
 (default `false`) requires verification after each payload download and before
-the next unrelated payload download; checksum sidecars do not close that
-window. At max effort, literal step `env` URL bindings are resolved; expressions
+the next unrelated payload download, including another URL in the same
+command; checksum sidecars do not close that window. At max effort, literal step `env` URL bindings are resolved; expressions
 and secrets remain unresolved. It also supports `effort: low`:
 literal-only commands retain their checks, while a known downloader command
 with any dynamic candidate URL uses the shared unanalyzable policy once. See its

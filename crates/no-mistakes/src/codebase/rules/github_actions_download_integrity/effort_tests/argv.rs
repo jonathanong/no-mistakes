@@ -23,7 +23,6 @@ fn low_proves_downloader_alias_scope_without_expanding_url_arguments() {
         "literal-assignment-command",
         "prefixed-command",
         "configured-helper-command",
-        "literal-command-separators",
     ] {
         let script = argv_script(name);
         let before = assign::probe::count();
@@ -83,16 +82,29 @@ fn non_ascii_non_url_operands_do_not_panic_during_prefix_classification() {
 }
 
 #[test]
-fn low_retains_downloader_scope_behind_empty_and_heredoc_prefixes() {
-    for name in ["elided-wrapper-command", "heredoc-command-prefix"] {
+fn low_retains_downloader_scope_after_an_unquoted_empty_wrapper() {
+    let script = argv_script("elided-wrapper-command");
+    let max = test_adapters::download_hits(&script, &[]);
+    assert_eq!(max.len(), 1);
+    let before = assign::probe::count();
+    let low = test_adapters::download_hits_low(&script, &[]);
+    assert_eq!(assign::probe::count(), before);
+    assert_eq!(low.len(), 1);
+    assert!(low[0].unanalyzable && low[0].indirect_command);
+}
+
+#[test]
+fn command_aliases_do_not_supply_shell_separators_or_redirections() {
+    for name in ["literal-command-separators", "heredoc-command-prefix"] {
         let script = argv_script(name);
-        let max = test_adapters::download_hits(&script, &[]);
-        assert_eq!(max.len(), 1, "{name}");
-        let before = assign::probe::count();
-        let low = test_adapters::download_hits_low(&script, &[]);
-        assert_eq!(assign::probe::count(), before, "{name}");
-        assert_eq!(low.len(), 1, "{name}");
-        assert!(low[0].unanalyzable && low[0].indirect_command, "{name}");
+        assert!(
+            test_adapters::download_hits(&script, &[]).is_empty(),
+            "{name}"
+        );
+        assert!(
+            test_adapters::download_hits_low(&script, &[]).is_empty(),
+            "{name}"
+        );
     }
 }
 

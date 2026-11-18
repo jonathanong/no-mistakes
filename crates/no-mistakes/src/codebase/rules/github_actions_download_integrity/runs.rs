@@ -85,10 +85,10 @@ fn skipped(lines: &[&str], place: Option<&StepRun>, script: &str) -> bool {
             return true;
         }
     }
-    let last = place.lines.last().map(|(line, _)| *line).unwrap_or(start);
+    let first_run = place.lines.first().map_or(start, |(line, _)| *line);
     lines
         .iter()
-        .take(last)
+        .take(first_run)
         .skip(start.saturating_sub(1))
         .any(|line| judge::has_skip(line))
 }

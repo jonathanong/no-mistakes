@@ -24,13 +24,9 @@ pub(super) fn bodies(action: bool, value: &Value) -> Vec<Body<'_>> {
             continue;
         };
         let shell = default_shell(mapping_get(job, "defaults"))
-            .or_else(|| default_shell(value.get("defaults")))
-            .or_else(|| {
-                mapping_get(job, "runs-on")
-                    .filter(|labels| windows_runner(labels))
-                    .map(|_| "pwsh")
-            });
-        push_runs(&scalar_name(id), steps, shell, &mut out);
+            .or_else(|| default_shell(value.get("defaults")));
+        let assume_bourne = !mapping_get(job, "runs-on").is_some_and(unknown_or_windows_runner);
+        push_runs(&scalar_name(id), steps, shell, assume_bourne, &mut out);
     }
     out
 }
@@ -52,7 +48,7 @@ fn composite_bodies(value: &Value) -> Vec<Body<'_>> {
         return Vec::new();
     };
     let mut out = Vec::new();
-    push_runs("", steps, None, &mut out);
+    push_runs("", steps, None, true, &mut out);
     out
 }
 
@@ -60,6 +56,7 @@ fn push_runs<'a>(
     job: &str,
     steps: &'a [Value],
     default_shell: Option<&str>,
+    assume_bourne: bool,
     out: &mut Vec<Body<'a>>,
 ) {
     for (index, step) in steps.iter().enumerate() {
@@ -83,7 +80,7 @@ fn push_runs<'a>(
             script,
             env: mapping_get(step, "env")
                 .and_then(Value::as_mapping)
-                .filter(|_| shell.is_none_or(is_bourne_shell)),
+                .filter(|_| shell.map_or(assume_bourne, is_bourne_shell)),
             target,
         });
     }
@@ -116,13 +113,17 @@ fn is_bourne_shell(template: &str) -> bool {
     )
 }
 
-fn windows_runner(labels: &Value) -> bool {
+fn unknown_or_windows_runner(labels: &Value) -> bool {
     if let Some(label) = labels.as_str() {
         let label = label.to_ascii_lowercase();
-        return label == "windows" || label.starts_with("windows-");
+        return label == "windows" || label.starts_with("windows-") || label.contains("${{");
     }
     if let Some(labels) = labels.as_sequence() {
-        return labels.iter().any(windows_runner);
+        return labels.iter().any(unknown_or_windows_runner);
     }
-    labels.get("labels").is_some_and(windows_runner)
+    labels.get("labels").is_some_and(unknown_or_windows_runner)
+        || labels
+            .get("group")
+            .and_then(Value::as_str)
+            .is_some_and(|group| group.contains("${{"))
 }

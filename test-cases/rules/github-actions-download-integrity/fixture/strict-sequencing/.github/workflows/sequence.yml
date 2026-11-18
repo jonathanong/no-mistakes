@@ -80,3 +80,57 @@ jobs:
         run: |
           NOTE='a;b'
           echo $NOTE; curl "${TOOL_URL}" -o first
+      - run: |
+          LABEL='note;curl https://downloads.example.com/synthetic-transfer'
+          echo $LABEL
+      - run: |
+          LABEL='note;curl https://downloads.example.com/synthetic-barrier'
+          curl https://downloads.example.com/verified-before-label -o tool
+          echo $LABEL
+          sha256sum -c tool.sha256
+      - env:
+          TOOL_URL: https://downloads.example.com/env-with-output-rewrite
+        run: |
+          OUT=tool.bin
+          curl "$TOOL_URL" -o "$OUT"
+      - env:
+          TOOL_URL: https://downloads.example.com/env-used-as-output
+        run: |
+          FLAG=--output
+          curl "$FLAG" "$TOOL_URL"
+      - env:
+          TOOL_URL: https://downloads.example.com/env-after-unknown-option
+        run: curl "$FLAGS" "$TOOL_URL" -o tool
+      - run: |
+          curl -O https://downloads.example.com/first-transfer --next -O https://downloads.example.com/second-transfer
+          sha256sum -c second-transfer.sha256
+      - run: |
+          curl 'https://downloads.example.com?name=tool.sha256'
+          curl 'https://[2001:db8::1]?name=files/tool.sha256'
+          curl 'https://downloads.example.com/tool.sha256?name=tool'
+      - run: |
+          echo note\
+          # integrity-check: skip reason=continued-word
+          curl https://downloads.example.com/continued-comment-word -o tool
+      - run: |
+          echo note \
+          # integrity-check: skip reason=continued-comment
+          curl https://downloads.example.com/continued-comment-skips -o tool
+      - run: |
+          CMD='if curl'
+          $CMD https://downloads.example.com/expanded-keyword-is-data
+      - run: |
+          CMD='! curl'
+          $CMD https://downloads.example.com/expanded-negation-is-data
+      - run: |
+          CMD='NAME=value curl'
+          $CMD https://downloads.example.com/expanded-assignment-is-data
+      - run: |
+          CMD='sudo curl'
+          $CMD https://downloads.example.com/plain-wrapper-alias
+      - run: |
+          CMD='env if curl'
+          $CMD https://downloads.example.com/expanded-wrapper-keyword-is-data
+      - run: |
+          CMD='exec FLAG=x curl'
+          $CMD https://downloads.example.com/expanded-wrapper-assignment-is-data

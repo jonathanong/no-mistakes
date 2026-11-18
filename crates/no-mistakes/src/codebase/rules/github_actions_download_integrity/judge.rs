@@ -1,11 +1,12 @@
 use super::assign::prepare_max_script;
 use super::env::UrlBindings;
-use super::url::{self, UrlHost};
+use super::url;
 use super::verify;
-use super::words::{self, Word};
+use super::words;
 use std::cell::OnceCell;
 
 mod command;
+mod operands;
 mod options;
 
 pub(super) struct Hit {
@@ -45,7 +46,7 @@ pub(super) fn scan_script(
     let binding = OnceCell::new();
     let mut pending_start = 0;
     for mut command in parsed.commands {
-        let original_command = match (&expanded, &original) {
+        let raw_command = match (&expanded, &original) {
             (Some(expanded), Some(raw)) => {
                 expanded.original_anchor(command.anchor).and_then(|anchor| {
                     let index = raw
@@ -55,7 +56,12 @@ pub(super) fn scan_script(
                     raw.commands.get(index)
                 })
             }
-            _ => Some(&command),
+            _ => None,
+        };
+        let original_command = if expanded.is_some() {
+            raw_command
+        } else {
+            Some(&command)
         };
         if strict
             && original_command.is_some_and(verify::command_verifies)
@@ -64,9 +70,6 @@ pub(super) fn scan_script(
             hits.truncate(pending_start);
             continue;
         }
-        let env = env
-            .as_ref()
-            .filter(|_| original_command.is_some_and(|raw| raw.words == command.words));
         let Some((mut name, mut arg_at)) = words::command_at(&command.words) else {
             continue;
         };
@@ -84,18 +87,23 @@ pub(super) fn scan_script(
             indirect_command = true;
         }
         let args = command.words.get(arg_at + 1..).unwrap_or(&[]);
-        let candidates = url_words(&name, args);
+        let candidates = operands::url_words(&name, args);
         // An expansion can become an option and consume a later literal URL.
         // Judge the command's argument shape before claiming any unsafe URL.
         if low {
             let unknown = options::dynamic_option(&name, args)
-                .or_else(|| candidates.iter().copied().find(|(_, url)| dynamic(url)))
+                .or_else(|| {
+                    candidates
+                        .iter()
+                        .find(|operand| dynamic(operand.text))
+                        .map(|operand| (operand.word, operand.text))
+                })
                 .or_else(|| {
                     if indirect_command {
                         candidates
                             .iter()
-                            .copied()
-                            .find(|(_, url)| url::http_url(url).is_some())
+                            .find(|operand| url::http_url(operand.text).is_some())
+                            .map(|operand| (operand.word, operand.text))
                     } else {
                         None
                     }
@@ -114,15 +122,32 @@ pub(super) fn scan_script(
                 continue;
             }
         }
-        let next_pending = hits.len();
-        for (word, url) in candidates {
+        let env = env.as_ref().and_then(|bindings| {
+            let original = if expanded.is_some() {
+                raw_command?
+            } else {
+                &command
+            };
+            let shape = operands::original_shape(original)?;
+            shape
+                .matches(&name, arg_at, args.len())
+                .then_some((bindings, shape))
+        });
+        let mut unknown_role = env.is_some() && options::dynamic_option(&name, args).is_some();
+        for operand in candidates {
+            let word = operand.word;
             if indirect_command {
                 continue;
             }
-            let url = env.and_then(|env| env.resolve(word, url)).unwrap_or(url);
+            let url = env
+                .as_ref()
+                .filter(|(_, shape)| !unknown_role && shape.same_operand(&operand))
+                .and_then(|(env, _)| env.resolve(word, operand.text))
+                .unwrap_or(operand.text);
+            unknown_role |= operand.may_be_option && dynamic(url);
             let Some(parsed) = url::http_url(url) else {
                 if strict && dynamic(url) {
-                    pending_start = next_pending;
+                    pending_start = hits.len();
                 }
                 continue;
             };
@@ -130,7 +155,7 @@ pub(super) fn scan_script(
                 continue;
             }
             if strict {
-                pending_start = next_pending;
+                pending_start = hits.len();
             }
             hits.push(Hit {
                 url: url.to_string(),
@@ -151,43 +176,10 @@ fn dynamic(value: &str) -> bool {
 pub(super) fn filter_trusted(hits: Vec<Hit>, hosts: &[String]) -> Vec<Hit> {
     hits.into_iter()
         .filter(|hit| {
-            hit.unanalyzable || url::http_url(&hit.url).is_none_or(|url| !trusted_host(&url, hosts))
+            hit.unanalyzable
+                || url::http_url(&hit.url).is_none_or(|url| !url::trusted(&url.host, hosts))
         })
         .collect()
-}
-
-fn trusted_host(url: &UrlHost, hosts: &[String]) -> bool {
-    url::trusted(&url.host, hosts)
-}
-
-fn url_words<'a>(command: &str, args: &'a [Word]) -> Vec<(&'a Word, &'a str)> {
-    let mut out = Vec::new();
-    let mut index = 0;
-    while index < args.len() {
-        let token = args[index].text.as_str();
-        if token == "--" {
-            for word in &args[index + 1..] {
-                out.push((word, word.text.as_str()));
-            }
-            break;
-        }
-        if let Some(inline) = token.strip_prefix("--url=") {
-            out.push((&args[index], inline));
-            index += 1;
-            continue;
-        }
-        if verify::takes_url_slot(command, token) {
-            index += 2;
-            continue;
-        }
-        if token.starts_with('-') && token != "-" {
-            index += 1;
-            continue;
-        }
-        out.push((&args[index], token));
-        index += 1;
-    }
-    out
 }
 
 pub(super) use url::{configured_host, has_skip};

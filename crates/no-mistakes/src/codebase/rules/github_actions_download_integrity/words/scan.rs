@@ -1,6 +1,7 @@
 use super::heredoc;
 use super::{flush_command, push_char, skip_arithmetic, Command, Parse};
 
+mod redirection;
 mod word;
 
 struct Scan<'a> {
@@ -10,6 +11,8 @@ struct Scan<'a> {
     line: usize,
     word: String,
     word_line: usize,
+    word_quoted: bool,
+    redirect_operand: bool,
     word_expansion_may_split: bool,
     word_quoted_expansion: Option<(usize, usize)>,
     quoting: Option<char>,
@@ -29,6 +32,8 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
         line: 1,
         word: String::new(),
         word_line: 1,
+        word_quoted: false,
+        redirect_operand: false,
         word_expansion_may_split: false,
         word_quoted_expansion: None,
         quoting: None,
@@ -60,7 +65,7 @@ impl<'a> Scan<'a> {
             || self.start_quote(ch)
             || self.expansion(ch)
             || self.arithmetic()
-            || self.heredoc_op()
+            || self.redirection()
         {
             return false;
         }
@@ -112,25 +117,6 @@ impl<'a> Scan<'a> {
         true
     }
 
-    fn heredoc_op(&mut self) -> bool {
-        match heredoc::look(self.chars, self.index) {
-            Some(heredoc::Look::Herestring { index }) => {
-                self.flush_word();
-                self.index = index;
-                true
-            }
-            Some(heredoc::Look::Document { index, opener }) => {
-                self.flush_word();
-                flush_command(&mut self.current, &mut self.commands);
-                self.current.anchor = self.index + 1;
-                self.pending = Some(opener);
-                self.index = index;
-                true
-            }
-            None => false,
-        }
-    }
-
     fn separator(&mut self, ch: char) -> bool {
         let double_ampersand = ch == '&' && self.chars.get(self.index + 1) == Some(&'&');
         let background = self.strict
@@ -145,6 +131,7 @@ impl<'a> Scan<'a> {
             return false;
         }
         self.flush_word();
+        self.redirect_operand = false;
         flush_command(&mut self.current, &mut self.commands);
         self.current.anchor = self.index + 1;
         if ch == '\n' {
@@ -168,7 +155,7 @@ impl<'a> Scan<'a> {
     }
 
     fn whitespace(&mut self, ch: char) -> bool {
-        if !ch.is_whitespace() && ch != '<' && ch != '>' {
+        if !ch.is_whitespace() {
             return false;
         }
         self.flush_word();

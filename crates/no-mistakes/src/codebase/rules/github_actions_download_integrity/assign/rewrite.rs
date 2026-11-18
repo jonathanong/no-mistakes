@@ -1,9 +1,11 @@
+use super::super::words::is_assignment;
 use super::{classify, probe, single_literal_binding, Kind};
 
 #[derive(Default)]
 pub(crate) struct Script {
     pub(crate) text: String,
     origins: Vec<Option<usize>>,
+    quote: Option<char>,
 }
 
 impl Script {
@@ -21,9 +23,15 @@ impl Script {
 
     pub(super) fn substitute(&mut self, line: &str, offset: usize, name: &str, value: &str) {
         let mut chars = line.chars().enumerate().peekable();
-        let mut quote = None;
         while let Some((index, ch)) = chars.next() {
-            if ch == '$' && quote != Some('\'') {
+            if ch == '\\' && self.quote != Some('\'') {
+                self.source_char(ch, offset + index);
+                if let Some((escaped_index, escaped)) = chars.next() {
+                    self.source_char(escaped, offset + escaped_index);
+                }
+                continue;
+            }
+            if ch == '$' && self.quote != Some('\'') {
                 let mut reference = String::new();
                 if matches!(chars.peek(), Some((_, '{'))) {
                     for (_, next) in chars.by_ref() {
@@ -39,12 +47,12 @@ impl Script {
                         reference.push(next);
                     }
                 }
-                if reference == name
+                let matches_binding = reference == name
                     || reference
                         .strip_prefix('{')
                         .and_then(|text| text.strip_suffix('}'))
-                        == Some(name)
-                {
+                        == Some(name);
+                if matches_binding && preserves_shell_syntax(value, self.quote) {
                     self.text.push_str(value);
                     self.origins.extend(value.chars().map(|_| None));
                 } else {
@@ -56,15 +64,48 @@ impl Script {
                 continue;
             }
             if matches!(ch, '\'' | '"') {
-                if quote == Some(ch) {
-                    quote = None;
-                } else if quote.is_none() {
-                    quote = Some(ch);
+                if self.quote == Some(ch) {
+                    self.quote = None;
+                } else if self.quote.is_none() {
+                    self.quote = Some(ch);
                 }
             }
             self.source_char(ch, offset + index);
         }
     }
+}
+
+fn preserves_shell_syntax(value: &str, quote: Option<char>) -> bool {
+    !(quote.is_some() && value.is_empty())
+        && value.split_whitespace().all(|field| {
+            !is_assignment(field)
+                && !matches!(
+                    field,
+                    "!" | "if" | "elif" | "then" | "else" | "do" | "while" | "until" | "time"
+                )
+        })
+        && value.chars().all(|ch| {
+            (ch == '\t' || !ch.is_control())
+                && (!ch.is_whitespace() || matches!(ch, ' ' | '\t'))
+                && !matches!(
+                    ch,
+                    '\'' | '"'
+                        | '\\'
+                        | '`'
+                        | '$'
+                        | '#'
+                        | ';'
+                        | '&'
+                        | '|'
+                        | '<'
+                        | '>'
+                        | '('
+                        | ')'
+                        | '{'
+                        | '}'
+                )
+                && (quote.is_some() || !matches!(ch, '*' | '?' | '['))
+        })
 }
 
 pub(crate) fn prepare_max_script(script: &str) -> Option<Script> {

@@ -26,6 +26,7 @@ impl Scan<'_> {
             return false;
         }
         self.quoting = Some(ch);
+        self.word_quoted = true;
         self.index += 1;
         true
     }
@@ -72,6 +73,12 @@ impl Scan<'_> {
     }
 
     pub(super) fn flush_word(&mut self) {
+        let quoted = std::mem::take(&mut self.word_quoted);
+        if self.redirect_operand && (quoted || !self.word.is_empty()) {
+            self.redirect_operand = false;
+            self.discard_word();
+            return;
+        }
         flush_word(
             &mut self.word,
             &mut self.current,
@@ -79,6 +86,11 @@ impl Scan<'_> {
             &mut self.word_expansion_may_split,
             &mut self.word_quoted_expansion,
         );
+    }
+    pub(super) fn discard_word(&mut self) {
+        self.word.clear();
+        self.word_expansion_may_split = false;
+        self.word_quoted_expansion = None;
     }
 }
 

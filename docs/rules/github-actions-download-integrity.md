@@ -57,12 +57,15 @@ map can also bind `"$NAME"` or `"${NAME}"` as a complete downloader URL argument
 (including `--url="$NAME"`). Explicit or inherited unsupported shells do not use
 step-env resolution, nor does an implicit shell on a known Windows runner.
 Otherwise, an omitted effective `shell` uses the scanner’s Bourne-style
-assumption. Single-quoted shell variables remain literal. Values containing
+assumption. Unresolved runner expressions leave the effective shell unknown
+and do not enable step-env resolution without an explicit supported shell.
+Single-quoted shell variables remain literal. Values containing
 GitHub expressions or shell expansion stay unresolved; job and workflow env
 maps are not evaluated. A shell reassignment leaves the original step binding
-unresolved. Env resolution is skipped for downloader commands rewritten by the
-existing single-uppercase-assignment expansion; keep the complete URL directly
-in the argument when combining binding styles.
+unresolved. Plain literal output or header bindings can coexist with the URL
+binding when the downloader’s URL argument role remains statically known.
+Literal binding data is never allowed to create shell commands; values that
+would introduce shell syntax remain unresolved.
 
 A host that is still `$`, `` ` ``, or `${{ }}` after that expansion is not
 judged. A literal untrusted host is judged even when the path still contains
@@ -113,13 +116,15 @@ boundary; `echo note# integrity-check: skip reason=fixture` is an ordinary
 argument and does not skip analysis.
 
 `strictSequencing` defaults to `false`. The default accepts a supported checksum
-command anywhere in the same script. When enabled, each untrusted non-checksum
-download must have a supported checksum command after it and before the next unrelated
-non-checksum download command, including one from a trusted host. Downloading a
-checksum sidecar does not interrupt that window. An unresolved dynamic download candidate also closes the window; only
-a proven checksum sidecar keeps it open. This is a lexical ordering check, not
-shell control-flow or proof that the checksum file describes the downloaded bytes. Multiple URLs in one
-downloader command share one verification window.
+command anywhere in the same script. When enabled, each untrusted payload must
+have a supported check after it and before the next payload transfer, including
+one from a trusted host. Each payload URL starts a new window, even within one
+downloader command. A known checksum sidecar stays in the preceding payload’s
+window; an unresolved dynamic download candidate closes it. Split multiple
+payload downloads into separate commands with a check between them.
+
+This is a lexical ordering check. It does not prove shell control flow or that
+the checksum file describes the downloaded bytes.
 
 ```yaml
 rules:
@@ -314,7 +319,9 @@ jobs:
 literal `BASE_URL="https://example.invalid/base"` followed by `curl "$BASE_URL/tool.tgz"`
 is the same download. Two assignments, or `BASE_URL="$(...)"`, are not expanded.
 
-A checksum check whose arguments contain command substitution (`$(...)` or backticks), including inside double quotes, cannot establish static integrity verification. Quoted parameter references such as `"${ARTIFACT}.sha256"` remain supported. Use a literal checksum file or another statically analyzable check. Single-quoted substitution text is literal.
+A checksum check whose arguments contain command substitution (`$(...)` or backticks), including inside double quotes, cannot establish static integrity verification. Quoted filename references such as `"${ARTIFACT}.sha256"` remain supported
+after a proven check option. An unresolved argument before the check option
+cannot establish verification because it could terminate option parsing. Use a literal checksum file or another statically analyzable check. Single-quoted substitution text is literal.
 
 ## Suppression
 
