@@ -231,12 +231,39 @@ including a write before that escape in source order when an earlier callback
 iteration may already have escaped the builder. An early callback return does
 not erase an escape that another iteration can observe.
 
-Recognition is limited to direct array literals, local bindings holding fresh
-array values, and parameters directly annotated with an array type (`T[]`), a
-tuple type, or the global `Array<T>` type. Member receivers, destructured
-parameter types, type aliases, type assertions, and unknown receivers do not
-establish a known array. Only inline, synchronous, non-generator callbacks are
-recognized; named callbacks and async callbacks retain ordinary handling.
+Known receivers include direct array literals, local bindings holding fresh
+array values, and parameters directly annotated with an array type (`T[]`),
+a tuple type, or the global `Array<T>` type. Unmodified global
+`Object.entries`, `Object.keys`, `Object.values`, and `Array.from` also produce
+known arrays, whether used directly or through local bindings. An `as` or
+`satisfies` wrapper around a proven array preserves that proof:
+
+```ts
+function collect(groups: Record<string, number>) {
+  const entries = Object.entries(groups) as Array<[string, number]>;
+  const ready: number[] = [];
+  entries.forEach(([, value]) => ready.push(value));
+  return ready;
+}
+```
+
+With typed ESLint (`parserOptions.project` or `projectService`), the checker can
+also prove array and tuple aliases, member receivers, typed call results, and
+unions whose every member is an array or tuple. The iteration method must come
+only from TypeScript's default library. Custom declarations, `any`, `unknown`,
+and non-array types do not establish this proof. Assertions cannot manufacture
+array provenance from an unknown value, including through local aliases.
+Without checker services, including in the Oxlint plugin, those typed-only
+receivers remain unproven.
+
+Shadowed constructors, modified global factories, and escaped constructor
+references do not prove array producers. Aliases retain mutation and escape
+identity; wrapping a receiver in another object does not hide its escape.
+`Object.entries` and `Object.values` retain shared value provenance, so mutating
+an object obtained from their results still reports. An `Array.from` mapper
+retains ordinary callback escape handling. Only inline, synchronous,
+non-generator iteration callbacks receive ownership preservation; named
+callbacks and async callbacks retain ordinary handling.
 Callbacks that write object properties, use `Object` or `Reflect` mutation,
 or read nested members of captured fresh containers also retain ordinary
 handling. Those operations can carry shared children between iterations;

@@ -51,8 +51,8 @@ function shared(origin) {
   return { type: "shared", origin };
 }
 
-function unknown() {
-  return { type: "unknown" };
+function unknown(scalar = false) {
+  return scalar ? { type: "unknown", scalar: true } : { type: "unknown" };
 }
 
 function freshCopy(tag, scope) {
@@ -66,9 +66,9 @@ function remember(fresh, tag) {
     fresh.items.push(tag);
     tag = tag.mutator.member;
   }
-  if (!tag || tag.type === "unknown") {
+  if (!tag || (tag.type === "unknown" && tag.scalar)) {
     if (!fresh.dynamic) {
-      fresh.dynamic = unknown();
+      fresh.dynamic = unknown(true);
     }
     return;
   }
@@ -83,19 +83,7 @@ function remember(fresh, tag) {
 }
 
 function joinDynamic(existing, tag) {
-  if (!existing || existing.type === "unknown") {
-    return tag;
-  }
-  if (existing === tag) {
-    return existing;
-  }
-  if (existing.type === "shared" && tag.type === "shared" && existing.origin === tag.origin) {
-    return existing;
-  }
-  if (existing.type === "mapset" && tag.type === "mapset") {
-    return existing;
-  }
-  return unknown();
+  return existing ? joinValues(existing, tag) : tag;
 }
 
 function lookup(scope, name) {

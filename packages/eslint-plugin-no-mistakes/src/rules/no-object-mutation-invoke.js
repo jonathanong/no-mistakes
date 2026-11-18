@@ -5,17 +5,9 @@ const { escapeResult } = require("./no-object-mutation-result");
 const { callFunction } = require("./no-object-mutation-fn");
 const { visitIteration } = require("./no-object-mutation-iteration");
 const { reducerCallback } = require("./no-object-mutation-reduce");
-const { iteratedContents } = require("./no-object-mutation-read");
+const { arrayFactory } = require("./no-object-mutation-array-factory");
 const { methodName, staticKey, unwrap } = require("./no-object-mutation-syntax");
-const {
-  callable,
-  createFresh,
-  joinValues,
-  lookup,
-  readMember,
-  remember,
-  unknown,
-} = require("./no-object-mutation-values");
+const { callable, joinValues, readMember, unknown } = require("./no-object-mutation-values");
 
 function memberCall(node, name) {
   const callee = unwrap(node.callee);
@@ -60,22 +52,8 @@ function visitKnownCall(state, node, scope, role) {
     escapeResult(state, seed, scope, role);
     return seed;
   }
-  const values = memberCall(node, "values");
-  if (values && isGlobalObject(values.object, scope)) {
-    const target = node.arguments[0];
-    if (target && target.type !== "SpreadElement") {
-      const tag = api.visit(state, target, scope, "read");
-      for (const argument of node.arguments.slice(1)) {
-        api.visit(
-          state,
-          argument.type === "SpreadElement" ? argument.argument : argument,
-          scope,
-          "read",
-        );
-      }
-      return arrayOf(scope, iteratedContents(tag));
-    }
-  }
+  const array = arrayFactory(state, node, scope, role);
+  if (array !== undefined) return array;
   const bound = memberCall(node, "bind");
   if (!bound) {
     return undefined;
@@ -132,25 +110,12 @@ function visitKnownCall(state, node, scope, role) {
   return tag;
 }
 
-function isGlobalObject(node, scope) {
-  const target = unwrap(node);
-  return Boolean(
-    target?.type === "Identifier" && target.name === "Object" && !lookup(scope, "Object"),
-  );
-}
-
-function arrayOf(scope, tag) {
-  const fresh = createFresh(scope);
-  remember(fresh, tag);
-  return fresh;
-}
-
 function boundTag(tag) {
   if (tag.type === "unknown") {
     return unknown();
   }
   if (tag.type === "union") {
-    let joined = unknown();
+    let joined = unknown(true);
     for (const member of tag.members) {
       joined = joinValues(joined, boundTag(member));
     }

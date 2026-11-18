@@ -3,14 +3,14 @@
 const { ARRAY_METHODS } = require("./no-object-mutation-ast");
 const { joinValues } = require("./no-object-mutation-join");
 
-function unknown() {
-  return { type: "unknown" };
+function unknown(scalar = false) {
+  return scalar ? { type: "unknown", scalar: true } : { type: "unknown" };
 }
 
 function elementTag(tag) {
   if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "union") {
-    let joined = unknown();
+    let joined = unknown(true);
     for (const member of tag.members) {
       joined = joinValues(joined, elementTag(member));
     }
@@ -44,11 +44,12 @@ function readMember(tag, key, objectNode) {
     // separate member tag preserves ordinary object/collection provenance.
     return { type: "unknown", mutator: { receiver: tag, receiverNode: objectNode, member } };
   }
+  if (tag?.type === "unknown") return tag;
   if (!tag || tag.type === "unknown" || tag.type === "fn") {
     return unknown();
   }
   if (tag.type === "union") {
-    let joined = unknown();
+    let joined = unknown(true);
     for (const member of tag.members) {
       joined = joinValues(joined, readMember(member, key));
     }
@@ -70,7 +71,7 @@ function readMember(tag, key, objectNode) {
       }
     }
   } else {
-    let joined = unknown();
+    let joined = unknown(true);
     for (const field of tag.fields.values()) {
       joined = joinValues(joined, field);
     }
@@ -90,10 +91,10 @@ function readMember(tag, key, objectNode) {
 function iteratedContents(tag) {
   if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "unknown" || tag.type === "fn") {
-    return unknown();
+    return tag.type === "unknown" ? tag : unknown();
   }
   if (tag.type === "union") {
-    let joined = unknown();
+    let joined = unknown(true);
     for (const member of tag.members) {
       joined = joinValues(joined, iteratedContents(member));
     }
@@ -108,7 +109,7 @@ function iteratedContents(tag) {
   if (tag.escaped) {
     return tag;
   }
-  let joined = unknown();
+  let joined = unknown(true);
   for (const field of tag.fields.values()) {
     joined = joinValues(joined, field);
   }
@@ -133,6 +134,10 @@ function rememberEscape(tag, key, contexts) {
 function escapeFresh(tag, seen = new Set(), contexts = []) {
   if (!tag || seen.has(tag)) {
     return;
+  }
+  if (["shared", "unknown", "this"].includes(tag.type)) {
+    rememberEscape(tag, "iterationChanged", contexts);
+    tag.iterationChanged = true;
   }
   if (tag.mutator) {
     seen.add(tag);

@@ -1,9 +1,10 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { checkedArray } = require("./no-object-mutation-array-proof");
 const { callFunction } = require("./no-object-mutation-fn");
 const { walkLoop } = require("./no-object-mutation-loop");
-const { lookup, unknown } = require("./no-object-mutation-values");
+const { lookup, readMember, unknown } = require("./no-object-mutation-values");
 const { mutationCall } = require("./no-object-mutation-forward");
 const { methodName, rootIdentifier, unwrap } = require("./no-object-mutation-syntax");
 
@@ -19,17 +20,19 @@ function visitIteration(state, node, scope) {
   const object = unwrap(callee.object);
   const cell = object.type === "Identifier" ? lookup(scope, object.name) : null;
   const literal = object.type === "ArrayExpression";
-  if (!literal && !(cell?.arrayParameter || cell?.tag.isArray)) return;
   if (unsupportedWrites(callback.body, scope)) return;
   const receiver = api.visit(state, callee.object, scope, "read");
   const name = methodName(callee);
+  const proven = literal || cell?.arrayParameter || (receiver.type === "fresh" && receiver.isArray);
+  const checked = checkedArray(state, object, scope, name, Boolean(proven));
   if (
+    checked === false ||
+    (!proven && checked !== true) ||
     state.arrayPrototypeChanged ||
-    receiver.iterationChanged ||
-    receiver.iterationUncertain ||
-    (receiver.type === "fresh" && receiver.escaped)
+    state.builtins.Array.iterationChanged ||
+    unsafeReceiver(receiver)
   ) {
-    return { fallbackCalleeTag: receiver.fields?.get(name) || receiver };
+    return { fallbackCalleeTag: readMember(receiver, name) };
   }
   const tag = api.visit(state, callback, scope, "read");
   if (node.arguments[1]) tag.receiver = api.visit(state, node.arguments[1], scope, "read");
@@ -42,6 +45,15 @@ function visitIteration(state, node, scope) {
     scope,
   );
   return unknown();
+}
+
+function unsafeReceiver(tag) {
+  return (
+    tag.iterationChanged ||
+    tag.iterationUncertain ||
+    (tag.type === "fresh" && tag.escaped) ||
+    (tag.type === "union" && tag.members.some(unsafeReceiver))
+  );
 }
 
 function unsupportedWrites(node, scope) {

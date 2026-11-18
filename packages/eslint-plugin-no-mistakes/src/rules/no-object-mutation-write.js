@@ -12,6 +12,7 @@ const {
 } = require("./no-object-mutation-syntax");
 
 function markEscaped(state, tag, seen) {
+  if (tag?.intrinsic) state.builtins[tag.intrinsic].iterationChanged = true;
   const was = Boolean(tag?.type === "fresh" && tag.escaped);
   escapeFresh(tag, seen, state.returnEscapes);
   if (!was && tag?.type === "fresh" && tag.escaped) {
@@ -114,6 +115,7 @@ function initializesOwnField(node) {
 }
 
 function considerWrite(state, target, node, info) {
+  if (target?.intrinsic) state.builtins[target.intrinsic].iterationChanged = true;
   const path = info.objectNode && staticPath(info.objectNode);
   if (
     path &&

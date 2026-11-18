@@ -165,6 +165,7 @@ function captureOuter(scope, tag, seen) {
 
 function visitIdentifier(state, node, scope, role) {
   let tag = lookup(scope, node.name)?.tag;
+  if (!tag && ["Object", "Array"].includes(node.name)) tag = state.builtins[node.name];
   // Unbound `arguments` is the function's parameter list, including through arrows.
   if (!tag && node.name === "arguments" && scope.hasArguments) {
     tag = shared("parameter");

@@ -17,13 +17,14 @@ function visitExpression(state, node, scope, role) {
   switch (node.type) {
     case "Identifier":
       return visitIdentifier(state, node, scope, role);
-    case "ThisExpression":
-      if (scope.receiver) {
-        return scope.receiver;
-      }
-      return { type: "this", inClass: Boolean(scope.inClass) };
-    case "Super":
+    case "ThisExpression": {
+      const receiver = scope.receiver || { type: "this", inClass: Boolean(scope.inClass) };
+      escapeResult(state, receiver, scope, role);
+      return receiver;
+    }
     case "Literal":
+      return unknown(!node.regex);
+    case "Super":
     case "TemplateElement":
     case "JSXText":
     case "JSXIdentifier":
@@ -144,7 +145,8 @@ function visitExpression(state, node, scope, role) {
 
 function joinAlternatives(left, right) {
   const joined = joinValues(left, right);
-  if (left.type === "unknown" || right.type === "unknown") joined.iterationUncertain = true;
+  if ((left.type === "unknown" || right.type === "unknown") && joined.type !== "union")
+    joined.iterationUncertain = true;
   return joined;
 }
 
