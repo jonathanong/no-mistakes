@@ -88,8 +88,12 @@ pub(in super::super) fn append(collector: &mut ImportCollector, keys: Vec<(Strin
     keys.sort_unstable();
     keys.dedup();
     drop(existing);
-    collector.value_flow.registry_mutations.extend(
-        keys.into_iter()
-            .map(|(name, scope)| RegistryMutation { name, scope }),
-    );
+    collector
+        .value_flow
+        .registry_mutations
+        .extend(keys.into_iter().map(|(name, scope)| RegistryMutation {
+            name,
+            scope,
+            export_only: false,
+        }));
 }

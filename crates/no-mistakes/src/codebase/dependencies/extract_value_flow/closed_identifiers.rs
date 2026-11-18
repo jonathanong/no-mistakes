@@ -128,6 +128,8 @@ mod metadata_mutations;
 mod names;
 #[path = "closed_identifier_registries.rs"]
 mod registries;
+#[path = "closed_identifier_registry_effects.rs"]
+mod registry_effects;
 #[path = "closed_identifier_escapes.rs"]
 mod registry_escapes;
 #[path = "closed_identifier_mutations.rs"]

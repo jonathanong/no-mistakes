@@ -1,0 +1,180 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "boundary.mts",
+          "import": "k",
+          "line": 12,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "boundary.mts",
+          "import": "k",
+          "line": 17,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "boundary.mts",
+          "import": "k",
+          "line": 20,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "boundary.mts",
+          "import": "k",
+          "line": 6,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "boundary.mts",
+          "import": "k",
+          "line": 9,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "missing.mts",
+          "import": "k",
+          "line": 6,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "missing.mts",
+          "import": "k",
+          "line": 9,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 12,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 15,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 18,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 21,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 24,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 27,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 30,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 35,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "negative.mts",
+          "import": "k",
+          "line": 39,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "role-collision.mts",
+          "import": "k",
+          "line": 4,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        },
+        {
+          "file": "role-collision.mts",
+          "import": "k",
+          "line": 7,
+          "message": "Unbounded identifier source `k` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.",
+          "rule": "postgres-no-unbounded-sql-identifier",
+          "sourceLine": "return read(`SELECT * FROM ${k}`);",
+          "target": "k"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

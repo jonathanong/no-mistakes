@@ -146,7 +146,7 @@ impl super::super::super::ImportCollector {
             .entry(scope)
             .or_default()
             .insert(name.to_string());
-        self.record_registry_mutation(name);
+        self.record_registry_export(name);
     }
 }
 

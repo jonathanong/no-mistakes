@@ -31,8 +31,18 @@ fn value_imports_in_file(
     else {
         return Vec::new();
     };
+    let projection = ValueImportProjection {
+        inputs,
+        facts,
+        resolver,
+        indexes,
+    };
+    let mut edges = Vec::new();
+    if inputs.plan.identifier_provenance {
+        project_identifier_type_imports(&projection, path, file, &mut edges);
+    }
     if file.value_flow.catalogs.reads.is_empty() {
-        return Vec::new();
+        return edges;
     }
     let mut imports: FxHashMap<&str, Option<&ImportedBinding>> = fx_map();
     for import in file
@@ -46,17 +56,10 @@ fn value_imports_in_file(
             .or_insert(Some(import));
     }
     if imports.is_empty() {
-        return Vec::new();
+        return edges;
     }
     let mut targets = fx_map();
     let mut decisions = fx_map();
-    let mut edges = Vec::new();
-    let projection = ValueImportProjection {
-        inputs,
-        facts,
-        resolver,
-        indexes,
-    };
     for read in file
         .value_flow
         .catalogs
@@ -122,3 +125,4 @@ fn value_import_facts_complete(file: &crate::codebase::ts_source::facts::TsFileF
 include!("value_import_resolution.rs");
 include!("value_import_namespaces.rs");
 include!("value_import_queries.rs");
+include!("value_import_types.rs");

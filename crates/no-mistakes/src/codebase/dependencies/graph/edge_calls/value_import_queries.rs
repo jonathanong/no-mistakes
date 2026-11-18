@@ -1,12 +1,17 @@
 impl DepGraph {
-    fn imported_selector_target(&self, file: &std::path::Path, selector: &str) -> Option<&NodeId> {
+    fn imported_selector_target(
+        &self,
+        file: &std::path::Path,
+        selector: &str,
+        import_kind: EdgeKind,
+    ) -> Option<&NodeId> {
         let edges = self.dependencies_of_node(&NodeId::symbol(file, selector))?;
         let mut value = None;
         for (target, kind) in edges {
             if *kind == EdgeKind::SymbolImportUnknown {
                 return None;
             }
-            if *kind != EdgeKind::SymbolImport {
+            if *kind != import_kind {
                 continue;
             }
             if value.is_some_and(|value| value != target) {
@@ -23,7 +28,24 @@ impl DepGraph {
         file: &std::path::Path,
         selector: &str,
     ) -> Option<(std::path::PathBuf, String)> {
-        match self.imported_selector_target(file, selector)? {
+        self.imported_symbol(file, selector, EdgeKind::SymbolImport)
+    }
+
+    pub(crate) fn imported_type(
+        &self,
+        file: &std::path::Path,
+        selector: &str,
+    ) -> Option<(std::path::PathBuf, String)> {
+        self.imported_symbol(file, selector, EdgeKind::SymbolTypeImport)
+    }
+
+    fn imported_symbol(
+        &self,
+        file: &std::path::Path,
+        selector: &str,
+        kind: EdgeKind,
+    ) -> Option<(std::path::PathBuf, String)> {
+        match self.imported_selector_target(file, selector, kind)? {
             NodeId::Symbol {
                 file,
                 symbol,
@@ -38,7 +60,7 @@ impl DepGraph {
         file: &std::path::Path,
         selector: &str,
     ) -> Option<std::path::PathBuf> {
-        match self.imported_selector_target(file, selector)? {
+        match self.imported_selector_target(file, selector, EdgeKind::SymbolImport)? {
             NodeId::File(namespace) => Some(namespace.to_path_buf()),
             _ => None,
         }

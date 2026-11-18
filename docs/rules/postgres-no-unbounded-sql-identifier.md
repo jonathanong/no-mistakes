@@ -357,17 +357,25 @@ supported generated identifier shape, or an explicit trusted helper contract:
   a call argument, a wrapper object or array, a return, an arrow that
   returns the registry, `export { registry }`, `export default`, and
   `export const` of the registry all end the proof.
-- A required parameter annotated with a local finite indexed-access
+- A required parameter annotated with a finite indexed-access
   type, such as `type Variety = (typeof VARIETIES)[number]`, where
   `const VARIETIES = ["painted", "plain"] as const` is a module-level tuple of
   string literals. Direct annotations, parentheses, local type-alias chains,
   and an `as const satisfies readonly string[]` initializer also work.
+  Named exports (`export const` or `export { VARIETIES }`) also establish
+  this type-domain proof. Imported tuples and type aliases resolve through
+  the prepared graph, including renamed imports and named re-exports. Both
+  the consumer and the defining module must be in the analyzed scope; an
+  unresolved, dynamic, or unsupported re-export does not establish the proof.
   An unrelated same-name parameter does not shadow the module tuple.
   Ordinary arrays, widened `string[]` or `readonly string[]` annotations,
   assignments to the parameter, mutable bindings, mixed/dynamic/spread elements,
-  shadowed names, and
-  mutated or escaped tuples do not establish this proof. Imported indexed
-  type aliases remain conservative.
+  shadowed names, and tuples mutated or escaped within their defining module
+  do not establish this proof. Export alone is permitted for this indexed-access
+  proof; it still ends the runtime registry proof described above. Type-only
+  star re-exports and an imported name used both as a type alias and in a
+  `typeof` indexed-access query remain conservative: the type and value can
+  have different definitions.
 - `.get` on a `const` built-in `Map` built only from string-literal pairs, including a
   frozen map, until that map is mutated.
   Shadowed `Set`, `Map`, or `Object.freeze` implementations do not establish

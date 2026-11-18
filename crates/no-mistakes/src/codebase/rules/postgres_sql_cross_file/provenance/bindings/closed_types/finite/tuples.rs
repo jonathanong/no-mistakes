@@ -15,6 +15,7 @@ impl Bindings<'_> {
                     let mutated = flow
                         .registry_mutations
                         .iter()
+                        .filter(|mutation| !mutation.export_only)
                         .map(|mutation| (mutation.scope, mutation.name.as_str()))
                         .collect::<crate::fx::FxHashSet<_>>();
                     let mut names = fx_set();

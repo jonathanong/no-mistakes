@@ -23,3 +23,36 @@ fn postgres_indexed_identifier_check_json_snapshot() {
     assert_eq!(report["max"]["report"]["warnings"], serde_json::json!([]));
     assert_eq!(report["max"]["report"]["advisories"], serde_json::json!([]));
 }
+
+#[test]
+fn postgres_imported_tuple_identifier_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3631",
+    )
+    .join("app");
+    let report = assert_saved_fixture_report(
+        "postgres_imported_tuple_identifier",
+        &[("max", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let findings = report["max"]["report"]["rules"].as_array().unwrap();
+    let mut files = std::collections::BTreeMap::new();
+    for finding in findings {
+        *files.entry(finding["file"].as_str().unwrap()).or_insert(0) += 1;
+    }
+    assert_eq!(
+        files,
+        [
+            ("boundary.mts", 5),
+            ("missing.mts", 2),
+            ("negative.mts", 9),
+            ("role-collision.mts", 2),
+        ]
+        .into()
+    );
+    assert_eq!(report["max"]["report"]["warnings"], serde_json::json!([]));
+    assert_eq!(report["max"]["report"]["advisories"], serde_json::json!([]));
+}
