@@ -140,8 +140,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             (&function_path, captured),
         );
         let precise = self.files[function_path.as_path()].facts.precise_records;
-        if !function.supported
-            || (append_body.is_none() && scopes::has_legacy_branch(&function, precise))
+        if append_body.is_none()
+            && (!function.supported || scopes::has_legacy_branch(&function, precise))
         {
             return self.unsupported_call(
                 &function,

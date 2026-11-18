@@ -47,22 +47,58 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
         false,
         value.span.start,
     );
-    if summary.supported {
-        let proof = super::append_callback::collect(value, &summary).map(std::sync::Arc::new);
-        let inner = std::sync::Arc::make_mut(&mut summary);
-        // Destructured call results are only modeled for append callbacks.
-        inner.supported = proof.is_some() || !destructures(&inner.body);
-        inner.append_callback = proof;
-    }
+    summary_proof(value, source, &mut summary);
     Expr::Function(summary)
 }
 
-fn destructures(steps: &[Step]) -> bool {
-    steps.iter().any(|step| match step {
-        Step::Destructured => true,
-        Step::Branch(_, left, right) => destructures(left) || destructures(right),
-        _ => false,
-    })
+// The proof may come from a lowering the general summary does not use, so a
+// function the evaluator treats as unsupported elsewhere stays unsupported.
+fn summary_proof(
+    value: &oxc_ast::ast::Function<'_>,
+    source: &str,
+    summary: &mut std::sync::Arc<Function>,
+) {
+    if !summary
+        .body
+        .iter()
+        .any(|step| matches!(step, Step::Branch(..)))
+    {
+        return;
+    }
+    let candidate = if summary.supported {
+        summary.clone()
+    } else if summary
+        .body
+        .iter()
+        .any(|step| matches!(step, Step::Unsupported))
+    {
+        let Some(body) = value.body.as_ref() else {
+            return;
+        };
+        let alt = super::super::statements::append_steps(&body.statements, source);
+        let Expr::Function(alt) = function_from(value, alt) else {
+            return;
+        };
+        if !alt.supported {
+            return;
+        }
+        alt
+    } else {
+        return;
+    };
+    let proof = super::append_callback::collect(value, &candidate).map(std::sync::Arc::new);
+    std::sync::Arc::make_mut(summary).append_callback = proof;
+}
+
+fn function_from(value: &oxc_ast::ast::Function<'_>, body: Vec<Step>) -> Expr {
+    Expr::Function(function(
+        &value.params,
+        body,
+        !value.generator,
+        value.r#async,
+        false,
+        value.span.start,
+    ))
 }
 
 pub(super) fn function(
@@ -84,8 +120,7 @@ pub(super) fn function(
     let supported = supported
         && names.is_some()
         && params.rest.is_none()
-        && !body.iter().any(|step| matches!(step, Step::Unsupported))
-        && !(arrow && destructures(&body));
+        && !body.iter().any(|step| matches!(step, Step::Unsupported));
     let names = names.unwrap_or_else(|| {
         params
             .items

@@ -40,6 +40,15 @@ pub(super) fn collect(
 }
 
 pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
+    lower(statements, source, false)
+}
+
+// Destructured call results are lowered only for the append-callback proof.
+pub(super) fn append_steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
+    lower(statements, source, true)
+}
+
+fn lower(statements: &[Statement<'_>], source: &str, destructured: bool) -> Vec<Step> {
     let mut declared: Vec<_> = super::trust::declared_names(statements)
         .into_iter()
         .collect();
@@ -53,11 +62,13 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
     for statement in statements {
         match statement {
             Statement::FunctionDeclaration(value) => bind_function(value, source, &mut steps),
-            Statement::VariableDeclaration(value) => bind_variables(value, source, &mut steps),
+            Statement::VariableDeclaration(value) => {
+                bind_variables(value, source, destructured, &mut steps)
+            }
             Statement::ExportDeclaration(value) => match &value.declaration {
                 Declaration::FunctionDeclaration(value) => bind_function(value, source, &mut steps),
                 Declaration::VariableDeclaration(value) => {
-                    bind_variables(value, source, &mut steps)
+                    bind_variables(value, source, destructured, &mut steps)
                 }
                 Declaration::TSTypeAliasDeclaration(_) | Declaration::TSInterfaceDeclaration(_) => {
                 }
@@ -146,6 +157,7 @@ fn bind_function(value: &oxc_ast::ast::Function<'_>, source: &str, steps: &mut V
 fn bind_variables(
     value: &oxc_ast::ast::VariableDeclaration<'_>,
     source: &str,
+    destructured: bool,
     steps: &mut Vec<Step>,
 ) {
     for declaration in &value.declarations {
@@ -154,7 +166,11 @@ fn bind_variables(
             continue;
         }
         let BindingPattern::BindingIdentifier(id) = &declaration.id else {
-            destructured::bind(declaration, source, steps);
+            if destructured {
+                destructured::bind(declaration, source, steps);
+            } else {
+                steps.push(Step::Unsupported);
+            }
             continue;
         };
         let init = declaration

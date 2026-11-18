@@ -31,11 +31,7 @@ pub(super) fn has_suspension(steps: &[Step]) -> bool {
         Step::Branch(test, left, right) => {
             contains_await(test) || has_suspension(left) || has_suspension(right)
         }
-        Step::Reserve(_)
-        | Step::Var(_)
-        | Step::Unsupported
-        | Step::Destructured
-        | Step::PotentialCalls(_) => false,
+        Step::Reserve(_) | Step::Var(_) | Step::Unsupported | Step::PotentialCalls(_) => false,
     })
 }
 

@@ -78,11 +78,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 | Step::Append(_, _)
                 | Step::Unsupported
                 | Step::PotentialCalls(_) => true,
-                Step::Reserve(_)
-                | Step::Hoisted(_, _)
-                | Step::Var(_)
-                | Step::Destructured
-                | Step::Return(_) => false,
+                Step::Reserve(_) | Step::Hoisted(_, _) | Step::Var(_) | Step::Return(_) => false,
             })
         {
             self.invalidate_live_builders();

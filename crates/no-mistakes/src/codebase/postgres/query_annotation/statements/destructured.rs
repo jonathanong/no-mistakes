@@ -28,7 +28,6 @@ pub(super) fn bind(
         return steps.push(Step::Unsupported);
     }
     let init = declaration.init.as_ref().expect("checked above");
-    steps.push(Step::Destructured);
     steps.push(Step::Effect(expression(init, source)));
     steps.extend(
         declaration
