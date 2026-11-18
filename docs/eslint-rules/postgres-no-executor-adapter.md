@@ -17,6 +17,30 @@ function run(account: string) {
 }
 ```
 
+A direct configured executor call already exposes its SQL when the first
+argument is an inline string, template, or tagged template. In both modes, a
+fresh options object in a later argument may carry a proven executor reference
+as a session selector:
+
+```ts
+async function update(query: QueryExecutor, id: string) {
+  await write(sql`UPDATE orders SET archived = true WHERE id = ${id}`, { query });
+  await write("UPDATE orders SET archived = true WHERE id = $1", [id], { query });
+}
+```
+
+Configured imports, stable aliases, namespace members, and proven executor
+receivers use the usual executor resolution. Receiver type proofs require typed
+linting. This allowance applies to the executor reference in that fresh object;
+forwarding callbacks elsewhere in the same call still report. It does not
+extend to helper calls, nested or spread options, computed option keys, optional
+calls, or constructors.
+
+The SQL must be visible in the first argument. `write({ query })`,
+`write(statement, { query })`, and `write({ query }, "SELECT 1")` still report.
+SQL visibility here uses the same inline SQL forms as the SQL checks; it does
+not prove bind-only interpolation safety or replace those checks.
+
 A helper with a proven configured executor parameter is also judged. With
 `executorTypeNames: ["QueryExecutor"]`, passing the executor directly is
 allowed:
