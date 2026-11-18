@@ -449,3 +449,9 @@ exclusions, suppression, and complete examples.
 `require-top-level-registration` accepts required `registrar` (`source`, `imported`) and `callback`, plus optional `message`. Scope owner modules with lint configuration; a genuine runtime imported registrar must receive the callback in a direct module-level expression statement. See [the rule](eslint-rules/require-top-level-registration.md).
 
 Both rules are opt-in and support ESLint and Oxlint, custom messages, and file/line/next-line suppression. Neither is enabled by a preset.
+
+### `no-top-level-await`
+
+An opt-in rule for module-level `await` and `for await`.
+`allowInImportMetaMain` defaults to `true` inside a direct main-guard consequent;
+set it to `false` to report those too. `message` customizes the diagnostic. See [options and examples](eslint-rules/no-top-level-await.md).

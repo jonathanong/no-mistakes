@@ -2,6 +2,11 @@ import type { ESLint } from "eslint";
 
 declare const plugin: ESLint.Plugin;
 declare namespace plugin {
+  export interface NoTopLevelAwaitOptions {
+    allowInImportMetaMain?: boolean;
+    message?: string;
+  }
+
   export type PostgresNoExecutorAdapterMode = "all" | "forwarding-only";
 
   export interface PostgresNoExecutorAdapterOptions {
