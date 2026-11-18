@@ -183,3 +183,7 @@ impl<'a, 'facts> Proof<'a, 'facts> {
 #[cfg(test)]
 #[path = "fragment_builder_boundary_tests.rs"]
 mod boundary_tests;
+
+#[cfg(test)]
+#[path = "fragment_builder_origin_tests.rs"]
+mod origin_tests;
