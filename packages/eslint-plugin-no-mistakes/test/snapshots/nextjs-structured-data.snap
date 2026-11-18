@@ -1,0 +1,312 @@
+[
+  {
+    "file": "app/page.tsx",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {}
+    ]
+  },
+  {
+    "file": "components/metadata.tsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "app/layout.tsx",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "allowInlineScriptIds": [
+          "theme-init"
+        ],
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 8,
+        "file": "app/page.tsx",
+        "line": 4,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 13,
+        "file": "app/page.tsx",
+        "line": 9,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 8,
+        "file": "app/page.tsx",
+        "line": 4,
+        "message": "Render structured data with the approved component.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 13,
+        "file": "app/page.tsx",
+        "line": 9,
+        "message": "Render structured data with the approved component.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "structuredDataMessage": "Render structured data with the approved component."
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 8,
+        "file": "app/page.tsx",
+        "line": 4,
+        "message": "Render structured data with the approved component.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 13,
+        "file": "app/page.tsx",
+        "line": 9,
+        "message": "Render structured data with the approved component.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData",
+        "structuredDataMessage": "Render structured data with the approved component."
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 8,
+        "file": "app/page.tsx",
+        "line": 4,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 13,
+        "file": "app/page.tsx",
+        "line": 9,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "allowInlineScriptIds": [
+          "page-schema",
+          "secondary-schema"
+        ],
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 8,
+        "file": "app/page.tsx",
+        "line": 4,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 9,
+        "endLine": 13,
+        "file": "app/page.tsx",
+        "line": 9,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "allowInlineScriptIdPatterns": [
+          "-schema$"
+        ],
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "components/metadata.tsx",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 7,
+        "endLine": 10,
+        "file": "components/metadata.tsx",
+        "line": 6,
+        "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag.",
+        "messageId": "structuredData",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData"
+      }
+    ]
+  },
+  {
+    "file": "app/page.tsx",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 29,
+        "endLine": 4,
+        "file": "app/page.tsx",
+        "line": 4,
+        "message": "Use next/script instead of a raw <script> tag.",
+        "messageId": "script",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 46,
+        "endLine": 5,
+        "file": "app/page.tsx",
+        "line": 5,
+        "message": "Use next/script instead of a raw <script> tag.",
+        "messageId": "script",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 41,
+        "endLine": 6,
+        "file": "app/page.tsx",
+        "line": 6,
+        "message": "Use next/script instead of a raw <script> tag.",
+        "messageId": "script",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData",
+        "structuredDataMessage": "Render structured data with the approved component."
+      }
+    ]
+  },
+  {
+    "file": "app/layout.tsx",
+    "findings": [
+      {
+        "column": 9,
+        "endColumn": 11,
+        "endLine": 12,
+        "file": "app/layout.tsx",
+        "line": 7,
+        "message": "Use next/script instead of a raw <script> tag.",
+        "messageId": "script",
+        "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "structuredDataComponent": "StructuredData",
+        "structuredDataMessage": "Render structured data with the approved component."
+      }
+    ]
+  }
+]
