@@ -474,3 +474,12 @@ fn message_includes_file_line_reason_and_match() {
         "src/app.test.ts:4: tests must not pin exact dependency versions (exact action ref): `actions/checkout@v4`"
     );
 }
+
+#[test]
+fn regex_literals_with_line_terminators_are_not_pins() {
+    let source =
+        std::fs::read_to_string(fixture("regex-action-refs").join("defaults/line-terminators.txt"))
+            .unwrap();
+    let options = compile_options(&Options::default()).unwrap();
+    assert!(check_source("regex.test.mts", &source, &options).is_empty());
+}

@@ -2,6 +2,7 @@ pub(super) struct LexState {
     pub(super) quote: Option<u8>,
     escaped: bool,
     pub(super) regex: bool,
+    pub(super) regexes: Vec<(usize, usize)>,
     regex_class: bool,
     pub(super) regex_allowed: bool,
     pub(super) line_comment: bool,
@@ -17,6 +18,7 @@ impl LexState {
             quote: None,
             escaped: false,
             regex: false,
+            regexes: Vec::new(),
             regex_class: false,
             regex_allowed: true,
             line_comment: false,
@@ -138,6 +140,8 @@ impl LexState {
                     b'[' => self.regex_class = true,
                     b']' => self.regex_class = false,
                     b'/' if !self.regex_class => {
+                        let start = self.non_code_start.expect("regex has an opening delimiter");
+                        self.regexes.push((start + 1, index));
                         self.regex = false;
                         self.regex_allowed = false;
                         self.finish_non_code(index + 1, ranges);
@@ -154,37 +158,4 @@ impl LexState {
         }
         None
     }
-}
-
-pub(super) fn follows_control_condition(
-    bytes: &[u8],
-    open_paren: usize,
-    non_code_ranges: &[(usize, usize)],
-) -> bool {
-    let end = super::skip_trivia(bytes, open_paren, non_code_ranges);
-    if [b"if".as_slice(), b"while", b"for", b"with"]
-        .iter()
-        .any(|token| standalone_token_ends_at(bytes, end, token))
-    {
-        return true;
-    }
-    let Some(await_start) = end.checked_sub(b"await".len()) else {
-        return false;
-    };
-    standalone_token_ends_at(bytes, end, b"await")
-        && standalone_token_ends_at(
-            bytes,
-            super::skip_trivia(bytes, await_start, non_code_ranges),
-            b"for",
-        )
-}
-
-fn standalone_token_ends_at(bytes: &[u8], end: usize, token: &[u8]) -> bool {
-    let Some(start) = end.checked_sub(token.len()) else {
-        return false;
-    };
-    &bytes[start..end] == token
-        && (start == 0
-            || !(bytes[start - 1].is_ascii_alphanumeric()
-                || matches!(bytes[start - 1], b'_' | b'$' | b'.' | b'#')))
 }

@@ -1,0 +1,142 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 2,
+          "message": "pins.test.mts:2: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toBe('vendor/sample@v4')",
+          "target": "exact action ref"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "defaults": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "jsx.test.tsx",
+          "import": "vendor/sample@v4",
+          "line": 2,
+          "message": "jsx.test.tsx:2: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "const expression = <p>{/vendor\\/sample@v4/}</p>",
+          "target": "exact action ref"
+        },
+        {
+          "file": "lookalikes.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 4,
+          "message": "lookalikes.test.mts:4: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toMatch(/^\"vendor\\/sample@v4\"$/)",
+          "target": "exact action ref"
+        },
+        {
+          "file": "lookalikes.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 7,
+          "message": "lookalikes.test.mts:7: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "if (enabled) /vendor\\/sample@v4/.test(ref)",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v0",
+          "line": 14,
+          "message": "pins.test.mts:14: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v0`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toMatch(/vendor\\/sample@v0/)",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v1.2.3",
+          "line": 5,
+          "message": "pins.test.mts:5: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v1.2.3`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toMatch(/^vendor\\/sample@v1\\.2\\.3$/i)",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 1,
+          "message": "pins.test.mts:1: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toMatch(/vendor\\/sample@v4/)",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 2,
+          "message": "pins.test.mts:2: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toBe('vendor/sample@v4')",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 26,
+          "message": "pins.test.mts:26: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "/vendor\\/sample@v4/,",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 4,
+          "message": "pins.test.mts:4: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toMatch(/^vendor\\/sample@v4$/)",
+          "target": "exact action ref"
+        },
+        {
+          "file": "pins.test.mts",
+          "import": "vendor/sample@v4",
+          "line": 6,
+          "message": "pins.test.mts:6: tests must not pin exact dependency versions (exact action ref): `vendor/sample@v4`",
+          "rule": "test-no-dependency-pins",
+          "sourceLine": "expect(ref).toMatch(/uses: vendor\\/sample@v4/)",
+          "target": "exact action ref"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_js": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

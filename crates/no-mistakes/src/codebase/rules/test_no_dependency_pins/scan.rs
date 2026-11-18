@@ -14,6 +14,7 @@ mod jsx_text_ranges;
 mod line_scan;
 mod raw_literal_arg;
 mod received_prefix;
+mod regex_literals;
 mod synthetic;
 
 use line_scan::{into_findings, scan_lines, Found};
@@ -21,7 +22,11 @@ use synthetic::only_zero_versions;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut found = Vec::new();
-    let ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
+    let ranges = if opts
+        .patterns
+        .iter()
+        .any(|pattern| pattern.multiline || regex_literals::applies(file, pattern))
+    {
         let jsx_text_ranges = jsx_text_ranges::collect(file, content);
         let lexical_source = jsx_text_ranges::mask(content, &jsx_text_ranges);
         let mut ranges = source_ranges_for_file(file, &lexical_source);
@@ -92,6 +97,7 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
             }
         } else {
             scan_lines(file, content, pattern, &mut found);
+            regex_literals::scan(file, content, pattern, &ranges.regexes, &mut found);
         }
     }
     into_findings(found)
