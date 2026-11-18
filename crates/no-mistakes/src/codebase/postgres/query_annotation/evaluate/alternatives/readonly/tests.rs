@@ -46,6 +46,7 @@ fn check_scalar_mode(precise: bool, fixture: &str) {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),

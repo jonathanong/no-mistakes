@@ -80,6 +80,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 10,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),

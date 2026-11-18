@@ -42,6 +42,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),

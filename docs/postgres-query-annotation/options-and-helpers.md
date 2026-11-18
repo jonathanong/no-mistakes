@@ -82,7 +82,13 @@ the exact executor call. Chained `catch`, `then`, and `finally` callbacks can
 still contain separate executor calls that require their own annotations.
 
 Callback forwarding through a straight-line helper substitutes the statement and
-callback arguments at each analyzable callsite. Findings point to the executor
+callback arguments at each analyzable callsite. Imported helpers use the same
+proof. A configured custom tag can preserve the leading builder's annotation
+when that builder occupies the first interpolation after an empty or whitespace
+segment, with suffix fragments after it. Interpolation effects must leave that
+builder intact, and its originating tag must resolve to the same provider and
+export as the composing tag. This annotation-only proof does not recover complete SQL and does not apply to the
+bind-only `sql-template-strings` tag. Findings point to the executor
 inside the callback. Every callsite must pass; one annotated invocation cannot
 hide an unannotated or opaque invocation of the same callback.
 

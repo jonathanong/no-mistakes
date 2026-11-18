@@ -37,6 +37,7 @@ fn sequential_alternatives_discard_noncallback_frames() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -65,7 +66,6 @@ fn sequential_alternatives_discard_noncallback_frames() {
     );
     assert_eq!(evaluator.scopes.len(), 1, "only the module frame survives");
 }
-
 #[test]
 fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
@@ -98,6 +98,7 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -121,7 +122,6 @@ fn sloppy_named_arguments_function_uses_implicit_invocation_object() {
             if text == "/* implicit arguments wins */ SELECT 1"
     ));
 }
-
 #[test]
 fn sequential_alternatives_discard_unreachable_deleted_slots() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
@@ -154,6 +154,7 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -180,7 +181,6 @@ fn sequential_alternatives_discard_unreachable_deleted_slots() {
     assert!(evaluator.deleted_argument_slots.is_empty());
     assert!(evaluator.mapped_arguments.is_empty());
 }
-
 #[test]
 fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
@@ -213,6 +213,7 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -236,7 +237,6 @@ fn retained_mapping_preserves_deleted_slots_after_alias_rebinding() {
             if text == "/* disconnected parameter */ SELECT 1"
     ));
 }
-
 #[test]
 fn callback_frame_compaction_remaps_retained_parameter_metadata() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
@@ -269,6 +269,7 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -296,7 +297,6 @@ fn callback_frame_compaction_remaps_retained_parameter_metadata() {
     assert_eq!(evaluator.scopes.len(), 2);
     assert!(evaluator.mapped_arguments.contains_key(captured));
 }
-
 #[test]
 fn sequential_alternatives_discard_unreachable_builder_taint() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
@@ -329,6 +329,7 @@ fn sequential_alternatives_discard_unreachable_builder_taint() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -389,6 +390,7 @@ fn nested_scalar_joins_discard_sql_proof_but_keep_callback_references() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),
@@ -464,6 +466,7 @@ fn nested_capture_restoration_keeps_reverse_readers_exact() {
         active_callback_executions: Default::default(),
         untrusted_array_intrinsics: false,
         next_builder: 0,
+        builder_tags: Default::default(),
         invalidated_builders: Default::default(),
         builder_updates: Default::default(),
         captured_bindings: Default::default(),

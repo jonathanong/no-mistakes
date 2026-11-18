@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: './db.mjs'
+      include: ['callers.mts', 'guards.mts', 'other/*.mts', 'pager.mts', 'sql.mts', 'db.mts']
+      trustedSqlTags:
+        - module: './sql.mjs'
+          name: sql
+        - module: './other-sql.mjs'
+          name: sql
+        - module: '././sql.mjs'
+          name: sql
+      unanalyzableSql: advise

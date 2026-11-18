@@ -58,6 +58,7 @@ pub(super) struct Evaluator<'a, F> {
     pub active_callback_functions: Option<callbacks::CallbackSet>,
     pub active_callback_executions: Option<callbacks::CallbackSet>,
     pub next_builder: u64,
+    pub builder_tags: FxHashMap<u64, (super::module_ids::ModuleId, usize)>,
     pub invalidated_builders: FxHashSet<u64>,
     pub builder_updates: FxHashMap<u64, Value>,
     pub captured_bindings: CapturedBindings,

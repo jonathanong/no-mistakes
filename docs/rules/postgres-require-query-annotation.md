@@ -68,7 +68,17 @@ ownership for every importer.
 A source-proven helper may forward a statement argument through an inline
 callback such as `statement => read(statement)`. The leading literal comment
 survives at max effort when the helper supplies that statement to the callback,
-including across an imported helper. Each invocation keeps its own argument:
+including across an imported helper. For a named tag imported through
+`trustedSqlTags`, the callback payload may also be a template whose first
+interpolation is the statement builder, followed by suffix fragments. The first
+static segment must be empty or whitespace, and the builder must retain a known
+leading prefix from the same resolved tag binding. For example, a helper can
+forward ``run(sql`${statement}${tail} ORDER BY id LIMIT 50`)`` when its configured tag
+splices SQL builders. This proves only the annotation; it does not certify the
+complete composed SQL for structural rules. Built-in bind-only tags, shadowed or
+untrusted tags, builders from other tags, mutating interpolations, and dynamic
+or unresolved helpers do not establish this proof. Text prepended before the
+statement is checked as the head of the query instead. Each invocation keeps its own argument:
 an annotated caller cannot prove an unannotated caller. A completed literal
 comment also survives later template interpolations. A missing comment remains
 a finding; an unresolved leading prefix or interpolated comment name follows
