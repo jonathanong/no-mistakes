@@ -93,6 +93,12 @@ and total timings to distinguish network stalls from completion stalls. Its
 internal deadline leaves room before the workflow step deadline; a stalled
 transfer still fails the required native API gate.
 
+JavaScript coverage uses the same downloader for its explicit shard reports,
+selecting `.vitest/blob` as the output directory. All reports share one internal
+deadline and retain digest and archive-path checks. The merge runs only after
+successful download completion, so an incomplete transfer cannot produce a
+passing coverage result.
+
 Coverage reports pass every archived test executable explicitly to LLVM. Cargo's
 new output layout uses metadata markers to distinguish test binaries from build
 script outputs; the archive omits those markers. An implicit directory scan can

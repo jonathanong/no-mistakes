@@ -50,10 +50,10 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 0)
         return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
 
-    def run_main(self, names=()):
+    def run_main(self, names=(), **options):
         output, errors = io.StringIO(), io.StringIO()
         with redirect_stdout(output), redirect_stderr(errors):
-            code = download.main(names)
+            code = download.main(names, **options)
         return code, json.loads(output.getvalue()), errors.getvalue()
 
     def test_success_extracts_verified_runtime_and_cleans_archive(self):
@@ -174,22 +174,23 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
             self.assertAlmostEqual(report["seconds"][stage],
                                    sum(row["seconds"][stage] for row in report["artifacts"]))
 
-    def test_cli_only_consumer_completes_without_extracting_addon(self):
+    def test_explicit_output_directory_extracts_only_requested_artifact(self):
         fixtures = Path("transport")
         shutil.copytree(FIXTURES, fixtures)
         (fixtures / "curl").chmod(0o755)
         env = {**os.environ, "PATH": str(fixtures.resolve()) + os.pathsep + os.environ["PATH"],
                "NATIVE_DOWNLOAD_FIXTURES": str(fixtures.resolve())}
         result = subprocess.run([sys.executable, str(Path(download.__file__).resolve()),
-                                 "linux-runtime-cli"],
+                                 "--output-directory", ".vitest/blob", "linux-runtime-cli"],
                                 env=env, capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
         self.assertTrue(report["success"])
         self.assertEqual([row["name"] for row in report["artifacts"]], ["linux-runtime-cli"])
-        self.assertEqual(Path("target/debug/no-mistakes").read_text(),
+        self.assertEqual(Path(".vitest/blob/no-mistakes").read_text(),
                          "linux-runtime-cli fixture\\n")
-        self.assertFalse(Path("target/debug/no-mistakes.node").exists())
+        self.assertFalse(Path(".vitest/blob/no-mistakes.node").exists())
+        self.assertFalse(Path("target").exists())
 
     def test_explicit_names_reject_duplicates_and_invalid_names_before_transport(self):
         for names in (["linux-runtime-cli"] * 2, [""], ["../runtime"], ["runtime/name"]):
@@ -216,12 +217,14 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.metadata = json.loads((FIXTURES / "linux-metadata.json").read_text())
         self.metadata["artifacts"][1]["digest"] = "sha256:" + "0" * 64
         with patch.object(download.subprocess, "run", side_effect=self.transport):
-            code, report, errors = self.run_main(["linux-runtime-cli", "linux-runtime-addon"])
+            code, report, errors = self.run_main(
+                ["linux-runtime-cli", "linux-runtime-addon"],
+                output_directory=Path(".vitest/blob"))
         self.assertEqual(code, 1)
         self.assertFalse(report["success"])
         self.assertEqual([row["name"] for row in report["artifacts"]], ["linux-runtime-cli"])
-        self.assertTrue(Path("target/debug/no-mistakes").is_file())
-        self.assertFalse(Path("target/debug/no-mistakes.node").exists())
+        self.assertTrue(Path(".vitest/blob/no-mistakes").is_file())
+        self.assertFalse(Path(".vitest/blob/no-mistakes.node").exists())
         self.assertEqual(len(self.calls), 4)
         self.assertTrue(all(not archive.exists() for archive in self.archive_paths))
         self.assertIn("SHA256 mismatch", errors)
