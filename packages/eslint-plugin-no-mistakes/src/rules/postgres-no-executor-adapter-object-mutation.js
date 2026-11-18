@@ -26,6 +26,8 @@ function objectMutation(variable, executorVariable, allowedProperty, ignoredRefe
     const parent = value.parent;
     if (
       (parent?.type === "AssignmentExpression" && parent.left === value) ||
+      ((parent?.type === "ForOfStatement" || parent?.type === "ForInStatement") &&
+        parent.left === value) ||
       (parent?.type === "UpdateExpression" && parent.argument === value) ||
       (parent?.type === "UnaryExpression" && parent.operator === "delete") ||
       (parent?.type === "VariableDeclarator" &&

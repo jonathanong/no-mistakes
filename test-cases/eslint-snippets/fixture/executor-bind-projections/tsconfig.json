@@ -2,8 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "target": "ES2022",
-    "baseUrl": ".",
-    "paths": { "@example/db": ["db.ts"], "@example/sql": ["sql.ts"] }
+    "paths": { "@example/db": ["./db.ts"], "@example/sql": ["./sql.ts"] }
   },
   "include": ["*.ts"]
 }

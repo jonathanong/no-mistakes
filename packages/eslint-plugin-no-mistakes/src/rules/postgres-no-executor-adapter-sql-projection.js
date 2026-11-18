@@ -127,7 +127,6 @@ function staticObjectValue(node, field, context, seen = new Set()) {
 }
 
 function projectedScalar(node, field, context, allowUndefined) {
-  if (field !== null && scalarArgument(node, context, allowUndefined)) return true;
   if (field !== null && typedScalarProjection(node, field, context, allowUndefined)) return true;
   const value = field === null ? node : staticObjectValue(node, field, context);
   return Boolean(value && scalarArgument(value, context, allowUndefined));

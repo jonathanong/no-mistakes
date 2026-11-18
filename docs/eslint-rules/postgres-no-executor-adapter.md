@@ -435,16 +435,19 @@ run(0 ?? read, account);
   entirely composed of those primitives. This includes
   named aliases and interfaces, inherited required fields, direct member reads,
   and one-level local or parameter destructuring (including renamed bindings).
-  A scalar helper argument such as `input.id` uses the same proof. Every branch
-  of an object union must have the required primitive field. Existing default
+  A scalar helper argument such as `input.id` uses the same proof when the
+  helper interpolates that value directly. A property interpolation requires
+  proof of that named property; a scalar argument alone cannot supply it. Every
+  branch of an object union must have the required primitive field. Existing default
   parameter handling still determines whether `undefined` is accepted.
 - This proof applies only to interpolations of configured parameterized trusted
   tags. A field passed as statement text, string concatenation, an interpolated
   raw template, an untrusted tag, a SQL/statement object, `any`, or `unknown`
   remains unproven. Optional or missing fields, getters, computed or nested
-  projections, casts standing in for type proof, and mutated or escaped objects
-  also remain reported. A reassigned destructured binding is unproven in both
-  local and imported helpers. Without a TypeScript program, the existing
+  projections, private members, casts standing in for type proof, and mutated or
+  escaped objects also remain reported. Loop targets such as `for (input.id of ids)` and
+  `for (input.id in ids)` count as writes. A reassigned destructured binding is
+  unproven in both local and imported helpers. Without a TypeScript program, the existing
   literal-object and scalar-parameter controls keep their syntax-only proof;
   the new typed-field proof is unavailable. Default `mode: "all"` is unchanged.
 - Imports for the two scoped options above match `importSpecifier` and its

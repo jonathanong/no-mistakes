@@ -32,6 +32,10 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
   const seen = new Map();
   function visit(node, field = null) {
     if (node.type === "MemberExpression" && !node.computed) {
+      if (node.property.type !== "Identifier") {
+        requirements.push(null);
+        return;
+      }
       if (node.parent?.type === "CallExpression" && node.parent.callee === node)
         return visit(node.object, field);
       if (field !== null) requirements.push(null);

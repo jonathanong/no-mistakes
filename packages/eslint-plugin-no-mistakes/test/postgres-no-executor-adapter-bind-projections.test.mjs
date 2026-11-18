@@ -20,6 +20,18 @@ const options = {
 };
 const languageOptions = { parser: tsParser, ecmaVersion: 2024, sourceType: "module", globals: {} };
 
+function fixtureRows(rows) {
+  const prefix = "test-cases/eslint-snippets/fixture/";
+  return rows.map((row) => ({
+    ...row,
+    file: row.file.replace(prefix, ""),
+    findings: row.findings.map((finding) => ({
+      ...finding,
+      file: finding.file.replace(prefix, ""),
+    })),
+  }));
+}
+
 function testCase(name, mode, typed = true, loose = false) {
   const filename = resolve(
     __dirname,
@@ -70,7 +82,17 @@ it("snapshots typed projection boundaries and unchanged default-mode diagnostics
   };
   const rows = snapshotSuite(rule, languageOptions, suite);
   expect(rows.map((row) => row.findings.length)).toEqual([0, 0, 0, 0, 24, 14, 24, 1, 1, 7]);
-  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+  await expect(snapshotDocument(fixtureRows(rows))).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-bind-projections.snap",
+  );
+});
+
+it("reports loop writes, scalar property requirements, and private members", async () => {
+  const rows = snapshotSuite(rule, languageOptions, {
+    invalid: [testCase("review.ts", "forwarding-only")],
+  });
+  expect(rows[0].findings.map(({ line }) => line)).toEqual([7, 11, 17, 23, 29]);
+  await expect(snapshotDocument(fixtureRows(rows))).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-bind-review.snap",
   );
 });

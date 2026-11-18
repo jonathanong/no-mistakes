@@ -28,7 +28,12 @@ function primitiveAnnotation(node, allowUndefined) {
 
 function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
   node = unwrapTs(node);
-  if (node?.type === "MemberExpression" && !node.computed && !node.optional)
+  if (
+    node?.type === "MemberExpression" &&
+    !node.computed &&
+    !node.optional &&
+    node.property.type === "Identifier"
+  )
     return typedScalarProjection(node.object, node.property.name, context, allowUndefined);
   if (node?.type === "Literal")
     return (
