@@ -1,5 +1,5 @@
 use super::check_json_clean::assert_saved_fixture_clean;
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::rules_path;
 
 #[test]
 fn postgres_aliased_identifier_guard_transaction_check_json_snapshot() {
@@ -21,7 +21,7 @@ fn postgres_aliased_identifier_guard_unchecked_union_check_json_snapshot() {
         "fixture",
         "issue-3073-aliased-guards",
     );
-    assert_saved_fixture(
+    assert_saved_fixture_clean(
         "postgres_aliased_identifier_guard_unchecked_union",
         &[(
             "reported",

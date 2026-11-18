@@ -1,0 +1,18 @@
+declare const external: string;
+export const ANNOTATED: readonly string[] = ["a", "b"] as const;
+export let MUTABLE = ["a", "b"] as const;
+export const DYNAMIC = ["a", external] as const;
+export const MIXED = ["a", 1] as const;
+export const SPREAD = [...ANNOTATED] as const;
+export const WRITTEN = ["a", "b"] as const;
+WRITTEN[0] = external;
+export const ESCAPED = ["a", "b"] as const;
+consume(ESCAPED);
+export type Annotated = (typeof ANNOTATED)[number];
+export type Mutable = (typeof MUTABLE)[number];
+export type Dynamic = (typeof DYNAMIC)[number];
+export type Mixed = (typeof MIXED)[number];
+export type Spread = (typeof SPREAD)[number];
+export type Written = (typeof WRITTEN)[number];
+export type Escaped = (typeof ESCAPED)[number];
+declare function consume(value: unknown): void;

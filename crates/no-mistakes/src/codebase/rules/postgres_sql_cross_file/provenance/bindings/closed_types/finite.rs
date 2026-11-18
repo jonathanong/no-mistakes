@@ -58,7 +58,13 @@ impl Bindings<'_> {
     ) -> bool {
         match shape {
             ValueType::FiniteStringLiterals => true,
-            ValueType::Element(name) => self.finite_tuple(file, name),
+            ValueType::Element(name) => {
+                self.finite_tuple(file, name)
+                    || self
+                        .graph
+                        .and_then(|graph| graph.imported_type(file, name))
+                        .is_some_and(|(producer, local)| self.finite_tuple(&producer, &local))
+            }
             ValueType::Reference(name) => {
                 let key = (file.to_path_buf(), name.clone());
                 if !visited.insert(key.clone()) {
@@ -68,8 +74,19 @@ impl Bindings<'_> {
                     .facts
                     .get_ts_facts(file)
                     .and_then(|ts| ts.value_flow.type_shapes.get(name));
-                let resolved =
-                    local.is_some_and(|shape| self.finite_string_type_inner(file, shape, visited));
+                let resolved = if let Some(shape) = local {
+                    self.finite_string_type_inner(file, shape, visited)
+                } else {
+                    self.graph
+                        .and_then(|graph| graph.imported_type(file, name))
+                        .is_some_and(|(producer, local)| {
+                            self.finite_string_type_inner(
+                                &producer,
+                                &ValueType::Reference(local),
+                                visited,
+                            )
+                        })
+                };
                 visited.remove(&key);
                 resolved
             }

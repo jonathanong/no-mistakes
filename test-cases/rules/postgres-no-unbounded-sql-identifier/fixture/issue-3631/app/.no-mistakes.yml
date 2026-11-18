@@ -1,0 +1,13 @@
+version: 2
+effort: max
+projects:
+  app:
+    root: .
+    include: ["*.mts"]
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    projects: [app]
+    options:
+      importSpecifier: "@example/db"
+      include: ["*.mts"]
+      unanalyzableSql: ignore

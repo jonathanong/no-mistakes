@@ -1,5 +1,5 @@
 use super::names::identifier_name;
-use super::{plain_call, RegistryMutation};
+use super::plain_call;
 use crate::codebase::dependencies::extract::ImportedBindingKind;
 use oxc_ast::ast::{AssignmentTarget, CallExpression, Expression};
 
@@ -76,24 +76,6 @@ impl super::super::super::ImportCollector {
             }
             _ => false,
         }
-    }
-
-    pub(super) fn record_registry_mutation(&mut self, name: &str) {
-        let Some(scope) = self.callee_binding_scope(name) else {
-            return;
-        };
-        let seen = self
-            .value_flow
-            .registry_mutations
-            .iter()
-            .any(|mutation| mutation.name == name && mutation.scope == scope);
-        if seen {
-            return;
-        }
-        self.value_flow.registry_mutations.push(RegistryMutation {
-            name: name.to_string(),
-            scope,
-        });
     }
 
     fn imported_random_uuid(&self) -> bool {

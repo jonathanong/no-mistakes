@@ -86,6 +86,17 @@ impl Bindings<'_> {
             } => self.named_unbounded(file, name, scope.unwrap_or(0), *offset, seen),
             ValueExpression::Member(inner, key) => self.member_unbounded(file, inner, key, seen),
             ValueExpression::Awaited(inner) => self.expr_unbounded(file, inner, seen),
+            ValueExpression::Call(start, end) if self.numeric_parameter_bounds_only => {
+                super::super::helpers::value_call_at(self.facts, file, *start, *end).is_some_and(
+                    |call| {
+                        call.arguments.is_empty()
+                            && matches!(&call.callee, ValueExpression::Member(receiver, method)
+                                if method == "toString"
+                                    && self.expr_unbounded(file, receiver, seen)
+                                    && !self.identifier_return(file, call, true))
+                    },
+                )
+            }
             ValueExpression::Derived(parts) => parts
                 .iter()
                 .any(|part| self.expr_unbounded(file, part, seen)),

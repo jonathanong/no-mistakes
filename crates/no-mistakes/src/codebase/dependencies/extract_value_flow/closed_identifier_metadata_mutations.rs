@@ -30,11 +30,13 @@ impl ImportCollector {
         sources.sort_unstable();
         sources.dedup();
         drop(mutated);
-        self.value_flow.registry_mutations.extend(
-            sources
-                .into_iter()
-                .map(|(name, scope)| RegistryMutation { name, scope }),
-        );
+        self.value_flow
+            .registry_mutations
+            .extend(sources.into_iter().map(|(name, scope)| RegistryMutation {
+                name,
+                scope,
+                export_only: false,
+            }));
         rows::finalize::publish(self, rows);
     }
 }

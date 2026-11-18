@@ -45,6 +45,16 @@ impl ValueImportProjection<'_, '_> {
         }
     }
 
+    fn live_value(&self, producer: &Path, local: &str) -> bool {
+        self.indexes
+            .file(self.facts, producer)
+            .is_some_and(|source| source.values.immutable_binding(0, local))
+            && self
+                .facts
+                .get_ts_facts(producer)
+                .is_some_and(value_import_facts_complete)
+    }
+
     fn selector(
         &self,
         export: (&std::path::Path, &str),
@@ -53,15 +63,7 @@ impl ValueImportProjection<'_, '_> {
     ) -> ImportedSelector {
         let result = match self.resolve(export.0, export.1) {
             ExportedCallableResolution::Value(producer, local) => {
-                let Some(source) = self.indexes.file(self.facts, &producer) else {
-                    return ImportedSelector::Missing;
-                };
-                if !source.values.immutable_binding(0, &local)
-                    || !self
-                        .facts
-                        .get_ts_facts(&producer)
-                        .is_some_and(value_import_facts_complete)
-                {
+                if !self.live_value(&producer, &local) {
                     return ImportedSelector::Missing;
                 }
                 (

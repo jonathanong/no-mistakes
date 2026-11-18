@@ -70,6 +70,7 @@ pub(crate) enum SetMethod {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RegistryMutation {
+    pub(crate) export_only: bool,
     pub(crate) name: String,
     pub(crate) scope: usize,
 }
