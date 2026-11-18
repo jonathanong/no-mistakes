@@ -210,11 +210,47 @@ also exposes its captured values. Returning `array.push(...)`'s numeric result
 does not expose the array itself. Callbacks reachable on a return path remain
 checked even if the continuing path replaces a callback field or captured binding.
 
-A loop can mutate a value shared by an earlier iteration even when the write
-precedes the escape in source order. Callbacks passed to unresolved calls,
-including `.map` and `.forEach`, may escape; returning a captured outer builder
-does not restore its local ownership. Build a fresh value inside each callback
-instead.
+An inline synchronous callback passed to a known array's built-in `map`,
+`forEach`, `flatMap`, or `filter` runs before the call returns. It may mutate a
+fresh local builder captured from the enclosing function while that builder
+remains locally owned:
+
+```ts
+function collect() {
+  const out = [];
+  [1, 2].forEach((value) => out.push(value));
+  return out;
+}
+```
+
+This preserves ownership; it does not exempt all writes in the callback.
+Parameters, imports, module bindings, and shared values nested inside a fresh
+container retain ordinary reporting. Passing the builder to an unknown call or
+publishing a closure that captures it escapes it. Subsequent writes still report,
+including a write before that escape in source order when an earlier callback
+iteration may already have escaped the builder. An early callback return does
+not erase an escape that another iteration can observe.
+
+Recognition is limited to direct array literals, local bindings holding fresh
+array values, and parameters directly annotated with an array type (`T[]`), a
+tuple type, or the global `Array<T>` type. Member receivers, destructured
+parameter types, type aliases, type assertions, and unknown receivers do not
+establish a known array. Only inline, synchronous, non-generator callbacks are
+recognized; named callbacks and async callbacks retain ordinary handling.
+Callbacks that write object properties, use `Object` or `Reflect` mutation,
+or read nested members of captured fresh containers also retain ordinary
+handling. Those operations can carry shared children between iterations;
+the synchronous path supports direct array mutator calls on captured builders.
+
+Any tracked member write or mutation through `Object` or `Reflect` invalidates
+built-in method recognition for that receiver, even when the write names another
+property. Passing an annotated receiver to an unknown call also invalidates
+recognition. A fresh receiver that has escaped falls back to ordinary call
+handling, as does an explicit write to the global array prototype. Custom or
+overridden methods do not receive ownership preservation.
+Callbacks passed to unresolved calls may escape; returning a captured outer
+builder does not restore its local ownership. Build a fresh value inside each
+callback instead.
 
 Return-path handling restores fresh-value ownership for continuing paths. It
 retains nested callback escape effects and the escape epoch used to revisit

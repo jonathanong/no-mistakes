@@ -163,6 +163,7 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
 }
 
 function releaseEscaping(state, tag) {
+  if (tag?.type === "shared") tag.iterationChanged = true;
   if (tag == null) {
     return;
   }

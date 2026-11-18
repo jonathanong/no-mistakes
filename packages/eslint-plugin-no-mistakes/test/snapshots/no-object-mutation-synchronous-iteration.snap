@@ -1,0 +1,424 @@
+[
+  {
+    "file": "no-object-mutation-iteration-escapes/synchronous-controls.js",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-iteration-escapes/typed-controls.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 2,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 2,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 9,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 9,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 18,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 18,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 29,
+        "endLine": 19,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 19,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 27,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 27,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 38,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 38,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 47,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 47,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 56,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 56,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 67,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 67,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 78,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 78,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 88,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 88,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 98,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 98,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 107,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 107,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 116,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 116,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 128,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 128,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 140,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 140,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 151,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 151,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 19,
+        "endLine": 161,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 161,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 21,
+        "endLine": 171,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 171,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 27,
+        "endLine": 180,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 180,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 25,
+        "endLine": 181,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 181,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 21,
+        "endLine": 188,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 188,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 21,
+        "endLine": 190,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 190,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 20,
+        "endLine": 198,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 198,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 20,
+        "endLine": 208,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 208,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 28,
+        "endLine": 217,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 217,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 44,
+        "endLine": 218,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 218,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 24,
+        "endLine": 225,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 225,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 19,
+        "endLine": 226,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 226,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 25,
+        "endColumn": 44,
+        "endLine": 233,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 233,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 241,
+        "file": "no-object-mutation-iteration-escapes/synchronous-escapes.js",
+        "line": 241,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "no-object-mutation-iteration-escapes/typed-escapes.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 2,
+        "file": "no-object-mutation-iteration-escapes/typed-escapes.ts",
+        "line": 2,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 18,
+        "endLine": 10,
+        "file": "no-object-mutation-iteration-escapes/typed-escapes.ts",
+        "line": 10,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 13,
+        "file": "no-object-mutation-iteration-escapes/typed-escapes.ts",
+        "line": 13,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 27,
+        "file": "no-object-mutation-iteration-escapes/typed-escapes.ts",
+        "line": 27,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 23,
+        "endLine": 41,
+        "file": "no-object-mutation-iteration-escapes/typed-escapes.ts",
+        "line": 41,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  }
+]

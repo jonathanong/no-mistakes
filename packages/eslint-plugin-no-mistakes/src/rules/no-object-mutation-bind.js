@@ -1,9 +1,16 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { arrayParameter } = require("./no-object-mutation-receiver");
 const { considerWrite } = require("./no-object-mutation-write");
 const { literalKey, memberKey, staticKey } = require("./no-object-mutation-syntax");
-const { elementTag, freshCopy, readMember, shared } = require("./no-object-mutation-values");
+const {
+  elementTag,
+  freshCopy,
+  lookup,
+  readMember,
+  shared,
+} = require("./no-object-mutation-values");
 
 function moduleTag(tag) {
   if (tag?.type === "mapset") {
@@ -67,6 +74,7 @@ function assignBinding(state, name, tag, scope) {
     return;
   }
   cell.tag = tag;
+  cell.arrayParameter = false;
 }
 
 function assignPattern(state, pattern, tag, scope) {
@@ -130,6 +138,12 @@ function bindPattern(state, pattern, tag, scope, kind, objectNode) {
   }
   if (pattern.type === "Identifier") {
     bindName(pattern.name, kind === "param" ? shared("parameter") : tag, scope, kind);
+    if (kind === "param") {
+      lookup(scope, pattern.name).arrayParameter = arrayParameter(
+        state.context.sourceCode,
+        pattern,
+      );
+    }
     return;
   }
   if (pattern.type === "AssignmentPattern") {
