@@ -375,7 +375,10 @@ supported generated identifier shape, or an explicit trusted helper contract:
   proof; it still ends the runtime registry proof described above. Type-only
   star re-exports and an imported name used both as a type alias and in a
   `typeof` indexed-access query remain conservative: the type and value can
-  have different definitions.
+  have different definitions. A finite domain only bounds its own operand:
+  adding an open string still reports, including through a zero-argument
+  `.toString()` call or an alias of its receiver. This applies equally to local,
+  exported, and imported tuples.
 - `.get` on a `const` built-in `Map` built only from string-literal pairs, including a
   frozen map, until that map is mutated.
   Shadowed `Set`, `Map`, or `Object.freeze` implementations do not establish

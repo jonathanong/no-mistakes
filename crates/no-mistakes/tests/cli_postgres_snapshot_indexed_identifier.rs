@@ -56,3 +56,36 @@ fn postgres_imported_tuple_identifier_check_json_snapshot() {
     assert_eq!(report["max"]["report"]["warnings"], serde_json::json!([]));
     assert_eq!(report["max"]["report"]["advisories"], serde_json::json!([]));
 }
+
+#[test]
+fn postgres_tuple_identifier_composition_parity_check_json_snapshot() {
+    let root = rules_path(
+        "postgres-no-unbounded-sql-identifier",
+        "fixture",
+        "issue-3631-parity",
+    );
+    let report = assert_saved_fixture_report(
+        "postgres_tuple_identifier_composition_parity",
+        &[("max", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let findings = report["max"]["report"]["rules"].as_array().unwrap();
+    let mut locations = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    locations.sort_unstable();
+    let expected = ["imported.mts", "local.mts"]
+        .into_iter()
+        .flat_map(|file| [9, 10, 17, 18, 24, 25].map(|line| (file, line)))
+        .collect::<Vec<_>>();
+    assert_eq!(locations, expected);
+    assert_eq!(report["max"]["report"]["warnings"], serde_json::json!([]));
+    assert_eq!(report["max"]["report"]["advisories"], serde_json::json!([]));
+}
