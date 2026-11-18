@@ -1,4 +1,4 @@
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 
 const RULE: &str = "postgres-require-query-annotation";
 
@@ -417,4 +417,34 @@ fn postgres_append_only_shapes_check_json_snapshot() {
             "append-only-shapes.yml",
         )],
     );
+}
+
+#[test]
+fn postgres_correlated_branches_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "correlated-branches");
+    let document = assert_saved_fixture_report(
+        "postgres_correlated_branches",
+        &[
+            ("max_advise", root.clone(), root.join(".no-mistakes.yml")),
+            ("low_advise", root.clone(), root.join(".no-mistakes-low.yml")),
+        ],
+        &[],
+        &[],
+    );
+    let result = &document["max_advise"];
+    assert_eq!(result["exitCode"], 0);
+    let report = &result["report"];
+    assert_eq!(report["rules"], serde_json::json!([]));
+    assert_eq!(report["warnings"], serde_json::json!([]));
+    let composition_advisories = report["advisories"].as_array().unwrap();
+    let locations: Vec<_> = composition_advisories
+        .iter()
+        .map(|advisory| {
+            assert_eq!(advisory["rule"], RULE);
+            assert_eq!(advisory["target"], "sql-composition");
+            assert_eq!(advisory["file"], "annotation.mts");
+            advisory["line"].as_u64().unwrap()
+        })
+        .collect();
+    assert_eq!(locations, [35, 48]);
 }

@@ -1,0 +1,10 @@
+version: 2
+effort: low
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "./db.mjs"
+      executorTypeNames: [Run]
+      include: [annotation.mts]
+      unanalyzableSql: advise

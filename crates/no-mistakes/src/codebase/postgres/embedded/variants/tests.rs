@@ -16,6 +16,8 @@ mod branch_throw;
 mod captured_bindings;
 #[path = "tests/captured_builder_identities.rs"]
 mod captured_builder_identities;
+#[path = "tests/correlated_finite_guards.rs"]
+mod correlated_finite_guards;
 #[path = "tests/defensive.rs"]
 mod defensive;
 #[path = "tests/destructuring_assignments.rs"]

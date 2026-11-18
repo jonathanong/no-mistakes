@@ -1,3 +1,4 @@
+use super::super::control::paths::changed_paths;
 use super::{ScopeVisitor, Snapshot, SwitchStatement};
 
 pub(super) fn join(
@@ -20,34 +21,6 @@ pub(super) fn join(
         visitor.restore_variants(current);
     }
     visitor.variant_snapshot()
-}
-
-fn changed_paths(
-    visitor: &mut ScopeVisitor<'_>,
-    snapshot: &Snapshot,
-    other: &Snapshot,
-    paths: &[Vec<(u64, u32)>],
-) -> Snapshot {
-    visitor.variant_paths = paths.to_vec();
-    snapshot
-        .iter()
-        .zip(other)
-        .map(|(scope, other)| {
-            scope
-                .iter()
-                .map(|(name, values)| {
-                    let values = if Some(values) == other.get(name) {
-                        values.clone()
-                    } else {
-                        values
-                            .clone()
-                            .and_then(|values| visitor.with_variant_paths(values))
-                    };
-                    (name.clone(), values)
-                })
-                .collect()
-        })
-        .collect()
 }
 
 pub(super) fn select(visitor: &mut ScopeVisitor<'_>, statement: &SwitchStatement<'_>) {

@@ -66,6 +66,42 @@ fn recovered_paths(
             branch_paths(paths, id, 1 - truth_arm),
         );
     };
+    value_paths(values, paths, id, truth_arm, truth)
+}
+
+pub(super) fn finite_branches(
+    visitor: &ScopeVisitor<'_>,
+    test: &Expression<'_>,
+    paths: &[Vec<(u64, u32)>],
+    id: u64,
+    truth_arm: u32,
+) -> Option<(Paths, Paths)> {
+    let mut values = Vec::new();
+    for path in paths {
+        for value in super::super::super::closed_values::recover_predicate(visitor, test, path)? {
+            if !values.contains(&value) {
+                values.push(value);
+            }
+            if values.len() > crate::codebase::postgres::embedded::MAX_EMBEDDED_SQL_VARIANTS {
+                return None;
+            }
+        }
+    }
+    if !values.iter().any(|value| !value.choices.is_empty()) {
+        return None;
+    }
+    Some(value_paths(values, paths, id, truth_arm, |value| {
+        Some(value.truth())
+    }))
+}
+
+fn value_paths(
+    values: Vec<Recovered>,
+    paths: &[Vec<(u64, u32)>],
+    id: u64,
+    truth_arm: u32,
+    truth: impl Fn(&Recovered) -> Option<bool>,
+) -> (Paths, Paths) {
     let mut yes = Vec::new();
     let mut no = Vec::new();
     for value in values {

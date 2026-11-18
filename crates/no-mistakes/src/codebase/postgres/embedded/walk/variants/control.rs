@@ -7,7 +7,7 @@ mod abrupt;
 mod if_statement;
 pub(in crate::codebase::postgres::embedded::walk) use if_statement::if_statement;
 mod join;
-mod paths;
+pub(super) mod paths;
 mod selection;
 pub(super) use join::joined;
 use selection::select;

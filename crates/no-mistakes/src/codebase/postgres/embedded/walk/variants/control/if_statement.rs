@@ -21,8 +21,12 @@ fn visit_if<'a, const TRACK: bool>(visitor: &mut ScopeVisitor<'a>, statement: &I
     visitor.visit_variant_guard(&statement.test);
     let original = visitor.variant_snapshot();
     let paths = visitor.variant_paths.clone();
-    let (yes, no) = truthiness::branches(visitor, &statement.test, &paths, id, truth_arm);
+    let finite_paths = truthiness::finite_branches(visitor, &statement.test, &paths, id, truth_arm);
+    let correlated = finite_paths.is_some();
+    let (yes, no) = finite_paths
+        .unwrap_or_else(|| truthiness::branches(visitor, &statement.test, &paths, id, truth_arm));
     let taken = paths::taken(&yes, &no).or(taken);
+    let correlated = (correlated && taken.is_none()).then(|| (yes.clone(), no.clone()));
     let transaction_before = TRACK.then(|| TransactionSnapshot::capture(visitor));
     visitor.restore_variants(&paths::restrict(&original, &yes));
     visitor.variant_paths = yes;
@@ -39,6 +43,13 @@ fn visit_if<'a, const TRACK: bool>(visitor: &mut ScopeVisitor<'a>, statement: &I
         visit_arm::<TRACK>(visitor, alternate);
     }
     let right = visitor.variant_snapshot();
+    let (left, right) = if let Some((yes, no)) = correlated {
+        let correlated_left = paths::changed_paths(visitor, &left, &right, &yes);
+        let correlated_right = paths::changed_paths(visitor, &right, &left, &no);
+        (correlated_left, correlated_right)
+    } else {
+        (left, right)
+    };
     if let (Some(transaction_before), Some(transaction_left)) =
         (transaction_before, transaction_left)
     {
