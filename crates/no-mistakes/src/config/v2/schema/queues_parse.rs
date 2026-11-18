@@ -1,11 +1,15 @@
-use super::{EnqueueFactory, QueueFactoryRoles, QueueNameFactory, WorkerFactory};
+use super::{
+    EnqueueFactory, QueueFactoryRoles, QueueNameFactory, QueueWaitPatterns, WorkerFactory,
+};
 use serde::{Deserialize, Serialize};
 
 pub fn deserialize_factories<'de, D>(deserializer: D) -> Result<QueueFactoryRoles, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
-    let mut roles = FactoriesInput::deserialize(deserializer)?.into_roles();
+    let mut roles = FactoriesInput::deserialize(deserializer)?
+        .into_roles()
+        .map_err(serde::de::Error::custom)?;
     if let Some(message) = roles.conflicts() {
         return Err(serde::de::Error::custom(message));
     }
@@ -20,6 +24,8 @@ where
     if roles.enqueue.is_empty()
         && roles.worker.is_empty()
         && roles.enqueue_and_wait.is_empty()
+        && roles.enqueue_and_wait_patterns.is_empty()
+        && !roles.forbid_enqueue_and_wait_declarations
         && roles.queue.iter().all(|factory| factory.name == 0)
     {
         let names = roles
@@ -60,6 +66,8 @@ where
             })
             .collect(),
         enqueue_and_wait: roles.enqueue_and_wait.clone(),
+        enqueue_and_wait_patterns: roles.enqueue_and_wait_patterns.patterns().to_vec(),
+        forbid_enqueue_and_wait_declarations: roles.forbid_enqueue_and_wait_declarations,
     }
     .serialize(serializer)
 }
@@ -79,6 +87,10 @@ struct RolesBody {
     worker: Vec<WorkerInput>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     enqueue_and_wait: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    enqueue_and_wait_patterns: Vec<String>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    forbid_enqueue_and_wait_declarations: bool,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -115,8 +127,8 @@ struct WorkerInput {
 }
 
 impl FactoriesInput {
-    fn into_roles(self) -> QueueFactoryRoles {
-        match self {
+    fn into_roles(self) -> Result<QueueFactoryRoles, String> {
+        Ok(match self {
             Self::Names(names) => QueueFactoryRoles {
                 queue: names
                     .into_iter()
@@ -156,8 +168,10 @@ impl FactoriesInput {
                     })
                     .collect(),
                 enqueue_and_wait: body.enqueue_and_wait,
+                enqueue_and_wait_patterns: QueueWaitPatterns::new(body.enqueue_and_wait_patterns)?,
+                forbid_enqueue_and_wait_declarations: body.forbid_enqueue_and_wait_declarations,
                 ..QueueFactoryRoles::default()
             },
-        }
+        })
     }
 }

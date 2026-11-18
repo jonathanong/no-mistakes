@@ -51,6 +51,8 @@ export interface QueueDiagnostic {
   message: string;
 }
 
+export type QueueWaitFindingKind = "enqueue-and-wait" | "enqueue-and-wait-declaration";
+
 export interface QueueCheckFinding {
   kind: string;
   file: string;

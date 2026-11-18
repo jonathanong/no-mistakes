@@ -16,6 +16,9 @@ impl QueueVisitor<'_> {
                 match specifier {
                     ImportDeclarationSpecifier::ImportSpecifier(spec) => {
                         let imported = export_name(&spec.imported);
+                        if !import.import_kind.is_type() && !spec.import_kind.is_type() {
+                            self.note_wait_import(&spec.local, &imported, import.span.end);
+                        }
                         let local = spec.local.name.as_str().to_string();
                         if is_queue_package(&source)
                             && matches!(imported.as_str(), "Queue" | "TestQueue")

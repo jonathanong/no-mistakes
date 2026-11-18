@@ -128,7 +128,11 @@ fn queue_scope(
             &source,
             &plan.queue_factory_names,
             &plan.queue_factory_roles,
-        ) || (source.contains('\\')
+        ) || ((!plan
+            .queue_factory_roles
+            .enqueue_and_wait_patterns
+            .is_empty()
+            || source.contains('\\'))
             && waits
                 .get_or_init(|| {
                     crate::queue::extract::WaitScopes::new(&plan.queue_factory_roles.wait_scopes)

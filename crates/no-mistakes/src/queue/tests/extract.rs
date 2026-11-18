@@ -13,7 +13,7 @@ pub(crate) fn extract_program_with_factories(
     root: &Path,
 ) -> FileFacts {
     let record_waits = waits_in_scope(path, root, &roles.wait_scopes);
-    let semantic = (record_waits && needs_wait_scoping(source))
+    let semantic = (record_waits && needs_wait_scoping(source, roles))
         .then(|| oxc_semantic::SemanticBuilder::new().build(program));
     extract_program_with_scoping(
         path,

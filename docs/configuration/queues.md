@@ -29,6 +29,8 @@ queues:
     worker:
       - { callee: createWorker, name: 0, processor: 1 }
     enqueueAndWait: [submitForResult]
+    enqueueAndWaitPatterns: ['^submit.*ForResult$']
+    forbidEnqueueAndWaitDeclarations: false
 ```
 
 ```yaml
@@ -71,8 +73,29 @@ contributes imported names; namespace references inside an inline processor do
 not narrow that processor. The `enqueues` and `workers` globs scope the files
 that participate in a project. `factories.enqueueAndWait` lists the exact names
 of functions that enqueue a job and wait for its result, such as
-`submitForResult(...)`. Names match bare identifier callees and default to an empty list. `waitScopes` limits that
-project's findings for these calls and for built-in
+`submitForResult(...)`. The list defaults to empty. Exact wrappers use the
+same member, static computed member, import alias, immutable local alias,
+and direct callback-reference handling as the built-in wait methods. Local
+aliases must be `const` bindings with a stable symbol, no writes, and uses
+after their declarations; dynamic keys do not establish a wait.
+
+`factories.enqueueAndWaitPatterns` is an optional list of name patterns for
+wait wrappers, defaulting to `[]`. Patterns use Rust `regex` syntax, not
+JavaScript regular-expression literals: write `^submit.*ForResult$`, not
+`/^submit.*ForResult$/`. Use anchors for whole-name matching,
+such as `^submit.*ForResult$`; look-around and backreferences are unsupported.
+Invalid patterns are configuration errors.
+
+`factories.forbidEnqueueAndWaitDeclarations` defaults to `false`. Enable it to
+report matching wait-wrapper declarations as `enqueue-and-wait-declaration`,
+so unused wrappers cannot introduce a blocking API later. It checks runtime
+function declarations and variables initialized with arrows or function
+expressions; ambient `declare` signatures are not wrapper definitions. Replace the wrapper
+with enqueue-only behavior and let the caller return control. The fix hint is
+part of the finding's `message`, not a separate JSON field.
+
+`waitScopes` limits that project's wait call/reference and declaration
+findings, including the built-in
 [`enqueue-and-wait` patterns](../cli/queues-check.md). An empty list checks
 every file of the project, and a file outside every project stays checked.
 A project root matches only that directory:

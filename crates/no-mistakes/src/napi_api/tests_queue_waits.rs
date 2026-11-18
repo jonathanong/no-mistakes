@@ -24,3 +24,40 @@ fn queue_check_json_recognizes_wait_values_and_respects_alias_scopes() {
             && finding["file"].as_str().unwrap().replace('\\', "/") != "api/worker.ts"
     }));
 }
+
+#[test]
+fn queue_check_json_exposes_wrapper_patterns_and_declaration_policy() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/wait-wrappers/fixture");
+    let result = super::project::queue_check_json_impl(json!({
+        "root": root
+    }))
+    .unwrap();
+    let findings: serde_json::Value = serde_json::from_str(&result).unwrap();
+    let findings = findings.as_array().unwrap();
+    assert!(findings
+        .iter()
+        .any(|finding| finding["kind"] == "enqueue-and-wait"));
+    let declarations: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["kind"] == "enqueue-and-wait-declaration")
+        .collect();
+    let mut files: Vec<_> = declarations
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap().replace('\\', "/"))
+        .collect();
+    files.sort();
+    assert_eq!(
+        files,
+        [
+            "api/routes/declaration-arrow.ts",
+            "api/routes/declaration-expression.ts",
+            "api/routes/declaration-function.ts",
+            "api/routes/suppressed-declaration.ts",
+        ]
+    );
+    assert!(declarations.iter().all(|finding| finding["message"]
+        .as_str()
+        .unwrap()
+        .contains("enqueue without waiting")));
+}

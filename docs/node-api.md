@@ -426,7 +426,19 @@ remain failures. See
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
-`queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Explicit wrapper names come from `queues.factories.enqueueAndWait` in the discovered configuration, with the same project `waitScopes`.
+`queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
+Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
+name patterns with `queues.factories.enqueueAndWaitPatterns` (default `[]`),
+and declaration checks with
+`queues.factories.forbidEnqueueAndWaitDeclarations` (default `false`) in the
+discovered configuration file. These are not inline `queueCheck()` options.
+Both wait finding kinds use the same project `waitScopes`.
+
+Import the exported `QueueWaitFindingKind` type for the wait-specific values
+`"enqueue-and-wait" | "enqueue-and-wait-declaration"`.
+`QueueCheckFinding.kind` remains `string` to preserve compatibility with
+other finding kinds. Declaration findings carry fix guidance in `message`;
+no separate JSON field is added.
 
 ## Runtime exports
 
