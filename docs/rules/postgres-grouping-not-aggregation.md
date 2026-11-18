@@ -408,9 +408,10 @@ largest in-flight statement.
 Shared/canonical `report`, project `postgres.unanalyzableSql: fail`, and
 rule-level `unanalyzableSql: report` or `unanalyzableSql: fail` all map to
 `advise`. This rule differs from failing PostgreSQL rules because neither a
-proven grouping shape nor uncertain SQL establishes that a query rewrite should be mandatory. The legacy
-`fail` spelling does not promote an advisory into a failure. Invalid modes remain
-configuration errors even when a valid canonical policy is present.
+proven grouping shape nor uncertain SQL establishes that a query rewrite should
+be mandatory. The legacy `fail` spelling does not promote an advisory into a
+failure. Invalid modes remain configuration errors even when a valid canonical
+policy is present.
 
 No allow list or `options.fail` option is supported. Public Node options are exported as
 `PostgresGroupingNotAggregationOptions`; the target union is
@@ -421,20 +422,26 @@ No allow list or `options.fail` option is supported. Public Node options are exp
 
 The default `undeclared-executor-type` advisory includes the application index
 in its message. Named applications include their configured name before the
-index, such as `application "worker" (#0)`; unnamed applications use `application
-#0`. For example:
+index, such as `application "worker" (#0)`; unnamed applications use
+`application #0`. This full example for a named application is wrapped for
+readability:
 
 ```text
-src/query.ts:5: postgres-grouping-not-aggregation application #0 has unresolved SQL for undeclared-executor-type: undeclared executor type `OtherClient` from `db`; add `OtherClient` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked
+src/query.ts:5: postgres-grouping-not-aggregation application "worker" (#0)
+has unresolved SQL for undeclared-executor-type:
+undeclared executor type `OtherClient` from `db`; add `OtherClient` to
+executorTypeNames and use an explicitly typed parameter/helper so its SQL
+is checked
 ```
 
 Compatibility note: #3554 introduced this format before the per-rule
 `unanalyzableSql: report` alias fix. This default advisory previously began
 directly with `undeclared executor type` after the file and line and included an
 `import` field. The current format uses the application prefix above and omits
-`import`. Consumers must tolerate the missing field and should select this diagnostic by
-`rule: postgres-grouping-not-aggregation` and `target: undeclared-executor-type`
-rather than matching message text. It remains in `advisories` and does not fail
+`import`. Consumers must tolerate the missing field and should select this
+diagnostic by `rule: postgres-grouping-not-aggregation` and
+`target: undeclared-executor-type` rather than matching message text. It remains
+in `advisories` and does not fail
 `check`; this change does not describe the output contract of other PostgreSQL
 rules or other advisory targets.
 
