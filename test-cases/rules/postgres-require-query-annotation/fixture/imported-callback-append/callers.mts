@@ -1,5 +1,5 @@
 import { read } from './db.mjs';
-import { page, replaced, prepended } from './pager.mjs';
+import { page, replaced, prepended, nested, escaped } from './pager.mjs';
 import { sql, type SqlStatement } from './sql.mjs';
 export const first = (after?: string) => page(sql`/* pageWidgets */ SELECT id FROM widgets WHERE TRUE`, after, 50, statement => read(statement));
 export const second = (after?: string) => page(sql`/* pageGadgets */ SELECT id FROM gadgets WHERE TRUE`, after, 50, statement => read(statement));
@@ -22,3 +22,5 @@ export const shared = () => {
   const statement = sql`/* shared */ SELECT id FROM widgets`;
   return page(statement, undefined, 50, value => read(value));
 };
+export const nestedTails = (after?: string) => nested(sql`/* nested */ SELECT id FROM widgets`, after, 1, statement => read(statement));
+export const escapedInput = (after?: string) => escaped(sql`/* escaped */ SELECT id FROM widgets`, after, statement => read(statement));

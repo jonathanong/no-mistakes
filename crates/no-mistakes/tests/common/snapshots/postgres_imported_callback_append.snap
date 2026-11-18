@@ -24,6 +24,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "callers.mts",
+          "line": 26,
+          "message": "callers.mts:26: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const escapedInput = (after?: string) => escaped(sql`/* escaped */ SELECT id FROM widgets`, after, statement => read(statement));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
           "line": 6,
           "message": "callers.mts:6: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
           "rule": "postgres-require-query-annotation",
@@ -228,6 +236,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "callers.mts:23: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "return page(statement, undefined, 50, value => read(value));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 26,
+          "message": "callers.mts:26: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const escapedInput = (after?: string) => escaped(sql`/* escaped */ SELECT id FROM widgets`, after, statement => read(statement));",
           "target": "annotation"
         },
         {

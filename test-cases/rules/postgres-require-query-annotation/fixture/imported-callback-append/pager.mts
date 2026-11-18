@@ -12,3 +12,15 @@ export async function replaced<T>(statement: SqlStatement, query: Run<T>) {
 export async function prepended<T>(statement: SqlStatement, query: Run<T>) {
   return query(sql`SELECT 1; ${statement}`);
 }
+export async function nested<T>(statement: SqlStatement, after: string | undefined, mode: number, query: Run<T>) {
+  if (mode > 0) {
+    if (after) statement.append(sql` AND id > ${after}`);
+  }
+  return await query(statement);
+}
+declare function mutate(statement: SqlStatement): void;
+export async function escaped<T>(statement: SqlStatement, after: string | undefined, query: Run<T>) {
+  mutate(statement);
+  if (after) statement.append(sql` LIMIT 10`);
+  return await query(statement);
+}
