@@ -41,6 +41,8 @@ fn grouping_sql_policy_aliases_match_check_and_analyze_project() {
         ("rule-fail", 2),
         ("shared-report", 2),
         ("rule-report", 2),
+        ("rule-sql-report", 2),
+        ("shared-ignore-rule-sql-report", 2),
         ("shared-sql-report", 2),
         ("project-fail", 2),
         ("rule-ignore-over-fail", 1),

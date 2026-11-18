@@ -37,7 +37,7 @@ test("grouping advice exports named options and all five target codes", () => {
   }
   assert.match(
     declaration,
-    /export type PostgresGroupingNotAggregationUnanalyzableSql = "fail" \| "ignore" \| "advise";/,
+    /export type PostgresGroupingNotAggregationUnanalyzableSql = "fail" \| "ignore" \| "advise" \| "report";/,
   );
   assert.doesNotMatch(declaration, /fail\?:|sqlIncludeLocked/);
   assert.match(

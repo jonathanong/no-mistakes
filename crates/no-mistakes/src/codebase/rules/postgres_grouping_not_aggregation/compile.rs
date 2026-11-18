@@ -1,6 +1,11 @@
 use super::*;
 pub(super) fn options(opts: &Options) -> Result<CompiledOptions> {
-    crate::codebase::postgres::unanalyzable_sql_mode(RULE_ID, &opts.unanalyzable_sql)?;
+    let mode = if opts.unanalyzable_sql.trim().eq_ignore_ascii_case("report") {
+        "advise"
+    } else {
+        &opts.unanalyzable_sql
+    };
+    crate::codebase::postgres::unanalyzable_sql_mode(RULE_ID, mode)?;
     GlobMatcher::new(&opts.sql_include, &format!("{RULE_ID} sqlInclude"))?;
     Ok(CompiledOptions {
         schema_catalog_path: opts.schema_catalog_path.clone(),

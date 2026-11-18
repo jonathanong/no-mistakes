@@ -15,6 +15,10 @@ fn compile_rule(config: &NoMistakesConfig) {
 fn shared_and_project_policies_compile_without_changing_advisory_only_behavior() {
     for (name, expected) in [
         ("shared-report.yml", "advise"),
+        ("report.yml", "advise"),
+        ("upper-report.yml", "advise"),
+        ("shared-ignore-report.yml", "advise"),
+        ("canonical-ignore-report.yml", "ignore"),
         ("fail.yml", "advise"),
         ("upper-fail.yml", "advise"),
         ("canonical-report.yml", "advise"),
@@ -83,24 +87,28 @@ fn grouping_unanalyzable_options_accept_default_and_normalized_ignore() {
 }
 
 #[test]
-fn invalid_sql_modes_are_rejected_and_legacy_fail_compiles() {
+fn invalid_sql_modes_are_rejected_and_advisory_aliases_compile() {
     let config = load("invalid.yml");
     let opts: Options = config.rules[0].try_rule_options().unwrap();
     let error = compile::options(&opts).err().unwrap().to_string();
     assert!(error.contains("unanalyzableSql must be"), "{error}");
     let mut opts = opts;
-    opts.unanalyzable_sql = "fail".into();
-    compile::options(&opts).unwrap();
+    for mode in ["fail", "report", " REPORT "] {
+        opts.unanalyzable_sql = mode.into();
+        compile::options(&opts).unwrap();
+    }
 }
 
 #[test]
 fn canonical_policy_still_rejects_an_invalid_explicit_alias() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/config/postgres-grouping-policy");
-    let error = crate::config::v2::load_v2_config(&root, Some(Path::new("invalid-canonical.yml")))
-        .unwrap_err()
-        .to_string();
-    assert!(error.contains("invalid options.unanalyzableSql"), "{error}");
+    for name in ["invalid-canonical.yml", "non-grouping-report.yml"] {
+        let error = crate::config::v2::load_v2_config(&root, Some(Path::new(name)))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("invalid options.unanalyzableSql"), "{error}");
+    }
 }
 
 #[test]

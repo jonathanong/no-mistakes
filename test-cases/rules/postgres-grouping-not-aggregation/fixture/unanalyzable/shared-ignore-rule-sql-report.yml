@@ -1,0 +1,13 @@
+unanalyzable: ignore
+rules:
+  - rule: postgres-grouping-not-aggregation
+    scope: repository
+    severity: advisory
+    options:
+      importSpecifier: db
+      schemaCatalogPath: schema.json
+      include: ["src/**/*.ts"]
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      trustedSqlTags: [{ module: db, name: sql }]
+      unanalyzableSql: report

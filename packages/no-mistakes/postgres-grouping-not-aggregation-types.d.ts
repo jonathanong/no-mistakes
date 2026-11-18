@@ -8,8 +8,8 @@ export type PostgresGroupingNotAggregationCode =
   | "distinct-join-filter"
   | "aggregate-existence-test";
 
-/** Legacy SQL policy: fail emits advice for this always-advisory rule. Defaults to advise. */
-export type PostgresGroupingNotAggregationUnanalyzableSql = "fail" | "ignore" | "advise";
+/** SQL policy for this advisory rule. Both fail and report map to advise, the default. */
+export type PostgresGroupingNotAggregationUnanalyzableSql = "fail" | "ignore" | "advise" | "report";
 
 /** Options for the always-advisory postgres-grouping-not-aggregation rule. */
 export interface PostgresGroupingNotAggregationOptions {

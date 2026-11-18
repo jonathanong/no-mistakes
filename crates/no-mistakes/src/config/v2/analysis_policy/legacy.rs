@@ -29,6 +29,9 @@ pub(super) fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
     } else {
         match value.trim().to_ascii_lowercase().as_str() {
             "fail" | "" => Some(Unanalyzable::Report),
+            "report" if rule.rule == "postgres-grouping-not-aggregation" => {
+                Some(Unanalyzable::Advise)
+            }
             "advise" => Some(Unanalyzable::Advise),
             "ignore" => Some(Unanalyzable::Ignore),
             _ => None,
