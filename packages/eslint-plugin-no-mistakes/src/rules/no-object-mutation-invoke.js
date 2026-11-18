@@ -52,7 +52,7 @@ function visitKnownCall(state, node, scope, role) {
     escapeResult(state, seed, scope, role);
     return seed;
   }
-  const array = arrayFactory(state, node, scope, role);
+  const array = arrayFactory(state, node, scope);
   if (array !== undefined) return array;
   const bound = memberCall(node, "bind");
   if (!bound) {

@@ -23,6 +23,7 @@ const { child, rootEnv, unknown } = require("./no-object-mutation-values");
 
 function scanMutations(program, context, options) {
   const state = {
+    iterationAliases: new WeakMap(),
     builtins: {
       Object: { type: "unknown", intrinsic: "Object" },
       Array: { type: "unknown", intrinsic: "Array" },

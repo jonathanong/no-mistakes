@@ -1287,7 +1287,7 @@ describe("no-object-mutation", () => {
         `,
         { allow: ["rows.keep"] },
       ),
-      repeated(5),
+      repeated(4),
     );
   });
 

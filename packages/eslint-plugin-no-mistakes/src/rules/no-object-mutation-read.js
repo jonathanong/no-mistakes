@@ -44,7 +44,7 @@ function readMember(tag, key, objectNode) {
     // separate member tag preserves ordinary object/collection provenance.
     return { type: "unknown", mutator: { receiver: tag, receiverNode: objectNode, member } };
   }
-  if (tag?.type === "unknown") return tag;
+  if (tag?.type === "unknown") return tag.arrayProducer ? unknown() : tag;
   if (!tag || tag.type === "unknown" || tag.type === "fn") {
     return unknown();
   }
@@ -91,7 +91,7 @@ function readMember(tag, key, objectNode) {
 function iteratedContents(tag) {
   if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "unknown" || tag.type === "fn") {
-    return tag.type === "unknown" ? tag : unknown();
+    return tag.type === "unknown" && !tag.arrayProducer ? tag : unknown();
   }
   if (tag.type === "union") {
     let joined = unknown(true);
@@ -131,13 +131,14 @@ function rememberEscape(tag, key, contexts) {
   }
 }
 
-function escapeFresh(tag, seen = new Set(), contexts = []) {
+function escapeFresh(tag, seen = new Set(), contexts = [], direct = false) {
   if (!tag || seen.has(tag)) {
     return;
   }
   if (["shared", "unknown", "this"].includes(tag.type)) {
-    rememberEscape(tag, "iterationChanged", contexts);
-    tag.iterationChanged = true;
+    const key = direct && tag.type === "shared" ? "iterationChanged" : "iterationIndirectChanged";
+    rememberEscape(tag, key, contexts);
+    tag[key] = true;
   }
   if (tag.mutator) {
     seen.add(tag);

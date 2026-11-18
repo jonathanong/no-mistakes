@@ -11,10 +11,10 @@ const {
   unwrap,
 } = require("./no-object-mutation-syntax");
 
-function markEscaped(state, tag, seen) {
+function markEscaped(state, tag, seen, direct = false) {
   if (tag?.intrinsic) state.builtins[tag.intrinsic].iterationChanged = true;
   const was = Boolean(tag?.type === "fresh" && tag.escaped);
-  escapeFresh(tag, seen, state.returnEscapes);
+  escapeFresh(tag, seen, state.returnEscapes, direct);
   if (!was && tag?.type === "fresh" && tag.escaped) {
     state.escapeEpoch += 1;
     api.escapeNestedFunctions(state, tag);

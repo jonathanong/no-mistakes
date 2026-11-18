@@ -1,35 +1,34 @@
 "use strict";
 
 function isBlank(tag) {
-  return tag.type === "unknown" && tag.scalar;
+  return tag.type === "unknown";
 }
 
 function isTrackable(tag) {
   return tag.type === "fresh" || tag.type === "fn" || tag.type === "union";
 }
 
-function addMember(members, tag, seen) {
+function addMember(members, tag) {
   if (tag.type === "union") {
     for (const member of tag.members) {
-      addMember(members, member, seen);
+      addMember(members, member);
     }
     return;
   }
-  if (!seen.has(tag)) {
-    seen.add(tag);
-    members.push(tag);
-  }
+  members.push(tag);
 }
 
 function unionOf(left, right) {
   const members = [];
-  const seen = new Set();
-  addMember(members, left, seen);
-  addMember(members, right, seen);
+  addMember(members, left);
+  addMember(members, right);
   return { type: "union", members };
 }
 
-// Keep value identities so a later escape or method write reaches every alternative.
+// A shared side stays paired with the other side. Escaping the join then
+// releases a fresh or function member, and a write still reports the shared
+// one. Same-origin shared tags collapse. Two fresh or function tags stay a
+// union for the same reason.
 function joinValues(left, right) {
   if (left === right) {
     return left;
@@ -44,7 +43,13 @@ function joinValues(left, right) {
   if (isBlank(right)) {
     return left;
   }
-  if (left.type === "shared" || left.type === "unknown" || right.type === "unknown") {
+  if (left.type === "shared") {
+    if (right.type === "shared") {
+      if (left.origin === right.origin) {
+        return left;
+      }
+      return unionOf(left, right);
+    }
     return unionOf(left, right);
   }
   if (right.type === "shared") {
@@ -65,8 +70,7 @@ function joinValues(left, right) {
 function readOnlyFresh(tag) {
   if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "union") {
-    const known = tag.members.filter((member) => member.type !== "unknown");
-    return known.length > 0 && known.every(readOnlyFresh);
+    return tag.members.every(readOnlyFresh);
   }
   return tag.type === "fresh" && !tag.escaped;
 }

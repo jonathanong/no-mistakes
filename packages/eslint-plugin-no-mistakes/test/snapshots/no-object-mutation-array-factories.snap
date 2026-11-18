@@ -18,7 +18,49 @@
     "options": null
   },
   {
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-controls.ts",
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-from.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-from.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-escape.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-escape.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/mixed-contents.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/mixed-contents.ts",
     "findings": [],
     "kind": "valid",
     "options": null
@@ -31,6 +73,12 @@
   },
   {
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/type-names.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/custom-lib/override.ts",
     "findings": [],
     "kind": "valid",
     "options": null
@@ -131,6 +179,198 @@
     "options": null
   },
   {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-unknown-elements.ts",
+    "findings": [
+      {
+        "column": 27,
+        "endColumn": 42,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-unknown-elements.ts",
+        "line": 7,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-unknown-elements.ts",
+        "line": 13,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-unknown-elements.ts",
+    "findings": [
+      {
+        "column": 27,
+        "endColumn": 42,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-unknown-elements.ts",
+        "line": 7,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 22,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-unknown-elements.ts",
+        "line": 13,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+        "line": 4,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+        "line": 7,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 25,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+        "line": 10,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 26,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+        "line": 4,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+        "line": 7,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 25,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+        "line": 10,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending-direct.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending-direct.ts",
+        "line": 5,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending-direct.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 5,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending-direct.ts",
+        "line": 5,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-controls.ts",
+    "findings": [
+      {
+        "column": 23,
+        "endColumn": 40,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-controls.ts",
+        "line": 19,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/this-receiver.ts",
     "findings": [
       {
@@ -189,42 +429,6 @@
     "options": null
   },
   {
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/mixed-contents.ts",
-    "findings": [
-      {
-        "column": 3,
-        "endColumn": 15,
-        "endLine": 5,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/mixed-contents.ts",
-        "line": 5,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      }
-    ],
-    "kind": "invalid",
-    "options": null
-  },
-  {
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/mixed-contents.ts",
-    "findings": [
-      {
-        "column": 3,
-        "endColumn": 15,
-        "endLine": 5,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/mixed-contents.ts",
-        "line": 5,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      }
-    ],
-    "kind": "invalid",
-    "options": null
-  },
-  {
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-escapes.ts",
     "findings": [
       {
@@ -255,17 +459,6 @@
         "endLine": 18,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-escapes.ts",
         "line": 18,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 24,
-        "endColumn": 41,
-        "endLine": 20,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-escapes.ts",
-        "line": 20,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
@@ -323,40 +516,11 @@
         "severity": 2
       },
       {
-        "column": 24,
-        "endColumn": 41,
-        "endLine": 20,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-escapes.ts",
-        "line": 20,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
         "column": 32,
         "endColumn": 49,
         "endLine": 29,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/joined-escapes.ts",
         "line": 29,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      }
-    ],
-    "kind": "invalid",
-    "options": null
-  },
-  {
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/custom-lib/override.ts",
-    "findings": [
-      {
-        "column": 23,
-        "endColumn": 40,
-        "endLine": 9,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/custom-lib/override.ts",
-        "line": 9,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
@@ -525,32 +689,10 @@
       },
       {
         "column": 3,
-        "endColumn": 26,
-        "endLine": 67,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-        "line": 67,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 3,
         "endColumn": 40,
         "endLine": 70,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
         "line": 70,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 3,
-        "endColumn": 36,
-        "endLine": 73,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-        "line": 73,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
@@ -562,17 +704,6 @@
         "endLine": 77,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
         "line": 77,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 27,
-        "endColumn": 44,
-        "endLine": 82,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-        "line": 82,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
@@ -785,32 +916,10 @@
       },
       {
         "column": 3,
-        "endColumn": 26,
-        "endLine": 67,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-        "line": 67,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 3,
         "endColumn": 40,
         "endLine": 70,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
         "line": 70,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 3,
-        "endColumn": 36,
-        "endLine": 73,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-        "line": 73,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
@@ -822,17 +931,6 @@
         "endLine": 77,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
         "line": 77,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 27,
-        "endColumn": 44,
-        "endLine": 82,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-        "line": 82,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
@@ -1117,17 +1215,6 @@
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",
         "severity": 2
-      },
-      {
-        "column": 22,
-        "endColumn": 39,
-        "endLine": 5,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/prototype-alias.ts",
-        "line": 5,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
       }
     ],
     "kind": "invalid",
@@ -1142,17 +1229,6 @@
         "endLine": 3,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/prototype-alias.ts",
         "line": 3,
-        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
-        "messageId": "mutation",
-        "ruleId": "no-mistakes/no-object-mutation",
-        "severity": 2
-      },
-      {
-        "column": 22,
-        "endColumn": 39,
-        "endLine": 5,
-        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/prototype-alias.ts",
-        "line": 5,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",

@@ -40,19 +40,29 @@ it("snapshots array producer and checker proof boundaries", async () => {
       savedCase("positive.ts"),
       savedCase("positive.ts", true),
       savedCase("typed.ts", true),
-      savedCase("joined-controls.ts", true),
+      ...[
+        "accept-only-from.ts",
+        "accept-only-pending.ts",
+        "accept-only-factory-escape.ts",
+        "mixed-contents.ts",
+      ].flatMap((name) => [savedCase(name), savedCase(name, true)]),
       savedCase("type-names.ts"),
       savedCase("type-names.ts", true),
+      savedCase("custom-lib/override.ts", true),
     ],
     invalid: [
       savedCase("typed.ts"),
+      savedCase("accept-only-unknown-elements.ts"),
+      savedCase("accept-only-unknown-elements.ts", true),
+      savedCase("accept-only-factory-arguments.ts"),
+      savedCase("accept-only-factory-arguments.ts", true),
+      savedCase("accept-only-pending-direct.ts"),
+      savedCase("accept-only-pending-direct.ts", true),
+      savedCase("joined-controls.ts", true),
       savedCase("this-receiver.ts"),
       savedCase("this-receiver.ts", true),
-      savedCase("mixed-contents.ts"),
-      savedCase("mixed-contents.ts", true),
       savedCase("joined-escapes.ts"),
       savedCase("joined-escapes.ts", true),
-      savedCase("custom-lib/override.ts", true),
       savedCase("negative.ts"),
       savedCase("negative.ts", true),
       savedCase("overrides.ts"),
@@ -70,10 +80,46 @@ it("snapshots array producer and checker proof boundaries", async () => {
 
 it.each([false, true])("retains every joined escape with typed=%s", (typed) => {
   const findings = languageOptionsFindings({ ...savedCase("joined-escapes.ts", typed), rule });
-  expect(findings.map((finding) => finding.line)).toEqual([8, 14, 18, 20, 29]);
+  expect(findings.map((finding) => finding.line)).toEqual([8, 14, 18, 29]);
 });
 
 it.each([false, true])("rejects escaped and overridden this receivers with typed=%s", (typed) => {
   const findings = languageOptionsFindings({ ...savedCase("this-receiver.ts", typed), rule });
   expect(findings.map((finding) => finding.line)).toEqual([5, 15]);
 });
+
+it.each([false, true])(
+  "preserves main diagnostics for accepted existing shapes with typed=%s",
+  (typed) => {
+    for (const name of ["accept-only-from.ts", "accept-only-pending.ts"]) {
+      expect(languageOptionsFindings({ ...savedCase(name, typed), rule }), name).toEqual([]);
+    }
+  },
+);
+
+const mainDiagnostics = JSON.parse(
+  fixture("no-object-mutation-array-factories/main-diagnostics.json"),
+);
+it.each(mainDiagnostics.cases)(
+  "only removes main diagnostics: $file typed=$typed",
+  ({ file, typed, diagnostics }) => {
+    const actual = languageOptionsFindings({ ...savedCase(file, typed), rule }).map(
+      ({ messageId, line, column, endLine, endColumn }) => ({
+        messageId,
+        line,
+        column,
+        endLine,
+        endColumn,
+      }),
+    );
+    if (file.startsWith("accept-only-")) expect(actual, file).toEqual(diagnostics);
+    const allowed = diagnostics.map((finding) => JSON.stringify(finding));
+    for (const finding of actual) {
+      const { messageId, line, column, endLine, endColumn } = finding;
+      const signature = JSON.stringify({ messageId, line, column, endLine, endColumn });
+      const index = allowed.indexOf(signature);
+      expect(index, `${file}: ${signature}`).toBeGreaterThanOrEqual(0);
+      allowed.splice(index, 1);
+    }
+  },
+);

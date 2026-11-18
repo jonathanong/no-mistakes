@@ -66,7 +66,8 @@ function remember(fresh, tag) {
     fresh.items.push(tag);
     tag = tag.mutator.member;
   }
-  if (!tag || (tag.type === "unknown" && tag.scalar)) {
+  if (!tag || tag.type === "unknown") {
+    if (tag && !tag.scalar) fresh.items.push(tag);
     if (!fresh.dynamic) {
       fresh.dynamic = unknown(true);
     }
@@ -83,7 +84,19 @@ function remember(fresh, tag) {
 }
 
 function joinDynamic(existing, tag) {
-  return existing ? joinValues(existing, tag) : tag;
+  if (!existing || existing.type === "unknown") {
+    return tag;
+  }
+  if (existing === tag) {
+    return existing;
+  }
+  if (existing.type === "shared" && tag.type === "shared" && existing.origin === tag.origin) {
+    return existing;
+  }
+  if (existing.type === "mapset" && tag.type === "mapset") {
+    return existing;
+  }
+  return unknown();
 }
 
 function lookup(scope, name) {

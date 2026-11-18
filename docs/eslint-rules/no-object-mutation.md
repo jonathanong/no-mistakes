@@ -249,20 +249,29 @@ function collect(groups: Record<string, number>) {
 
 With typed ESLint (`parserOptions.project` or `projectService`), the checker can
 also prove array and tuple aliases, member receivers, typed call results, and
-unions whose every member is an array or tuple. The iteration method must come
-only from TypeScript's default library. Custom declarations, `any`, `unknown`,
+unions whose every member is an array or tuple. For these newly proven
+receivers, the iteration method must come only from TypeScript's default
+library. Custom declarations, `any`, `unknown`,
 and non-array types do not establish this proof. Assertions cannot manufacture
 array provenance from an unknown value, including through local aliases.
 Without checker services, including in the Oxlint plugin, those typed-only
 receivers remain unproven.
 
 Shadowed constructors, modified global factories, and escaped constructor
-references do not prove array producers. Aliases retain mutation and escape
-identity; wrapping a receiver in another object does not hide its escape.
-`Object.entries` and `Object.values` retain shared value provenance, so mutating
-an object obtained from their results still reports. An `Array.from` mapper
-retains ordinary callback escape handling. Only inline, synchronous,
-non-generator iteration callbacks receive ownership preservation; named
+references do not prove array producers. The additional proof checks aliases
+and indirect escapes before admitting a newly recognized receiver.
+Array recognition preserves the existing ownership model. `Object.values`
+retains its prior shared-value handling; recognizing `Object.entries` or
+`Array.from` does not infer new element ownership. Mapper results remain opaque,
+and mapper callbacks retain ordinary escape handling. Fresh literal results
+such as `Array.from({ length: count }, () => ({}))` remain clean. Staging a
+parameter-array element in a local pending array also retains its prior
+diagnostics; its borrowed-child provenance gap is tracked separately in
+[#3646](https://github.com/jonathanong/no-mistakes/issues/3646). Receiver alias
+and indirect-escape checks apply to the newly
+recognized iterations without changing existing array diagnostics. Only inline,
+synchronous, non-generator iteration callbacks receive ownership preservation;
+named
 callbacks and async callbacks retain ordinary handling.
 Callbacks that write object properties, use `Object` or `Reflect` mutation,
 or read nested members of captured fresh containers also retain ordinary

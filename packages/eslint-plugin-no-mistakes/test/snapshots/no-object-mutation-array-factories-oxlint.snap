@@ -2,6 +2,34 @@
   {
     "code": "no-mistakes(no-object-mutation)",
     "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+    "line": 4,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+    "line": 7,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-factory-arguments.ts",
+    "line": 10,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending-direct.ts",
+    "line": 5,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/global-alias.ts",
     "line": 5,
     "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
@@ -143,21 +171,7 @@
     "code": "no-mistakes(no-object-mutation)",
     "column": 3,
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-    "line": 67,
-    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
-  },
-  {
-    "code": "no-mistakes(no-object-mutation)",
-    "column": 3,
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
     "line": 70,
-    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
-  },
-  {
-    "code": "no-mistakes(no-object-mutation)",
-    "column": 3,
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-    "line": 73,
     "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
   },
   {
@@ -165,13 +179,6 @@
     "column": 59,
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
     "line": 77,
-    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
-  },
-  {
-    "code": "no-mistakes(no-object-mutation)",
-    "column": 27,
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/negative.ts",
-    "line": 82,
     "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
   },
   {
@@ -221,13 +228,6 @@
     "column": 3,
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/prototype-alias.ts",
     "line": 3,
-    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
-  },
-  {
-    "code": "no-mistakes(no-object-mutation)",
-    "column": 22,
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/prototype-alias.ts",
-    "line": 5,
     "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
   },
   {

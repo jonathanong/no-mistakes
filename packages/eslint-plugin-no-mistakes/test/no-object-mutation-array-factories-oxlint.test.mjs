@@ -17,6 +17,11 @@ it("preserves array factory proof boundaries through real Oxlint", async () => {
       "json",
       ...[
         "positive.ts",
+        "accept-only-from.ts",
+        "accept-only-pending.ts",
+        "accept-only-factory-escape.ts",
+        "accept-only-factory-arguments.ts",
+        "accept-only-pending-direct.ts",
         "type-names.ts",
         "typed.ts",
         "negative.ts",
@@ -33,7 +38,11 @@ it("preserves array factory proof boundaries through real Oxlint", async () => {
   const { diagnostics } = JSON.parse(result.stdout);
   expect(diagnostics.length).toBeGreaterThan(0);
   expect(
-    diagnostics.filter((finding) => /(?:positive|type-names)\.ts$/.test(finding.filename)),
+    diagnostics.filter((finding) =>
+      /(?:positive|type-names|accept-only-from|accept-only-pending|accept-only-factory-escape)\.ts$/.test(
+        finding.filename,
+      ),
+    ),
   ).toEqual([]);
   await expect(snapshotDocument(oxlintFindings(diagnostics))).toMatchFileSnapshot(
     "snapshots/no-object-mutation-array-factories-oxlint.snap",

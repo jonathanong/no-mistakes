@@ -2,6 +2,7 @@
 
 const api = require("./no-object-mutation-runtime");
 const { checkedArray } = require("./no-object-mutation-array-proof");
+const { unsafeReceiver } = require("./no-object-mutation-iteration-aliases");
 const { callFunction } = require("./no-object-mutation-fn");
 const { walkLoop } = require("./no-object-mutation-loop");
 const { lookup, readMember, unknown } = require("./no-object-mutation-values");
@@ -23,14 +24,19 @@ function visitIteration(state, node, scope) {
   if (unsupportedWrites(callback.body, scope)) return;
   const receiver = api.visit(state, callee.object, scope, "read");
   const name = methodName(callee);
-  const proven = literal || cell?.arrayParameter || (receiver.type === "fresh" && receiver.isArray);
-  const checked = checkedArray(state, object, scope, name, Boolean(proven));
+  const proven =
+    literal ||
+    cell?.arrayParameter ||
+    receiver.arrayProducer ||
+    (receiver.type === "fresh" && receiver.isArray);
+  const legacy = literal || cell?.arrayParameter || (cell?.tag.isArray && !receiver.arrayProducer);
+  const checked = legacy ? null : checkedArray(state, object, scope, name, Boolean(proven));
   if (
     checked === false ||
     (!proven && checked !== true) ||
     state.arrayPrototypeChanged ||
-    state.builtins.Array.iterationChanged ||
-    unsafeReceiver(receiver)
+    (!legacy && state.builtins.Array.iterationChanged) ||
+    unsafeReceiver(state, receiver, !legacy)
   ) {
     return { fallbackCalleeTag: readMember(receiver, name) };
   }
@@ -45,15 +51,6 @@ function visitIteration(state, node, scope) {
     scope,
   );
   return unknown();
-}
-
-function unsafeReceiver(tag) {
-  return (
-    tag.iterationChanged ||
-    tag.iterationUncertain ||
-    (tag.type === "fresh" && tag.escaped) ||
-    (tag.type === "union" && tag.members.some(unsafeReceiver))
-  );
 }
 
 function unsupportedWrites(node, scope) {
