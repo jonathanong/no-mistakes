@@ -136,6 +136,7 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
     return;
   }
   seen.add(tag);
+  if (tag.intrinsic) markEscaped(state, tag);
   if (tag.mutator) {
     escapeNestedFunctions(state, tag.mutator.receiver, seen);
     for (const value of tag.mutator.boundArgs || []) escapeNestedFunctions(state, value, seen);
@@ -163,7 +164,6 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
 }
 
 function releaseEscaping(state, tag) {
-  if (tag?.type === "shared") tag.iterationChanged = true;
   if (tag == null) {
     return;
   }
@@ -184,7 +184,7 @@ function releaseEscaping(state, tag) {
   if (tag.fn?.type === "fn") {
     escapeFunction(state, tag.fn);
   }
-  markEscaped(state, tag);
+  markEscaped(state, tag, undefined, true);
 }
 
 api.deferExpression = deferExpression;

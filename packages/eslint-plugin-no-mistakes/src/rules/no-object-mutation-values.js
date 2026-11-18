@@ -51,8 +51,8 @@ function shared(origin) {
   return { type: "shared", origin };
 }
 
-function unknown() {
-  return { type: "unknown" };
+function unknown(scalar = false) {
+  return scalar ? { type: "unknown", scalar: true } : { type: "unknown" };
 }
 
 function freshCopy(tag, scope) {
@@ -67,8 +67,9 @@ function remember(fresh, tag) {
     tag = tag.mutator.member;
   }
   if (!tag || tag.type === "unknown") {
+    if (tag && !tag.scalar) fresh.items.push(tag);
     if (!fresh.dynamic) {
-      fresh.dynamic = unknown();
+      fresh.dynamic = unknown(true);
     }
     return;
   }

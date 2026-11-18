@@ -1,6 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { rememberAlternatives } = require("./no-object-mutation-iteration-aliases");
 const { escapeResult } = require("./no-object-mutation-result");
 const {
   visitArray,
@@ -17,13 +18,14 @@ function visitExpression(state, node, scope, role) {
   switch (node.type) {
     case "Identifier":
       return visitIdentifier(state, node, scope, role);
-    case "ThisExpression":
-      if (scope.receiver) {
-        return scope.receiver;
-      }
-      return { type: "this", inClass: Boolean(scope.inClass) };
-    case "Super":
+    case "ThisExpression": {
+      const receiver = scope.receiver || { type: "this", inClass: Boolean(scope.inClass) };
+      if (role === "escape") receiver.iterationIndirectChanged = true;
+      return receiver;
+    }
     case "Literal":
+      return unknown(!node.regex);
+    case "Super":
     case "TemplateElement":
     case "JSXText":
     case "JSXIdentifier":
@@ -81,12 +83,14 @@ function visitExpression(state, node, scope, role) {
         return api.visit(state, node.right, scope, role);
       }
       return joinAlternatives(
+        state,
         api.visit(state, node.left, scope, role),
         api.visit(state, node.right, scope, role),
       );
     case "ConditionalExpression":
       api.visit(state, node.test, scope, "read");
       return joinAlternatives(
+        state,
         api.visit(state, node.consequent, scope, role),
         api.visit(state, node.alternate, scope, role),
       );
@@ -100,11 +104,11 @@ function visitExpression(state, node, scope, role) {
     case "AssignmentExpression":
       return visitAssignment(state, node, scope);
     case "MemberExpression": {
-      const member = readMember(
-        api.visit(state, node.object, scope, "read"),
-        memberKey(node),
-        node.object,
-      );
+      const object = api.visit(state, node.object, scope, "read");
+      const member = readMember(object, memberKey(node), node.object);
+      if (object.type === "fresh" && member.type === "unknown") {
+        for (const item of object.items) rememberAlternatives(state, member, item, item);
+      }
       escapeResult(state, member, scope, role);
       return member;
     }
@@ -142,8 +146,9 @@ function visitExpression(state, node, scope, role) {
   }
 }
 
-function joinAlternatives(left, right) {
+function joinAlternatives(state, left, right) {
   const joined = joinValues(left, right);
+  rememberAlternatives(state, joined, left, right);
   if (left.type === "unknown" || right.type === "unknown") joined.iterationUncertain = true;
   return joined;
 }

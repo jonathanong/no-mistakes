@@ -118,7 +118,7 @@ function constructInstance(scope, tag) {
     return unknown();
   }
   if (tag.type === "union") {
-    let joined = unknown();
+    let joined = unknown(true);
     for (const member of tag.members) {
       joined = joinValues(joined, constructInstance(scope, member));
     }
