@@ -1,17 +1,9 @@
 "use strict";
 
 const { constInitializer } = require("./postgres-no-executor-adapter-binding");
+const { typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
 const { scalarArgument } = require("./postgres-no-executor-adapter-sql-scalar");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
-const LOCAL_WRAPPERS = new Set([
-  "TSAsExpression",
-  "TSTypeAssertion",
-  "TSNonNullExpression",
-  "TSSatisfiesExpression",
-  "TSInstantiationExpression",
-  "ParenthesizedExpression",
-  "ChainExpression",
-]);
 
 function localField(pattern, variable, context) {
   if (pattern?.type !== "ObjectPattern") return null;
@@ -48,45 +40,6 @@ function tsAliasField(source, symbol, checker, ts) {
   if (!ts.isVariableDeclaration(declaration) || !declaration.initializer) return null;
   const field = tsField(source.parent, symbol, checker, ts);
   return field === null ? null : { initializer: declaration.initializer, field };
-}
-
-function objectMutation(variable, executorVariable, allowedProperty) {
-  return variable.references.some((reference) => {
-    if (reference.init) return false;
-    let value = reference.identifier;
-    let depth = 0;
-    while (true) {
-      const parent = value.parent;
-      if (parent?.expression === value && LOCAL_WRAPPERS.has(parent.type)) value = parent;
-      else if (parent?.type === "MemberExpression" && parent.object === value) {
-        value = parent;
-        depth++;
-      } else break;
-    }
-    const parent = value.parent;
-    if (
-      (parent?.type === "AssignmentExpression" && parent.left === value) ||
-      (parent?.type === "UpdateExpression" && parent.argument === value) ||
-      (parent?.type === "UnaryExpression" && parent.operator === "delete") ||
-      (parent?.type === "VariableDeclarator" &&
-        parent.init === value &&
-        parent.id.type === "Identifier") ||
-      (parent?.type === "CallExpression" &&
-        (parent.arguments.includes(value) ||
-          (parent.callee === value &&
-            depth === 1 &&
-            (variable !== executorVariable ||
-              value.computed ||
-              value.property.name !== allowedProperty))))
-    )
-      return true;
-    if (depth > 0) return false;
-    return !(
-      parent?.type === "VariableDeclarator" &&
-      parent.init === value &&
-      parent.id.type === "ObjectPattern"
-    );
-  });
 }
 
 function tsUnwrap(node, wrappers) {
@@ -174,7 +127,7 @@ function staticObjectValue(node, field, context, seen = new Set()) {
 }
 
 function projectedScalar(node, field, context, allowUndefined) {
-  if (field !== null && scalarArgument(node, context, allowUndefined)) return true;
+  if (field !== null && typedScalarProjection(node, field, context, allowUndefined)) return true;
   const value = field === null ? node : staticObjectValue(node, field, context);
   return Boolean(value && scalarArgument(value, context, allowUndefined));
 }
@@ -182,7 +135,6 @@ function projectedScalar(node, field, context, allowUndefined) {
 module.exports = {
   localAliasField,
   localField,
-  objectMutation,
   projectedScalar,
   tsAliasField,
   tsField,

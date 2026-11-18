@@ -1905,6 +1905,17 @@
         "severity": 2
       },
       {
+        "column": 22,
+        "endColumn": 30,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/default-tag-local.ts",
+        "line": 49,
+        "message": "This call passes readPool into a helper. Name the executor inside the helper (`readPool(sql`…`)`, or `const exec = readPool; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
         "column": 29,
         "endColumn": 37,
         "endLine": 50,
@@ -2333,6 +2344,17 @@
         "severity": 2
       },
       {
+        "column": 22,
+        "endColumn": 30,
+        "endLine": 47,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/default-tag-imported.ts",
+        "line": 47,
+        "message": "This call passes readPool into a helper. Name the executor inside the helper (`readPool(sql`…`)`, or `const exec = readPool; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
         "column": 29,
         "endColumn": 37,
         "endLine": 48,
@@ -2580,6 +2602,17 @@
         "endLine": 96,
         "file": "test-cases/eslint-snippets/fixture/executor-target/default-tag-imported.ts",
         "line": 96,
+        "message": "This call passes readPool into a helper. Name the executor inside the helper (`readPool(sql`…`)`, or `const exec = readPool; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      },
+      {
+        "column": 41,
+        "endColumn": 49,
+        "endLine": 97,
+        "file": "test-cases/eslint-snippets/fixture/executor-target/default-tag-imported.ts",
+        "line": 97,
         "message": "This call passes readPool into a helper. Name the executor inside the helper (`readPool(sql`…`)`, or `const exec = readPool; exec(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
