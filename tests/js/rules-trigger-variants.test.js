@@ -49,10 +49,12 @@ test("rules trigger variants preserve cases, graders, and every rule body", asyn
     const describe = join(temporary, "evals-variants/_plugins/describe");
     const pluginFiles = await files(control);
     assert.ok(pluginFiles.length > 0);
+    assert.deepEqual(pluginFiles, await files(copied));
     assert.deepEqual(await files(describe), pluginFiles);
     for (const file of pluginFiles) {
       const original = await readFile(join(control, file), "utf8");
       const candidate = await readFile(join(describe, file), "utf8");
+      assert.equal(original, await readFile(join(copied, file), "utf8"), file);
       if (file.endsWith("/SKILL.md"))
         assert.equal(withoutDescription(candidate), withoutDescription(original), file);
       else assert.equal(candidate, original, file);
