@@ -7,6 +7,11 @@ declare namespace plugin {
     message?: string;
   }
 
+  export interface NoLocaleLessDateFormatOptions {
+    methods?: string[];
+    allowUndefinedLocale?: boolean;
+  }
+
   export type PostgresNoExecutorAdapterMode = "all" | "forwarding-only";
 
   export interface PostgresNoExecutorAdapterOptions {
