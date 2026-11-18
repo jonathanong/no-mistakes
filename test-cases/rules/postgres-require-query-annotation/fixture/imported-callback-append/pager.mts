@@ -45,3 +45,30 @@ export async function otherBuilder(selectWhere: SqlStatement, other: SqlStatemen
   const result = await query(other);
   return result;
 }
+declare function pick(statement: SqlStatement): string;
+type Reader = (s: SqlStatement) => Promise<Rows>;
+export async function pageDefault(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  const { rows = mutate(selectWhere) } = await query(selectWhere);
+  return rows;
+}
+export async function pageComputed(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  const { [pick(selectWhere)]: rows } = await query(selectWhere);
+  return rows;
+}
+export async function pageAfter(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  await query(selectWhere);
+  selectWhere.append(sql` LIMIT 1`);
+}
+export async function pageMutate(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  const result = await query(selectWhere);
+  const touched = mutate(selectWhere);
+  return result;
+}
+export async function plainDestructure(statement: SqlStatement, run: Reader) {
+  const { rows } = await run(statement);
+  return rows;
+}

@@ -100,6 +100,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 | Step::PotentialCalls(_)
                 | Step::Reserve(_)
                 | Step::Hoisted(_, _)
+                | Step::Destructured
                 | Step::Var(_) => {}
             }
         }

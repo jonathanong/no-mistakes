@@ -49,9 +49,20 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
     );
     if summary.supported {
         let proof = super::append_callback::collect(value, &summary).map(std::sync::Arc::new);
-        std::sync::Arc::make_mut(&mut summary).append_callback = proof;
+        let inner = std::sync::Arc::make_mut(&mut summary);
+        // Destructured call results are only modeled for append callbacks.
+        inner.supported = proof.is_some() || !destructures(&inner.body);
+        inner.append_callback = proof;
     }
     Expr::Function(summary)
+}
+
+fn destructures(steps: &[Step]) -> bool {
+    steps.iter().any(|step| match step {
+        Step::Destructured => true,
+        Step::Branch(_, left, right) => destructures(left) || destructures(right),
+        _ => false,
+    })
 }
 
 pub(super) fn function(
@@ -73,7 +84,8 @@ pub(super) fn function(
     let supported = supported
         && names.is_some()
         && params.rest.is_none()
-        && !body.iter().any(|step| matches!(step, Step::Unsupported));
+        && !body.iter().any(|step| matches!(step, Step::Unsupported))
+        && !(arrow && destructures(&body));
     let names = names.unwrap_or_else(|| {
         params
             .items

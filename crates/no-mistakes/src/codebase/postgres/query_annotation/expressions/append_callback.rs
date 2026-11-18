@@ -17,12 +17,7 @@ pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Optio
     let mut tags = Vec::new();
     let mut body = Vec::with_capacity(summary.body.len());
     for (index, step) in summary.body.iter().enumerate() {
-        if index > site
-            && !matches!(
-                step,
-                Step::Return(_) | Step::Bind(_, _) | Step::Var(_) | Step::Reserve(_)
-            )
-        {
+        if index > site && !inert_after_call(step, &payload) {
             return None;
         }
         if let Step::Branch(test, left, right) = step {
@@ -81,6 +76,27 @@ fn call_site(summary: &Function) -> Option<(usize, usize, String)> {
             let callback = summary.params.iter().position(|name| name == callback)?;
             Some((index, callback, payload.clone()))
         })
+}
+
+// After the callback call only the result may be read: never a call, never the
+// builder itself.
+fn inert_after_call(step: &Step, payload: &str) -> bool {
+    match step {
+        Step::Var(_) | Step::Reserve(_) => true,
+        Step::Return(expr) | Step::Bind(_, expr) => result_read(expr, payload),
+        _ => false,
+    }
+}
+
+fn result_read(expr: &Expr, payload: &str) -> bool {
+    match expr {
+        Expr::Name(name) => name != payload,
+        Expr::Member(inner, _) | Expr::Await(inner) => result_read(inner, payload),
+        Expr::Unknown | Expr::Primitive | Expr::Text(_) | Expr::Number(_) | Expr::Boolean(_) => {
+            true
+        }
+        _ => false,
+    }
 }
 
 fn awaited(expr: &Expr) -> &Expr {

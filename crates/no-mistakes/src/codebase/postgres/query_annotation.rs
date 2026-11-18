@@ -125,6 +125,7 @@ pub(super) enum Step {
     Effect(Expr),
     Return(Expr),
     Unsupported,
+    Destructured,
     PotentialCalls(Vec<(u32, u32)>),
 }
 

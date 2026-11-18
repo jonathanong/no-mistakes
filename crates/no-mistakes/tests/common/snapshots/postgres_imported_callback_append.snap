@@ -40,6 +40,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "callers.mts",
+          "line": 31,
+          "message": "callers.mts:31: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const defaultMutates = (after?: string) => pageDefault(sql`/* defaultMutates */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 32,
+          "message": "callers.mts:32: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const computedKey = (after?: string) => pageComputed(sql`/* computedKey */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 33,
+          "message": "callers.mts:33: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const appendAfter = (after?: string) => pageAfter(sql`/* appendAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 34,
+          "message": "callers.mts:34: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const mutateAfter = (after?: string) => pageMutate(sql`/* mutateAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 35,
+          "message": "callers.mts:35: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const plainRows = () => plainDestructure(sql`/* plainRows */ SELECT id FROM widgets`, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
           "line": 6,
           "message": "callers.mts:6: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
           "rule": "postgres-require-query-annotation",
@@ -260,6 +300,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "callers.mts:30: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "export const differentBuilder = (after?: string) => otherBuilder(sql`/* appended */ SELECT id FROM widgets`, sql`SELECT id FROM gadgets`, after, statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 31,
+          "message": "callers.mts:31: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const defaultMutates = (after?: string) => pageDefault(sql`/* defaultMutates */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 32,
+          "message": "callers.mts:32: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const computedKey = (after?: string) => pageComputed(sql`/* computedKey */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 33,
+          "message": "callers.mts:33: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const appendAfter = (after?: string) => pageAfter(sql`/* appendAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 34,
+          "message": "callers.mts:34: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const mutateAfter = (after?: string) => pageMutate(sql`/* mutateAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 35,
+          "message": "callers.mts:35: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const plainRows = () => plainDestructure(sql`/* plainRows */ SELECT id FROM widgets`, statement => read(statement).then(() => ({ rows: [] })));",
           "target": "annotation"
         },
         {

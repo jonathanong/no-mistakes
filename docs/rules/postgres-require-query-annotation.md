@@ -76,6 +76,10 @@ by ``statement.append(sql` ORDER BY id LIMIT ${limit + 1}`)`` and
 result (`const result = await query(statement)`), destructure it
 (`const { rows } = await query(statement)`), or stand alone
 (`await query(statement);`); the call must pass the appended builder itself.
+A destructure may use only plain, possibly nested bindings, never defaults,
+computed keys, or non-identifier rest targets. After the call, only the result
+may be read (`return rows`, `return result.rows`); another call, an append, or
+any reference to the builder leaves the helper unproven.
 Each caller must supply a fresh trusted tagged
 literal with a static leading annotation. Appends before initialization, shared
 or opaque arguments, replacement, prepend, and unsupported uses remain unproven
