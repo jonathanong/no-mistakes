@@ -1,4 +1,4 @@
-use super::Snapshot;
+use super::{ScopeVisitor, Snapshot};
 
 /// Keep prior alternatives only on branch paths that can actually reach them.
 /// Unchanged values gain no new choices, so unrelated branches do not consume
@@ -63,6 +63,34 @@ pub(in crate::codebase::postgres::embedded::walk) fn branch_paths(
                 path.push((id, arm));
             }
             path
+        })
+        .collect()
+}
+
+pub(in crate::codebase::postgres::embedded::walk::variants) fn changed_paths(
+    visitor: &mut ScopeVisitor<'_>,
+    snapshot: &Snapshot,
+    other: &Snapshot,
+    paths: &[Vec<(u64, u32)>],
+) -> Snapshot {
+    visitor.variant_paths = paths.to_vec();
+    snapshot
+        .iter()
+        .zip(other)
+        .map(|(scope, other)| {
+            scope
+                .iter()
+                .map(|(name, values)| {
+                    let values = if Some(values) == other.get(name) {
+                        values.clone()
+                    } else {
+                        values
+                            .clone()
+                            .and_then(|values| visitor.with_variant_paths(values))
+                    };
+                    (name.clone(), values)
+                })
+                .collect()
         })
         .collect()
 }

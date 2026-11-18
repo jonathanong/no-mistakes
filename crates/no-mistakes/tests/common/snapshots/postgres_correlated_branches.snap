@@ -1,0 +1,46 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "low_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "max_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "annotation.mts",
+          "line": 35,
+          "message": "annotation.mts:35: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 2 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement)",
+          "target": "sql-composition"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 48,
+          "message": "annotation.mts:48: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 2 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement)",
+          "target": "sql-composition"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

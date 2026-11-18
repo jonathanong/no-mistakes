@@ -91,7 +91,17 @@ For an executor call with complete
 [SQL alternatives](../postgres-facts.md#finite-sql-alternatives), the rule uses
 those versions from the shared extractor instead of its separate helper-prefix
 traversal. Every version must start with an annotation or be an exempt
-transaction statement. Recovery is capped at 16 versions; a missing annotation
+transaction statement.
+
+At max effort, append guards that compare the same stable string-union parameter
+share its finite choices. Strict string equality/inequality, negation, and
+short-circuit `&&`/`||` tests keep only feasible combinations, including paths
+that skip an append. For example, a `mode` of `'widgets' | 'gadgets' | 'all'`
+can select either table or both with `UNION ALL` without inventing an empty
+CTE or omitting the union between two selections. Conditions on unrelated values
+remain independent; unknown or reassigned inputs retain conservative alternatives.
+
+Recovery is capped at 16 versions; a missing annotation
 on only one path is still reported at that branch's physical source location,
 where line suppressions also apply:
 

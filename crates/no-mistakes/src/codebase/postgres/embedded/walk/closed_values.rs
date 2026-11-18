@@ -30,6 +30,7 @@ mod member_ownership_tests;
 mod members;
 #[cfg(test)]
 mod parent_fields_tests;
+mod predicate;
 mod state;
 use expression::expression;
 #[cfg(test)]
@@ -166,4 +167,15 @@ pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Opti
 
 pub(super) fn closed_call(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> bool {
     assertions::recover(visitor,call,8).is_some_and(|arms| !arms.is_empty() && arms.iter().all(|arm| matches!(&arm.node,Node::Text(text) if !text.contains('\0') && !crate::codebase::postgres::embedded::helpers::sentinel::contains(text))))
+}
+
+pub(super) fn recover_predicate(
+    visitor: &ScopeVisitor<'_>,
+    test: &Expression<'_>,
+    constraints: &[(u64, u32)],
+) -> Option<Vec<Recovered>> {
+    if visitor.head_calls_only || visitor.loop_depth > 0 {
+        return None;
+    }
+    predicate::recover(visitor, test, 8, constraints)
 }
