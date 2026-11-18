@@ -1,0 +1,56 @@
+name: Download integrity controls
+on: workflow_dispatch
+jobs:
+  runner-group:
+    runs-on:
+      group: '${{ inputs.runner_group }}'
+      labels: self-hosted
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/unknown-runner
+        run: curl "$TOOL_URL"
+      - shell: bash
+        env:
+          TOOL_URL: https://downloads.example.com/explicit-bash
+        run: curl "$TOOL_URL"
+  shell-controls:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/expression-env
+        run: |
+          printf '%s\n' '${{ inputs.message }}'
+          curl "$TOOL_URL"
+          curl https://downloads.example.com/expression-literal
+      - env:
+          TOOL_URL: https://downloads.example.com/exported-env
+          OTHER: https://downloads.example.com/overwritten-by-read
+        run: |
+          export -- TOOL_URL
+          read -- OTHER <<< https://api.github.com/tool
+          curl "$TOOL_URL"
+          curl "$OTHER"
+      - env:
+          TOOL_URL: https://downloads.example.com/callback-env
+        run: |
+          mapfile -c 1 -C callback <<< data
+          curl "$TOOL_URL"
+          curl https://downloads.example.com/callback-literal
+      - run: |
+          curl https://downloads.example.com/missing-algorithm -o tool
+          shasum -a
+      - run: |
+          curl https://downloads.example.com/algorithm-option-end -o tool
+          shasum -a -- -c
+      - run: |
+          curl https://downloads.example.com/combined-output&>>trace.log
+          curl https://downloads.example.com/attached-output>trace.log
+      - run: |
+          CMD='sudo curl'
+          "$CMD" https://downloads.example.com/quoted-wrapper
+          $CMD https://downloads.example.com/unquoted-wrapper
+      - env:
+          TOOL_URL: https://downloads.example.com/partial-quoted-env
+        run: |
+          curl "prefix$TOOL_URL"
+          curl https://downloads.example.com/partial-quoted-literal

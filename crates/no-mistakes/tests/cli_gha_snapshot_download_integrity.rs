@@ -65,6 +65,16 @@ fn github_actions_download_integrity_scopes_and_sequencing_match_snapshot() {
             &["fail", "shell-source", "shell-source-low"][..],
         ),
         (
+            "github_actions_download_integrity_coverage_controls",
+            "coverage-controls",
+            &["fail", "strict-sequencing", "strict-sequencing-low"][..],
+        ),
+        (
+            "github_actions_download_integrity_empty_args",
+            "empty-args",
+            &["fail", "strict-sequencing"][..],
+        ),
+        (
             "github_actions_download_integrity_review_shapes",
             "review-shapes",
             &["fail", "strict-sequencing", "strict-sequencing-low"][..],

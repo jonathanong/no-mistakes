@@ -1,0 +1,324 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 15,
+          "message": ".github/workflows/audit.yml:15: job `runner-group` step 2 downloads `https://downloads.example.com/explicit-bash` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "run: curl \"$TOOL_URL\"",
+          "target": "runner-group"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 24,
+          "message": ".github/workflows/audit.yml:24: job `shell-controls` step 1 downloads `https://downloads.example.com/expression-literal` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/expression-literal",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 31,
+          "message": ".github/workflows/audit.yml:31: job `shell-controls` step 2 downloads `https://downloads.example.com/exported-env` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$TOOL_URL\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 38,
+          "message": ".github/workflows/audit.yml:38: job `shell-controls` step 3 downloads `https://downloads.example.com/callback-literal` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/callback-literal",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 40,
+          "message": ".github/workflows/audit.yml:40: job `shell-controls` step 4 downloads `https://downloads.example.com/missing-algorithm` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/missing-algorithm -o tool",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 43,
+          "message": ".github/workflows/audit.yml:43: job `shell-controls` step 5 downloads `https://downloads.example.com/algorithm-option-end` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/algorithm-option-end -o tool",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 46,
+          "message": ".github/workflows/audit.yml:46: job `shell-controls` step 6 downloads `https://downloads.example.com/combined-output` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/combined-output&>>trace.log",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 47,
+          "message": ".github/workflows/audit.yml:47: job `shell-controls` step 6 downloads `https://downloads.example.com/attached-output` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/attached-output>trace.log",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 51,
+          "message": ".github/workflows/audit.yml:51: job `shell-controls` step 7 downloads `https://downloads.example.com/unquoted-wrapper` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "$CMD https://downloads.example.com/unquoted-wrapper",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 56,
+          "message": ".github/workflows/audit.yml:56: job `shell-controls` step 8 downloads `https://downloads.example.com/partial-quoted-literal` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/partial-quoted-literal",
+          "target": "shell-controls"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "strict-sequencing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 15,
+          "message": ".github/workflows/audit.yml:15: job `runner-group` step 2 downloads `https://downloads.example.com/explicit-bash` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "run: curl \"$TOOL_URL\"",
+          "target": "runner-group"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 24,
+          "message": ".github/workflows/audit.yml:24: job `shell-controls` step 1 downloads `https://downloads.example.com/expression-literal` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/expression-literal",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 31,
+          "message": ".github/workflows/audit.yml:31: job `shell-controls` step 2 downloads `https://downloads.example.com/exported-env` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$TOOL_URL\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 38,
+          "message": ".github/workflows/audit.yml:38: job `shell-controls` step 3 downloads `https://downloads.example.com/callback-literal` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/callback-literal",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 40,
+          "message": ".github/workflows/audit.yml:40: job `shell-controls` step 4 downloads `https://downloads.example.com/missing-algorithm` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/missing-algorithm -o tool",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 43,
+          "message": ".github/workflows/audit.yml:43: job `shell-controls` step 5 downloads `https://downloads.example.com/algorithm-option-end` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/algorithm-option-end -o tool",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 46,
+          "message": ".github/workflows/audit.yml:46: job `shell-controls` step 6 downloads `https://downloads.example.com/combined-output` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/combined-output&>>trace.log",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 47,
+          "message": ".github/workflows/audit.yml:47: job `shell-controls` step 6 downloads `https://downloads.example.com/attached-output` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/attached-output>trace.log",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 51,
+          "message": ".github/workflows/audit.yml:51: job `shell-controls` step 7 downloads `https://downloads.example.com/unquoted-wrapper` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "$CMD https://downloads.example.com/unquoted-wrapper",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 56,
+          "message": ".github/workflows/audit.yml:56: job `shell-controls` step 8 downloads `https://downloads.example.com/partial-quoted-literal` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/partial-quoted-literal",
+          "target": "shell-controls"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "strict-sequencing-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 11,
+          "message": ".github/workflows/audit.yml:11: job `runner-group` step 1 download URL or argument shape `$TOOL_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "run: curl \"$TOOL_URL\"",
+          "target": "runner-group"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 15,
+          "message": ".github/workflows/audit.yml:15: job `runner-group` step 2 download URL or argument shape `$TOOL_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "run: curl \"$TOOL_URL\"",
+          "target": "runner-group"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 23,
+          "message": ".github/workflows/audit.yml:23: job `shell-controls` step 1 download URL or argument shape `$TOOL_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$TOOL_URL\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 24,
+          "message": ".github/workflows/audit.yml:24: job `shell-controls` step 1 downloads `https://downloads.example.com/expression-literal` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/expression-literal",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 31,
+          "message": ".github/workflows/audit.yml:31: job `shell-controls` step 2 download URL or argument shape `$TOOL_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$TOOL_URL\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 32,
+          "message": ".github/workflows/audit.yml:32: job `shell-controls` step 2 download URL or argument shape `$OTHER` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$OTHER\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 37,
+          "message": ".github/workflows/audit.yml:37: job `shell-controls` step 3 download URL or argument shape `$TOOL_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$TOOL_URL\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 38,
+          "message": ".github/workflows/audit.yml:38: job `shell-controls` step 3 downloads `https://downloads.example.com/callback-literal` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/callback-literal",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 40,
+          "message": ".github/workflows/audit.yml:40: job `shell-controls` step 4 downloads `https://downloads.example.com/missing-algorithm` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/missing-algorithm -o tool",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 43,
+          "message": ".github/workflows/audit.yml:43: job `shell-controls` step 5 downloads `https://downloads.example.com/algorithm-option-end` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/algorithm-option-end -o tool",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 46,
+          "message": ".github/workflows/audit.yml:46: job `shell-controls` step 6 downloads `https://downloads.example.com/combined-output` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/combined-output&>>trace.log",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 47,
+          "message": ".github/workflows/audit.yml:47: job `shell-controls` step 6 downloads `https://downloads.example.com/attached-output` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/attached-output>trace.log",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 51,
+          "message": ".github/workflows/audit.yml:51: job `shell-controls` step 7 downloader command is unanalyzable at effort low; call `curl` directly with literal HTTP(S) URL arguments instead of a command alias.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "$CMD https://downloads.example.com/unquoted-wrapper",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 55,
+          "message": ".github/workflows/audit.yml:55: job `shell-controls` step 8 download URL or argument shape `prefix$TOOL_URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"prefix$TOOL_URL\"",
+          "target": "shell-controls"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 56,
+          "message": ".github/workflows/audit.yml:56: job `shell-controls` step 8 downloads `https://downloads.example.com/partial-quoted-literal` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl https://downloads.example.com/partial-quoted-literal",
+          "target": "shell-controls"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

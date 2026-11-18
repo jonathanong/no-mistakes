@@ -134,3 +134,28 @@ jobs:
       - run: |
           CMD='exec FLAG=x curl'
           $CMD https://downloads.example.com/expanded-wrapper-assignment-is-data
+      - run: |
+          URL=https://downloads.example.com/comment-apostrophe
+          # Don't remove this note.
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/continued-comment-apostrophe
+          echo note \
+          # Don't remove this note.
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/hash-in-continued-word
+          echo note\
+          #'literal content
+          '
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/hash-inside-multiline-quote
+          printf '%s' 'ordinary text
+          # and more text'
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/escaped-hash
+          echo \# 'literal
+          and more text'
+          curl "$URL"

@@ -82,12 +82,13 @@ fn flush_word(
     word: &mut String,
     current: &mut Command,
     word_line: usize,
+    quoted: bool,
     expansion_may_split: &mut bool,
     quoted_expansion: &mut Option<(usize, usize)>,
 ) {
     let expansion_may_split = std::mem::take(expansion_may_split);
     let quoted_expansion = quoted_expansion.take();
-    if !word.is_empty() {
+    if quoted || !word.is_empty() {
         current.words.push(Word {
             text: std::mem::take(word),
             line: word_line,

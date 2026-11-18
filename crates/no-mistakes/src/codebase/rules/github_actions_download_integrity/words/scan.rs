@@ -93,7 +93,7 @@ impl<'a> Scan<'a> {
     /// The newline stays for `separator`, so a here-document opener on the
     /// same line still skips its body (`cat <<EOF # note`).
     fn comment(&mut self, ch: char) -> bool {
-        if ch != '#' || self.quoting.is_some() || !self.word.is_empty() {
+        if ch != '#' || self.quoting.is_some() || self.word_quoted || !self.word.is_empty() {
             return false;
         }
         while self.index < self.chars.len() && self.chars[self.index] != '\n' {

@@ -1,0 +1,28 @@
+name: Audit empty shell arguments
+on: push
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/reassigned-by-read
+        run: |
+          read -r -d '' TOOL_URL <<< 'https://api.github.com/tool' || :
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://api.github.com/tool.sha256
+        run: |
+          curl https://downloads.example.com/before-reassigned-sidecar -o first
+          read -r -d '' TOOL_URL <<< 'https://downloads.example.com/second' || :
+          curl "$TOOL_URL" -o second
+          sha256sum -c second.sha256
+      - env:
+          TOOL_URL: https://downloads.example.com/unrelated-read-target
+        run: |
+          read -r -d "" CHANNEL <<< 'channel data' || :
+          curl "$TOOL_URL" -o tool
+      - run: curl -o '' https://downloads.example.com/empty-output-argument
+      - run: "'' curl https://downloads.example.com/after-empty-command"
+      - run: |
+          PREFIX=''
+          $PREFIX curl https://downloads.example.com/elided-prefix -o tool

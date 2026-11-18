@@ -8,6 +8,9 @@ const LEADING: &[&str] = &[
 pub(super) fn command_at(words: &[Word]) -> Option<(String, usize)> {
     let mut index = 0;
     while index < words.len() {
+        if words[index].text.is_empty() {
+            return None;
+        }
         let text = unwrap_group(&words[index].text);
         if text.is_empty()
             || is_assignment(&words[index].text)

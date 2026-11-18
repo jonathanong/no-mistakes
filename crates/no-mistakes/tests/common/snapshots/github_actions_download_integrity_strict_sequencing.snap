@@ -45,6 +45,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/sequence.yml",
+          "line": 140,
+          "message": ".github/workflows/sequence.yml:140: job `build` step 39 downloads `https://downloads.example.com/comment-apostrophe` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 145,
+          "message": ".github/workflows/sequence.yml:145: job `build` step 40 downloads `https://downloads.example.com/continued-comment-apostrophe` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 151,
+          "message": ".github/workflows/sequence.yml:151: job `build` step 41 downloads `https://downloads.example.com/hash-in-continued-word` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 156,
+          "message": ".github/workflows/sequence.yml:156: job `build` step 42 downloads `https://downloads.example.com/hash-inside-multiline-quote` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 161,
+          "message": ".github/workflows/sequence.yml:161: job `build` step 43 downloads `https://downloads.example.com/escaped-hash` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
           "line": 36,
           "message": ".github/workflows/sequence.yml:36: job `build` step 9 downloads `https://downloads.example.com/before-check-alias` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
@@ -150,6 +190,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/sequence.yml:130: job `build` step 36 downloads `https://downloads.example.com/plain-wrapper-alias` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "$CMD https://downloads.example.com/plain-wrapper-alias",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 140,
+          "message": ".github/workflows/sequence.yml:140: job `build` step 39 downloads `https://downloads.example.com/comment-apostrophe` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 145,
+          "message": ".github/workflows/sequence.yml:145: job `build` step 40 downloads `https://downloads.example.com/continued-comment-apostrophe` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 151,
+          "message": ".github/workflows/sequence.yml:151: job `build` step 41 downloads `https://downloads.example.com/hash-in-continued-word` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 156,
+          "message": ".github/workflows/sequence.yml:156: job `build` step 42 downloads `https://downloads.example.com/hash-inside-multiline-quote` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 161,
+          "message": ".github/workflows/sequence.yml:161: job `build` step 43 downloads `https://downloads.example.com/escaped-hash` with `curl` and does not verify the bytes before the next unrelated download or the end of this script. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
           "target": "build"
         },
         {
@@ -355,6 +435,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/sequence.yml:130: job `build` step 36 downloader command is unanalyzable at effort low; call `curl` directly with literal HTTP(S) URL arguments instead of a command alias.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "$CMD https://downloads.example.com/plain-wrapper-alias",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 140,
+          "message": ".github/workflows/sequence.yml:140: job `build` step 39 download URL or argument shape `$URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 145,
+          "message": ".github/workflows/sequence.yml:145: job `build` step 40 download URL or argument shape `$URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 151,
+          "message": ".github/workflows/sequence.yml:151: job `build` step 41 download URL or argument shape `$URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 156,
+          "message": ".github/workflows/sequence.yml:156: job `build` step 42 download URL or argument shape `$URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 161,
+          "message": ".github/workflows/sequence.yml:161: job `build` step 43 download URL or argument shape `$URL` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `curl` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$URL\"",
           "target": "build"
         },
         {

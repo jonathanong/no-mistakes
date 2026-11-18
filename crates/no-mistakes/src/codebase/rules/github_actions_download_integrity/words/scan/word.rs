@@ -25,6 +25,9 @@ impl Scan<'_> {
         if ch != '\'' && ch != '"' {
             return false;
         }
+        if self.word.is_empty() && !self.word_quoted {
+            self.word_line = self.line;
+        }
         self.quoting = Some(ch);
         self.word_quoted = true;
         self.index += 1;
@@ -83,6 +86,7 @@ impl Scan<'_> {
             &mut self.word,
             &mut self.current,
             self.word_line,
+            quoted,
             &mut self.word_expansion_may_split,
             &mut self.word_quoted_expansion,
         );

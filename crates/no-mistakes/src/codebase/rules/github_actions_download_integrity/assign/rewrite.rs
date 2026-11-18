@@ -6,6 +6,7 @@ pub(crate) struct Script {
     pub(crate) text: String,
     origins: Vec<Option<usize>>,
     quote: Option<char>,
+    in_word: bool,
 }
 
 impl Script {
@@ -24,14 +25,24 @@ impl Script {
     pub(super) fn substitute(&mut self, line: &str, offset: usize, name: &str, value: &str) {
         let mut chars = line.chars().enumerate().peekable();
         while let Some((index, ch)) = chars.next() {
+            if ch == '#' && self.quote.is_none() && !self.in_word {
+                self.source_char(ch, offset + index);
+                for (index, ch) in chars {
+                    self.source_char(ch, offset + index);
+                }
+                return;
+            }
             if ch == '\\' && self.quote != Some('\'') {
                 self.source_char(ch, offset + index);
-                if let Some((escaped_index, escaped)) = chars.next() {
-                    self.source_char(escaped, offset + escaped_index);
-                }
+                let Some((escaped_index, escaped)) = chars.next() else {
+                    return;
+                };
+                self.source_char(escaped, offset + escaped_index);
+                self.in_word = true;
                 continue;
             }
             if ch == '$' && self.quote != Some('\'') {
+                self.in_word = true;
                 let mut reference = String::new();
                 if matches!(chars.peek(), Some((_, '{'))) {
                     for (_, next) in chars.by_ref() {
@@ -70,8 +81,10 @@ impl Script {
                     self.quote = Some(ch);
                 }
             }
+            self.in_word = self.quote.is_some() || (!ch.is_whitespace() && !";&|()<>".contains(ch));
             self.source_char(ch, offset + index);
         }
+        self.in_word = self.quote.is_some();
     }
 }
 
@@ -123,10 +136,11 @@ pub(crate) fn prepare_max_script(script: &str) -> Option<Script> {
         let line = source
             .strip_suffix('\n')
             .map_or(source, |body| body.strip_suffix('\r').unwrap_or(body));
-        if let Some((name, value)) = binding
-            .as_ref()
-            .filter(|_| !matches!(classify(line.trim()), Kind::Literal(_, _)))
-        {
+        if let Some((name, value)) = binding.as_ref().filter(|_| {
+            out.quote.is_some()
+                || out.in_word
+                || !matches!(classify(line.trim()), Kind::Literal(_, _))
+        }) {
             out.substitute(line, offset, name, value);
         } else {
             for (index, ch) in line.chars().enumerate() {
