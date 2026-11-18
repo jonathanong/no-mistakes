@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "paths": {
+      "@example/db": ["./db.ts"],
+      "@example/sql": ["./sql.ts"],
+      "@example/assertions": ["./configured-helpers.d.ts"],
+      "@example/mutable-assertions": ["./configured-mutable-target.ts"]
+    }
+  },
+  "include": ["*.ts"]
+}

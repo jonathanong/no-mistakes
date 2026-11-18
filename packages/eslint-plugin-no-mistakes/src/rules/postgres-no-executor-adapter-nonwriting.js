@@ -2,6 +2,8 @@
 
 const { safeOtherArguments } = require("./postgres-no-executor-adapter-nonwriting-arguments");
 
+const { tsAssertionArgument } = require("./postgres-no-executor-adapter-assertion");
+const { configuredArgument } = require("./postgres-no-executor-adapter-nonwriting-config");
 const { pureReaderBody } = require("./postgres-no-executor-adapter-nonwriting-body");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
@@ -94,6 +96,11 @@ function tsNonWritingArgument(call, index, checker, ts, facts, program) {
   let argument = call.arguments[index];
   while (ts.isParenthesizedExpression(argument)) argument = argument.expression;
   if (!ts.isIdentifier(argument)) return false;
+  if (
+    tsAssertionArgument(call, index, checker, ts, facts, program) ||
+    configuredArgument(call, index, checker, ts, facts, program)
+  )
+    return true;
   const declaration = directTarget(call, checker, ts, facts, program);
   if (!declaration || !safeOtherArguments(call, index, checker, ts, facts, program)) return false;
   const readers = (facts.nonWritingReaders ??= new WeakMap());
