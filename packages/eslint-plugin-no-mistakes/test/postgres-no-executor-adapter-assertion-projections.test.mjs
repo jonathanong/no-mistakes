@@ -59,6 +59,8 @@ it("preserves forwarding-only projections through stable assertions and configur
       testCase("imported.ts", "forwarding-only"),
       testCase("configured.ts", "forwarding-only", { configured: true }),
       testCase("negative.ts", "all"),
+      testCase("guard-proofs.ts", "forwarding-only"),
+      testCase("configured-direct-named.ts", "forwarding-only", { configured: true }),
     ],
     invalid: [
       testCase("configured.ts", "forwarding-only"),
@@ -71,10 +73,12 @@ it("preserves forwarding-only projections through stable assertions and configur
       testCase("binding-boundaries.ts", "forwarding-only"),
       testCase("configured-boundaries.ts", "forwarding-only", { configured: true }),
       testCase("configured-reassignment.ts", "forwarding-only", { configured: true }),
+      testCase("guard-controls.ts", "forwarding-only"),
+      testCase("configured-type-only.ts", "forwarding-only", { configured: true }),
     ],
   });
   expect(rows.map((row) => row.findings.length)).toEqual([
-    0, 0, 0, 0, 2, 2, 2, 17, 2, 1, 1, 4, 8, 2,
+    0, 0, 0, 0, 0, 0, 2, 2, 2, 17, 2, 1, 1, 4, 8, 2, 12, 2,
   ]);
   const mutationFindings = languageOptionsFindings({
     ...testCase("negative.ts", "forwarding-only"),

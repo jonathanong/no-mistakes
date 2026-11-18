@@ -87,7 +87,6 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program) {
     if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
       return false;
     const symbol = checker.getSymbolAtLocation(parameter.name);
-    if (!symbol) return false;
     parameters.add(symbol);
   }
   const writes = sourceWrites(declaration.getSourceFile(), checker, facts, program);
@@ -159,9 +158,6 @@ function nonWritingAssertionBody(declaration, checker, ts, facts, program) {
 }
 
 function tsAssertionArgument(call, index, checker, ts, facts, program) {
-  let argument = call.arguments[index];
-  while (argument && ts.isParenthesizedExpression(argument)) argument = argument.expression;
-  if (!argument || !ts.isIdentifier(argument)) return false;
   const signature = stableCallSignature(call, checker, ts, facts, program);
   if (!signature) return false;
   const predicate = checker.getTypePredicateOfSignature(signature);

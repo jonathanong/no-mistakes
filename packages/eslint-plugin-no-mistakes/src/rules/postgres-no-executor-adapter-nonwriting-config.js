@@ -18,8 +18,6 @@ const nonWritingCalleesSchema = {
 
 function configuredArgument(call, index, checker, ts, facts, program) {
   if (!facts.nonWritingCallees?.length) return false;
-  const signature = stableCallSignature(call, checker, ts, facts, program);
-  if (!signature || !safeOtherArguments(call, index, checker, ts, facts, program)) return false;
   const symbol = checker.getSymbolAtLocation(call.expression);
   const declaration = symbol?.declarations?.[0];
   let imported;
@@ -32,8 +30,13 @@ function configuredArgument(call, index, checker, ts, facts, program) {
     imported = "default";
     importDeclaration = declaration.parent;
   } else return false;
-  return facts.nonWritingCallees.some(
-    (entry) => entry.module === importDeclaration.moduleSpecifier.text && entry.export === imported,
+  return (
+    facts.nonWritingCallees.some(
+      (entry) =>
+        entry.module === importDeclaration.moduleSpecifier.text && entry.export === imported,
+    ) &&
+    Boolean(stableCallSignature(call, checker, ts, facts, program)) &&
+    safeOtherArguments(call, index, checker, ts, facts, program)
   );
 }
 
