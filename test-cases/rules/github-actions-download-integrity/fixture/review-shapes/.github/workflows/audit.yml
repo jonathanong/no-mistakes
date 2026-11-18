@@ -1,0 +1,72 @@
+name: Audit shell shapes
+on: push
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/read-separated
+        run: |
+          read -r CHANNEL < ./channel.txt
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/read-attached
+        run: |
+          0<./channel.txt read -r CHANNEL 2>&1
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/here-string
+        run: |
+          read -r CHANNEL <<< "channel name"
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/redirected-write
+        run: |
+          read -r TOOL_URL < ./replacement.txt
+          curl "$TOOL_URL" -o tool
+      - run: |
+          curl https://downloads.example.com/redirect-file -o tool >./status.txt
+          sha256sum -c tool.sha256 2>&1
+      - run: |
+          curl https://downloads.example.com/url-shaped-redirection -o tool >https://downloads.example.com/redirection-operand
+      - run: |
+          curl https://downloads.example.com/check-mode -o tool
+          sha256sum "${CHECK_MODE}" -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/check-mode-unquoted -o tool
+          sha256sum $CHECK_MODE -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/check-mode-after-double-dash -o tool
+          sha256sum -- -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/check-filename -o tool
+          sha256sum -c "${CHECK_FILE}"
+      - run: |
+          curl https://downloads.example.com/shasum-check-mode -o tool
+          shasum -a 256 "${CHECK_MODE}" -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/shasum-after-double-dash -o tool
+          shasum -a 256 -- -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/shasum-check-filename -o tool
+          shasum -a 256 -c "${CHECK_FILE}"
+  matrix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/unknown-runner
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/matrix-with-explicit-bash
+        shell: bash
+        run: curl "$TOOL_URL" -o tool
+  unknown-mapped:
+    runs-on:
+      labels: ${{ inputs.label }}
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/unknown-mapped-runner
+        run: curl "$TOOL_URL" -o tool

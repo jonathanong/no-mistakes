@@ -42,3 +42,5 @@ export type * from "./postgres-lock-written-rows-types";
 export type * from "./postgres-column-check-constraints-types";
 
 export type * from "./postgres-grouping-not-aggregation-types";
+
+export type * from "./github-actions-download-integrity-types";

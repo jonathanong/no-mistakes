@@ -215,7 +215,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ci.yml",
           "line": 6,
-          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl https://example.invalid/a.tgz",
           "target": "build"
@@ -248,7 +248,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ci.yml",
           "line": 6,
-          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl https://example.invalid/a.tgz",
           "target": "build"
@@ -269,7 +269,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ci.yml",
           "line": 6,
-          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl https://example.invalid/a.tgz",
           "target": "build"
@@ -290,7 +290,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ci.yml",
           "line": 6,
-          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "message": ".github/workflows/ci.yml:6: job `build` step 1 downloads `https://example.invalid/a.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",
           "sourceLine": "curl https://example.invalid/a.tgz",
           "target": "build"

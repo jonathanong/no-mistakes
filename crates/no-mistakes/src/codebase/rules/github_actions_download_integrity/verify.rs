@@ -1,24 +1,30 @@
-use super::words::commands;
+use super::words::{self, Command};
 
-pub(super) fn step_verifies(script: &str) -> bool {
-    commands(script).into_iter().any(|command| {
-        // A substitution hides the checksum file, so the check is not judged.
-        if command.dynamic {
-            return false;
+pub(super) fn command_verifies(command: &Command) -> bool {
+    if command.dynamic {
+        return false;
+    }
+    let Some((name, offset)) = words::command_at(&command.words) else {
+        return false;
+    };
+    let args = &command.words[offset + 1..];
+    match name.as_str() {
+        "sha256sum" => sha256sum_verifies(args),
+        "shasum" => shasum_256_check(args),
+        _ => false,
+    }
+}
+
+fn sha256sum_verifies(args: &[words::Word]) -> bool {
+    for word in args {
+        if sha256_check(&word.text) {
+            return true;
         }
-        let words: Vec<&str> = command
-            .words
-            .iter()
-            .map(|word| word.text.as_str())
-            .collect();
-        let Some((name, _)) = super::words::command_at(&command.words) else {
-            return false;
-        };
-        if name == "sha256sum" {
-            return words.iter().any(|word| sha256_check(word));
+        if ends_known_options(word) {
+            break;
         }
-        name == "shasum" && shasum_256_check(&words)
-    })
+    }
+    false
 }
 
 fn sha256_check(word: &str) -> bool {
@@ -34,12 +40,36 @@ fn sha256_check(word: &str) -> bool {
                 .all(|ch| matches!(ch, 'b' | 'c' | 't' | 'w' | 'z')))
 }
 
-fn shasum_256_check(words: &[&str]) -> bool {
-    let algorithm = words.windows(2).any(|pair| pair == ["-a", "256"]) || words.contains(&"-a256");
-    let check = words
-        .iter()
-        .any(|word| *word == "-c" || *word == "--check" || word.starts_with("--check="));
-    algorithm && check
+fn shasum_256_check(args: &[words::Word]) -> bool {
+    let mut args = args.iter();
+    let mut algorithm = false;
+    let mut check = false;
+    while let Some(word) = args.next() {
+        match word.text.as_str() {
+            "-a" => {
+                let Some(value) = args.next() else {
+                    return false;
+                };
+                if ends_known_options(value) {
+                    return false;
+                }
+                algorithm = value.text == "256";
+            }
+            "-a256" => algorithm = true,
+            "-c" | "--check" => check = true,
+            value if value.starts_with("--check=") => check = true,
+            _ if ends_known_options(word) => break,
+            _ => {}
+        }
+        if algorithm && check {
+            return true;
+        }
+    }
+    false
+}
+
+fn ends_known_options(word: &words::Word) -> bool {
+    word.text == "--" || word.expansion_may_split || word.quoted_expansion.is_some()
 }
 
 pub(super) fn takes_url_slot(command: &str, token: &str) -> bool {

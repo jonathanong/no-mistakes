@@ -45,3 +45,56 @@ fn github_actions_download_integrity_json_matches_snapshot() {
         ],
     );
 }
+
+#[test]
+fn github_actions_download_integrity_scopes_and_sequencing_match_snapshot() {
+    for (snapshot, fixture, configs) in [
+        (
+            "github_actions_download_integrity_step_env",
+            "step-env",
+            &["fail"][..],
+        ),
+        (
+            "github_actions_download_integrity_builtin_writes",
+            "builtin-writes",
+            &["fail"][..],
+        ),
+        (
+            "github_actions_download_integrity_shell_source",
+            "shell-source",
+            &["fail", "shell-source", "shell-source-low"][..],
+        ),
+        (
+            "github_actions_download_integrity_coverage_controls",
+            "coverage-controls",
+            &["fail", "strict-sequencing", "strict-sequencing-low"][..],
+        ),
+        (
+            "github_actions_download_integrity_empty_args",
+            "empty-args",
+            &["fail", "strict-sequencing"][..],
+        ),
+        (
+            "github_actions_download_integrity_review_shapes",
+            "review-shapes",
+            &["fail", "strict-sequencing", "strict-sequencing-low"][..],
+        ),
+        (
+            "github_actions_download_integrity_strict_sequencing",
+            "strict-sequencing",
+            &["fail", "strict-sequencing", "strict-sequencing-low"][..],
+        ),
+    ] {
+        let cases = configs
+            .iter()
+            .map(|&config| {
+                (
+                    config,
+                    rules_path(RULE, "fixture", fixture),
+                    rules_path(RULE, "configs", &format!("{config}.yml")),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_saved_fixture(snapshot, &cases);
+    }
+}

@@ -27,14 +27,17 @@ fn only_quoted_option_values_preserve_the_following_url_slot() {
         ("unquoted-inline-output", "quoted-inline-output"),
     ] {
         let script = operand_script(unquoted);
-        assert!(judge::download_hits(&script, &[]).is_empty(), "{unquoted}");
-        let low = judge::download_hits_low(&script, &[]);
+        assert!(
+            test_adapters::download_hits(&script, &[]).is_empty(),
+            "{unquoted}"
+        );
+        let low = test_adapters::download_hits_low(&script, &[]);
         assert_eq!(low.len(), 1, "{unquoted}");
         assert!(low[0].unanalyzable, "{unquoted}");
 
         let script = operand_script(quoted);
-        let max = judge::download_hits(&script, &[]);
-        let low = judge::download_hits_low(&script, &[]);
+        let max = test_adapters::download_hits(&script, &[]);
+        let low = test_adapters::download_hits_low(&script, &[]);
         assert_eq!(max.len(), 1, "{quoted}");
         assert_eq!(low.len(), 1, "{quoted}");
         assert!(!low[0].unanalyzable, "{quoted}");
@@ -50,7 +53,7 @@ fn uncertain_option_values_follow_policy_without_dropping_literal_violations() {
         Unanalyzable::Advise,
         Unanalyzable::Ignore,
     ] {
-        let result = runs::check_source_low(OPERANDS, &source, &hosts(), &[], policy);
+        let result = test_adapters::check_source_low(OPERANDS, &source, &hosts(), &[], policy);
         assert_eq!(
             result.findings.len(),
             if policy == Unanalyzable::Report { 6 } else { 3 }
@@ -80,13 +83,13 @@ fn uncertain_option_values_follow_policy_without_dropping_literal_violations() {
 fn escaped_option_values_do_not_split_but_doubled_backslashes_allow_expansion() {
     let path = ".github/workflows/escaped-option-values.yml";
     let source = std::fs::read_to_string(fixture_root("effort-argv").join(path)).unwrap();
-    assert!(runs::check_source(path, &source, &hosts(), &[]).is_empty());
+    assert!(test_adapters::check_source(path, &source, &hosts(), &[]).is_empty());
     for policy in [
         Unanalyzable::Report,
         Unanalyzable::Advise,
         Unanalyzable::Ignore,
     ] {
-        let result = runs::check_source_low(path, &source, &hosts(), &[], policy);
+        let result = test_adapters::check_source_low(path, &source, &hosts(), &[], policy);
         assert_eq!(
             result.findings.len(),
             usize::from(policy == Unanalyzable::Report)

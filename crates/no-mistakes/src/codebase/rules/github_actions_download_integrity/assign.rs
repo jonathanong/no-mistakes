@@ -1,21 +1,5 @@
-/// Expands one whole-line uppercase literal. Any other uppercase assignment
-/// in the same script leaves every `$NAME` untouched.
-pub(super) fn expand_uppercase(script: &str) -> String {
-    probe::note();
-    let env = single_literal_binding(script);
-    let mut out = String::new();
-    for line in script.lines() {
-        if matches!(classify(line.trim()), Kind::Literal(_, _)) && env.is_some() {
-            out.push_str(line);
-        } else if let Some((name, value)) = &env {
-            out.push_str(&substitute(line, name, value));
-        } else {
-            out.push_str(line);
-        }
-        out.push('\n');
-    }
-    out
-}
+mod rewrite;
+pub(super) use rewrite::prepare_max_script;
 
 /// The same one-binding proof used by max, without expanding any script values.
 pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
@@ -40,7 +24,9 @@ pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
 }
 
 pub(super) fn substitute_command(token: &str, binding: &(String, String)) -> String {
-    substitute(token, &binding.0, &binding.1)
+    let mut out = rewrite::Script::default();
+    out.substitute(token, 0, &binding.0, &binding.1);
+    out.text
 }
 
 #[cfg(test)]
@@ -111,60 +97,4 @@ fn quoted(raw: &str) -> Option<String> {
         value.push(ch);
     }
     None
-}
-
-fn substitute(line: &str, name: &str, value: &str) -> String {
-    let mut out = String::new();
-    let mut chars = line.chars().peekable();
-    let mut quote = None;
-    while let Some(ch) = chars.next() {
-        if quote == Some('\'') {
-            out.push(ch);
-            if ch == '\'' {
-                quote = None;
-            }
-            continue;
-        }
-        if ch == '\'' || ch == '"' {
-            quote = if quote == Some(ch) { None } else { Some(ch) };
-            out.push(ch);
-            continue;
-        }
-        if ch == '$' {
-            let found = read_expansion(&mut chars);
-            if found == name {
-                out.push_str(value);
-                continue;
-            }
-            out.push('$');
-            if !found.is_empty() {
-                out.push_str(&found);
-            }
-            continue;
-        }
-        out.push(ch);
-    }
-    out
-}
-
-fn read_expansion(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
-    if chars.peek() == Some(&'{') {
-        chars.next();
-        let mut name = String::new();
-        for next in chars.by_ref() {
-            if next == '}' {
-                break;
-            }
-            name.push(next);
-        }
-        return name;
-    }
-    let mut name = String::new();
-    while chars
-        .peek()
-        .is_some_and(|next| next.is_ascii_uppercase() || next.is_ascii_digit() || *next == '_')
-    {
-        name.push(chars.next().unwrap_or('_'));
-    }
-    name
 }

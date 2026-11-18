@@ -1,15 +1,20 @@
 use super::heredoc;
 use super::{flush_command, push_char, skip_arithmetic, Command, Parse};
 
+mod redirection;
 mod word;
 
 struct Scan<'a> {
     chars: &'a [char],
+    strict: bool,
     index: usize,
     line: usize,
     word: String,
     word_line: usize,
+    word_quoted: bool,
+    redirect_operand: bool,
     word_expansion_may_split: bool,
+    word_quoted_expansion: Option<(usize, usize)>,
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
@@ -18,17 +23,22 @@ struct Scan<'a> {
     stop: bool,
 }
 
-pub(super) fn run(script: &str) -> Parse {
+pub(super) fn run(script: &str, strict: bool) -> Parse {
     let chars: Vec<char> = script.chars().collect();
     let mut scan = Scan {
         chars: &chars,
+        strict,
         index: 0,
         line: 1,
         word: String::new(),
         word_line: 1,
+        word_quoted: false,
+        redirect_operand: false,
         word_expansion_may_split: false,
+        word_quoted_expansion: None,
         quoting: None,
         current: Command {
+            anchor: 0,
             dynamic: false,
             words: Vec::new(),
         },
@@ -55,7 +65,7 @@ impl<'a> Scan<'a> {
             || self.start_quote(ch)
             || self.expansion(ch)
             || self.arithmetic()
-            || self.heredoc_op()
+            || self.redirection()
         {
             return false;
         }
@@ -83,7 +93,7 @@ impl<'a> Scan<'a> {
     /// The newline stays for `separator`, so a here-document opener on the
     /// same line still skips its body (`cat <<EOF # note`).
     fn comment(&mut self, ch: char) -> bool {
-        if ch != '#' || self.quoting.is_some() || !self.word.is_empty() {
+        if ch != '#' || self.quoting.is_some() || self.word_quoted || !self.word.is_empty() {
             return false;
         }
         while self.index < self.chars.len() && self.chars[self.index] != '\n' {
@@ -107,34 +117,23 @@ impl<'a> Scan<'a> {
         true
     }
 
-    fn heredoc_op(&mut self) -> bool {
-        match heredoc::look(self.chars, self.index) {
-            Some(heredoc::Look::Herestring { index }) => {
-                self.flush_word();
-                self.index = index;
-                true
-            }
-            Some(heredoc::Look::Document { index, opener }) => {
-                self.flush_word();
-                flush_command(&mut self.current, &mut self.commands);
-                self.pending = Some(opener);
-                self.index = index;
-                true
-            }
-            None => false,
-        }
-    }
-
     fn separator(&mut self, ch: char) -> bool {
-        if ch != '\n'
-            && ch != ';'
-            && ch != '|'
-            && !(ch == '&' && self.chars.get(self.index + 1) == Some(&'&'))
-        {
+        let double_ampersand = ch == '&' && self.chars.get(self.index + 1) == Some(&'&');
+        let background = self.strict
+            && ch == '&'
+            && self
+                .index
+                .checked_sub(1)
+                .is_none_or(|prev| !matches!(self.chars[prev], '>' | '<') || self.escaped_at(prev))
+            && self.chars.get(self.index + 1) != Some(&'>')
+            && !self.escaped();
+        if !matches!(ch, '\n' | ';' | '|') && !double_ampersand && !background {
             return false;
         }
         self.flush_word();
+        self.redirect_operand = false;
         flush_command(&mut self.current, &mut self.commands);
+        self.current.anchor = self.index + 1;
         if ch == '\n' {
             if let Some(opener) = self.pending.take() {
                 let body = heredoc::skip_body(self.chars, self.index, self.line, &opener);
@@ -148,7 +147,7 @@ impl<'a> Scan<'a> {
             }
             self.line += 1;
         }
-        if ch == '&' || (ch == '|' && self.chars.get(self.index + 1) == Some(&'|')) {
+        if double_ampersand || (ch == '|' && self.chars.get(self.index + 1) == Some(&'|')) {
             self.index += 1;
         }
         self.index += 1;
@@ -156,7 +155,7 @@ impl<'a> Scan<'a> {
     }
 
     fn whitespace(&mut self, ch: char) -> bool {
-        if !ch.is_whitespace() && ch != '<' && ch != '>' {
+        if !ch.is_whitespace() {
             return false;
         }
         self.flush_word();

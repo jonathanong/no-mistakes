@@ -1,0 +1,167 @@
+name: Audit
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: "https://downloads.example.com/tool?a=1&b=2"
+        run: curl -fsSL "$TOOL_URL" -o tool
+      - env:
+          tool_url: https://downloads.example.com/alternate
+        run: wget "${tool_url}" -O tool
+      - env:
+          TOOL_URL: https://downloads.example.com/inline-option
+        run: curl --url="$TOOL_URL" -o tool
+      - run: curl -fsSL https://downloads.example.com/literal -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/verified
+        run: |
+          curl -fsSL "$TOOL_URL" -o tool
+          sha256sum -c tool.sha256
+      - env:
+          TOOL_URL: https://api.github.com:443/tool
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/tool.sha256
+        run: curl "$TOOL_URL" -o tool.sha256
+      - env:
+          TOOL_URL: ${{ secrets.TOOL_URL }}
+        run: curl -fsSL "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/${{ inputs.version }}
+        run: curl -fsSL "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/single-quoted
+        run: curl '$TOOL_URL' -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/not-a-url-operand
+        run: curl -H "$TOOL_URL" https://api.github.com/tool
+      - env:
+          TOOL_URL: https://downloads.example.com/overwritten
+        run: |
+          export TOOL_URL=https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/empty
+        run: curl "\$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/joined-word
+        run: curl "$"TOOL_URL -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/with-local-assignment
+        run: |
+          MODE=fast
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/appended
+        run: |
+          TOOL_URL+=.sha256
+          curl "$TOOL_URL" -o tool.sha256
+      - env:
+          TOOL_URL: https://downloads.example.com/array-element
+        run: |
+          TOOL_URL[0]=https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/powershell
+        shell: pwsh
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/explicit-bash
+        shell: bash
+        run: curl "$TOOL_URL" -o tool
+      - run: "curl -fsSL \\\r\nhttps://downloads.example.com/crlf -o tool"
+      - env:
+          TOOL_URL: https://downloads.example.com/read-only-label
+        run: |
+          echo TOOL_URL
+          echo TOOL_URL=x
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/printf-target
+        run: |
+          printf -v TOOL_URL '%s' https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/dynamic-printf-target
+        run: |
+          name=TOOL_URL
+          printf -v "$name" '%s' https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/unrelated-printf-target
+          OTHER_URL: https://downloads.example.com/overwritten-by-printf
+        run: |
+          printf -v OTHER_URL '%s' https://api.github.com/tool
+          curl "$OTHER_URL" -o other
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/attached-printf-target
+        run: |
+          printf -vTOOL_URL '%s' https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/read-target
+        run: |
+          read -r -pPrompt TOOL_URL
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/read-prompt
+        run: |
+          read -r -p TOOL_URL unrelated
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/unset-target
+        run: |
+          unset -v TOOL_URL
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/loop-target
+        run: |
+          for TOOL_URL in https://api.github.com/tool; do :; done
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/nameref-target
+        run: |
+          declare -n ref=TOOL_URL
+          ref=https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+  powershell:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/powershell-default
+        run: curl "$TOOL_URL" -o tool
+  windows:
+    runs-on: windows-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/implicit-powershell
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/explicit-bash-on-windows
+        shell: bash
+        run: curl "$TOOL_URL" -o tool
+  windows-runner-group:
+    runs-on:
+      group: build-runners
+      labels: [self-hosted, Windows]
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/windows-mapped-labels
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/bash-on-windows-mapped-labels
+        shell: bash
+        run: curl "$TOOL_URL" -o tool
+  windows-runner-label:
+    runs-on:
+      labels: windows-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/windows-mapped-label
+        run: curl "$TOOL_URL" -o tool

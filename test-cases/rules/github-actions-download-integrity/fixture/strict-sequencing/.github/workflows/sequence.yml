@@ -1,0 +1,161 @@
+name: Audit
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsSL https://downloads.example.com/first -o first
+          curl -fsSL https://downloads.example.com/second -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl -fsSL https://downloads.example.com/first -o first
+          sha256sum -c first.sha256
+          curl -fsSL https://downloads.example.com/second -o second
+          sha256sum -c second.sha256
+      - run: |
+          wget https://downloads.example.com/sidecar-ok -O tool
+          wget https://downloads.example.com/tool.sha256 -O tool.sha256
+          shasum -a 256 -c tool.sha256
+      - run: |
+          sha256sum -c unrelated.sha256
+          curl https://downloads.example.com/after-check -o tool
+      - run: |
+          curl https://downloads.example.com/before-trusted -o tool
+          curl https://api.github.com/metadata -o metadata
+          sha256sum -c tool.sha256
+      - run: curl https://downloads.example.com/same-line -o tool; wget https://downloads.example.com/next -O next; sha256sum -c next.sha256
+      - run: |
+          curl https://downloads.example.com/grouped https://downloads.example.com/tool.sha256 -o tool -o tool.sha256
+          sha256sum -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/grouped-first https://downloads.example.com/grouped-second -o first -o second
+          sha256sum -c checksums.sha256
+      - run: |
+          CHECK=sha256sum
+          curl https://downloads.example.com/before-check-alias -o tool
+          "$CHECK" -c tool.sha256
+      - run: curl https://downloads.example.com/background -o tool & curl https://downloads.example.com/foreground -o next; sha256sum -c next.sha256
+      - run: |
+          curl https://downloads.example.com/before-dynamic -o first
+          curl "$SECOND_URL" -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/before-mixed -o first
+          curl -- "$SECOND_URL" https://downloads.example.com/mixed -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/before-dynamic-host -o first
+          curl "https://${DOWNLOAD_HOST}/second" -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/escaped-redirection -o file\>& curl https://downloads.example.com/foreground -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl https://downloads.example.com/redirection-ok -o first 2>&1
+          sha256sum -c first.sha256 2>&1
+      - run: |
+          curl https://downloads.example.com/quoted-checksum -o first
+          sha256sum -c "${ARTIFACT}.sha256"
+      - run: |
+          curl https://downloads.example.com/command-substitution-checksum -o first
+          sha256sum -c "$(choose_checksum)"
+      - run: |
+          curl https://downloads.example.com/backtick-checksum -o first
+          sha256sum -c "`choose_checksum`"
+      - run: |
+          echo note# integrity-check: skip reason=not-a-comment
+          curl https://downloads.example.com/comment-word -o first
+      - run: |
+          echo note # integrity-check: skip reason=real-comment
+          curl https://downloads.example.com/comment-skips -o first
+      - run: |
+          NOTE='a;b'
+          echo $NOTE; curl https://downloads.example.com/preserved-check -o first; sha256sum -c first.sha256
+      - run: |
+          NOTE='a;sha256sum -c first.sha256'
+          curl https://downloads.example.com/injected-check -o first; echo $NOTE
+      - env:
+          TOOL_URL: https://downloads.example.com/preserved-env
+        run: |
+          NOTE='a;b'
+          echo $NOTE; curl "${TOOL_URL}" -o first
+      - run: |
+          LABEL='note;curl https://downloads.example.com/synthetic-transfer'
+          echo $LABEL
+      - run: |
+          LABEL='note;curl https://downloads.example.com/synthetic-barrier'
+          curl https://downloads.example.com/verified-before-label -o tool
+          echo $LABEL
+          sha256sum -c tool.sha256
+      - env:
+          TOOL_URL: https://downloads.example.com/env-with-output-rewrite
+        run: |
+          OUT=tool.bin
+          curl "$TOOL_URL" -o "$OUT"
+      - env:
+          TOOL_URL: https://downloads.example.com/env-used-as-output
+        run: |
+          FLAG=--output
+          curl "$FLAG" "$TOOL_URL"
+      - env:
+          TOOL_URL: https://downloads.example.com/env-after-unknown-option
+        run: curl "$FLAGS" "$TOOL_URL" -o tool
+      - run: |
+          curl -O https://downloads.example.com/first-transfer --next -O https://downloads.example.com/second-transfer
+          sha256sum -c second-transfer.sha256
+      - run: |
+          curl 'https://downloads.example.com?name=tool.sha256'
+          curl 'https://[2001:db8::1]?name=files/tool.sha256'
+          curl 'https://downloads.example.com/tool.sha256?name=tool'
+      - run: |
+          echo note\
+          # integrity-check: skip reason=continued-word
+          curl https://downloads.example.com/continued-comment-word -o tool
+      - run: |
+          echo note \
+          # integrity-check: skip reason=continued-comment
+          curl https://downloads.example.com/continued-comment-skips -o tool
+      - run: |
+          CMD='if curl'
+          $CMD https://downloads.example.com/expanded-keyword-is-data
+      - run: |
+          CMD='! curl'
+          $CMD https://downloads.example.com/expanded-negation-is-data
+      - run: |
+          CMD='NAME=value curl'
+          $CMD https://downloads.example.com/expanded-assignment-is-data
+      - run: |
+          CMD='sudo curl'
+          $CMD https://downloads.example.com/plain-wrapper-alias
+      - run: |
+          CMD='env if curl'
+          $CMD https://downloads.example.com/expanded-wrapper-keyword-is-data
+      - run: |
+          CMD='exec FLAG=x curl'
+          $CMD https://downloads.example.com/expanded-wrapper-assignment-is-data
+      - run: |
+          URL=https://downloads.example.com/comment-apostrophe
+          # Don't remove this note.
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/continued-comment-apostrophe
+          echo note \
+          # Don't remove this note.
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/hash-in-continued-word
+          echo note\
+          #'literal content
+          '
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/hash-inside-multiline-quote
+          printf '%s' 'ordinary text
+          # and more text'
+          curl "$URL"
+      - run: |
+          URL=https://downloads.example.com/escaped-hash
+          echo \# 'literal
+          and more text'
+          curl "$URL"

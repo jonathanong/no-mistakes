@@ -45,10 +45,7 @@ fn split_host(rest: &str) -> (String, &str) {
         let Some((host, after)) = body.split_once(']') else {
             return (String::new(), "");
         };
-        let path = after
-            .find('/')
-            .map(|index| &after[index + 1..])
-            .unwrap_or("");
+        let path = path_after_authority(after, after.find(['/', '?', '#']).unwrap_or(after.len()));
         return (host.to_ascii_lowercase(), path);
     }
     let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
@@ -62,8 +59,12 @@ fn split_host(rest: &str) -> (String, &str) {
         }
         _ => authority,
     };
-    let path = rest.get(end + 1..).unwrap_or("");
+    let path = path_after_authority(rest, end);
     (host.to_ascii_lowercase(), path)
+}
+
+fn path_after_authority(url: &str, end: usize) -> &str {
+    url[end..].strip_prefix('/').unwrap_or("")
 }
 
 fn checksum_path(path: &str) -> bool {
@@ -88,13 +89,42 @@ pub(super) fn trusted(host: &str, hosts: &[String]) -> bool {
 }
 
 pub(super) fn has_skip(text: &str) -> bool {
-    text.lines().any(skip_line)
+    let mut quote = None;
+    let mut starts_word = true;
+    for line in text.lines() {
+        let mut chars = line.char_indices();
+        let mut continued = false;
+        while let Some((index, ch)) = chars.next() {
+            if ch == '\\' && quote != Some('\'') {
+                if chars.next().is_none() {
+                    continued = true;
+                    break;
+                }
+                starts_word = false;
+            } else if let Some(active) = quote {
+                if ch == active {
+                    quote = None;
+                }
+            } else if matches!(ch, '"' | '\'') {
+                quote = Some(ch);
+                starts_word = false;
+            } else if ch == '#' && starts_word {
+                if skip_comment(&line[index + 1..]) {
+                    return true;
+                }
+                break;
+            } else {
+                starts_word = ch.is_whitespace() || ";&|()<>".contains(ch);
+            }
+        }
+        if !continued && quote.is_none() {
+            starts_word = true;
+        }
+    }
+    false
 }
 
-fn skip_line(line: &str) -> bool {
-    let Some(comment) = unquoted_hash(line) else {
-        return false;
-    };
+fn skip_comment(comment: &str) -> bool {
     let rest = comment.trim_start();
     let Some(rest) = rest.strip_prefix("integrity-check:") else {
         return false;
@@ -113,24 +143,4 @@ fn skip_line(line: &str) -> bool {
     chars.next().is_some_and(|ch| ch.is_ascii_alphanumeric())
         && chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-')
         && !slug.contains(char::is_whitespace)
-}
-
-fn unquoted_hash(line: &str) -> Option<&str> {
-    let mut quote = None;
-    for (index, ch) in line.char_indices() {
-        if let Some(active) = quote {
-            if ch == active {
-                quote = None;
-            }
-            continue;
-        }
-        if ch == '"' || ch == '\'' {
-            quote = Some(ch);
-            continue;
-        }
-        if ch == '#' {
-            return Some(&line[index + 1..]);
-        }
-    }
-    None
 }

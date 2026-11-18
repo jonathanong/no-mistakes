@@ -32,6 +32,7 @@ pub(super) fn run(
                 config,
                 files,
                 &prepared.sources,
+                prepared.snapshot,
                 defer_suppression,
             )
         },

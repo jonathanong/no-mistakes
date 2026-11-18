@@ -1,0 +1,66 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 17,
+          "message": ".github/workflows/audit.yml:17: job `build` step 1 downloads `https://downloads.example.com/getopts-control` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$CONTROL_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 24,
+          "message": ".github/workflows/audit.yml:24: job `build` step 2 downloads `https://downloads.example.com/mapfile-control` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$CONTROL_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 31,
+          "message": ".github/workflows/audit.yml:31: job `build` step 3 downloads `https://downloads.example.com/readarray-control` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$CONTROL_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 41,
+          "message": ".github/workflows/audit.yml:41: job `build` step 4 downloads `https://downloads.example.com/read-control` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$CONTROL_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 48,
+          "message": ".github/workflows/audit.yml:48: job `build` step 5 downloads `https://downloads.example.com/builtin-printf-control` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$CONTROL_URL\"",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 55,
+          "message": ".github/workflows/audit.yml:55: job `build` step 6 downloads `https://downloads.example.com/read-only-builtins` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "curl \"$TOOL_URL\"",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

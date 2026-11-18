@@ -20,6 +20,11 @@ pub(super) fn recover_downloader(
         if !original.text.contains('$') {
             return None;
         }
+        if original.quoted_expansion.is_some()
+            && (identity.1.is_empty() || identity.1.contains(char::is_whitespace))
+        {
+            return None;
+        }
         let original_line = original.line;
         let replaced = assign::substitute_command(&original.text, identity);
         if replaced == original.text {
@@ -34,39 +39,7 @@ pub(super) fn recover_downloader(
             }
             return None;
         }
-        // A literal command prefix can open a heredoc closed later in the
-        // original script. Its partial parse proves identity, never URL safety.
-        if parsed.commands.len() > 1 {
-            // Max can substitute a literal prefix containing separators. Keep
-            // only downloader identity proof, reporting the whole alias shape.
-            let mut suffix = Some(command.words.split_off(at + 1));
-            command.words.pop();
-            let mut leading = Some(std::mem::take(&mut command.words));
-            let last = parsed.commands.len() - 1;
-            for (index, mut candidate) in parsed.commands.into_iter().enumerate() {
-                for word in &mut candidate.words {
-                    word.line = original_line;
-                }
-                if index == 0 {
-                    let mut words = leading.take().unwrap_or_default();
-                    words.extend(candidate.words);
-                    candidate.words = words;
-                }
-                if index == last {
-                    candidate.words.extend(suffix.take().unwrap_or_default());
-                }
-                if let Some((name, slot)) =
-                    recover_downloader(&mut candidate, script, helpers, binding)
-                {
-                    if super::url_words(&name, &candidate.words[slot + 1..])
-                        .iter()
-                        .any(|(_, url)| super::dynamic(url) || super::url::http_url(url).is_some())
-                    {
-                        command.words = candidate.words;
-                        return Some((name, slot));
-                    }
-                }
-            }
+        if parsed.unterminated_heredoc || parsed.commands.len() != 1 {
             return None;
         }
         let mut prefix = parsed.commands.pop()?.words;

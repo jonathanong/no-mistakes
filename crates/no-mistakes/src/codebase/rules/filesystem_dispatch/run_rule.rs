@@ -81,6 +81,11 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             Some(snapshot),
             next_config_resolver.expect("request boundary prepares next config resolver"),
         ),
+        GITHUB_ACTIONS_DOWNLOAD_INTEGRITY => {
+            github_actions_download_integrity::check_with_snapshot(
+                root, config, files, sources, snapshot,
+            )
+        }
         SHELLCHECK_RUNNER => shellcheck_runner::check_with_files_sources_and_snapshot(
             root, config, files, sources, snapshot,
         ),

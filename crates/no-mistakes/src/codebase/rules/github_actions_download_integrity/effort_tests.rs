@@ -45,14 +45,14 @@ fn low_bypasses_assignment_expansion_but_max_still_recovers_the_url() {
         .unwrap();
     let before = assign::probe::count();
     let binding_reads = assign::probe::binding_scans();
-    let low = judge::download_hits_low(script, &[]);
+    let low = test_adapters::download_hits_low(script, &[]);
     assert_eq!(assign::probe::count(), before);
     assert_eq!(assign::probe::binding_scans(), binding_reads);
     assert_eq!(low.len(), 1);
     assert!(low[0].unanalyzable);
     assert_eq!(low[0].url, "$BASE_URL/b.tgz");
 
-    let max = judge::download_hits(script, &[]);
+    let max = test_adapters::download_hits(script, &[]);
     assert_eq!(assign::probe::count(), before + 1);
     assert_eq!(assign::probe::binding_scans(), binding_reads + 1);
     assert_eq!(max.len(), 1);
@@ -63,8 +63,9 @@ fn low_bypasses_assignment_expansion_but_max_still_recovers_the_url() {
 #[test]
 fn low_routes_expansions_and_dynamic_paths_without_reclassifying_literal_findings() {
     let source = source("fail");
-    let max = runs::check_source(WORKFLOW, &source, &hosts(), &[]);
-    let report = runs::check_source_low(WORKFLOW, &source, &hosts(), &[], Unanalyzable::Report);
+    let max = test_adapters::check_source(WORKFLOW, &source, &hosts(), &[]);
+    let report =
+        test_adapters::check_source_low(WORKFLOW, &source, &hosts(), &[], Unanalyzable::Report);
     let shapes: Vec<_> = report
         .findings
         .iter()
@@ -82,7 +83,7 @@ fn low_routes_expansions_and_dynamic_paths_without_reclassifying_literal_finding
         assert!(max.contains(finding), "literal max parity: {finding:?}");
     }
     for policy in [Unanalyzable::Advise, Unanalyzable::Ignore] {
-        let result = runs::check_source_low(WORKFLOW, &source, &hosts(), &[], policy);
+        let result = test_adapters::check_source_low(WORKFLOW, &source, &hosts(), &[], policy);
         assert_eq!(result.findings, literal);
         if policy == Unanalyzable::Advise {
             assert_eq!(result.advisories, shapes);
@@ -95,8 +96,9 @@ fn low_routes_expansions_and_dynamic_paths_without_reclassifying_literal_finding
 #[test]
 fn low_keeps_literal_trust_checksum_verification_and_skip_proofs() {
     let source = source("pass");
-    assert!(runs::check_source(WORKFLOW, &source, &hosts(), &[]).is_empty());
-    let low = runs::check_source_low(WORKFLOW, &source, &hosts(), &[], Unanalyzable::Advise);
+    assert!(test_adapters::check_source(WORKFLOW, &source, &hosts(), &[]).is_empty());
+    let low =
+        test_adapters::check_source_low(WORKFLOW, &source, &hosts(), &[], Unanalyzable::Advise);
     assert!(low.findings.is_empty(), "{:?}", low.findings);
     // Max resolves this trusted-host assignment; low reports only the unknown URL shape.
     assert_eq!(low.advisories.len(), 1, "{:?}", low.advisories);
@@ -121,8 +123,15 @@ fn applications_keep_independent_max_report_and_advise_policies() {
         ],
         ..NoMistakesConfig::default()
     };
-    let result =
-        diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+    let result = diagnostics_with_files_and_sources(
+        &root,
+        &config,
+        &files,
+        &sources,
+        &crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files),
+        true,
+    )
+    .unwrap();
     assert_eq!(result.advisories.len(), 5);
     assert_eq!(
         result
@@ -148,13 +157,27 @@ fn shared_analysis_options_are_sanitized_but_unknown_rule_options_still_fail() {
         rules: vec![application],
         ..NoMistakesConfig::default()
     };
-    let result =
-        diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
+    let result = diagnostics_with_files_and_sources(
+        &root,
+        &config,
+        &files,
+        &sources,
+        &crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files),
+        true,
+    )
+    .unwrap();
     assert_eq!(result.advisories.len(), 5);
     config.rules[0].options = serde_yaml::from_str("unexpected: true\n").unwrap();
-    let error = diagnostics_with_files_and_sources(&root, &config, &files, &sources, true)
-        .err()
-        .unwrap();
+    let error = diagnostics_with_files_and_sources(
+        &root,
+        &config,
+        &files,
+        &sources,
+        &crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files),
+        true,
+    )
+    .err()
+    .unwrap();
     assert!(error.to_string().contains("invalid options"), "{error}");
 }
 
