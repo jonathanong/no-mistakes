@@ -104,6 +104,13 @@ name, value vocabulary, and inheritance behavior for PostgreSQL rules. The
 shared `unanalyzable` policy (`report`, `advise`, or `ignore`) is configured at
 the repository or rule-application level; it is separate from this legacy
 project setting.
+For [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md),
+project `fail` maps to `advise`, matching shared/canonical `report` and rule-level
+legacy `fail`. The rule only suggests query rewrites and always emits
+non-failing advisories. Project `ignore` suppresses only SQL diagnostic advice;
+proven grouping advisories remain. A rule's canonical `options.unanalyzable`
+can override the inherited policy; restating the legacy project key on the rule
+is still a configuration error.
 Every key is optional. An embedded-SQL rule still needs a non-empty
 `executors.importSpecifier` on the project; an empty specifier does not select
 every `.query` call. `executorNames`, `extraExecutorNames`, `excludeExecutorNames`, `factoryNames`, and `typeNames` are

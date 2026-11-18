@@ -30,13 +30,14 @@ test("grouping advice exports named options and all five target codes", () => {
     "executorOptionProperties?: string[];",
     "trustedSqlTags?: { module: string; name: string }[];",
     "sqlLiteralHelpers?: string[];",
+    "unanalyzable?: Unanalyzable;",
     "unanalyzableSql?: PostgresGroupingNotAggregationUnanalyzableSql;",
   ]) {
     assert.ok(declaration.includes(field), field);
   }
   assert.match(
     declaration,
-    /export type PostgresGroupingNotAggregationUnanalyzableSql = "ignore" \| "advise";/,
+    /export type PostgresGroupingNotAggregationUnanalyzableSql = "fail" \| "ignore" \| "advise";/,
   );
   assert.doesNotMatch(declaration, /fail\?:|sqlIncludeLocked/);
   assert.match(

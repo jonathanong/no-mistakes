@@ -916,3 +916,8 @@ report APIs; no additional runtime export is needed. Import
 from `no-mistakes`. Findings appear in `advisories`, and `target` contains one of
 the five named shape codes for consumer filtering. An unset catalog disables all
 shapes. Explicit failing severity and `options.fail` are rejected.
+`PostgresGroupingNotAggregationUnanalyzableSql` includes the legacy `fail` spelling,
+which emits the same diagnostic advice as `advise` for this rule. The canonical
+`unanalyzable` option uses the exported `Unanalyzable` type; `report` also emits
+advice and `ignore` suppresses diagnostic advice. Proven grouping findings stay
+advisory in every mode.

@@ -25,7 +25,10 @@ fn assert_policy(policy: &str, diagnostic_expected: bool) {
         &[],
         &[],
     );
-    let result = &snapshots[policy];
+    assert_result(&snapshots[policy], diagnostic_expected);
+}
+
+fn assert_result(result: &serde_json::Value, diagnostic_expected: bool) {
     let report = &result["report"];
     assert_eq!(result["exitCode"], 0, "{report}");
     assert_eq!(report["rules"], serde_json::json!([]), "{report}");
@@ -48,4 +51,41 @@ fn assert_policy(policy: &str, diagnostic_expected: bool) {
         "{report}"
     );
     assert_eq!(advisories.len(), 1 + diagnostics.len(), "{report}");
+}
+
+#[test]
+fn postgres_grouping_unanalyzable_policy_parity_check_json_snapshot() {
+    let root = rules_path(RULE, "fixture", "unanalyzable");
+    let policies = [
+        ("default", true),
+        ("advise", true),
+        ("ignore", false),
+        ("rule-fail", true),
+        ("shared-report", true),
+        ("shared-sql-report", true),
+        ("project-fail", true),
+        ("rule-report", true),
+        ("rule-ignore-over-fail", false),
+        ("shared-ignore-rule-fail", true),
+        ("project-fail-rule-ignore", false),
+    ];
+    let cases: Vec<_> = policies
+        .iter()
+        .map(|(name, _)| (*name, root.clone(), root.join(format!("{name}.yml"))))
+        .collect();
+    let reports = assert_saved_fixture_report(
+        "postgres_grouping_unanalyzable_policy_parity",
+        &cases,
+        &[],
+        &[],
+    );
+    for (name, diagnostic_expected) in policies {
+        assert_result(&reports[name], diagnostic_expected);
+        let expected = if diagnostic_expected {
+            "advise"
+        } else {
+            "ignore"
+        };
+        assert_eq!(reports[name], reports[expected], "{name}: {reports}");
+    }
 }

@@ -57,7 +57,7 @@ impl NoMistakesConfig {
         {
             validate_low_alias(rule)?;
         }
-        let unanalyzable = if let Some(shared) = option(rule, "unanalyzable")? {
+        let mut unanalyzable = if let Some(shared) = option(rule, "unanalyzable")? {
             shared
         } else {
             legacy_policy(rule)?
@@ -65,6 +65,10 @@ impl NoMistakesConfig {
                 .or(self.unanalyzable_sql)
                 .unwrap_or_default()
         };
+        if rule.rule == "postgres-grouping-not-aggregation" && unanalyzable == Unanalyzable::Report
+        {
+            unanalyzable = Unanalyzable::Advise;
+        }
         Ok(EffectiveRuleAnalysis {
             effort,
             unanalyzable,
@@ -81,8 +85,8 @@ impl NoMistakesConfig {
         Ok(policy)
     }
 
-    /// Propagate new shared defaults to legacy SQL parsers, without rewriting
-    /// pre-existing alias payloads or inserting options for implicit defaults.
+    /// Propagate shared defaults and normalize advisory-only SQL policy aliases
+    /// without inserting options for implicit defaults.
     pub fn materialize_analysis_defaults(&mut self) -> Result<()> {
         for index in 0..self.rules.len() {
             if !self.rules[index].enabled {
@@ -97,13 +101,16 @@ impl NoMistakesConfig {
             let shared: Option<Unanalyzable> = option(rule, "unanalyzable")?;
             let has_alias = rule.options.get("unanalyzableSql").is_some();
             let inherited = self.unanalyzable.or(self.unanalyzable_sql);
-            if (shared.is_some() || (!has_alias && inherited.is_some()))
+            let grouping_fail_alias = rule.rule == "postgres-grouping-not-aggregation"
+                && rule
+                    .options
+                    .get("unanalyzableSql")
+                    .and_then(serde_yaml::Value::as_str)
+                    .is_some_and(|value| value.trim().eq_ignore_ascii_case("fail"));
+            if (shared.is_some() || (!has_alias && inherited.is_some()) || grouping_fail_alias)
                 && sql_policy_rule(&rule.rule)
             {
                 let value = match policy.unanalyzable {
-                    Unanalyzable::Report if rule.rule == "postgres-grouping-not-aggregation" => {
-                        "advise"
-                    }
                     Unanalyzable::Report if rule.rule != "postgres-require-query-annotation" => {
                         "fail"
                     }

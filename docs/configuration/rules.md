@@ -93,7 +93,7 @@ For [`postgres-require-query-annotation`](../rules/postgres-require-query-annota
 `options.unanalyzable` inherits the repository `unanalyzable` policy and
 defaults to `report`; configure `ignore` to skip opaque executor arguments, or
 `advise` for a non-failing residual advisory. The legacy key keeps the same
-meaning. Other PostgreSQL rules keep their legacy `fail` spelling for
+meaning. Failing PostgreSQL rules keep their legacy `fail` spelling for
 `report`; setting the shared `report` policy translates to that spelling.
 For rule applications that consume the shared policy, when both
 `options.unanalyzable` and `options.unanalyzableSql` are present, the canonical
@@ -101,10 +101,21 @@ For rule applications that consume the shared policy, when both
 invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
+
+[`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
+also consumes the shared policy, but deliberately stays advisory only: its
+query rewrites need review and benchmarks even when the shape is proven.
+Shared or rule-level canonical `unanalyzable: report` and legacy
+`unanalyzableSql: fail` (rule or project) all emit the same non-failing advice as
+`advise`. `ignore` suppresses SQL diagnostic advice, while proven grouping
+advisories remain. Canonical rule options take precedence over the legacy alias
+and shared defaults, and an invalid alias is still rejected.
+
 PostgreSQL member calls whose imported receiver type comes from the configured
 executor module but is missing from `executorTypeNames` also use this shared
-policy: `report` fails, `advise` emits a non-failing advisory, and `ignore` stays
-silent. Add the named type to the executor list and use a supported explicitly
+policy: for failing rules `report` fails, while `advise` emits a non-failing
+advisory and `ignore` stays silent. The grouping rule keeps its advisory-only
+mapping described above. Add the named type to the executor list and use a supported explicitly
 typed parameter, for example `function run(client: PoolClient) { ... }`. Merely
 configuring a type does not prove a complex receiver. The policy does not promote
 unresolved calls into executed SQL.
