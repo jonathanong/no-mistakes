@@ -3,20 +3,7 @@
 const { resolveVariable } = require("./postgres-query-text");
 const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 
-function primitiveType(type, ts, allowUndefined) {
-  if (type.isUnion())
-    return (
-      type.types.length > 0 && type.types.every((part) => primitiveType(part, ts, allowUndefined))
-    );
-  const mask =
-    ts.TypeFlags.StringLike |
-    ts.TypeFlags.NumberLike |
-    ts.TypeFlags.BooleanLike |
-    ts.TypeFlags.BigIntLike |
-    ts.TypeFlags.Null |
-    (allowUndefined ? ts.TypeFlags.Undefined : 0);
-  return Boolean(type.flags & mask);
-}
+const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
 
 function typedScalarProjection(receiver, field, context, allowUndefined = true) {
   if (receiver.type !== "Identifier") return false;
@@ -24,7 +11,7 @@ function typedScalarProjection(receiver, field, context, allowUndefined = true) 
   if (
     !variable?.defs.length ||
     !variable.defs.every((def) => def.type === "Parameter") ||
-    objectMutation(variable, null, null, receiver)
+    objectMutation(variable, null, null, receiver, context)
   )
     return false;
   const services = context.sourceCode.parserServices;

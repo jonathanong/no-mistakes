@@ -1,5 +1,7 @@
 "use strict";
 
+const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
+
 const { constInitializer } = require("./postgres-no-executor-adapter-binding");
 const { typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
 const { scalarArgument } = require("./postgres-no-executor-adapter-sql-scalar");
@@ -47,7 +49,16 @@ function tsUnwrap(node, wrappers) {
   return node;
 }
 
-function tsObjectAliased(declaration, symbol, checker, ts, facts, executorSymbol, allowedProperty) {
+function tsObjectAliased(
+  declaration,
+  symbol,
+  checker,
+  ts,
+  facts,
+  executorSymbol,
+  allowedProperty,
+  program,
+) {
   const cache = (facts.projectionAliases ??= new WeakMap());
   let byReceiver = cache.get(declaration);
   if (!byReceiver) {
@@ -71,8 +82,11 @@ function tsObjectAliased(declaration, symbol, checker, ts, facts, executorSymbol
     ]);
     function visit(node) {
       if (ts.isCallExpression(node))
-        for (const argument of node.arguments)
-          if (ts.isIdentifier(tsUnwrap(argument, wrappers)))
+        for (const [index, argument] of node.arguments.entries())
+          if (
+            ts.isIdentifier(tsUnwrap(argument, wrappers)) &&
+            !tsNonWritingArgument(node, index, checker, ts, facts, program)
+          )
             aliases.add(checker.getSymbolAtLocation(tsUnwrap(argument, wrappers)));
       if (
         ts.isCallExpression(node) &&

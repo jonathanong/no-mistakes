@@ -440,6 +440,20 @@ run(0 ?? read, account);
   proof of that named property; a scalar argument alone cannot supply it. Every
   branch of an object union must have the required primitive field. Existing default
   parameter handling still determines whether `undefined` is accepted.
+- Passing that object whole to another call preserves the projection proof only
+  when typed ESLint resolves a single stable, visible synchronous function
+  declaration whose matching parameter has required primitive data fields and
+  only reads them directly or uses one-level destructuring into scalar `const` bindings.
+  Its body must consist of scalar expressions, constants, returns, and simple
+  `if`/block control flow. Other calls, external property reads, writes, deferred
+  code, and loops remain unproven, even when the formal parameter itself is not
+  assigned. This applies before or after the projection, also
+  across source imports. A readonly annotation alone is not evidence: mutable
+  implementations, ambient declarations, unknown/`any` callees, captures,
+  storage, aliases, and field writes remain unproven. Default/rest/optional
+  parameters, overloads, optional/spread calls, methods, and computed access are
+  outside this narrow call proof. Calls through captured or reassigned bindings
+  do not gain an exemption merely because they appear after a value read.
 - This proof applies only to interpolations of configured parameterized trusted
   tags. A field passed as statement text, string concatenation, an interpolated
   raw template, an untrusted tag, a SQL/statement object, `any`, or `unknown`

@@ -1,5 +1,24 @@
 "use strict";
 
+const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
+const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
+
+function nonWritingArgument(call, value, context) {
+  const services = context?.sourceCode.parserServices;
+  if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(call)) return false;
+  const index = call.arguments.indexOf(value);
+  if (value.type !== "Identifier") return false;
+  const ts = require("typescript");
+  return tsNonWritingArgument(
+    services.esTreeNodeToTSNodeMap.get(call),
+    index,
+    services.program.getTypeChecker(),
+    ts,
+    targetFactsFor(context),
+    services.program,
+  );
+}
+
 const LOCAL_WRAPPERS = new Set([
   "TSAsExpression",
   "TSTypeAssertion",
@@ -10,7 +29,7 @@ const LOCAL_WRAPPERS = new Set([
   "ChainExpression",
 ]);
 
-function objectMutation(variable, executorVariable, allowedProperty, ignoredReference) {
+function objectMutation(variable, executorVariable, allowedProperty, ignoredReference, context) {
   return variable.references.some((reference) => {
     if (reference.init || reference.identifier === ignoredReference) return false;
     let value = reference.identifier;
@@ -24,6 +43,8 @@ function objectMutation(variable, executorVariable, allowedProperty, ignoredRefe
       } else break;
     }
     const parent = value.parent;
+    if (parent?.type === "CallExpression" && parent.arguments.includes(value))
+      return !nonWritingArgument(parent, value, context);
     if (
       (parent?.type === "AssignmentExpression" && parent.left === value) ||
       ((parent?.type === "ForOfStatement" || parent?.type === "ForInStatement") &&
@@ -34,12 +55,11 @@ function objectMutation(variable, executorVariable, allowedProperty, ignoredRefe
         parent.init === value &&
         parent.id.type === "Identifier") ||
       (parent?.type === "CallExpression" &&
-        (parent.arguments.includes(value) ||
-          (parent.callee === value &&
-            depth === 1 &&
-            (variable !== executorVariable ||
-              value.computed ||
-              value.property.name !== allowedProperty))))
+        parent.callee === value &&
+        depth === 1 &&
+        (variable !== executorVariable ||
+          value.computed ||
+          value.property.name !== allowedProperty))
     )
       return true;
     if (depth > 0) return false;

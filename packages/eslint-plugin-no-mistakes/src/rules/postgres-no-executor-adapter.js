@@ -1,5 +1,7 @@
 "use strict";
 
+const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
+
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const {
@@ -47,7 +49,7 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, RULE_ID);
     const source = context.sourceCode;
     const filename = context.filename;
-    const targetFacts = new WeakMap();
+    const targetFacts = targetFactsFor(context);
     let bindings = { scoped: [], queryMembers: false };
 
     function quotedExecutor(quoteNode, name) {
