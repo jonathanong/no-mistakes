@@ -429,6 +429,24 @@ run(0 ?? read, account);
   same scalar or fragment check follows a destructured property such as
   `function search({ where }, query)` or `const { where } = options` inside
   the helper. Computed keys, spreads, and unknown objects remain unproven.
+- With typed ESLint, a stable object parameter can supply a required primitive
+  data field as a bind value. The checker must resolve one unambiguous data-field
+  declaration and prove a string, number, boolean, bigint, null, or a union
+  entirely composed of those primitives. This includes
+  named aliases and interfaces, inherited required fields, direct member reads,
+  and one-level local or parameter destructuring (including renamed bindings).
+  A scalar helper argument such as `input.id` uses the same proof. Every branch
+  of an object union must have the required primitive field. Existing default
+  parameter handling still determines whether `undefined` is accepted.
+- This proof applies only to interpolations of configured parameterized trusted
+  tags. A field passed as statement text, string concatenation, an interpolated
+  raw template, an untrusted tag, a SQL/statement object, `any`, or `unknown`
+  remains unproven. Optional or missing fields, getters, computed or nested
+  projections, casts standing in for type proof, and mutated or escaped objects
+  also remain reported. A reassigned destructured binding is unproven in both
+  local and imported helpers. Without a TypeScript program, the existing
+  literal-object and scalar-parameter controls keep their syntax-only proof;
+  the new typed-field proof is unavailable. Default `mode: "all"` is unchanged.
 - Imports for the two scoped options above match `importSpecifier` and its
   subpaths (`@example/db/types` for `@example/db`), not sibling packages such as
   `@example/dbx`. A relative import matches only when it resolves into that
@@ -492,6 +510,20 @@ function filterOptions({ where }, query) {
 }
 filterOptions({ where: sql`active = true` }, read); // reported: fragment in a destructured property
 filterOptions({ where: true }, read); // allowed: scalar in a destructured property
+```
+
+With a configured trusted `sql` tag, required primitive fields are placeholders,
+not statement text:
+
+```ts
+type Input = { id: string };
+function count(query: QueryExecutor, input: Input) {
+  const { id } = input;
+  return query(sql`SELECT count(*) FROM sample WHERE id = ${id}`);
+}
+function load(input: Input) {
+  return count(read, input); // allowed with typed ESLint
+}
 ```
 
 The mode also accepts a fresh object such as `load({ query: read })` when a

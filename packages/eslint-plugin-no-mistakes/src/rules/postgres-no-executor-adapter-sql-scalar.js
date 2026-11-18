@@ -1,5 +1,6 @@
 "use strict";
 
+const { primitiveType, typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 
 function primitiveAnnotation(node, allowUndefined) {
@@ -25,23 +26,10 @@ function primitiveAnnotation(node, allowUndefined) {
   ].includes(node?.type);
 }
 
-function primitiveType(type, ts, allowUndefined) {
-  if (type.isUnion())
-    return (
-      type.types.length > 0 && type.types.every((part) => primitiveType(part, ts, allowUndefined))
-    );
-  const mask =
-    ts.TypeFlags.StringLike |
-    ts.TypeFlags.NumberLike |
-    ts.TypeFlags.BooleanLike |
-    ts.TypeFlags.BigIntLike |
-    ts.TypeFlags.Null |
-    (allowUndefined ? ts.TypeFlags.Undefined : 0);
-  return Boolean(type.flags & mask);
-}
-
 function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
   node = unwrapTs(node);
+  if (node?.type === "MemberExpression" && !node.computed && !node.optional)
+    return typedScalarProjection(node.object, node.property.name, context, allowUndefined);
   if (node?.type === "Literal")
     return (
       node.value === null || ["string", "number", "boolean", "bigint"].includes(typeof node.value)

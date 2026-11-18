@@ -1,11 +1,11 @@
 "use strict";
 
 const { childNodes, resolveVariable } = require("./postgres-query-text");
+const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const {
   localAliasField,
   localField,
-  objectMutation,
   projectedScalar,
   tsAliasField,
   tsField,
@@ -164,7 +164,9 @@ function tsHoleSafe(
         requirements.push(field === null ? binding : null);
         if (sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol))
           requirements.push(null);
-      } else
+      } else {
+        if (sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol))
+          requirements.push(null);
         for (const source of symbol.declarations ?? []) {
           if (ts.isParameter(source)) requirements.push(null);
           if (ts.isBindingElement(source)) {
@@ -174,14 +176,10 @@ function tsHoleSafe(
               visit(alias.initializer, alias.field);
             } else requirements.push(null);
           }
-          if (ts.isVariableDeclaration(source)) {
-            if (
-              sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol)
-            )
-              requirements.push(null);
-            if (source.initializer) visit(source.initializer, field);
-          }
+          if (ts.isVariableDeclaration(source) && source.initializer)
+            visit(source.initializer, field);
         }
+      }
       return;
     }
     ts.forEachChild(node, (child) => visit(child, field));
