@@ -265,9 +265,9 @@ The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
 topics (`testing`, `postgresql`, `queue`, `github-actions`) with 14 cases
 between them (`testing` and `github-actions` have three, the others four),
 plus four off-topic guards. Every case
-loads all 16 plugin skills.
+exposes all 16 plugin skills.
 
-- **write** (2 per topic, slug `write-*`): ordinary work (a function, query,
+- **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
   test, worker, workflow). The prompt never names the rule; breaking one
   specific rule is the path of least resistance. The rubric checks that one
   thing in the code.
@@ -283,54 +283,146 @@ loads all 16 plugin skills.
   here is over-triggering. The `-neg-` slug makes `summarize.py` count them as
   negatives.
 
-Selection rule: choose a rule only if an unprimed model's default behaviour
-violates it. A rule the model already follows (SQL injection, secrets in logs)
-cannot show a Δ. A case whose without-arm already passes in a pilot gets
-replaced, and surviving cases are re-measured on fresh runs, not the pilot's.
+Case selection does not require the without-plugin arm to fail. Keep ceiling
+cases: they measure triggering and check that the rules do no harm, although
+they cannot establish a content-score gain. Do not replace cases or add scale
+pressure just to make an unprimed model fail. Keep the same task pressure in
+both arms and retain the content graders as regression checks.
 
 `skill-fired` here checks the specific topic skill among the 16, not whether the
 plugin fired at all.
+
+### Current trigger comparison
+
+Measured 2026-11-17 on `77413ee9411801db8de00cb94d2cb348d1e30283`
+(release 0.109.78), Claude plugin eval 2.1.325, Sonnet 5.5 agent and Opus 5.5
+judge. One `--runs 3` pass per variant: 54 with-plugin attempts each, 108 total,
+$10.0481 ($5.0976 control; $4.9505 candidate). All attempts completed without
+errors or skipped graders. These are control/candidate variants, not a
+with/without-plugin content comparison.
+
+| Measure | Control | Candidate |
+| --- | --- | --- |
+| Expected topic skill fired | 36/42 | 33/42 |
+| Queue skill fired (primary group) | 7/12 | 7/12 |
+| Any rules skill fired off-topic | 0/12 | 0/12 |
+| Content grader passed, excluding `skill-fired` | 51/54 | 48/54 |
+
+| Case | Control fired | Candidate fired | Control content | Candidate content |
+| --- | --- | --- | --- | --- |
+| `github-actions-exception-runner-reasons` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `github-actions-review-path-filter-required` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `github-actions-write-persist-credentials` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `postgresql-exception-index-timeout` | 3/3 | 2/3 | 3/3 | 3/3 |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `postgresql-write-advisory-lock` | 3/3 | 2/3 | 3/3 | 3/3 |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/3 | 0/3 |
+| `queue-review-entity-only-dedup-id` | 1/3 | 1/3 | 3/3 | 3/3 |
+| `queue-write-bounded-sweep` | 3/3 | 3/3 | 3/3 | 2/3 |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `testing-exception-parsed-usage-text` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `testing-review-real-email-fixture` | 2/3 | 1/3 | 3/3 | 1/3 |
+| `testing-write-error-text` | 3/3 | 3/3 | 3/3 | 3/3 |
+
+The candidate changes only the queue description in `rules_variants.py`.
+It leads with enqueueing from request/event handlers and database transaction
+handoffs, rather than "background work" and queue library names. This is a
+routing hypothesis: the receipt prompt centers on a webhook transaction, and
+historical replications repeatedly missed it. The fresh control also missed
+two dedup triggers and one testing-fixture trigger. PostgreSQL and GitHub
+Actions were perfect in this control; their older misses are not a current
+reason to broaden those descriptions. The testing prompt already names a test
+file and Vitest, so a single missed trigger does not justify another candidate.
+
+**Decision: reject the candidate; retain the shipped descriptions.** Queue
+triggering did not improve, and the receipt case remained 0/3 in both variants.
+The `describe` variant retains the rejected wording for reproducibility; it is
+not shipped by the plugin. No prompts, graders, or rule bodies changed.
+
+The gate was sized before the candidate: `power.py --runs 3` on the fresh
+control gives a same-description predictive margin of 3 queue triggers and 5
+global triggers. Queue would need at least 11/12 versus 7/12 to exceed that
+simulated variation; the observed gain is zero. The global loss of three is
+also within its margin. These are noise checks, not proof of equivalence or
+content-score significance. For queue drops, the modeled 80%-power depths
+are 15 runs for a nominal 20% drop, 25 for 15%, and 50 for 10%; concentrated
+single-case changes can need more. No additional paid depth was run.
+
+Every failed content verdict was inspected. All six receipt answers skipped
+`Skill` and proposed after-commit enqueueing or an outbox, contrary to the
+exception rubric. They also raised retention and retry concerns whose validity
+depends on assumptions absent from the snippet; this does not establish that
+routing alone caused the content failures. The candidate's bounded-sweep
+answer enforced batch/time caps but aimed to finish the promo backlog in one
+run, which conflicts with the rubric's leave-work-for-later wording. One
+failed testing review loaded the skill and raised the real-domain issue but
+criticized the empty-list decoy; the other missed the domain issue. Retain all
+recorded verdicts: ambiguous content grading is a limitation, not a reason to
+loosen a grader or relabel a failure.
+
+This suite measures synthetic skill-surface requests, not consumer traffic,
+production reliability, or the model's internal reason for skipping a skill.
+The current comparison does not re-measure without-plugin scores or claim
+that every triggered answer follows every rule.
 
 ### Trigger variants
 
 `python3 evals/generate.py --rules-variant <name>` builds a copy of the plugin
 under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the 18
 rules cases under `evals-variants/rules-<name>/`, pointed at it. Rule bodies
-are copied unchanged, so a difference between variants is a triggering
-difference.
+are copied unchanged. Compare trigger counts separately from content scores;
+sampling can move either result even when the inputs match.
 
 | variant | change |
 | --- | --- |
 | `control` | unchanged copy, run the same day as the others |
-| `describe` | every description opens "Load before ..." and names concrete files, libraries and activities |
+| `describe` | description overrides from `rules_variants.py`; bodies stay unchanged |
 | `entry` | one `coding-rules` skill that indexes the topics; each topic's rules move to `references/<topic>-rules.md`. `skill-fired` expects `coding-rules`. Whether the topic reference was read is in the trace, not a grader: a `tool_used` grader other than `skill-fired` is scored |
 
-Run all three single-arm (`--ablation none --runs 3`) on the same day:
+Compare `control` and `describe` single-arm (`--ablation none --runs 3`) on the same day:
 
 ```bash
+python3 evals/generate.py --rules-variant control
+bash scripts/run-evals.sh --eval-dir evals-variants/rules-control --tag rules \
+  --runs 3 --ablation none --model claude-sonnet-5-5 \
+  --judge-model claude-opus-5-5 -j 4 --no-publish --no-scaffold --trust-plugin \
+  --keep-temp --max-cost-usd 12 --output-dir evals/results/trigger-control \
+  --json evals/results/trigger-control.json
+# Size both the global gate and the declared queue group before the candidate.
+python3 - <<'PYTHON'
+import json
+from pathlib import Path
+source = Path("evals/results/trigger-control.json")
+report = json.loads(source.read_text())
+report["derived_from"] = str(source)
+report["cases"] = [case for case in report["cases"] if
+                   case["name"].startswith(("rules-queue-", "rules-offtopic-neg-"))]
+report.pop("aggregates", None)
+Path("evals/results/trigger-control-queue-derived.json").write_text(json.dumps(report))
+PYTHON
+python3 evals/power.py --runs 3 evals/results/trigger-control.json
+python3 evals/power.py --runs 3 evals/results/trigger-control-queue-derived.json
+# Report actual run count and cost before another --runs 3 pass.
 python3 evals/generate.py --rules-variant describe
-pnpm run evals -- --eval-dir evals-variants/rules-describe --tag rules \
-  --runs 3 --ablation none -j 4
+bash scripts/run-evals.sh --eval-dir evals-variants/rules-describe --tag rules \
+  --runs 3 --ablation none --model claude-sonnet-5-5 \
+  --judge-model claude-opus-5-5 -j 4 --no-publish --no-scaffold --trust-plugin \
+  --keep-temp --max-cost-usd 12 --output-dir evals/results/trigger-candidate \
+  --json evals/results/trigger-candidate.json
+python3 evals/power.py --runs 3 evals/results/trigger-control.json \
+  evals/results/trigger-candidate.json
 ```
 
-Replication, 2026-11-16: `control` and `describe`, `--runs 6`, single
-arm, Sonnet 5.5 agent, Opus 5.5 judge, same day, 17 cases.
-
-| variant | should-fire trigger | off-topic fired | cost |
-| --- | --- | --- | --- |
-| `control` | 51/78 (65%) | 0/24 | $8.21 |
-| `describe` | 58/78 (74%) | 0/24 | $8.85 |
-
-`power.py --runs 6` allows a wrong-way gap of 6 between two fresh arms, so
-+7 clears the noise by one count. It agrees with the 2026-11-14 screen
-(+6/48). The gain is concentrated in `postgresql-write-anti-join` (2/6 →
-6/6) and `postgresql-write-offset-pagination` (1/6 → 6/6), two cases that
-already pass without the plugin. `describe` lost on
-`testing-exception-parsed-usage-text` (6/6 → 4/6 fired, score 0.83 →
-0.33). Re-measure on the replacement cases before changing any description.
-`queue-exception-enqueue-in-tx-receipt` fired 0/12 across both variants.
-
-Second replication, 2026-11-16, 14 should-fire cases (the 5 replacement cases included): `control` 59/84, `describe` 69/84, allowed gap 7, off-topic 0/24 for both. The plugin now ships the `describe` descriptions (trimmed where one claimed more than its skill body covers; `DESCRIBE` in `rules_variants.py` matches), so `describe` is the new `control`: the two variants are identical until a description changes again.
+Budget roughly $5 per 54-attempt variant at the measured prices; the $12 cap is
+a safety bound, not an estimate. Paid runs require authorization. Preserve the
+raw JSON, HTML report, exact variant inputs, and `power.py` output before
+cleaning the worktree; `--keep-temp` preserves traces for failure inspection.
+The 2026-11-17 artifacts are archived outside the worktree at
+`~/.cache/no-mistakes/evals/3379-2026-11-17/`. Only trace files were copied out
+of kept temporary agent directories, not agent configuration. Large reports
+stay out of git. See [HISTORY.md](HISTORY.md) for prior replications and the
+abandoned pilot's separate cost; [AGENTS.md](AGENTS.md) owns the editing rules.
 
 Demand is "skill surface": these traps come from the rules
 text, not from mined traffic. `summarize.py --mentions` and

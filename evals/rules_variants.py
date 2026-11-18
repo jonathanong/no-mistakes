@@ -3,13 +3,13 @@
 `python3 evals/generate.py --rules-variant <name>` builds the variant plugin under
 evals-variants/_plugins/<name>/ and emits the rules and off-topic cases under
 evals-variants/rules-<name>/, pointed at it. Rule bodies are copied unchanged;
-only descriptions or skill layout differ, so a score change is a triggering
-change. See README "Rules-plugin cases".
+only descriptions or skill layout differ. Trigger counts and content scores
+are reported separately; see README "Rules-plugin cases".
 
 - control: an unchanged copy, so a same-day run shares paths and cost with the
   variants.
-- describe: every description opens with "Load before ..." and names concrete
-  files, libraries, and activities instead of "MUST NOT / SHOULD NOT rules for".
+- describe: overlay the candidate descriptions in DESCRIBE without changing
+  rule bodies. Candidates need not match the shipped descriptions.
 - entry: one `coding-rules` skill whose body indexes the topics; each topic's
   rules move to references/<topic>-rules.md.
 """
@@ -26,7 +26,7 @@ DESCRIBE = {
     "observability-rules": "Load before adding or reviewing a log line, a metric, an alert, or a monitor (pino, winston, OpenTelemetry, Datadog, Sentry). Lists the defects to avoid and the patterns that need a stated reason: personal data, metric cardinality, fields monitors depend on, absence alerts, bound context, metrics clients across forks.",
     "playwright-rules": "Load before writing, reviewing, or de-flaking a Playwright or other browser end-to-end test, or adding data-testid attributes to UI. Lists the defects to avoid and the patterns that need a stated reason: waits, locators, test ids, setup, network mocking, timeouts.",
     "postgresql-rules": "Load before writing or reviewing anything that sends SQL to PostgreSQL: a query through pg/node-postgres, Kysely, Drizzle, Prisma, or psql; a repository or data-access function; a migration; an index; or a query plan. Lists the defects to avoid and the patterns that need a stated reason: queries, locks, transactions, schema, migrations, partitioning.",
-    "queue-rules": "Load before writing or reviewing background work: a queue producer or worker (BullMQ, pg-boss, SQS), an enqueue call, a cron or nightly job, a sweep, reconciler, cleanup, backfill, or any loop that reads rows on a schedule. Lists the defects to avoid and the patterns that need a stated reason: producers, workers, leases, dedup, bounded iteration.",
+    "queue-rules": "Load before writing or reviewing code that enqueues jobs, including request and event handlers and handoffs around database transactions. Also covers queue workers (BullMQ, pg-boss, SQS), retries, leases, deduplication, and bounded cron jobs, sweeps, reconcilers, cleanup, and backfills.",
     "react-rules": "Load before writing or reviewing React components, hooks, or a Next.js page, layout, route handler, redirect, or rewrite. Lists the defects to avoid and the patterns that need a stated reason: rendering, server and client boundaries, caching, metadata, scripts, routing, accessibility.",
     "rollout-rules": "Load before adding a feature flag, changing an API, event, or message contract, deploying a change that spans services, adding a table, service, or write path that needs an entry point, or touching payments, refunds, or other irreversible actions. Lists the defects to avoid and the patterns that need a stated reason: flags, deploy order, compatibility, unreachable new code, irreversible actions, string-referenced config.",
     "rust-rules": "Load before writing or reviewing Rust code, Cargo.toml, clippy settings, or benchmarks. Lists the defects to avoid and the patterns that need a stated reason: lints, parallel locking, hot loops, repo-wide indexes, deterministic output, blocking the async runtime or Node event loop, coverage exclusions, speedup claims, test fixtures.",

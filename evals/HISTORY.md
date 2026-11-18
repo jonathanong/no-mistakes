@@ -19,6 +19,108 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-17 — retain ceiling cases; reject queue trigger candidate (#3379)
+
+Decision superseding the issue's case-replacement plan: case selection does
+not require the without-plugin arm to fail. Keep the existing cases, omit
+scale framing, and investigate skill triggering with unchanged content
+graders. The earlier describe-variant replication was already complete.
+
+Base `77413ee9411801db8de00cb94d2cb348d1e30283` (0.109.78), CLI 2.1.325,
+Claude Sonnet 5.5 agent / Opus 5.5 judge, concurrency 4, single with-plugin arm,
+18 cases × 3 attempts per variant. Control and candidate ran in the same
+session; no prompt, grader, rule-body, model, or attempt-depth changes.
+The candidate only rewrote the queue description to name enqueueing in
+request/event handlers and database transaction handoffs. The wording is
+preserved in `rules_variants.py`; the shipped queue description is unchanged.
+
+| Measure | Control | Candidate |
+| --- | --- | --- |
+| Expected topic skill fired | 36/42 | 33/42 |
+| Queue skill fired | 7/12 | 7/12 |
+| Off-topic fired | 0/12 | 0/12 |
+| Content passes (excluding `skill-fired`) | 51/54 | 48/54 |
+| Cost | $5.0975846 | $4.9505255 |
+
+Both reports are complete: no errored attempts or skipped graders. Total
+comparison cost $10.0481101 for 108 agent attempts, including judging. Queue
+receipt fired/passed 0/3 in each arm; dedup fired 1/3 and passed 3/3 in each.
+Queue bounded-sweep and self-requeue fired 3/3 in each. The global trigger
+loss is in unchanged PostgreSQL index-timeout/advisory-lock cases (each
+3→2) and testing real-email fixture (2→1). Content losses were bounded-sweep
+(3→2) and testing real-email fixture (3→1).
+
+Before the candidate, `power.py --runs 3` set the fresh-pair predictive
+margins at 3 for the declared queue group and 5 globally. Queue gain zero
+fails the improvement threshold (at least +4); global -3 is within modeled
+noise. No over-triggering was observed in 12 off-topic attempts per variant.
+These are not content-score confidence bounds or proof of non-regression.
+Queue's modeled 80%-power depth is 15/25/50 runs for nominal 20%/15%/10%
+drops; the model assumes a distributed shift, not a single-case effect.
+No deeper run was purchased.
+
+All nine failed content verdicts across both arms were inspected. Six receipt
+answers never called `Skill` and recommended moving the enqueue or adding an
+outbox; their retry/retention assumptions limit what this rubric proves.
+The bounded-sweep failure had enforced caps but tried to finish the promo
+backlog in one run. One testing failure raised the domain issue and criticized
+the empty-list decoy; another missed the domain issue. Preserve recorded
+verdicts and note the ambiguity instead of changing a grader. The candidate
+shows no queue gain and is rejected; no production description change ships.
+
+Artifacts (raw reports, exact inputs, case/plugin hashes, copied candidate
+traces, failure answers, protocol, and power output):
+`~/.cache/no-mistakes/evals/3379-2026-11-17/`.
+Control traces were removed by the runner's default cleanup; its final-answer
+evidence remains in the JSON report. The candidate used `--keep-temp`.
+
+## 2026-11-17 — abandoned replacement pilot (#3379)
+
+Ten new candidate attempts, plugin-free, one each, Sonnet 5.5 / Opus 5.5,
+CLI 2.1.325, cost $0.9766534 including judging. Nine passed; one review failed
+on its decoy. The user superseded replacement and scale-framing work before
+any candidate case was adopted. No tracked case edits were made. This pilot
+is not a control for the trigger comparison and supplies no claimed gain.
+Artifacts: `pilot.json`, `pilot/`, and `pilot-suite/` in the archive above.
+Including this abandoned pilot, the session spent $11.0247635 on 118 agent
+attempts. Run counts and costs were reported before the second `--runs 3`
+pass; no additional paid runs followed.
+
+## 2026-11-16 — rules description replications
+
+Historical results moved from README.md. The first replication shipped in
+[#3482](https://github.com/jonathanong/no-mistakes/pull/3482); the second in
+[#3509](https://github.com/jonathanong/no-mistakes/pull/3509). Raw reports are
+unavailable locally, so these are published historical aggregates, not a
+same-session control for a new candidate. The second replication's cost was
+not published. Its 216 agent attempts used Sonnet 5.5 and Opus 5.5. Descriptions
+were trimmed after measurement; the trimmed catalog was not re-measured then.
+The replacement-case selection instruction below was superseded on 2026-11-17.
+
+Replication, 2026-11-16: `control` and `describe`, `--runs 6`, single
+arm, Sonnet 5.5 agent, Opus 5.5 judge, same day, 17 cases.
+
+| variant | should-fire trigger | off-topic fired | cost |
+| --- | --- | --- | --- |
+| `control` | 51/78 (65%) | 0/24 | $8.21 |
+| `describe` | 58/78 (74%) | 0/24 | $8.85 |
+
+`power.py --runs 6` allows a wrong-way gap of 6 between two fresh arms, so
++7 clears the noise by one count. It agrees with the 2026-11-14 screen
+(+6/48). The gain is concentrated in `postgresql-write-anti-join` (2/6 →
+6/6) and `postgresql-write-offset-pagination` (1/6 → 6/6), two cases that
+already pass without the plugin. `describe` lost on
+`testing-exception-parsed-usage-text` (6/6 → 4/6 fired, score 0.83 →
+0.33). Re-measure on the replacement cases before changing any description.
+`queue-exception-enqueue-in-tx-receipt` fired 0/12 across both variants.
+
+Second replication, 2026-11-16, 14 should-fire cases after the case-bank
+updates: `control` 59/84, `describe` 69/84, allowed gap 7, off-topic 0/24 for
+both. The plugin then shipped the `describe` descriptions, trimmed where one
+claimed more than its skill body covered. `DESCRIBE` matched the shipped
+catalog at that point, so the variants were identical until the next
+description experiment.
+
 ## Trigger rate by description
 
 The shipped `description:` was reworked in #981 and corrected in #985. All at
