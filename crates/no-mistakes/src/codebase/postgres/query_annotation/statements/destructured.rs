@@ -47,11 +47,17 @@ fn plain(pattern: &BindingPattern<'_>) -> bool {
                 .properties
                 .iter()
                 .all(|property| !property.computed && plain(&property.value))
-                && object.rest.as_ref().is_none_or(|rest| plain_target(&rest.argument))
+                && object
+                    .rest
+                    .as_ref()
+                    .is_none_or(|rest| plain_target(&rest.argument))
         }
         BindingPattern::ArrayPattern(array) => {
             array.elements.iter().flatten().all(plain)
-                && array.rest.as_ref().is_none_or(|rest| plain_target(&rest.argument))
+                && array
+                    .rest
+                    .as_ref()
+                    .is_none_or(|rest| plain_target(&rest.argument))
         }
         BindingPattern::AssignmentPattern(_) => false,
     }
