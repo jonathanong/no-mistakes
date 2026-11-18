@@ -1,0 +1,10 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    severity: error
+    options:
+      unanalyzableSql: ignore
+      importSpecifier: "./db.mjs"
+      include: ["controls.mts"]

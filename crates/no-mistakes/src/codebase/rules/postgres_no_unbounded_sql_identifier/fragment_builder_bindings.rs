@@ -83,6 +83,16 @@ impl Proof<'_, '_> {
                         .iter()
                         .any(|export| export.specifier.is_none() && export.local == binding.name)
                 });
+            if proof.direct
+                && exported
+                && !matches!(&binding.value,
+                ValueExpression::Call(start, end)
+                if proof.files[file].flow.tagged_templates.contains_key(&(*start, *end))
+                    && proof.files[file].calls.get(&(*start, *end))
+                        .is_some_and(|call| call.arguments.len() == 1))
+            {
+                return false;
+            }
             if !proof.expression(file, &binding.value, default_only)
                 || !proof.lifecycle(file, binding)
             {
@@ -93,10 +103,11 @@ impl Proof<'_, '_> {
             } else if returned {
                 imports::owned_reads(proof, file, binding)
             } else {
-                !flow
-                    .registry_mutations
-                    .iter()
-                    .any(|write| write.scope == binding.scope && write.name == binding.name)
+                (proof.direct && proof.origin_reads(file, binding.scope, &binding.name))
+                    || !flow
+                        .registry_mutations
+                        .iter()
+                        .any(|write| write.scope == binding.scope && write.name == binding.name)
             }
         })
     }
