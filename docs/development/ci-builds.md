@@ -987,10 +987,12 @@ rejects its real measured duration while retaining the report artifacts.
 
 The [forbidden-lint-suppression parity matrix](../../packages/no-mistakes/scripts/api-tests/forbidden-lint-suppressions-native.js)
 runs each case outside the checkout so discovery can use the saved fixture
-without reading the checkout's Git index. Each case still runs the standalone,
-batched, and CLI calls and compares their full reports. Canonicalizing the
-fixture path keeps parser-failure paths consistent when the operating system
-exposes an aliased temporary directory.
+without reading the checkout's Git index. Each case runs CommonJS standalone,
+ESM batched, and CLI calls and compares their full reports. Strict export-identity
+assertions prove the ESM and CommonJS entrypoints share both functions, avoiding
+duplicate scans through the same function objects. Canonicalizing the fixture
+path keeps parser-failure paths consistent when the operating system exposes an
+aliased temporary directory.
 
 Name independent fixture cases separately in real-addon parity matrices. Each case
 retains all job/API variants and assertions; the per-test timing gate and
