@@ -163,6 +163,56 @@ suite without adding the browser suites to the coverage step's deadline. A resum
 older tag whose manifest has no browser-test script skips only that absent
 script. When the script exists, its test failures still fail validation.
 
+The Rust execution budget is split by Cargo target class: unit targets
+(`--lib --bins`) and all integration targets (`--test '*'`) each have a separate
+15-minute step. Both retain the existing four test threads, one Rayon worker,
+and serial compiler setting. The full workspace is still built first, and
+documentation tests retain their separate step. Unit execution resets a job-local snapshot
+reference inventory and preserves it only on success. Integration execution
+appends its references and audits the complete inventory; either test failure or
+an orphan snapshot still fails validation.
+
+In [release run 44170204235](https://github.com/jonathanong/no-mistakes/actions/runs/44170204235),
+workflow source `4122bc4fa5b81feb2ad4c935e3883c06e3987de3` validated prepared
+version `0.109.76` (`780878045e4e369309b0817108d9d25c65379dcc`) on
+`ubuntu-latest`, Rust 1.100.0, with those worker caps. The warmed Cargo invocation
+took 0.63 seconds before execution; compilation had already completed in 822
+seconds. Per-harness test results identify the serial execution cost:
+
+| Target | Observed seconds |
+| --- | ---: |
+| Library unit tests | 398.40 |
+| Binary unit tests | 15.49 |
+| PostgreSQL integration tests | 275.37 |
+| Other completed integration harnesses | 50.39 |
+| Rules integration harness | At least 171.57; cancelled |
+| Test plans, contracts, Windows harness | Not started |
+
+The combined step reached its 900-second deadline while tests were still
+progressing. Logs span 912.52 seconds including cancellation grace. Unit targets
+account for 413.89 seconds; integration execution is a censored lower bound of
+497.63 seconds. The 61 periodic test resource samples show no OOM kills, at least
+13,108 MiB available, and a largest sampled process RSS of 1,577 MiB. These
+cancelled-run samples diagnose pressure; they do not establish a completed-run
+memory maximum or a runtime p95. The split isolates the integration budget from
+the already measured unit cost while retaining both worker caps and every test.
+A completed local integration run at base source
+`3c8cf3c97b2c39efec4c9deabdf8302abd64186c`, plus the CI contract edits in this
+change, used four pinned CPUs with a four-CPU quota, four test threads, one Rayon worker,
+real PostgreSQL 18, and a 12 GiB memory limit. All eight integration harnesses
+completed: 2,263 tests passed in 226.96 seconds, with no filtered or
+ignored cases. Peak memory for the entire cgroup was
+1,772,384,256 bytes (1.65 GiB), with no OOM events. The
+Windows-only harness has no cases on Linux. The source is newer than the hosted
+tag and includes five additional PostgreSQL cases; hardware also differs.
+This single completed local sample covers the previously unobserved tail but
+does not establish a hosted runtime p95 or a guaranteed upper bound. See
+[the local timing fixture](../../.github/scripts/fixtures/release-rust-local-timing.json)
+for per-harness results and measurement limits.
+
+Raw result lines, timestamps, provenance and censoring are saved in
+[the release timing fixture](../../.github/scripts/fixtures/release-rust-timing.json).
+
 The `Validate` join succeeds only when both jobs succeed. A failed, cancelled,
 or skipped suite blocks all publication channels. Native compilation continues
 to overlap validation. The Rust cache keeps its previous `validate` shared key

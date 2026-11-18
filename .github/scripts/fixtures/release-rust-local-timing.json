@@ -1,0 +1,96 @@
+{
+  "sourceHead": "3c8cf3c97b2c39efec4c9deabdf8302abd64186c",
+  "sampleCount": 1,
+  "completed": true,
+  "elapsedSeconds": 226.955,
+  "exitCode": 0,
+  "cpuModel": "Intel(R) Core(TM) Ultra 7 270K Plus",
+  "cpuAffinity": [0, 1, 2, 3],
+  "cpuQuota": "400%",
+  "memoryLimitBytes": 12884901888,
+  "peakCgroupMemoryBytes": 1772384256,
+  "oomKillEvents": 0,
+  "testThreads": 4,
+  "rayonThreads": 1,
+  "command": ["cargo", "test", "--locked", "--workspace", "--all-features", "--test", "*"],
+  "harnesses": [
+    {
+      "harness": "tests/macos_invocation.rs",
+      "passed": 156,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 10.09,
+      "rawResult": "test result: ok. 156 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.09s"
+    },
+    {
+      "harness": "tests/suite_cli_package_config.rs",
+      "passed": 45,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 8.95,
+      "rawResult": "test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.95s"
+    },
+    {
+      "harness": "tests/suite_cli_postgres.rs",
+      "passed": 786,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 96.21,
+      "rawResult": "test result: ok. 786 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 96.21s"
+    },
+    {
+      "harness": "tests/suite_cli_queries.rs",
+      "passed": 294,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 15.95,
+      "rawResult": "test result: ok. 294 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.95s"
+    },
+    {
+      "harness": "tests/suite_cli_rules.rs",
+      "passed": 476,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 80.26,
+      "rawResult": "test result: ok. 476 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 80.26s"
+    },
+    {
+      "harness": "tests/suite_cli_test_plans.rs",
+      "passed": 386,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 8.68,
+      "rawResult": "test result: ok. 386 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.68s"
+    },
+    {
+      "harness": "tests/suite_contracts.rs",
+      "passed": 120,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 6.57,
+      "rawResult": "test result: ok. 120 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.57s"
+    },
+    {
+      "harness": "tests/windows_job_object.rs",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "harnessSeconds": 0.0,
+      "rawResult": "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    }
+  ],
+  "notes": [
+    "Completed local measurement; source is newer than prepared v0.109.76 and contains five additional PostgreSQL cases. CI-only contracts were updated for the split.",
+    "Warmed build; real PostgreSQL 18; CI=true; ShellCheck 0.11.0; debug symbols and incremental compilation disabled.",
+    "Local warning-only RUSTFLAGS differ from hosted -D warnings; hardware and source differ, so this is not a paired performance comparison or hosted p95.",
+    "Prior setup failure and pre-update contract failure are excluded from successful-run resource maxima. The Windows-only harness has zero cases on Linux."
+  ]
+}

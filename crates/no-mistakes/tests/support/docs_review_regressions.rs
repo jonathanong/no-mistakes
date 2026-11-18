@@ -68,12 +68,14 @@ fn release_tooling_is_relocated_outside_the_tagged_source_inventory() {
         .join("crates/no-mistakes/tests/docs_coverage.rs")
         .is_file());
 
-    let validation = run(step_command("Run Rust tests"));
-    assert!(validation.status.success(), "{validation:?}");
-    assert_eq!(
-        String::from_utf8(validation.stdout).unwrap().trim(),
-        source.to_str().unwrap()
-    );
+    for phase in ["Run Rust tests (unit)", "Run Rust tests (integration)"] {
+        let validation = run(step_command(phase));
+        assert!(validation.status.success(), "{phase}: {validation:?}");
+        assert_eq!(
+            String::from_utf8(validation.stdout).unwrap().trim(),
+            source.to_str().unwrap()
+        );
+    }
 }
 
 #[test]

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "an explicitly disabled integration target selected by the glob",
+    "change": "disable-integration",
+    "expected": ["disabled integration target"]
+  },
+  {
+    "name": "a workspace without integration targets",
+    "change": "remove-integration",
+    "expected": ["integration target required"]
+  },
+  {
+    "name": "a new testable example outside both phases",
+    "change": "add-example",
+    "expected": ["unsupported test target"],
+    "target": {
+      "name": "synthetic-example",
+      "kind": ["example"],
+      "test": true
+    }
+  }
+]

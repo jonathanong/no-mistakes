@@ -362,9 +362,17 @@ jobs:
         timeout-minutes: 1
         run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-disk-usage.sh" "after Rust test build"
 
-      - name: Run Rust tests
+      - name: Run Rust tests (unit)
         timeout-minutes: 15
-        run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh" bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test
+        env:
+          RUST_VALIDATION_REFERENCES_FILE: ${{ runner.temp }}/release-rust-snapshot-references.txt
+        run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh" bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test-unit
+
+      - name: Run Rust tests (integration)
+        timeout-minutes: 15
+        env:
+          RUST_VALIDATION_REFERENCES_FILE: ${{ runner.temp }}/release-rust-snapshot-references.txt
+        run: bash "$RUNNER_TEMP/validation-tools/.github/scripts/with-resource-samples.sh" bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test-integration
 
       - name: Run Rust doctests
         timeout-minutes: 5

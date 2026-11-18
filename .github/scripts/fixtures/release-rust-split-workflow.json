@@ -1,0 +1,105 @@
+[
+  {
+    "name": "a unit cap without measured reserve",
+    "step": "Run Rust tests (unit)",
+    "values": {
+      "timeout-minutes": 8
+    },
+    "expected": ["unit reserve"]
+  },
+  {
+    "name": "an integration cap below observed work plus reserve",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "timeout-minutes": 9
+    },
+    "expected": ["integration reserve"]
+  },
+  {
+    "name": "a longer cap replacing the split",
+    "step": "Run Rust tests (unit)",
+    "values": {
+      "timeout-minutes": 30
+    },
+    "expected": ["bounded phase"]
+  },
+  {
+    "name": "an absent deadline",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "timeout-minutes": null
+    },
+    "expected": ["bounded phase", "integration reserve"]
+  },
+  {
+    "name": "a conditional phase",
+    "step": "Run Rust tests (unit)",
+    "values": {
+      "if": "false"
+    },
+    "expected": ["mandatory phase"]
+  },
+  {
+    "name": "ignored integration failure",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "continue-on-error": true
+    },
+    "expected": ["mandatory phase"]
+  },
+  {
+    "name": "an integration inventory separate from unit tests",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "env": {
+        "RUST_VALIDATION_REFERENCES_FILE": "different.txt"
+      }
+    },
+    "expected": ["shared inventory"]
+  },
+  {
+    "name": "an inventory in the source tree",
+    "expected": ["fresh job inventory", "shared inventory"],
+    "step": "Run Rust tests (unit)",
+    "values": {
+      "env": {
+        "RUST_VALIDATION_REFERENCES_FILE": "references.txt"
+      }
+    }
+  },
+  {
+    "name": "integration before unit tests",
+    "step": "Run Rust tests (integration)",
+    "moveBefore": "Run Rust tests (unit)",
+    "expected": ["phase order"]
+  },
+  {
+    "name": "unmeasured test concurrency",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "env": {
+        "RUST_TEST_THREADS": "8",
+        "RUST_VALIDATION_REFERENCES_FILE": "${{ runner.temp }}/release-rust-snapshot-references.txt"
+      }
+    },
+    "expected": ["worker caps"]
+  },
+  {
+    "name": "a missing integration inventory",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "env": {}
+    },
+    "expected": ["shared inventory"]
+  },
+  {
+    "name": "an empty integration inventory",
+    "step": "Run Rust tests (integration)",
+    "values": {
+      "env": {
+        "RUST_VALIDATION_REFERENCES_FILE": ""
+      }
+    },
+    "expected": ["shared inventory"]
+  }
+]
