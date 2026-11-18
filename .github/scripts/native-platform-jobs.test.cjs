@@ -45,11 +45,11 @@ test("each platform retains identical native steps without sharing a producer ba
   }
 });
 
-test("native platform jobs cover every Windows and macOS Rust and API shard", () => {
+test("native platform jobs retain complete six-shard Windows and two-shard macOS partitions", () => {
   for (const name of ["native-rust-tests", "native-api-tests"]) {
     for (const [suffix, count] of [
       ["", 6],
-      ["-macos", name === "native-rust-tests" ? 4 : 2],
+      ["-macos", 2],
     ]) {
       const body = job(name + suffix);
       const partitions = [...body.matchAll(/shard:\s+(\d+)\s+total:\s+(\d+)/g)].map((row) => [

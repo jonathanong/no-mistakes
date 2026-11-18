@@ -53,18 +53,18 @@ test("macOS two-shard scheduling balances the saved outliers in heuristic weight
   const { entries, groups } = inventory("macOS", finalInventory.cases);
   const full = casePlan("macOS", entries, groups, 1, 1);
   const plans = [1, 2].map((index) => casePlan("macOS", entries, groups, index, 2));
-  assert.equal(full.length, 458);
+  assert.equal(full.length, 373);
   assert.deepEqual(
     plans.map((plan) => plan.length),
-    [228, 230],
+    [185, 188],
   );
   assert.deepEqual(
     plans.map((plan) => schedulingSummary(plan, entries).assignedWeightUnits),
-    [473, 472],
+    [430, 430],
   );
   const identities = (rows) => rows.map((row) => `${row.executable}:${row.name}`).sort();
   assert.deepEqual(identities(plans.flat()), identities(full));
-  assert.equal(new Set(identities(plans.flat())).size, 458);
+  assert.equal(new Set(identities(plans.flat())).size, 373);
   for (const plan of plans) {
     assert.deepEqual(
       plan,
@@ -90,32 +90,6 @@ test("macOS two-shard scheduling balances the saved outliers in heuristic weight
   );
 });
 
-test("four weighted macOS shards complete the timeout run's inventory with less PostgreSQL work per runner", () => {
-  const { entries, groups } = inventory("macOS", finalInventory.cases);
-  const full = casePlan("macOS", entries, groups, 1, 1);
-  const shards = [1, 2, 3, 4];
-  const plans = shards.map((index) => casePlan("macOS", entries, groups, index, shards.length));
-  const names = (plan) => plan.map(({ executable, name }) => [executable, name]).sort();
-  assert.equal(full.length, 458);
-  assert.deepEqual(names(plans.flat()), names(full));
-  assert.deepEqual(
-    plans.map((plan) => schedulingSummary(plan, entries).assignedWeightUnits),
-    [237, 236, 236, 236],
-  );
-  assert.deepEqual(
-    plans.map(
-      (plan) => plan.filter(({ executable }) => executable.includes("suite_cli_postgres")).length,
-    ),
-    [64, 66, 66, 67],
-  );
-
-  const reversed = groups.map((group) => ({ ...group, tests: [...group.tests].reverse() }));
-  assert.deepEqual(
-    shards.map((index) => casePlan("macOS", entries, reversed, index, shards.length)),
-    plans,
-  );
-});
-
 test("Windows six-shard assignments and flags keep the exact existing modulo plan", () => {
   const cases = Object.entries(savedCases).flatMap(([harness, names]) =>
     names.map((name) => ({ harness, name })),
@@ -136,7 +110,7 @@ test("Windows six-shard assignments and flags keep the exact existing modulo pla
 
 test("new cases use the equal placeholder and removed weighted cases are harmless", () => {
   const plans = [1, 2].map((index) =>
-    outlierPartition(skewed.cases, skewed.entries, index, 2, skewed.evidence),
+    outlierPartition(skewed.cases, skewed.entries, index, skewed.evidence),
   );
   assert.deepEqual(
     plans.map((plan) => plan.map((row) => row.name)),
@@ -158,7 +132,7 @@ test("new cases use the equal placeholder and removed weighted cases are harmles
 
 test("stable harness identities break ties without depending on executable hashes or input order", () => {
   const expected = [1, 2].map((index) =>
-    outlierPartition(skewed.cases, skewed.entries, index, 2, skewed.evidence)
+    outlierPartition(skewed.cases, skewed.entries, index, skewed.evidence)
       .map((row) => `${row.executable}:${row.name}`)
       .sort(),
   );
@@ -167,7 +141,6 @@ test("stable harness identities break ties without depending on executable hashe
       [...skewed.cases].reverse(),
       skewed.entries,
       index,
-      2,
       skewed.evidence,
     );
     assert.deepEqual(
@@ -179,22 +152,22 @@ test("stable harness identities break ties without depending on executable hashe
     const cases = skewed.cases.map((row) => ({ ...row, executable: changed(row.executable) }));
     const entries = skewed.entries.map((row) => ({ ...row, executable: changed(row.executable) }));
     assert.deepEqual(
-      outlierPartition(cases, entries, index, 2, skewed.evidence).map((row) => row.name),
+      outlierPartition(cases, entries, index, skewed.evidence).map((row) => row.name),
       skewed.expectedNames[index - 1],
     );
   }
 });
 
 test("invalid outlier configuration fails before selecting a partial plan", () => {
-  assert.throws(() => outlierPartition(skewed.cases, skewed.entries, 0, 2), /valid shard index/);
+  assert.throws(() => outlierPartition(skewed.cases, skewed.entries, 0), /shard 1 or 2/);
   assert.throws(
-    () => outlierPartition(skewed.cases, [], 1, 2, skewed.evidence),
+    () => outlierPartition(skewed.cases, [], 1, skewed.evidence),
     /missing native harness/,
   );
   const row = skewed.evidence.cases[0];
   for (const cases of [[{ ...row, weight: 0 }], [row, row]])
     assert.throws(
-      () => outlierPartition(skewed.cases, skewed.entries, 1, 2, { defaultWeight: 1, cases }),
+      () => outlierPartition(skewed.cases, skewed.entries, 1, { defaultWeight: 1, cases }),
       /unique positive integers/,
     );
 });

@@ -116,8 +116,8 @@ function casePlan(platform, entries, inventory, index, count) {
     const right = `${b.executable}\0${b.name}`;
     return left < right ? -1 : left > right ? 1 : 0;
   });
-  if (platform === "macOS" && count > 1)
-    return require("./native-rust-partition.cjs").outlierPartition(cases, entries, index, count);
+  if (platform === "macOS" && count === 2)
+    return require("./native-rust-partition.cjs").outlierPartition(cases, entries, index);
   return cases.filter((_, offset) => offset % count === index - 1);
 }
 
