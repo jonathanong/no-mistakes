@@ -113,4 +113,4 @@ function visitLoop(state, node, scope) {
   return unknown();
 }
 
-module.exports = { visitLoop };
+module.exports = { visitLoop, walkLoop };

@@ -76,6 +76,7 @@ function visitCall(state, node, scope, role) {
         objectNode: mutation.targetNode,
         scope,
         remembered,
+        changesMethods: !mutation.arrayReceiver,
       });
     if (readOnlyFresh(target)) {
       return target;

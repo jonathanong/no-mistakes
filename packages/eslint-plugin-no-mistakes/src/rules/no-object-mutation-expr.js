@@ -80,13 +80,13 @@ function visitExpression(state, node, scope, role) {
         api.visit(state, node.left, scope, "read");
         return api.visit(state, node.right, scope, role);
       }
-      return joinValues(
+      return joinAlternatives(
         api.visit(state, node.left, scope, role),
         api.visit(state, node.right, scope, role),
       );
     case "ConditionalExpression":
       api.visit(state, node.test, scope, "read");
-      return joinValues(
+      return joinAlternatives(
         api.visit(state, node.consequent, scope, role),
         api.visit(state, node.alternate, scope, role),
       );
@@ -140,6 +140,12 @@ function visitExpression(state, node, scope, role) {
     default:
       return undefined;
   }
+}
+
+function joinAlternatives(left, right) {
+  const joined = joinValues(left, right);
+  if (left.type === "unknown" || right.type === "unknown") joined.iterationUncertain = true;
+  return joined;
 }
 
 module.exports = { visitExpression };

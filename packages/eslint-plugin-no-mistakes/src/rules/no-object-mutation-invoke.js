@@ -3,6 +3,7 @@
 const api = require("./no-object-mutation-runtime");
 const { escapeResult } = require("./no-object-mutation-result");
 const { callFunction } = require("./no-object-mutation-fn");
+const { visitIteration } = require("./no-object-mutation-iteration");
 const { reducerCallback } = require("./no-object-mutation-reduce");
 const { iteratedContents } = require("./no-object-mutation-read");
 const { methodName, staticKey, unwrap } = require("./no-object-mutation-syntax");
@@ -25,6 +26,8 @@ function memberCall(node, name) {
 }
 
 function visitKnownCall(state, node, scope, role) {
+  const iteration = visitIteration(state, node, scope, role);
+  if (iteration !== undefined) return iteration;
   const reducer = reducerCallback(node);
   if (reducer) {
     const callee = unwrap(node.callee);

@@ -1,0 +1,254 @@
+[
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 2,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 9,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 18,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 19,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 27,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 38,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 47,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 56,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 67,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 78,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 88,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 98,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 107,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 116,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 128,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 140,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 151,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 161,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 171,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 180,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 181,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 188,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 190,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 198,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 208,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 217,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 218,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 225,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 226,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 25,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 233,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/synchronous-escapes.js",
+    "line": 241,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/typed-escapes.ts",
+    "line": 2,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/typed-escapes.ts",
+    "line": 10,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/typed-escapes.ts",
+    "line": 13,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/typed-escapes.ts",
+    "line": 27,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-iteration-escapes/typed-escapes.ts",
+    "line": 41,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  }
+]

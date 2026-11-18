@@ -84,4 +84,13 @@ function functionEnvironment(state, node, scope, tag) {
   return env;
 }
 
-module.exports = { functionEnvironment };
+function arrayParameter(sourceCode, node) {
+  const type = node.typeAnnotation?.typeAnnotation;
+  return (
+    type?.type === "TSArrayType" ||
+    type?.type === "TSTupleType" ||
+    globalArrayType(sourceCode, type)
+  );
+}
+
+module.exports = { arrayParameter, functionEnvironment };

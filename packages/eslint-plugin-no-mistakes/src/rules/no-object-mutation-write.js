@@ -1,7 +1,7 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
-const { escapeFresh, remember, unknown } = require("./no-object-mutation-values");
+const { escapeFresh, lookup, remember, unknown } = require("./no-object-mutation-values");
 const {
   literalKey,
   memberKey,
@@ -114,8 +114,17 @@ function initializesOwnField(node) {
 }
 
 function considerWrite(state, target, node, info) {
+  const path = info.objectNode && staticPath(info.objectNode);
+  if (
+    path &&
+    (path === "Array.prototype" || path.startsWith("Array.prototype.")) &&
+    !lookup(info.scope, "Array")
+  ) {
+    state.arrayPrototypeChanged = true;
+  }
   if (!info.viaCall && initializesOwnField(node)) return;
   if (target?.mutator) target = target.mutator.member;
+  if (target && (!info.viaCall || info.changesMethods)) target.iterationChanged = true;
   if (target?.type === "union") {
     for (const member of target.members) {
       considerWrite(state, member, node, info);
