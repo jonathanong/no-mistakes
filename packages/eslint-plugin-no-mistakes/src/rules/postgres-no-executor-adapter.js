@@ -1,5 +1,6 @@
 "use strict";
 
+const { nonWritingCalleesSchema } = require("./postgres-no-executor-adapter-nonwriting-config");
 const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
 
 const { rule } = require("../helpers");
@@ -33,7 +34,12 @@ module.exports = rule(
       description: "disallow executor forwarding adapters that hide SQL from analysis",
       recommended: false,
     },
-    schema: [executorOptionSchema({ mode: { enum: ["forwarding-only", "all"] } })],
+    schema: [
+      executorOptionSchema({
+        mode: { enum: ["forwarding-only", "all"] },
+        nonWritingCallees: nonWritingCalleesSchema,
+      }),
+    ],
     messages: {
       forward:
         "This callback only forwards to {{executor}}. Call that executor on the SQL text (`{{direct}}`{{alias}}). Passing the function into a helper (`{{rejected}}`) does not connect the statement to the executor, so analysis cannot see it.",

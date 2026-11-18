@@ -388,6 +388,7 @@ run(0 ?? read, account);
 | `executorFactoryNames` | `[]`                                                       | Select imported executor factories.                                           |
 | `executorTypeNames`    | `[]`                                                       | Select imported executor types.                                               |
 | `trustedSqlTags`       | `[]`                                                       | Select SQL tags, including default imports, whose templates expose SQL in `"forwarding-only"` mode. |
+| `nonWritingCallees`    | `[]` | Trust exact imported non-writing callees in `"forwarding-only"` mode. |
 | `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.       |
 
 - `importSpecifier` identifies the database module and defaults to empty.
@@ -452,11 +453,58 @@ run(0 ?? read, account);
   calls and property/getter reads in those arguments remain unproven.
   This applies before or after the projection, also
   across source imports. A readonly annotation alone is not evidence: mutable
-  implementations, ambient declarations, unknown/`any` callees, captures,
+  implementations, ambient declarations without the assertion proof below,
+  unknown/`any` callees, captures,
   storage, aliases, and field writes remain unproven. Default/rest/optional
   parameters, overloads, optional/spread calls, methods, and computed access are
   outside this narrow call proof. Calls through captured or reassigned bindings
   do not gain an exemption merely because they appear after a value read.
+- With typed ESLint, an assertion signature can preserve an otherwise proven
+  object projection:
+  `asserts value` or `asserts value is T` must assert the parameter at the exact
+  position where the object is passed directly. Ambient declarations are
+  trusted as typed contracts. Visible implementations must use only simple
+  guards, throws, and bare returns; other calls, writes, and captures are
+  unproven. A throw may decorate a fresh built-in error with scalar metadata:
+  `throw Object.assign(new Error("assertion failed"), { status })`.
+  This requires the unchanged built-in `Object.assign`, `Object`, and `Error`
+  in both the assertion module and its caller. Prototype references and
+  escapes of these intrinsics remain unproven because inherited setters can
+  run during assignment. Metadata must be own, static data properties with
+  literal or proven primitive parameter values; getters,
+  spreads, computed keys, and object values remain unproven. This writes only
+  the fresh error, not the asserted object. General `Object.assign` calls,
+  including writes to an assertion parameter, remain unproven.
+  Guards can check the parameter itself, such as `if (!value)`, but cannot read
+  object fields. A field check such as `typeof value.id !== "string"` remains
+  unproven even when TypeScript narrows the object; optional fields also fail
+  the ordinary reader proof. A built-in `Error` constructor must remain
+  unchanged in both the assertion module and its caller.
+  Overloaded assertions qualify only when every call signature asserts the
+  same argument position. A visible implementation must still pass the body
+  proof, and mixed assertion/boolean overloads remain unproven.
+  An assertion about another argument, an ordinary boolean return, `any`, or
+  `unknown` does not establish this proof. Passing the same object again in
+  another argument remains
+  unproven. Other arguments must satisfy the side-effect-free scalar checks
+  above. Assertions do not widen the caller-side projection contract: every
+  caller union member must still provide the required scalar field.
+- `nonWritingCallees` defaults to `[]`. Each entry has `module` and `export`;
+  use `export: "default"` for a default import or the exported name for a
+  named import. Stable function declarations and `const` function initializers
+  are supported. Matching uses the exact import binding, never the local name;
+  type-only import or re-export paths cannot prove a runtime callee.
+  A shadowed binding or an import from another module does not match.
+  This is an explicit trust boundary: configure only functions you trust not
+  to mutate, retain, or capture the directly passed object. A configured
+  helper may have a known `void` or boolean return type: configuration trusts
+  its non-writing contract, but that return type supplies no narrowing.
+  Without configuration, a `void` or ordinary boolean signature proves nothing.
+  Configuration does not turn `any` or `unknown` into a proven callee.
+  Reassigned bindings, spread calls, object captures, unsafe other arguments,
+  and writes between the assertion and SQL projection remain unproven.
+  Assertion signatures and this option preserve bind-value analysis only in
+  `"forwarding-only"` mode; default `mode: "all"` is unchanged.
 - This proof applies only to interpolations of configured parameterized trusted
   tags. A field passed as statement text, string concatenation, an interpolated
   raw template, an untrusted tag, a SQL/statement object, `any`, or `unknown`
@@ -501,6 +549,8 @@ For example, with `mode: "forwarding-only"`:
     {
       importSpecifier: "@example/db",
       executorTypeNames: ["QueryExecutor"],
+      trustedSqlTags: [{ module: "sql-template-strings", name: "default" }],
+      nonWritingCallees: [{ module: "@example/assertions", export: "default" }],
       mode: "forwarding-only",
     },
   ],
@@ -545,6 +595,33 @@ function load(input: Input) {
   return count(read, input); // allowed with typed ESLint
 }
 ```
+
+A typed assertion can narrow optional input before its field becomes a bind
+value. This synthetic example uses the configured tag and assertion import:
+
+```ts
+import sql from "sql-template-strings";
+import assert from "@example/assertions";
+import { read, type QueryExecutor } from "@example/db";
+
+type Notice = { id: string };
+function count(query: QueryExecutor, id: string) {
+  return query(sql`SELECT count(*) FROM sample WHERE id = ${id}`);
+}
+function load(notice: Notice | undefined) {
+  assert(notice);
+  return count(read, notice.id);
+}
+```
+
+Here the assertion export has an `asserts value` signature. At `notice.id`,
+the receiver `notice` must narrow from `Notice | undefined` to `Notice`.
+The rule then checks that `id` is a required scalar field, with type `string`;
+the wider input annotation alone cannot prove that projection. A signature
+`asserts value is Notice` can similarly narrow to the required data shape. A cast is not a substitute, and a subsequent
+write or escape invalidates the proof. A configured helper returning `void` or
+boolean preserves the non-writing contract but supplies no TypeScript narrowing
+itself.
 
 The mode also accepts a fresh object such as `load({ query: read })` when a
 stable local helper calls that property with visible SQL. It does not infer

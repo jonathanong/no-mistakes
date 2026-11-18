@@ -2,14 +2,27 @@ import plugin, {
   type NoTopLevelAwaitOptions,
   type NoLocaleLessDateFormatOptions,
   type PostgresNoExecutorAdapterMode,
+  type PostgresNonWritingCallee,
   type PostgresNoExecutorAdapterOptions,
 } from "../src/index.js";
 import pluginRequire = require("../src/index.js");
 
 export const mode: PostgresNoExecutorAdapterMode = "forwarding-only";
+export const nonWritingCallee: PostgresNonWritingCallee = {
+  module: "@example/assertions",
+  export: "default",
+};
+export const namedCallee: pluginRequire.PostgresNonWritingCallee = {
+  module: "@example/assertions",
+  export: "requireValue",
+};
+// @ts-expect-error Exact import identities require an export name.
+export const invalidCallee: PostgresNonWritingCallee = { module: "@example/assertions" };
+
 export const options: PostgresNoExecutorAdapterOptions = {
   importSpecifier: "@example/db",
   executorTypeNames: ["QueryExecutor"],
+  nonWritingCallees: [nonWritingCallee, namedCallee],
   mode,
 };
 export const dateFormatOptions: NoLocaleLessDateFormatOptions = {

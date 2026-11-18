@@ -14,6 +14,11 @@ declare namespace plugin {
 
   export type PostgresNoExecutorAdapterMode = "all" | "forwarding-only";
 
+  export interface PostgresNonWritingCallee {
+    module: string;
+    export: string;
+  }
+
   export interface PostgresNoExecutorAdapterOptions {
     importSpecifier?: string;
     executorNames?: string[];
@@ -21,6 +26,7 @@ declare namespace plugin {
     executorTypeNames?: string[];
     trustedSqlTags?: { module: string; name: string }[];
     mode?: PostgresNoExecutorAdapterMode;
+    nonWritingCallees?: PostgresNonWritingCallee[];
   }
 }
 

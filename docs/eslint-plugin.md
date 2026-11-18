@@ -273,6 +273,13 @@ templates expose SQL in `"forwarding-only"` mode), and `mode?: "all" |
 "forwarding-only"` (default `"all"`; the opt-in mode reports forwarding
 callbacks and hidden SQL paths). See the [rule reference](eslint-rules/postgres-no-executor-adapter.md).
 
+`nonWritingCallees?: { module: string, export: string }[]` defaults to empty.
+Each `module` and `export` pair trusts the exact named import or `export: "default"`
+import as non-writing in typed forwarding-only proofs. Stable typed assertion
+predicates also preserve otherwise proven bind-value projections. Unknown callees,
+unsafe arguments, captures, and writes remain unproven; see the rule reference for
+the trust boundary.
+
 ### `postgres-no-manual-transaction`
 
 `importSpecifier?: string` (default empty),
