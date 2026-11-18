@@ -1,12 +1,15 @@
 import { dirname, resolve } from "node:path";
 import tsParser from "@typescript-eslint/parser";
-import { expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   languageOptionsFindings,
   snapshotDocument,
   snapshotSuite,
 } from "./diagnostic-snapshot.mjs";
 import { __dirname, fixture } from "./helpers.mjs";
+
+beforeEach(() => vi.stubEnv("CI", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 const rule = "postgres-no-executor-adapter";
 const options = {
@@ -33,6 +36,7 @@ function testCase(name, mode, typed = true, loose = false) {
         ? {
             project: resolve(dirname(filename), loose ? "tsconfig.loose.json" : "tsconfig.json"),
             tsconfigRootDir: dirname(filename),
+            disallowAutomaticSingleRunInference: true,
           }
         : {},
     },
