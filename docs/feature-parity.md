@@ -12,6 +12,13 @@ Rust, CLI `check`, async Node `check()` and `analyzeProject()` check reports use
 the same workflow scope, inherited-write findings, unresolved policy, and
 suppression handling.
 
+[`github-actions-download-integrity`](rules/github-actions-download-integrity.md)
+resolves literal step env URLs at max effort and supports opt-in Git-tracked
+shell sources through `shellSourceInclude` and per-transfer checks through
+`strictSequencing`. Rust, CLI `check`, async Node `check()`, and `analyzeProject()`
+check reports share the selected sources, shell inference, findings, and
+suppressions.
+
 Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
 literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
 produce scoped aggregate-check warnings; see
