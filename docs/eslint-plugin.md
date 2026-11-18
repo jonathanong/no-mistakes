@@ -121,8 +121,16 @@ The schema accepts an object: `internalSpecifiers?: string[]`,
 
 `allowInlineScriptIds?: string[]` and `allowInlineScriptIdPatterns?: string[]`
 exempt a raw `<script>` only when it also has `dangerouslySetInnerHTML`.
-Both default to no exemptions. A literal `type="application/ld+json"` is
-always allowed.
+Both default to no exemptions. Literal `type="application/ld+json"` and
+`type={"application/ld+json"}` tags are allowed by default.
+
+Set `structuredDataComponent?: string` to recommend a project component for
+JSON-LD, or `structuredDataMessage?: string` for a custom diagnostic. Both
+accept nonempty strings; either enables raw JSON-LD reports, and the custom
+message wins when both are set. Inline-id exemptions do not bypass this
+opt-in. Scope adoption with flat-config `files` and `ignores`, including an
+ignore for the wrapper implementation. See the
+[rule options and example](eslint-rules/nextjs-no-manual-script-tags.md#options).
 
 ### `no-banned-import-outside-allowed-paths`
 

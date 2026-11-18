@@ -76,11 +76,16 @@ module.exports = Object.assign(
           properties: {
             allowInlineScriptIds: { type: "array", items: { type: "string" } },
             allowInlineScriptIdPatterns: { type: "array", items: { type: "string" } },
+            structuredDataComponent: { type: "string", minLength: 1 },
+            structuredDataMessage: { type: "string", minLength: 1 },
           },
           additionalProperties: false,
         },
       ],
-      messages: { script: "Use next/script instead of a raw <script> tag." },
+      messages: {
+        script: "Use next/script instead of a raw <script> tag.",
+        structuredData: "{{message}}",
+      },
     },
     (context) => {
       const options = context.options[0] || {};
@@ -95,7 +100,20 @@ module.exports = Object.assign(
         JSXOpeningElement(node) {
           if (!isNextFile) return;
           if (node.name.type !== "JSXIdentifier" || node.name.name !== "script") return;
-          if (isJsonLdScript(node)) return;
+          if (isJsonLdScript(node)) {
+            if (options.structuredDataComponent || options.structuredDataMessage) {
+              context.report({
+                node,
+                messageId: "structuredData",
+                data: {
+                  message:
+                    options.structuredDataMessage ||
+                    `Use <${options.structuredDataComponent}> instead of a raw JSON-LD <script> tag.`,
+                },
+              });
+            }
+            return;
+          }
           if (isAllowedInlineScript(node, options, patterns)) return;
           context.report({ node, messageId: "script" });
         },
