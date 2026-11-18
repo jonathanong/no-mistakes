@@ -7,8 +7,14 @@ pub fn materialize_rule(category: &str, name: &str) -> tempfile::TempDir {
         .join(category)
         .join(name)
         .join("fixture");
+    materialize_tracked(&source)
+}
+
+/// Copy a saved fixture into a temporary Git repository with every file staged,
+/// so rules that need a Git index behave the same inside a `git archive` extraction.
+pub fn materialize_tracked(source: &Path) -> tempfile::TempDir {
     let destination = tempfile::TempDir::new().expect("create fixture destination");
-    copy_tree(&source, destination.path());
+    copy_tree(source, destination.path());
     git(destination.path(), &["init", "-q", "--initial-branch=main"]);
     git(destination.path(), &["add", "."]);
     destination
