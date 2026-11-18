@@ -82,18 +82,28 @@ pub(super) fn record(
                     call.sql_text.clone(),
                 )
             } else {
-                let projected = (call.kind == EmbeddedSqlKind::Composed)
-                    .then(|| prepared.query_annotation_prefix(path, &opts.embedded, *span))
-                    .flatten();
+                let projected = if call.kind == EmbeddedSqlKind::Composed {
+                    prepared.query_annotation_prefix(path, &opts.embedded, *span)
+                } else if call.kind == EmbeddedSqlKind::Dynamic {
+                    prepared
+                        .proven_query_annotation_prefix(path, &opts.embedded, *span)
+                        .filter(|prefix| {
+                            prefix.as_deref().is_some_and(|sql| {
+                                annotation_status(sql) == SqlVerdictStatus::ProvenClear
+                            })
+                        })
+                } else {
+                    None
+                };
                 let (sql, used_projection) = match projected {
                     Some(Some(sql)) => (Some(sql.as_str()), true),
                     Some(None) => (None, true),
                     None => (call.sql_text.as_deref(), false),
                 };
-                let proof = if call.kind == EmbeddedSqlKind::Dynamic {
-                    TextProof::Partial
-                } else if used_projection {
+                let proof = if used_projection {
                     TextProof::Prepared
+                } else if call.kind == EmbeddedSqlKind::Dynamic {
+                    TextProof::Partial
                 } else {
                     TextProof::Exact
                 };

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - name: annotated operations
+    rule: postgres-require-query-annotation
+    scope: repository
+    severity: error
+    options:
+      effort: max
+      unanalyzableSql: ignore
+      importSpecifier: './db.mjs'
+      executorTypeNames: [Run]
+      include: ['annotation.mts', 'imported.mts', 'external.mts', 'shared.mts']

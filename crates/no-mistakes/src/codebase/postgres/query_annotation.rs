@@ -29,6 +29,7 @@ pub(crate) struct QueryAnnotationFileFacts {
     pub(super) raw_tag_reassigned: bool,
     pub(super) mapped_arguments: crate::fx::FxHashSet<u32>,
     pub calls: BTreeMap<(u32, u32), Option<String>>,
+    pub(crate) proven_call_prefixes: crate::fx::FxHashSet<(u32, u32)>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

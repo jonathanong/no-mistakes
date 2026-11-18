@@ -1,0 +1,165 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "annotation.mts",
+          "line": 24,
+          "message": "annotation.mts:24: postgres-require-query-annotation application \"annotated operations\" (#0) has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch('SELECT id FROM widgets LIMIT 5', statement => read(statement));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 28,
+          "message": "annotation.mts:28: postgres-require-query-annotation application \"annotated operations\" (#0) has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch(`/* ${name} */ SELECT id FROM widgets LIMIT 5`, statement => read(statement));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 32,
+          "message": "annotation.mts:32: postgres-require-query-annotation application \"annotated operations\" (#0) has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch(`${prefix}SELECT id FROM widgets LIMIT 5`, statement => read(statement));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 42,
+          "message": "annotation.mts:42: postgres-require-query-annotation application \"annotated operations\" (#0) has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "external.mts",
+          "line": 4,
+          "message": "external.mts:4: postgres-require-query-annotation application \"annotated operations\" (#0) has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "shared.mts",
+          "line": 4,
+          "message": "shared.mts:4: postgres-require-query-annotation application \"annotated operations\" (#0) has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "annotation.mts",
+          "line": 24,
+          "message": "annotation.mts:24: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch('SELECT id FROM widgets LIMIT 5', statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "shared.mts",
+          "line": 4,
+          "message": "shared.mts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "annotation.mts",
+          "line": 24,
+          "message": "annotation.mts:24: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch('SELECT id FROM widgets LIMIT 5', statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "shared.mts",
+          "line": 4,
+          "message": "shared.mts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "annotation.mts",
+          "line": 24,
+          "message": "annotation.mts:24: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch('SELECT id FROM widgets LIMIT 5', statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 28,
+          "message": "annotation.mts:28: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch(`/* ${name} */ SELECT id FROM widgets LIMIT 5`, statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 32,
+          "message": "annotation.mts:32: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return runSearch(`${prefix}SELECT id FROM widgets LIMIT 5`, statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 42,
+          "message": "annotation.mts:42: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "annotation"
+        },
+        {
+          "file": "shared.mts",
+          "line": 4,
+          "message": "shared.mts:4: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement);",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
