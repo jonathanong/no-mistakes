@@ -357,6 +357,17 @@ supported generated identifier shape, or an explicit trusted helper contract:
   a call argument, a wrapper object or array, a return, an arrow that
   returns the registry, `export { registry }`, `export default`, and
   `export const` of the registry all end the proof.
+- A required parameter annotated with a local finite indexed-access
+  type, such as `type Variety = (typeof VARIETIES)[number]`, where
+  `const VARIETIES = ["painted", "plain"] as const` is a module-level tuple of
+  string literals. Direct annotations, parentheses, local type-alias chains,
+  and an `as const satisfies readonly string[]` initializer also work.
+  An unrelated same-name parameter does not shadow the module tuple.
+  Ordinary arrays, widened `string[]` or `readonly string[]` annotations,
+  assignments to the parameter, mutable bindings, mixed/dynamic/spread elements,
+  shadowed names, and
+  mutated or escaped tuples do not establish this proof. Imported indexed
+  type aliases remain conservative.
 - `.get` on a `const` built-in `Map` built only from string-literal pairs, including a
   frozen map, until that map is mutated.
   Shadowed `Set`, `Map`, or `Object.freeze` implementations do not establish
@@ -384,8 +395,16 @@ supported generated identifier shape, or an explicit trusted helper contract:
   UUID producers, mixed bounded/open returns, reassigned prefixes, recursive
   return cycles, and async results used without `await` do not establish this proof.
 - A value dominated by `if (!ALLOWED.has(value)) throw` or
-  `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. A `return`
-  that exits the callable also works. `ALLOWED`
+  `if (!ALLOWED_LIST.includes(value)) throw` in the same callable. A strict
+  membership predicate also works:
+  `if (!ALLOWED_LIST.some(item => item === value)) throw`.
+  The predicate must be a synchronous one-parameter arrow whose expression is
+  only strict equality between that parameter and the guarded identifier
+  (either operand order). Async callbacks, coercive equality, compound
+  predicates, and a failure branch that continues do not validate the value.
+  The guard retains its subject and collection scopes, including through
+  nested blocks; a class that shadows the collection does not prove membership.
+  A `return` that exits the callable also works. `ALLOWED`
   must be one `const` built-in `Set` of string literals, and `ALLOWED_LIST` one `const`
   array of string literals. The array may be imported from a unique literal
   export, including an `as const` array used by a local

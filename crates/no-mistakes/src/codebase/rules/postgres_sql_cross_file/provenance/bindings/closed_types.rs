@@ -25,12 +25,12 @@ impl Bindings<'_> {
                     && parameter.mutation_contexts.is_empty()
                     && !self.non_required_parameter(file, parameter.scope, &parameter.name)
             }
-            Some(ValueType::Reference(name))
+            Some(shape @ (ValueType::Reference(_) | ValueType::Element(_)))
                 if self.numeric_parameter_bounds_only
                     && parameter.invalidated_at.is_none()
                     && parameter.mutation_contexts.is_empty()
                     && !self.non_required_parameter(file, parameter.scope, &parameter.name)
-                    && self.finite_string_type(file, &ValueType::Reference(name.clone())) =>
+                    && self.finite_string_type(file, shape) =>
             {
                 true
             }

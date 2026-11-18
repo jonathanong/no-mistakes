@@ -25,6 +25,7 @@ impl ImportCollector {
         use oxc_ast::ast::TSType;
         match annotation {
             _ if finite_string_type(annotation) => ValueType::FiniteStringLiterals,
+            TSType::TSParenthesizedType(inner) => self.annotation_shape(&inner.type_annotation),
             TSType::TSTypeReference(reference) => {
                 let Some(name) = type_reference_name(reference) else {
                     return ValueType::Unknown;
@@ -57,7 +58,14 @@ impl ImportCollector {
             }
             TSType::TSIndexedAccessType(indexed) => {
                 if let Some(name) = element_of_typeof(indexed) {
-                    return ValueType::Element(name);
+                    return if self
+                        .callee_binding_scope(&name)
+                        .is_none_or(|scope| scope == 0)
+                    {
+                        ValueType::Element(name)
+                    } else {
+                        ValueType::Unknown
+                    };
                 }
                 if let TSType::TSLiteralType(literal) = &indexed.index_type {
                     if let oxc_ast::ast::TSLiteral::StringLiteral(key) = &literal.literal {

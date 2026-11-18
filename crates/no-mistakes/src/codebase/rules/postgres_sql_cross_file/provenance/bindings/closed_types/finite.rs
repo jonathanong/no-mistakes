@@ -1,5 +1,7 @@
 use super::*;
 
+mod tuples;
+
 impl Bindings<'_> {
     pub(crate) fn finite_string_parameter(&self, file: &Path, scope: usize, name: &str) -> bool {
         self.numeric_parameter_bounds_only
@@ -9,7 +11,8 @@ impl Bindings<'_> {
                 .iter()
                 .any(|parameter| match &parameter.type_reference {
                     Some(shape @ ValueType::FiniteStringLiterals)
-                    | Some(shape @ ValueType::Reference(_)) => self.finite_string_type(file, shape),
+                    | Some(shape @ ValueType::Reference(_))
+                    | Some(shape @ ValueType::Element(_)) => self.finite_string_type(file, shape),
                     _ => false,
                 })
     }
@@ -55,6 +58,7 @@ impl Bindings<'_> {
     ) -> bool {
         match shape {
             ValueType::FiniteStringLiterals => true,
+            ValueType::Element(name) => self.finite_tuple(file, name),
             ValueType::Reference(name) => {
                 let key = (file.to_path_buf(), name.clone());
                 if !visited.insert(key.clone()) {

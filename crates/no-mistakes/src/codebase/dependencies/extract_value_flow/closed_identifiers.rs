@@ -70,13 +70,13 @@ impl ImportCollector {
 
     pub(crate) fn note_closed_identifier(
         &mut self,
-        pattern: &BindingPattern<'_>,
+        declarator: &oxc_ast::ast::VariableDeclarator<'_>,
         init: &Expression<'_>,
-        declared_at: u32,
     ) {
-        let BindingPattern::BindingIdentifier(identifier) = pattern else {
+        let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
             return;
         };
+        let declared_at = declarator.span.start;
         let name = identifier.name.to_string();
         let scope = self
             .callee_binding_scope(&name)
@@ -96,6 +96,7 @@ impl ImportCollector {
                     declared_at,
                     keys,
                     kind,
+                    const_tuple: declarator.type_annotation.is_none() && const_tuple(init),
                 });
         }
         if let Some(source) = self.bounded_source(init) {
@@ -159,3 +160,11 @@ pub(super) fn literal_string(expr: &Expression<'_>) -> Option<String> {
 #[cfg(test)]
 #[path = "closed_identifiers_tests.rs"]
 mod tests;
+
+fn const_tuple(expression: &Expression<'_>) -> bool {
+    match expression {
+        Expression::TSSatisfiesExpression(satisfies) => const_tuple(&satisfies.expression),
+        Expression::ParenthesizedExpression(inner) => const_tuple(&inner.expression),
+        _ => super::super::literal_const_tuple(expression),
+    }
+}

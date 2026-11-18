@@ -46,7 +46,7 @@ struct ImportCollector {
     unreachable_call_ranges: Vec<UnreachableCallRange>,
     import_inactive_call_ranges: Vec<(u32, u32)>,
     value_flow: ValueFlowFacts,
-    finite_guard_call_indexes: FxHashMap<u32, usize>,
+    finite_guard_calls: FxHashMap<u32, extract_value_flow::closed_identifiers::GuardCall>,
     metadata_registry_names: FxHashSet<String>,
     metadata_lookup_calls: FxHashSet<u32>,
     metadata_rows: extract_value_flow::closed_identifiers::rows::State,

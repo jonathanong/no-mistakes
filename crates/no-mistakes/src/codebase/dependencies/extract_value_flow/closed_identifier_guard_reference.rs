@@ -2,6 +2,10 @@ use crate::codebase::dependencies::extract::ValueExpression;
 use oxc_ast::ast::{Expression, Statement};
 use oxc_syntax::operator::UnaryOperator;
 
+#[path = "closed_identifier_some_guard.rs"]
+mod some;
+pub(super) use some::some_subject;
+
 pub(super) fn value(value: &ValueExpression) -> Option<(String, usize, Vec<String>)> {
     match value {
         ValueExpression::Named {
@@ -76,6 +80,9 @@ fn negative_membership<'a>(
     let call = super::super::plain_call(&unary.argument)?;
     if call.arguments.len() != 1 {
         return None;
+    }
+    if some_subject(call).is_some() {
+        return Some(call);
     }
     let mut argument = call.arguments[0].as_expression()?;
     while let Expression::ParenthesizedExpression(parenthesized) = argument {
