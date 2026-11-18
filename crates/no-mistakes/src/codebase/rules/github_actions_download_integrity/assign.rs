@@ -1,20 +1,27 @@
 /// Expands one whole-line uppercase literal. Any other uppercase assignment
 /// in the same script leaves every `$NAME` untouched.
-pub(super) fn expand_uppercase(script: &str) -> String {
+pub(super) fn prepare_max_script(script: &str) -> Option<String> {
     probe::note();
-    let env = single_literal_binding(script);
+    let binding = single_literal_binding(script);
+    if binding.is_none()
+        && !script.contains("\r\n")
+        && (script.is_empty() || script.ends_with('\n'))
+    {
+        return None;
+    }
     let mut out = String::new();
     for line in script.lines() {
-        if matches!(classify(line.trim()), Kind::Literal(_, _)) && env.is_some() {
-            out.push_str(line);
-        } else if let Some((name, value)) = &env {
+        if let Some((name, value)) = binding
+            .as_ref()
+            .filter(|_| !matches!(classify(line.trim()), Kind::Literal(_, _)))
+        {
             out.push_str(&substitute(line, name, value));
         } else {
             out.push_str(line);
         }
         out.push('\n');
     }
-    out
+    Some(out)
 }
 
 /// The same one-binding proof used by max, without expanding any script values.

@@ -1,8 +1,10 @@
+#[derive(PartialEq, Eq)]
 pub(super) struct Word {
     pub(super) text: String,
     pub(super) line: usize,
     /// An unquoted expansion may add fields and change following option slots.
     pub(super) expansion_may_split: bool,
+    pub(super) quoted_expansion: Option<(usize, usize)>,
 }
 
 pub(super) struct Command {
@@ -18,12 +20,12 @@ pub(super) struct Parse {
     pub(super) unterminated_heredoc: bool,
 }
 
-pub(super) fn commands(script: &str) -> Vec<Command> {
-    parse(script).commands
+pub(super) fn parse(script: &str) -> Parse {
+    parse_ordered(script, false)
 }
 
-pub(super) fn parse(script: &str) -> Parse {
-    scan::run(script)
+pub(super) fn parse_ordered(script: &str, strict: bool) -> Parse {
+    scan::run(script, strict)
 }
 
 fn skip_arithmetic(chars: &[char], mut index: usize, line: &mut usize) -> usize {
@@ -79,13 +81,16 @@ fn flush_word(
     current: &mut Command,
     word_line: usize,
     expansion_may_split: &mut bool,
+    quoted_expansion: &mut Option<(usize, usize)>,
 ) {
     let expansion_may_split = std::mem::take(expansion_may_split);
+    let quoted_expansion = quoted_expansion.take();
     if !word.is_empty() {
         current.words.push(Word {
             text: std::mem::take(word),
             line: word_line,
             expansion_may_split,
+            quoted_expansion,
         });
     }
 }

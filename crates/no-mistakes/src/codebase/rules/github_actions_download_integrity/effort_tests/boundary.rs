@@ -30,7 +30,8 @@ fn low_ignores_non_actions_malformed_yaml_and_unreadable_inventory_entries() {
     let malformed =
         std::fs::read_to_string(root.join(".github/workflows/malformed-low.yml")).unwrap();
     for (path, content) in [("README.md", source("fail")), (WORKFLOW, malformed)] {
-        let result = runs::check_source_low(path, &content, &hosts(), &[], Unanalyzable::Report);
+        let result =
+            test_adapters::check_source_low(path, &content, &hosts(), &[], Unanalyzable::Report);
         assert!(result.findings.is_empty());
         assert!(result.advisories.is_empty());
     }
@@ -42,15 +43,22 @@ fn low_ignores_non_actions_malformed_yaml_and_unreadable_inventory_entries() {
         rules: vec![rule(Effort::Low, Unanalyzable::Report)],
         ..NoMistakesConfig::default()
     };
-    let result =
-        diagnostics_with_files_and_sources(&root, &config, &files, &sources, false).unwrap();
+    let result = diagnostics_with_files_and_sources(
+        &root,
+        &config,
+        &files,
+        &sources,
+        &crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files),
+        false,
+    )
+    .unwrap();
     assert!(result.findings.is_empty());
     assert!(result.advisories.is_empty());
 }
 
 #[test]
 fn command_alias_diagnostics_name_the_direct_call_rewrite() {
-    let result = runs::check_source_low(
+    let result = test_adapters::check_source_low(
         WORKFLOW,
         &source("effort-argv"),
         &hosts(),
@@ -67,8 +75,9 @@ fn command_alias_diagnostics_name_the_direct_call_rewrite() {
 fn trusted_command_alias_adds_uncertainty_without_changing_definite_findings() {
     let workflow = ".github/workflows/trusted-alias-subset.yml";
     let source = std::fs::read_to_string(fixture_root("effort-argv").join(workflow)).unwrap();
-    let max = runs::check_source(workflow, &source, &hosts(), &[]);
-    let low = runs::check_source_low(workflow, &source, &hosts(), &[], Unanalyzable::Report);
+    let max = test_adapters::check_source(workflow, &source, &hosts(), &[]);
+    let low =
+        test_adapters::check_source_low(workflow, &source, &hosts(), &[], Unanalyzable::Report);
     assert_eq!(max.len(), 1, "{max:?}");
     assert_eq!(low.findings.len(), 2, "{:?}", low.findings);
     assert!(low.advisories.is_empty());
@@ -99,7 +108,7 @@ fn trusted_command_alias_adds_uncertainty_without_changing_definite_findings() {
     let script = parsed["jobs"]["verify"]["steps"][1]["run"]
         .as_str()
         .unwrap();
-    let raw = judge::download_hits_low(script, &[]);
+    let raw = test_adapters::download_hits_low(script, &[]);
     assert_eq!(raw.len(), 1);
     assert!(raw[0].indirect_command && raw[0].unanalyzable);
     assert_eq!(raw[0].url, "https://api.github.com/repos/example/project");

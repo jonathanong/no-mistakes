@@ -1,10 +1,20 @@
 use super::*;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
-use crate::codebase::ts_source::SourceStore;
+use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, path_filter::GlobMatcher};
+use crate::codebase::ts_source::{
+    discover_files_from_visible, relative_slash_path, SourceStore, VisiblePathSnapshot,
+};
 use crate::config::v2::{Effort, NoMistakesConfig};
+use rayon::prelude::*;
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    super::super::check_sourced_standalone(root, config, check_with_files)
+    let snapshot = VisiblePathSnapshot::new(root);
+    let files = discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        &snapshot.paths_for(root),
+    );
+    let sources = snapshot.source_store_for(root);
+    check_with_snapshot(root, config, &files, &sources, &snapshot)
 }
 
 pub(crate) fn check_with_files(
@@ -12,56 +22,72 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    super::super::check_with_borrowed_source_store(
-        root,
-        config,
-        files,
-        check_with_files_and_sources,
-    )
+    let snapshot = VisiblePathSnapshot::from_paths(root, files);
+    let sources = snapshot.source_store_for(root);
+    check_with_snapshot(root, config, files, &sources, &snapshot)
 }
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_with_snapshot(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
     sources: &SourceStore,
+    snapshot: &VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
-    // The compatibility file-rule boundary leaves suppression to its caller.
-    Ok(diagnostics_with_files_and_sources(root, config, files, sources, true)?.findings)
+    Ok(diagnostics_with_files_and_sources(root, config, files, sources, snapshot, true)?.findings)
 }
 
-/// Evaluate every application once, retaining its independent analysis policy.
 #[doc(hidden)]
 pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
     sources: &SourceStore,
+    snapshot: &VisiblePathSnapshot,
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics> {
     let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
-        let files = super::super::selected_rule_files(root, config, rule, files)?;
-        let policy = config.effective_rule_analysis(rule)?;
-        if policy.effort != Effort::Low {
-            diagnostics
-                .findings
-                .extend(scan(root, &options, &files, sources)?);
-            continue;
-        }
-        let (hosts, helpers) = compile(&options)?;
+        let (files, roots) =
+            super::super::selected_rule_files_with_roots(root, config, rule, files)?;
+        let analysis = config.effective_rule_analysis(rule)?;
+        let hosts = compile_hosts(&options)?;
+        let policy = runs::Policy {
+            hosts: &hosts,
+            helpers: &options.download_helpers,
+            low: (analysis.effort == Effort::Low).then_some(analysis.unanalyzable),
+            strict: options.strict_sequencing,
+        };
+        let includes = GlobMatcher::new(
+            &options.shell_source_include,
+            &format!("{RULE_ID} shellSourceInclude"),
+        )?;
+        let indexes: Vec<_> = roots
+            .into_iter()
+            .filter(|target| !includes.is_empty() && snapshot.git_index_available_for(target))
+            .map(|target| snapshot.git_index_paths_for(&target))
+            .collect();
         let chunks: Vec<_> = files
             .par_iter()
-            .map(|path| {
+            .filter_map(|path| {
                 let rel = relative_slash_path(root, path);
-                if gha_kind(&rel).is_none() {
-                    return AnalysisDiagnostics::default();
+                let kind = gha_kind(&rel);
+                if kind.is_none()
+                    && !(includes.is_match(&rel)
+                        && indexes.iter().any(|index| {
+                            index
+                                .binary_search_by(|entry| entry.as_os_str().cmp(path.as_os_str()))
+                                .is_ok()
+                        }))
+                {
+                    return None;
                 }
-                let Some(content) = super::super::read_language_source(sources, path) else {
-                    return AnalysisDiagnostics::default();
-                };
-                runs::check_source_low(&rel, &content, &hosts, &helpers, policy.unanalyzable)
+                let content = super::super::read_language_source(sources, path)?;
+                Some(match kind {
+                    Some(action) => runs::check_workflow(&rel, &content, action, &policy),
+                    None => runs::check_shell(&rel, &content, &policy),
+                })
             })
             .collect();
         for chunk in chunks {

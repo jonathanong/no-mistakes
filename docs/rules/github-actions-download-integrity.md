@@ -2,9 +2,9 @@
 
 ## Why and when
 
-Use this rule when a workflow or composite action downloads bytes with `curl`
-or `wget` inside a `run` script. An http(s) URL can change between runs, so a
-later step can execute or unpack different bytes than the author read. The
+Use this rule when a workflow, composite action, or explicitly selected shell
+source downloads bytes with `curl` or `wget`. An http(s) URL can change between
+runs, so a later step can execute or unpack different bytes than the author read. The
 rule is opt-in. Listing it is what turns it on. Product defaults do not enable
 it, and it is not part of a recommended or strict preset.
 
@@ -27,7 +27,8 @@ It flags `curl`, `wget`, or a configured helper when an argument is an
 `if ! sha256sum -c` still counts as a check. A finding is skipped when any
 of these is true:
 
-- the same `run` body runs `sha256sum -c` (or `--check`, including a short
+- with `strictSequencing: false`, the same `run` body or selected shell source
+  runs `sha256sum -c` (or `--check`, including a short
   cluster such as `-cw`) or `shasum -a 256 -c` (also `-a256` and `--check`).
   A command substitution or backtick in that check does not count
 - the host, after stripping a port and any login prefix, is trusted
@@ -50,6 +51,18 @@ not judged. A here-document body is skipped, and a download after its
 terminator is still judged. An unterminated here-document is not judged.
 `<<<` and `<<` inside `$((...))` are not here-documents. The rule does not
 eval the shell.
+
+At max effort in Bourne-style steps, a literal HTTP(S) URL in the step’s `env`
+map can also bind `"$NAME"` or `"${NAME}"` as a complete downloader URL argument
+(including `--url="$NAME"`). Explicit or inherited unsupported shells do not use
+step-env resolution, nor does an implicit shell on a known Windows runner.
+Otherwise, an omitted effective `shell` uses the scanner’s Bourne-style
+assumption. Single-quoted shell variables remain literal. Values containing
+GitHub expressions or shell expansion stay unresolved; job and workflow env
+maps are not evaluated. A shell reassignment leaves the original step binding
+unresolved. Env resolution is skipped for downloader commands rewritten by the
+existing single-uppercase-assignment expansion; keep the complete URL directly
+in the argument when combining binding styles.
 
 A host that is still `$`, `` ` ``, or `${{ }}` after that expansion is not
 judged. A literal untrusted host is judged even when the path still contains
@@ -83,6 +96,51 @@ An explicit list replaces the default. `trustedHosts: []` trusts nothing, so
 http(s) URL. The default is only `curl` and `wget`. An explicit list is extra,
 not a replacement, so `[]` leaves `curl` and `wget` in place. A helper is a
 single command token such as `ci_download_to`.
+
+`shellSourceInclude` selects additional Git-tracked shell sources with
+root-relative path globs, intersected with the rule application’s file scope.
+There is no extension filter: each matched tracked file is treated as shell
+source, except recognized workflow and action YAML keeps its normal handling.
+Without a Git index, no additional shell sources are scanned.
+It defaults to `[]`, so scripts invoked by workflows or composite
+actions are not followed automatically. Select only the scripts whose download
+policy you intend to enforce; the scanner reads source and never executes it.
+Selected scripts use the same host, checksum, helper, and suppression policy
+as inline scripts, with findings on the script’s own lines. A reasoned
+`# integrity-check: skip reason=<slug>` anywhere in a selected shell source
+skips that source’s downloads.
+
+`strictSequencing` defaults to `false`. The default accepts a supported checksum
+command anywhere in the same script. When enabled, each untrusted non-checksum download
+must have a supported checksum command after it and before the next unrelated
+non-checksum download command, including one from a trusted host. Downloading a checksum sidecar does not interrupt that
+window. This is a lexical ordering check, not shell control-flow or proof that
+the checksum file describes the downloaded bytes. Multiple URLs in one
+downloader command share one verification window.
+
+```yaml
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      shellSourceInclude:
+        - .github/actions/tool/install.sh
+        - scripts/install-*.sh
+      strictSequencing: true
+```
+
+With strict sequencing, verify each payload before fetching the next one:
+
+```sh
+curl -fsSL https://example.invalid/first -o first
+sha256sum -c first.sha256
+curl -fsSL https://example.invalid/second -o second
+sha256sum -c second.sha256
+```
+
+Moving the first check below the second download reports the first download
+under strict sequencing. With the option off, the same script retains the
+same-script checksum policy.
 
 ## Analysis
 
@@ -188,6 +246,11 @@ jobs:
           curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
           curl -fsSL https://example.invalid/tool.tgz.sha256 -o tool.tgz.sha256
           sha256sum -c tool.tgz.sha256
+      - env:
+          TOOL_URL: https://example.invalid/tool.tgz
+        run: |
+          curl -fsSL "$TOOL_URL" -o tool.tgz
+          sha256sum -c tool.tgz.sha256
       - run: curl https://api.github.com/repos/example/tool
       - run: |
           # integrity-check: skip reason=vendor-tarball
@@ -218,6 +281,18 @@ jobs:
       - run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
 ```
 
+A literal step env binding is also unsafe without verification at max effort:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: https://example.invalid/tool.tgz
+        run: curl -fsSL "$TOOL_URL" -o tool.tgz
+```
+
 ## Fix
 
 Pin the download in the same step:
@@ -240,7 +315,8 @@ A checksum check whose arguments contain command substitution (`$(...)` or backt
 
 ## Suppression
 
-Use a YAML comment. `no-mistakes-disable-next-line github-actions-download-integrity`
+Use a YAML comment, or a shell comment in a selected source.
+`no-mistakes-disable-next-line github-actions-download-integrity`
 suppresses the next line. `no-mistakes-disable-line github-actions-download-integrity`
 suppresses the same line. `no-mistakes-disable-file github-actions-download-integrity`
 in the leading comment block suppresses the file.
@@ -260,8 +336,8 @@ that should not be hashed. It is not a `no-mistakes-disable` comment.
 [`github-actions-script-expressions`](github-actions-script-expressions.md)
 rejects untrusted expressions inside scripts.
 [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md)
-rejects a persisted write token. This rule only judges http(s) downloads in
-`run` bodies.
+rejects a persisted write token. This rule judges http(s) downloads in
+`run` bodies and explicitly selected shell sources.
 
 ## Invalid UTF-8
 

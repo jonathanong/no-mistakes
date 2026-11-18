@@ -464,3 +464,20 @@ test("queue wait kinds compile when imported from the package root", { timeout: 
     /export type \{ QueueWaitFindingKind \} from "\.\/queue-report-types";/,
   );
 });
+
+test("download integrity exports scoped shell and sequencing options", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "github-actions-download-integrity-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declaration, /export interface GithubActionsDownloadIntegrityOptions/);
+  assert.match(declaration, /trustedHosts\?: string\[\];/);
+  assert.match(declaration, /downloadHelpers\?: string\[\];/);
+  assert.match(declaration, /shellSourceInclude\?: string\[\];/);
+  assert.match(declaration, /strictSequencing\?: boolean;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      "./github-actions-download-integrity-types",
+    ),
+  );
+});

@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      shellSourceInclude:
+        - .github/actions/tool/*.sh
+        - .github/workflows/scripts/*.sh

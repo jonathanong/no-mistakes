@@ -1,24 +1,23 @@
-use super::words::commands;
+use super::words::{self, Command};
 
-pub(super) fn step_verifies(script: &str) -> bool {
-    commands(script).into_iter().any(|command| {
-        // A substitution hides the checksum file, so the check is not judged.
-        if command.dynamic {
-            return false;
-        }
-        let words: Vec<&str> = command
-            .words
-            .iter()
-            .map(|word| word.text.as_str())
-            .collect();
-        let Some((name, _)) = super::words::command_at(&command.words) else {
-            return false;
-        };
-        if name == "sha256sum" {
-            return words.iter().any(|word| sha256_check(word));
-        }
-        name == "shasum" && shasum_256_check(&words)
-    })
+pub(super) fn command_verifies(command: &Command) -> bool {
+    if command.dynamic {
+        return false;
+    }
+    let Some((name, _)) = words::command_at(&command.words) else {
+        return false;
+    };
+    match name.as_str() {
+        "sha256sum" => command.words.iter().any(|word| sha256_check(&word.text)),
+        "shasum" => shasum_256_check(
+            &command
+                .words
+                .iter()
+                .map(|word| word.text.as_str())
+                .collect::<Vec<_>>(),
+        ),
+        _ => false,
+    }
 }
 
 fn sha256_check(word: &str) -> bool {

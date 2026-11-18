@@ -1,4 +1,4 @@
-use super::runs::check_source;
+use super::test_adapters::check_source;
 use super::{gha_kind, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
@@ -280,5 +280,42 @@ jobs:
             .starts_with("- name:"),
         "{}",
         lines[runs[1].item_line - 1]
+    );
+}
+
+#[test]
+fn shell_source_requires_tracked_membership_in_addition_to_matching_the_glob() {
+    let source = fixture_root("shell-source");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        &std::fs::read_to_string(source.join("../../configs/shell-source.yml")).unwrap(),
+    )
+    .unwrap();
+    let find_scripts = || {
+        super::check(fixture.path(), &config)
+            .unwrap()
+            .into_iter()
+            .map(|finding| finding.file)
+            .filter(|file| file.ends_with(".sh"))
+            .collect::<Vec<_>>()
+    };
+    assert!(find_scripts().is_empty());
+    crate::test_support::git_init(fixture.path());
+    let tracked = ".github/actions/tool/install.sh";
+    crate::test_support::git_add_force(fixture.path(), &[tracked]);
+    assert_eq!(find_scripts(), [tracked]);
+}
+
+#[test]
+fn invalid_shell_source_glob_identifies_the_rule_option() {
+    let root = fixture_root("shell-source");
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        &std::fs::read_to_string(root.join("../../configs/invalid-shell-source.yml")).unwrap(),
+    )
+    .unwrap();
+    let error = super::check_with_files(&root, &config, &[]).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "github-actions-download-integrity shellSourceInclude contains invalid glob `[`",
     );
 }

@@ -1,12 +1,11 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod assign;
 mod effort;
+mod env;
 mod judge;
 mod runs;
 mod url;
@@ -29,9 +28,11 @@ pub(super) const DEFAULT_TRUSTED_HOSTS: &[&str] = &[
 struct Options {
     trusted_hosts: Option<Vec<String>>,
     download_helpers: Vec<String>,
+    shell_source_include: Vec<String>,
+    strict_sequencing: bool,
 }
 
-fn compile(opts: &Options) -> Result<(Vec<String>, Vec<String>)> {
+fn compile_hosts(opts: &Options) -> Result<Vec<String>> {
     let hosts = match &opts.trusted_hosts {
         None => DEFAULT_TRUSTED_HOSTS
             .iter()
@@ -51,7 +52,7 @@ fn compile(opts: &Options) -> Result<(Vec<String>, Vec<String>)> {
             anyhow::bail!("{RULE_ID} downloadHelpers entry `{helper}` is not a command name");
         }
     }
-    Ok((hosts, opts.download_helpers.clone()))
+    Ok(hosts)
 }
 
 fn valid_helper(name: &str) -> bool {
@@ -63,39 +64,7 @@ fn valid_helper(name: &str) -> bool {
 }
 
 pub use effort::{check, diagnostics_with_files_and_sources};
-pub(crate) use effort::{check_with_files, check_with_files_and_sources};
-
-fn scan(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let (hosts, helpers) = compile(opts)?;
-    let mut findings: Vec<RuleFinding> = files
-        .par_iter()
-        .flat_map(|path| check_file(path, root, &hosts, &helpers, sources))
-        .collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
-fn check_file(
-    path: &Path,
-    root: &Path,
-    hosts: &[String],
-    helpers: &[String],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let rel = relative_slash_path(root, path);
-    if gha_kind(&rel).is_none() {
-        return Vec::new();
-    }
-    let Some(content) = super::read_language_source(sources, path) else {
-        return Vec::new();
-    };
-    runs::check_source(&rel, &content, hosts, helpers)
-}
+pub(crate) use effort::{check_with_files, check_with_snapshot};
 
 /// `Some(true)` is an action file. `Some(false)` is a workflow. `None` is ignored.
 pub(super) fn gha_kind(rel: &str) -> Option<bool> {
@@ -124,5 +93,7 @@ mod coverage;
 mod edges;
 #[cfg(test)]
 mod effort_tests;
+#[cfg(test)]
+mod test_adapters;
 #[cfg(test)]
 mod tests;

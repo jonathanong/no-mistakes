@@ -1,0 +1,38 @@
+name: Audit
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsSL https://downloads.example.com/first -o first
+          curl -fsSL https://downloads.example.com/second -o second
+          sha256sum -c second.sha256
+      - run: |
+          curl -fsSL https://downloads.example.com/first -o first
+          sha256sum -c first.sha256
+          curl -fsSL https://downloads.example.com/second -o second
+          sha256sum -c second.sha256
+      - run: |
+          wget https://downloads.example.com/sidecar-ok -O tool
+          wget https://downloads.example.com/tool.sha256 -O tool.sha256
+          shasum -a 256 -c tool.sha256
+      - run: |
+          sha256sum -c unrelated.sha256
+          curl https://downloads.example.com/after-check -o tool
+      - run: |
+          curl https://downloads.example.com/before-trusted -o tool
+          curl https://api.github.com/metadata -o metadata
+          sha256sum -c tool.sha256
+      - run: curl https://downloads.example.com/same-line -o tool; wget https://downloads.example.com/next -O next; sha256sum -c next.sha256
+      - run: |
+          curl https://downloads.example.com/grouped https://downloads.example.com/tool.sha256 -o tool -o tool.sha256
+          sha256sum -c tool.sha256
+      - run: |
+          curl https://downloads.example.com/grouped-first https://downloads.example.com/grouped-second -o first -o second
+          sha256sum -c checksums.sha256
+      - run: |
+          CHECK=sha256sum
+          curl https://downloads.example.com/before-check-alias -o tool
+          "$CHECK" -c tool.sha256
+      - run: curl https://downloads.example.com/background -o tool & curl https://downloads.example.com/foreground -o next; sha256sum -c next.sha256

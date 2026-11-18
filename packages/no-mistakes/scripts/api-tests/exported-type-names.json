@@ -124,6 +124,7 @@
   "ForbiddenDependencyException",
   "ForbiddenLintSuppressionDirective",
   "ForbiddenLintSuppressionsOptions",
+  "GithubActionsDownloadIntegrityOptions",
   "GraphEdge",
   "GroupedExecutionTarget",
   "HotFileDiagnostic",

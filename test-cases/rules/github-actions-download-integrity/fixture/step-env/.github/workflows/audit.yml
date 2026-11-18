@@ -1,0 +1,93 @@
+name: Audit
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: "https://downloads.example.com/tool?a=1&b=2"
+        run: curl -fsSL "$TOOL_URL" -o tool
+      - env:
+          tool_url: https://downloads.example.com/alternate
+        run: wget "${tool_url}" -O tool
+      - env:
+          TOOL_URL: https://downloads.example.com/inline-option
+        run: curl --url="$TOOL_URL" -o tool
+      - run: curl -fsSL https://downloads.example.com/literal -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/verified
+        run: |
+          curl -fsSL "$TOOL_URL" -o tool
+          sha256sum -c tool.sha256
+      - env:
+          TOOL_URL: https://api.github.com:443/tool
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/tool.sha256
+        run: curl "$TOOL_URL" -o tool.sha256
+      - env:
+          TOOL_URL: ${{ secrets.TOOL_URL }}
+        run: curl -fsSL "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/${{ inputs.version }}
+        run: curl -fsSL "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/single-quoted
+        run: curl '$TOOL_URL' -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/not-a-url-operand
+        run: curl -H "$TOOL_URL" https://api.github.com/tool
+      - env:
+          TOOL_URL: https://downloads.example.com/overwritten
+        run: |
+          export TOOL_URL=https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/empty
+        run: curl "\$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/joined-word
+        run: curl "$"TOOL_URL -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/with-local-assignment
+        run: |
+          MODE=fast
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/appended
+        run: |
+          TOOL_URL+=.sha256
+          curl "$TOOL_URL" -o tool.sha256
+      - env:
+          TOOL_URL: https://downloads.example.com/array-element
+        run: |
+          TOOL_URL[0]=https://api.github.com/tool
+          curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/powershell
+        shell: pwsh
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/explicit-bash
+        shell: bash
+        run: curl "$TOOL_URL" -o tool
+      - run: "curl -fsSL \\\r\nhttps://downloads.example.com/crlf -o tool"
+  powershell:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/powershell-default
+        run: curl "$TOOL_URL" -o tool
+  windows:
+    runs-on: windows-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/implicit-powershell
+        run: curl "$TOOL_URL" -o tool
+      - env:
+          TOOL_URL: https://downloads.example.com/explicit-bash-on-windows
+        shell: bash
+        run: curl "$TOOL_URL" -o tool

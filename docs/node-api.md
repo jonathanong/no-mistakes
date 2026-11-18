@@ -365,6 +365,13 @@ redundant `rejectStepExceedingJob` comparisons only for literal job timeouts at
 least that cap; the partner reports step violations. Missing or ineligible
 coverage produces the same warning, `analysisFallbacks` record, and `max`
 fallback in both APIs. See [its Effort section](rules/github-actions-job-timeouts.md#effort).
+Configured `github-actions-download-integrity` applications use the existing
+async `check()` → `checkJson` binding and `analyzeProject()` check reports.
+`GithubActionsDownloadIntegrityOptions` exports the rule's configuration
+contract, including opt-in `shellSourceInclude` and `strictSequencing`. Set them
+in the rule application's YAML `options` selected by `config`; both entrypoints
+share the CLI's literal step env handling and selected-shell policy.
+
 For `github-actions-download-integrity`, `low` skips assignment expansion for
 URL values and routes a known downloader command with any dynamic candidate URL
 through one shared unanalyzable diagnostic. Literal-only commands retain their

@@ -1,4 +1,5 @@
-use super::assign::expand_uppercase;
+use super::assign::prepare_max_script;
+use super::env::UrlBindings;
 use super::url::{self, UrlHost};
 use super::verify;
 use super::words::{self, Word};
@@ -15,26 +16,51 @@ pub(super) struct Hit {
     pub(super) indirect_command: bool,
 }
 
-pub(super) fn download_hits(script: &str, helpers: &[String]) -> Vec<Hit> {
-    download_hits_with_effort(script, helpers, false)
-}
-
-pub(super) fn download_hits_low(script: &str, helpers: &[String]) -> Vec<Hit> {
-    download_hits_with_effort(script, helpers, true)
-}
-
-fn download_hits_with_effort(script: &str, helpers: &[String], low: bool) -> Vec<Hit> {
-    if url::has_skip(script) || verify::step_verifies(script) {
+pub(super) fn scan_script(
+    script: &str,
+    helpers: &[String],
+    low: bool,
+    strict: bool,
+    env: Option<&serde_yaml::Mapping>,
+) -> Vec<Hit> {
+    if url::has_skip(script) {
         return Vec::new();
     }
-    let expanded = (!low).then(|| expand_uppercase(script));
-    let parsed = words::parse(expanded.as_deref().unwrap_or(script));
+    let raw = words::parse_ordered(script, strict);
+    if !strict && raw.commands.iter().any(verify::command_verifies) {
+        return Vec::new();
+    }
+    let expanded = (!low).then(|| prepare_max_script(script)).flatten();
+    let env = env
+        .filter(|env| !low && !env.is_empty())
+        .and_then(|env| UrlBindings::new(env, script, &raw));
+    let (parsed, original) = match expanded {
+        Some(expanded) => (words::parse_ordered(&expanded, strict), Some(raw)),
+        None => (raw, None),
+    };
     if parsed.unterminated_heredoc {
         return Vec::new();
     }
     let mut hits = Vec::new();
     let binding = OnceCell::new();
-    for mut command in parsed.commands {
+    let mut pending_start = 0;
+    let command_count = parsed.commands.len();
+    for (index, mut command) in parsed.commands.into_iter().enumerate() {
+        let original_command = match &original {
+            Some(raw) if raw.commands.len() == command_count => raw.commands.get(index),
+            Some(_) => None,
+            None => Some(&command),
+        };
+        if strict
+            && original_command.is_some_and(verify::command_verifies)
+            && verify::command_verifies(&command)
+        {
+            hits.truncate(pending_start);
+            continue;
+        }
+        let env = env
+            .as_ref()
+            .filter(|_| original_command.is_some_and(|raw| raw.words == command.words));
         let Some((mut name, mut arg_at)) = words::command_at(&command.words) else {
             continue;
         };
@@ -79,15 +105,20 @@ fn download_hits_with_effort(script: &str, helpers: &[String], low: bool) -> Vec
                 continue;
             }
         }
+        let next_pending = hits.len();
         for (word, url) in candidates {
             if indirect_command {
                 continue;
             }
+            let url = env.and_then(|env| env.resolve(word, url)).unwrap_or(url);
             let Some(parsed) = url::http_url(url) else {
                 continue;
             };
             if parsed.checksum {
                 continue;
+            }
+            if strict {
+                pending_start = next_pending;
             }
             hits.push(Hit {
                 url: url.to_string(),

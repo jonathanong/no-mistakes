@@ -370,3 +370,9 @@ and run `no-mistakes check --root <root> --format json`. Read `advisories` and
 filter their `target` by the five shape codes. No catalog means no findings.
 The rule is always advisory; use normal source disable directives for measured
 exceptions and async `check()` / `analyzeProject()` for repeated in-process work.
+
+For `github-actions-download-integrity`, use `shellSourceInclude` root-relative
+globs to opt into Git-tracked shell-source scanning and `strictSequencing: true` to require
+a checksum after each payload and before the next unrelated download. Literal
+step `env` URL bindings resolve at max effort. See the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-download-integrity.md).

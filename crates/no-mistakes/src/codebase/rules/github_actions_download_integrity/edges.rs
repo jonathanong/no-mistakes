@@ -1,8 +1,9 @@
-use super::assign::expand_uppercase;
-use super::judge::download_hits;
+use super::test_adapters::{
+    check_source, commands, download_hits, expand_uppercase, step_verifies,
+};
 use super::url::{configured_host, http_url};
-use super::verify::{step_verifies, takes_url_slot};
-use super::words::{commands, is_assignment};
+use super::verify::takes_url_slot;
+use super::words::is_assignment;
 use super::RULE_ID;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
@@ -97,7 +98,7 @@ runs:
   steps:
     - run: curl https://example.invalid/tool.tgz
 ";
-    let findings = super::runs::check_source(
+    let findings = check_source(
         ".github/actions/fetch/action.yml",
         action,
         &["example.invalid".to_string()],
@@ -108,9 +109,7 @@ runs:
 runs:
   using: composite
 ";
-    assert!(
-        super::runs::check_source(".github/actions/fetch/action.yml", bare, &[], &[]).is_empty()
-    );
+    assert!(check_source(".github/actions/fetch/action.yml", bare, &[], &[]).is_empty());
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
@@ -124,7 +123,7 @@ runs:
 }
 
 fn check(source: &str) -> Vec<super::RuleFinding> {
-    super::runs::check_source(
+    check_source(
         ".github/workflows/ci.yml",
         source,
         &super::DEFAULT_TRUSTED_HOSTS
@@ -152,9 +151,7 @@ runs:
   steps:
     - run: curl https://example.invalid/a.tgz
 ";
-    assert!(
-        super::runs::check_source(".github/actions/node/action.yml", action, &[], &[]).is_empty()
-    );
+    assert!(check_source(".github/actions/node/action.yml", action, &[], &[]).is_empty());
     let skipped = "\
 on: push
 jobs:

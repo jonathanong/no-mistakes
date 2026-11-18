@@ -1,0 +1,7 @@
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: ./install.sh
+    - shell: bash
+      run: curl https://downloads.example.com/inline -o inline

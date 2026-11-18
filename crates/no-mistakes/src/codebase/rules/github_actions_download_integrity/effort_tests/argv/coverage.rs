@@ -28,9 +28,12 @@ fn alias_identity_proofs_do_not_broaden_download_target_scope() {
         "multiple-non-downloader-commands",
     ] {
         let script = script(name);
-        assert!(judge::download_hits(&script, &[]).is_empty(), "max: {name}");
         assert!(
-            judge::download_hits_low(&script, &[]).is_empty(),
+            test_adapters::download_hits(&script, &[]).is_empty(),
+            "max: {name}"
+        );
+        assert!(
+            test_adapters::download_hits_low(&script, &[]).is_empty(),
             "low: {name}"
         );
     }
@@ -40,8 +43,8 @@ fn alias_identity_proofs_do_not_broaden_download_target_scope() {
 fn literal_url_positions_survive_option_end_markers_and_ordinary_short_flags() {
     for name in ["explicit-end-of-options", "ordinary-short-option-cluster"] {
         let script = script(name);
-        let max = judge::download_hits(&script, &[]);
-        let low = judge::download_hits_low(&script, &[]);
+        let max = test_adapters::download_hits(&script, &[]);
+        let low = test_adapters::download_hits_low(&script, &[]);
         assert_eq!(max.len(), 1, "{name}");
         assert_eq!(low.len(), 1, "{name}");
         assert!(!low[0].unanalyzable, "{name}");
@@ -54,8 +57,8 @@ fn literal_url_positions_survive_option_end_markers_and_ordinary_short_flags() {
 fn dynamic_short_option_names_route_uncertainty_through_each_policy() {
     let script = script("dynamic-short-option-name");
     // Max proves that -$FLAG becomes -o and consumes the following filename.
-    assert!(judge::download_hits(&script, &[]).is_empty());
-    let low = judge::download_hits_low(&script, &[]);
+    assert!(test_adapters::download_hits(&script, &[]).is_empty());
+    let low = test_adapters::download_hits_low(&script, &[]);
     assert_eq!(low.len(), 1);
     assert!(low[0].unanalyzable);
     assert_eq!(low[0].url, "-$FLAG");
@@ -66,7 +69,7 @@ fn dynamic_short_option_names_route_uncertainty_through_each_policy() {
         Unanalyzable::Advise,
         Unanalyzable::Ignore,
     ] {
-        let result = runs::check_source_low(WORKFLOW, &source, &hosts(), &[], policy);
+        let result = test_adapters::check_source_low(WORKFLOW, &source, &hosts(), &[], policy);
         assert_eq!(
             result.findings.len(),
             usize::from(policy == Unanalyzable::Report)

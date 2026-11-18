@@ -1,8 +1,10 @@
-use super::assign::expand_uppercase;
-use super::judge::{self, configured_host, download_hits};
+use super::judge::{self, configured_host};
+use super::test_adapters::{
+    check_source, commands, download_hits, expand_uppercase, step_verifies,
+};
 use super::url::{self, http_url};
-use super::verify::{step_verifies, takes_url_slot};
-use super::words::{self, commands};
+use super::verify::takes_url_slot;
+use super::words;
 use super::RULE_ID;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
@@ -13,7 +15,7 @@ fn workflow(script: &str) -> String {
 }
 
 fn check(source: &str) -> Vec<super::RuleFinding> {
-    super::runs::check_source(
+    check_source(
         ".github/workflows/ci.yml",
         source,
         &super::DEFAULT_TRUSTED_HOSTS

@@ -5,11 +5,13 @@ mod word;
 
 struct Scan<'a> {
     chars: &'a [char],
+    strict: bool,
     index: usize,
     line: usize,
     word: String,
     word_line: usize,
     word_expansion_may_split: bool,
+    word_quoted_expansion: Option<(usize, usize)>,
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
@@ -18,15 +20,17 @@ struct Scan<'a> {
     stop: bool,
 }
 
-pub(super) fn run(script: &str) -> Parse {
+pub(super) fn run(script: &str, strict: bool) -> Parse {
     let chars: Vec<char> = script.chars().collect();
     let mut scan = Scan {
         chars: &chars,
+        strict,
         index: 0,
         line: 1,
         word: String::new(),
         word_line: 1,
         word_expansion_may_split: false,
+        word_quoted_expansion: None,
         quoting: None,
         current: Command {
             dynamic: false,
@@ -126,11 +130,16 @@ impl<'a> Scan<'a> {
     }
 
     fn separator(&mut self, ch: char) -> bool {
-        if ch != '\n'
-            && ch != ';'
-            && ch != '|'
-            && !(ch == '&' && self.chars.get(self.index + 1) == Some(&'&'))
-        {
+        let double_ampersand = ch == '&' && self.chars.get(self.index + 1) == Some(&'&');
+        let background = self.strict
+            && ch == '&'
+            && self
+                .index
+                .checked_sub(1)
+                .is_none_or(|prev| !matches!(self.chars[prev], '>' | '<'))
+            && self.chars.get(self.index + 1) != Some(&'>')
+            && !self.escaped();
+        if !matches!(ch, '\n' | ';' | '|') && !double_ampersand && !background {
             return false;
         }
         self.flush_word();
@@ -148,7 +157,7 @@ impl<'a> Scan<'a> {
             }
             self.line += 1;
         }
-        if ch == '&' || (ch == '|' && self.chars.get(self.index + 1) == Some(&'|')) {
+        if double_ampersand || (ch == '|' && self.chars.get(self.index + 1) == Some(&'|')) {
             self.index += 1;
         }
         self.index += 1;
