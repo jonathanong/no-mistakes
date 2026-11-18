@@ -70,13 +70,13 @@ impl ImportCollector {
 
     pub(crate) fn note_closed_identifier(
         &mut self,
-        pattern: &BindingPattern<'_>,
+        declarator: &oxc_ast::ast::VariableDeclarator<'_>,
         init: &Expression<'_>,
-        declared_at: u32,
     ) {
-        let BindingPattern::BindingIdentifier(identifier) = pattern else {
+        let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
             return;
         };
+        let declared_at = declarator.span.start;
         let name = identifier.name.to_string();
         let scope = self
             .callee_binding_scope(&name)
@@ -96,6 +96,8 @@ impl ImportCollector {
                     declared_at,
                     keys,
                     kind,
+                    const_tuple: declarator.type_annotation.is_none()
+                        && super::super::literal_const_tuple(init),
                 });
         }
         if let Some(source) = self.bounded_source(init) {

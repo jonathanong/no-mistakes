@@ -61,7 +61,7 @@ impl ImportCollector {
             }
             self.record_value_pattern(&declarator.id, value, declarator.span.start, immutable);
             if immutable {
-                self.note_closed_identifier(&declarator.id, init, declarator.span.start);
+                self.note_closed_identifier(declarator, init);
                 self.note_literal_catalog_binding(&declarator.id, init, declarator.span.start);
                 self.note_sql_placeholder_binding(&declarator.id, init, declarator.span.start);
             }

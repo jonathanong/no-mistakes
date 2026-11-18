@@ -7,6 +7,7 @@ pub(crate) struct ClosedStringRegistry {
     pub(crate) declared_at: u32,
     pub(crate) keys: Vec<String>,
     pub(crate) kind: RegistryKind,
+    pub(crate) const_tuple: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

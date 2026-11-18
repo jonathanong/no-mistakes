@@ -57,7 +57,11 @@ impl ImportCollector {
             }
             TSType::TSIndexedAccessType(indexed) => {
                 if let Some(name) = element_of_typeof(indexed) {
-                    return ValueType::Element(name);
+                    return if self.callee_binding_scope(&name) == Some(0) {
+                        ValueType::Element(name)
+                    } else {
+                        ValueType::Unknown
+                    };
                 }
                 if let TSType::TSLiteralType(literal) = &indexed.index_type {
                     if let oxc_ast::ast::TSLiteral::StringLiteral(key) = &literal.literal {

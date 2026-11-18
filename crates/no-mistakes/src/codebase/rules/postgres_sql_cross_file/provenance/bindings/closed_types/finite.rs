@@ -9,7 +9,8 @@ impl Bindings<'_> {
                 .iter()
                 .any(|parameter| match &parameter.type_reference {
                     Some(shape @ ValueType::FiniteStringLiterals)
-                    | Some(shape @ ValueType::Reference(_)) => self.finite_string_type(file, shape),
+                    | Some(shape @ ValueType::Reference(_))
+                    | Some(shape @ ValueType::Element(_)) => self.finite_string_type(file, shape),
                     _ => false,
                 })
     }
@@ -55,6 +56,7 @@ impl Bindings<'_> {
     ) -> bool {
         match shape {
             ValueType::FiniteStringLiterals => true,
+            ValueType::Element(name) => self.finite_tuple(file, name),
             ValueType::Reference(name) => {
                 let key = (file.to_path_buf(), name.clone());
                 if !visited.insert(key.clone()) {
@@ -71,6 +73,20 @@ impl Bindings<'_> {
             }
             _ => false,
         }
+    }
+
+    fn finite_tuple(&self, file: &Path, name: &str) -> bool {
+        use crate::codebase::dependencies::extract::{unique_closed_collection, RegistryKind};
+        self.facts.get_ts_facts(file).is_some_and(|ts| {
+            unique_closed_collection(&ts.value_flow, name, RegistryKind::Array)
+                && ts
+                    .value_flow
+                    .closed_string_registries
+                    .iter()
+                    .any(|registry| {
+                        registry.name == name && registry.scope == 0 && registry.const_tuple
+                    })
+        })
     }
 
     pub(in super::super) fn widened_finite_string_flow(
