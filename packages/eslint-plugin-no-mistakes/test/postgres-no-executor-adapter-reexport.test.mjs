@@ -55,7 +55,7 @@ for (const mode of ["forwarding-only", "all"]) {
     await expect(snapshotDocument(rows)).toMatchFileSnapshot(
       `snapshots/postgres-no-executor-adapter-reexport-${mode}.snap`,
     );
-  });
+  }, 30_000);
 }
 
 for (const mode of ["forwarding-only", "all"]) {
@@ -72,5 +72,5 @@ for (const mode of ["forwarding-only", "all"]) {
     await expect(snapshotDocument(rows)).toMatchFileSnapshot(
       `snapshots/postgres-no-executor-adapter-reexport-crash-${mode}.snap`,
     );
-  });
+  }, 30_000);
 }

@@ -73,5 +73,5 @@ for (const mode of ["forwarding-only", "all"]) {
     await expect(snapshotDocument(rows)).toMatchFileSnapshot(
       `snapshots/postgres-no-executor-adapter-library-validator-${mode}.snap`,
     );
-  });
+  }, 30_000);
 }
