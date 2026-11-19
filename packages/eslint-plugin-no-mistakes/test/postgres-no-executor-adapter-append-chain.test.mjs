@@ -50,6 +50,7 @@ const lines = (rows) => rows.map((row) => row.findings.map(({ line }) => line));
 const PROOFS = ["proofs.ts", "importedConstProofs.ts", "importedProofs.ts"];
 const CONTROLS = ["controls.ts", "importedControls.ts"];
 const MUTATED = ["aliasControls.ts", "exportedConstControls.ts", "listedConstControls.ts"];
+const NAMESPACE = ["namespaceDestructureControls.ts", "namespaceElementControls.ts"];
 const ESCAPED = [
   "initializerAliasControls.ts",
   "shorthandPropertyControls.ts",
@@ -114,4 +115,17 @@ it("reports constants that escape through an initializer or other declaration po
 it("reports the same escaped constants without type information", () => {
   const rows = suite("forwarding-only", [], ESCAPED, false);
   expect(lines(rows)).toEqual(ESCAPED_LINES);
+});
+
+it("reports constants mutated through a namespace import", async () => {
+  const rows = suite("forwarding-only", [], NAMESPACE);
+  expect(lines(rows)).toEqual([[11], [11]]);
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-append-chain-namespace.snap",
+  );
+});
+
+it("reports the same namespace-mutated constants without type information", () => {
+  const rows = suite("forwarding-only", [], NAMESPACE, false);
+  expect(lines(rows)).toEqual([[11], [11]]);
 });

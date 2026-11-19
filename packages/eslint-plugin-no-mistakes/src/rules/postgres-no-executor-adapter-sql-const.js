@@ -50,6 +50,34 @@ function resolvedSymbol(node, checker, ts) {
   return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
 }
 
+function aliasTarget(symbol, checker, ts) {
+  return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+}
+
+// A namespace import used as anything but `ns.X` hands every export to code
+// this pass cannot follow (destructuring, `ns["X"]`, passing, spreading).
+function escapeNamespace(node, escaped, checker, ts) {
+  const declaration = node.parent;
+  if (ts.isNamespaceImport(declaration) || ts.isNamespaceExport(declaration)) return;
+  const module = resolvedSymbol(node, checker, ts);
+  if (!module || !(module.flags & ts.SymbolFlags.Module)) return;
+  if (ts.isPropertyAccessExpression(declaration) && declaration.expression === node) return;
+  for (const member of checker.getExportsOfModule(module)) {
+    escaped.add(member);
+    escaped.add(aliasTarget(member, checker, ts));
+  }
+}
+
+// `const { X } = value` reads property X of any value, so X escapes.
+function escapeDestructured(node, escaped, checker, ts) {
+  const element = node.parent;
+  if (!ts.isBindingElement(element) || element.name !== node) return;
+  const key = element.propertyName ?? node;
+  if (!ts.isIdentifier(key) && !ts.isStringLiteral(key)) return;
+  const property = checker.getTypeAtLocation(element.parent).getProperty(key.text);
+  if (property) escaped.add(aliasTarget(property, checker, ts));
+}
+
 // Symbols with a use that is not an `.append` argument, resolved through every
 // import, re-export and rename alias, so no text search can hide a mutation.
 function escapedSymbols(program, checker, ts) {
@@ -65,6 +93,8 @@ function escapedSymbols(program, checker, ts) {
         const reference = ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
         const use = reference ? node.parent : node;
         const specifier = ts.isImportSpecifier(node.parent) || ts.isExportSpecifier(node.parent);
+        escapeNamespace(node, escaped, checker, ts);
+        escapeDestructured(node, escaped, checker, ts);
         const symbol = resolvedSymbol(node, checker, ts);
         if (symbol && !specifier && !tsAppendArgument(use, ts)) escaped.add(symbol);
       }
