@@ -57,3 +57,20 @@ for (const mode of ["forwarding-only", "all"]) {
     );
   });
 }
+
+for (const mode of ["forwarding-only", "all"]) {
+  it(`reports instead of crashing on a symbol-less property and stops at the nearest manifest in ${mode} mode`, async () => {
+    const rows = snapshotSuite(rule, languageOptions, {
+      valid: [],
+      invalid: [
+        testCase("executor-reexport-package", "crash.ts", packageOptions, mode),
+        testCase("executor-package-boundary", "controls.ts", packageOptions, mode),
+      ],
+    });
+    expect(rows[0].findings.length).toBeGreaterThan(0);
+    expect(rows[1].findings.map(({ line }) => line)).toEqual([15, 16]);
+    await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+      `snapshots/postgres-no-executor-adapter-reexport-crash-${mode}.snap`,
+    );
+  });
+}

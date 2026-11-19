@@ -11,14 +11,18 @@ function bare(file) {
 }
 
 function packageNamed(file, name) {
-  for (let dir = path.dirname(file); ; dir = path.dirname(dir)) {
+  for (let dir = path.dirname(file); dir !== path.dirname(dir); dir = path.dirname(dir)) {
+    let manifest;
     try {
-      if (JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8")).name === name)
-        return true;
+      manifest = fs.readFileSync(path.join(dir, "package.json"), "utf8");
     } catch {
-      // A missing or unreadable manifest is not the configured package.
+      continue;
     }
-    if (path.dirname(dir) === dir) return false;
+    try {
+      return JSON.parse(manifest).name === name;
+    } catch {
+      return false;
+    }
   }
 }
 

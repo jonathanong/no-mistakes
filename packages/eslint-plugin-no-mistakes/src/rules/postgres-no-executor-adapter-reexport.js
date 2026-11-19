@@ -8,7 +8,7 @@ const ALIAS_SYMBOL_FLAG = 1 << 21;
 // import and re-export aliases to the declaring package.
 function declarationOf(typeName, checker) {
   let symbol = checker.getSymbolAtLocation(typeName);
-  if (symbol.flags & ALIAS_SYMBOL_FLAG) symbol = checker.getAliasedSymbol(symbol);
+  if (symbol?.flags & ALIAS_SYMBOL_FLAG) symbol = checker.getAliasedSymbol(symbol);
   return symbol?.declarations?.[0];
 }
 
@@ -33,7 +33,9 @@ function importedExecutorOption(annotation, property, type, checker, options) {
   )
     return false;
   return checker.getPropertiesOfType(type).every((other) => {
-    const executor = namesExecutor(other.declarations[0], checker, options);
+    const declaration = other.declarations?.[0];
+    if (!declaration) return false;
+    const executor = namesExecutor(declaration, checker, options);
     return other.name === property ? executor : !executor;
   });
 }

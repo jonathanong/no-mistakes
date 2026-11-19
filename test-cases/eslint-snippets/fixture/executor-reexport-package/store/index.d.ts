@@ -14,3 +14,4 @@ export declare function write(
   statement: { text: string },
   options: QueryOptions | LooseOptions | WideOptions,
 ): Promise<unknown>;
+export type RecOptions = QueryOptions & Record<"x", string>;
