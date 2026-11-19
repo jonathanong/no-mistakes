@@ -7,6 +7,7 @@ const { visitIteration } = require("./no-object-mutation-iteration");
 const { reducerCallback } = require("./no-object-mutation-reduce");
 const { arrayFactory } = require("./no-object-mutation-array-factory");
 const { methodName, staticKey, unwrap } = require("./no-object-mutation-syntax");
+const { yieldsCallerOwnedElements } = require("./no-object-mutation-iterator-owner");
 const { callable, joinValues, readMember, unknown } = require("./no-object-mutation-values");
 
 function memberCall(node, name) {
@@ -147,10 +148,17 @@ function getContents(tag) {
   return null;
 }
 
-function finishGet(node, calleeTag) {
+function finishGet(state, node, calleeTag) {
   // Iterating a caller-owned collection yields its caller-owned elements.
-  const iterator = ["entries", "values"].find((name) => memberCall(node, name));
-  if (iterator && calleeTag.type === "shared" && !node.arguments.length) return calleeTag;
+  const iterator = ["entries", "values"].map((name) => memberCall(node, name)).find(Boolean);
+  if (
+    iterator &&
+    calleeTag.type === "shared" &&
+    !node.arguments.length &&
+    yieldsCallerOwnedElements(state, iterator.object, methodName(iterator))
+  ) {
+    return calleeTag;
+  }
   if (!memberCall(node, "get")) {
     return null;
   }

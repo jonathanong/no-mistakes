@@ -107,6 +107,47 @@ export async function stage(bodies: unknown[], events: Ev[]) {
 }
 ```
 
+That caller-owned yield applies to an untyped receiver, to `any` and `unknown`,
+and when `entries` or `values` comes from TypeScript's default library (`Array`,
+a tuple, `readonly` arrays, `Map`, `Set`, and subclasses that inherit those
+methods). A project-declared `values()` or `entries()` on another object type
+returns that method's own result. With checker services, a write into that
+result is not a write into the receiver:
+
+```ts
+type Ev = { name: string; target?: { id: string } };
+interface Service {
+  values(): Array<{ event: Ev }>;
+}
+export function fromService(service: Service) {
+  for (const item of service.values()) {
+    item.event.target = { id: "x" }; // quiet: `values` is declared on `Service`
+  }
+}
+```
+
+Without checker services, including the Oxlint plugin, that call stays
+caller-owned. A union stays caller-owned when any member is. A type parameter
+uses its constraint, and a parameter with no constraint stays caller-owned.
+
+Fresh entries staged in one local array share one provenance union. Escaping
+any read of that array escapes every fresh entry in the union, so a later write
+through a different index still reports:
+
+```ts
+type Ev = { name: string; target?: { id: string } };
+function leak(value: unknown) {
+  return value;
+}
+export function tainted() {
+  const pending: Array<{ event: Ev }> = [];
+  pending.push({ event: { name: "one" } });
+  pending.push({ event: { name: "two" } });
+  leak(pending[0]);
+  pending[1]!.event.target = { id: "x" }; // reported: the entries share one union
+}
+```
+
 Bare `this.push(...)`, `this.pop()`, and the other listed array mutator calls
 are not presumed to mutate an array when the receiver is unknown. This includes
 stream methods in object literals and ordinary functions. Known array receivers

@@ -40,12 +40,48 @@ it.each([false, true])("reports the staged and direct issue examples with typed=
   expect(lines(factories("accept-only-pending-direct.ts", typed))).toEqual([5]);
 });
 
+it.each([false, true])("keeps default-library iterators caller-owned with typed=%s", (typed) => {
+  expect(lines(savedCase("collections.ts", typed))).toEqual([
+    11, 17, 23, 29, 35, 41, 47, 53, 59, 65, 71, 77,
+  ]);
+});
+
+it("keeps a project entries or values result local when typed", () => {
+  expect(lines(savedCase("service.ts", true))).toEqual([]);
+});
+
+it("keeps an untyped entries or values result caller-owned", () => {
+  expect(lines(savedCase("service.ts"))).toEqual([14, 20, 26, 32, 38]);
+});
+
+it.each([false, true])(
+  "reports the other fresh entry after one pending escape with typed=%s",
+  (typed) => {
+    expect(lines(savedCase("escaped-union.ts", typed))).toEqual([19]);
+  },
+);
+
+it.each([false, true])("remembers a repeated fresh tag inside one union with typed=%s", (typed) => {
+  expect(lines(savedCase("repeated-fresh.ts", typed))).toEqual([]);
+});
+
 it("snapshots pending provenance in both parser modes", async () => {
   const suite = {
-    valid: [savedCase("fresh.ts"), savedCase("fresh.ts", true)],
+    valid: [
+      savedCase("fresh.ts"),
+      savedCase("fresh.ts", true),
+      savedCase("service.ts", true),
+      savedCase("repeated-fresh.ts"),
+      savedCase("repeated-fresh.ts", true),
+    ],
     invalid: [
       savedCase("borrowed.ts"),
       savedCase("borrowed.ts", true),
+      savedCase("collections.ts"),
+      savedCase("collections.ts", true),
+      savedCase("service.ts"),
+      savedCase("escaped-union.ts"),
+      savedCase("escaped-union.ts", true),
       factories("accept-only-pending.ts"),
       factories("accept-only-pending.ts", true),
     ],
