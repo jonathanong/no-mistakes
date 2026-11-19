@@ -9,17 +9,17 @@ fields and an explicit HTTP method to keep the intended request visible.
 ## Disallowed
 
 ```ts
-import { execFile } from 'node:child_process';
-execFile('gh', ['api', `repos/${repo}/labels?per_page=100`]);
-execFile('gh', ['api', 'repos/O/R/labels', '-F', 'per_page=100']);
+import { execFile } from "node:child_process";
+execFile("gh", ["api", `repos/${repo}/labels?per_page=100`]);
+execFile("gh", ["api", "repos/O/R/labels", "-F", "per_page=100"]);
 ```
 
 ## Allowed
 
 ```ts
-import { execFile } from 'node:child_process';
-execFile('gh', ['api', '-X', 'GET', `repos/${repo}/labels`, '-F', 'per_page=100']);
-execFile('gh', ['api', 'graphql', '-f', 'query=query { viewer { login } }']);
+import { execFile } from "node:child_process";
+execFile("gh", ["api", "-X", "GET", `repos/${repo}/labels`, "-F", "per_page=100"]);
+execFile("gh", ["api", "graphql", "-f", "query=query { viewer { login } }"]);
 ```
 
 ## Options
@@ -114,7 +114,7 @@ Another file's re-export is not visible here. `import { run } from "./barrel.mjs
 
 ```ts
 // no-mistakes-disable-next-line gh-api-argument-safety -- endpoint is a reviewed protocol fixture
-execFile('gh', ['api', 'repos/O/R/labels?per_page=100']);
+execFile("gh", ["api", "repos/O/R/labels?per_page=100"]);
 ```
 
 `no-mistakes-disable-line` and top-of-file `no-mistakes-disable-file` also work.
