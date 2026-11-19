@@ -31,7 +31,12 @@ function assertRetryPair(
   assert.equal(retry.uses, first.uses);
   if (retryWithoutCache) {
     assert.match(backoff.run, /rm -rf "\$HOME\/setup-pnpm\/store"/);
-    assert.deepEqual(retry.with, { runtime: first.with.runtime, cache: false, install: false });
+    assert.deepEqual(retry.with, {
+      runtime: first.with.runtime,
+      cache: false,
+      install: false,
+      'cache-dependency-path': '.github/pnpm-lockfile-cache-disabled',
+    });
   } else {
     assert.deepEqual(retry.with, first.with);
   }
