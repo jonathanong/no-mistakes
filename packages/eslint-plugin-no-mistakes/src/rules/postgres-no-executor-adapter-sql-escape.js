@@ -1,6 +1,7 @@
 "use strict";
 
 const { indexFor, programFiles } = require("./postgres-no-executor-adapter-sql-index");
+const { declaredModule, memberText } = require("./postgres-no-executor-adapter-sql-namespace");
 
 const verdicts = new WeakMap();
 
@@ -52,28 +53,35 @@ function moduleHas(module, candidate, names, shared) {
   return false;
 }
 
-// Namespace aliases of modules exporting the candidate, plus their re-exports.
-function namespaceNames(index, candidate, names, shared) {
-  const { checker, ts } = shared;
-  const result = new Set();
+function filterTexts(index, names) {
+  const texts = new Set(names);
+  const pending = [];
   for (const name of index.namespaces) {
-    if (!index.modules.has(name)) index.modules.set(name, resolvedSymbol(name, checker, ts));
-    const module = index.modules.get(name);
-    if (!(module?.flags & ts.SymbolFlags.Module) || !moduleHas(module, candidate, names, shared))
-      continue;
-    for (const alias of aliasNames(index, [name.text], module, shared)) result.add(alias);
+    if (!texts.has(name.text)) pending.push(name.text);
+    texts.add(name.text);
   }
-  return result;
+  while (pending.length) {
+    for (const alias of index.bySource.get(pending.pop()) ?? []) {
+      if (texts.has(alias.text)) continue;
+      texts.add(alias.text);
+      pending.push(alias.text);
+    }
+  }
+  return [...texts];
 }
 
-function escapesNamespace(node, candidate, names, shared) {
-  const { checker, ts } = shared;
-  const declaration = node.parent;
-  if (ts.isNamespaceImport(declaration) || ts.isNamespaceExport(declaration)) return false;
-  const module = resolvedSymbol(node, checker, ts);
-  if (!(module?.flags & ts.SymbolFlags.Module)) return false;
-  if (ts.isPropertyAccessExpression(declaration) && declaration.expression === node) return false;
-  return moduleHas(module, candidate, names, shared);
+function namespaceEscape(node, candidate, names, shared) {
+  const { ts } = shared;
+  const parent = node.parent;
+  if (ts.isNamespaceImport(parent) || ts.isNamespaceExport(parent)) return false;
+  if (ts.isImportEqualsDeclaration(parent) && parent.name === node) return false;
+  const module = declaredModule(node, shared);
+  if (!module) return false;
+  const member = memberText(node, ts);
+  if (member === null) return moduleHas(module, candidate, names, shared);
+  if (!names.has(member)) return false;
+  const access = parent;
+  return moduleHas(module, candidate, new Set([member]), shared) && !tsAppendArgument(access, ts);
 }
 
 function keyText(element, ts) {
@@ -88,10 +96,12 @@ function escapesDestructured(element, candidate, shared) {
 }
 
 function escapesUse(node, state) {
-  const { candidate, names, spaces, shared } = state;
+  const { candidate, names, shared } = state;
   const { checker, ts } = shared;
   if (ts.isVariableDeclaration(node.parent) && node.parent.name === node) return false;
-  if (spaces.has(node.text) && escapesNamespace(node, candidate, names, shared)) return true;
+  // The parameter name is the binding. The body uses are the module reads.
+  if (ts.isParameter(node.parent) && node.parent.name === node) return false;
+  if (namespaceEscape(node, candidate, names, shared)) return true;
   if (!names.has(node.text)) return false;
   const reference = ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
   const use = reference ? node.parent : node;
@@ -118,11 +128,17 @@ function walker(state) {
 function computeEscape(candidate, shared) {
   const index = indexFor(shared.program, shared.ts);
   const names = aliasNames(index, [candidate.name], candidate, shared);
-  const spaces = namespaceNames(index, candidate, names, shared);
-  const texts = [...names, ...spaces];
-  const walk = walker({ candidate, names, spaces, shared });
-  return programFiles(shared.program).some(
-    (file) => texts.some((text) => file.text.includes(text)) && walk(file),
+  const texts = filterTexts(index, names);
+  const walk = walker({ candidate, names, shared });
+  return programFiles(shared.program).some((file) => fileMentions(file, texts) && walk(file));
+}
+
+function fileMentions(file, texts) {
+  const text = file.text;
+  return (
+    text.includes("import(") ||
+    text.includes("require(") ||
+    texts.some((name) => text.includes(name))
   );
 }
 

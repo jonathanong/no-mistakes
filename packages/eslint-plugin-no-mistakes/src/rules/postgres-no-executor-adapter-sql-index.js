@@ -44,7 +44,7 @@ function buildIndex(program, ts) {
   };
   for (const file of programFiles(program))
     for (const statement of file.statements) recordStatement(statement, ts, add, namespaces);
-  return { bySource, namespaces, modules: new Map() };
+  return { bySource, namespaces };
 }
 
 function indexFor(program, ts) {
