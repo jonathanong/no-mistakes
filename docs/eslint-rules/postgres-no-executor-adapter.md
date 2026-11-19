@@ -198,10 +198,85 @@ the same declared options type; the chain may span at most four functions and
 must not revisit one. The binding must not be written, spread (`{ ...options }`),
 cast, stored (`stash.push(options)`) or mutated (`options.readOnly = true`) in
 the helper, and spread arguments, constructors, arrow `const` callees and
-destructured callee parameters stay unproven. Without a parameter default, an
-optional property, a property set to something other than an executor
-(`{ query: (statement) => read(statement) }`), a different key
+destructured callee parameters stay unproven. An optional property needs a
+parameter default (`options: QueryOptions = {}`) or an optional parameter
+(`options?: QueryOptions`): the call site supplies the property in its literal.
+Without either, an optional property, a property set to something other than an
+executor (`{ query: (statement) => read(statement) }`), a different key
 (`{ label: query }`) and a callee with another options type keep reporting.
+
+### Library executor terminals
+
+The options chain may also end at a configured library executor instead of
+`options.query(...)`. The call must name an executor from `executorNames`
+imported from `importSpecifier` (`read`, `write`, ...); no name heuristics apply,
+and a function that is not configured (`lookup(statement, options)`) keeps reporting.
+The options binding is the second argument, passed unchanged or as the first
+spread of an object literal followed only by literal scalar overrides:
+
+```ts
+async function sendWidget(id: string, options: QueryOptions = {}) {
+  await write(sql`UPDATE widgets SET state = 'sent' WHERE id = ${id}`, options);
+  await write(sql`UPDATE widgets SET state = 'sent' WHERE id = ${id}`, {
+    ...options,
+    readOnly: false,
+  });
+}
+sendWidget(id, { query });
+```
+
+The binding is judged like a pass-on: writing or storing it, or mutating a
+property such as `options.readOnly`, keeps the call reporting. So do
+`{ readOnly: false, ...options }`, an override that is not a literal scalar
+(`{ ...options, query: other }`), a computed key, and a second spread. The
+statement still goes through the SQL proof above in both modes: a trusted-tag
+literal with scalar holes. `write(statement, options)` with a received or
+dynamic statement keeps reporting.
+
+A single-statement adapter closure that passes its parameter straight through
+to such a call is followed when it is an argument of a helper whose executor
+parameter is proven, and the helper's own SQL is the proven literal:
+
+```ts
+async function selectWidget(id: string, execute: SessionExecutor) {
+  return execute(sql`SELECT id FROM widgets WHERE id = ${id}`);
+}
+async function fromPrimary(id: string, options?: QueryOptions) {
+  return selectWidget(id, (statement) => write(statement, { ...options, readOnly: false }));
+}
+fromPrimary(id, { query });
+```
+
+The closure must be non-async with one identifier parameter and either an
+expression body or a single `return`. The options argument must be an unwritten
+parameter of the enclosing function, optionally spread with literal scalar
+overrides. A closure with more statements, one that transforms the statement
+(`write(String(statement), options)`), async or generator closures, options
+from another source, and a closure that is not passed directly as an argument
+keep reporting as before. A closure without an options argument
+(`(statement) => read(statement)`) also keeps reporting.
+
+The receiving helper's parameter may also be a plain function type instead of
+an executor type, so a helper that takes `run: (statement: Statement) =>
+Promise<unknown>` accepts such a closure. The helper must be a local function
+without a rest parameter and call that parameter only with the proven literal
+SQL; an imported helper, an untyped or destructured parameter, and a parameter
+that is written keep reporting.
+
+An options type whose `query` property is declared inside the configured
+library (`QueryOptions` and `QueryExecutor` both declared in
+`importSpecifier`'s package, or in the file a relative `importSpecifier`
+names) counts as the configured executor when the property's type name is in
+`executorTypeNames`. A same-named type declared elsewhere does not.
+
+An options type the file imports from `importSpecifier` (including a re-export
+or alias of a type another package declares, such as a path-aliased module that
+runs `export type { QueryOptions }` on a third-party type) counts too. The
+checker follows the aliases to the `query` property, whose type must resolve to
+a declaration named in `executorTypeNames`; no other property may be typed as
+one. A lookalike declared locally or imported from another module, a `query`
+typed as anything else, an unresolved type and a second executor-typed
+property keep reporting.
 
 Both reporting modes judge an executor supplied this way (a defaulted optional
 property, or a callee reached through a pass-on) by the SQL it receives, the

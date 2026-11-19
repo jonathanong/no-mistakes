@@ -11,17 +11,11 @@ const {
   executorOptionSchema,
 } = require("./postgres-executor");
 const { TS_ASSERTIONS, executorLeaves } = require("./postgres-no-executor-adapter-ref");
-const {
-  aliasHint,
-  classifyFunction,
-  directCall,
-  judgedDirect,
-} = require("./postgres-no-executor-adapter-forward");
-const {
-  passedAlias,
-  passedDirect,
-  resolvePassed,
-} = require("./postgres-no-executor-adapter-passed");
+const { classifyFunction } = require("./postgres-no-executor-adapter-forward");
+const { resolvePassed } = require("./postgres-no-executor-adapter-passed");
+const { createReporters } = require("./postgres-no-executor-adapter-report");
+const { libraryAdapter } = require("./postgres-no-executor-adapter-library");
+const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { acceptedTarget } = require("./postgres-no-executor-adapter-supplied");
 const { directOption } = require("./postgres-no-executor-adapter-direct");
 const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
@@ -56,46 +50,21 @@ module.exports = rule(
     const source = context.sourceCode;
     const filename = context.filename;
     const targetFacts = targetFactsFor(context);
+    const { reportAdapter, reportPassed } = createReporters(context, suppressed);
     let bindings = { scoped: [], queryMembers: false };
 
-    function quotedExecutor(quoteNode, name) {
-      if (quoteNode?.type !== "Property") return name;
-      const key = source.getText(quoteNode.key);
-      return `${quoteNode.computed ? `[${key}]` : key}: ${name}`;
-    }
-
-    function reportAdapter(node, adapter, call, index, quoteNode) {
-      if (suppressed(node)) return;
-      const names = adapter.names;
-      const leaves = adapter.leaves ?? [];
-      const rejected = names
-        .map((name) => directCall(source, call, index, quotedExecutor(quoteNode, name), quoteNode))
-        .join(" or ");
-      context.report({
-        node,
-        messageId: adapter.reason ? "blocked" : "forward",
-        data: {
-          executor: names.join(" or "),
-          direct: judgedDirect(names, leaves, adapter.conditionalText),
-          alias: aliasHint(names, leaves),
-          rejected,
-          reason: adapter.reason ?? "the selector contract changed",
-        },
-      });
-    }
-
-    function reportPassed(node, passed) {
-      if (suppressed(node)) return;
-      const names = [...new Set(passed.leaves.map((leaf) => leaf.name))];
-      context.report({
-        node,
-        messageId: "passed",
-        data: {
-          executor: names.join(" or "),
-          direct: passedDirect(names, passed.leaves, passed.conditionalText),
-          alias: passedAlias(names, passed.leaves),
-        },
-      });
+    // `statement => write(statement, options)` reaches a helper's executor
+    // parameter only when the helper's own SQL is proven literal.
+    function libraryClosure(expr, wrapped, call, index, quoteNode, nested) {
+      return (
+        !wrapped &&
+        !nested &&
+        !quoteNode &&
+        libraryAdapter(expr, context, options) &&
+        (acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode) ||
+          callbackTarget(call, index, context, targetFacts)) &&
+        visibleSqlTarget(call, index, quoteNode, context, options, true, targetFacts, true) === true
+      );
     }
 
     function visitArgument(argument, call, index, quoteNode, nested = false) {
@@ -143,6 +112,7 @@ module.exports = rule(
         }
       }
       if (expr.type === "ArrowFunctionExpression" || expr.type === "FunctionExpression") {
+        if (libraryClosure(expr, wrapped, call, index, quoteNode, nested)) return;
         const adapter = classifyFunction(expr, context, bindings, options);
         if (!adapter) return;
         if (wrapped && !adapter.reason) adapter.reason = "type assertion";

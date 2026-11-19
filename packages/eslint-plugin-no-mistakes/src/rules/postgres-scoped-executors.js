@@ -201,4 +201,5 @@ module.exports = {
   isScopedExecutor,
   isScopedMember,
   matchesConfiguredModule,
+  packageRoot,
 };

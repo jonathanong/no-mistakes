@@ -1,13 +1,19 @@
 "use strict";
 
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
-const { isImportedHelper, localFunction } = require("./postgres-no-executor-adapter-target");
+const {
+  acceptsExecutor,
+  isImportedHelper,
+  localFunction,
+} = require("./postgres-no-executor-adapter-target");
+const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { literalSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { forwardedHop } = require("./postgres-no-executor-adapter-hop");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
 const { importedVisible } = require("./postgres-no-executor-adapter-imported-visible");
+const { libraryVisible } = require("./postgres-no-executor-adapter-library");
 
 function opaqueBody(body) {
   const stack = [body];
@@ -68,7 +74,19 @@ function otherPropertyRead(reference, property) {
   return true;
 }
 
-function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts) {
+// The same judgement that leaves an adapter closure unreported where it is an
+// argument: its receiver accepts it and the receiver's SQL is visible.
+function closureProven(fn, context, options, facts) {
+  const call = fn.parent;
+  const at = call.arguments.indexOf(fn);
+  return (
+    (acceptsExecutor(call, at, null, context, options, facts) ||
+      callbackTarget(call, at, context, facts)) &&
+    visibleSqlTarget(call, at, null, context, options, true, facts, true) === true
+  );
+}
+
+function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts, callback) {
   if (call.type !== "CallExpression") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
   if (quoteNode && (quoteNode.type !== "Property" || quoteNode.computed)) return null;
@@ -84,6 +102,7 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
   if (
     !property &&
     target?.typeAnnotation &&
+    !(callback && target.typeAnnotation.typeAnnotation.type === "TSFunctionType") &&
     !localExecutorType(target.typeAnnotation.typeAnnotation, context, options)
   )
     return false;
@@ -96,6 +115,14 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
     if (reference.init) return true;
     if (reference.isWrite()) return false;
     if (binding.object && otherPropertyRead(reference, property)) return true;
+    const hole = (value) => localHoleSafe(value, call, fn, context, variable, property);
+    const terminal =
+      accepted && binding.object
+        ? libraryVisible(reference.identifier, context, options, hole, (fn) =>
+            closureProven(fn, context, options, facts),
+          )
+        : null;
+    if (terminal !== null) return terminal;
     if (accepted && binding.object && passedOn(reference)) {
       const inner = reference.identifier.parent;
       const at = inner.arguments.indexOf(reference.identifier);

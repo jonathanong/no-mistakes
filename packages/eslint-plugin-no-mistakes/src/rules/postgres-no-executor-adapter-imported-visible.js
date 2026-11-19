@@ -4,6 +4,7 @@ const { tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
 const { tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { memberWrite } = require("./postgres-no-executor-adapter-option-forward");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
+const { tsAdapterStatement, tsLibraryCall } = require("./postgres-no-executor-adapter-library");
 
 // An argument that is not a plain, unwritten parameter of the forwarding
 // function has no scalar proof, so the hole check rejects it.
@@ -36,6 +37,14 @@ function parameterBinding(parameter, property, ts) {
     return { binding: element?.name, object: false };
   }
   return { binding: parameter.name, object: Boolean(property) };
+}
+
+// The helper an adapter closure is passed to must prove its own SQL.
+function closureReceiverVisible(invoked, closure, declaration, args, shared) {
+  const inner = shared.checker.getResolvedSignature(invoked)?.getDeclaration();
+  const forwarded = forwardedArguments(invoked, declaration, args, shared);
+  const at = invoked.arguments.indexOf(closure);
+  return declarationVisible(inner, at, undefined, forwarded, shared) === true;
 }
 
 // `args` are the ESTree arguments the executor's SQL holes are judged against:
@@ -71,6 +80,27 @@ function declarationVisible(declaration, index, property, args, shared) {
         if (memberWrite(invoked)) safe = false;
         return;
       }
+      const hole = (expression) =>
+        tsHoleSafe(
+          expression,
+          { arguments: args },
+          declaration,
+          checker,
+          ts,
+          context,
+          facts,
+          program,
+          symbol,
+          property,
+        );
+      const library = object && tsLibraryCall(node, ts, checker, options);
+      if (library) {
+        const closure = tsAdapterStatement(library, ts, checker);
+        safe = closure
+          ? closureReceiverVisible(closure.parent, closure, declaration, args, shared)
+          : tsLiteralSql(library.arguments[0], checker, ts, options, hole);
+        return;
+      }
       let callee = node;
       if (
         object &&
@@ -89,19 +119,6 @@ function declarationVisible(declaration, index, property, args, shared) {
         if (!passedOn(node, invoked)) safe = false;
         return;
       }
-      const hole = (expression) =>
-        tsHoleSafe(
-          expression,
-          { arguments: args },
-          declaration,
-          checker,
-          ts,
-          context,
-          facts,
-          program,
-          symbol,
-          property,
-        );
       if (
         !ts.isCallExpression(invoked) ||
         invoked.expression !== callee ||

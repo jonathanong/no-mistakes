@@ -51,7 +51,7 @@ function localTarget(fn, index, property, context, options, facts) {
         property,
         services.program.getTypeChecker(),
         options,
-        param.type === "AssignmentPattern",
+        param.type === "AssignmentPattern" || Boolean(param.optional),
       )
     )
       return false;
@@ -142,7 +142,13 @@ function importedTarget(call, index, property, context, options, facts) {
         ));
     if (
       !bound ||
-      !declaredOptionType(type, property, checker, options, Boolean(params[index].initializer))
+      !declaredOptionType(
+        type,
+        property,
+        checker,
+        options,
+        Boolean(params[index].initializer || params[index].questionToken),
+      )
     )
       return false;
     const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
