@@ -3,6 +3,8 @@
 const { childNodes, resolveVariable } = require("./postgres-query-text");
 const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
+const { loopBinding } = require("./postgres-no-executor-adapter-sql-loop");
+const { tsScalarDefault } = require("./postgres-no-executor-adapter-sql-primitive");
 const {
   localAliasField,
   localField,
@@ -63,7 +65,9 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
         requirements.push(field === null ? binding : null);
         if (variable.references.some((ref) => ref.isWrite() && !ref.init)) requirements.push(null);
       } else if (variable.defs.some((def) => def.type === "Parameter")) requirements.push(null);
-      else
+      else if (variable.defs.some(loopBinding)) {
+        if (!projectedScalar(node, field, context)) requirements.push(null);
+      } else
         for (const def of variable.defs) {
           if (def.type === "Variable") {
             if (variable.references.some((ref) => ref.isWrite() && !ref.init))
@@ -90,18 +94,6 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
       ? projectedScalar(call.arguments[index], field, context, defaultScalar)
       : Boolean(fallback && defaultScalar);
   });
-}
-
-function tsScalarDefault(node, ts) {
-  return Boolean(
-    node &&
-    (ts.isStringLiteral(node) ||
-      ts.isNumericLiteral(node) ||
-      ts.isNoSubstitutionTemplateLiteral(node) ||
-      [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword].includes(
-        node.kind,
-      )),
-  );
 }
 
 function tsHoleSafe(
@@ -174,6 +166,8 @@ function tsHoleSafe(
           requirements.push(null);
         for (const source of symbol.declarations ?? []) {
           if (ts.isParameter(source)) requirements.push(null);
+          if (ts.isVariableDeclaration(source) && ts.isForOfStatement(source.parent.parent))
+            requirements.push(null);
           if (ts.isBindingElement(source)) {
             const alias = tsAliasField(source, symbol, checker, ts);
             if (alias) {

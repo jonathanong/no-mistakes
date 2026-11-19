@@ -15,4 +15,16 @@ function primitiveType(type, ts, allowUndefined) {
   return Boolean(type.flags & mask);
 }
 
-module.exports = { primitiveType };
+function tsScalarDefault(node, ts) {
+  return Boolean(
+    node &&
+    (ts.isStringLiteral(node) ||
+      ts.isNumericLiteral(node) ||
+      ts.isNoSubstitutionTemplateLiteral(node) ||
+      [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword].includes(
+        node.kind,
+      )),
+  );
+}
+
+module.exports = { primitiveType, tsScalarDefault };
