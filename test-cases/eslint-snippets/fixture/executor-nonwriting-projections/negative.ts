@@ -101,26 +101,6 @@ export function unknownBefore(input: Input) {
   return byId(read, input.id);
 }
 
-export function anyAfter(input: Input) {
-  const { id } = input;
-  const rows = byId(read, id);
-  anyConsumer(input);
-  return rows;
-}
-
-export function unknownAfter(input: Input) {
-  const { id } = input;
-  const rows = byId(read, id);
-  unknownConsumer(input);
-  return rows;
-}
-
-export function reassignedField(input: Input) {
-  const { id } = input;
-  input.id = "changed";
-  return byId(read, id);
-}
-
 export function spreadCall(input: Input) {
   canInspect(...([input] as const));
   return byId(read, input.id);
