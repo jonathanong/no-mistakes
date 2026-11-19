@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn finite_string_guards_keep_only_feasible_sql_variants() {
     let calls = calls("variants-correlated-finite-guards.ts");
-    assert_eq!(calls.len(), 12);
+    assert_eq!(calls.len(), 13);
 
     let mut list_either = texts(&calls[0]);
     list_either.sort_unstable();
@@ -33,7 +33,7 @@ fn finite_string_guards_keep_only_feasible_sql_variants() {
 #[test]
 fn independent_and_unproven_guards_retain_each_sql_combination() {
     let calls = calls("variants-correlated-finite-guards.ts");
-    assert_eq!(calls.len(), 12);
+    assert_eq!(calls.len(), 13);
     for (index, description) in [
         (1, "distinct parameters"),
         (2, "reassigned parameter"),
@@ -59,7 +59,7 @@ fn independent_and_unproven_guards_retain_each_sql_combination() {
 #[test]
 fn unsupported_operands_and_exhausted_predicate_budgets_keep_both_arms() {
     let calls = calls("variants-correlated-finite-guards.ts");
-    assert_eq!(calls.len(), 12);
+    assert_eq!(calls.len(), 13);
     for (index, description) in [
         (7, "object operand"),
         (8, "array operand"),
@@ -92,4 +92,21 @@ fn independent_opaque_tail_keeps_both_outcomes_within_each_finite_mode() {
         ]
     );
     assert!(!calls[6].variants_truncated());
+}
+
+#[test]
+fn branch_reassignment_keeps_every_feasible_variant_after_the_join() {
+    let calls = calls("variants-correlated-finite-guards.ts");
+    let mut variants = texts(&calls[12]);
+    variants.sort_unstable();
+    assert_eq!(
+        variants,
+        [
+            "/* reassignedInsideBranch */ WITH candidates AS () SELECT id FROM candidates LIMIT 5",
+            "/* reassignedInsideBranch */ WITH candidates AS (SELECT id FROM items) SELECT id FROM candidates LIMIT 5",
+            "/* reassignedInsideBranch */ WITH candidates AS (SELECT id FROM widgets) SELECT id FROM candidates LIMIT 5",
+            "/* reassignedInsideBranch */ WITH candidates AS (SELECT id FROM widgetsSELECT id FROM items) SELECT id FROM candidates LIMIT 5",
+        ]
+    );
+    assert!(!calls[12].variants_truncated());
 }

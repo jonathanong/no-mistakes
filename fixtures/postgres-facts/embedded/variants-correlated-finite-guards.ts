@@ -107,3 +107,15 @@ export function overDepthBudget(mode: "a" | "b") {
   }
   query(statement);
 }
+
+export function reassignedInsideBranch(kind: "widgets" | "items", narrowed: boolean) {
+  let selected: "widgets" | "items" = kind;
+  if (narrowed) {
+    selected = "items";
+  }
+  const statement = sql`/* reassignedInsideBranch */ WITH candidates AS (`;
+  if (selected === "widgets") statement.append(sql`SELECT id FROM widgets`);
+  if (selected === "items") statement.append(sql`SELECT id FROM items`);
+  statement.append(sql`) SELECT id FROM candidates LIMIT 5`);
+  query(statement);
+}

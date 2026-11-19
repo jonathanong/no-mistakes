@@ -490,5 +490,5 @@ fn postgres_correlated_branches_check_json_snapshot() {
             advisory["line"].as_u64().unwrap()
         })
         .collect();
-    assert_eq!(locations, [35, 48]);
+    assert_eq!(locations, [35, 48, 64]);
 }

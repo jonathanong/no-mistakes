@@ -33,6 +33,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-require-query-annotation",
           "sourceLine": "return read(statement)",
           "target": "sql-composition"
+        },
+        {
+          "file": "annotation.mts",
+          "line": 64,
+          "message": "annotation.mts:64: postgres-require-query-annotation application #0 has unresolved SQL for sql-composition: 2 invalid composed SQL variant(s) skipped; validate generated SQL in consumer tests",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return read(statement)",
+          "target": "sql-composition"
         }
       ],
       "codebase": [],
