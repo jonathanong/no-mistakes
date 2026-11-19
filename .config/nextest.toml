@@ -1,0 +1,4 @@
+# Hung-test guard (#3700): nextest names a test still running after each
+# 60s period and kills it after 10 periods, instead of burning the job timeout.
+[profile.default]
+slow-timeout = { period = "60s", terminate-after = 10 }
