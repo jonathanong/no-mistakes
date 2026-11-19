@@ -217,3 +217,47 @@ fn postgres_imported_callback_append_check_json_snapshot() {
         );
     }
 }
+
+#[test]
+fn postgres_imported_callback_append_results_check_json_snapshot() {
+    const RULE: &str = "postgres-require-query-annotation";
+    let root = rules_path(RULE, "fixture", "imported-callback-append-results");
+    let cases = ["advise", "report", "ignore"].map(|policy| {
+        (
+            policy,
+            root.clone(),
+            rules_path(
+                RULE,
+                "configs",
+                &format!("imported-callback-append-results-{policy}.yml"),
+            ),
+        )
+    });
+    let reports = assert_saved_fixture_report(
+        "postgres_imported_callback_append_results",
+        &cases,
+        &[],
+        &[],
+    );
+    for policy in ["advise", "report", "ignore"] {
+        let report = &reports[policy]["report"];
+        assert_eq!(report["warnings"], serde_json::json!([]));
+        let lines = |category: &str| {
+            let mut lines = report[category]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|finding| finding["line"].as_u64().unwrap())
+                .collect::<Vec<_>>();
+            lines.sort_unstable();
+            lines
+        };
+        let (rules, advisories) = match policy {
+            "report" => (vec![8], vec![]),
+            "advise" => (vec![], vec![8]),
+            _ => (vec![], vec![]),
+        };
+        assert_eq!(lines("rules"), rules, "{policy}: {report}");
+        assert_eq!(lines("advisories"), advisories, "{policy}: {report}");
+    }
+}

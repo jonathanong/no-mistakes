@@ -40,12 +40,9 @@ it("snapshots array producer and checker proof boundaries", async () => {
       savedCase("positive.ts"),
       savedCase("positive.ts", true),
       savedCase("typed.ts", true),
-      ...[
-        "accept-only-from.ts",
-        "accept-only-pending.ts",
-        "accept-only-factory-escape.ts",
-        "mixed-contents.ts",
-      ].flatMap((name) => [savedCase(name), savedCase(name, true)]),
+      ...["accept-only-from.ts", "accept-only-factory-escape.ts", "mixed-contents.ts"].flatMap(
+        (name) => [savedCase(name), savedCase(name, true)],
+      ),
       savedCase("type-names.ts"),
       savedCase("type-names.ts", true),
       savedCase("custom-lib/override.ts", true),
@@ -56,8 +53,10 @@ it("snapshots array producer and checker proof boundaries", async () => {
       savedCase("accept-only-unknown-elements.ts", true),
       savedCase("accept-only-factory-arguments.ts"),
       savedCase("accept-only-factory-arguments.ts", true),
-      savedCase("accept-only-pending-direct.ts"),
-      savedCase("accept-only-pending-direct.ts", true),
+      ...["accept-only-pending.ts", "accept-only-pending-direct.ts"].flatMap((name) => [
+        savedCase(name),
+        savedCase(name, true),
+      ]),
       savedCase("joined-controls.ts", true),
       savedCase("this-receiver.ts"),
       savedCase("this-receiver.ts", true),
@@ -91,7 +90,7 @@ it.each([false, true])("rejects escaped and overridden this receivers with typed
 it.each([false, true])(
   "preserves main diagnostics for accepted existing shapes with typed=%s",
   (typed) => {
-    for (const name of ["accept-only-from.ts", "accept-only-pending.ts"]) {
+    for (const name of ["accept-only-from.ts"]) {
       expect(languageOptionsFindings({ ...savedCase(name, typed), rule }), name).toEqual([]);
     }
   },

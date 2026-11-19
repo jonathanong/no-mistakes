@@ -72,13 +72,12 @@ fn summary_proof(
         .iter()
         .any(|step| matches!(step, Step::Unsupported))
     {
-        let Some(body) = value.body.as_ref() else {
-            return;
-        };
+        let body = value
+            .body
+            .as_ref()
+            .expect("functions with branch steps have a body");
         let alt = super::super::statements::append_steps(&body.statements, source);
-        let Expr::Function(alt) = function_from(value, alt) else {
-            return;
-        };
+        let alt = function_from(value, alt);
         if !alt.supported {
             return;
         }
@@ -90,15 +89,15 @@ fn summary_proof(
     std::sync::Arc::make_mut(summary).append_callback = proof;
 }
 
-fn function_from(value: &oxc_ast::ast::Function<'_>, body: Vec<Step>) -> Expr {
-    Expr::Function(function(
+fn function_from(value: &oxc_ast::ast::Function<'_>, body: Vec<Step>) -> std::sync::Arc<Function> {
+    function(
         &value.params,
         body,
         !value.generator,
         value.r#async,
         false,
         value.span.start,
-    ))
+    )
 }
 
 pub(super) fn function(
