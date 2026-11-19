@@ -39,7 +39,7 @@ it("preserves array factory proof boundaries through real Oxlint", async () => {
   expect(diagnostics.length).toBeGreaterThan(0);
   expect(
     diagnostics.filter((finding) =>
-      /(?:positive|type-names|accept-only-from|accept-only-pending|accept-only-factory-escape)\.ts$/.test(
+      /(?:positive|type-names|accept-only-from|accept-only-factory-escape)\.ts$/.test(
         finding.filename,
       ),
     ),

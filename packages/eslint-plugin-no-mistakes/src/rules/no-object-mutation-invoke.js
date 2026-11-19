@@ -148,6 +148,9 @@ function getContents(tag) {
 }
 
 function finishGet(node, calleeTag) {
+  // Iterating a caller-owned collection yields its caller-owned elements.
+  const iterator = ["entries", "values"].find((name) => memberCall(node, name));
+  if (iterator && calleeTag.type === "shared" && !node.arguments.length) return calleeTag;
   if (!memberCall(node, "get")) {
     return null;
   }
