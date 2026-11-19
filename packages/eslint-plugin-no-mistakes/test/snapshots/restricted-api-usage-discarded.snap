@@ -1,0 +1,312 @@
+{
+  "restricted-api-usage": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 28,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 6,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 7,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 27,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 8,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 19,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 9,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 36,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 9,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 23,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 10,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 11,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 12,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 23,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^goto$",
+              "discardedResultOnly": true,
+              "message": "Capture or return the result."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 28,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 6,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 7,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 27,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 8,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 19,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 9,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 36,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 9,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 23,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 10,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 11,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 12,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 26,
+          "endColumn": 45,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 13,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 35,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 14,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 27,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 15,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 16,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 33,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 17,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 19,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 46,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 22,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded.ts",
+          "line": 23,
+          "message": "Capture or return the result.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^goto$",
+              "message": "Capture or return the result."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

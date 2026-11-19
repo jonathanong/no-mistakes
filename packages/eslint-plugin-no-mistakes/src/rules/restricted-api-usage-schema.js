@@ -14,6 +14,7 @@ const targetSchema = {
     source: { type: "string", minLength: 1 },
     importedNamePattern: { type: "string", minLength: 1 },
     callNamePattern: { type: "string", minLength: 1 },
+    discardedResultOnly: { type: "boolean" },
     constructNamePattern: { type: "string", minLength: 1 },
     constructArgumentCount: { type: "integer", minimum: 0 },
     ...Object.fromEntries(patterns.map((key) => [key, { type: "string", minLength: 1 }])),
@@ -27,6 +28,7 @@ const targetSchema = {
   dependencies: {
     source: ["importedNamePattern"],
     constructArgumentCount: ["constructNamePattern"],
+    discardedResultOnly: ["callNamePattern"],
   },
   additionalProperties: false,
 };

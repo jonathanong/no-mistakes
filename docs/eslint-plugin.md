@@ -462,6 +462,8 @@ and a named root ignores shadowing. File scope stays on the lint config. See
 An opt-in file-local import and call policy. `targets` entries select an exact
 `importedNamePattern` (with an exact `source`, or alone for any source), an independent lexical
 `callNamePattern`, or both. `message` supplies a local reason and safe rewrite.
+`discardedResultOnly: true` limits `callNamePattern` to calls whose result is
+discarded (expression statement, `void`, non-final comma operand, awaited or not).
 Type-only imports are ignored; imported aliases and namespace calls use lexical
 binding identity. Lexical call patterns intentionally also match unrelated
 bindings with those names. Strict lexical selectors
