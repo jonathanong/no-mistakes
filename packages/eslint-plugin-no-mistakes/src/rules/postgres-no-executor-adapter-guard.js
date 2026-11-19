@@ -20,10 +20,14 @@ function guardTest(identifier) {
   return comparison ? parent : null;
 }
 
-// `if (!row)` / `if (row == null)` only reads the binding. Whether the consequent
-// exits is left to the checker: the projection type stays nullable unless it does.
+// `if (!row)` / `if (row == null)`, alone or as an operand of `||` / `&&`, only
+// reads the binding. Whether the consequent exits is left to the checker: the
+// projection type stays nullable unless every path that reaches it narrowed it.
 function nullishGuardRead(identifier) {
-  const test = guardTest(identifier);
+  let test = guardTest(identifier);
+  while (test?.parent.type === "LogicalExpression" && test.parent.operator !== "??") {
+    test = test.parent;
+  }
   return test?.parent.type === "IfStatement";
 }
 

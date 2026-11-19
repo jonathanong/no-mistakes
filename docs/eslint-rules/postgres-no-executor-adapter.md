@@ -158,6 +158,17 @@ optional calls are also supported. Returning or storing the options object or
 executor value, forwarding it to opaque code, or replacing the property keeps
 the incoming call reported. Aliasing or destructuring the whole options object
 inside the body is also unproven; call the declared property directly instead.
+An optional parameter (`options?: QueryOptions`) or an explicit
+`QueryOptions | undefined | null` declares one options object, so a helper such
+as `rejectUnresolvable(id, { query })` is accepted, including in a guarded
+`if (!row) return rejectUnresolvable(id, { query })`. The accepted property is
+the one the checker resolves to a configured executor type on that declared
+parameter. An untyped or `any` parameter, a property typed `unknown` or as a
+plain function, a union of distinct options types, and a type only inferred
+from a default value give no declared contract and keep reporting (an
+executor-typed body that calls the property with visible SQL is already
+judged by SQL visibility). So does an options object that also escapes in the
+helper, for example `stash.push(options)`.
 Optional fields, structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as
 `dispatch({ nested: { query: read } })` and forwarding callbacks remain
@@ -458,7 +469,8 @@ run(0 ?? read, account);
   `if (!row) throw …`, `if (!row) return reject(id, query)` and
   `if (row == null) …`, `if (row === undefined) …` and `if (row != null) { … }`
   are plain reads of the local (the local on the left, `null` or `undefined` on
-  the right, as the `if` test itself), and the checker's narrowed type at the
+  the right, as the `if` test or an operand of `||` / `&&` in it, such as
+  `if (!row || row.locked) return null`), and the checker's narrowed type at the
   projection decides. The projection is accepted only when the guard always
   exits or encloses it, so the local is non-nullable there. A guard that does
   not exit (`if (!row) log()`), a guard on another variable, a guard after the
