@@ -409,7 +409,11 @@ export function list(account: string, flag: boolean, tx: Tx) {
 
 Passing an executor value to an unproven helper is reported and not rewritten.
 The message names the executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead of
-passing it. A `const` bound to a conditional of executors also names
+passing it. That call form is for an executor type that has call signatures. A
+configured type with none, such as a pool client passed as `query.client` or
+`transaction.client`, is named inside the helper without a call form, or as
+``client.query(sql`…`)`` when the type has a `query` method. A `const` bound to
+a conditional of executors also names
 ``(flag ? read : write)(sql`…`)`` when every branch is an identifier executor.
 `run(read, account)` is not a judged rewrite when `run` has no proven configured
 executor parameter. The same passed-value report
@@ -929,7 +933,11 @@ function run(account: string) {
 
 The message for a passed executor names that shape (``read(sql`…`)``, and
 ``const exec = read; exec(sql`…`)`` when the executor is an imported identifier).
-It does not rewrite the call.
+It does not rewrite the call. A configured executor type with no call signatures
+does not use that call. The message names the executor inside the helper and,
+when the type has a `query` method, names ``client.query(sql`…`)``. Typed
+linting is required to tell those shapes apart. Without a TypeScript program
+the message keeps the call form.
 
 A callback can also be replaced by a direct executor call. Write the SQL as an
 argument of the executor (or of a `const` alias of an imported executor):

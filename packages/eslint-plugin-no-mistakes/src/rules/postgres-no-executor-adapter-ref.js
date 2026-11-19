@@ -14,6 +14,7 @@ const {
   isProvenQueryMember,
   namespaceExecutor,
 } = require("./postgres-no-executor-adapter-member");
+const { executorCallShape } = require("./postgres-no-executor-adapter-call-shape");
 
 const NESTED_THIS_BOUNDARIES = new Set([
   "ClassDeclaration",
@@ -21,6 +22,11 @@ const NESTED_THIS_BOUNDARIES = new Set([
   "FunctionDeclaration",
   "FunctionExpression",
 ]);
+
+function withCallShape(node, ref, context) {
+  if (!ref) return null;
+  return { ...ref, ...executorCallShape(node, context) };
+}
 
 function executorRef(node, context, bindings, options) {
   if (node.type === "ChainExpression") return null;
@@ -32,12 +38,24 @@ function executorRef(node, context, bindings, options) {
     // Only an imported executor gets an alias hint. Analysis judges a const alias
     // of a scoped factory or typed parameter, but this rule does not suggest it.
     if (variableIsImportedExecutor(variable, options)) {
-      return { name: current.name, kind: "identifier", aliasable: true };
+      return withCallShape(
+        current,
+        { name: current.name, kind: "identifier", aliasable: true },
+        context,
+      );
     }
     if (variableIsScopedExecutor(variable, bindings.scoped ?? [], current)) {
-      return { name: current.name, kind: "identifier", aliasable: false };
+      return withCallShape(
+        current,
+        { name: current.name, kind: "identifier", aliasable: false },
+        context,
+      );
     }
-    return destructuredExecutor(current, context, bindings, options);
+    return withCallShape(
+      current,
+      destructuredExecutor(current, context, bindings, options),
+      context,
+    );
   }
   if (
     current.type === "MemberExpression" &&
@@ -50,12 +68,20 @@ function executorRef(node, context, bindings, options) {
       resolveVariable(current.object, context),
     )
   ) {
-    return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
+    return withCallShape(
+      current,
+      { name: context.sourceCode.getText(current), kind: "member", aliasable: false },
+      context,
+    );
   }
   if (isProvenQueryMember(current, context, bindings, options)) {
-    return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
+    return withCallShape(
+      current,
+      { name: context.sourceCode.getText(current), kind: "member", aliasable: false },
+      context,
+    );
   }
-  return namespaceExecutor(current, context, options);
+  return withCallShape(current, namespaceExecutor(current, context, options), context);
 }
 
 function executorLeaves(node, context, bindings, options) {
