@@ -24,7 +24,7 @@ function memberName(member) {
 }
 
 // Resolves a factory callee to its exported name through named, renamed,
-// default, and namespace imports. A shadowed or non-import binding resolves to null.
+// default, and namespace imports. A shadowed or non-import binding resolves to null (unjudged).
 function importedFactoryName(sourceCode, callee) {
   const node = unwrapExpression(callee);
   if (node?.type === "Identifier") {
@@ -60,11 +60,10 @@ function lastProperty(object, name) {
 function valueAllowed(sourceCode, property, allowed, allowShorthand) {
   if (property.shorthand) return allowShorthand;
   const value = unwrapExpression(property.value);
-  if (value?.type === "CallExpression" || value?.type === "NewExpression") {
-    const name = importedFactoryName(sourceCode, value.callee);
-    return name !== null && allowed.includes(name);
-  }
-  return true;
+  if (value?.type === "Identifier") return allowShorthand;
+  if (value?.type !== "CallExpression" && value?.type !== "NewExpression") return true;
+  const name = importedFactoryName(sourceCode, value.callee);
+  return name === null || allowed.includes(name);
 }
 
 function invalidValueProperties(argument, target, sourceCode) {
@@ -81,6 +80,7 @@ function invalidValueProperties(argument, target, sourceCode) {
 }
 
 function exceedsMaxArguments(target, args) {
+  if (args.some((arg) => arg.type === "SpreadElement")) return false;
   return Number.isInteger(target.maxArguments) && args.length > target.maxArguments;
 }
 

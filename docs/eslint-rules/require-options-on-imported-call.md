@@ -101,16 +101,20 @@ client.chat.responses.create({ signal });
     is present and its value is a call or `new` of anything else, the call is
     reported as `invalidOptionValue`. A factory resolves through named,
     renamed (`import { approvedAgent as make }`), default and namespace
-    imports (`agents.approvedAgent()`); a shadowed or non-imported callee is
-    not allowed. With this option a shorthand property (`{ agent }`) is
-    rejected unless `allowShorthand` is `true`. Other values, such as
-    unknown identifiers, are not judged. Applies to imported, global and
-    receiver targets.
-  - optional `allowShorthand`: boolean, default `false`. Accepts `{ agent }`
-    for properties validated by `allowedValueCallees`.
+    imports (`agents.approvedAgent()`). Only a call or `new` whose callee
+    resolves to an imported binding outside the list is reported. A callee
+    that is not an import (`factory.create()`, `this.make()`, a local
+    function) or is shadowed is not judged, and neither are member
+    expressions, conditionals, spreads and other non-call values. A plain
+    identifier value, whether shorthand (`{ agent }`) or `{ agent: agent }`,
+    is rejected unless `allowShorthand` is `true`. Applies to imported, global
+    and receiver targets.
+  - optional `allowShorthand`: boolean, default `false`. Accepts a plain identifier
+    value (`{ agent }` or `{ agent: agent }`) for properties validated by `allowedValueCallees`.
   - optional `maxArguments`: opt-in maximum argument count (integer, at least
     0). A call with more arguments is reported as `tooManyArguments`. For
-    `.call` and `.apply` the count excludes the receiver.
+    `.call` and `.apply` the count excludes the receiver. A call with any spread argument skips this
+    check.
 
   Without these options only presence is checked, as before.
 
@@ -122,6 +126,7 @@ import { approvedAgent, otherAgent } from "@example/agents";
 await send(request, { agent: otherAgent() }); // invalidOptionValue
 await send(request, { agent: approvedAgent() }); // ok
 await send(request, { agent }, extra); // tooManyArguments
+// fix: await send(request, { agent: approvedAgent() });
 ```
 
 - optional top-level `message`: report text when the target has no `message`.

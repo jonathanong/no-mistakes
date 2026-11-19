@@ -8,6 +8,7 @@ const files = {
   "value-validation-default": ["@example/transport", "send"],
   "value-validation-namespace": ["@example/transport", "send"],
   "value-validation-renamed": ["@example/transport", "send"],
+  "value-validation-spread": ["@example/transport", "send"],
 };
 const modes = {
   off: {},
@@ -45,6 +46,11 @@ describe("require-options-on-imported-call value validation", () => {
     await expect(sections.join("\n")).toMatchFileSnapshot(
       "snapshots/require-options-value-validation.snap",
     );
+  });
+
+  it("skips the arity check when any argument is a spread", () => {
+    const got = run("value-validation-spread", { maxArguments: 0 });
+    expect(got).toEqual(["5:tooManyArguments"]);
   });
 
   it("keeps today's output when the new options are absent", () => {
