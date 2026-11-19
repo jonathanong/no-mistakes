@@ -1,0 +1,7 @@
+# no-mistakes-disable-file workflow-topology-policy
+name: orders
+on: push
+jobs:
+  ship:
+    uses: ./.github/workflows/orders.yml
+    secrets: inherit

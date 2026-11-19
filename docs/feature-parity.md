@@ -6,6 +6,14 @@ with the same explicit trigger matching, event filters, source locations, and
 suppressions in Rust, CLI `check`, async Node `check()`, and `analyzeProject()`
 check reports.
 
+The same surfaces support opt-in
+[`forbiddenEvents`](configuration/workflow-topology-policy-forbidden-events.md)
+and
+[`forbidSecretsInherit`](configuration/workflow-topology-policy-secrets-inherit.md).
+Event bans cover scalar, sequence, and mapping `on` forms. The secrets ban
+matches the exact `inherit` string on local and remote reusable-workflow calls.
+Defaults stay off, and suppression stays on the reported key.
+
 Native GitHub Actions checks include opt-in
 [`github-actions-job-permissions`](rules/github-actions-job-permissions.md).
 Rust, CLI `check`, async Node `check()` and `analyzeProject()` check reports use

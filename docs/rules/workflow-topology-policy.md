@@ -112,6 +112,12 @@ no requirement. `secretInventory` is separately opt-in:
   `events` applies to all events; `events: []` applies to none. See
   [activity type configuration](../configuration/workflow-topology-policy-activity-types.md)
   for examples, ignored inputs, and suppression at the `on.<event>.types` key.
+- `forbiddenEvents`: exact, case-sensitive event names banned on `on`. An
+  omitted list or `[]` bans nothing. See
+  [forbidden events](../configuration/workflow-topology-policy-forbidden-events.md).
+- `forbidSecretsInherit`: when `true`, report reusable-workflow calls that set
+  `secrets: inherit`. `false` reports nothing. See
+  [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
 - `concurrencyPolicy`: owner id to the intended pending, cancellation, and
   scope behavior of that lock. See [concurrency configuration](../configuration/workflow-topology-policy-concurrency.md#concurrencypolicy).
 - `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs
@@ -142,6 +148,42 @@ point to `on.<event>.types`; the standard rule-level `message` and suppression
 directives apply at that key. See the
 [configuration guide](../configuration/workflow-topology-policy-activity-types.md)
 for YAML examples and event-filter defaults.
+
+### `forbiddenEvents`
+
+For example, ban `pull_request_target`:
+
+```yaml
+forbiddenEvents: [pull_request_target]
+```
+
+`on: pull_request_target`, `on: [push, pull_request_target]`, and
+`on: {pull_request_target: {types: [opened]}}` are counterexamples.
+`on: pull_request` in the same form is valid. Matching is exact and
+case-sensitive. A mapping entry with a value is reported on that event key.
+A scalar, a sequence, and a null mapping value are reported on the `on` key.
+Duplicate names in one workflow produce one finding. Remove the event. The
+standard rule-level `message` and suppression directives apply at the reported
+key. See the
+[configuration guide](../configuration/workflow-topology-policy-forbidden-events.md).
+
+### `forbidSecretsInherit`
+
+`false` by default, which reports nothing. `true` reports a reusable-workflow
+call whose `secrets` value is the exact string `inherit`, including a quoted
+`"inherit"`, on local and remote `uses` calls.
+
+```yaml
+jobs:
+  ship:
+    uses: ./.github/workflows/orders.yml
+    secrets: inherit
+```
+
+Map each secret by name. A missing `secrets` key and `secrets: {}` pass. A job
+without a reusable-workflow `uses` is ignored. Findings point to the `secrets`
+key. See the
+[configuration guide](../configuration/workflow-topology-policy-secrets-inherit.md).
 
 ### `concurrencyPolicy`
 
@@ -225,6 +267,17 @@ For a forbidden activity type, remove that type from `on.<event>.types` and
 retain the intended allowed types. Findings point to the `types` key; place
 line and next-line suppressions there. See the
 [configuration examples](../configuration/workflow-topology-policy-activity-types.md).
+
+For a forbidden event, remove that event from `on`. Findings point to the
+event key when the mapping entry has a value, and to the `on` key for a
+scalar, a sequence, or a null mapping value. Place line and next-line
+suppressions on that key. See the
+[forbidden events guide](../configuration/workflow-topology-policy-forbidden-events.md).
+
+For `secrets: inherit`, replace the value with an explicit mapping. Findings
+point to the `secrets` key. A missing `secrets` key stays quiet, and
+`forbidSecretsInherit: false` reports nothing. See the
+[secrets inherit guide](../configuration/workflow-topology-policy-secrets-inherit.md).
 
 Add the missing topology edge or ordered step, or update the policy with the
 intended graph and a reason for an intentionally unlocked workflow. For a

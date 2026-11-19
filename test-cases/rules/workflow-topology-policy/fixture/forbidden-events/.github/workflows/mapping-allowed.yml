@@ -1,0 +1,9 @@
+name: orders
+on:
+  pull_request:
+    types: [opened]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo order

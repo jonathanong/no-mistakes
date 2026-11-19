@@ -1,0 +1,6 @@
+name: items
+on: push
+jobs:
+  ship:
+    uses: ./.github/workflows/orders.yml
+    secrets: inherit # no-mistakes-disable-line workflow-topology-policy

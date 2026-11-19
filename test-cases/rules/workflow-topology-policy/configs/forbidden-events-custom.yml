@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    message: Use pull_request for these widget workflows.
+    options:
+      forbiddenEvents: [pull_request_target]

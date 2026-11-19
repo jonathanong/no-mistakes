@@ -150,6 +150,8 @@ position use line 1 rather than an inferred line.
 - [Workflow secret inventory](workflow-topology-policy.md)
 - [Workflow topology concurrency](workflow-topology-policy-concurrency.md)
 - [Workflow activity type policy](workflow-topology-policy-activity-types.md)
+- [Workflow forbidden events](workflow-topology-policy-forbidden-events.md)
+- [Workflow secrets inherit policy](workflow-topology-policy-secrets-inherit.md)
 - [Changed-file checks](checks.md)
 - [Infrastructure (Terraform/OpenTofu)](infra.md)
 

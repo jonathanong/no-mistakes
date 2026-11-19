@@ -1,0 +1,29 @@
+name: widgets
+on: push
+jobs:
+  inherit:
+    uses: ./.github/workflows/orders.yml
+    secrets: inherit
+  mapped:
+    uses: ./.github/workflows/orders.yml
+    secrets:
+      ORDER_TOKEN: ${{ secrets.ORDER_TOKEN }}
+  plain:
+    uses: ./.github/workflows/orders.yml
+  empty:
+    uses: ./.github/workflows/orders.yml
+    secrets: {}
+  quoted:
+    uses: ./.github/workflows/orders.yml
+    secrets: "inherit"
+  remote:
+    uses: example/orders/.github/workflows/orders.yml@v1
+    secrets: inherit
+  mistyped:
+    uses: ./.github/workflows/orders.yml
+    secrets: Inherit
+  local:
+    runs-on: ubuntu-latest
+    secrets: inherit
+    steps:
+      - run: echo widget
