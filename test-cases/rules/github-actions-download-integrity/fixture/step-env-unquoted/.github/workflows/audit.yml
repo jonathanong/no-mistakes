@@ -45,3 +45,18 @@ jobs:
       - env:
           TOOL_URL: https://api.github.com/trusted
         run: curl -fsSL -o tool.tgz $TOOL_URL
+      - env:
+          SPLIT_URL: "https://downloads.example.com/word split"
+        run: curl -fsSL -o tool.tgz $SPLIT_URL
+      - env:
+          STAR_URL: "https://downloads.example.com/star*.tgz"
+        run: curl -fsSL -o tool.tgz $STAR_URL
+      - env:
+          QUESTION_URL: "https://downloads.example.com/file?.tgz"
+        run: curl -fsSL -o tool.tgz ${QUESTION_URL}
+      - env:
+          CLASS_URL: "https://downloads.example.com/file[a].tgz"
+        run: curl -fsSL -o tool.tgz ${CLASS_URL}
+      - env:
+          QUOTED_GLOB_URL: "https://downloads.example.com/quoted*.tgz"
+        run: curl -fsSL -o tool.tgz "${QUOTED_GLOB_URL}"
