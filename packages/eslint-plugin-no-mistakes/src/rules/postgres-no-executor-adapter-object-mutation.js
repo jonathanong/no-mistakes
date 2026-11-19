@@ -2,6 +2,8 @@
 
 const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
 const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
+const { mayPrecede } = require("./postgres-no-executor-adapter-mutation-order");
+const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
 
 function nonWritingArgument(call, value, context) {
   const services = context?.sourceCode.parserServices;
@@ -29,9 +31,26 @@ const LOCAL_WRAPPERS = new Set([
   "ChainExpression",
 ]);
 
-function objectMutation(variable, executorVariable, allowedProperty, ignoredReference, context) {
+function scalarArgument(call, value, context) {
+  const services = context?.sourceCode.parserServices;
+  if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(value)) return false;
+  const ts = require("typescript");
+  const checker = services.program.getTypeChecker();
+  const type = checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(value));
+  return call.callee !== value && primitiveType(type, ts, true);
+}
+
+function objectMutation(
+  variable,
+  executorVariable,
+  allowedProperty,
+  ignoredReference,
+  context,
+  before = null,
+) {
   return variable.references.some((reference) => {
     if (reference.init || reference.identifier === ignoredReference) return false;
+    if (!mayPrecede(variable, reference, before)) return false;
     let value = reference.identifier;
     let depth = 0;
     while (true) {
@@ -44,7 +63,10 @@ function objectMutation(variable, executorVariable, allowedProperty, ignoredRefe
     }
     const parent = value.parent;
     if (parent?.type === "CallExpression" && parent.arguments.includes(value))
-      return !nonWritingArgument(parent, value, context);
+      return !(
+        nonWritingArgument(parent, value, context) ||
+        (before && depth > 0 && scalarArgument(parent, value, context))
+      );
     if (
       (parent?.type === "AssignmentExpression" && parent.left === value) ||
       ((parent?.type === "ForOfStatement" || parent?.type === "ForInStatement") &&
