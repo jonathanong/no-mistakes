@@ -223,6 +223,10 @@ Production Rust changes under `crates/no-mistakes/src/` also select
 `cargo test --locked -p no-mistakes --lib architecture` to validate prepared
 analysis ownership and canonical graph reuse, even when only a source file changes.
 
+CI runs Rust tests under nextest with `.config/nextest.toml`: a test running
+past 60s is named in the log and killed after 10 minutes, so a hang fails fast
+and identifies the test instead of exhausting the job timeout.
+
 CI checks links to this repository's `main` documentation against the checked-out
 `docs/` files, including new pages in a pull request. Missing targets still fail;
 links outside that documentation prefix continue to be checked over the network.

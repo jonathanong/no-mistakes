@@ -391,7 +391,7 @@ jobs:
             command: cargo check --locked --tests --no-default-features -p no-mistakes
             flags: -D warnings
           - name: PostgreSQL source identities
-            command: "cargo test --locked -p no-mistakes --lib --no-default-features --features test-instrumentation codebase::postgres::source::"
+            command: "cargo nextest run --locked -p no-mistakes --lib --no-default-features --features test-instrumentation codebase::postgres::source::"
             flags: -D warnings
           - name: coverage warnings
             command: cargo check --locked --workspace --lib --tests --all-features
@@ -419,6 +419,12 @@ jobs:
           shared-key: ${{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' || 'linux-runtime-v1' }}
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install nextest
+        if: ${{ matrix.name == 'PostgreSQL source identities' }}
+        timeout-minutes: 3
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: cargo-nextest@0.9.151
       # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Run isolated Rust quality check
         timeout-minutes: ${{ matrix.name == 'PostgreSQL source identities' && 30 || 18 }}
