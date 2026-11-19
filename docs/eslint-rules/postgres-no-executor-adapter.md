@@ -256,6 +256,19 @@ from another source, and a closure that is not passed directly as an argument
 keep reporting as before. A closure without an options argument
 (`(statement) => read(statement)`) also keeps reporting.
 
+The receiving helper's parameter may also be a plain function type instead of
+an executor type, so a helper that takes `run: (statement: Statement) =>
+Promise<unknown>` accepts such a closure. The helper must be a local function
+without a rest parameter and call that parameter only with the proven literal
+SQL; an imported helper, an untyped or destructured parameter, and a parameter
+that is written keep reporting.
+
+An options type whose `query` property is declared inside the configured
+library (`QueryOptions` and `QueryExecutor` both declared in
+`importSpecifier`'s package, or in the file a relative `importSpecifier`
+names) counts as the configured executor when the property's type name is in
+`executorTypeNames`. A same-named type declared elsewhere does not.
+
 Both reporting modes judge an executor supplied this way (a defaulted optional
 property, or a callee reached through a pass-on) by the SQL it receives, the
 same proof `forwarding-only` applies: a trusted-tag literal with scalar holes,

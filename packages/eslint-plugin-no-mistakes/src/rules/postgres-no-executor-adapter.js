@@ -15,6 +15,7 @@ const { classifyFunction } = require("./postgres-no-executor-adapter-forward");
 const { resolvePassed } = require("./postgres-no-executor-adapter-passed");
 const { createReporters } = require("./postgres-no-executor-adapter-report");
 const { libraryAdapter } = require("./postgres-no-executor-adapter-library");
+const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { acceptedTarget } = require("./postgres-no-executor-adapter-supplied");
 const { directOption } = require("./postgres-no-executor-adapter-direct");
 const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
@@ -60,8 +61,9 @@ module.exports = rule(
         !nested &&
         !quoteNode &&
         libraryAdapter(expr, context, options) &&
-        acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode) &&
-        visibleSqlTarget(call, index, quoteNode, context, options, true, targetFacts) === true
+        (acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode) ||
+          callbackTarget(call, index, context, targetFacts)) &&
+        visibleSqlTarget(call, index, quoteNode, context, options, true, targetFacts, true) === true
       );
     }
 

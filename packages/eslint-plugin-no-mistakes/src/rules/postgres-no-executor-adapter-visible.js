@@ -69,7 +69,7 @@ function otherPropertyRead(reference, property) {
   return true;
 }
 
-function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts) {
+function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts, callback) {
   if (call.type !== "CallExpression") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
   if (quoteNode && (quoteNode.type !== "Property" || quoteNode.computed)) return null;
@@ -85,6 +85,7 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
   if (
     !property &&
     target?.typeAnnotation &&
+    !(callback && target.typeAnnotation.typeAnnotation.type === "TSFunctionType") &&
     !localExecutorType(target.typeAnnotation.typeAnnotation, context, options)
   )
     return false;
