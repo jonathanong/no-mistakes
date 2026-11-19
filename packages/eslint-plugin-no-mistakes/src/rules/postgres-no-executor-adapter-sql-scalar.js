@@ -37,6 +37,25 @@ function typedBinding(def) {
   return def.type === "Parameter" || loopBinding(def);
 }
 
+// Lazy: sql-projection requires this module. A typed receiver or a const object literal.
+function projectedField(receiver, field, context, allowUndefined) {
+  return (
+    typedScalarProjection(receiver, field, context, allowUndefined) ||
+    require("./postgres-no-executor-adapter-sql-projection").projectedScalar(
+      receiver,
+      field,
+      context,
+      allowUndefined,
+    )
+  );
+}
+
+function destructuredField(variable, def, context, allowUndefined) {
+  const { localField } = require("./postgres-no-executor-adapter-sql-projection");
+  const field = def.node.init ? localField(def.node.id, variable, context) : null;
+  return field === null ? null : projectedField(def.node.init, field, context, allowUndefined);
+}
+
 function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
   node = unwrapTs(node);
   const scalar = (part) => scalarArgument(part, context, allowUndefined, seen);
@@ -47,7 +66,7 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
     !node.optional &&
     node.property.type === "Identifier"
   )
-    return typedScalarProjection(node.object, node.property.name, context, allowUndefined);
+    return projectedField(node.object, node.property.name, context, allowUndefined);
   if (node?.type === "Literal")
     return (
       node.value === null || ["string", "number", "boolean", "bigint"].includes(typeof node.value)
@@ -62,6 +81,8 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
         return false;
       for (const def of variable.defs) {
         if (def.type === "Variable" && !loopBinding(def)) {
+          const field = destructuredField(variable, def, context, allowUndefined);
+          if (field !== null) return field;
           const fresh = freshLocal(variable, def.node, node, context, scalar);
           if (fresh !== null) return fresh;
           const derived = derivedLocal(variable, def.node, node, context, scalar);

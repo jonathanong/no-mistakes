@@ -641,7 +641,13 @@ run(0 ?? read, account);
   initialized from `any`, an unknown call, or another function's result, and a
   shadowing declaration remain reported. An assertion between declaration and
   projection (`assert(notice, 404)`) is judged by the assertion proof below.
-  An early-exit guard also proves a nullable local: `if (!row) return null`,
+  The same proof covers a `const` local initialized from another proven `const`
+  local (`const first = rows[0]!; const notice = first`), a destructured field of a
+  proven receiver (`const { id } = notice`; a later write to `notice.id` cannot change
+  the copied `id`), and a field of a `const` object literal read once with no
+  spread, computed key, getter, write, or escape (`const notice = { id: "a" }`,
+  then `notice.id`). A write to the source before the destructuring, a `let`,
+  a computed key, a spread, or a second use of the literal stays reported. An early-exit guard also proves a nullable local: `if (!row) return null`,
   `if (!row) throw …`, `if (!row) return reject(id, query)` and
   `if (row == null) …`, `if (row === undefined) …` and `if (row != null) { … }`
   are plain reads of the local (the local on the left, `null` or `undefined` on

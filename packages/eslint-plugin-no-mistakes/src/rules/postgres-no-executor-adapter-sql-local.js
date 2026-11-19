@@ -86,7 +86,7 @@ function receiverInit(variable) {
 // A never-reassigned const bound to a parameter, an element of one, or an element of
 // a destructured executor result is the same receiver proof as the parameter itself.
 // So is a `for...of` element of one, or the awaited result of a proven helper.
-function localReceiver(variable, context, before = null) {
+function localReceiver(variable, context, before = null, seen = new Set([variable])) {
   const init = receiverInit(variable);
   if (!init) return false;
   let root = unwrapTs(init);
@@ -95,8 +95,10 @@ function localReceiver(variable, context, before = null) {
   const rootVariable = root.type === "Identifier" ? resolveVariable(root, context) : null;
   return Boolean(
     rootVariable &&
-    rootVariable !== variable &&
-    (parameterVariable(root, context) || executorResult(rootVariable, context)) &&
+    !seen.has(rootVariable) &&
+    (parameterVariable(root, context) ||
+      executorResult(rootVariable, context) ||
+      localReceiver(rootVariable, context, before, seen.add(rootVariable))) &&
     !objectMutation(rootVariable, null, null, root, context, before),
   );
 }

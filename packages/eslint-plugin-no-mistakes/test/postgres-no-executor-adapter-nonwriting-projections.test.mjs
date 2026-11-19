@@ -74,7 +74,7 @@ it("snapshots nonwriting projection boundaries and mode controls", async () => {
   };
   const rows = snapshotSuite(rule, languageOptions, suite);
   expect(rows.map((row) => row.findings.length)).toEqual([
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 2, 3, 22, 5, 9, 7,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 2, 3, 22, 5, 9, 7,
   ]);
   const hiddenEffects = rows.find(
     (row) => row.kind === "invalid" && row.file.endsWith("/reader-hidden-effects.ts"),
