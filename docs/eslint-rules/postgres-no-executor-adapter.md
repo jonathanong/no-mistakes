@@ -614,8 +614,9 @@ run(0 ?? read, account);
   the call site checks) and a cycle between helpers is unproven. A ninth nested
   helper stays unproven. A `for...of` const bound to an element of a
   parameter, or to a primitive, is a proven projection or scalar when nothing
-  writes it, including when that helper is imported; an interpolation that uses
-  any other iteration value reports. A
+  writes it in a same-file helper; an imported helper's loop binding stays
+  unproven and reports, as does an interpolation that uses any other iteration
+  value. A
   `const summary = await load(query, id)` result, where `load` is a proven
   helper called with a typed executor parameter, is a valid projection receiver
   for a later helper under the same typed field proof.

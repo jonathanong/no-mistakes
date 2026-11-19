@@ -83,3 +83,7 @@ export async function staleAlias(query: SessionExecutor, ids: string[], outside:
     rows.push({ id, status: "x" });
   }
 }
+
+export async function importedPrimitiveLoop(query: SessionExecutor, ids: string[]) {
+  await helpers.eachId(ids, query);
+}

@@ -917,6 +917,17 @@
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
+      },
+      {
+        "column": 29,
+        "endColumn": 34,
+        "endLine": 88,
+        "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/controls-branches.ts",
+        "line": 88,
+        "message": "This call passes query into a helper. Name the executor inside the helper (`query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
       }
     ],
     "kind": "invalid",
