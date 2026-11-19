@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "callers.mts",
+          "line": 8,
+          "message": "callers.mts:8: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const missing = (limit: number) => queryIdPage(limit, sql`SELECT id FROM widgets`, statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 9,
+          "message": "callers.mts:9: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const opaque = (limit: number, value: SqlStatement) => queryIdPage(limit, value, statement => read(statement));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

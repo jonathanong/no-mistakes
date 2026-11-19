@@ -25,3 +25,6 @@ mod cli_postgres_snapshot_plain_helper_location;
 
 #[path = "cli_postgres_snapshot_indexed_identifier.rs"]
 mod cli_postgres_snapshot_indexed_identifier;
+
+#[path = "cli_postgres_snapshot_issue_3651.rs"]
+mod cli_postgres_snapshot_issue_3651;
