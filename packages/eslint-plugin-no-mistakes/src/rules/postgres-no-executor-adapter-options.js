@@ -31,17 +31,17 @@ function optionObjectType(annotation, checker) {
 
 // A call site's inferred shape is insufficient: inspect the implementation's
 // declared parameter, then the declaration of its named property.
-function declaredOptionType(annotation, property, checker, options) {
+function declaredOptionType(annotation, property, checker, options, supplied = false) {
   if (!annotation || !property) return false;
   const type = optionObjectType(annotation, checker);
   if (type.isUnion()) return false;
   const symbol = type.getProperty(property);
   if (symbol?.declarations?.length !== 1) return false;
-  if (symbol.flags & OPTIONAL_SYMBOL_FLAG) return false;
+  if (symbol.flags & OPTIONAL_SYMBOL_FLAG && !supplied) return false;
   const member = symbol.declarations[0];
   if (
     member.name?.text !== property ||
-    member.questionToken ||
+    (member.questionToken && !supplied) ||
     member.parameters ||
     !member.type?.typeName
   )

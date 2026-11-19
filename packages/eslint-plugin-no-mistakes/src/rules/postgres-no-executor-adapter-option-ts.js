@@ -1,5 +1,11 @@
 "use strict";
 
+const {
+  forwardedOption,
+  guardedProof,
+  memberWrite,
+} = require("./postgres-no-executor-adapter-option-forward");
+
 function referenceFacts(fn, checker, facts) {
   let cached = facts.get(fn);
   if (cached) return cached;
@@ -21,7 +27,7 @@ function referenceFacts(fn, checker, facts) {
   }
   for (const parameter of fn.parameters) visit(parameter);
   visit(fn.body);
-  cached = { refs, opaqueScope, verdicts: new Map() };
+  cached = { refs, opaqueScope, verdicts: new Map(), facts };
   facts.set(fn, cached);
   return cached;
 }
@@ -131,6 +137,8 @@ function valueUse(node, property, checker, state) {
 }
 
 function safeSymbol(symbol, object, property, checker, state) {
+  let wrote = false;
+  let forwarded = false;
   for (const identifier of state.refs.get(symbol) ?? []) {
     const parent = identifier.parent;
     if (
@@ -142,18 +150,27 @@ function safeSymbol(symbol, object, property, checker, state) {
     if (parent?.expression === identifier && parent.getFirstToken()?.getText() === "typeof")
       continue;
     if (object) {
-      if (parent?.expression === identifier && (parent.name || parent.argumentExpression)) {
-        const name = staticKey(parent);
+      // A non-null assertion or cast is transparent for the property read.
+      const { expression, parent: owner } = followedExpression(identifier);
+      if (owner?.expression === expression && (owner.name || owner.argumentExpression)) {
+        const name = staticKey(owner);
         if (name == null) return false;
-        if (name !== property) continue;
-        if (valueUse(parent, property, checker, state)) continue;
+        if (name !== property) {
+          wrote ||= memberWrite(owner);
+          continue;
+        }
+        if (valueUse(owner, property, checker, state)) continue;
+      } else if (forwardedOption(identifier, property, checker, state.facts, tsOptionBody)) {
+        state.forwarded = forwarded = true;
+        continue;
       }
     } else if (valueUse(identifier, property, checker, state)) {
       continue;
     }
     return false;
   }
-  return true;
+  // A callee that receives the binding sees every other property write.
+  return !(wrote && forwarded);
 }
 
 function tsOptionBody(fn, index, property, checker, facts) {
@@ -163,8 +180,10 @@ function tsOptionBody(fn, index, property, checker, facts) {
   if (state.verdicts.has(key)) return state.verdicts.get(key);
   const binding = bindingName(fn.parameters[index], property);
   const symbol = checker.getSymbolAtLocation(binding.node);
-  const safe = Boolean(
-    symbol && !state.opaqueScope && safeSymbol(symbol, binding.object, property, checker, state),
+  const safe = guardedProof(fn, key, facts, () =>
+    Boolean(
+      symbol && !state.opaqueScope && safeSymbol(symbol, binding.object, property, checker, state),
+    ),
   );
   state.verdicts.set(key, safe);
   return safe;

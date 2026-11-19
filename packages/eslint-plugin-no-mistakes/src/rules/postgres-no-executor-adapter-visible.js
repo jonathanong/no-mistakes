@@ -2,9 +2,11 @@
 
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 const { isImportedHelper, localFunction } = require("./postgres-no-executor-adapter-target");
-const { literalSql, tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
-const { localHoleSafe, tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
+const { literalSql } = require("./postgres-no-executor-adapter-sql");
+const { localHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
+const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
+const { importedVisible } = require("./postgres-no-executor-adapter-imported-visible");
 
 function opaqueBody(body) {
   const stack = [body];
@@ -34,12 +36,14 @@ function parameterBinding(param, property) {
 }
 
 function executorCall(reference, property) {
-  const node = reference.identifier;
+  let node = reference.identifier;
+  while (node.parent?.type === "TSNonNullExpression") node = node.parent;
   let callee = node;
   if (property && node.parent?.type === "MemberExpression" && node.parent.object === node) {
     if (node.parent.computed || node.parent.property.name !== property) return null;
     callee = node.parent;
   }
+  while (callee.parent?.type === "TSNonNullExpression") callee = callee.parent;
   const call = callee.parent;
   return call?.type === "CallExpression" && call.callee === callee ? call : null;
 }
@@ -61,95 +65,6 @@ function otherPropertyRead(reference, property) {
   )
     return false;
   return true;
-}
-
-function importedVisible(call, index, property, context, options, facts) {
-  const services = context.sourceCode.parserServices;
-  if (!services?.program || !services.esTreeNodeToTSNodeMap) return null;
-  const ts = require("typescript");
-  const checker = services.program.getTypeChecker();
-  const callee = services.esTreeNodeToTSNodeMap.get(call.callee);
-  const signatures = checker.getTypeAtLocation(callee).getCallSignatures();
-  if (signatures.length !== 1) return null;
-  const declaration = signatures[0].getDeclaration();
-  const parameter = declaration?.parameters?.[index];
-  if (!declaration?.body || !parameter) return null;
-  let binding = parameter.name;
-  let object = false;
-  if (property && ts.isObjectBindingPattern(binding)) {
-    binding = binding.elements.find(
-      (element) =>
-        ts.isIdentifier(element.name) &&
-        (element.propertyName?.text ?? element.name.text) === property &&
-        !element.initializer &&
-        !element.dotDotDotToken,
-    )?.name;
-  } else if (property) {
-    object = true;
-  }
-  if (!binding || !ts.isIdentifier(binding)) return null;
-  const symbol = checker.getSymbolAtLocation(binding);
-  if (!symbol) return null;
-  let seen = false;
-  let safe = true;
-  function visit(node) {
-    if (!safe) return;
-    if (ts.isIdentifier(node) && node.text === "arguments") safe = false;
-    if (node !== binding && ts.isIdentifier(node) && checker.getSymbolAtLocation(node) === symbol) {
-      seen = true;
-      let invoked = node.parent;
-      if (
-        object &&
-        ts.isPropertyAccessExpression(invoked) &&
-        invoked.expression === node &&
-        invoked.name.text !== property
-      ) {
-        const parent = invoked.parent;
-        if (
-          (ts.isBinaryExpression(parent) &&
-            parent.left === invoked &&
-            ts.isAssignmentOperator(parent.operatorToken.kind)) ||
-          ts.isPrefixUnaryExpression(parent) ||
-          ts.isPostfixUnaryExpression(parent) ||
-          ts.isDeleteExpression(parent)
-        )
-          safe = false;
-        return;
-      }
-      if (
-        object &&
-        ts.isPropertyAccessExpression(invoked) &&
-        invoked.expression === node &&
-        invoked.name.text === property
-      ) {
-        invoked = invoked.parent;
-      }
-      if (
-        !ts.isCallExpression(invoked) ||
-        (invoked.expression !== node && invoked.expression !== node.parent) ||
-        !invoked.arguments[0] ||
-        !tsLiteralSql(invoked.arguments[0], checker, ts, options, (hole) =>
-          tsHoleSafe(
-            hole,
-            call,
-            declaration,
-            checker,
-            ts,
-            context,
-            facts,
-            services.program,
-            symbol,
-            property,
-          ),
-        )
-      ) {
-        safe = false;
-      }
-    }
-    ts.forEachChild(node, visit);
-  }
-  visit(declaration.body);
-  return seen && safe;
 }
 
 function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts) {
@@ -180,6 +95,12 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
     if (reference.init) return true;
     if (reference.isWrite()) return false;
     if (binding.object && otherPropertyRead(reference, property)) return true;
+    if (accepted && binding.object && passedOn(reference)) {
+      const inner = reference.identifier.parent;
+      const at = inner.arguments.indexOf(reference.identifier);
+      const next = [inner, at, quoteNode, context, options, accepted, facts];
+      return visibleSqlTarget(...next) === true;
+    }
     const invocation = executorCall(reference, property);
     return Boolean(
       invocation &&
