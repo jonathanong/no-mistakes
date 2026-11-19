@@ -3,6 +3,7 @@
 const { literalString } = require("./module-mock-helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
+const { resultDiscarded } = require("./restricted-api-usage-discard");
 const { targetSchema } = require("./restricted-api-usage-schema");
 const { mergeVisitors, strictVisitors } = require("./restricted-api-usage-strict");
 const { isLocalRequire, memberPropertyName, resolveVariable } = require("./async-target-bindings");
@@ -159,6 +160,7 @@ module.exports = {
       for (const target of targets) {
         // Namespace accesses report at the member itself, including calls.
         if (matches(target, namespace, name)) continue;
+        if (target.discardedResultOnly && !resultDiscarded(node)) continue;
         if (
           (name !== null && target.call?.test(name)) ||
           matches(target, binding, binding?.name ?? null)
