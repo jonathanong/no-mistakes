@@ -22,7 +22,7 @@ async function restOptions(id: string, opts: RunOptions = {}) {
 }
 
 async function parenWrite(id: string, options: RunOptions = {}) {
-  options.readOnly = true;
+  (options.readOnly) = true;
   await options.query?.(sql`SELECT id FROM widgets WHERE id = ${id}`);
 }
 
