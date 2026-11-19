@@ -22,7 +22,9 @@ pub(super) fn original_shape(command: &Command) -> Option<OriginalShape<'_>> {
     let args = &command.words[command_at + 1..];
     let url_words = url_words(&name, args)
         .into_iter()
-        .filter(|operand| operand.word.quoted_expansion.is_some())
+        .filter(|operand| {
+            operand.word.quoted_expansion.is_some() || operand.word.bare_expansion.is_some()
+        })
         .map(|operand| (operand.at, operand.word))
         .collect::<Vec<_>>();
     if url_words.is_empty() {

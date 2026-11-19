@@ -5,6 +5,8 @@ pub(super) struct Word {
     /// An unquoted expansion may add fields and change following option slots.
     pub(super) expansion_may_split: bool,
     pub(super) quoted_expansion: Option<(usize, usize)>,
+    /// A whole `$NAME` or `${NAME}` reference outside quotes, as (offset, length).
+    pub(super) bare_expansion: Option<(usize, usize)>,
 }
 
 pub(super) struct Command {
@@ -85,15 +87,18 @@ fn flush_word(
     quoted: bool,
     expansion_may_split: &mut bool,
     quoted_expansion: &mut Option<(usize, usize)>,
+    bare_expansion: &mut Option<(usize, usize)>,
 ) {
     let expansion_may_split = std::mem::take(expansion_may_split);
     let quoted_expansion = quoted_expansion.take();
+    let bare_expansion = bare_expansion.take();
     if quoted || !word.is_empty() {
         current.words.push(Word {
             text: std::mem::take(word),
             line: word_line,
             expansion_may_split,
             quoted_expansion,
+            bare_expansion,
         });
     }
 }

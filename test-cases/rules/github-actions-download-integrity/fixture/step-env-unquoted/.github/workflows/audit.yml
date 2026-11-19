@@ -1,0 +1,47 @@
+name: Audit
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOOL_URL: https://downloads.example.com/braced
+        run: curl -fsSL -o tool.tgz ${TOOL_URL}
+      - env:
+          TOOL_URL: https://downloads.example.com/bare
+        run: curl -fsSL -o tool.tgz $TOOL_URL
+      - env:
+          TOOL_URL: https://downloads.example.com/wget
+        run: wget -O tool.tgz ${TOOL_URL}
+      - env:
+          TOOL_URL: https://downloads.example.com/inline-option
+        run: curl --url=$TOOL_URL -o tool.tgz
+      - env:
+          BASE: https://downloads.example.com
+          FILE: composed
+        run: curl -fsSL -o tool.tgz $BASE/$FILE
+      - env:
+          TOOL_URL: https://downloads.example.com/suffix
+        run: curl -fsSL -o tool.tgz ${TOOL_URL}.tgz
+      - env:
+          TOOL_URL: ${{ secrets.TOOL_URL }}
+        run: curl -fsSL -o tool.tgz ${TOOL_URL}
+      - env:
+          TOOL_URL: https://downloads.example.com/${{ inputs.version }}
+        run: curl -fsSL -o tool.tgz $TOOL_URL
+      - env:
+          TOOL_URL: https://downloads.example.com/reassigned
+        run: |
+          TOOL_URL=https://api.github.com/tool
+          curl -fsSL -o tool.tgz ${TOOL_URL}
+      - env:
+          TOOL_URL: https://downloads.example.com/verified
+        run: |
+          curl -fsSL -o tool.tgz ${TOOL_URL}
+          sha256sum -c tool.sha256
+      - env:
+          TOOL_URL: https://downloads.example.com/single-quoted
+        run: curl -fsSL -o tool.tgz '$TOOL_URL'
+      - env:
+          TOOL_URL: https://api.github.com/trusted
+        run: curl -fsSL -o tool.tgz $TOOL_URL

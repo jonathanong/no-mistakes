@@ -15,6 +15,7 @@ struct Scan<'a> {
     redirect_operand: bool,
     word_expansion_may_split: bool,
     word_quoted_expansion: Option<(usize, usize)>,
+    word_bare_expansion: Option<(usize, usize)>,
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
@@ -36,6 +37,7 @@ pub(super) fn run(script: &str, strict: bool) -> Parse {
         redirect_operand: false,
         word_expansion_may_split: false,
         word_quoted_expansion: None,
+        word_bare_expansion: None,
         quoting: None,
         current: Command {
             anchor: 0,

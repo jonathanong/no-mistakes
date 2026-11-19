@@ -41,6 +41,10 @@ impl Scan<'_> {
         if self.quoting.is_none() && matches!(ch, '$' | '`') {
             self.word_expansion_may_split = true;
         }
+        if self.quoting.is_none() && ch == '$' {
+            self.word_bare_expansion = quoted_reference_len(&self.chars[self.index + 1..])
+                .map(|len| (self.word.len(), len));
+        }
         if self.quoting == Some('"') && ch == '$' {
             self.word_quoted_expansion = quoted_reference_len(&self.chars[self.index + 1..])
                 .map(|len| (self.word.len(), len));
@@ -89,12 +93,14 @@ impl Scan<'_> {
             quoted,
             &mut self.word_expansion_may_split,
             &mut self.word_quoted_expansion,
+            &mut self.word_bare_expansion,
         );
     }
     pub(super) fn discard_word(&mut self) {
         self.word.clear();
         self.word_expansion_may_split = false;
         self.word_quoted_expansion = None;
+        self.word_bare_expansion = None;
     }
 }
 

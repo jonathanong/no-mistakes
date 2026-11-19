@@ -56,6 +56,11 @@ fn github_actions_download_integrity_scopes_and_sequencing_match_snapshot() {
             &["fail"][..],
         ),
         (
+            "github_actions_download_integrity_step_env_unquoted",
+            "step-env-unquoted",
+            &["fail"][..],
+        ),
+        (
             "github_actions_download_integrity_builtin_writes",
             "builtin-writes",
             &["fail"][..],
