@@ -88,6 +88,25 @@ function append(rows, otherRows, row) {
 }
 ```
 
+A local array that stages caller-owned values does not make them local. Reading
+a staged entry back, including through a destructure or a `for...of`, keeps the
+provenance of what was pushed. `entries()` and `values()` on a caller-owned
+collection yield caller-owned elements, so a staged `body` and `event` are both
+reported:
+
+```ts
+export async function stage(bodies: unknown[], events: Ev[]) {
+  const pending: Array<{ args: Record<string, unknown>; event: Ev }> = [];
+  for (const [i, body] of bodies.entries()) {
+    pending.push({ args: body as Record<string, unknown>, event: events[i]! });
+  }
+  for (const { args, event } of pending) {
+    args["id"] = 1; // reported: `body` is the caller's
+    event.target = { id: "x" }; // reported: `events[i]` is the caller's
+  }
+}
+```
+
 Bare `this.push(...)`, `this.pop()`, and the other listed array mutator calls
 are not presumed to mutate an array when the receiver is unknown. This includes
 stream methods in object literals and ordinary functions. Known array receivers
@@ -370,6 +389,17 @@ export function apply(app: { extend(value: object): void }) {
 /** @this {{ data?: string }} */
 export function update() {
   this.data = "ready";
+}
+```
+
+Entries that are fresh in this function stay local when staged. A pending array
+of events created inside the function, or of literals produced by a mapper, is
+still written freely:
+
+```ts
+export function stage(names: string[]) {
+  const pending = names.map((name) => ({ args: {} as Record<string, unknown>, name }));
+  for (const { args } of pending) args["id"] = 1;
 }
 ```
 

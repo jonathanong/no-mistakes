@@ -83,6 +83,10 @@ function remember(fresh, tag) {
   fresh.dynamic = joinDynamic(fresh.dynamic, tag);
 }
 
+function freshMembers(tag) {
+  return tag.type === "fresh" || (tag.type === "union" && tag.members.every(freshMembers));
+}
+
 function joinDynamic(existing, tag) {
   if (!existing || existing.type === "unknown") {
     return tag;
@@ -95,6 +99,9 @@ function joinDynamic(existing, tag) {
   }
   if (existing.type === "mapset" && tag.type === "mapset") {
     return existing;
+  }
+  if (freshMembers(existing) && freshMembers(tag)) {
+    return existing.members?.includes(tag) ? existing : joinValues(existing, tag);
   }
   return unknown();
 }
