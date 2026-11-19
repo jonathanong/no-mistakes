@@ -3,6 +3,7 @@ const { createTargetMatcher } = require("./async-targets");
 const { unwrapExpression } = require("./async-ast");
 const { createWrapperResolver } = require("./gh-api-wrappers");
 const { ruleSuppression } = require("../rule-suppression");
+const { createFactoryResolver, factorySchema } = require("./gh-api-factory");
 const { inspectArgv, token } = require("./gh-api-argv");
 
 module.exports = {
@@ -30,6 +31,7 @@ module.exports = {
               additionalProperties: false,
             },
           },
+          factoryWrappers: factorySchema,
           endpointMessage: { type: "string", minLength: 1 },
           methodMessage: { type: "string", minLength: 1 },
         },
@@ -44,6 +46,7 @@ module.exports = {
   create(context) {
     const options = context.options[0] || {};
     const resolveWrapper = createWrapperResolver(context, options.wrappers || []);
+    const resolveFactory = createFactoryResolver(context, options.factoryWrappers || []);
     const matcherContext = Object.create(context);
     Object.defineProperty(matcherContext, "options", {
       value: [
@@ -68,7 +71,7 @@ module.exports = {
         if (resolved && token(resolved.arguments[0]) === "gh") {
           array = unwrapExpression(resolved.arguments[1]);
         } else {
-          const wrapped = resolveWrapper(node);
+          const wrapped = resolveWrapper(node) || resolveFactory(node);
           if (!wrapped) return;
           array = unwrapExpression(wrapped.arguments[wrapped.wrapper.argumentPosition - 1]);
           includesApi = wrapped.wrapper.includesApi !== false;

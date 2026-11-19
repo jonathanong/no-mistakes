@@ -422,7 +422,9 @@ See [the rule reference](eslint-rules/vitest-timeout-cap.md) for limits and
 ### `gh-api-argument-safety`
 
 Opt-in literal GitHub CLI API argv checks. `wrappers` entries select `callee`,
-`argumentPosition`, and `includesApi`; `endpointMessage` and `methodMessage`
+`argumentPosition`, and `includesApi`; `factoryWrappers` entries select a
+`factory`, `method`, `argumentPosition`, and `includesApi` on an immediate
+`factory(...).method([...])` receiver; `endpointMessage` and `methodMessage`
 customize diagnostics. See [the rule reference](eslint-rules/gh-api-argument-safety.md).
 
 ### `no-argv-main-guard`
