@@ -464,7 +464,11 @@ An opt-in file-local import and call policy. `targets` entries select an exact
 `callNamePattern`, or both. `message` supplies a local reason and safe rewrite.
 Type-only imports are ignored; imported aliases and namespace calls use lexical
 binding identity. Lexical call patterns intentionally also match unrelated
-bindings with those names. Invalid expressions fail during initialization.
+bindings with those names. Strict lexical selectors
+(`referenceNamePattern`, `declarationNamePattern`, `propertyNamePattern`,
+`constructNamePattern` with `constructArgumentCount`) are separate opt-ins for
+owners who intend the names themselves to be forbidden. Invalid expressions fail
+during initialization.
 See [the rule reference](eslint-rules/restricted-api-usage.md) for file scoping,
 exclusions, suppression, and complete examples.
 

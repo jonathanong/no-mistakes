@@ -68,8 +68,41 @@ client.send(new ListEntriesCommand({ cursor }));
 - `message`: optional replacement diagnostic, which should explain the local
   reason and static rewrite. The default asks callers to use an allowed API.
 
-Each target needs `source` plus `importedNamePattern`, or `callNamePattern`, or
-both. Invalid regular expressions throw during rule initialization. Expressions
+- `referenceNamePattern`: optional regular expression for a bare identifier or
+  static member property that is read without being called or constructed.
+  `api.blockingWait` and `const f = blockingWait` report; `api.blockingWait()`,
+  `new api.blockingWait()`, bindings, parameters, destructure keys, and labels do
+  not (use `callNamePattern` or `constructNamePattern` for invocations).
+- `declarationNamePattern`: optional regular expression for the name declared by a
+  function, class, or variable declaration, such as `function enqueueItemAndWait() {}`.
+- `propertyNamePattern`: optional regular expression for a literal object key or a
+  class method or field definition (`{ blockingWait: true }`, `blockingWait = 1`).
+  Computed keys are unproven and do not report; destructuring patterns are not
+  definitions.
+- `constructNamePattern`: optional regular expression for the callee name of
+  `new Name(...)` or `new ns.Name(...)`.
+- `constructArgumentCount`: optional non-negative integer. Requires
+  `constructNamePattern` and reports only constructions with exactly that many
+  arguments. A spread argument makes the arity unproven, so it does not match.
+
+The strict selectors are lexical like `callNamePattern`: they ignore import origin
+and shadowing, and are off unless configured. Existing configurations produce
+identical findings.
+
+```js
+{
+  'no-mistakes/restricted-api-usage': ['error', {
+    targets: [
+      { referenceNamePattern: '^blockingWait$', message: 'Use the async variant.' },
+      { declarationNamePattern: 'AndWait$' },
+      { constructNamePattern: '^RateLimitedWorker$', constructArgumentCount: 0 }
+    ]
+  }]
+}
+```
+
+Each target needs `source` plus `importedNamePattern`, or at least one of
+`callNamePattern` and the strict selectors above, or several. Invalid regular expressions throw during rule initialization. Expressions
 use JavaScript search semantics: use anchors when a prefix or exact match matters.
 
 Use the linter's file scope and ignores to narrow the policy and allow a contract

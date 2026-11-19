@@ -145,6 +145,9 @@ work when the file is linted with ESLint.
 
 ## Related rules
 
+- [`restricted-api-usage`](restricted-api-usage.md) has opt-in lexical selectors
+  for bare references, declarations, literal object keys, and constructor arity
+  when only a name, not a member path, is forbidden.
 - [`forbidden-calls`](../rules/forbidden-calls.md) bans calls through the
   prepared call graph. It does not see a member read that is not a call.
 - [`no-banned-import-outside-allowed-paths`](no-banned-import-outside-allowed-paths.md)

@@ -1,0 +1,391 @@
+{
+  "restricted-api-usage": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-none.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 31,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+          "line": 3,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 37,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+          "line": 4,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+          "line": 5,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 33,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+          "line": 6,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 36,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+          "line": 7,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 25,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-reference.ts",
+          "line": 15,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "referenceNamePattern": "^blockingWait$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-declaration.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-declaration.ts",
+          "line": 1,
+          "message": "Restricted API 'enqueueItemAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 21,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-declaration.ts",
+          "line": 2,
+          "message": "Restricted API 'EnqueueAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 24,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-declaration.ts",
+          "line": 3,
+          "message": "Restricted API 'enqueueJobAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "declarationNamePattern": "AndWait$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-property.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-property.ts",
+          "line": 2,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-property.ts",
+          "line": 3,
+          "message": "Restricted API 'blockingWait2'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-property.ts",
+          "line": 4,
+          "message": "Restricted API 'blockingWait3'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-property.ts",
+          "line": 9,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-property.ts",
+          "line": 10,
+          "message": "Restricted API 'blockingWait4'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "propertyNamePattern": "^blockingWait"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 1,
+          "message": "Restricted API 'RateLimitedWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 2,
+          "message": "Restricted API 'RateLimitedWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "constructArgumentCount": 0,
+              "constructNamePattern": "^RateLimitedWorker$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 1,
+          "message": "Restricted API 'RateLimitedWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 2,
+          "message": "Restricted API 'RateLimitedWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 3,
+          "message": "Restricted API 'RateLimitedWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 5,
+          "message": "Restricted API 'RateLimitedWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
+          "line": 6,
+          "message": "Restricted API 'OtherWorker'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "constructNamePattern": "Worker$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-none.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 31,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-none.ts",
+          "line": 1,
+          "message": "Name is forbidden.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-none.ts",
+          "line": 2,
+          "message": "Name is forbidden.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-none.ts",
+          "line": 3,
+          "message": "Name is forbidden.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 36,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-none.ts",
+          "line": 4,
+          "message": "Name is forbidden.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "constructArgumentCount": 0,
+              "constructNamePattern": "^RateLimitedWorker$",
+              "declarationNamePattern": "AndWait$",
+              "message": "Name is forbidden.",
+              "propertyNamePattern": "^blockingWait",
+              "referenceNamePattern": "^blockingWait$"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
