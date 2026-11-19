@@ -1,0 +1,54 @@
+[
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-mapped-args/proofs.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "all",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-mapped-args/controls.ts",
+    "findings": [
+      {
+        "column": 21,
+        "endColumn": 23,
+        "endLine": 232,
+        "file": "test-cases/eslint-snippets/fixture/executor-mapped-args/controls.ts",
+        "line": 232,
+        "message": "This call passes tx into a helper. Name the executor inside the helper (`tx(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "all",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  }
+]
