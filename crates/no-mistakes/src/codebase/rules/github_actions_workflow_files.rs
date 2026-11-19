@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub(super) mod job_lines;
+pub(super) mod step_lines;
 
 /// `Some(true)` is an action file. `Some(false)` is a workflow. `None` is ignored.
 pub(super) fn gha_kind(rel: &str) -> Option<bool> {
