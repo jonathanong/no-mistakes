@@ -44,7 +44,9 @@ function tsConstDeclaration(declaration, ts, judge) {
 }
 
 function resolvedSymbol(node, checker, ts) {
-  const symbol = checker.getSymbolAtLocation(node);
+  const symbol = ts.isShorthandPropertyAssignment(node.parent)
+    ? checker.getShorthandAssignmentValueSymbol(node.parent)
+    : checker.getSymbolAtLocation(node);
   return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
 }
 
@@ -56,7 +58,10 @@ function escapedSymbols(program, checker, ts) {
     if (program.isSourceFileFromExternalLibrary(file) || program.isSourceFileDefaultLibrary(file))
       continue;
     (function visit(node) {
-      if (ts.isIdentifier(node) && !ts.isVariableDeclaration(node.parent)) {
+      if (
+        ts.isIdentifier(node) &&
+        !(ts.isVariableDeclaration(node.parent) && node.parent.name === node)
+      ) {
         const reference = ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
         const use = reference ? node.parent : node;
         const specifier = ts.isImportSpecifier(node.parent) || ts.isExportSpecifier(node.parent);

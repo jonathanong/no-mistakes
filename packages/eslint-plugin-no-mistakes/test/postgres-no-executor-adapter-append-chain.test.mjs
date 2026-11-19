@@ -50,6 +50,15 @@ const lines = (rows) => rows.map((row) => row.findings.map(({ line }) => line));
 const PROOFS = ["proofs.ts", "importedConstProofs.ts", "importedProofs.ts"];
 const CONTROLS = ["controls.ts", "importedControls.ts"];
 const MUTATED = ["aliasControls.ts", "exportedConstControls.ts", "listedConstControls.ts"];
+const ESCAPED = [
+  "initializerAliasControls.ts",
+  "shorthandPropertyControls.ts",
+  "propertyAssignmentControls.ts",
+  "bindingElementControls.ts",
+  "parameterDefaultControls.ts",
+  "exportAssignmentControls.ts",
+];
+const ESCAPED_LINES = [[15], [15], [15], [15], [14], [12]];
 const CONTROL_LINES = [67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100, 109];
 
 it("proves constant append chains and reports the controls in forwarding-only mode", async () => {
@@ -92,4 +101,17 @@ it("reports constants mutated through aliases or other modules", async () => {
 it("reports the same mutated constants without type information", async () => {
   const rows = suite("forwarding-only", [], MUTATED, false);
   expect(lines(rows)).toEqual([[14, 17], [11], [11]]);
+});
+
+it("reports constants that escape through an initializer or other declaration position", async () => {
+  const rows = suite("forwarding-only", [], ESCAPED);
+  expect(lines(rows)).toEqual(ESCAPED_LINES);
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-append-chain-escaped.snap",
+  );
+});
+
+it("reports the same escaped constants without type information", () => {
+  const rows = suite("forwarding-only", [], ESCAPED, false);
+  expect(lines(rows)).toEqual(ESCAPED_LINES);
 });
