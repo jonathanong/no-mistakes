@@ -1,0 +1,59 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "callers.mts",
+          "line": 8,
+          "message": "callers.mts:8: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const arrayDefault = (after?: string) => pageArrayDefault(sql`/* arrayDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => [1]));",
+          "target": "leading-annotation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "callers.mts",
+          "line": 8,
+          "message": "callers.mts:8: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const arrayDefault = (after?: string) => pageArrayDefault(sql`/* arrayDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => [1]));",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -5,13 +5,6 @@ use super::super::{
 use oxc_ast::ast;
 
 pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Option<AppendCallback> {
-    if !summary
-        .body
-        .iter()
-        .any(|step| matches!(step, Step::Branch(_, _, _)))
-    {
-        return None;
-    }
     let (site, callback, payload) = call_site(summary)?;
     let payload_index = summary.params.iter().position(|name| name == &payload)?;
     let mut tags = Vec::new();
@@ -82,7 +75,6 @@ fn call_site(summary: &Function) -> Option<(usize, usize, String)> {
 // builder itself.
 fn inert_after_call(step: &Step, payload: &str) -> bool {
     match step {
-        Step::Var(_) | Step::Reserve(_) => true,
         Step::Return(expr) | Step::Bind(_, expr) => result_read(expr, payload),
         _ => false,
     }
