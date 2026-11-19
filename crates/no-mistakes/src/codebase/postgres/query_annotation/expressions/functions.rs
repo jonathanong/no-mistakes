@@ -51,8 +51,6 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
     Expr::Function(summary)
 }
 
-// The proof may come from a lowering the general summary does not use, so a
-// function the evaluator treats as unsupported elsewhere stays unsupported.
 fn summary_proof(
     value: &oxc_ast::ast::Function<'_>,
     source: &str,

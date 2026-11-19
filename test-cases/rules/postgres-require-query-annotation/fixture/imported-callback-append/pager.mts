@@ -72,3 +72,14 @@ export async function plainDestructure(statement: SqlStatement, run: Reader) {
   const { rows } = await run(statement);
   return rows;
 }
+export async function pageArray(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  await query(selectWhere);
+  return [mutate(selectWhere)];
+}
+export async function pageObject(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  await query(selectWhere);
+  const wrapped = { y: mutate(selectWhere) };
+  return wrapped;
+}
