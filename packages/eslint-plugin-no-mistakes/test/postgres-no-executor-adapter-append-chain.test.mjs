@@ -125,6 +125,14 @@ it("reports constants mutated through a namespace import", async () => {
   );
 });
 
+it("reports constants mutated through renames, ambient re-exports, default and require aliases", async () => {
+  const rows = suite("forwarding-only", [], ["indexControls.ts"]);
+  expect(lines(rows)).toEqual([[31, 34, 37, 40, 43]]);
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-append-chain-index.snap",
+  );
+});
+
 it("reports the same namespace-mutated constants without type information", () => {
   const rows = suite("forwarding-only", [], NAMESPACE, false);
   expect(lines(rows)).toEqual([[11], [11]]);
