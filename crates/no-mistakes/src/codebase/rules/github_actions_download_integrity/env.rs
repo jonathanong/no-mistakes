@@ -27,7 +27,8 @@ impl<'a> UrlBindings<'a> {
 
     pub(super) fn resolve(&self, word: &words::Word, operand: &str) -> Option<&'a str> {
         let whole = Some((word.text.len() - operand.len(), operand.len()));
-        if word.quoted_expansion != whole && word.bare_expansion != whole {
+        let bare = word.bare_expansion == whole;
+        if word.quoted_expansion != whole && !bare {
             return None;
         }
         let reference = operand.strip_prefix('$')?;
@@ -40,6 +41,9 @@ impl<'a> UrlBindings<'a> {
         }
         let value = self.values.get(name)?.as_str()?;
         if value.contains(['$', '`', '{', '}']) || value.contains(char::is_whitespace) {
+            return None;
+        }
+        if bare && value.contains(['*', '?', '[']) {
             return None;
         }
         Some(value)
