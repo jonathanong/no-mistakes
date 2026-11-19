@@ -302,6 +302,8 @@ mod cli_check_production_exports_platform;
 #[path = "cli_check_rules_test_no_live_repository_scan_forwarded.rs"]
 mod cli_check_rules_test_no_live_repository_scan_forwarded;
 
+#[path = "cli_check_rules_test_no_live_repository_scan_analyzers.rs"]
+mod cli_check_rules_test_no_live_repository_scan_analyzers;
 #[path = "cli_check_rules_test_no_live_repository_scan_context.rs"]
 mod cli_check_rules_test_no_live_repository_scan_context;
 #[path = "cli_check_rules_test_no_live_repository_scan_issue_3286.rs"]

@@ -12,6 +12,10 @@ test("live repository scan options expose roots, fixtures, enumerators, and unre
   assert.match(types, /unresolvedRoot\?: "advise" \| "report";/);
   assert.match(types, /export interface TestNoLiveRepositoryScanRuntimeAsset/);
   assert.match(types, /runtimeAssets\?: TestNoLiveRepositoryScanRuntimeAsset\[\];/);
+  assert.match(types, /export interface TestNoLiveRepositoryScanAnalyzer/);
+  assert.match(types, /command: string;/);
+  assert.match(types, /args\?: string\[\];/);
+  assert.match(types, /analyzers\?: TestNoLiveRepositoryScanAnalyzer\[\];/);
   assert.match(types, /root: string;/);
   assert.match(types, /reason: string;/);
   assert.match(

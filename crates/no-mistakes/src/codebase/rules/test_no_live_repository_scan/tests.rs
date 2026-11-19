@@ -104,6 +104,9 @@ fn options_validate_and_default_fixture_dirs() {
         "runtimeAssets: [{root: 'a\\\\b', reason: why}]",
         "runtimeAssets: [{root: a/../b, reason: why}]",
         "runtimeAssets: [{root: a, reason: ' '}]",
+        "analyzers: [{command: ''}]",
+        "analyzers: [{command: a/b}]",
+        "analyzers: [{command: widget-audit, args: ['']}]",
     ] {
         let options: Options = serde_yaml::from_str(bad).unwrap();
         assert!(options.validate().is_err(), "{bad}");

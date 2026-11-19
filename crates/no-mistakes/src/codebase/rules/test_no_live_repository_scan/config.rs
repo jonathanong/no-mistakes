@@ -32,6 +32,8 @@ pub(super) struct Options {
     pub(super) unresolved_root: UnresolvedRoot,
     /// Shipped asset trees that production code legitimately reads at runtime.
     pub(super) runtime_assets: Vec<RuntimeAsset>,
+    /// Analyzer commands tests must not run against the live repository.
+    pub(super) analyzers: Vec<AnalyzerCommand>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -41,6 +43,16 @@ pub(super) struct RuntimeAsset {
     pub(super) root: String,
     /// Why the tree is shipped input rather than a policy surface.
     pub(super) reason: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct AnalyzerCommand {
+    /// Executable name. A path matches by its basename, including `node_modules/.bin`.
+    pub(super) command: String,
+    /// Leading arguments that identify the analyzer. Extra arguments may follow.
+    #[serde(default)]
+    pub(super) args: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -94,6 +106,16 @@ impl Options {
             {
                 bail!("{RULE_ID}: runtimeAssets entries need a relative `root` without `..` and a non-empty `reason`");
             }
+        }
+        let command_name = |command: &str| {
+            !command.is_empty()
+                && !command.contains(['/', '\\', ' '])
+                && command.chars().all(|c| c.is_ascii_graphic())
+        };
+        if self.analyzers.iter().any(|analyzer| {
+            !command_name(&analyzer.command) || analyzer.args.iter().any(String::is_empty)
+        }) {
+            bail!("{RULE_ID}: analyzers entries need a command name without separators and non-empty leading arguments");
         }
         Ok(())
     }

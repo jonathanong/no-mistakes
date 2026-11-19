@@ -45,6 +45,11 @@ enumerators, and distinguishes the shared temporary directory from an owned
 and the return value of callback `fs.mkdtemp`, are not that owned directory.
 Awaiting an immutable `const` alias of that promise is the directory. Another
 use of a mutable buffer result leaves the binding unproven.
+Opt-in `analyzers` entries share this CLI and async Node check. A configured
+command matches a direct executable, a `node_modules/.bin` basename, and one
+level of `pnpm exec`, `pnpm dlx`, or `npx` wrapping. The `cwd` proof is the
+same owned `mkdtemp` or fixture-directory proof; a missing `cwd` is the live
+working directory.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory
 and loader aliases do not grant a bounded-path proof.

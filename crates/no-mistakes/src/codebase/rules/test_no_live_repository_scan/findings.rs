@@ -159,7 +159,7 @@ pub(super) fn unresolved_dispatch(
     }
 }
 
-fn build(
+pub(super) fn build(
     root: &Path,
     application: &RuleDef,
     site: &ResolvedCallSite,

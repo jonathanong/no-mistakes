@@ -14,6 +14,14 @@ export interface TestNoLiveRepositoryScanEnumerator {
   export?: string;
 }
 
+/** An analyzer command a test must not run against the live working directory. */
+export interface TestNoLiveRepositoryScanAnalyzer {
+  /** Executable name. A path matches by its basename, including `node_modules/.bin`. */
+  command: string;
+  /** Leading arguments that identify the analyzer. Extra arguments may follow. */
+  args?: string[];
+}
+
 /** A shipped asset tree that production code reads at runtime. */
 export interface TestNoLiveRepositoryScanRuntimeAsset {
   /** Repository-relative directory, for example `assets/migrations`. No `..`, no leading `/`. */
@@ -39,4 +47,9 @@ export interface TestNoLiveRepositoryScanOptions {
    * target `runtime asset` instead of failing; other trees are still reported.
    */
   runtimeAssets?: TestNoLiveRepositoryScanRuntimeAsset[];
+  /**
+   * Analyzer commands tests must not run against the live working directory.
+   * Default: none. No command name is built in.
+   */
+  analyzers?: TestNoLiveRepositoryScanAnalyzer[];
 }

@@ -683,9 +683,12 @@ Configured [`production-exports-only-used-by-tests`](rules/production-exports-on
 [`test-no-live-repository-scan`](rules/test-no-live-repository-scan.md) runs
 through the existing asynchronous `check()` and `analyzeProject()` APIs; it adds
 no new entrypoint. Type its options with `TestNoLiveRepositoryScanOptions`
-(including `runtimeAssets` entries, `TestNoLiveRepositoryScanRuntimeAsset`),
+(including `runtimeAssets` entries, `TestNoLiveRepositoryScanRuntimeAsset`,
+and opt-in `analyzers` entries, `TestNoLiveRepositoryScanAnalyzer`),
 exported from `no-mistakes/types`. Runtime-asset reads are advisories with
-target `runtime asset` in the check report.
+target `runtime asset` in the check report. A configured analyzer launch
+against the live working directory is an ordinary finding with target
+`analyzer subprocess`.
 
 The reports share CommonJS binding provenance with the canonical call graph,
 retain unresolved computed loads, and distinguish shared temporary roots from

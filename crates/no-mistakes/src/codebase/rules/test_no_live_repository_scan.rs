@@ -10,6 +10,7 @@ mod provenance;
 mod reachable;
 mod registry;
 mod requires;
+mod subprocess;
 use super::analysis_policy::AnalysisDiagnostics;
 use super::forbidden_calls::{expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
@@ -77,6 +78,7 @@ pub(crate) fn check_with_graph(
         }
         let reachable = &scope.sources;
         let fixture_dirs = options.fixture_dirs();
+        let analyzers = subprocess::Gate::new(&root, application, facts, &options, &fixture_dirs);
         let mut sites = requires::Sites::default();
         let owners = std::cell::OnceCell::new();
         for site in graph.resolved_call_sites() {
@@ -86,6 +88,7 @@ pub(crate) fn check_with_graph(
             {
                 continue;
             }
+            analyzers.note(&mut diagnostics, site);
             let loads =
                 node_loaders::findings(&root, application, site, facts, &options.enumerators);
             findings::unresolved_findings(&mut diagnostics, options.unresolved_root).extend(loads);
