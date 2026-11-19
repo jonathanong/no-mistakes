@@ -447,7 +447,13 @@ run(0 ?? read, account);
   parameter, when it is initialized from a parameter, an element or member of
   a parameter (`const notice = rows[0]!`), or an element of a row set
   destructured from `await query(...)` where `query` is a parameter typed with
-  a configured `executorTypeNames` entry. The local's type must supply the
+  a configured `executorTypeNames` entry, or a `const` or `await using` bound to
+  `await factory()` where `factory` is an imported `executorFactoryNames` entry
+  (`const tx = await beginTransaction()`, then `const { rows } = await tx(statement)`).
+  That factory binding is an executor root like the typed parameter, as long as
+  it is never reassigned, not a `let`, and not passed to another function before
+  the projection. A factory missing from the list, a call that is not awaited, and a
+  reassigned `let` stay reported. The local's type must supply the
   required primitive field, and neither the local nor its source parameter or
   row set may be written, aliased, iterated, passed to a writing callee, or
   otherwise escape anywhere in the function. A `let`/`var` local, a local
