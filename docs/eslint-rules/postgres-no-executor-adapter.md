@@ -480,6 +480,20 @@ run(0 ?? read, account);
   `const summary = await load(query, id)` result, where `load` is a proven
   helper called with a typed executor parameter, is a valid projection receiver
   for a later helper under the same typed field proof.
+- Those hop arguments may also be built from the executor's own rows or from a
+  proven helper. `rows.map((r) => r.id)` and
+  `rows.map((r) => ({ a: 1, b: r.id, c: "x" as const }))` are accepted when
+  `rows` is a never-written `const { rows } = await query(...)` of a typed
+  executor, the callback is a single arrow expression, and every projected
+  field passes the same typed scalar proof as a direct projection. The awaited
+  result of a proven helper called with the same executor is accepted whether
+  or not it is scalar (for example `number[]`), inline as
+  `deliver(await build(ids, query), query)` or through a const. A mapped array
+  or result binding that is later mutated or reassigned reports. A callback
+  with a block body, a side effect or more than one expression, whole rows
+  (`rows.map((r) => r)`), spreads of a row, non-scalar fields, other receivers,
+  a result of an unproven helper and dynamic SQL in any hop keep the call
+  reported.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   In `"forwarding-only"` mode, a direct tagged template is visible SQL only
   when its tag resolves to that configured import and the template starts

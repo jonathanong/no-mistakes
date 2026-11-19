@@ -101,4 +101,4 @@ function localReceiver(variable, context, before = null) {
   );
 }
 
-module.exports = { localReceiver };
+module.exports = { executorResult, helperResult, localReceiver };

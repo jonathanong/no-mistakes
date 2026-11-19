@@ -6,6 +6,7 @@ const {
   freshDate,
   freshLocal,
 } = require("./postgres-no-executor-adapter-sql-fresh");
+const { derivedLocal, derivedValue } = require("./postgres-no-executor-adapter-sql-mapped");
 const { loopBinding } = require("./postgres-no-executor-adapter-sql-loop");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 
@@ -39,7 +40,7 @@ function typedBinding(def) {
 function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
   node = unwrapTs(node);
   const scalar = (part) => scalarArgument(part, context, allowUndefined, seen);
-  if (freshDate(node, context, scalar)) return true;
+  if (freshDate(node, context, scalar) || derivedValue(node, context, scalar)) return true;
   if (
     node?.type === "MemberExpression" &&
     !node.computed &&
@@ -63,6 +64,8 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
         if (def.type === "Variable" && !loopBinding(def)) {
           const fresh = freshLocal(variable, def.node, node, context, scalar);
           if (fresh !== null) return fresh;
+          const derived = derivedLocal(variable, def.node, node, context, scalar);
+          if (derived !== null) return derived;
           return (
             Boolean(def.node.init) && scalarArgument(def.node.init, context, allowUndefined, seen)
           );
