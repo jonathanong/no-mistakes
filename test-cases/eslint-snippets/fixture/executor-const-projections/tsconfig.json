@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "paths": {
+      "@example/db": ["./db.ts"],
+      "@example/sql": ["./sql.ts"]
+    }
+  },
+  "include": ["*.ts"]
+}
