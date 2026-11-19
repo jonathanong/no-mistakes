@@ -108,21 +108,36 @@ export async function stage(bodies: unknown[], events: Ev[]) {
 ```
 
 That caller-owned yield applies to an untyped receiver, to `any` and `unknown`,
-and when `entries` or `values` comes from TypeScript's default library (`Array`,
-a tuple, `readonly` arrays, `Map`, `Set`, and subclasses that inherit those
-methods). A project-declared `values()` or `entries()` on another object type
-returns that method's own result. With checker services, a write into that
-result is not a write into the receiver:
+to unions and type parameters, and when `entries` or `values` comes from
+TypeScript's default library or an external library (`Array`, a tuple,
+`readonly` arrays, `Map`, `Set`, and subclasses that inherit those methods).
+It also applies to a project-declared `values()` or `entries()` unless its body
+provably returns a fresh collection. Every `return` must be an array literal
+(including spreads), `new Map(...)`, `new Set(...)`, `new Array(...)`,
+`Array.from(...)`/`Array.of(...)`, or a `.map`, `.filter`, `.slice`, `.concat`,
+`.flat`, `.flatMap` or `.toSorted` call. A returned `this` member, parameter,
+module-level binding, interface or abstract signature, generator, or anything
+else unproven stays caller-owned, so the write is reported:
 
 ```ts
-type Ev = { name: string; target?: { id: string } };
-interface Service {
-  values(): Array<{ event: Ev }>;
-}
-export function fromService(service: Service) {
-  for (const item of service.values()) {
-    item.event.target = { id: "x" }; // quiet: `values` is declared on `Service`
+class Registry {
+  private byId = new Map<string, Row>();
+  values() {
+    return this.byId.values();
   }
+}
+for (const row of registry.values()) {
+  row.x = 1; // reported: the iterator walks the registry's shared map
+}
+
+class Snapshot {
+  private rows: Row[] = [];
+  values() {
+    return [...this.rows];
+  }
+}
+for (const row of snapshot.values()) {
+  row.x = 1; // quiet: `values` returns a fresh array
 }
 ```
 

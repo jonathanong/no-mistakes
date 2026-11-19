@@ -12,7 +12,7 @@
     "options": null
   },
   {
-    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service-fresh.ts",
     "findings": [],
     "kind": "valid",
     "options": null
@@ -484,6 +484,90 @@
         "endLine": 38,
         "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
         "line": 38,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 51,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": null
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+    "findings": [
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 14,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 20,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 26,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 32,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 38,
+        "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+        "messageId": "mutation",
+        "ruleId": "no-mistakes/no-object-mutation",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 36,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/no-object-mutation-pending/service.ts",
+        "line": 51,
         "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
         "messageId": "mutation",
         "ruleId": "no-mistakes/no-object-mutation",

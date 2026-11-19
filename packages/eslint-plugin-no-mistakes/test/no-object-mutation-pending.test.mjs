@@ -46,13 +46,16 @@ it.each([false, true])("keeps default-library iterators caller-owned with typed=
   ]);
 });
 
-it("keeps a project entries or values result local when typed", () => {
-  expect(lines(savedCase("service.ts", true))).toEqual([]);
+it("keeps a project entries or values result local only when it returns a fresh collection", () => {
+  expect(lines(savedCase("service-fresh.ts", true))).toEqual([]);
 });
 
-it("keeps an untyped entries or values result caller-owned", () => {
-  expect(lines(savedCase("service.ts"))).toEqual([14, 20, 26, 32, 38]);
-});
+it.each([false, true])(
+  "keeps unproven project entries or values results caller-owned with typed=%s",
+  (typed) => {
+    expect(lines(savedCase("service.ts", typed))).toEqual([14, 20, 26, 32, 38, 51]);
+  },
+);
 
 it.each([false, true])(
   "reports the other fresh entry after one pending escape with typed=%s",
@@ -70,7 +73,7 @@ it("snapshots pending provenance in both parser modes", async () => {
     valid: [
       savedCase("fresh.ts"),
       savedCase("fresh.ts", true),
-      savedCase("service.ts", true),
+      savedCase("service-fresh.ts", true),
       savedCase("repeated-fresh.ts"),
       savedCase("repeated-fresh.ts", true),
     ],
@@ -80,6 +83,7 @@ it("snapshots pending provenance in both parser modes", async () => {
       savedCase("collections.ts"),
       savedCase("collections.ts", true),
       savedCase("service.ts"),
+      savedCase("service.ts", true),
       savedCase("escaped-union.ts"),
       savedCase("escaped-union.ts", true),
       factories("accept-only-pending.ts"),

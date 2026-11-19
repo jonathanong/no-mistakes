@@ -38,3 +38,16 @@ export function constrained<T extends Service>(service: T) {
     item.event.target = { id: "x" };
   }
 }
+
+export class Registry {
+  private byId = new Map<string, { event: Ev }>();
+  values() {
+    return this.byId.values();
+  }
+}
+
+export function sharedRegistry(registry: Registry) {
+  for (const item of registry.values()) {
+    item.event.target = { id: "x" };
+  }
+}

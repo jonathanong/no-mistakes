@@ -34,7 +34,10 @@ function callerOwnedType(checker, program, type, method, seen) {
 function callerOwnedMembers(checker, program, type, method) {
   const declarations = checker.getPropertyOfType(type, method)?.declarations;
   if (!declarations?.length) return true;
-  return !declarations.every((declaration) => projectDeclaration(program, declaration));
+  return !declarations.every(
+    (declaration) =>
+      projectDeclaration(program, declaration) && returnsFreshCollection(declaration),
+  );
 }
 
 function projectDeclaration(program, declaration) {
@@ -42,6 +45,37 @@ function projectDeclaration(program, declaration) {
   return (
     !program.isSourceFileDefaultLibrary(file) && !program.isSourceFileFromExternalLibrary(file)
   );
+}
+
+const FRESH_CALLS = new Set(["map", "filter", "slice", "concat", "flat", "flatMap", "toSorted"]);
+const FRESH_CONSTRUCTORS = new Set(["Map", "Set", "Array"]);
+
+function returnsFreshCollection(declaration) {
+  const ts = require("typescript");
+  if (!ts.isMethodDeclaration(declaration) || !declaration.body) return false;
+  if (declaration.asteriskToken) return false;
+  const returns = [];
+  const visit = (node) => {
+    if (ts.isFunctionLike(node) || ts.isClassLike(node)) return;
+    if (ts.isReturnStatement(node)) returns.push(node.expression);
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(declaration.body, visit);
+  return returns.length > 0 && returns.every((expression) => freshExpression(ts, expression));
+}
+
+function freshExpression(ts, expression) {
+  if (!expression) return false;
+  const node = ts.skipOuterExpressions(expression);
+  if (ts.isArrayLiteralExpression(node)) return true;
+  if (ts.isNewExpression(node)) {
+    return ts.isIdentifier(node.expression) && FRESH_CONSTRUCTORS.has(node.expression.text);
+  }
+  if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return false;
+  const { expression: owner, name } = node.expression;
+  if (ts.isIdentifier(owner) && owner.text === "Array")
+    return name.text === "from" || name.text === "of";
+  return FRESH_CALLS.has(name.text);
 }
 
 module.exports = { yieldsCallerOwnedElements };
