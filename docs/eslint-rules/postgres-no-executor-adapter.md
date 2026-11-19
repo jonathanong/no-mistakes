@@ -647,7 +647,11 @@ run(0 ?? read, account);
   the copied `id`), and a field of a `const` object literal read once with no
   spread, computed key, getter, write, or escape (`const notice = { id: "a" }`,
   then `notice.id`). A write to the source before the destructuring, a `let`,
-  a computed key, a spread, or a second use of the literal stays reported. An early-exit guard also proves a nullable local: `if (!row) return null`,
+  a computed key, a spread, or a second use of the literal stays reported. The
+  proof requires the field to be primitive-typed, which is why a later write
+  through the source cannot change the copy.
+
+  An early-exit guard also proves a nullable local: `if (!row) return null`,
   `if (!row) throw …`, `if (!row) return reject(id, query)` and
   `if (row == null) …`, `if (row === undefined) …` and `if (row != null) { … }`
   are plain reads of the local (the local on the left, `null` or `undefined` on
@@ -679,6 +683,7 @@ run(0 ?? read, account);
   the projection still does. A scalar read bound to a `const`
   (`const id = row.id`) is not an alias of the row, so later projections such as
   `const ownerId = row.ownerId` stay proved; `const copy = row` still is one.
+
 - An object-literal argument is proved property by property with the same checks as
   a positional argument: `markWithInput(tx, { id: row.id, ownerId: row.ownerId, at })`
   is accepted when the executor is a typed parameter or a configured factory root

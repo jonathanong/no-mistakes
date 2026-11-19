@@ -82,7 +82,7 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
       for (const def of variable.defs) {
         if (def.type === "Variable" && !loopBinding(def)) {
           const field = destructuredField(variable, def, context, allowUndefined);
-          if (field !== null) return field;
+          if (field) return true;
           const fresh = freshLocal(variable, def.node, node, context, scalar);
           if (fresh !== null) return fresh;
           const derived = derivedLocal(variable, def.node, node, context, scalar);
