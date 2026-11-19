@@ -169,7 +169,41 @@ from a default value give no declared contract and keep reporting (an
 executor-typed body that calls the property with visible SQL is already
 judged by SQL visibility). So does an options object that also escapes in the
 helper, for example `stash.push(options)`.
-Optional fields, structural callable lookalikes, computed keys, and objects
+An optional parameter with an inline type (`options?: { query: SessionExecutor }`)
+behaves like a required one, including when the body reads `options!.query(...)`.
+
+A shared options interface may declare the executor as optional when the
+helper's parameter has a default value. The call site supplies the property
+with `{ query }` or `{ query: tx }`, so it is present for that call:
+
+```ts
+interface QueryOptions {
+  query?: QueryExecutor;
+  readOnly?: boolean;
+}
+async function assertDelivered(id: string, options: QueryOptions = {}) {
+  await options.query?.(sql`SELECT ${id}`);
+}
+async function rejectUnresolvable(id: string, options: QueryOptions = {}) {
+  await assertDelivered(id, options); // passed on unchanged
+  assert(false, 404, "not found");
+}
+rejectUnresolvable(id, { query });
+```
+
+When the helper passes its `options` binding on as a direct call argument, the
+proof is applied to the callee. The callee must be a single non-overloaded
+function declaration with a body, an identifier parameter at that position, and
+the same declared options type; the chain may span at most four functions and
+must not revisit one. The binding must not be written, spread (`{ ...options }`),
+cast, stored (`stash.push(options)`) or mutated (`options.readOnly = true`) in
+the helper, and spread arguments, constructors, arrow `const` callees and
+destructured callee parameters stay unproven. Without a parameter default, an
+optional property, a property set to something other than an executor
+(`{ query: (statement) => read(statement) }`), a different key
+(`{ label: query }`) and a callee with another options type keep reporting.
+
+Structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as
 `dispatch({ nested: { query: read } })` and forwarding callbacks remain
 unproven. Use an explicit required executor property or name the executor inside

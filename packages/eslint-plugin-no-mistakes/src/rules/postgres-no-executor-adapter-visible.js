@@ -5,6 +5,7 @@ const { isImportedHelper, localFunction } = require("./postgres-no-executor-adap
 const { literalSql, tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe, tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
+const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
 
 function opaqueBody(body) {
   const stack = [body];
@@ -34,7 +35,8 @@ function parameterBinding(param, property) {
 }
 
 function executorCall(reference, property) {
-  const node = reference.identifier;
+  let node = reference.identifier;
+  while (node.parent?.type === "TSNonNullExpression") node = node.parent;
   let callee = node;
   if (property && node.parent?.type === "MemberExpression" && node.parent.object === node) {
     if (node.parent.computed || node.parent.property.name !== property) return null;
@@ -124,6 +126,7 @@ function importedVisible(call, index, property, context, options, facts) {
       ) {
         invoked = invoked.parent;
       }
+      if (object && ts.isCallExpression(invoked) && invoked.arguments.includes(node)) return;
       if (
         !ts.isCallExpression(invoked) ||
         (invoked.expression !== node && invoked.expression !== node.parent) ||
@@ -180,6 +183,7 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
     if (reference.init) return true;
     if (reference.isWrite()) return false;
     if (binding.object && otherPropertyRead(reference, property)) return true;
+    if (accepted && binding.object && passedOn(reference)) return true;
     const invocation = executorCall(reference, property);
     return Boolean(
       invocation &&

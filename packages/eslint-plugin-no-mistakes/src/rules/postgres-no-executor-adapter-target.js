@@ -45,7 +45,15 @@ function localTarget(fn, index, property, context, options, facts) {
     if (!services.program || services.program.getCompilerOptions().noResolve || !annotation)
       return false;
     const node = services.esTreeNodeToTSNodeMap?.get(annotation);
-    if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
+    if (
+      !declaredOptionType(
+        node,
+        property,
+        services.program.getTypeChecker(),
+        options,
+        param.type === "AssignmentPattern",
+      )
+    )
       return false;
     const implementation = services.esTreeNodeToTSNodeMap.get(fn);
     return tsOptionBody(implementation, index, property, services.program.getTypeChecker(), facts);
@@ -132,7 +140,11 @@ function importedTarget(call, index, property, context, options, facts) {
             (element.propertyName?.text ?? element.name.text) === property &&
             !element.dotDotDotToken,
         ));
-    if (!bound || !declaredOptionType(type, property, checker, options)) return false;
+    if (
+      !bound ||
+      !declaredOptionType(type, property, checker, options, Boolean(params[index].initializer))
+    )
+      return false;
     const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
     return (
       !writes.eval &&
