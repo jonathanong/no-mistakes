@@ -9,10 +9,11 @@ const { localReceiver } = require("./postgres-no-executor-adapter-sql-local");
 function typedScalarProjection(receiver, field, context, allowUndefined = true) {
   if (receiver.type !== "Identifier") return false;
   const variable = resolveVariable(receiver, context);
+  const parameter = variable?.defs.every((def) => def.type === "Parameter");
   if (
     !variable?.defs.length ||
-    !(variable.defs.every((def) => def.type === "Parameter") || localReceiver(variable, context)) ||
-    objectMutation(variable, null, null, receiver, context)
+    !(parameter || localReceiver(variable, context, receiver)) ||
+    objectMutation(variable, null, null, receiver, context, parameter ? null : receiver)
   )
     return false;
   const services = context.sourceCode.parserServices;

@@ -454,6 +454,14 @@ run(0 ?? read, account);
   initialized from `any`, an unknown call, or another function's result, and a
   shadowing declaration remain reported. An assertion between declaration and
   projection (`assert(notice, 404)`) is judged by the assertion proof below.
+  The write, escape, alias or writing-callee check is per projection site: only
+  uses between the declaration and that projection, in source order, invalidate
+  it. A later `return notice`, a later SQL interpolation, or a later scalar
+  projection (`markNotice(notice.id, query)`) leaves earlier projections proved,
+  while a later write still invalidates every projection after it. A use inside a
+  loop that also contains the projection counts as before it, and a use inside any
+  function closure counts regardless of position; a projection inside a closure
+  of the declaring function is checked against every use.
 - Passing that object whole to another call preserves the projection proof only
   when typed ESLint resolves a single stable, visible synchronous function
   declaration whose matching parameter has required primitive data fields and

@@ -39,7 +39,7 @@ function executorResult(variable, context) {
 
 // A never-reassigned const bound to a parameter, an element of one, or an element of
 // a destructured executor result is the same receiver proof as the parameter itself.
-function localReceiver(variable, context) {
+function localReceiver(variable, context, before = null) {
   const declarator = constDeclarator(variable);
   if (declarator?.id.type !== "Identifier") return false;
   let root = unwrapTs(declarator.init);
@@ -49,7 +49,7 @@ function localReceiver(variable, context) {
     rootVariable &&
     rootVariable !== variable &&
     (parameterVariable(root, context) || executorResult(rootVariable, context)) &&
-    !objectMutation(rootVariable, null, null, root, context),
+    !objectMutation(rootVariable, null, null, root, context, before),
   );
 }
 
