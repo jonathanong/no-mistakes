@@ -454,6 +454,18 @@ run(0 ?? read, account);
   initialized from `any`, an unknown call, or another function's result, and a
   shadowing declaration remain reported. An assertion between declaration and
   projection (`assert(notice, 404)`) is judged by the assertion proof below.
+  An early-exit guard also proves a nullable local: `if (!row) return null`,
+  `if (!row) throw …`, `if (!row) return reject(id, query)` and
+  `if (row == null) …`, `if (row === undefined) …` and `if (row != null) { … }`
+  are plain reads of the local (the local on the left, `null` or `undefined` on
+  the right, as the `if` test itself), and the checker's narrowed type at the
+  projection decides. The projection is accepted only when the guard always
+  exits or encloses it, so the local is non-nullable there. A guard that does
+  not exit (`if (!row) log()`), a guard on another variable, a guard after the
+  projection, a write to the local before it, a reversed comparison
+  (`null === row`), a comparison with anything else (`row === other`,
+  `row > 0`) and a `!row` that is not an `if` test (`!row ? a : b`) stay
+  reported.
   The write, escape, alias or writing-callee check is per projection site: only
   uses between the declaration and that projection, in source order, invalidate
   it. A later `return notice`, a later SQL interpolation, or a later scalar
