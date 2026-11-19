@@ -100,7 +100,7 @@ function visitCall(state, node, scope, role) {
     visitArgument(state, argument, scope, "escape");
   }
   invokeCallable(state, forwarded ? readMember(calleeTag, forward) : calleeTag);
-  return finishGet(node, calleeTag) || unknown();
+  return finishGet(state, node, calleeTag) || unknown();
 }
 
 function runConstruction(state, tag, seen = new Set()) {

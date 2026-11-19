@@ -107,6 +107,64 @@ export async function stage(bodies: unknown[], events: Ev[]) {
 }
 ```
 
+That caller-owned yield applies to an untyped receiver, to `any` and `unknown`,
+to unions and type parameters, and when `entries` or `values` comes from
+TypeScript's default library or an external library (`Array`, a tuple,
+`readonly` arrays, `Map`, `Set`, and subclasses that inherit those methods).
+It also applies to a project-declared `values()` or `entries()` unless its body
+provably returns a fresh collection. Every `return` must be an array literal
+(including spreads), `new Map(...)`, `new Set(...)`, `new Array(...)`,
+`Array.from(...)`/`Array.of(...)`, or a `.map`, `.filter`, `.slice`, `.concat`,
+`.flat`, `.flatMap` or `.toSorted` call. A returned `this` member, parameter,
+module-level binding, interface or abstract signature, generator, or anything
+else unproven stays caller-owned, so the write is reported:
+
+```ts
+class Registry {
+  private byId = new Map<string, Row>();
+  values() {
+    return this.byId.values();
+  }
+}
+const registry = new Registry();
+for (const row of registry.values()) {
+  row.x = 1; // reported: the iterator walks the registry's shared map
+}
+
+class Snapshot {
+  private rows: Row[] = [];
+  values() {
+    return [...this.rows];
+  }
+}
+const snapshot = new Snapshot();
+for (const row of snapshot.values()) {
+  row.x = 1; // quiet: `values` returns a fresh array
+}
+```
+
+Without checker services, including the Oxlint plugin, that call stays
+caller-owned. A union stays caller-owned when any member is. A type parameter
+uses its constraint, and a parameter with no constraint stays caller-owned.
+
+Fresh entries staged in one local array share one provenance union. Escaping
+any read of that array escapes every fresh entry in the union, so a later write
+through a different index still reports:
+
+```ts
+type Ev = { name: string; target?: { id: string } };
+function leak(value: unknown) {
+  return value;
+}
+export function tainted() {
+  const pending: Array<{ event: Ev }> = [];
+  pending.push({ event: { name: "one" } });
+  pending.push({ event: { name: "two" } });
+  leak(pending[0]);
+  pending[1]!.event.target = { id: "x" }; // reported: the entries share one union
+}
+```
+
 Bare `this.push(...)`, `this.pop()`, and the other listed array mutator calls
 are not presumed to mutate an array when the receiver is unknown. This includes
 stream methods in object literals and ordinary functions. Known array receivers
