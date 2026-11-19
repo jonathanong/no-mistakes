@@ -106,10 +106,20 @@ test("benchmark PRs use artifact transport while main may save and probe the han
 
 test("pnpm stores restore on PRs but save only on main", () => {
   const setups = steps(workflow).filter((step) => /uses: pnpm\/setup@/.test(step));
+  const retries = setups.filter((step) => /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step));
+  const firsts = setups.filter((step) => !retries.includes(step));
   assert.equal(setups.length, 30);
-  for (const step of setups) {
+  assert.equal(firsts.length, retries.length);
+  for (const step of firsts) {
     assert.match(step, /cache: true/);
     assert.match(step, /save-cache: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
     assert.doesNotMatch(step, /if:.*github.ref/);
+  }
+  for (const step of retries) {
+    assert.match(step, /cache: false/);
+    // An unresolved lockfile path makes pnpm/setup skip its lockfile-verification cache restore too.
+    assert.match(step, /cache-dependency-path: \.github\/pnpm-lockfile-cache-disabled\n/);
+    assert.doesNotMatch(step, /cache: true/);
+    assert.doesNotMatch(step, /save-cache/);
   }
 });

@@ -214,7 +214,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -226,16 +226,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -448,7 +450,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -460,16 +462,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -554,7 +558,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -567,16 +571,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -723,7 +729,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -735,16 +741,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -782,7 +790,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -794,22 +802,24 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Download JavaScript shard reports
-        timeout-minutes: 3
+        timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: javascript-shard-*
@@ -851,7 +861,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -863,16 +873,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -955,7 +967,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: ${{ matrix.runtime }}
@@ -968,16 +980,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: ${{ matrix.runtime }}
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install pnpm dependencies
@@ -1064,7 +1078,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1077,16 +1091,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1257,7 +1273,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1270,16 +1286,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1447,7 +1465,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1460,16 +1478,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1613,7 +1633,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1626,16 +1646,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1832,7 +1854,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1845,20 +1867,22 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-rust-archive
-        timeout-minutes: 2
+        timeout-minutes: 6
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           run-id: ${{ needs.native-test-build.outputs.artifact-run-id }}
@@ -1935,7 +1959,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -1948,20 +1972,22 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-rust-archive
-        timeout-minutes: 2
+        timeout-minutes: 6
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           run-id: ${{ needs.native-test-build-macos.outputs.artifact-run-id }}
@@ -2050,7 +2076,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -2063,16 +2089,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-runtime
@@ -2182,7 +2210,7 @@ jobs:
       - name: Set up pnpm and Node.js (attempt 1 of 2)
         id: pnpm-setup
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
@@ -2195,16 +2223,18 @@ jobs:
         timeout-minutes: 1
         shell: bash
         run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
           echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
           sleep 5
       - name: Retry pnpm and Node.js setup
         if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         with:
           runtime: node@24
-          cache: true
-          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-runtime
@@ -2580,7 +2610,7 @@ jobs:
       - name: Download instrumented Rust tests (attempt 1 of 2)
         id: coverage-download
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 4
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           run-id: ${{ needs.rust-coverage-build.outputs.artifact-run-id }}
@@ -2596,7 +2626,7 @@ jobs:
           sleep 5
       - name: Retry instrumented Rust test download
         if: ${{ !cancelled() && steps.coverage-download.outcome == 'failure' }}
-        timeout-minutes: 2
+        timeout-minutes: 4
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           run-id: ${{ needs.rust-coverage-build.outputs.artifact-run-id }}
