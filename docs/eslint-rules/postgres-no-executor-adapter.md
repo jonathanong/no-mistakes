@@ -710,11 +710,16 @@ run(0 ?? read, account);
   built from row fields and then mutated), a shadowed `Date`, and a non-row object
   or array, whose contents cannot be proved free of SQL fragments. `string | null`
   row fields still prove.
-- An optional property that an inline object-literal argument omits
-  (`put(tx, { id: row.id })` where the callee type declares `ownerId?: string`)
-  reads as `undefined` and proves, because nothing row-derived reaches it. A
-  required property, a spread, a `__proto__` key, or an object that is not written
-  inline at the call stays reported.
+- In `"forwarding-only"` mode, an optional property that an inline
+  object-literal argument omits (`put(tx, { id: row.id })` where the callee
+  type declares `ownerId?: string`) reads as `undefined` and proves, because
+  nothing row-derived reaches it. Default `mode: "all"` is unchanged. Extra
+  optional fields the callee never binds into SQL stay silent. An inline
+  `new Date()` still proves. These stay reported: a required property, a
+  spread, a `__proto__` key, an object that is not written inline at the call,
+  `{ id } as Req` when `Req` requires the omitted field, and an omitted field
+  fed to `.append(input.note ?? '')`. When the callee binds every field, a row
+  `Date`, a row array, a non-row object, and a mutated `Date` still report.
 - Two shapes are silent today by design, not by proof: a root whose factory is not
   in `executorFactoryNames` (`declare function openOther(): Promise<SessionExecutor>`)
   and `const pending = beginTransaction(); const tx = await pending`. Neither is

@@ -40,14 +40,23 @@ function testCase(name) {
   };
 }
 
-it("proves an inline new Date() option value is fresh and non-row", async () => {
+it("proves omitted optional fields and a fresh Date in forwarding-only mode", async () => {
   const rows = snapshotSuite(rule, languageOptions, {
-    valid: [testCase("datefields.mts")],
-    invalid: [testCase("controls.mts")],
+    valid: [testCase("datefields.mts"), testCase("unbound-optionals.mts")],
+    invalid: [
+      testCase("controls.mts"),
+      testCase("bound-controls.mts"),
+      testCase("append-control.mts"),
+      testCase("required-cast.mts"),
+    ],
   });
   expect(rows.map((row) => row.findings.map(({ line }) => line))).toEqual([
     [],
+    [],
     [15, 21, 28, 36, 45, 51, 58],
+    [20, 26, 32, 40],
+    [12],
+    [13],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-inline-date.snap",

@@ -29,3 +29,13 @@ export async function d5(query: SessionExecutor, id: string) {
   if (!row) return null
   return either(query, { id: row.id })
 }
+type Dated = { id: string; at: Date }
+async function writeDate(query: SessionExecutor, input: Dated) {
+  await query(sql`UPDATE widgets SET seen_at = ${input.at} WHERE id = ${input.id}`)
+}
+export async function boundFreshDate(query: SessionExecutor, id: string) {
+  const { rows } = await query<Widget>(sql`SELECT id, owner_id AS "ownerId", state, seen_at AS "seenAt", tags FROM widgets WHERE id = ${id}`)
+  const row = rows[0]
+  if (!row) return null
+  return writeDate(query, { id: row.id, at: new Date() })
+}
