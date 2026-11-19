@@ -1,0 +1,258 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "hash-off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/hash-files.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` calls hashFiles for `widgets.lock`, but allowHashFiles is false. Set allowHashFiles to true or add a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/cache-widgets/action.yml",
+          "line": 10,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: widgets-"
+        },
+        {
+          "file": ".github/actions/cache-widgets/action.yml",
+          "line": 9,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/actions/cache-widgets/action.yml",
+          "line": 9,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/alias.yml",
+          "line": 1,
+          "message": "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "name: Widgets"
+        },
+        {
+          "file": ".github/workflows/cross-job.yml",
+          "line": 17,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
+        },
+        {
+          "file": ".github/workflows/flow.yml",
+          "line": 7,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- { uses: actions/cache@v4, with: { path: .cache/widgets, key: widgets-shared, restore-keys: widgets- } }"
+        },
+        {
+          "file": ".github/workflows/flow.yml",
+          "line": 7,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- { uses: actions/cache@v4, with: { path: .cache/widgets, key: widgets-shared, restore-keys: widgets- } }"
+        },
+        {
+          "file": ".github/workflows/flow.yml",
+          "line": 7,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- { uses: actions/cache@v4, with: { path: .cache/widgets, key: widgets-shared, restore-keys: widgets- } }"
+        },
+        {
+          "file": ".github/workflows/invalid.yml",
+          "line": 2,
+          "message": "Invalid YAML (did not find expected ',' or ']' at line 2 column 1, while parsing a flow sequence at line 1 column 7); fix the YAML so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": ""
+        },
+        {
+          "file": ".github/workflows/later-output.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
+        },
+        {
+          "file": ".github/workflows/matrix.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('widgets.lock') }}"
+        },
+        {
+          "file": ".github/workflows/missing-key.yml",
+          "line": 10,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: widgets-"
+        },
+        {
+          "file": ".github/workflows/missing-key.yml",
+          "line": 7,
+          "message": "Cache step for `.cache/widgets` has no key. Set key to include the configured platform fragments and a digest of the configured lockfile.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- uses: actions/cache@v4"
+        },
+        {
+          "file": ".github/workflows/multiline-path.yml",
+          "line": 12,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/multiline-path.yml",
+          "line": 12,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/no-mention.yml",
+          "line": 14,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
+        },
+        {
+          "file": ".github/workflows/os-name.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os_name }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}"
+        },
+        {
+          "file": ".github/workflows/restore-action.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/restore-action.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/restore-action.yml",
+          "line": 11,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: widgets-"
+        },
+        {
+          "file": ".github/workflows/save-action.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/save-action.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/sequence-restore.yml",
+          "line": 12,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "- widgets-"
+        },
+        {
+          "file": ".github/workflows/shared.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/shared.yml",
+          "line": 10,
+          "message": "Cache key for `.cache/widgets` is missing platform fragments `runner.os`, `runner.arch`. Add each fragment as its own expression, such as ${{ runner.os }}. A different context such as matrix.os does not satisfy runner.os.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-shared"
+        },
+        {
+          "file": ".github/workflows/shared.yml",
+          "line": 11,
+          "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "restore-keys: widgets-"
+        },
+        {
+          "file": ".github/workflows/wrong-output.yml",
+          "line": 14,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that mentions `widgets.lock` and writes the digest to GITHUB_OUTPUT.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "restore-ok": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unreadable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 2,
+          "message": "Cannot read GitHub Actions YAML as UTF-8 (invalid utf-8 sequence of 1 bytes from index 13); restore a readable file so cache keys can be checked.",
+          "rule": "github-actions-cache-key-policy"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

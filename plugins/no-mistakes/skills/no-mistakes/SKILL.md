@@ -353,6 +353,11 @@ body lines, joining backslash continuations, in workflow/composite `run` and `ac
 Move oversized scripts into files and invoke them; see the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).
 
+For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
+required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
+`allowHashFiles` defaults to false. `matrix.os` does not satisfy `runner.os`. See the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
+
 
 Use `postgres-column-check-constraints` with a catalog path and explicit column
 globs, integer types, and `require: non-negative` to check schema lower bounds.

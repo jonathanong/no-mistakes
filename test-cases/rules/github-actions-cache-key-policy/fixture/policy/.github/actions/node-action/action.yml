@@ -1,0 +1,10 @@
+name: Node
+description: Ignored node action
+runs:
+  using: node20
+  main: index.js
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: .cache/widgets
+        key: widgets-shared

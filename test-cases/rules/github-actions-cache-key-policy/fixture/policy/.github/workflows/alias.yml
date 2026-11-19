@@ -1,0 +1,12 @@
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - &cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: widgets-shared
+      - *cache

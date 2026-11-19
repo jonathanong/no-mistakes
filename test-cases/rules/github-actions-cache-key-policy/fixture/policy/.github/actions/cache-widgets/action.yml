@@ -1,0 +1,10 @@
+name: Cache widgets
+description: Save the widgets directory
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: .cache/widgets
+        key: widgets-shared
+        restore-keys: widgets-

@@ -840,6 +840,12 @@ Its positive integer `maxLines` option defaults to 10 and counts non-blank YAML
 script-body lines, joining backslash continuations, in workflows and composite actions. See the
 [rule documentation](rules/github-actions-max-inline-script-lines.md).
 
+`github-actions-cache-key-policy` is available through asynchronous `check()` and
+`analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
+Configure `caches` with a path, lockfile, and `keyParts`. `rejectRestoreKeys` defaults to true
+and `allowHashFiles` defaults to false. See the
+[rule documentation](rules/github-actions-cache-key-policy.md).
+
 ### Source-level merged configuration
 
 ```ts

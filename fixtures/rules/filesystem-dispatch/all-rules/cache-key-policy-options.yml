@@ -1,0 +1,8 @@
+      rejectRestoreKeys: true
+      allowHashFiles: false
+      caches:
+        - path: .cache/widgets
+          lockfile: widgets.lock
+          keyParts:
+            - runner.os
+            - runner.arch
