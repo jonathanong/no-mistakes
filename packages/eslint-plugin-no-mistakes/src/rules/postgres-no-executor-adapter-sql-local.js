@@ -3,6 +3,8 @@
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 const { executorOptionDefaults } = require("./postgres-executor");
 const { matchesConfiguredModule } = require("./postgres-scoped-executors");
+const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
+const { loopIterable } = require("./postgres-no-executor-adapter-sql-loop");
 const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 
 function parameterVariable(node, context) {
@@ -65,12 +67,30 @@ function executorResult(variable, context) {
   );
 }
 
+// `await helper(tx, ...)` where `tx` is a typed executor parameter and the helper is proven.
+function helperResult(init, context) {
+  const call = init.type === "AwaitExpression" ? unwrapTs(init.argument) : null;
+  if (call?.type !== "CallExpression" || call.optional) return false;
+  const index = call.arguments.findIndex((arg) => executorParameter(unwrapTs(arg), context));
+  if (index < 0) return false;
+  const options = executorOptionDefaults(context.options[0]);
+  const { provenHelper } = require("./postgres-no-executor-adapter-hop");
+  return provenHelper(call, index, context, options, targetFactsFor(context));
+}
+
+function receiverInit(variable) {
+  const declarator = constDeclarator(variable);
+  return declarator?.id.type === "Identifier" ? declarator.init : loopIterable(variable.defs[0]);
+}
+
 // A never-reassigned const bound to a parameter, an element of one, or an element of
 // a destructured executor result is the same receiver proof as the parameter itself.
+// So is a `for...of` element of one, or the awaited result of a proven helper.
 function localReceiver(variable, context, before = null) {
-  const declarator = constDeclarator(variable);
-  if (declarator?.id.type !== "Identifier") return false;
-  let root = unwrapTs(declarator.init);
+  const init = receiverInit(variable);
+  if (!init) return false;
+  let root = unwrapTs(init);
+  if (helperResult(root, context)) return true;
   while (root.type === "MemberExpression" && !root.optional) root = unwrapTs(root.object);
   const rootVariable = root.type === "Identifier" ? resolveVariable(root, context) : null;
   return Boolean(

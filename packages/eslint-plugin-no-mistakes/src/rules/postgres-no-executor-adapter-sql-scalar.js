@@ -6,6 +6,7 @@ const {
   freshDate,
   freshLocal,
 } = require("./postgres-no-executor-adapter-sql-fresh");
+const { loopBinding } = require("./postgres-no-executor-adapter-sql-loop");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 
 function primitiveAnnotation(node, allowUndefined) {
@@ -29,6 +30,10 @@ function primitiveAnnotation(node, allowUndefined) {
     "TSBigIntKeyword",
     "TSNullKeyword",
   ].includes(node?.type);
+}
+
+function typedBinding(def) {
+  return def.type === "Parameter" || loopBinding(def);
 }
 
 function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
@@ -55,7 +60,7 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
       if (variable.references.some((reference) => reference.isWrite() && !reference.init))
         return false;
       for (const def of variable.defs) {
-        if (def.type === "Variable") {
+        if (def.type === "Variable" && !loopBinding(def)) {
           const fresh = freshLocal(variable, def.node, node, context, scalar);
           if (fresh !== null) return fresh;
           return (
@@ -68,12 +73,11 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
         )
           return true;
       }
-      if (variable.defs.some((def) => def.type !== "Parameter")) return false;
+      if (variable.defs.some((def) => def.type !== "Parameter" && !loopBinding(def))) return false;
     }
   }
   const parameter = node?.type === "Identifier" ? resolveVariable(node, context) : null;
-  if (!parameter?.defs.length || !parameter.defs.every((def) => def.type === "Parameter"))
-    return false;
+  if (!parameter?.defs.length || !parameter.defs.every(typedBinding)) return false;
   const services = context.sourceCode.parserServices;
   if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(node)) return false;
   const ts = require("typescript");

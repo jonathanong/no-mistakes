@@ -4,6 +4,7 @@ const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text
 const { isImportedHelper, localFunction } = require("./postgres-no-executor-adapter-target");
 const { literalSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
+const { forwardedHop } = require("./postgres-no-executor-adapter-hop");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
 const { importedVisible } = require("./postgres-no-executor-adapter-imported-visible");
@@ -102,11 +103,9 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
       return visibleSqlTarget(...next) === true;
     }
     const invocation = executorCall(reference, property);
-    return Boolean(
-      invocation &&
-      literalSql(invocation.arguments[0], context, options, (hole) =>
-        localHoleSafe(hole, call, fn, context, variable, property),
-      ),
+    if (!invocation) return !property && forwardedHop(reference, context, options, facts);
+    return literalSql(invocation.arguments[0], context, options, (hole) =>
+      localHoleSafe(hole, call, fn, context, variable, property),
     );
   });
 }
