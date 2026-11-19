@@ -2,9 +2,9 @@
 
 const { unwrapTs } = require("./postgres-query-text");
 
-// An object literal argument that omits `field` reads it as undefined, which is
-// non-row data only when the parameter type declares that field optional
-// (docs/eslint-rules/postgres-no-executor-adapter.md).
+// Forwarding-only hole proof. An object literal that omits `field` reads it as
+// undefined, which is non-row data only when that field is optional. Default
+// mode all is unchanged (docs/eslint-rules/postgres-no-executor-adapter.md).
 function omittedOptionalField(node, field, context) {
   node = unwrapTs(node);
   const services = context.sourceCode.parserServices;
