@@ -1,7 +1,5 @@
 "use strict";
 
-const ts = require("typescript");
-
 function yieldsCallerOwnedElements(state, expression, method) {
   const services = state.context.sourceCode.parserServices;
   if (!services?.program || !services.esTreeNodeToTSNodeMap) return true;
@@ -18,6 +16,7 @@ function yieldsCallerOwnedElements(state, expression, method) {
 }
 
 function callerOwnedType(checker, program, type, method, seen) {
+  const ts = require("typescript");
   if (!type || seen.has(type)) return true;
   seen.add(type);
   if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return true;
