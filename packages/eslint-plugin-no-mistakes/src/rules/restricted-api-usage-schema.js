@@ -1,6 +1,11 @@
 "use strict";
 
-const patterns = ["referenceNamePattern", "declarationNamePattern", "propertyNamePattern"];
+const patterns = [
+  "referenceNamePattern",
+  "declarationNamePattern",
+  "propertyNamePattern",
+  "destructureNamePattern",
+];
 const strictRequired = [...patterns, "constructNamePattern"].map((key) => ({ required: [key] }));
 
 const targetSchema = {
@@ -15,12 +20,11 @@ const targetSchema = {
     message: { type: "string", minLength: 1 },
   },
   anyOf: [
-    { required: ["source", "importedNamePattern"] },
+    { required: ["importedNamePattern"] },
     { required: ["callNamePattern"] },
     ...strictRequired,
   ],
   dependencies: {
-    importedNamePattern: ["source"],
     source: ["importedNamePattern"],
     constructArgumentCount: ["constructNamePattern"],
   },

@@ -54,7 +54,13 @@ client.send(new ListEntriesCommand({ cursor }));
 - `targets`: restrictions; omitted means no restrictions. An empty array is invalid.
 - `source`: exact module specifier for imports, re-exports, and dynamic loads.
 - `importedNamePattern`: JavaScript regular expression for the original exported
-  name, including `default`. Requires `source`. Named value imports are findings
+  name, including `default`. `source` is optional. With `source`, only imports from
+  that module match. Without it, a named value import from any module matches by
+  its original name, so `import { enqueueReviewAndWait as enqueueReview } from
+  './enqueues.mts'` reports even when renamed. A source-less target does not
+  match namespace member reads, destructured namespace keys or re-exports, which
+  need a `source`. It was chosen over `referenceNamePattern` because that matches
+  the local alias a reader renames, not the restricted exported name. Named value imports are findings
   even when unused or renamed. Named value re-exports match the original name.
   Matching namespace member reads and destructured keys report the access itself;
   direct imported calls also report. Wildcard and namespace re-exports, dynamic
@@ -79,6 +85,12 @@ client.send(new ListEntriesCommand({ cursor }));
   class method or field definition (`{ blockingWait: true }`, `blockingWait = 1`).
   Computed keys are unproven and do not report; destructuring patterns are not
   definitions.
+- `destructureNamePattern`: optional regular expression for an object destructuring
+  key, whether shorthand, renamed, nested or defaulted
+  (`const { addAndWait: wait, outer: { waitUntilFinished } = {} } = queue`). Reports
+  the property. Computed keys are unproven and rest elements have no key. It is a
+  separate option so `propertyNamePattern` and `referenceNamePattern` keep
+  ignoring destructuring and existing configurations report identically.
 - `constructNamePattern`: optional regular expression for the callee name of
   `new Name(...)` or `new ns.Name(...)`.
 - `constructArgumentCount`: optional non-negative integer. Requires
@@ -101,7 +113,7 @@ identical findings.
 }
 ```
 
-Each target needs `source` plus `importedNamePattern`, or at least one of
+Each target needs `importedNamePattern` (alone for any source, or with `source`), or at least one of
 `callNamePattern` and the strict selectors above, or several. Invalid regular expressions throw during rule initialization. Expressions
 use JavaScript search semantics: use anchors when a prefix or exact match matters.
 

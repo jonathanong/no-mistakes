@@ -59,7 +59,10 @@ module.exports = {
           });
           if (name === null) continue;
           for (const target of targets) {
-            if (target.source === node.source.value && target.imported?.test(name)) {
+            if (
+              (target.source === undefined || target.source === node.source.value) &&
+              target.imported?.test(name)
+            ) {
               report(specifier, target, name);
             }
           }
@@ -169,7 +172,7 @@ module.exports = {
     }
     const strict = targets.some((target) =>
       Object.keys(target).some((key) =>
-        /^(reference|declaration|property|construct)Name/.test(key),
+        /^(reference|declaration|property|destructure|construct)Name/.test(key),
       ),
     );
     const base = {

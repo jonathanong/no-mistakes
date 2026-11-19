@@ -1,0 +1,280 @@
+{
+  "restricted-api-usage": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "referenceNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 4,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 5,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 26,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 6,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 36,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 7,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 43,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 8,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 45,
+          "endColumn": 76,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 8,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 29,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 9,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 50,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 11,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "destructureNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$",
+              "message": "Use the static helper."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+      "findings": [
+        {
+          "column": 33,
+          "endColumn": 36,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 5,
+          "message": "Restricted API 'add'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "destructureNamePattern": "^add$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 31,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 12,
+          "message": "Restricted API 'addAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "propertyNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 47,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+          "line": 1,
+          "message": "Restricted API 'enqueueReviewAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 20,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+          "line": 2,
+          "message": "Restricted API 'addAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+          "line": 6,
+          "message": "No default imports.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^default$",
+              "message": "No default imports."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 20,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/import-sourceless.ts",
+          "line": 2,
+          "message": "Restricted API 'addAndWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "importedNamePattern": "^(enqueueReviewAndWait|addAndWait|waitUntilFinished)$",
+              "source": "@example/queue"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

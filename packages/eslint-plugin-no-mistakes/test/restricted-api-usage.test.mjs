@@ -72,7 +72,7 @@ describe(id, () => {
         /Invalid regular expression/,
       );
     }
-    for (const partial of [{ source: "@example/client" }, { importedNamePattern: "x" }]) {
+    for (const partial of [{ source: "@example/client" }]) {
       assert.throws(
         () => check("usage.ts", { targets: [{ ...partial, ...lexical }] }),
         /configuration|match|propert/i,

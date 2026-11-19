@@ -25,7 +25,7 @@ const NAME_SLOTS = {
 };
 const BINDING_PARENTS =
   /^(ArrayPattern|RestElement|Import.*Specifier|ExportSpecifier|CatchClause)$/;
-const KEYS = ["reference", "declaration", "property", "construct"];
+const KEYS = ["reference", "declaration", "property", "destructure", "construct"];
 
 function compile(target) {
   const out = {};
@@ -97,7 +97,8 @@ function strictVisitors(targets, report) {
     MethodDefinition: key,
     PropertyDefinition: key,
     Property(node) {
-      if (node.parent.type === "ObjectExpression") key(node);
+      const kind = node.parent.type === "ObjectPattern" ? "destructure" : "property";
+      check(kind, node, memberPropertyName({ property: node.key, computed: node.computed }));
     },
     NewExpression(node) {
       let callee = node.callee;
