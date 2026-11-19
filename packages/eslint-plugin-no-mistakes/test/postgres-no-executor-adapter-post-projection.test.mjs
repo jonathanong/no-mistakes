@@ -50,3 +50,15 @@ it("keeps earlier projections proved after later reads, returns and projections"
     "snapshots/postgres-no-executor-adapter-post-projection.snap",
   );
 });
+
+it("keeps loop writes and parameter escapes reported, clears non-overlapping parameter reads", async () => {
+  const rows = snapshotSuite(rule, languageOptions, {
+    valid: [testCase("loop-parameter-proofs.ts")],
+    invalid: [testCase("loop-parameter-controls.ts")],
+  });
+  expect(rows[0].findings).toEqual([]);
+  expect(rows[1].findings.map(({ line }) => line)).toEqual([19, 27, 34, 39, 46]);
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-loop-parameter.snap",
+  );
+});

@@ -459,9 +459,18 @@ run(0 ?? read, account);
   it. A later `return notice`, a later SQL interpolation, or a later scalar
   projection (`markNotice(notice.id, query)`) leaves earlier projections proved,
   while a later write still invalidates every projection after it. A use inside a
-  loop that also contains the projection counts as before it, and a use inside any
-  function closure counts regardless of position; a projection inside a closure
-  of the declaring function is checked against every use.
+  loop that also contains the projection counts as before it, including when the
+  const is declared inside the loop, unless the const is rooted at a binding
+  declared inside that same loop (a fresh object each iteration); a write through
+  `const row = rows[i]!` to `rows` declared outside the loop still reports. A use
+  inside any function closure counts regardless of position; a projection inside
+  a closure of the declaring function is checked against every use.
+  Parameter receivers (`widget.id` where `widget` is a parameter) follow the same
+  per-projection rule: a later use of the parameter does not invalidate an earlier
+  projection, while a write, escape or alias that may precede it does. Primitive
+  member arguments of one call (`pair(query, widget.id, widget.ownerId)`) do not
+  invalidate each other; an object member argument (`stash(widget.nested)`) before
+  the projection still does.
 - Passing that object whole to another call preserves the projection proof only
   when typed ESLint resolves a single stable, visible synchronous function
   declaration whose matching parameter has required primitive data fields and

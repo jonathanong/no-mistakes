@@ -20,6 +20,38 @@ function enclosingFunction(node) {
   return enclosing(node, FUNCTIONS)[0] ?? null;
 }
 
+function strip(node) {
+  let current = node;
+  while (
+    current &&
+    (current.type === "MemberExpression" ||
+      current.type === "ChainExpression" ||
+      current.type.startsWith("TS"))
+  )
+    current = current.object ?? current.expression;
+  return current;
+}
+
+function lookup(scope, name) {
+  for (let current = scope; current; current = current.upper) {
+    const found = current.set.get(name);
+    if (found) return found;
+  }
+  return null;
+}
+
+// A const declared inside `loop` whose value is rooted at another binding declared
+// inside the same loop is a new object on every iteration.
+function freshIn(variable, loop) {
+  const def = variable.defs.length === 1 ? variable.defs[0] : null;
+  const inside = (node) => loop.range[0] <= node.range[0] && node.range[1] <= loop.range[1];
+  if (def?.type !== "Variable" || def.parent.kind !== "const" || !inside(def.node)) return false;
+  const root = strip(def.node.init);
+  if (root?.type !== "Identifier") return false;
+  const rootVariable = lookup(variable.scope, root.name);
+  return Boolean(rootVariable?.identifiers[0] && inside(rootVariable.identifiers[0]));
+}
+
 // Whether a use of a const local can still affect the value read at `before`.
 // Closures and loops are conservative; see docs/eslint-rules/postgres-no-executor-adapter.md.
 function mayPrecede(variable, reference, before) {
@@ -35,7 +67,7 @@ function mayPrecede(variable, reference, before) {
     (loop) =>
       loop.range[0] <= identifier.range[0] &&
       identifier.range[1] <= loop.range[1] &&
-      loop.range[0] >= variable.identifiers[0].range[1],
+      !freshIn(variable, loop),
   );
 }
 

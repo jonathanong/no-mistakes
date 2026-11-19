@@ -13,7 +13,7 @@ function typedScalarProjection(receiver, field, context, allowUndefined = true) 
   if (
     !variable?.defs.length ||
     !(parameter || localReceiver(variable, context, receiver)) ||
-    objectMutation(variable, null, null, receiver, context, parameter ? null : receiver)
+    objectMutation(variable, null, null, receiver, context, receiver)
   )
     return false;
   const services = context.sourceCode.parserServices;
