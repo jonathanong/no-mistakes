@@ -8,6 +8,7 @@ const files = {
   "value-validation-default": ["@example/transport", "send"],
   "value-validation-namespace": ["@example/transport", "send"],
   "value-validation-renamed": ["@example/transport", "send"],
+  "value-validation-forms": ["@example/transport", "send"],
   "value-validation-spread": ["@example/transport", "send"],
 };
 const modes = {

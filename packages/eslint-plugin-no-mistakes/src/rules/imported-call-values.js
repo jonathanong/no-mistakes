@@ -30,7 +30,7 @@ function importedFactoryName(sourceCode, callee) {
   if (node?.type === "Identifier") {
     const spec = importBinding(sourceCode, node, node.name);
     if (spec?.type === "ImportSpecifier") {
-      return propertyName(spec.imported) ?? literalString(spec.imported);
+      return propertyName(spec.imported);
     }
     return spec?.type === "ImportDefaultSpecifier" ? node.name : null;
   }

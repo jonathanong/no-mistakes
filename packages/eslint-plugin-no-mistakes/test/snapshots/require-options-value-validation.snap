@@ -49,6 +49,19 @@
 3:invalidOptionValue
 5:tooManyArguments
 
+## value-validation-forms (off)
+
+
+## value-validation-forms (on)
+3:invalidOptionValue
+4:invalidOptionValue
+6:invalidOptionValue
+
+## value-validation-forms (on+shorthand)
+3:invalidOptionValue
+4:invalidOptionValue
+6:invalidOptionValue
+
 ## value-validation-spread (off)
 
 
