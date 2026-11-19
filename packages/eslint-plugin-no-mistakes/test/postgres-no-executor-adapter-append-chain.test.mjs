@@ -49,6 +49,7 @@ const lines = (rows) => rows.map((row) => row.findings.map(({ line }) => line));
 
 const PROOFS = ["proofs.ts", "importedConstProofs.ts", "importedProofs.ts"];
 const CONTROLS = ["controls.ts", "importedControls.ts"];
+const MUTATED = ["aliasControls.ts", "exportedConstControls.ts", "listedConstControls.ts"];
 const CONTROL_LINES = [67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100, 109];
 
 it("proves constant append chains and reports the controls in forwarding-only mode", async () => {
@@ -78,4 +79,17 @@ it("proves only file-local constants without type information", async () => {
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-untyped.snap",
   );
+});
+
+it("reports constants mutated through aliases or other modules", async () => {
+  const rows = suite("forwarding-only", [], MUTATED);
+  expect(lines(rows)).toEqual([[14, 17], [11], [11]]);
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-append-chain-mutated.snap",
+  );
+});
+
+it("reports the same mutated constants without type information", async () => {
+  const rows = suite("forwarding-only", [], MUTATED, false);
+  expect(lines(rows)).toEqual([[14, 17], [11], [11]]);
 });

@@ -296,7 +296,9 @@ constant declared in the helper's file may interpolate scalars. A constant
 imported from a sibling module (including `import * as ns` access and renamed
 imports) must have no interpolations, and the checker must be available because
 the proof reads every file of the program. Without type information only
-constants declared in the same file are proven.
+constants declared in the same file and never exported are proven. Uses are
+resolved through re-exports, renames and `default` aliases, so a mutation in
+another module through any alias disproves the constant.
 
 ```ts
 const COLS = sql`id, state`;

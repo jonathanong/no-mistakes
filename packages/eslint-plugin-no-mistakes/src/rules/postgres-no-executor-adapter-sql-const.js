@@ -48,48 +48,37 @@ function resolvedSymbol(node, checker, ts) {
   return symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
 }
 
-function declarationUses(file, declaration, checker, ts) {
-  const target = checker.getSymbolAtLocation(declaration.name);
-  const uses = [];
-  (function visit(node) {
-    if (ts.isIdentifier(node) && node.parent !== declaration) {
-      const own = resolvedSymbol(node, checker, ts) === target;
-      const reference = ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
-      if (own && !ts.isImportSpecifier(node.parent) && !ts.isExportSpecifier(node.parent))
-        uses.push(reference ? node.parent : node);
-    }
-    ts.forEachChild(node, visit);
-  })(file);
-  return uses;
+// Symbols with a use that is not an `.append` argument, resolved through every
+// import, re-export and rename alias, so no text search can hide a mutation.
+function escapedSymbols(program, checker, ts) {
+  const escaped = new Set();
+  for (const file of program.getSourceFiles()) {
+    if (program.isSourceFileFromExternalLibrary(file) || program.isSourceFileDefaultLibrary(file))
+      continue;
+    (function visit(node) {
+      if (ts.isIdentifier(node) && !ts.isVariableDeclaration(node.parent)) {
+        const reference = ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
+        const use = reference ? node.parent : node;
+        const specifier = ts.isImportSpecifier(node.parent) || ts.isExportSpecifier(node.parent);
+        const symbol = resolvedSymbol(node, checker, ts);
+        if (symbol && !specifier && !tsAppendArgument(use, ts)) escaped.add(symbol);
+      }
+      ts.forEachChild(node, visit);
+    })(file);
+  }
+  return escaped;
 }
 
-const unmutatedByProgram = new WeakMap();
+const escapedByProgram = new WeakMap();
 
 // Every program-wide use of the const is the argument of an `.append` call.
-function unmutated(declaration, checker, ts, program) {
-  const known = unmutatedByProgram.get(program) ?? new Map();
-  unmutatedByProgram.set(program, known);
-  if (!known.has(declaration)) {
-    const name = declaration.name.text;
-    known.set(
-      declaration,
-      program
-        .getSourceFiles()
-        .filter(
-          (file) =>
-            !program.isSourceFileFromExternalLibrary(file) &&
-            !program.isSourceFileDefaultLibrary(file) &&
-            file.text.includes(name),
-        )
-        .every((file) =>
-          declarationUses(file, declaration, checker, ts).every((use) => tsAppendArgument(use, ts)),
-        ),
-    );
-  }
-  return known.get(declaration);
+function appendOnly(declaration, checker, ts, program) {
+  if (!escapedByProgram.has(program))
+    escapedByProgram.set(program, escapedSymbols(program, checker, ts));
+  return !escapedByProgram.get(program).has(checker.getSymbolAtLocation(declaration.name));
 }
 
-// An unmutated, interpolation-free module-level `const` sql tag, imported or not.
+// An appendOnly, interpolation-free module-level `const` sql tag, imported or not.
 function tsConstFragment(node, shared, judge) {
   const { checker, ts, program } = shared;
   const name = ts.isPropertyAccessExpression(node) ? node.name : node;
@@ -98,7 +87,7 @@ function tsConstFragment(node, shared, judge) {
   return Boolean(
     declaration &&
     tsConstDeclaration(declaration, ts, judge) &&
-    unmutated(declaration, checker, ts, program),
+    appendOnly(declaration, checker, ts, program),
   );
 }
 
