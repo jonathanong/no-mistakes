@@ -8,7 +8,6 @@ const TRANSPARENT = new Set([
   "TSSatisfiesExpression",
   "TSTypeAssertion",
   "TSInstantiationExpression",
-  "LogicalExpression",
 ]);
 
 function resultDiscarded(call) {
@@ -17,6 +16,9 @@ function resultDiscarded(call) {
     const parent = current.parent;
     const type = parent.type;
     if (TRANSPARENT.has(type)) {
+      current = parent;
+    } else if (type === "LogicalExpression") {
+      if (parent.right !== current) return false;
       current = parent;
     } else if (type === "SequenceExpression") {
       if (parent.expressions.at(-1) !== current) return true;

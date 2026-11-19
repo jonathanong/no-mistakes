@@ -17,11 +17,27 @@
       ]
     },
     {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded-left-operand.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^goto$",
+              "discardedResultOnly": true,
+              "message": "Capture or return the result."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded-positions.ts",
       "findings": [
         {
-          "column": 3,
-          "endColumn": 18,
+          "column": 12,
+          "endColumn": 27,
           "endLine": 8,
           "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded-positions.ts",
           "line": 8,
@@ -31,8 +47,8 @@
           "severity": 2
         },
         {
-          "column": 3,
-          "endColumn": 18,
+          "column": 12,
+          "endColumn": 27,
           "endLine": 9,
           "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded-positions.ts",
           "line": 9,
@@ -86,8 +102,8 @@
           "severity": 2
         },
         {
-          "column": 12,
-          "endColumn": 27,
+          "column": 21,
+          "endColumn": 36,
           "endLine": 13,
           "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/discarded-positions.ts",
           "line": 13,

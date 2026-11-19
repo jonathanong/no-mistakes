@@ -27,7 +27,10 @@ function snapshotCase(name, discardedResultOnly) {
 describe(`${id} discardedResultOnly value-discarding positions`, () => {
   it("snapshots logical, conditional, for-clause and promise-chain fixtures", async () => {
     const cases = {
-      valid: [snapshotCase("discarded-promise-chain.ts", true)],
+      valid: [
+        snapshotCase("discarded-promise-chain.ts", true),
+        snapshotCase("discarded-left-operand.ts", true),
+      ],
       invalid: [snapshotCase("discarded-positions.ts", true)],
     };
     await expect(
@@ -37,6 +40,10 @@ describe(`${id} discardedResultOnly value-discarding positions`, () => {
   it("reports calls in logical, conditional, sequence and for-clause discards only", () => {
     const lines = check("discarded-positions.ts", true).map((message) => message.line);
     assert.deepEqual(lines, [8, 9, 10, 11, 11, 12, 13, 14, 15, 16, 16, 17, 17, 18]);
+  });
+  it("counts left operands of &&, || and ?? as used tests", () => {
+    assert.deepEqual(check("discarded-left-operand.ts", true), []);
+    assert.equal(check("discarded-left-operand.ts", false).length, 7);
   });
   it("counts promise-chain receivers as used", () => {
     assert.deepEqual(check("discarded-promise-chain.ts", true), []);

@@ -81,14 +81,16 @@ client.send(new ListEntriesCommand({ cursor }));
     `for` statement. Value-passing wrappers are followed while the whole
     expression is discarded: `await`, `!`, `as T`, `satisfies T`, `<T>`
     assertions, `call()<T>` instantiations, optional calls (`call?.()`), a
-    sequence's final operand, either side of `||`, `&&` and `??`, and the
+    sequence's final operand, the right operand of `||`, `&&` and `??` (the left operand is a test, so
+    `check(x) && other(x)` and `check(x) ?? fallback()` use `check`'s result,
+    like `check(x) ? a() : b()`), and the
     branches (not the test) of `cond ? a() : b()`. `await call()` as a
     statement is discarded, because awaiting settles the promise but still
     drops its value.
   - Not discarded: `const x = await call()`, assignment, `return call()`, an
     arrow expression body, an argument, a conditional or `for` test, the final
     operand of a sequence that is used, and any other consumer. A member access
-    on the call, including `call()?.x`, is a use of the result.
+    on the call, including `call()?.length`, is a use of the result.
   - Promise chains count as used: `call().catch(f)`, `call().then(f)` and
     `call().finally(f)` pass even as statements, because the call's parent is
     a member access. Seeing through promise chains would change the semantics,

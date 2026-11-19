@@ -5,12 +5,12 @@ declare const sink: (value: unknown) => void;
 declare let slot: unknown;
 
 export function discarded() {
-  page.goto("/a") ?? other;
-  page.goto("/b") || other;
+  other ?? page.goto("/a");
+  other || page.goto("/b");
   cond && page.goto("/c");
   cond ? page.goto("/d") : page.goto("/e");
   cond ? other : page.goto("/f");
-  (cond && page.goto("/g")) || other;
+  other || (cond && page.goto("/g"));
   cond && (page.goto("/h"), other);
   cond && void page.goto("/i");
   for (page.goto("/j"); cond; page.goto("/k")) sink(0);
