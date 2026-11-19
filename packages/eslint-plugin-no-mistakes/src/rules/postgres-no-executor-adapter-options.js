@@ -2,6 +2,7 @@
 
 const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { declaredInConfiguredModule } = require("./postgres-no-executor-adapter-module");
+const { importedExecutorOption } = require("./postgres-no-executor-adapter-reexport");
 // TypeScript's SymbolFlags.Optional bit; type services supply the resolved symbol.
 const OPTIONAL_SYMBOL_FLAG = 1 << 24;
 
@@ -56,7 +57,10 @@ function declaredOptionType(annotation, property, checker, options, supplied = f
   )
     return false;
   const from = annotation.getSourceFile().fileName;
-  return configuredImport(member.type.typeName, checker, options, new Set(), from);
+  return (
+    configuredImport(member.type.typeName, checker, options, new Set(), from) ||
+    importedExecutorOption(annotation, property, type, checker, options)
+  );
 }
 
 module.exports = { declaredOptionType, optionObjectType };

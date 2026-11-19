@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "paths": {
+      "@data-stores/psql": ["./store/index.d.ts"],
+      "@acme/pg-core": ["./vendor/pg-core/dist/types.d.mts"],
+      "@other/pg-core": ["./vendor/other-core/types.d.ts"],
+      "sql-template-strings": ["./sql.ts"]
+    }
+  },
+  "include": ["*.ts"]
+}

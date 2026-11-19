@@ -269,6 +269,15 @@ library (`QueryOptions` and `QueryExecutor` both declared in
 names) counts as the configured executor when the property's type name is in
 `executorTypeNames`. A same-named type declared elsewhere does not.
 
+An options type the file imports from `importSpecifier` (including a re-export
+or alias of a type another package declares, such as a path-aliased module that
+runs `export type { QueryOptions }` on a third-party type) counts too. The
+checker follows the aliases to the `query` property, whose type must resolve to
+a declaration named in `executorTypeNames`; no other property may be typed as
+one. A lookalike declared locally or imported from another module, a `query`
+typed as anything else, an unresolved type and a second executor-typed
+property keep reporting.
+
 Both reporting modes judge an executor supplied this way (a defaulted optional
 property, or a callee reached through a pass-on) by the SQL it receives, the
 same proof `forwarding-only` applies: a trusted-tag literal with scalar holes,
