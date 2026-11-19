@@ -23,3 +23,10 @@ process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH ||= join(
   "napi",
   "test-addon.js",
 );
+
+if (
+  /[\\/]packages[\\/]eslint-plugin-no-mistakes[\\/]test[\\/]/.test(expect.getState().testPath ?? "")
+) {
+  // Typed-program rule tests build TypeScript programs and need headroom on loaded CI shards.
+  vi.setConfig({ testTimeout: 30_000 });
+}
