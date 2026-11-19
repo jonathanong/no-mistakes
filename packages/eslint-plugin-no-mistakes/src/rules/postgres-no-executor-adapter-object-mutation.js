@@ -2,6 +2,7 @@
 
 const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
 const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
+const { nullishGuardRead } = require("./postgres-no-executor-adapter-guard");
 const { mayPrecede } = require("./postgres-no-executor-adapter-mutation-order");
 const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
 
@@ -51,6 +52,7 @@ function objectMutation(
   return variable.references.some((reference) => {
     if (reference.init || reference.identifier === ignoredReference) return false;
     if (!mayPrecede(variable, reference, before)) return false;
+    if (before && nullishGuardRead(reference.identifier)) return false;
     let value = reference.identifier;
     let depth = 0;
     while (true) {
