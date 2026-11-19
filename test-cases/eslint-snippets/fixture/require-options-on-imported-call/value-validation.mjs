@@ -1,0 +1,15 @@
+import { send } from '@example/transport'
+import { approvedAgent, otherAgent, OtherCtor } from '@example/agents'
+await send(request, { agent: otherAgent() })
+await send(request, { agent: approvedAgent() })
+await send(request, { agent }, extra)
+await send(request, { agent })
+await send(request, { agent: agent })
+await send(request, { agent: factory.create() })
+await send(request, { agent: this.make() })
+await send(request, { agent: pool.get() })
+await send(request, { agent: localMake() })
+await send(request, { agent: cond ? otherAgent() : null })
+await send(request, { agent: members.agent })
+await send(request, { agent: new Local() })
+await send(request, { agent: new OtherCtor() })

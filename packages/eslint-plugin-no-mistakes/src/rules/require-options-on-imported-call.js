@@ -12,6 +12,7 @@ const {
   staticPropertyName,
   visiblePropertyNames,
 } = require("./imported-call-options");
+const { exceedsMaxArguments, invalidValueProperties } = require("./imported-call-values");
 const { shouldCheckOptionsFile } = require("./required-call-selector-compile");
 const { createCallSelectors } = require("./required-call-selectors");
 
@@ -23,6 +24,9 @@ function requirementKey(target, fallback) {
     target.propertyMatch,
     [...target.requiredProperties].sort(),
     target.message || fallback || "",
+    target.maxArguments ?? null,
+    target.allowedValueCallees ?? null,
+    target.allowShorthand ?? null,
   ]);
 }
 
@@ -31,11 +35,25 @@ function reportMissing(context, node, target, resolved, suppressed, fallback, re
   const key = requirementKey(target, fallback);
   const seen = reported.get(node);
   if (seen?.has(key)) return;
-  if (hasRequiredOptions(args[target.optionsPosition - 1], target, context.sourceCode)) {
-    return;
-  }
+  const optionsArg = args[target.optionsPosition - 1];
+  const tooMany = exceedsMaxArguments(target, args);
+  const badValues = invalidValueProperties(optionsArg, target, context.sourceCode);
+  const present = hasRequiredOptions(optionsArg, target, context.sourceCode);
+  if (present && !tooMany && badValues.length === 0) return;
   if (seen) seen.add(key);
   else reported.set(node, new Set([key]));
+  if (present) {
+    context.report({
+      node,
+      messageId: tooMany ? "tooManyArguments" : "invalidOptionValue",
+      data: {
+        calleeName: resolved.calleeName,
+        maxArguments: String(target.maxArguments),
+        properties: badValues.join(", "),
+      },
+    });
+    return;
+  }
   const custom = target.message || fallback;
   if (custom) {
     context.report({ node, messageId: "customOptions", data: { message: custom } });
@@ -68,6 +86,9 @@ module.exports = Object.assign(
         missingOptions:
           "Call '{{calleeName}}' from '{{source}}' must pass a statically visible options object at argument {{optionsPosition}} containing {{propertyMatch}} of: {{requiredProperties}}.",
         customOptions: "{{message}}",
+        tooManyArguments: "Call '{{calleeName}}' must pass at most {{maxArguments}} arguments.",
+        invalidOptionValue:
+          "Call '{{calleeName}}' passes option(s) {{properties}} with a value that is not an allowed factory call.",
       },
     },
     (context) => {
