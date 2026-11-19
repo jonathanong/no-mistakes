@@ -42,6 +42,7 @@ fn outputs_mode(scenario: &str, name: &str, precise: bool) -> Vec<(String, Value
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

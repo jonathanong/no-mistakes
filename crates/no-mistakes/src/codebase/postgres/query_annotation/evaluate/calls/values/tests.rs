@@ -34,6 +34,7 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

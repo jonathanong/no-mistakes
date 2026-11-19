@@ -7,6 +7,8 @@ pub(super) mod effects;
 mod failed_arrays;
 mod failed_bindings;
 mod failed_values;
+mod guard_writes;
+mod lexical;
 mod updates;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -19,11 +21,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         generic: bool,
     ) -> Value {
         self.reserve_bindings(steps, env);
-        let supported = !steps.iter().any(|step| {
-            matches!(step, Step::Unsupported)
-                || (!self.files[path].facts.precise_records
-                    && matches!(step, Step::Branch(_, _, _)))
-        });
+        let lexical = !self.files[path].facts.precise_records
+            && steps
+                .iter()
+                .any(|step| self.lexical_destructure((step, steps), path, (*env, depth, generic)));
+        let supported = !lexical
+            && !steps.iter().any(|step| {
+                matches!(step, Step::Unsupported)
+                    || (!self.files[path].facts.precise_records
+                        && matches!(step, Step::Branch(_, _, _))
+                        && !super::calls::scopes::early_exit_guard(step))
+            });
         let unsafe_scope = steps.iter().any(|step| {
             matches!(step, Step::PotentialCalls(calls) if calls.iter().any(|start| !self.files[path].executors.contains(start)))
         });
@@ -58,7 +66,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let mut opaque_return = self.files[path].facts.precise_records && !supported;
         for (index, step) in steps.iter().enumerate() {
             match step {
-                Step::Branch(_, _, _) if !self.files[path].facts.precise_records => {}
+                Step::Branch(test, _, _) if !self.files[path].facts.precise_records => {
+                    if supported && !super::calls::scopes::inert(test) {
+                        self.poison_guard_writes(test, *env);
+                        if self.next_builder == 0 {
+                            self.untrusted_array_intrinsics = true;
+                        } else {
+                            self.invalidate_live_builders();
+                        }
+                    }
+                }
                 Step::Branch(test, left, right) => {
                     return self.branch_steps(
                         (test, left, right),

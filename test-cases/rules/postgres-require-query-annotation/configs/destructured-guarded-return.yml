@@ -1,0 +1,11 @@
+rules:
+  - name: runtime queries identify executed statements
+    rule: postgres-require-query-annotation
+    scope: repository
+    severity: error
+    options:
+      effort: max
+      unanalyzableSql: advise
+      importSpecifier: "@example/psql"
+      executorTypeNames: [QueryOptions]
+      include: [src/**/*.ts]

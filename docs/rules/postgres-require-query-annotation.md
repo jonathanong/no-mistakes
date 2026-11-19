@@ -548,6 +548,8 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   A proven missing annotation (including a decidable literal head at low) remains a finding under every policy.
 
+Destructuring a call result (``const { rows } = await run(sql`/* x */ SELECT 1`)``, array patterns, and non-awaited patterns) resolves the SQL argument exactly as `const result = await run(...)` does, including when `run` is a local such as `options.query ?? write`. Destructuring never changes whether a call is annotated. A destructured call whose SQL the evaluator cannot resolve keeps the lexical result instead of adding an `unresolved-leading-sql` finding that the plain form would report. An early `if (test) return value` guard before the call (the test may call helpers, the arm only returns) no longer stops the evaluator from resolving the SQL after it. Only a direct executor call is evaluated: a destructured call to any other helper, or one whose SQL argument already starts with a literal leading annotation, keeps the lexical result. When some invocations of a destructured executor call resolve and others stay unresolved, the resolved ones decide; unresolved invocations of an ordinary, non-destructured helper still report.
+
 ## Valid example
 
 ```ts

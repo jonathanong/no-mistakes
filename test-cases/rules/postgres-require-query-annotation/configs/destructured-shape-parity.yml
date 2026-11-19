@@ -1,0 +1,11 @@
+version: 2
+effort: max
+unanalyzable: report
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@example/psql"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryOptions, TransactionQuery]
+      include: [src/query.ts, src/builders.ts, src/helpers.ts, src/transactions.ts]

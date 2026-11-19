@@ -34,6 +34,7 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

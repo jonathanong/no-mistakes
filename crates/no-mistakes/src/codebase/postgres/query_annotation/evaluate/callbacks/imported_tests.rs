@@ -61,6 +61,7 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
             (specifier == "./helper.mjs").then(|| helper.clone())
         },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

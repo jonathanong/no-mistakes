@@ -1,0 +1,50 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "destructured-call-parity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 27,
+          "message": "src/query.ts:27: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const result = await read(bareQuery(after))",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const { rows } = await read(bareQuery(after))",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 75,
+          "message": "src/query.ts:75: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const result = await read(`${head} SELECT 1`)",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 80,
+          "message": "src/query.ts:80: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const { rows } = await read(`${head} SELECT 1`)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -34,6 +34,7 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

@@ -1,4 +1,4 @@
-mod destructured;
+pub(super) mod destructured;
 mod unsupported;
 use super::{expressions::expression, Expr, QueryAnnotationFileFacts, Step};
 use oxc_ast::ast::{BindingPattern, Declaration, Program, Statement};
@@ -166,11 +166,7 @@ fn bind_variables(
             continue;
         }
         let BindingPattern::BindingIdentifier(id) = &declaration.id else {
-            if destructured {
-                destructured::bind(declaration, source, steps);
-            } else {
-                steps.push(Step::Unsupported);
-            }
+            destructured::bind(declaration, source, destructured, steps);
             continue;
         };
         let init = declaration

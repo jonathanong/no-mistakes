@@ -34,6 +34,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

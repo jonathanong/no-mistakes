@@ -72,14 +72,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "callers.mts",
-          "line": 35,
-          "message": "callers.mts:35: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "export const plainRows = () => plainDestructure(sql`/* plainRows */ SELECT id FROM widgets`, statement => read(statement).then(() => ({ rows: [] })));",
-          "target": "leading-annotation"
-        },
-        {
-          "file": "callers.mts",
           "line": 6,
           "message": "callers.mts:6: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
           "rule": "postgres-require-query-annotation",
@@ -332,14 +324,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "callers.mts:34: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "export const mutateAfter = (after?: string) => pageMutate(sql`/* mutateAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
-          "target": "annotation"
-        },
-        {
-          "file": "callers.mts",
-          "line": 35,
-          "message": "callers.mts:35: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
-          "rule": "postgres-require-query-annotation",
-          "sourceLine": "export const plainRows = () => plainDestructure(sql`/* plainRows */ SELECT id FROM widgets`, statement => read(statement).then(() => ({ rows: [] })));",
           "target": "annotation"
         },
         {

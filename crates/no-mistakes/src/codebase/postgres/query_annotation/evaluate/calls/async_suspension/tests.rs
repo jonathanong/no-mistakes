@@ -17,6 +17,30 @@ fn suspension_discards_only_events_created_after_the_await() {
 }
 
 #[test]
+fn deferral_visits_only_the_logged_slice_and_keeps_earlier_events() {
+    let key = |index: u32| (PathBuf::from("many.ts"), (index, index + 1));
+    let mut events = ExecutionEvents::new();
+    let mut log = Vec::new();
+    for index in 0..200 {
+        events.insert(key(index), vec![(false, Value::Unknown)]);
+        log.push(key(index));
+    }
+    events
+        .get_mut(&key(5))
+        .unwrap()
+        .push((false, Value::Unknown));
+    log.push(key(5));
+    defer_unresolved_events(&mut events, &log[200..]);
+    assert!(events[&key(0)][0].1 == Value::Unknown);
+    assert!(events[&key(199)][0].1 == Value::Unknown);
+    assert!(events[&key(5)][0].1 == Value::Unknown);
+    assert!(matches!(
+        events[&key(5)][1].1,
+        Value::Failure(DEFERRED_REASON)
+    ));
+}
+
+#[test]
 fn nested_await_in_sql_builder_mutations_is_a_suspension() {
     let awaited = || Expr::Await(Box::new(Expr::Text("ready".into())));
     let conditional_index = Expr::Sequence(vec![Expr::Alternatives(vec![

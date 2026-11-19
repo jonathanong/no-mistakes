@@ -11,6 +11,7 @@ pub(super) fn evaluator<'a>(
         files,
         resolve: |_name, _path| None,
         events: Default::default(),
+        event_log: Default::default(),
         scopes: vec![scope.into()],
         modules: Default::default(),
         active_module_initials: Default::default(),

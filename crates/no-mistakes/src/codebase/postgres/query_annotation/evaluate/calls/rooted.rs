@@ -84,6 +84,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             } else {
                 arguments.first().cloned().unwrap_or(Value::Unknown)
             };
+            self.event_log.push((path.to_path_buf(), span));
             self.events
                 .entry((path.to_path_buf(), span))
                 .or_default()

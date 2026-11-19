@@ -29,6 +29,7 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
@@ -125,6 +126,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
             (specifier == "./later.mts" && from == root.as_path()).then(|| later.clone())
         },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),
@@ -222,6 +224,7 @@ fn missing_prepared_eager_and_runtime_modules_remain_observed_on_cache_hits() {
             (specifier == "./broken.mjs").then(|| from.with_file_name("broken.mts"))
         },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

@@ -20,6 +20,9 @@ mod values;
 mod tests;
 
 #[cfg(test)]
+mod capture_restoration_tests;
+
+#[cfg(test)]
 mod deletion_tests;
 
 #[cfg(test)]

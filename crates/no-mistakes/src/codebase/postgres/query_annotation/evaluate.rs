@@ -51,6 +51,7 @@ pub(super) struct Evaluator<'a, F> {
     // Immutable request-wide trust; branch snapshots cannot restore intrinsics.
     pub untrusted_array_intrinsics: bool,
     pub events: ExecutionEvents,
+    pub event_log: Vec<(PathBuf, CallSpan)>,
     pub scopes: Vec<Scope>,
     pub modules: module_cache::ModuleCache,
     pub active_module_initials: Vec<alternatives::modules::Initials>,

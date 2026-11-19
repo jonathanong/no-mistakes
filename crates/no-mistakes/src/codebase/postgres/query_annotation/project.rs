@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 mod demand;
 pub(super) mod evaluator;
 mod merge;
-mod output;
+pub(in crate::codebase::postgres::query_annotation) mod output;
 mod parallel;
 mod prepare;
 mod work;
