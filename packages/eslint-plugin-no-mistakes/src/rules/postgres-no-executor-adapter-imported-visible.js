@@ -39,6 +39,14 @@ function parameterBinding(parameter, property, ts) {
   return { binding: parameter.name, object: Boolean(property) };
 }
 
+// The helper an adapter closure is passed to must prove its own SQL.
+function closureReceiverVisible(invoked, closure, declaration, args, shared) {
+  const inner = shared.checker.getResolvedSignature(invoked)?.getDeclaration();
+  const forwarded = forwardedArguments(invoked, declaration, args, shared);
+  const at = invoked.arguments.indexOf(closure);
+  return declarationVisible(inner, at, undefined, forwarded, shared) === true;
+}
+
 // `args` are the ESTree arguments the executor's SQL holes are judged against:
 // the original call's, or for a pass-on the arguments forwarded by it.
 function declarationVisible(declaration, index, property, args, shared) {
@@ -87,9 +95,10 @@ function declarationVisible(declaration, index, property, args, shared) {
         );
       const library = object && tsLibraryCall(node, ts, checker, options);
       if (library) {
-        safe =
-          tsAdapterStatement(library, ts, checker) ||
-          tsLiteralSql(library.arguments[0], checker, ts, options, hole);
+        const closure = tsAdapterStatement(library, ts, checker);
+        safe = closure
+          ? closureReceiverVisible(closure.parent, closure, declaration, args, shared)
+          : tsLiteralSql(library.arguments[0], checker, ts, options, hole);
         return;
       }
       let callee = node;

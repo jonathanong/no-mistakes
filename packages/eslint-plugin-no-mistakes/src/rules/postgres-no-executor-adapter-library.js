@@ -57,24 +57,26 @@ function optionsCall(identifier, context, options) {
     : null;
 }
 
-// The statement is the parameter of an adapter closure passed to a helper. The
-// helper's own SQL is proven where that closure is judged.
-function adapterStatement(statement, call, context, options) {
+// The statement is the parameter of an adapter closure passed to a helper, and
+// the helper's own SQL is proven by the check that decides whether the closure
+// is reported (`closureProven`).
+function adapterStatement(statement, call, context, options, closureProven) {
   const def = statement.type === "Identifier" ? resolveVariable(statement, context)?.defs[0] : null;
   const fn = def?.type === "Parameter" ? def.node : null;
   return Boolean(
     fn?.parent.type === "CallExpression" &&
     fn.parent.arguments.includes(fn) &&
-    libraryAdapter(fn, context, options) === call,
+    libraryAdapter(fn, context, options) === call &&
+    closureProven(fn),
   );
 }
 
 // Null when the reference is not such a terminal, else whether its SQL is visible.
-function libraryVisible(identifier, context, options, safeHole) {
+function libraryVisible(identifier, context, options, safeHole, closureProven) {
   const call = optionsCall(identifier, context, options);
   if (!call) return null;
   return (
-    adapterStatement(call.arguments[0], call, context, options) ||
+    adapterStatement(call.arguments[0], call, context, options, closureProven) ||
     literalSql(call.arguments[0], context, options, safeHole)
   );
 }
@@ -171,22 +173,23 @@ function tsClosureCall(fn, ts) {
 }
 
 // The statement of a library call is the parameter of an adapter closure that
-// is itself a call argument; the receiving helper's SQL is proven there.
+// is itself a call argument. Returns that closure; the receiving helper's SQL
+// is proven by the caller.
 function tsAdapterStatement(call, ts, checker) {
   const [statement] = call.arguments;
   const fn = ts.isIdentifier(statement)
     ? checker.getSymbolAtLocation(statement)?.valueDeclaration?.parent
     : null;
-  return Boolean(
-    fn &&
+  return fn &&
     (ts.isArrowFunction(fn) || ts.isFunctionExpression(fn)) &&
     fn.parameters.length === 1 &&
     !fn.asteriskToken &&
     !fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword) &&
     ts.isCallExpression(fn.parent) &&
     fn.parent.arguments.includes(fn) &&
-    tsClosureCall(fn, ts) === call,
-  );
+    tsClosureCall(fn, ts) === call
+    ? fn
+    : null;
 }
 
 module.exports = { libraryAdapter, libraryVisible, tsAdapterStatement, tsLibraryCall };

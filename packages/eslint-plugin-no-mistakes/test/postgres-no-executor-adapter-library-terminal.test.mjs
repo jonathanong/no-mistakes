@@ -40,8 +40,8 @@ function testCase(name, mode) {
 
 const SHARED_LINES = [30, 35, 59, 70, 74, 78, 78, 86, 87, 88, 89, 90];
 const REPORTED_LINES = {
-  "forwarding-only": [...SHARED_LINES, 90, 91, 92, 93, 94, 95, 97, 97, 98],
-  all: [...SHARED_LINES, 91, 92, 93, 94, 95, 97, 98],
+  "forwarding-only": [...SHARED_LINES, 90, 91, 92, 93, 94, 95, 96, 97, 97, 98],
+  all: [...SHARED_LINES, 91, 92, 93, 94, 95, 96, 97, 98],
 };
 
 for (const mode of ["forwarding-only", "all"]) {

@@ -49,7 +49,9 @@ function testCase(directory, name, options, mode) {
   };
 }
 
-const CONTROL_LINES = [37, 41, 45, 49, 53, 57, 61, 65, 69, 74];
+const CONTROL_LINES = [37, 41, 45, 49, 53, 57, 61, 65, 69, 70, 71, 72, 73, 74, 75, 76, 77];
+// The adapter closure reports, and so does the caller that hands it the options.
+const T4_LINES = [18, 25];
 
 for (const mode of ["forwarding-only", "all"]) {
   it(`clears library terminals under the validator options in ${mode} mode`, async () => {
@@ -59,8 +61,12 @@ for (const mode of ["forwarding-only", "all"]) {
         testCase(package_, "terminals.ts", packageOptions, mode),
         testCase("executor-library-validator", "terminals.mts", relativeOptions, mode),
       ],
-      invalid: [testCase(package_, "controls.ts", packageOptions, mode)],
+      invalid: [
+        testCase(package_, "controls.ts", packageOptions, mode),
+        testCase("executor-library-validator", "controls.mts", relativeOptions, mode),
+      ],
     });
+    expect(rows[3].findings.map(({ line }) => line)).toEqual(T4_LINES);
     expect(rows[0].findings).toEqual([]);
     expect(rows[1].findings).toEqual([]);
     expect(rows[2].findings.map(({ line }) => line)).toEqual(CONTROL_LINES);

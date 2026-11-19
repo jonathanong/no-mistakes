@@ -1,7 +1,12 @@
 "use strict";
 
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
-const { isImportedHelper, localFunction } = require("./postgres-no-executor-adapter-target");
+const {
+  acceptsExecutor,
+  isImportedHelper,
+  localFunction,
+} = require("./postgres-no-executor-adapter-target");
+const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { literalSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { forwardedHop } = require("./postgres-no-executor-adapter-hop");
@@ -69,6 +74,18 @@ function otherPropertyRead(reference, property) {
   return true;
 }
 
+// The same judgement that leaves an adapter closure unreported where it is an
+// argument: its receiver accepts it and the receiver's SQL is visible.
+function closureProven(fn, context, options, facts) {
+  const call = fn.parent;
+  const at = call.arguments.indexOf(fn);
+  return (
+    (acceptsExecutor(call, at, null, context, options, facts) ||
+      callbackTarget(call, at, context, facts)) &&
+    visibleSqlTarget(call, at, null, context, options, true, facts, true) === true
+  );
+}
+
 function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts, callback) {
   if (call.type !== "CallExpression") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
@@ -101,7 +118,9 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
     const hole = (value) => localHoleSafe(value, call, fn, context, variable, property);
     const terminal =
       accepted && binding.object
-        ? libraryVisible(reference.identifier, context, options, hole)
+        ? libraryVisible(reference.identifier, context, options, hole, (fn) =>
+            closureProven(fn, context, options, facts),
+          )
         : null;
     if (terminal !== null) return terminal;
     if (accepted && binding.object && passedOn(reference)) {
