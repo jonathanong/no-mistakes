@@ -40,3 +40,38 @@ export async function writeBefore(query: SessionExecutor, id: string, next: stri
   row.id = next;
   return markWidget(row.id, query);
 }
+
+export async function otherOperand(query: SessionExecutor, id: string, other: Widget) {
+  const { rows } = (await query(sql`SELECT id FROM widgets WHERE id = ${id}`)) as Result;
+  const row = rows[0];
+  if (row === other) return null;
+  return markWidget(row.id, query);
+}
+
+export async function reversedGuard(query: SessionExecutor, id: string) {
+  const { rows } = (await query(sql`SELECT id FROM widgets WHERE id = ${id}`)) as Result;
+  const row = rows[0];
+  if (null === row) return null;
+  return markWidget(row.id, query);
+}
+
+export async function relationalGuard(query: SessionExecutor, id: string) {
+  const { rows } = (await query(sql`SELECT id FROM widgets WHERE id = ${id}`)) as Result;
+  const row = rows[0];
+  if (row > 0) return null;
+  return markWidget(row.id, query);
+}
+
+export async function conditionalGuard(query: SessionExecutor, id: string) {
+  const { rows } = (await query(sql`SELECT id FROM widgets WHERE id = ${id}`)) as Result;
+  const row = rows[0];
+  const ready = !row ? 1 : 0;
+  return ready + (await markWidget(row.id, query));
+}
+
+export async function typeofRead(query: SessionExecutor, id: string) {
+  const { rows } = (await query(sql`SELECT id FROM widgets WHERE id = ${id}`)) as Result;
+  const row = rows[0];
+  if (typeof row === "undefined") return null;
+  return markWidget(row.id, query);
+}

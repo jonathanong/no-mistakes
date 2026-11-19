@@ -45,7 +45,7 @@ it("accepts const-local receivers narrowed by an exiting guard", async () => {
     invalid: [testCase("controls.ts")],
   });
   expect(rows[0].findings).toEqual([]);
-  expect(rows[1].findings.map(({ line }) => line)).toEqual([17, 25, 31, 41]);
+  expect(rows[1].findings.map(({ line }) => line)).toEqual([17, 25, 31, 41, 48, 55, 62, 69, 76]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-guard-narrowing.snap",
   );
