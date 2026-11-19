@@ -3,20 +3,9 @@
 const { literalString } = require("./module-mock-helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
+const { targetSchema } = require("./restricted-api-usage-schema");
+const { mergeVisitors, strictVisitors } = require("./restricted-api-usage-strict");
 const { isLocalRequire, memberPropertyName, resolveVariable } = require("./async-target-bindings");
-
-const targetSchema = {
-  type: "object",
-  properties: {
-    source: { type: "string", minLength: 1 },
-    importedNamePattern: { type: "string", minLength: 1 },
-    callNamePattern: { type: "string", minLength: 1 },
-    message: { type: "string", minLength: 1 },
-  },
-  anyOf: [{ required: ["source", "importedNamePattern"] }, { required: ["callNamePattern"] }],
-  dependencies: { importedNamePattern: ["source"], source: ["importedNamePattern"] },
-  additionalProperties: false,
-};
 
 module.exports = {
   meta: {
@@ -178,7 +167,12 @@ module.exports = {
         }
       }
     }
-    return {
+    const strict = targets.some((target) =>
+      Object.keys(target).some((key) =>
+        /^(reference|declaration|property|construct)Name/.test(key),
+      ),
+    );
+    const base = {
       Program: recordImports,
       CallExpression: invocation,
       MemberExpression: member,
@@ -191,5 +185,6 @@ module.exports = {
         dynamicSource(node, node.source);
       },
     };
+    return strict ? mergeVisitors(base, strictVisitors(targets, report)) : base;
   },
 };
