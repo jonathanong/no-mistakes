@@ -126,6 +126,7 @@ class Registry {
     return this.byId.values();
   }
 }
+const registry = new Registry();
 for (const row of registry.values()) {
   row.x = 1; // reported: the iterator walks the registry's shared map
 }
@@ -136,6 +137,7 @@ class Snapshot {
     return [...this.rows];
   }
 }
+const snapshot = new Snapshot();
 for (const row of snapshot.values()) {
   row.x = 1; // quiet: `values` returns a fresh array
 }
