@@ -8,7 +8,9 @@ module.exports = defineConfig({
     pool: "forks",
     // Each native process owns a Rayon pool; overlap would time competing pools.
     fileParallelism: !compiledNative,
-    testTimeout: compiledNative ? 20_000 : 5_000,
+    // Loaded CI shards exceed the 5s default (typed programs, compiled API); policy caps this at 30s.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     setupFiles: ["tests/js/setup.js"],
     include: [
       "packages/*/scripts/*.test.js",

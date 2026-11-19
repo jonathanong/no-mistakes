@@ -11,8 +11,8 @@ const fixture = path.join(root, "fixtures/ci/native-api-tests/runner");
 
 test("real native runs serialize files while mock runs retain parallelism", () => {
   for (const [addon, expected] of [
-    ["/synthetic/addon.node", { fileParallelism: false, testTimeout: 20_000 }],
-    ["", { fileParallelism: true, testTimeout: 5_000 }],
+    ["/synthetic/addon.node", { fileParallelism: false, testTimeout: 30_000 }],
+    ["", { fileParallelism: true, testTimeout: 30_000 }],
   ]) {
     const result = spawnSync(process.execPath, [path.join(fixture, "config-probe.cjs")], {
       cwd: root,
