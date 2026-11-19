@@ -76,18 +76,40 @@ client.send(new ListEntriesCommand({ cursor }));
   call's result is discarded; capturing, returning, or passing the result on
   passes. It is independent of promise handling and does not change import,
   namespace, or strict-selector findings. Result use is judged per call:
-  - Discarded: the call is an expression statement, the operand of `void`, or a
-    non-final operand of a comma sequence. `await call()` as a statement is
-    discarded, because awaiting settles the promise but still drops its value, as
-    do transparent wrappers (`call()!`, `call() as T`, `call?.()` optional calls, `call()<T>` instantiations, and a
-    sequence whose final operand is the call, when the sequence itself is
-    discarded).
+  - Discarded: the call is an expression statement, the operand of `void`, a
+    non-final operand of a comma sequence, or an `init` or `update` clause of a
+    `for` statement. Value-passing wrappers are followed while the whole
+    expression is discarded: `await`, `!`, `as T`, `satisfies T`, `<T>`
+    assertions, `call()<T>` instantiations, optional calls (`call?.()`), a
+    sequence's final operand, either side of `||`, `&&` and `??`, and the
+    branches (not the test) of `cond ? a() : b()`. `await call()` as a
+    statement is discarded, because awaiting settles the promise but still
+    drops its value.
   - Not discarded: `const x = await call()`, assignment, `return call()`, an
-    arrow expression body, an argument, a receiver (`call().then(f)`), the final
-    operand of a sequence that is used, and any other consumer such as `&&`.
-    Example with `callNamePattern: '^goto$'`: `await page.goto('/guide')`,
-    `page.goto('/guide')` and `void page.goto('/guide')` report;
-    `const response = await page.goto('/guide')` and `return page.goto('/guide')` pass.
+    arrow expression body, an argument, a conditional or `for` test, the final
+    operand of a sequence that is used, and any other consumer. A member access
+    on the call, including `call()?.x`, is a use of the result.
+  - Promise chains count as used: `call().catch(f)`, `call().then(f)` and
+    `call().finally(f)` pass even as statements, because the call's parent is
+    a member access. Seeing through promise chains would change the semantics,
+    so the option does not.
+
+  Example with `callNamePattern: '^goto$'`:
+
+  ```ts
+  await page.goto("/guide"); // reports
+  page.goto("/guide"); // reports
+  void page.goto("/guide"); // reports
+  page.goto("/guide") ?? fallback; // reports
+  cond && page.goto("/guide"); // reports
+  cond ? page.goto("/a") : page.goto("/b"); // reports both
+  for (page.goto("/a"); ok; page.goto("/b")) {} // reports both
+
+  const response = await page.goto("/guide"); // passes
+  return page.goto("/guide"); // passes
+  page.goto("/guide").catch(report); // passes
+  ```
+
 - `message`: optional replacement diagnostic, which should explain the local
   reason and static rewrite. The default asks callers to use an allowed API.
 
