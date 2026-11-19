@@ -74,4 +74,8 @@ describe(`${id} discardedResultOnly`, () => {
       assert.throws(() => check(opt(bad)), /configuration|match|propert/i);
     }
   });
+  it("rejects unknown target keys", () => {
+    const unknown = { ...base, discardedResultOnly: true, discardedOnly: true };
+    assert.throws(() => check(opt(unknown)), /additional properties|must NOT have/i);
+  });
 });
