@@ -98,7 +98,7 @@ function declarationVisible(declaration, index, property, args, shared) {
         const closure = tsAdapterStatement(library, ts, checker);
         safe = closure
           ? closureReceiverVisible(closure.parent, closure, declaration, args, shared)
-          : tsLiteralSql(library.arguments[0], checker, ts, options, hole);
+          : tsLiteralSql(library.arguments[0], checker, ts, options, hole, program);
         return;
       }
       let callee = node;
@@ -123,7 +123,7 @@ function declarationVisible(declaration, index, property, args, shared) {
         !ts.isCallExpression(invoked) ||
         invoked.expression !== callee ||
         !invoked.arguments[0] ||
-        !tsLiteralSql(invoked.arguments[0], checker, ts, options, hole)
+        !tsLiteralSql(invoked.arguments[0], checker, ts, options, hole, program)
       ) {
         safe = false;
       }

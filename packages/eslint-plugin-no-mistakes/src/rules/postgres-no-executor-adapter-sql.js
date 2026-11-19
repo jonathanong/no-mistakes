@@ -1,6 +1,11 @@
 "use strict";
 
 const { resolveVariable } = require("./postgres-query-text");
+const {
+  constFragment,
+  isAppend,
+  tsConstFragment,
+} = require("./postgres-no-executor-adapter-sql-const");
 
 function configuredTag(source, name, options) {
   return options.trustedSqlTags.some(
@@ -11,22 +16,24 @@ function configuredTag(source, name, options) {
   );
 }
 
-// `statement.append(fragment)` stays static when both sides are static SQL; a
-// string argument is raw SQL, so only a literal one is accepted.
-function isAppend(node) {
-  return (
-    node?.type === "CallExpression" &&
-    node.arguments.length === 1 &&
-    node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    node.callee.property.name === "append"
-  );
+function fragment(node, context, options) {
+  const { scalarArgument } = require("./postgres-no-executor-adapter-sql-scalar");
+  const hole = (value) => scalarArgument(value, context);
+  return constFragment(node, context, {
+    local: (init) => literalSql(init, context, options, hole),
+    ts:
+      ({ checker, ts }) =>
+      (init) =>
+        tsLiteralSql(init, checker, ts, options, () => false),
+  });
 }
 
 function literalSql(node, context, options, safeHole) {
   if (isAppend(node))
-    return [node.callee.object, node.arguments[0]].every((part) =>
-      literalSql(part, context, options, safeHole),
+    return (
+      literalSql(node.callee.object, context, options, safeHole) &&
+      (literalSql(node.arguments[0], context, options, safeHole) ||
+        fragment(node.arguments[0], context, options))
     );
   if (node?.type === "Literal" && typeof node.value === "string") return true;
   if (node?.type === "TemplateLiteral") return node.expressions.length === 0;
@@ -49,16 +56,21 @@ function literalSql(node, context, options, safeHole) {
   );
 }
 
-function tsLiteralSql(node, checker, ts, options, safeHole) {
+function tsLiteralSql(node, checker, ts, options, safeHole, program) {
   if (
     ts.isCallExpression(node) &&
     ts.isPropertyAccessExpression(node.expression) &&
     node.expression.name.text === "append" &&
     node.arguments.length === 1
-  )
-    return [node.expression.expression, node.arguments[0]].every((part) =>
-      tsLiteralSql(part, checker, ts, options, safeHole),
+  ) {
+    const part = (value) => tsLiteralSql(value, checker, ts, options, safeHole, program);
+    const judge = (init) => tsLiteralSql(init, checker, ts, options, () => false);
+    return (
+      part(node.expression.expression) &&
+      (part(node.arguments[0]) ||
+        tsConstFragment(node.arguments[0], { checker, ts, program }, judge))
     );
+  }
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return true;
   if (!ts.isTaggedTemplateExpression(node) || !ts.isIdentifier(node.tag)) return false;
   const head = ts.isTemplateExpression(node.template)
