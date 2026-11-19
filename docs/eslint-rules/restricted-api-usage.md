@@ -54,18 +54,19 @@ client.send(new ListEntriesCommand({ cursor }));
 - `targets`: restrictions; omitted means no restrictions. An empty array is invalid.
 - `source`: exact module specifier for imports, re-exports, and dynamic loads.
 - `importedNamePattern`: JavaScript regular expression for the original exported
-  name, including `default`. `source` is optional. With `source`, only imports from
-  that module match. Without it, a named value import from any module matches by
-  its original name, so `import { enqueueReviewAndWait as enqueueReview } from
-  './enqueues.mts'` reports even when renamed. A source-less target does not
-  match namespace member reads, destructured namespace keys or re-exports, which
-  need a `source`. It was chosen over `referenceNamePattern` because that matches
-  the local alias a reader renames, not the restricted exported name. Named value imports are findings
-  even when unused or renamed. Named value re-exports match the original name.
-  Matching namespace member reads and destructured keys report the access itself;
-  direct imported calls also report. Wildcard and namespace re-exports, dynamic
-  imports and global `require` loads report any configured source because
-  their export contents cannot be name-matched.
+  name, including `default`. `source` is optional. With `source`, only imports
+  from that module match. Without it, a named value import from any module
+  matches by its original name, so a rename still reports:
+  `import { enqueueReviewAndWait as enqueueReview } from './enqueues.mts'`.
+- A source-less `importedNamePattern` does not match namespace member reads,
+  destructured namespace keys, or re-exports. Those need a `source`. It matches
+  the exported name. `referenceNamePattern` matches the local alias instead.
+- Named value imports are findings even when unused or renamed. Named value
+  re-exports match the original name. Matching namespace member reads and
+  destructured keys report the access itself; direct imported calls also report.
+- Wildcard and namespace re-exports, dynamic imports, and global `require`
+  loads report any configured source, because their export contents cannot be
+  name-matched.
 - `callNamePattern`: optional JavaScript regular expression for a direct callee
   name or static member property. This explicitly asserts a lexical restriction:
   it also reports unrelated imports, local functions, shadowed bindings, and
@@ -126,12 +127,16 @@ client.send(new ListEntriesCommand({ cursor }));
   class method or field definition (`{ blockingWait: true }`, `blockingWait = 1`).
   Computed keys are unproven and do not report; destructuring patterns are not
   definitions.
-- `destructureNamePattern`: optional regular expression for an object destructuring
-  key, whether shorthand, renamed, nested or defaulted
-  (`const { addAndWait: wait, outer: { waitUntilFinished } = {} } = queue`). Reports
-  the property. Computed keys are unproven and rest elements have no key. It is a
-  separate option so `propertyNamePattern` and `referenceNamePattern` keep
-  ignoring destructuring and existing configurations report identically.
+- `destructureNamePattern`: optional regular expression for an object
+  destructuring key. Shorthand, renamed, nested, and defaulted keys match in
+  declarations, parameters, `for...of`, and assignment
+  (`({ addAndWait } = queue)`, `for (const { waitUntilFinished } of jobs)`).
+  The report is on the property.
+- `destructureNamePattern` matches a static string key, including the computed
+  form `['addAndWait']`. A non-literal computed key is unproven, and a rest
+  element has no key. The option is separate so `propertyNamePattern` and
+  `referenceNamePattern` keep ignoring destructuring and existing
+  configurations report identically.
 - `constructNamePattern`: optional regular expression for the callee name of
   `new Name(...)` or `new ns.Name(...)`.
 - `constructArgumentCount`: optional non-negative integer. Requires
@@ -154,9 +159,11 @@ identical findings.
 }
 ```
 
-Each target needs `importedNamePattern` (alone for any source, or with `source`), or at least one of
-`callNamePattern` and the strict selectors above, or several. Invalid regular expressions throw during rule initialization. Expressions
-use JavaScript search semantics: use anchors when a prefix or exact match matters.
+Each target needs `importedNamePattern` (alone for any source, or with
+`source`), or at least one of `callNamePattern` and the strict selectors
+above, or several. Invalid regular expressions throw during rule
+initialization. Expressions use JavaScript search semantics: use anchors
+when a prefix or exact match matters.
 
 Use the linter's file scope and ignores to narrow the policy and allow a contract
 test. For example, an ESLint flat-config entry can set `files: ['backend/**/*.mts']`
@@ -168,9 +175,10 @@ Import-origin calls use lexical binding identity, so a parameter shadowing an
 import is allowed. Declaration-level and specifier-level type imports are ignored.
 Namespace accesses accept static string keys, optional calls, and transparent
 TypeScript wrappers. Reads report before aliasing, construction, `.call` / `.apply`
-forwarding, or tagged templates can hide the restricted API. Destructuring reports
-the matching key, including renamed and defaulted bindings. Type-only re-exports
-are ignored. Dynamic imports and global `require` loads of a configured source
+forwarding, or tagged templates can hide the restricted API. Destructuring
+reports the matching key, including renamed, defaulted, `for...of`, and
+assignment patterns, and a static computed key. Type-only re-exports are
+ignored. Dynamic imports and global `require` loads of a configured source
 ask for a static named import, including when a custom message is configured.
 Assigning the whole namespace to another variable also asks for a static named
 import before the original binding is hidden. A rest destructure copies the whole

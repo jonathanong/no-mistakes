@@ -9,5 +9,14 @@ const { addAndWait: withDefault = fallback, enqueueReviewAndWait = fallback } = 
 const { "addAndWait": quoted } = queue;
 const { [dynamicKey]: computed, ...rest } = queue;
 function handler({ waitUntilFinished: inParameter }: any) {}
+declare const batches: readonly unknown[];
+let addAndWait: unknown;
+let assignedReview: unknown;
+let assignedRest: unknown;
+for (const { addAndWait: fromLoop, kept } of batches) {}
+for (const { outer: { waitUntilFinished: fromNestedLoop } } of batches) {}
+({ addAndWait, ...assignedRest } = queue);
+({ enqueueReviewAndWait: assignedReview } = dependencies);
+const { ['addAndWait']: literalComputed, ['kept']: keptComputed } = queue;
 const object = { addAndWait: 1 };
 queue.addAndWait();
