@@ -16,6 +16,11 @@ function check(options) {
   const rules = { [`no-mistakes/${id}`]: ["error", options] };
   return lint(fixture(`${id}/${name}`), rules, resolve(root, name));
 }
+function checkExtra(options) {
+  const name = "discarded-extra.ts";
+  const rules = { [`no-mistakes/${id}`]: ["error", options] };
+  return lint(fixture(`${id}/${name}`), rules, resolve(root, name));
+}
 function snapshotCase(options) {
   return {
     code: fixture(`${id}/discarded.ts`),
@@ -47,6 +52,19 @@ describe(`${id} discardedResultOnly`, () => {
     );
     assert.equal(check(opt(base)).length, 16);
     assert.equal(check(opt({ ...base, discardedResultOnly: false })).length, 16);
+  });
+  it("treats generic instantiations as transparent and keeps import origins independent", () => {
+    const lines = (options) => checkExtra(opt(options)).map((message) => message.line);
+    assert.deepEqual(lines({ callNamePattern: "^factory$", discardedResultOnly: true }), [5]);
+    assert.deepEqual(
+      lines({
+        source: "client",
+        importedNamePattern: "^fetch$",
+        callNamePattern: "^goto$",
+        discardedResultOnly: true,
+      }),
+      [1, 7],
+    );
   });
   it("requires a lexical call selector", () => {
     for (const bad of [

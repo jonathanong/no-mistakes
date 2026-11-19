@@ -73,15 +73,15 @@ client.send(new ListEntriesCommand({ cursor }));
   - Discarded: the call is an expression statement, the operand of `void`, or a
     non-final operand of a comma sequence. `await call()` as a statement is
     discarded, because awaiting settles the promise but still drops its value, as
-    do transparent wrappers (`call()!`, `call() as T`, `call()?.x` chains, and a
+    do transparent wrappers (`call()!`, `call() as T`, `call?.()` optional calls, `call()<T>` instantiations, and a
     sequence whose final operand is the call, when the sequence itself is
     discarded).
   - Not discarded: `const x = await call()`, assignment, `return call()`, an
     arrow expression body, an argument, a receiver (`call().then(f)`), the final
     operand of a sequence that is used, and any other consumer such as `&&`.
-  Example with `callNamePattern: '^goto$'`: `await page.goto('/guide')`,
-  `page.goto('/guide')` and `void page.goto('/guide')` report;
-  `const response = await page.goto('/guide')` and `return page.goto('/guide')` pass.
+    Example with `callNamePattern: '^goto$'`: `await page.goto('/guide')`,
+    `page.goto('/guide')` and `void page.goto('/guide')` report;
+    `const response = await page.goto('/guide')` and `return page.goto('/guide')` pass.
 - `message`: optional replacement diagnostic, which should explain the local
   reason and static rewrite. The default asks callers to use an allowed API.
 

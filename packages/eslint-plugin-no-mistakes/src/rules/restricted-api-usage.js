@@ -160,11 +160,11 @@ module.exports = {
       for (const target of targets) {
         // Namespace accesses report at the member itself, including calls.
         if (matches(target, namespace, name)) continue;
-        if (target.discardedResultOnly && !resultDiscarded(node)) continue;
-        if (
-          (name !== null && target.call?.test(name)) ||
-          matches(target, binding, binding?.name ?? null)
-        ) {
+        const lexical =
+          name !== null &&
+          target.call?.test(name) &&
+          (!target.discardedResultOnly || resultDiscarded(node));
+        if (lexical || matches(target, binding, binding?.name ?? null)) {
           report(node, target, binding?.name ?? name);
         }
       }

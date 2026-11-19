@@ -7,6 +7,7 @@ const TRANSPARENT = new Set([
   "TSAsExpression",
   "TSSatisfiesExpression",
   "TSTypeAssertion",
+  "TSInstantiationExpression",
 ]);
 
 function resultDiscarded(call) {
