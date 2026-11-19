@@ -31,6 +31,11 @@ async function destructureWrite(id: string, options: RunOptions = {}, src: RunOp
   await options.query?.(sql`SELECT id FROM widgets WHERE id = ${id}`);
 }
 
+async function parenPattern(id: string, options: RunOptions = {}, src: RunOptions) {
+  ({ readOnly: (options.readOnly) } = src);
+  await options.query?.(sql`SELECT id FROM widgets WHERE id = ${id}`);
+}
+
 async function selfOptions(id: string, options: RunOptions = {}): Promise<unknown> {
   return id ? selfOptions(id, options) : options;
 }
@@ -49,6 +54,10 @@ export async function parenCaller(query: SessionExecutor, id: string) {
 
 export async function destructureCaller(query: SessionExecutor, id: string) {
   await destructureWrite(id, { query }, { query });
+}
+
+export async function parenPatternCaller(query: SessionExecutor, id: string) {
+  await parenPattern(id, { query }, { query });
 }
 
 export async function coalesce(query: SessionExecutor, id: string) {

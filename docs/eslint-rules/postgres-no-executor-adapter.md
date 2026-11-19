@@ -210,8 +210,10 @@ whose type is an inline `{ query?: SessionExecutor }` or a named options type
 clears when the call site passes `{ query }` and the helper calls that property
 with proven SQL. Mode `"all"` still reports those passes. `options!.query(...)`
 on an imported helper is the same call. A parenthesized assignment
-(`(options.readOnly) = true`) and a destructuring assignment
-(`({ readOnly: options.readOnly } = src)`) are writes. A helper that passes its
+(`(options.readOnly) = true`), a destructuring assignment
+(`({ readOnly: options.readOnly } = src)`), and that same target wrapped in
+parentheses inside the pattern (`({ readOnly: (options.readOnly) } = src)`)
+are writes. A helper that passes its
 options object to itself is unproven, and that check does not recurse without
 a bound.
 

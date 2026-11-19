@@ -60,7 +60,8 @@ function unwrapParens(node, ts) {
 // A write through another property of the binding changes what any callee it is
 // passed on to sees, so it is never an unrelated read. Parentheses and
 // destructuring-assignment targets (`(options.readOnly) = true`,
-// `({ a: options.readOnly } = src)`) are writes too.
+// `({ a: options.readOnly } = src)`, `({ a: (options.readOnly) } = src)`)
+// are writes too. A shorthand pattern names an identifier, never this member.
 function memberWrite(member) {
   const ts = require("typescript");
   const unwrapped = unwrapParens(member, ts);
@@ -83,10 +84,6 @@ function memberWrite(member) {
       continue;
     }
     if (ts.isPropertyAssignment(up) && up.initializer === cursor) {
-      cursor = up.parent;
-      continue;
-    }
-    if (ts.isShorthandPropertyAssignment(up) && up.name === cursor) {
       cursor = up.parent;
       continue;
     }
