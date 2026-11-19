@@ -8,12 +8,16 @@ const workflow = parse(readFileSync(path.join(__dirname, "../workflows/ci.yml"),
 const retryCondition = "${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}";
 const downloadCondition = "${{ !cancelled() && steps.coverage-download.outcome == 'failure' }}";
 
-function assertRetryPair(job, index, { id, firstName, condition, retryName, action }) {
+function assertRetryPair(
+  job,
+  index,
+  { id, firstName, condition, retryName, action, firstTimeout, retryTimeout, retryWithoutCache },
+) {
   const [first, backoff, retry] = job.steps.slice(index, index + 3);
   assert.ok(first && backoff && retry, "retry sequence must contain three steps");
   assert.equal(first.name, firstName);
   assert.equal(first.id, id);
-  assert.equal(first["timeout-minutes"], 2);
+  assert.equal(first["timeout-minutes"], firstTimeout);
   assert.equal(first["continue-on-error"], true);
   assert.equal(backoff.if, condition);
   assert.equal(backoff["timeout-minutes"], 1);
@@ -22,11 +26,15 @@ function assertRetryPair(job, index, { id, firstName, condition, retryName, acti
   assert.match(backoff.run, /sleep 5/);
   assert.equal(retry.name, retryName);
   assert.equal(retry.if, condition);
-  assert.equal(retry["timeout-minutes"], 2);
+  assert.equal(retry["timeout-minutes"], retryTimeout);
   assert.equal(retry["continue-on-error"] ?? false, false);
   assert.equal(retry.uses, first.uses);
-  assert.deepEqual(retry.with, first.with);
-  assert.equal(first["timeout-minutes"] + backoff["timeout-minutes"] + retry["timeout-minutes"], 5);
+  if (retryWithoutCache) {
+    assert.match(backoff.run, /rm -rf "\$HOME\/setup-pnpm\/store"/);
+    assert.deepEqual(retry.with, { runtime: first.with.runtime, cache: false, install: false });
+  } else {
+    assert.deepEqual(retry.with, first.with);
+  }
   assert.ok(first.uses?.startsWith(action));
   assert.ok(job.steps.indexOf(retry) > index);
   assert.equal(job["continue-on-error"] ?? false, false);
@@ -53,11 +61,14 @@ test("every pnpm Node setup in CI has a bounded, fatal-on-exhaustion retry", () 
         condition: retryCondition,
         retryName: "Retry pnpm and Node.js setup",
         action: "pnpm/setup@",
+        firstTimeout: 3,
+        retryTimeout: 3,
+        retryWithoutCache: true,
       });
       const setup = steps[index];
       assert.ok(setup.with?.runtime, `${jobName} must retain its Node runtime selection`);
       assert.equal(steps[index + 2].with.runtime, setup.with.runtime);
-      assert.equal(steps[index + 2].with.cache, setup.with.cache);
+      assert.equal(steps[index + 2].with.cache, false);
       index += 2;
     }
   }
@@ -87,6 +98,8 @@ test("Rust coverage shard artifact download retries within a bounded fatal seque
     condition: downloadCondition,
     retryName: "Retry instrumented Rust test download",
     action: "actions/download-artifact@",
+    firstTimeout: 4,
+    retryTimeout: 4,
   });
   assert.equal(job.steps[index + 3].name, "Start isolated PostgreSQL for catalog fixtures");
   assert.equal(job.steps[index + 3].if, undefined);
