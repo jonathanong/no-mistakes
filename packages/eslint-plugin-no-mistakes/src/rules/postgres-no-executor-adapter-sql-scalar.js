@@ -1,6 +1,11 @@
 "use strict";
 
-const { primitiveType, typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
+const { typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
+const {
+  bindValueType,
+  freshDate,
+  freshLocal,
+} = require("./postgres-no-executor-adapter-sql-fresh");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 
 function primitiveAnnotation(node, allowUndefined) {
@@ -28,6 +33,8 @@ function primitiveAnnotation(node, allowUndefined) {
 
 function scalarArgument(node, context, allowUndefined = true, seen = new Set()) {
   node = unwrapTs(node);
+  const scalar = (part) => scalarArgument(part, context, allowUndefined, seen);
+  if (freshDate(node, context, scalar)) return true;
   if (
     node?.type === "MemberExpression" &&
     !node.computed &&
@@ -49,6 +56,8 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
         return false;
       for (const def of variable.defs) {
         if (def.type === "Variable") {
+          const fresh = freshLocal(variable, def.node, node, context, scalar);
+          if (fresh !== null) return fresh;
           return (
             Boolean(def.node.init) && scalarArgument(def.node.init, context, allowUndefined, seen)
           );
@@ -69,9 +78,10 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
   if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(node)) return false;
   const ts = require("typescript");
   const checker = services.program.getTypeChecker();
-  return primitiveType(
+  return bindValueType(
     checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(node)),
     ts,
+    services.program,
     allowUndefined,
   );
 }
