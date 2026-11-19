@@ -14,7 +14,7 @@ function declarationOf(call, context, facts) {
     .getTypeChecker()
     .getTypeAtLocation(callee)
     .getCallSignatures();
-  return signature?.getDeclaration() ?? null;
+  return signature.getDeclaration();
 }
 
 // The executor reaches an optional defaulted options parameter, or the callee

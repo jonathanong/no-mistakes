@@ -67,6 +67,7 @@ it("pins executor-row identity, read-only element consts, and the follow-up cont
       testCase("controls-library.ts"),
       testCase("controls-hops.ts"),
       testCase("controls-generic.ts"),
+      testCase("controls-branches.ts"),
       testCase("proofs-options.ts", allMode),
     ],
   });

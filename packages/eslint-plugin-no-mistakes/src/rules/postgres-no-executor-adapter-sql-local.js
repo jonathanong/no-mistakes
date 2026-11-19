@@ -48,7 +48,7 @@ function factoryCall(init, context) {
 
 // `const tx = await beginTransaction()` / `await using tx = ...` with a configured factory.
 function executorFactoryLocal(node, context) {
-  const variable = node.type === "Identifier" ? resolveVariable(node, context) : null;
+  const variable = resolveVariable(node, context);
   const declarator = variable && constDeclarator(variable, ["const", "await using"]);
   return Boolean(
     declarator?.id.type === "Identifier" &&

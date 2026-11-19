@@ -33,21 +33,15 @@ function literalFields(body, scalar) {
 // effect, and each projected value passes the shared scalar proof.
 function enclosingCall(node) {
   let current = node;
-  while (current?.parent) {
+  while (current.parent) {
     const parent = current.parent;
     if (parent.type === "CallExpression" && parent.arguments.includes(current)) return parent;
-    if (
-      parent.type === "AwaitExpression" ||
-      parent.type === "ChainExpression" ||
-      parent.type === "ParenthesizedExpression" ||
-      parent.type.startsWith("TS")
-    ) {
+    if (parent.type === "AwaitExpression" || parent.type.startsWith("TS")) {
       current = parent;
       continue;
     }
     return null;
   }
-  return null;
 }
 
 // Executor roots passed beside this value. Empty when the call forwards none.
@@ -61,8 +55,7 @@ function forwardedExecutors(node, context) {
       value?.type === "Identifier" &&
       (executorParameter(value, context) || executorFactoryLocal(value, context))
     ) {
-      const variable = resolveVariable(value, context);
-      if (variable) found.push(variable);
+      found.push(resolveVariable(value, context));
     }
   }
   return found;

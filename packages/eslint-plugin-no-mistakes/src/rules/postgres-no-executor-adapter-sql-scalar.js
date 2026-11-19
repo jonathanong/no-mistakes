@@ -57,7 +57,7 @@ function rowCallbackField(def) {
   if (
     pattern?.type !== "ObjectPattern" ||
     target !== pattern ||
-    !call?.arguments.includes(fn) ||
+    !call?.arguments?.includes(fn) ||
     callee?.type !== "MemberExpression" ||
     callee.computed ||
     callee.optional ||

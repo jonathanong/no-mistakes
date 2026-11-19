@@ -11,6 +11,11 @@ async function lockNotice(query: SessionExecutor, id: string) {
   await query(sql`SELECT id FROM notices WHERE id = ${id} FOR UPDATE`);
 }
 
+async function loadNotices(query: SessionExecutor, id: string) {
+  const { rows } = await query<{ rows: Notice[] }>(sql`SELECT id FROM notices WHERE id = ${id}`);
+  return rows;
+}
+
 async function twoCalls(run: SessionExecutor, id: string) {
   await run(sql`SELECT id FROM notices WHERE id = ${id}`);
   return run(sql`UPDATE notices SET status = 'x' WHERE id = ${id}`);
@@ -39,12 +44,51 @@ export async function mutateAfter(tx: SessionExecutor) {
   ids.push("later");
 }
 
+export async function wrappedIds(tx: SessionExecutor) {
+  const { rows } = await tx<{ rows: Notice[] }>(sql`SELECT id FROM notices`);
+  const ids = rows.map((row) => row.id);
+  await lockAll(tx, ids!);
+  return ids;
+}
+
 export async function twoStatements(query: SessionExecutor, id: string) {
   await twoCalls(query, id);
 }
 
 export async function primitiveLoop(query: SessionExecutor, ids: string[]) {
   for (const id of ids) await lockNotice(query, id);
+}
+
+async function markWith(query: SessionExecutor, input: { ids: string[] }) {
+  await query(sql`UPDATE notices SET status = 'x' WHERE id = ANY(${input.ids})`);
+}
+
+export async function objectIds(tx: SessionExecutor) {
+  const { rows } = await tx<{ rows: Notice[] }>(sql`SELECT id FROM notices`);
+  const ids = rows.map((row) => row.id);
+  await markWith(tx, { ids });
+}
+
+export async function computedField(query: SessionExecutor, rows: Notice[]) {
+  await Promise.all(rows.map(({ ["id"]: id }) => lockNotice(query, id)));
+}
+
+export async function optionalMap(query: SessionExecutor, rows: Notice[]) {
+  await Promise.all(rows.map?.(({ id }) => lockNotice(query, id)));
+}
+
+export async function defaultedField(query: SessionExecutor, rows: Notice[]) {
+  await Promise.all(rows.map(({ id } = { id: "x" }) => lockNotice(query, id)));
+}
+
+export async function freshAlias(query: SessionExecutor, ids: string[]) {
+  for (const id of ids) {
+    const fetched = await loadNotices(query, id);
+    const rows = fetched;
+    const row = rows[0]!;
+    await lockNotice(query, row.id);
+    rows.push({ id, status: "x" });
+  }
 }
 
 export function fieldLater(query: SessionExecutor, rows: Notice[]) {

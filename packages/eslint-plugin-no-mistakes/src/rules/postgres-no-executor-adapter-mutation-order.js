@@ -45,26 +45,10 @@ function lookup(scope, name) {
   return null;
 }
 
-function unwrapExpression(node) {
-  let current = node;
-  while (
-    current &&
-    (current.type === "ParenthesizedExpression" ||
-      current.type === "ChainExpression" ||
-      current.type === "TSAsExpression" ||
-      current.type === "TSNonNullExpression" ||
-      current.type === "TSSatisfiesExpression" ||
-      current.type === "TSTypeAssertion")
-  )
-    current = current.expression;
-  return current;
-}
-
-// An awaited call allocates a new object. An alias of an outer binding does not.
+// An awaited call allocates a new object. An alias of another binding does not.
+// The typescript-eslint AST drops parentheses, so the initializer is the await itself.
 function awaitedCall(node) {
-  const awaited = unwrapExpression(node);
-  if (awaited?.type !== "AwaitExpression") return false;
-  return unwrapExpression(awaited.argument)?.type === "CallExpression";
+  return node.type === "AwaitExpression" && node.argument.type === "CallExpression";
 }
 
 // A const declared inside `loop` whose value is rooted at another binding declared

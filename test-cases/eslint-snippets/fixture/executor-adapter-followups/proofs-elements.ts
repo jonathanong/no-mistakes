@@ -20,6 +20,14 @@ export async function secondLocal(query: SessionExecutor, rows: Notice[]) {
   return lockNotice(query, notice.id);
 }
 
+export async function scalarCopy(query: SessionExecutor, rows: Notice[]) {
+  const first = rows[0]!;
+  const id = first.id;
+  const second = rows[1]!;
+  await lockNotice(query, id);
+  return lockNotice(query, second.id);
+}
+
 export async function executorRows(query: SessionExecutor, id: string) {
   const { rows } = await query<{ rows: Notice[] }>(
     sql`UPDATE notices SET status = 'x' WHERE id = ${id} RETURNING id`,
