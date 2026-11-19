@@ -17,17 +17,35 @@ function unwrapPassed(node) {
   return current;
 }
 
+function callKind(leaf) {
+  if (leaf.callable !== false) return "call";
+  return leaf.query ? "query" : "none";
+}
+
+function callText(name, leaves) {
+  const kinds = new Set(leaves.filter((leaf) => leaf.name === name).map(callKind));
+  if (kinds.size !== 1 || kinds.has("none")) return null;
+  if (kinds.has("query")) return `${name}.query(sql\`…\`)`;
+  return `${name}(sql\`…\`)`;
+}
+
 function passedDirect(names, leaves, conditionalText) {
-  const calls = names.map((name) => `${name}(sql\`…\`)`);
+  const calls = names.map((name) => callText(name, leaves)).filter(Boolean);
   const identifiers = leaves.length > 0 && leaves.every((leaf) => leaf.kind === "identifier");
-  if (conditionalText && identifiers) calls.push(`(${conditionalText})(sql\`…\`)`);
+  const callable = leaves.every((leaf) => leaf.callable !== false);
+  if (conditionalText && identifiers && callable) calls.push(`(${conditionalText})(sql\`…\`)`);
   return calls.join(" or ");
 }
 
 function passedAlias(names, leaves) {
   if (names.length !== 1 || leaves.length === 0) return "";
-  if (!leaves.every((leaf) => leaf.aliasable)) return "";
+  if (!leaves.every((leaf) => leaf.aliasable && leaf.callable !== false)) return "";
   return `, or \`const exec = ${names[0]}; exec(sql\`…\`)\``;
+}
+
+function passedForm(direct, alias) {
+  if (!direct && !alias) return "";
+  return ` (\`${direct}\`${alias})`;
 }
 
 // Proven branches only. An unknown branch is omitted: naming it, or the whole
@@ -106,5 +124,6 @@ function resolvePassed(node, context, bindings, options, seen) {
 module.exports = {
   passedAlias,
   passedDirect,
+  passedForm,
   resolvePassed,
 };

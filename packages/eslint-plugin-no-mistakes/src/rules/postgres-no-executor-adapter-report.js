@@ -1,7 +1,7 @@
 "use strict";
 
 const { aliasHint, directCall, judgedDirect } = require("./postgres-no-executor-adapter-forward");
-const { passedAlias, passedDirect } = require("./postgres-no-executor-adapter-passed");
+const { passedAlias, passedDirect, passedForm } = require("./postgres-no-executor-adapter-passed");
 
 function createReporters(context, suppressed) {
   const source = context.sourceCode;
@@ -40,8 +40,10 @@ function createReporters(context, suppressed) {
       messageId: "passed",
       data: {
         executor: names.join(" or "),
-        direct: passedDirect(names, passed.leaves, passed.conditionalText),
-        alias: passedAlias(names, passed.leaves),
+        form: passedForm(
+          passedDirect(names, passed.leaves, passed.conditionalText),
+          passedAlias(names, passed.leaves),
+        ),
       },
     });
   }
