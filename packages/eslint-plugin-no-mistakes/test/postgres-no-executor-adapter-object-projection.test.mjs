@@ -42,13 +42,15 @@ function testCase(name) {
 
 it("accepts proven row projections inside object-literal arguments", async () => {
   const rows = snapshotSuite(rule, languageOptions, {
-    valid: [testCase("proofs.ts"), testCase("silent.ts")],
-    invalid: [testCase("controls.ts")],
+    valid: [testCase("proofs.ts"), testCase("silent.ts"), testCase("unrelated.ts")],
+    invalid: [testCase("controls.ts"), testCase("unrelated-controls.ts")],
   });
   expect(rows.map((row) => row.findings.map(({ line }) => line))).toEqual([
     [],
     [],
+    [],
     [19, 26, 34, 41, 48, 57, 66, 76],
+    [25, 32, 40, 47, 55, 63, 72, 79, 87, 95, 102, 109, 116, 123],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-object-projection.snap",

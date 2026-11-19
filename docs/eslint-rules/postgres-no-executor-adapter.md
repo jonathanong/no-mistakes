@@ -512,6 +512,23 @@ run(0 ?? read, account);
   as a value, a computed key, a call on the row or a write to it
   (`row.id.toString()`, `(row.id = x)`), and an object literal stored in a variable
   and mutated or passed on before the call.
+- The primitive-type requirement applies to values read from the row. A value
+  unrelated to the row is judged exactly as a positional argument is, and a
+  property and a positional argument now use one check. Before this change, both
+  rejected a non-row `Date` (`markWidget(row.id, at, tx)` with `at: Date`, or
+  `{ id: row.id, reviewedAt: at }`). Both now accept a non-row bind value that is a
+  primitive or the built-in `Date`: a parameter typed that way (with or without
+  a default such as `at = new Date()`), a `const` bound to `new Date(...)`, or an inline
+  `new Date(...)` whose arguments are proven scalars. This is sound because a
+  `Date` is a bind value, never a SQL fragment, and a value that does not come
+  from the row cannot carry stale row data. A `const` Date is accepted only
+  when no later use (a setter call, a write, an escape) could write row data into
+  it. These stay reported, in both positions: a `Date` or other non-primitive row
+  field (`row.at`, `new Date(row.at)`), the row, the rows, or an alias of either,
+  an object derived from the row (`{ ...row }`, `Object.assign({}, row)`, a local
+  built from row fields and then mutated), a shadowed `Date`, and a non-row object
+  or array, whose contents cannot be proved free of SQL fragments. `string | null`
+  row fields still prove.
 - Two shapes are silent today by design, not by proof: a root whose factory is not
   in `executorFactoryNames` (`declare function openOther(): Promise<SessionExecutor>`)
   and `const pending = beginTransaction(); const tx = await pending`. Neither is
