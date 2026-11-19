@@ -75,7 +75,9 @@ unproven. Transparent TypeScript casts do not bypass the direct `eval` guard. A 
 
 ```ts
 const helpers = {
-  load(query: QueryExecutor) { return query("SELECT id FROM orders"); },
+  load(query: QueryExecutor) {
+    return query("SELECT id FROM orders");
+  },
 };
 helpers.load(read);
 helpers["load"](read);
@@ -381,15 +383,15 @@ run(0 ?? read, account);
 }
 ```
 
-| Option                 | Default                                                    | Purpose                                                                       |
-| ---------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `importSpecifier`      | `""`                                                       | Select the database import boundary.                                          |
-| `executorNames`        | `query`, `read`, `write` with a module; required otherwise | Select named executors.                                                       |
-| `executorFactoryNames` | `[]`                                                       | Select imported executor factories.                                           |
-| `executorTypeNames`    | `[]`                                                       | Select imported executor types.                                               |
+| Option                 | Default                                                    | Purpose                                                                                             |
+| ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `importSpecifier`      | `""`                                                       | Select the database import boundary.                                                                |
+| `executorNames`        | `query`, `read`, `write` with a module; required otherwise | Select named executors.                                                                             |
+| `executorFactoryNames` | `[]`                                                       | Select imported executor factories.                                                                 |
+| `executorTypeNames`    | `[]`                                                       | Select imported executor types.                                                                     |
 | `trustedSqlTags`       | `[]`                                                       | Select SQL tags, including default imports, whose templates expose SQL in `"forwarding-only"` mode. |
-| `nonWritingCallees`    | `[]` | Trust exact imported non-writing callees in `"forwarding-only"` mode. |
-| `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.       |
+| `nonWritingCallees`    | `[]`                                                       | Trust exact imported non-writing callees in `"forwarding-only"` mode.                               |
+| `mode`                 | `"all"`                                                    | Use `"forwarding-only"` to narrow reports to forwarders and hidden SQL.                             |
 
 - `importSpecifier` identifies the database module and defaults to empty.
   Configure your database module explicitly. Named executor imports must come
@@ -441,6 +443,17 @@ run(0 ?? read, account);
   proof of that named property; a scalar argument alone cannot supply it. Every
   branch of an object union must have the required primitive field. Existing default
   parameter handling still determines whether `undefined` is accepted.
+- A `const` local is a valid projection receiver, with the same proof as a
+  parameter, when it is initialized from a parameter, an element or member of
+  a parameter (`const notice = rows[0]!`), or an element of a row set
+  destructured from `await query(...)` where `query` is a parameter typed with
+  a configured `executorTypeNames` entry. The local's type must supply the
+  required primitive field, and neither the local nor its source parameter or
+  row set may be written, aliased, iterated, passed to a writing callee, or
+  otherwise escape anywhere in the function. A `let`/`var` local, a local
+  initialized from `any`, an unknown call, or another function's result, and a
+  shadowing declaration remain reported. An assertion between declaration and
+  projection (`assert(notice, 404)`) is judged by the assertion proof below.
 - Passing that object whole to another call preserves the projection proof only
   when typed ESLint resolves a single stable, visible synchronous function
   declaration whose matching parameter has required primitive data fields and

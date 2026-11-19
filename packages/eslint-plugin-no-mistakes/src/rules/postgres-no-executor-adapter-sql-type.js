@@ -4,13 +4,14 @@ const { resolveVariable } = require("./postgres-query-text");
 const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 
 const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
+const { localReceiver } = require("./postgres-no-executor-adapter-sql-local");
 
 function typedScalarProjection(receiver, field, context, allowUndefined = true) {
   if (receiver.type !== "Identifier") return false;
   const variable = resolveVariable(receiver, context);
   if (
     !variable?.defs.length ||
-    !variable.defs.every((def) => def.type === "Parameter") ||
+    !(variable.defs.every((def) => def.type === "Parameter") || localReceiver(variable, context)) ||
     objectMutation(variable, null, null, receiver, context)
   )
     return false;
