@@ -32,13 +32,17 @@ const LOCAL_WRAPPERS = new Set([
   "ChainExpression",
 ]);
 
-function scalarArgument(call, value, context) {
+function scalarValue(value, context) {
   const services = context?.sourceCode.parserServices;
   if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(value)) return false;
   const ts = require("typescript");
   const checker = services.program.getTypeChecker();
   const type = checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(value));
-  return call.callee !== value && primitiveType(type, ts, true);
+  return primitiveType(type, ts, true);
+}
+
+function scalarArgument(call, value, context) {
+  return call.callee !== value && scalarValue(value, context);
 }
 
 function objectMutation(
@@ -77,7 +81,8 @@ function objectMutation(
       (parent?.type === "UnaryExpression" && parent.operator === "delete") ||
       (parent?.type === "VariableDeclarator" &&
         parent.init === value &&
-        parent.id.type === "Identifier") ||
+        parent.id.type === "Identifier" &&
+        !(before && depth > 0 && scalarValue(value, context))) ||
       (parent?.type === "CallExpression" &&
         parent.callee === value &&
         depth === 1 &&

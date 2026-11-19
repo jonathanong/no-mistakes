@@ -500,7 +500,23 @@ run(0 ?? read, account);
   projection, while a write, escape or alias that may precede it does. Primitive
   member arguments of one call (`pair(query, widget.id, widget.ownerId)`) do not
   invalidate each other; an object member argument (`stash(widget.nested)`) before
-  the projection still does.
+  the projection still does. A scalar read bound to a `const`
+  (`const id = row.id`) is not an alias of the row, so later projections such as
+  `const ownerId = row.ownerId` stay proved; `const copy = row` still is one.
+- An object-literal argument is proved property by property with the same checks as
+  a positional argument: `markWithInput(tx, { id: row.id, ownerId: row.ownerId, at })`
+  is accepted when the executor is a typed parameter or a configured factory root
+  and every property the helper reads is a proven projection or an accepted scalar.
+  A shorthand property (`{ id }`) counts only when `id` is itself a proven
+  projection binding. These stay reported: a spread (`{ ...row }`), the whole row
+  as a value, a computed key, a call on the row or a write to it
+  (`row.id.toString()`, `(row.id = x)`), and an object literal stored in a variable
+  and mutated or passed on before the call.
+- Two shapes are silent today by design, not by proof: a root whose factory is not
+  in `executorFactoryNames` (`declare function openOther(): Promise<SessionExecutor>`)
+  and `const pending = beginTransaction(); const tx = await pending`. Neither is
+  an executor root the rule recognizes, so the call is never judged. Fixtures pin
+  both; list the factory to have it judged.
 - Passing that object whole to another call preserves the projection proof only
   when typed ESLint resolves a single stable, visible synchronous function
   declaration whose matching parameter has required primitive data fields and
