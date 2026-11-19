@@ -1,0 +1,49 @@
+## value-validation (off)
+
+
+## value-validation (on)
+3:invalidOptionValue
+5:tooManyArguments
+6:invalidOptionValue
+
+## value-validation (on+shorthand)
+3:invalidOptionValue
+5:tooManyArguments
+
+## value-validation-default (off)
+
+
+## value-validation-default (on)
+3:invalidOptionValue
+5:tooManyArguments
+6:invalidOptionValue
+
+## value-validation-default (on+shorthand)
+3:invalidOptionValue
+5:tooManyArguments
+
+## value-validation-namespace (off)
+
+
+## value-validation-namespace (on)
+3:invalidOptionValue
+5:tooManyArguments
+6:invalidOptionValue
+
+## value-validation-namespace (on+shorthand)
+3:invalidOptionValue
+5:tooManyArguments
+
+## value-validation-renamed (off)
+
+
+## value-validation-renamed (on)
+3:invalidOptionValue
+5:tooManyArguments
+6:invalidOptionValue
+8:invalidOptionValue
+
+## value-validation-renamed (on+shorthand)
+3:invalidOptionValue
+5:tooManyArguments
+8:invalidOptionValue

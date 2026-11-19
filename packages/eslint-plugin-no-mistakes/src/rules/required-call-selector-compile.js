@@ -1,5 +1,6 @@
 "use strict";
 
+const { valueOptionExtras } = require("./imported-call-values");
 const { patternToRegExp } = require("./async-patterns");
 const { normalizeRequiredProperties } = require("./imported-call-options");
 const { repoRelativeFilename, stringMatches } = require("./module-mock-helpers");
@@ -53,7 +54,7 @@ function selectorTarget(target, requiredProperties) {
     propertyMatch: target.propertyMatch === "all" ? "all" : "any",
   };
   if (typeof target.message === "string" && target.message) compiled.message = target.message;
-  return compiled;
+  return Object.assign(compiled, valueOptionExtras(target));
 }
 
 function compileCallSelectors(options) {

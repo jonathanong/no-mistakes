@@ -3,6 +3,7 @@
 const { unwrapExpression } = require("./async-ast");
 const { compileTargets, matchingTargets } = require("./async-patterns");
 const { isDefinitelyUndefinedValue } = require("./imported-call-undefined");
+const { valueOptionExtras } = require("./imported-call-values");
 const { propertyName, literalString } = require("./module-mock-helpers");
 
 const pathPatternList = { type: "array", items: { type: "string" } };
@@ -23,6 +24,12 @@ const targetOptions = {
   requiredProperties: { type: "array", items: { type: "string" }, minItems: 1 },
   propertyMatch: { type: "string", enum: ["any", "all"] },
   message: { type: "string", minLength: 1 },
+  allowedValueCallees: {
+    type: "object",
+    additionalProperties: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1 },
+  },
+  allowShorthand: { type: "boolean" },
+  maxArguments: { type: "integer", minimum: 0 },
 };
 
 function targetKind(required, properties) {
@@ -107,6 +114,7 @@ function compileImportedCallTargets(options) {
     };
     // Per-target text stays off the object unless set, so older compiled shapes stay stable.
     if (typeof target.message === "string" && target.message) next.message = target.message;
+    Object.assign(next, valueOptionExtras(target));
     compiled.push(next);
   }
   return compiled;

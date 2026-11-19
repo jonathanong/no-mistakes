@@ -81,21 +81,49 @@ client.chat.responses.create({ signal });
     Regex selectors retain joined dotted text: a literal dotted key can have
     the same regex input as nested properties. Use a glob when those boundaries
     must remain distinct.
-  A target that sets both `globalNamePatterns` and `receiverPatterns`, omits
-  its kind, or uses a slash-wrapped pattern that does not compile (`/[/`,
-  `/(/`, `/*/`) fails at config load in ESLint and Oxlint. It does not load
-  and then match nothing.
-  A value that starts with `/` is a wrapped regex, not a glob, for imported
-  targets as well as global and receiver targets. The body cannot contain an
-  unescaped `/`. `/^@acme/http$/` and `/abs/**` fail at config load. Write a
-  package path as a glob that does not start with `/` (`@acme/http` or
-  `@acme/**`), or escape the slash (`/^@acme\/http$/`).
-  Each group also sets:
+    A target that sets both `globalNamePatterns` and `receiverPatterns`, omits
+    its kind, or uses a slash-wrapped pattern that does not compile (`/[/`,
+    `/(/`, `/*/`) fails at config load in ESLint and Oxlint. It does not load
+    and then match nothing.
+    A value that starts with `/` is a wrapped regex, not a glob, for imported
+    targets as well as global and receiver targets. The body cannot contain an
+    unescaped `/`. `/^@acme/http$/` and `/abs/**` fail at config load. Write a
+    package path as a glob that does not start with `/` (`@acme/http` or
+    `@acme/**`), or escape the slash (`/^@acme\/http$/`).
+    Each group also sets:
   - `optionsPosition`: one-based argument index of the options object.
   - `requiredProperties`: property names that must be statically present with a
     value that is not definitely `undefined`.
   - optional `propertyMatch`: `"any"` (default) or `"all"`.
   - optional `message`: replaces the report text for that target.
+  - optional `allowedValueCallees`: opt-in value validation. Maps a property
+    name to the imported factory names allowed as its value. When the property
+    is present and its value is a call or `new` of anything else, the call is
+    reported as `invalidOptionValue`. A factory resolves through named,
+    renamed (`import { approvedAgent as make }`), default and namespace
+    imports (`agents.approvedAgent()`); a shadowed or non-imported callee is
+    not allowed. With this option a shorthand property (`{ agent }`) is
+    rejected unless `allowShorthand` is `true`. Other values, such as
+    unknown identifiers, are not judged. Applies to imported, global and
+    receiver targets.
+  - optional `allowShorthand`: boolean, default `false`. Accepts `{ agent }`
+    for properties validated by `allowedValueCallees`.
+  - optional `maxArguments`: opt-in maximum argument count (integer, at least
+    0). A call with more arguments is reported as `tooManyArguments`. For
+    `.call` and `.apply` the count excludes the receiver.
+
+  Without these options only presence is checked, as before.
+
+```ts
+// { optionsPosition: 2, requiredProperties: ["agent"],
+//   allowedValueCallees: { agent: ["approvedAgent"] }, maxArguments: 2 }
+import { send } from "@example/transport";
+import { approvedAgent, otherAgent } from "@example/agents";
+await send(request, { agent: otherAgent() }); // invalidOptionValue
+await send(request, { agent: approvedAgent() }); // ok
+await send(request, { agent }, extra); // tooManyArguments
+```
+
 - optional top-level `message`: report text when the target has no `message`.
 - `checkedPathPatterns` limits checking to matching files. An empty list checks
   every file, which is the default.
