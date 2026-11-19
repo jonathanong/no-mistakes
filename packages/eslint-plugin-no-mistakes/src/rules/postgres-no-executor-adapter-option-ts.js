@@ -6,6 +6,8 @@ const {
   memberWrite,
 } = require("./postgres-no-executor-adapter-option-forward");
 
+const { tsLibraryCall } = require("./postgres-no-executor-adapter-library");
+
 function referenceFacts(fn, checker, facts) {
   let cached = facts.get(fn);
   if (cached) return cached;
@@ -160,7 +162,10 @@ function safeSymbol(symbol, object, property, checker, state) {
           continue;
         }
         if (valueUse(owner, property, checker, state)) continue;
-      } else if (forwardedOption(identifier, property, checker, state.facts, tsOptionBody)) {
+      } else if (
+        tsLibraryCall(identifier, require("typescript"), checker, state.facts.executorOptions) ||
+        forwardedOption(identifier, property, checker, state.facts, tsOptionBody)
+      ) {
         state.forwarded = forwarded = true;
         continue;
       }

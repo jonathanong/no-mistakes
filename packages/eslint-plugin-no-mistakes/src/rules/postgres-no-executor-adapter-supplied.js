@@ -26,7 +26,8 @@ function suppliedOptions(call, index, quoteNode, context, facts) {
   const declaration = declarationOf(call, context, facts);
   const parameter = declaration?.parameters?.[index];
   return Boolean(
-    (parameter?.initializer && typeof parameter.name.escapedText === "string") ||
+    ((parameter?.initializer || parameter?.questionToken) &&
+      typeof parameter.name.escapedText === "string") ||
     facts.get(declaration)?.forwarded,
   );
 }

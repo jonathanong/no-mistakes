@@ -4,6 +4,7 @@ const { tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
 const { tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
 const { memberWrite } = require("./postgres-no-executor-adapter-option-forward");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
+const { tsAdapterStatement, tsLibraryCall } = require("./postgres-no-executor-adapter-library");
 
 // An argument that is not a plain, unwritten parameter of the forwarding
 // function has no scalar proof, so the hole check rejects it.
@@ -71,6 +72,26 @@ function declarationVisible(declaration, index, property, args, shared) {
         if (memberWrite(invoked)) safe = false;
         return;
       }
+      const hole = (expression) =>
+        tsHoleSafe(
+          expression,
+          { arguments: args },
+          declaration,
+          checker,
+          ts,
+          context,
+          facts,
+          program,
+          symbol,
+          property,
+        );
+      const library = object && tsLibraryCall(node, ts, checker, options);
+      if (library) {
+        safe =
+          tsAdapterStatement(library, ts, checker) ||
+          tsLiteralSql(library.arguments[0], checker, ts, options, hole);
+        return;
+      }
       let callee = node;
       if (
         object &&
@@ -89,19 +110,6 @@ function declarationVisible(declaration, index, property, args, shared) {
         if (!passedOn(node, invoked)) safe = false;
         return;
       }
-      const hole = (expression) =>
-        tsHoleSafe(
-          expression,
-          { arguments: args },
-          declaration,
-          checker,
-          ts,
-          context,
-          facts,
-          program,
-          symbol,
-          property,
-        );
       if (
         !ts.isCallExpression(invoked) ||
         invoked.expression !== callee ||

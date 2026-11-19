@@ -127,4 +127,4 @@ function importedExecutorType(node, checker, options) {
   return false;
 }
 
-module.exports = { localExecutorType, importedExecutorType };
+module.exports = { localExecutorType, importedExecutorType, importedSpecifier };

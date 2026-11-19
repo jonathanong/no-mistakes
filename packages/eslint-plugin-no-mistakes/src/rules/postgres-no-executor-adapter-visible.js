@@ -8,6 +8,7 @@ const { forwardedHop } = require("./postgres-no-executor-adapter-hop");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
 const { importedVisible } = require("./postgres-no-executor-adapter-imported-visible");
+const { libraryVisible } = require("./postgres-no-executor-adapter-library");
 
 function opaqueBody(body) {
   const stack = [body];
@@ -96,6 +97,12 @@ function visibleSqlTarget(call, index, quoteNode, context, options, accepted, fa
     if (reference.init) return true;
     if (reference.isWrite()) return false;
     if (binding.object && otherPropertyRead(reference, property)) return true;
+    const hole = (value) => localHoleSafe(value, call, fn, context, variable, property);
+    const terminal =
+      accepted && binding.object
+        ? libraryVisible(reference.identifier, context, options, hole)
+        : null;
+    if (terminal !== null) return terminal;
     if (accepted && binding.object && passedOn(reference)) {
       const inner = reference.identifier.parent;
       const at = inner.arguments.indexOf(reference.identifier);
