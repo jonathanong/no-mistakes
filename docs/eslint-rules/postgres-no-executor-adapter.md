@@ -298,7 +298,21 @@ imports) must have no interpolations, and the checker must be available because
 the proof reads every file of the program. Without type information only
 constants declared in the same file and never exported are proven. Uses are
 resolved through re-exports, renames and `default` aliases, so a mutation in
-another module through any alias disproves the constant.
+another module through any alias disproves the constant. A namespace import
+(`import * as parts`), `import parts = require(...)`, `const parts = require(...)`,
+and `const parts = await import(...)` (including `import(...).then`) are that
+module. `parts.COLS` and `parts["COLS"]` are uses of that export: an argument of
+`.append(...)` is allowed, and any other use, including `parts.COLS.append(...)`,
+disproves it. A string key names that member. A computed key that is not a string,
+or any use of the namespace that is not a member read (`Object.values(parts)`,
+`Object.assign`, `Reflect.set` or `Reflect.get`, or passing `parts` into a call),
+disproves every exported fragment. An `export *` barrel is that same module for
+both a named import and a namespace import.
+
+An `export =` assignment, `eval` of a string, and a `globalThis` write that never
+names the binding are not tracked, so a mutation through them does not disprove
+the constant. A `!` or `as` assertion around an otherwise append-only use does
+disprove it, and the chain reports.
 
 ```ts
 const COLS = sql`id, state`;

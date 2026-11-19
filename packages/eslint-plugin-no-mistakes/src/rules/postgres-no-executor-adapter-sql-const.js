@@ -34,10 +34,20 @@ function tsConstDeclaration(declaration, ts, judge) {
 }
 
 // An appendOnly, interpolation-free module-level `const` sql tag, imported or not.
+function fragmentName(node, ts) {
+  if (ts.isPropertyAccessExpression(node)) return node.name;
+  if (
+    ts.isElementAccessExpression(node) &&
+    node.argumentExpression &&
+    ts.isStringLiteralLike(node.argumentExpression)
+  )
+    return node.argumentExpression;
+  return node;
+}
+
 function tsConstFragment(node, shared, judge) {
   const { checker, ts } = shared;
-  const name = ts.isPropertyAccessExpression(node) ? node.name : node;
-  const symbol = resolvedSymbol(name, checker, ts);
+  const symbol = resolvedSymbol(fragmentName(node, ts), checker, ts);
   const declaration = symbol?.declarations?.length === 1 ? symbol.declarations[0] : null;
   return Boolean(
     declaration && tsConstDeclaration(declaration, ts, judge) && !escapes(symbol, shared),
@@ -61,20 +71,52 @@ function localConst(variable, judge) {
 
 // An appended fragment: a never-written, never-mutated module-level const sql tag.
 // Constants this file cannot see all uses of go through the type checker.
+function stringMember(node) {
+  return (
+    node.type === "MemberExpression" &&
+    node.computed &&
+    !node.optional &&
+    node.object.type === "Identifier" &&
+    node.property.type === "Literal" &&
+    typeof node.property.value === "string"
+  );
+}
+
+function sharedServices(context) {
+  const services = context.sourceCode.parserServices;
+  if (!services?.program) return null;
+  return {
+    services,
+    shared: {
+      checker: services.program.getTypeChecker(),
+      ts: require("typescript"),
+      program: services.program,
+    },
+  };
+}
+
 function constFragment(node, context, judges) {
   const variable = node.type === "Identifier" ? resolveVariable(node, context) : null;
-  if (variable && localConst(variable, judges.local)) return true;
-  const services = context.sourceCode.parserServices;
+  const typed = sharedServices(context);
+  if (variable && localConst(variable, judges.local)) {
+    if (!typed || !typed.services.esTreeNodeToTSNodeMap?.has(node)) return true;
+    const symbol = resolvedSymbol(
+      typed.services.esTreeNodeToTSNodeMap.get(node),
+      typed.shared.checker,
+      typed.shared.ts,
+    );
+    return !symbol || !escapes(symbol, typed.shared);
+  }
   const reference =
     node.type === "Identifier" ||
+    stringMember(node) ||
     (node.type === "MemberExpression" && !node.computed && node.object.type === "Identifier");
-  if (!reference || !services?.program || !services.esTreeNodeToTSNodeMap?.has(node)) return false;
-  const shared = {
-    checker: services.program.getTypeChecker(),
-    ts: require("typescript"),
-    program: services.program,
-  };
-  return tsConstFragment(services.esTreeNodeToTSNodeMap.get(node), shared, judges.ts(shared));
+  if (!reference || !typed || !typed.services.esTreeNodeToTSNodeMap?.has(node)) return false;
+  return tsConstFragment(
+    typed.services.esTreeNodeToTSNodeMap.get(node),
+    typed.shared,
+    judges.ts(typed.shared),
+  );
 }
 
 module.exports = { constFragment, isAppend, tsConstFragment };
