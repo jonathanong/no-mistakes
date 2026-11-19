@@ -1,0 +1,45 @@
+name: Widgets
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish widgets
+        uses: example/publish-widget@v1
+        with:
+          name: widgets
+          path: widgets.log
+          keep-days: 30
+          replace: false
+      - name: publish pinned widgets
+        uses: example/publish-widget@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        with:
+          name: widgets
+          path: widgets.log
+          keep-days: 30
+          replace: true
+      - name: setup runtime
+        uses: example/setup-runtime@v2
+        with:
+          cache: local
+          runtime-version: "22"
+          package-manager-cache: true
+      - name: checkout orders
+        uses: example/checkout-orders@v1
+        with:
+          path: orders
+      - name: ship items
+        uses: example/ship-items@v1
+        with:
+          name: items
+          path: items.log
+      - name: ship banned items
+        uses: example/ship-items@v1
+        with:
+          name: items
+          overwrite: true
+      - name: dynamic action
+        uses: ${{ matrix.widget }}
+        with:
+          keep-days: 30
+          replace: false

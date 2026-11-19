@@ -1,0 +1,19 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      actions:
+        - uses: example/publish-widget
+          require:
+            keep-days: 1
+            replace: true
+        - uses: example/setup-runtime
+          ban:
+            - cache
+            - runtime-version
+          require:
+            runtime-version-file: .runtime-version
+            package-manager-cache: false
+        - uses: example/ship-items
+          ban:
+            - overwrite

@@ -153,6 +153,8 @@ mod cli_check_rules_version_pin;
 mod cli_check_rules_workflow_topology;
 #[path = "cli_check_unused_disable_directives.rs"]
 mod cli_check_unused_disable_directives;
+#[path = "cli_gha_snapshot_action_input_policy.rs"]
+mod cli_gha_snapshot_action_input_policy;
 #[path = "cli_gha_snapshot_action_timeout_pair.rs"]
 mod cli_gha_snapshot_action_timeout_pair;
 #[path = "cli_gha_snapshot_checkout_credentials.rs"]

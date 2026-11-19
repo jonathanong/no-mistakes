@@ -12,6 +12,7 @@ pub use super::forbidden_calls::RULE_ID as FORBIDDEN_CALLS;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
 pub use super::forbidden_lint_suppressions::RULE_ID as FORBIDDEN_LINT_SUPPRESSIONS;
 pub use super::forbidden_workspace_closure::RULE_ID as FORBIDDEN_WORKSPACE_CLOSURE;
+pub use super::github_actions_action_input_policy::RULE_ID as GITHUB_ACTIONS_ACTION_INPUT_POLICY;
 pub use super::github_actions_action_timeout_pair::RULE_ID as GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR;
 pub use super::github_actions_composite_step_schema::RULE_ID as GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA;
 pub use super::github_actions_job_permissions::RULE_ID as GITHUB_ACTIONS_JOB_PERMISSIONS;

@@ -35,6 +35,15 @@ pub(super) fn run(
         CONFIG_PATH_REFERENCES => {
             config_path_references::check_with_files_and_sources(root, config, files, sources)
         }
+        GITHUB_ACTIONS_ACTION_INPUT_POLICY => {
+            github_actions_action_input_policy::check_with_files_and_sources(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => {
             github_actions_action_timeout_pair::check_with_files_and_sources(
                 root,

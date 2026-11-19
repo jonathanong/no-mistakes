@@ -1,0 +1,34 @@
+name: Widgets
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish widgets
+        uses: example/publish-widget@v1
+        with:
+          name: widgets
+          path: widgets.log
+          keep-days: 1
+          replace: true
+      - name: publish pinned widgets
+        uses: example/publish-widget@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        with:
+          name: widgets
+          path: widgets.log
+          keep-days: "1"
+          replace: "true"
+      - name: setup runtime
+        uses: example/setup-runtime@v2
+        with:
+          runtime-version-file: .runtime-version
+          package-manager-cache: false
+      - name: checkout orders
+        uses: example/checkout-orders@v1
+        with:
+          path: orders
+      - name: ship items
+        uses: example/ship-items@v1
+        with:
+          name: items
+          path: items.log

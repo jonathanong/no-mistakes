@@ -1,0 +1,12 @@
+# no-mistakes-disable-file github-actions-action-input-policy
+name: Widgets
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish widgets
+        uses: example/publish-widget@v1
+        with:
+          keep-days: 30
+          replace: false

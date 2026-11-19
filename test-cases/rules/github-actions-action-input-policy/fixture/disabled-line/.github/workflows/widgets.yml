@@ -1,0 +1,16 @@
+name: Widgets
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: suppressed widget
+        uses: example/publish-widget@v1
+        with:
+          keep-days: 30 # no-mistakes-disable-line github-actions-action-input-policy
+          replace: true
+      - name: open widget
+        uses: example/publish-widget@v1
+        with:
+          keep-days: 9
+          replace: true
