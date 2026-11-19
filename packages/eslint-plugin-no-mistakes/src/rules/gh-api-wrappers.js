@@ -49,4 +49,4 @@ function createWrapperResolver(context, wrappers) {
     return invoked ? resolve(invoked.callee, invoked.arguments) : null;
   };
 }
-module.exports = { createWrapperResolver };
+module.exports = { createWrapperResolver, wrapperName };

@@ -1,0 +1,30 @@
+[
+  {
+    "file": "factory.ts",
+    "line": 4,
+    "column": 28,
+    "messageId": "endpointQuery",
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "file": "factory.ts",
+    "line": 5,
+    "column": 1,
+    "messageId": "missingMethod",
+    "message": "Set an explicit -X/--method when gh api uses field flags (for example -X GET)."
+  },
+  {
+    "file": "factory.ts",
+    "line": 9,
+    "column": 31,
+    "messageId": "endpointQuery",
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "file": "factory.ts",
+    "line": 15,
+    "column": 33,
+    "messageId": "endpointQuery",
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  }
+]
