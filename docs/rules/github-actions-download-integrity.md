@@ -54,7 +54,12 @@ eval the shell.
 
 At max effort in Bourne-style steps, a literal HTTP(S) URL in the step’s `env`
 map can also bind `"$NAME"` or `"${NAME}"` as a complete downloader URL argument
-(including `--url="$NAME"`). Explicit or inherited unsupported shells do not use
+(including `--url="$NAME"`). An unquoted `$NAME` or `${NAME}` that is the whole
+shell word binds the same way (`curl -o tool.tgz ${TOOL_URL}`,
+`wget -O tool.tgz $TOOL_URL`). A composition such as `$BASE/$FILE` or
+`${NAME}.tgz`, an unquoted `--url=$NAME`, and a command whose option slots
+contain other unquoted expansions stay unresolved, because word splitting could
+change which word is the URL. Explicit or inherited unsupported shells do not use
 step-env resolution, nor does an implicit shell on a known Windows runner.
 Otherwise, an omitted effective `shell` uses the scanner’s Bourne-style
 assumption. Unresolved runner expressions leave the effective shell unknown

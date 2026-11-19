@@ -26,7 +26,8 @@ impl<'a> UrlBindings<'a> {
     }
 
     pub(super) fn resolve(&self, word: &words::Word, operand: &str) -> Option<&'a str> {
-        if word.quoted_expansion != Some((word.text.len() - operand.len(), operand.len())) {
+        let whole = Some((word.text.len() - operand.len(), operand.len()));
+        if word.quoted_expansion != whole && word.bare_expansion != whole {
             return None;
         }
         let reference = operand.strip_prefix('$')?;
