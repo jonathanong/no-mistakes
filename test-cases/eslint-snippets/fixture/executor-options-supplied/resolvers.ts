@@ -7,7 +7,7 @@ export interface QueryOptions {
 }
 
 async function assertDelivered(id: string, options: QueryOptions = {}) {
-  await options.query!(sql`SELECT ${id}`);
+  await options.query?.(sql`SELECT ${id}`);
 }
 
 export async function rejectUnresolvable(id: string, options: QueryOptions = {}): Promise<never> {

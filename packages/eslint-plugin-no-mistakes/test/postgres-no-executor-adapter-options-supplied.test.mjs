@@ -42,12 +42,15 @@ function testCase(name) {
 it("proves supplied optional executors passed on unchanged", async () => {
   const rows = snapshotSuite(rule, languageOptions, {
     valid: [testCase("proofs.ts"), testCase("importedProofs.ts")],
-    invalid: [testCase("controls.ts")],
+    invalid: [testCase("controls.ts"), testCase("dynamicCallee.ts")],
   });
   expect(rows[0].findings).toEqual([]);
   expect(rows[1].findings).toEqual([]);
   expect(rows[2].findings.map(({ line }) => line)).toEqual([
     61, 68, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
+  ]);
+  expect(rows[3].findings.map(({ line }) => line)).toEqual([
+    34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-options-supplied.snap",
