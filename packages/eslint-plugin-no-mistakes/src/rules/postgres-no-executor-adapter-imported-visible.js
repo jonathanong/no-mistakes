@@ -2,6 +2,7 @@
 
 const { tsLiteralSql } = require("./postgres-no-executor-adapter-sql");
 const { tsHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
+const { memberWrite } = require("./postgres-no-executor-adapter-option-forward");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 
 // An argument that is not a plain, unwritten parameter of the forwarding
@@ -67,24 +68,21 @@ function declarationVisible(declaration, index, property, args, shared) {
         invoked.expression === node &&
         invoked.name.text !== property
       ) {
-        const parent = invoked.parent;
-        if (
-          (ts.isBinaryExpression(parent) &&
-            parent.left === invoked &&
-            ts.isAssignmentOperator(parent.operatorToken.kind)) ||
-          ts.isPrefixUnaryExpression(parent) ||
-          ts.isPostfixUnaryExpression(parent) ||
-          ts.isDeleteExpression(parent)
-        )
-          safe = false;
+        if (memberWrite(invoked)) safe = false;
         return;
       }
+      let callee = node;
       if (
         object &&
         ts.isPropertyAccessExpression(invoked) &&
         invoked.expression === node &&
         invoked.name.text === property
       ) {
+        callee = invoked;
+        invoked = invoked.parent;
+      }
+      while (ts.isNonNullExpression(invoked)) {
+        callee = invoked;
         invoked = invoked.parent;
       }
       if (object && ts.isCallExpression(invoked) && invoked.arguments.includes(node)) {
@@ -106,7 +104,7 @@ function declarationVisible(declaration, index, property, args, shared) {
         );
       if (
         !ts.isCallExpression(invoked) ||
-        (invoked.expression !== node && invoked.expression !== node.parent) ||
+        invoked.expression !== callee ||
         !invoked.arguments[0] ||
         !tsLiteralSql(invoked.arguments[0], checker, ts, options, hole)
       ) {

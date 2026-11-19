@@ -1,6 +1,10 @@
 "use strict";
 
-const { forwardedOption, guardedProof } = require("./postgres-no-executor-adapter-option-forward");
+const {
+  forwardedOption,
+  guardedProof,
+  memberWrite,
+} = require("./postgres-no-executor-adapter-option-forward");
 
 function referenceFacts(fn, checker, facts) {
   let cached = facts.get(fn);
@@ -133,6 +137,8 @@ function valueUse(node, property, checker, state) {
 }
 
 function safeSymbol(symbol, object, property, checker, state) {
+  let wrote = false;
+  let forwarded = false;
   for (const identifier of state.refs.get(symbol) ?? []) {
     const parent = identifier.parent;
     if (
@@ -149,9 +155,13 @@ function safeSymbol(symbol, object, property, checker, state) {
       if (owner?.expression === expression && (owner.name || owner.argumentExpression)) {
         const name = staticKey(owner);
         if (name == null) return false;
-        if (name !== property) continue;
+        if (name !== property) {
+          wrote ||= memberWrite(owner);
+          continue;
+        }
         if (valueUse(owner, property, checker, state)) continue;
       } else if (forwardedOption(identifier, property, checker, state.facts, tsOptionBody)) {
+        state.forwarded = forwarded = true;
         continue;
       }
     } else if (valueUse(identifier, property, checker, state)) {
@@ -159,7 +169,8 @@ function safeSymbol(symbol, object, property, checker, state) {
     }
     return false;
   }
-  return true;
+  // A callee that receives the binding sees every other property write.
+  return !(wrote && forwarded);
 }
 
 function tsOptionBody(fn, index, property, checker, facts) {

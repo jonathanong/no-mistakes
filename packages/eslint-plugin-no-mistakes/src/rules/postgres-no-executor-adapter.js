@@ -22,7 +22,7 @@ const {
   passedDirect,
   resolvePassed,
 } = require("./postgres-no-executor-adapter-passed");
-const { acceptsExecutor } = require("./postgres-no-executor-adapter-target");
+const { acceptedTarget } = require("./postgres-no-executor-adapter-supplied");
 const { directOption } = require("./postgres-no-executor-adapter-direct");
 const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
 const RULE_ID = "postgres-no-executor-adapter";
@@ -121,7 +121,7 @@ module.exports = rule(
         // A partial conditional falls through and names only the proven branches.
         if (leaves) {
           const accepted =
-            !nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts);
+            !nested && acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode);
           const visible =
             mode === "forwarding-only" && !nested
               ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)
@@ -157,7 +157,7 @@ module.exports = rule(
         return;
       }
       const accepted =
-        !nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts);
+        !nested && acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode);
       const visible =
         mode === "forwarding-only" && !nested && passed.definite
           ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)

@@ -203,6 +203,12 @@ optional property, a property set to something other than an executor
 (`{ query: (statement) => read(statement) }`), a different key
 (`{ label: query }`) and a callee with another options type keep reporting.
 
+Both reporting modes judge an executor supplied this way (a defaulted optional
+property, or a callee reached through a pass-on) by the SQL it receives, the
+same proof `forwarding-only` applies: a trusted-tag literal with scalar holes,
+or such a statement extended with `.append(<literal>)`. A dynamic fragment
+(`statement.append(column)`) keeps reporting.
+
 Structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as
 `dispatch({ nested: { query: read } })` and forwarding callbacks remain

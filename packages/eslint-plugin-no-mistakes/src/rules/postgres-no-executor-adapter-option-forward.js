@@ -51,4 +51,19 @@ function passedOn(reference) {
   return reference.identifier.parent.type === "CallExpression";
 }
 
-module.exports = { forwardedOption, guardedProof, passedOn };
+// A write through another property of the binding changes what any callee it is
+// passed on to sees, so it is never an unrelated read.
+function memberWrite(member) {
+  const ts = require("typescript");
+  const parent = member.parent;
+  return Boolean(
+    (ts.isBinaryExpression(parent) &&
+      parent.left === member &&
+      ts.isAssignmentOperator(parent.operatorToken.kind)) ||
+    ts.isPrefixUnaryExpression(parent) ||
+    ts.isPostfixUnaryExpression(parent) ||
+    ts.isDeleteExpression(parent),
+  );
+}
+
+module.exports = { forwardedOption, guardedProof, memberWrite, passedOn };

@@ -43,6 +43,7 @@ function executorCall(reference, property) {
     if (node.parent.computed || node.parent.property.name !== property) return null;
     callee = node.parent;
   }
+  while (callee.parent?.type === "TSNonNullExpression") callee = callee.parent;
   const call = callee.parent;
   return call?.type === "CallExpression" && call.callee === callee ? call : null;
 }
