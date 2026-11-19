@@ -1,5 +1,6 @@
 "use strict";
 
+const { resolveVariable } = require("./postgres-query-text");
 const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
 const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
 const { nullishGuardRead } = require("./postgres-no-executor-adapter-guard");
@@ -45,6 +46,13 @@ function scalarArgument(call, value, context) {
   return call.callee !== value && scalarValue(value, context);
 }
 
+// `const a = rows[0]` copies an element. It does not mutate the root when that const stays read-only.
+function readOnlyElement(declarator, context) {
+  if (declarator.parent?.kind !== "const" || declarator.id.type !== "Identifier") return false;
+  const bound = resolveVariable(declarator.id, context);
+  return Boolean(bound && !objectMutation(bound, null, null, declarator.id, context, null, true));
+}
+
 function objectMutation(
   variable,
   executorVariable,
@@ -52,6 +60,7 @@ function objectMutation(
   ignoredReference,
   context,
   before = null,
+  scalarsAreReads = false,
 ) {
   return variable.references.some((reference) => {
     if (reference.init || reference.identifier === ignoredReference) return false;
@@ -71,7 +80,8 @@ function objectMutation(
     if (parent?.type === "CallExpression" && parent.arguments.includes(value))
       return !(
         nonWritingArgument(parent, value, context) ||
-        (before && depth > 0 && scalarArgument(parent, value, context))
+        (before && depth > 0 && scalarArgument(parent, value, context)) ||
+        (scalarsAreReads && depth > 0 && scalarValue(value, context))
       );
     if (
       (parent?.type === "AssignmentExpression" && parent.left === value) ||
@@ -82,7 +92,9 @@ function objectMutation(
       (parent?.type === "VariableDeclarator" &&
         parent.init === value &&
         parent.id.type === "Identifier" &&
-        !(before && depth > 0 && scalarValue(value, context))) ||
+        !(before && depth > 0 && scalarValue(value, context)) &&
+        !(scalarsAreReads && depth > 0 && scalarValue(value, context)) &&
+        !(before && depth > 0 && readOnlyElement(parent, context))) ||
       (parent?.type === "CallExpression" &&
         parent.callee === value &&
         depth === 1 &&

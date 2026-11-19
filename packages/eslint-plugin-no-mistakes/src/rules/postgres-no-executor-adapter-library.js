@@ -81,11 +81,14 @@ function libraryVisible(identifier, context, options, safeHole, closureProven) {
   );
 }
 
-function enclosingParameter(identifier, context) {
+// Options must be an unwritten parameter of a function outside the adapter closure.
+// `s => write(s, s)` reuses the statement parameter and is not that binding.
+function forwardedOptions(identifier, fn, context) {
   const variable = resolveVariable(identifier, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
   return Boolean(
-    variable?.defs.length === 1 &&
-    variable.defs[0].type === "Parameter" &&
+    def?.type === "Parameter" &&
+    def.node !== fn &&
     !variable.references.some((ref) => ref.isWrite() && !ref.init),
   );
 }
@@ -114,7 +117,7 @@ function libraryAdapter(fn, context, options) {
   const binding = spread?.type === "SpreadElement" ? spread.argument : extra;
   return binding.type === "Identifier" &&
     optionsCall(binding, context, options) === call &&
-    enclosingParameter(binding, context)
+    forwardedOptions(binding, fn, context)
     ? call
     : null;
 }
@@ -187,6 +190,7 @@ function tsAdapterStatement(call, ts, checker) {
     !fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword) &&
     ts.isCallExpression(fn.parent) &&
     fn.parent.arguments.includes(fn) &&
+    call.arguments.length <= 2 &&
     tsClosureCall(fn, ts) === call
     ? fn
     : null;

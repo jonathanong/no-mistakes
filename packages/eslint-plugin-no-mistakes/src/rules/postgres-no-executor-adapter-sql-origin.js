@@ -4,7 +4,11 @@ const { childNodes, resolveVariable } = require("./postgres-query-text");
 const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { loopBinding } = require("./postgres-no-executor-adapter-sql-loop");
-const { tsScalarDefault } = require("./postgres-no-executor-adapter-sql-primitive");
+const {
+  constPrimitiveForOfSet,
+  tsForOfUnproven,
+  tsScalarDefault,
+} = require("./postgres-no-executor-adapter-sql-primitive");
 const {
   localAliasField,
   localField,
@@ -162,12 +166,14 @@ function tsHoleSafe(
         if (sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol))
           requirements.push(null);
       } else {
-        if (sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol))
+        if (
+          !constPrimitiveForOfSet(symbol.declarations, node, field, checker, ts, program) &&
+          sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol)
+        )
           requirements.push(null);
         for (const source of symbol.declarations ?? []) {
           if (ts.isParameter(source)) requirements.push(null);
-          if (ts.isVariableDeclaration(source) && ts.isForOfStatement(source.parent.parent))
-            requirements.push(null);
+          if (tsForOfUnproven(source, node, field, checker, ts, program)) requirements.push(null);
           if (ts.isBindingElement(source)) {
             const alias = tsAliasField(source, symbol, checker, ts);
             if (alias) {

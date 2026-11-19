@@ -8,6 +8,9 @@ const {
 } = require("./postgres-no-executor-adapter-sql-fresh");
 const { derivedLocal, derivedValue } = require("./postgres-no-executor-adapter-sql-mapped");
 const { loopBinding } = require("./postgres-no-executor-adapter-sql-loop");
+const { primitiveType } = require("./postgres-no-executor-adapter-sql-primitive");
+const { executorResult, localReceiver } = require("./postgres-no-executor-adapter-sql-local");
+const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 
 function primitiveAnnotation(node, allowUndefined) {
@@ -35,6 +38,61 @@ function primitiveAnnotation(node, allowUndefined) {
 
 function typedBinding(def) {
   return def.type === "Parameter" || loopBinding(def);
+}
+
+const ROW_METHODS = new Set(["map", "flatMap", "forEach", "filter", "find", "some", "every"]);
+
+// `{ at }` on `rows.map` is a field of the element, not a free Date or primitive parameter.
+function rowCallbackField(def) {
+  if (def.type !== "Parameter" || def.name?.parent?.type !== "Property") return null;
+  const property = def.name.parent;
+  if (property.computed || property.value !== def.name || property.key.type !== "Identifier")
+    return null;
+  const pattern = property.parent;
+  const fn = def.node;
+  const param = fn?.params?.[0];
+  const target = param?.type === "AssignmentPattern" ? param.left : param;
+  const call = fn?.parent;
+  const callee = call?.type === "CallExpression" ? unwrapTs(call.callee) : null;
+  if (
+    pattern?.type !== "ObjectPattern" ||
+    target !== pattern ||
+    !call?.arguments.includes(fn) ||
+    callee?.type !== "MemberExpression" ||
+    callee.computed ||
+    callee.optional ||
+    callee.property.type !== "Identifier" ||
+    !ROW_METHODS.has(callee.property.name) ||
+    callee.object.type !== "Identifier"
+  )
+    return null;
+  return { field: property.key.name, receiver: callee.object };
+}
+
+function elementFieldScalar(receiver, field, context, allowUndefined) {
+  const variable = resolveVariable(receiver, context);
+  const rowBacked = Boolean(
+    variable?.defs.length &&
+    (variable.defs.every((def) => def.type === "Parameter") ||
+      executorResult(variable, context) ||
+      localReceiver(variable, context, receiver)),
+  );
+  if (!rowBacked) return null;
+  if (objectMutation(variable, null, null, receiver, context, receiver)) return false;
+  const services = context.sourceCode.parserServices;
+  if (!services?.program || !services.esTreeNodeToTSNodeMap?.has(receiver)) return false;
+  const ts = require("typescript");
+  const checker = services.program.getTypeChecker();
+  const type = checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(receiver));
+  const element = type.getNumberIndexType?.();
+  if (!element) return false;
+  const parts = element.isUnion() ? element.types : [element];
+  const source = services.esTreeNodeToTSNodeMap.get(receiver);
+  return parts.every((part) => {
+    const property = checker.getPropertyOfType(part, field);
+    if (!property || property.flags & ts.SymbolFlags.Optional) return false;
+    return primitiveType(checker.getTypeOfSymbolAtLocation(property, source), ts, allowUndefined);
+  });
 }
 
 // Lazy: sql-projection requires this module. A typed receiver or a const object literal.
@@ -98,6 +156,11 @@ function scalarArgument(node, context, allowUndefined = true, seen = new Set()) 
           return true;
       }
       if (variable.defs.some((def) => def.type !== "Parameter" && !loopBinding(def))) return false;
+      const field = variable.defs.length === 1 ? rowCallbackField(variable.defs[0]) : null;
+      if (field) {
+        const proven = elementFieldScalar(field.receiver, field.field, context, allowUndefined);
+        if (proven !== null) return proven;
+      }
     }
   }
   const parameter = node?.type === "Identifier" ? resolveVariable(node, context) : null;
