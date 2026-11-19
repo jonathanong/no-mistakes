@@ -9,17 +9,17 @@ fields and an explicit HTTP method to keep the intended request visible.
 ## Disallowed
 
 ```ts
-import { execFile } from "node:child_process";
-execFile("gh", ["api", `repos/${repo}/labels?per_page=100`]);
-execFile("gh", ["api", "repos/O/R/labels", "-F", "per_page=100"]);
+import { execFile } from 'node:child_process';
+execFile('gh', ['api', `repos/${repo}/labels?per_page=100`]);
+execFile('gh', ['api', 'repos/O/R/labels', '-F', 'per_page=100']);
 ```
 
 ## Allowed
 
 ```ts
-import { execFile } from "node:child_process";
-execFile("gh", ["api", "-X", "GET", `repos/${repo}/labels`, "-F", "per_page=100"]);
-execFile("gh", ["api", "graphql", "-f", "query=query { viewer { login } }"]);
+import { execFile } from 'node:child_process';
+execFile('gh', ['api', '-X', 'GET', `repos/${repo}/labels`, '-F', 'per_page=100']);
+execFile('gh', ['api', 'graphql', '-f', 'query=query { viewer { login } }']);
 ```
 
 ## Options
@@ -49,10 +49,18 @@ Renamed and namespace imports work; shadowed imports do not match.
 factory. Each entry has `factory` (an exact dotted spelling bound like a wrapper
 `callee`), `method` (one static name), `argumentPosition` (one-based, 1–32), and
 optional `includesApi` (default `true`). At most 64 entries. Only an immediate
-`factory(...).method([...])` receiver matches; `other().method(...)`, another
-method on the factory result, dynamic member names, and a client stored in a
-variable are not selected. It is off unless configured, and the existing
-argument checks then apply to the selected argv.
+`factory(...).method([...])` receiver matches. An optional factory call or
+optional method still matches, including `factory()?.method([...])` and
+`factory?.().method([...])`. A computed member matches when its key is a static
+string or an expression-free template, such as `factory()['call']([...])`.
+`other().method(...)`, another method on the factory result, a non-literal
+computed name, a client stored in a variable, and
+`(await factory()).method([...])` are not selected. A spread in the configured
+argument position is not a literal array, so that call is not inspected. A
+spread element inside the selected array still uses the argv checks below. An
+`argumentPosition` past the arguments of that call is not inspected. It is off
+unless configured, and the existing argument checks then apply to the selected
+argv.
 
 ```js
 {
@@ -106,7 +114,7 @@ Another file's re-export is not visible here. `import { run } from "./barrel.mjs
 
 ```ts
 // no-mistakes-disable-next-line gh-api-argument-safety -- endpoint is a reviewed protocol fixture
-execFile("gh", ["api", "repos/O/R/labels?per_page=100"]);
+execFile('gh', ['api', 'repos/O/R/labels?per_page=100']);
 ```
 
 `no-mistakes-disable-line` and top-of-file `no-mistakes-disable-file` also work.

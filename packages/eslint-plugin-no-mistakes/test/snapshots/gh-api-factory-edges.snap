@@ -1,0 +1,23 @@
+[
+  {
+    "file": "factory-edges.ts",
+    "line": 4,
+    "column": 29,
+    "messageId": "endpointQuery",
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "file": "factory-edges.ts",
+    "line": 5,
+    "column": 30,
+    "messageId": "endpointQuery",
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "file": "factory-edges.ts",
+    "line": 8,
+    "column": 28,
+    "messageId": "endpointQuery",
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  }
+]

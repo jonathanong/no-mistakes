@@ -8,12 +8,21 @@ const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", i
 const factoryWrappers = [
   { factory: "makeClient", method: "call", argumentPosition: 1, includesApi: false },
 ];
-function check(options) {
+function check(options, name = "factory.ts") {
   return lint(
-    fixture(`${id}/factory.ts`),
+    fixture(`${id}/${name}`),
     { [`no-mistakes/${id}`]: ["error", options] },
-    resolve(root, "factory.ts"),
+    resolve(root, name),
   );
+}
+function rows(messages, file) {
+  return messages.map(({ line, column, messageId, message }) => ({
+    file,
+    line,
+    column,
+    messageId,
+    message,
+  }));
 }
 describe("gh-api-argument-safety factoryWrappers", () => {
   it("selects only the configured factory receiver and method", async () => {
@@ -27,16 +36,40 @@ describe("gh-api-argument-safety factoryWrappers", () => {
         [15, "endpointQuery"],
       ],
     );
-    const rows = messages.map(({ line, column, messageId, message }) => ({
-      file: "factory.ts",
-      line,
-      column,
-      messageId,
-      message,
-    }));
-    await expect(`${JSON.stringify(rows, null, 2)}\n`).toMatchFileSnapshot(
+    await expect(`${JSON.stringify(rows(messages, "factory.ts"), null, 2)}\n`).toMatchFileSnapshot(
       "snapshots/gh-api-factory.snap",
     );
+  });
+  it("keeps optional calls, awaited receivers and spreads conservative", async () => {
+    const messages = check({ factoryWrappers }, "factory-edges.ts");
+    assert.deepEqual(
+      messages.map((m) => [m.line, m.messageId]),
+      [
+        [4, "endpointQuery"],
+        [5, "endpointQuery"],
+        [8, "endpointQuery"],
+      ],
+    );
+    await expect(
+      `${JSON.stringify(rows(messages, "factory-edges.ts"), null, 2)}\n`,
+    ).toMatchFileSnapshot("snapshots/gh-api-factory-edges.snap");
+  });
+  it("reports only the argv at the configured argumentPosition", async () => {
+    const past = check(
+      {
+        factoryWrappers: [
+          { factory: "makeClient", method: "call", argumentPosition: 2, includesApi: false },
+        ],
+      },
+      "factory-edges.ts",
+    );
+    assert.deepEqual(
+      past.map((m) => [m.line, m.messageId]),
+      [[10, "endpointQuery"]],
+    );
+    await expect(
+      `${JSON.stringify(rows(past, "factory-edges.ts"), null, 2)}\n`,
+    ).toMatchFileSnapshot("snapshots/gh-api-factory-edges-position.snap");
   });
   it("treats the first argv element as api when includesApi is not false", () => {
     const messages = check({

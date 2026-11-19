@@ -1,0 +1,10 @@
+declare function makeClient(options: unknown): { call(...args: unknown[]): void };
+declare const extra: string[];
+const exec = {};
+makeClient({ exec })?.call(['repos/EXAMPLE/DEMO/labels?per_page=1']);
+makeClient?.({ exec }).call(['repos/EXAMPLE/DEMO/labels?per_page=1']);
+(await makeClient({ exec })).call(['repos/EXAMPLE/DEMO/labels?per_page=1']);
+makeClient({ exec }).call(...['repos/EXAMPLE/DEMO/labels?per_page=1']);
+makeClient({ exec }).call(['repos/EXAMPLE/DEMO/labels?per_page=1', ...extra]);
+makeClient({ exec }).call(['repos/EXAMPLE/DEMO/labels', ...extra, '-F', 'per_page=1']);
+makeClient({ exec }).call(extra, ['repos/EXAMPLE/DEMO/labels?per_page=1']);
