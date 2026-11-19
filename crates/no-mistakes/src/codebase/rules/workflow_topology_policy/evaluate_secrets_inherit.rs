@@ -8,11 +8,7 @@ pub(super) fn lint(topology: &WorkflowTopology, options: &Options) -> Vec<Locate
     if !options.forbid_secrets_inherit {
         return Vec::new();
     }
-    topology
-        .edges
-        .iter()
-        .filter_map(inherit_finding)
-        .collect()
+    topology.edges.iter().filter_map(inherit_finding).collect()
 }
 
 fn inherit_finding(edge: &WorkflowTopologyEdge) -> Option<LocatedFinding> {
