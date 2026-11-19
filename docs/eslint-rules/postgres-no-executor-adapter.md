@@ -284,6 +284,32 @@ same proof `forwarding-only` applies: a trusted-tag literal with scalar holes,
 or such a statement extended with `.append(<literal>)`. A dynamic fragment
 (`statement.append(column)`) keeps reporting.
 
+### Append chains
+
+A helper that forwards `query(sql`...`.append(COLS).append(sql`...`))` is proven
+when the chain's root and every appended fragment are trusted `sql` tags, or a
+fragment is a constant: a module-level `const` bound to a trusted `sql` tag that
+nothing reassigns or mutates. The only uses allowed anywhere in the program are
+as the argument of `.append(...)`; `COLS.append(...)`, passing it to another
+call, or exporting it as a value that is read otherwise count as mutation. A
+constant declared in the helper's file may interpolate scalars. A constant
+imported from a sibling module (including `import * as ns` access and renamed
+imports) must have no interpolations, and the checker must be available because
+the proof reads every file of the program. Without type information only
+constants declared in the same file are proven.
+
+```ts
+const COLS = sql`id, state`;
+async function appendOnly(id: string, query: SessionExecutor) {
+  await query(sql`SELECT `.append(COLS).append(sql` FROM widgets WHERE id = ${id}`));
+}
+```
+
+An appended parameter, `let`, call result, string constant, a constant that is
+mutated anywhere (including in another module), a constant whose tag has
+interpolations from another module, or a constant used as the chain root
+(`COLS.append(...)` mutates it) keeps reporting.
+
 Structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as
 `dispatch({ nested: { query: read } })` and forwarding callbacks remain
