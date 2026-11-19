@@ -5,6 +5,7 @@ type Notice = { id: string; status: string };
 
 declare function stash(notice: Notice): void;
 declare function dynamicId(): string;
+declare function anyFn(): any;
 declare const key: "id";
 
 async function lockNotice(query: SessionExecutor, id: string) {
@@ -72,4 +73,37 @@ export async function spreadObject(query: SessionExecutor, rows: Notice[]) {
 export async function dynamicField(query: SessionExecutor) {
   const notice = { id: dynamicId(), status: "b" };
   return lockNotice(query, notice.id);
+}
+
+export async function secondLiteralUse(query: SessionExecutor) {
+  const notice = { id: "a", status: "b" };
+  await lockNotice(query, notice.id);
+  return lockNotice(query, notice.status);
+}
+
+export async function anyValueDestructure(query: SessionExecutor, anyValue: any) {
+  const { id } = anyValue;
+  return lockNotice(query, id);
+}
+
+export async function chainedAnyCall(query: SessionExecutor) {
+  const first = anyFn();
+  const notice = first;
+  return lockNotice(query, notice.id);
+}
+
+export async function defaultedDestructure(
+  query: SessionExecutor,
+  rows: Notice[],
+  fallback: string,
+) {
+  const notice = rows[0]!;
+  const { id = fallback } = notice;
+  return lockNotice(query, id);
+}
+
+export async function restElement(query: SessionExecutor, rows: Notice[]) {
+  const notice = rows[0]!;
+  const { ...copy } = notice;
+  return lockNotice(query, copy.id);
 }

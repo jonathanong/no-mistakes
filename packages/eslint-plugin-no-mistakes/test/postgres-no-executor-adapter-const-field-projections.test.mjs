@@ -46,7 +46,7 @@ it("proves field projections through destructuring, const chains and const objec
   });
   expect(rows.map((row) => row.findings.map(({ line }) => line))).toEqual([
     [],
-    [22, 29, 36, 41, 47, 53, 59, 64, 69, 74],
+    [23, 30, 37, 42, 48, 54, 60, 65, 70, 75, 80, 81, 86, 92, 102, 108],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-const-field-projections.snap",

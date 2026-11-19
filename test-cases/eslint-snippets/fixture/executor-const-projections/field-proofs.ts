@@ -36,12 +36,30 @@ export async function annotatedConstObject(query: SessionExecutor) {
 }
 
 declare function consume(notice: Notice): void;
+declare const anyConsumer: any;
+declare function unknownConsumer(notice: unknown): unknown;
 
 export async function consumedAfterDestructure(query: SessionExecutor, rows: Notice[]) {
   const notice = rows[0]!;
   const { id } = notice;
   await lockNotice(query, id);
   consume(notice);
+}
+
+export async function anyAfter(query: SessionExecutor, rows: Notice[]) {
+  const notice = rows[0]!;
+  const { id } = notice;
+  const locked = lockNotice(query, id);
+  anyConsumer(notice);
+  return locked;
+}
+
+export async function unknownAfter(query: SessionExecutor, rows: Notice[]) {
+  const notice = rows[0]!;
+  const { id } = notice;
+  const locked = lockNotice(query, id);
+  unknownConsumer(notice);
+  return locked;
 }
 
 export async function writtenAfterDestructure(query: SessionExecutor, rows: Notice[]) {
