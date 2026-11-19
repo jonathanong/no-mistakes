@@ -467,6 +467,19 @@ run(0 ?? read, account);
   template. With typed linting, the same check applies to imported helpers.
   A helper that calls the executor with a received or composed SQL fragment
   still reports. This option changes only this rule.
+- In `"forwarding-only"` mode, a same-file helper may also pass its executor
+  parameter on, unchanged, as a plain argument to another same-file helper. The
+  callee is proven only when every hop is itself proven, with the same literal
+  SQL, hole-safety and executor-use checks: any other use of the parameter (a
+  store, a closure return, an escape, a reassignment, a spread or an unresolved
+  or overloaded callee) keeps the call reported. Hops may sit in loops and run
+  one after another. The check is depth-bounded (eight nested helpers) and a
+  cycle between helpers is unproven. A `for...of` const bound to an element of a
+  parameter, or to a primitive, is a proven projection or scalar when nothing
+  writes it; an interpolation that uses any other iteration value reports. A
+  `const summary = await load(query, id)` result, where `load` is a proven
+  helper called with a typed executor parameter, is a valid projection receiver
+  for a later helper under the same typed field proof.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   In `"forwarding-only"` mode, a direct tagged template is visible SQL only
   when its tag resolves to that configured import and the template starts
