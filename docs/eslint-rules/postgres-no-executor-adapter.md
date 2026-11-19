@@ -582,6 +582,11 @@ run(0 ?? read, account);
   built from row fields and then mutated), a shadowed `Date`, and a non-row object
   or array, whose contents cannot be proved free of SQL fragments. `string | null`
   row fields still prove.
+- An optional property that an inline object-literal argument omits
+  (`put(tx, { id: row.id })` where the callee type declares `ownerId?: string`)
+  reads as `undefined` and proves, because nothing row-derived reaches it. A
+  required property, a spread, a `__proto__` key, or an object that is not written
+  inline at the call stays reported.
 - Two shapes are silent today by design, not by proof: a root whose factory is not
   in `executorFactoryNames` (`declare function openOther(): Promise<SessionExecutor>`)
   and `const pending = beginTransaction(); const tx = await pending`. Neither is

@@ -3,6 +3,7 @@
 const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
 
 const { constInitializer } = require("./postgres-no-executor-adapter-binding");
+const { omittedOptionalField } = require("./postgres-no-executor-adapter-sql-absent");
 const { typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
 const { scalarArgument } = require("./postgres-no-executor-adapter-sql-scalar");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
@@ -118,6 +119,9 @@ function tsObjectAliased(
   return aliases.has(symbol);
 }
 
+// An omitted property of a fully visible literal reads as undefined.
+const ABSENT = Symbol("absent");
+
 function staticObjectValue(node, field, context, seen = new Set()) {
   node = unwrapTs(node);
   if (node.type === "Identifier") {
@@ -132,17 +136,19 @@ function staticObjectValue(node, field, context, seen = new Set()) {
   for (const entry of node.properties) {
     if (entry.type !== "Property" || entry.computed || entry.kind !== "init") return null;
     const key = entry.key.type === "Identifier" ? entry.key.name : entry.key.value;
+    if (key === "__proto__") return null;
     if (key === field) {
       if (value) return null;
       value = entry.value;
     }
   }
-  return value;
+  return value ?? ABSENT;
 }
 
 function projectedScalar(node, field, context, allowUndefined) {
   if (field !== null && typedScalarProjection(node, field, context, allowUndefined)) return true;
   const value = field === null ? node : staticObjectValue(node, field, context);
+  if (value === ABSENT) return allowUndefined && omittedOptionalField(node, field, context);
   return Boolean(value && scalarArgument(value, context, allowUndefined));
 }
 
