@@ -23,11 +23,17 @@ function configuredImport(typeName, checker, options, seen) {
   return Boolean(next && configuredImport(next, checker, options, seen));
 }
 
+// An optional parameter or an explicit `| undefined` / `| null` still declares
+// one options object; any other union has no single contract to judge.
+function optionObjectType(annotation, checker) {
+  return checker.getNonNullableType(checker.getTypeFromTypeNode(annotation));
+}
+
 // A call site's inferred shape is insufficient: inspect the implementation's
 // declared parameter, then the declaration of its named property.
 function declaredOptionType(annotation, property, checker, options) {
   if (!annotation || !property) return false;
-  const type = checker.getTypeFromTypeNode(annotation);
+  const type = optionObjectType(annotation, checker);
   if (type.isUnion()) return false;
   const symbol = type.getProperty(property);
   if (symbol?.declarations?.length !== 1) return false;
@@ -43,4 +49,4 @@ function declaredOptionType(annotation, property, checker, options) {
   return configuredImport(member.type.typeName, checker, options, new Set());
 }
 
-module.exports = { declaredOptionType };
+module.exports = { declaredOptionType, optionObjectType };

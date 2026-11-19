@@ -40,10 +40,12 @@ function declaredProperties(target, context, options) {
   const node = services.esTreeNodeToTSNodeMap.get(annotation);
   if (!node) return null;
   const checker = services.program.getTypeChecker();
-  const { declaredOptionType } = require("./postgres-no-executor-adapter-options");
+  const {
+    declaredOptionType,
+    optionObjectType,
+  } = require("./postgres-no-executor-adapter-options");
   return {
-    names: checker
-      .getTypeFromTypeNode(node)
+    names: optionObjectType(node, checker)
       .getProperties()
       .map((symbol) => symbol.name),
     accepts: (property) => declaredOptionType(node, property, checker, options),
