@@ -54,7 +54,22 @@
     {
       "file": "accept-only-pending.ts",
       "typed": false,
-      "diagnostics": []
+      "diagnostics": [
+        {
+          "messageId": "mutation",
+          "line": 14,
+          "column": 5,
+          "endLine": 14,
+          "endColumn": 24
+        },
+        {
+          "messageId": "mutation",
+          "line": 15,
+          "column": 5,
+          "endLine": 15,
+          "endColumn": 34
+        }
+      ]
     },
     {
       "file": "accept-only-unknown-elements.ts",
@@ -595,7 +610,22 @@
     {
       "file": "accept-only-pending.ts",
       "typed": true,
-      "diagnostics": []
+      "diagnostics": [
+        {
+          "messageId": "mutation",
+          "line": 14,
+          "column": 5,
+          "endLine": 14,
+          "endColumn": 24
+        },
+        {
+          "messageId": "mutation",
+          "line": 15,
+          "column": 5,
+          "endLine": 15,
+          "endColumn": 34
+        }
+      ]
     },
     {
       "file": "accept-only-unknown-elements.ts",

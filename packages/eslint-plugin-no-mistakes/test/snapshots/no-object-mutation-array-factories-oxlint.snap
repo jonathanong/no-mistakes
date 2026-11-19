@@ -29,6 +29,20 @@
   },
   {
     "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending.ts",
+    "line": 14,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
+    "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/accept-only-pending.ts",
+    "line": 15,
+    "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+  },
+  {
+    "code": "no-mistakes(no-object-mutation)",
     "column": 3,
     "file": "test-cases/eslint-snippets/fixture/no-object-mutation-array-factories/global-alias.ts",
     "line": 5,
