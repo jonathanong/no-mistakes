@@ -117,6 +117,8 @@ test("pnpm stores restore on PRs but save only on main", () => {
   }
   for (const step of retries) {
     assert.match(step, /cache: false/);
+    // An unresolved lockfile path makes pnpm/setup skip its lockfile-verification cache restore too.
+    assert.match(step, /cache-dependency-path: \.github\/pnpm-lockfile-cache-disabled\n/);
     assert.doesNotMatch(step, /cache: true/);
     assert.doesNotMatch(step, /save-cache/);
   }

@@ -237,6 +237,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -472,6 +473,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -580,6 +582,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -749,6 +752,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -809,6 +813,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -879,6 +884,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
       - name: Install pnpm dependencies
         timeout-minutes: 5
@@ -985,6 +991,7 @@ jobs:
         with:
           runtime: ${{ matrix.runtime }}
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install pnpm dependencies
@@ -1095,6 +1102,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1289,6 +1297,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1480,6 +1489,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1647,6 +1657,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Install Rust
@@ -1867,6 +1878,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-rust-archive
@@ -1971,6 +1983,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-rust-archive
@@ -2087,6 +2100,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-runtime
@@ -2220,6 +2234,7 @@ jobs:
         with:
           runtime: node@24
           cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
           install: false
 
       - name: Download native-runtime
