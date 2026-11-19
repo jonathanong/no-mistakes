@@ -119,6 +119,61 @@
           "messageId": "restrictedApi",
           "ruleId": "no-mistakes/restricted-api-usage",
           "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 34,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 16,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 56,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 17,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 14,
+          "endLine": 18,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 18,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 4,
+          "endColumn": 40,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 19,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 40,
+          "endLine": 20,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
+          "line": 20,
+          "message": "Use the static helper.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -165,9 +220,9 @@
         {
           "column": 18,
           "endColumn": 31,
-          "endLine": 12,
+          "endLine": 21,
           "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/destructure.ts",
-          "line": 12,
+          "line": 21,
           "message": "Restricted API 'addAndWait'. Use an allowed API instead.",
           "messageId": "restrictedApi",
           "ruleId": "no-mistakes/restricted-api-usage",
