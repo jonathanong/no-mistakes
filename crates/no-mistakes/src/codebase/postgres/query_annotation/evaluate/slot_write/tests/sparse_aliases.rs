@@ -27,6 +27,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

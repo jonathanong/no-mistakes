@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "soundness-guard-mutates-builder": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return write(statement)",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 21,
+          "message": "src/query.ts:21: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return write(statement)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -42,6 +42,50 @@ fn postgres_copy_streams_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_destructured_option_member_check_json_snapshot() {
+    let cases = [(
+        "destructured-option-member",
+        rules_path(RULE, "fixture", "destructured-option-member"),
+        rules_path(RULE, "configs", "destructured-option-member.yml"),
+    )];
+    let document = assert_saved_fixture_report(
+        "postgres_destructured_option_member",
+        &cases,
+        &[],
+        &[],
+    );
+    let messages: Vec<_> = document["destructured-option-member"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            let message = finding["message"].as_str().unwrap();
+            assert!(message.contains("must start with a /* name */"), "{message}");
+            finding["line"].as_u64().unwrap()
+        })
+        .collect();
+    assert_eq!(messages, [41, 47, 53]);
+}
+
+#[test]
+fn postgres_destructured_call_parity_check_json_snapshot() {
+    let cases = [(
+        "destructured-call-parity",
+        rules_path(RULE, "fixture", "destructured-call-parity"),
+        rules_path(RULE, "configs", "destructured-call-parity.yml"),
+    )];
+    let document =
+        assert_saved_fixture_report("postgres_destructured_call_parity", &cases, &[], &[]);
+    let lines: Vec<_> = document["destructured-call-parity"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
+    assert_eq!(lines, [27, 32, 75, 80]);
+}
+
+#[test]
 #[rustfmt::skip]
 fn postgres_require_query_annotation_check_json_snapshot() {
     // Output cases formerly asserted via check_with_files in the rule unit module.

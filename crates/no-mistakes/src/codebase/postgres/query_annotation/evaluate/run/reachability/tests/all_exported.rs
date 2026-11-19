@@ -166,6 +166,7 @@ fn evaluator<'a>(
         files,
         resolve: |_specifier, _from| None,
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

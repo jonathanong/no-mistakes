@@ -42,6 +42,7 @@ fn with_arrays(
         resolve: (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None })
             as fn(&str, &std::path::Path) -> Option<PathBuf>,
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

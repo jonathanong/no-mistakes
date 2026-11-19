@@ -27,6 +27,7 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

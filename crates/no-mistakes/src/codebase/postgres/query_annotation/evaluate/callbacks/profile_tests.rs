@@ -34,6 +34,7 @@ fn captured_snapshot_tracks_only_live_semantic_state_and_bounded_revisits() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

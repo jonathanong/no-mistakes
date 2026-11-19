@@ -48,7 +48,12 @@ pub(super) fn reduce_with_sources(
         // its contextual preference; executed SQL must include every
         // reachable invocation before it certifies a complete statement.
         let contextual = !collect_executed && events.iter().any(|(generic, _)| !generic);
-        let all_invocations = !contextual || events.iter().all(|(generic, _)| !generic);
+        // An external invocation with unknown arguments still proves the same
+        // static prefix when its own value is a proven safe prefix.
+        let all_invocations = !contextual
+            || events.iter().all(|(generic, value)| {
+                !generic || prefix(value).is_some_and(|text| !sql_requires_query_annotation(&text))
+            });
         if !sources.is_empty() {
             let failures = sources
                 .remove(&(path.clone(), span))
@@ -63,14 +68,18 @@ pub(super) fn reduce_with_sources(
                     .insert((path.clone(), span), failures);
             }
         }
-        let values = events
+        let mut values = events
             .into_iter()
             .filter(|(generic, _)| !contextual || !generic)
             .map(|(_, value)| value)
             .collect::<Vec<_>>();
+        let deferred = |value: &Value| matches!(value, Value::Failure(reason) if *reason == output::DEFERRED_REASON);
+        if values.iter().any(|value| !deferred(value)) {
+            values.retain(|value| !deferred(value));
+        }
         if values
             .iter()
-            .all(|value| matches!(value, Value::Unsupported))
+            .all(|value| matches!(value, Value::Unsupported) || deferred(value))
         {
             // Legacy lexical SQL facts remain authoritative where this
             // additive helper projection does not model the scope.
@@ -103,7 +112,7 @@ pub(super) fn reduce_with_sources(
                 .executed
                 .insert((path.clone(), span), reason.map_or(Ok(alternatives), Err));
         }
-        let values = values.into_iter().map(prefix).collect::<Vec<_>>();
+        let values = values.iter().map(prefix).collect::<Vec<_>>();
         let proven_prefix = all_invocations && values.iter().all(Option::is_some);
         // Every analyzable invocation must satisfy the rule. One favorable
         // callback callsite must never hide another unannotated/opaque one.

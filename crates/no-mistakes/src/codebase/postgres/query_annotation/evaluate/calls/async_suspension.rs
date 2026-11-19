@@ -2,6 +2,7 @@ use crate::codebase::postgres::query_annotation::{Expr, Step};
 use std::{collections::BTreeMap, path::PathBuf};
 
 use super::super::{CallSpan, ExecutionEvents, Value};
+use crate::codebase::postgres::query_annotation::project::output::DEFERRED_REASON;
 
 pub(super) type EventLengths = BTreeMap<(PathBuf, CallSpan), usize>;
 
@@ -16,7 +17,31 @@ pub(super) fn invalidate_new_events(events: &mut ExecutionEvents, previous: &Eve
     for (key, values) in events {
         let count = previous.get(key).copied().unwrap_or(0);
         for (_, value) in values.iter_mut().skip(count) {
-            *value = Value::Unknown;
+            if !matches!(value, Value::Unsupported)
+                && !matches!(value, Value::Failure(reason) if *reason == DEFERRED_REASON)
+            {
+                *value = Value::Unknown;
+            }
+        }
+    }
+}
+
+/// A destructured executor call whose leading SQL stays unresolved keeps the
+/// lexical facts, exactly as before destructured calls were evaluated.
+pub(in super::super) fn defer_unresolved_events(
+    events: &mut ExecutionEvents,
+    logged: &[(PathBuf, CallSpan)],
+) {
+    use crate::codebase::postgres::query_annotation::project::output::prefix;
+    let mut seen = crate::fx::FxHashMap::<&(PathBuf, CallSpan), usize>::default();
+    for key in logged.iter().rev() {
+        let skipped = seen.entry(key).or_default();
+        let values = events.get_mut(key).expect("logged events stay recorded");
+        let index = values.len() - 1 - *skipped;
+        let (_, value) = &mut values[index];
+        *skipped += 1;
+        if prefix(value).is_none() {
+            *value = Value::Failure(DEFERRED_REASON);
         }
     }
 }

@@ -1,0 +1,42 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "destructured-option-member": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 41,
+          "message": "src/query.ts:41: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const { rows } = await run(sql`SELECT 2`)",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 47,
+          "message": "src/query.ts:47: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const [first] = await run('SELECT 3')",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 53,
+          "message": "src/query.ts:53: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const result = await run(sql`SELECT 4`)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

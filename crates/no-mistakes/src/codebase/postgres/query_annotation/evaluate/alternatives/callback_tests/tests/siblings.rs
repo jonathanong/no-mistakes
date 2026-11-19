@@ -34,6 +34,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

@@ -6,6 +6,7 @@ pub(super) fn evaluator<'a>(files: &'a FxHashMap<PathBuf, File<'a>>) -> TestEval
         files,
         resolve: |_, _| None,
         events: Default::default(),
+        event_log: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
         active_module_initials: Default::default(),

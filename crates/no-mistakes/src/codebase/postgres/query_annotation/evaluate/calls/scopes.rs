@@ -64,7 +64,43 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn has_legacy_bran
         && function
             .body
             .iter()
-            .any(|step| matches!(step, Step::Branch(_, _, _)))
+            .any(|step| matches!(step, Step::Branch(_, _, _)) && !early_exit_guard(step))
+}
+
+/// An `if (test) return value` only prunes paths, so the statements after it
+/// still describe every executed call. The test may run calls; the caller
+/// invalidates live builders for those.
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn early_exit_guard(
+    step: &Step,
+) -> bool {
+    use crate::codebase::postgres::query_annotation::Expr;
+    let Step::Branch(_, left, right) = step else {
+        return false;
+    };
+    let mut arm = left
+        .iter()
+        .filter(|step| !matches!(step, Step::PotentialCalls(_) | Step::Reserve(_)));
+    let (Some(Step::Return(value)), None) = (arm.next(), arm.next()) else {
+        return false;
+    };
+    // A guard that returns SQL text still feeds callers, so only values that
+    // cannot be SQL (`undefined`, booleans, numbers) may be skipped.
+    right.is_empty() && matches!(value, Expr::Primitive | Expr::Boolean(_) | Expr::Number(_))
+        || matches!(value, Expr::Name(name) if name == "undefined") && right.is_empty()
+}
+
+pub(in crate::codebase::postgres::query_annotation::evaluate) fn inert(
+    expr: &crate::codebase::postgres::query_annotation::Expr,
+) -> bool {
+    use crate::codebase::postgres::query_annotation::Expr;
+    match expr {
+        Expr::Boolean(_) | Expr::Number(_) | Expr::Primitive | Expr::Text(_) | Expr::Name(_) => {
+            true
+        }
+        Expr::Discard(inner) => inert(inner),
+        Expr::Binary(_, left, right) => inert(left) && inert(right),
+        _ => false,
+    }
 }
 
 /// A callee's declarations shadow captured bindings even when a bare var

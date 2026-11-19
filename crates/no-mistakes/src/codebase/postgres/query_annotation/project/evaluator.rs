@@ -12,6 +12,7 @@ pub(super) fn new<'a, F>(
         resolve,
         untrusted_array_intrinsics,
         events: Default::default(),
+        event_log: Vec::new(),
         scopes: Vec::new(),
         modules: super::super::evaluate::module_cache::ModuleCache::with_ids(
             files

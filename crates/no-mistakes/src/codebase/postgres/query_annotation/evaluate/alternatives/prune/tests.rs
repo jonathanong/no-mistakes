@@ -20,6 +20,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         files: &files,
         resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
         events: Default::default(),
+        event_log: Default::default(),
         // The unrooted frame deliberately precedes the module, forcing a remap.
         scopes: vec![
             FxHashMap::from_iter([("dead".into(), Value::Prefix("dead".into(), true, Some(9)))])

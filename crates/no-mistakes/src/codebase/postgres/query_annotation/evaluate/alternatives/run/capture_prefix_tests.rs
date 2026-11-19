@@ -58,6 +58,7 @@ fn alternatives_do_not_clone_an_unchanged_prefix_capture_during_resolver_work() 
             None
         },
         events: Default::default(),
+        event_log: Default::default(),
         scopes: vec![Scope::default(), Scope::default()],
         modules: Default::default(),
         active_module_initials: Default::default(),

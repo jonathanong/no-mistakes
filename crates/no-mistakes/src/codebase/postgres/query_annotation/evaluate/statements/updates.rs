@@ -36,7 +36,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             && self.effect_can_mutate(expr, path, *env)
             && !self.proven_append_only_effect(expr, path, *env, depth, generic);
         let live_before = may_mutate.then(|| self.live_builder_values());
+        let destructured = name
+            == crate::codebase::postgres::query_annotation::statements::destructured::RESULT
+            && !self.files[path].facts.precise_records;
+        let logged = self.event_log.len();
         let value = self.binding_value(expr, path, env, context, (supported, unsupported));
+        if destructured && self.event_log.len() > logged {
+            super::super::calls::async_suspension::defer_unresolved_events(
+                &mut self.events,
+                &self.event_log[logged..],
+            );
+        }
         let handled = self.handled_deletion_effect(expr, &value, path, *env);
         let value = value.exposed();
         self.write_captured_binding_evaluated(*env, name, &value, depth);

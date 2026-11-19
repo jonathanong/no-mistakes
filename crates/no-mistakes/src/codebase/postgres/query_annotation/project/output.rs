@@ -3,6 +3,10 @@ use super::ProjectedSql;
 use crate::codebase::postgres::embedded::publish_placeholders_with_positions;
 use crate::codebase::postgres::sql_requires_query_annotation;
 
+/// Destructured executor call whose SQL stayed unresolved; the lexical facts decide.
+pub(in crate::codebase::postgres::query_annotation) const DEFERRED_REASON: &str =
+    "unresolved-destructured-call";
+
 pub(super) fn projected_sql(value: &Value) -> Option<Vec<ProjectedSql>> {
     match value {
         Value::Prefix(text, complete, _) => {
@@ -31,29 +35,30 @@ pub(super) fn projected_sql(value: &Value) -> Option<Vec<ProjectedSql>> {
     }
 }
 
-pub(super) fn prefix(value: Value) -> Option<String> {
+pub(in crate::codebase::postgres::query_annotation) fn prefix(value: &Value) -> Option<String> {
     if let Value::Possible(values) = value {
         // A known unsafe possibility still violates the rule. A known safe
         // possibility cannot establish safety for the implicit unknown case.
         return values
-            .into_iter()
+            .iter()
             .filter_map(prefix)
             .find(|text| sql_requires_query_annotation(text));
     }
     let Value::Prefix(text, complete, _) = value else {
         return None;
     };
+    let complete = *complete;
     let start = text.trim_start();
     if complete
-        || super::super::super::annotation::has_leading_query_annotation(&text)
+        || super::super::super::annotation::has_leading_query_annotation(text)
         || (!start.is_empty()
             && !start.starts_with('/')
             && !could_be_transaction(start)
-            && sql_requires_query_annotation(&text))
+            && sql_requires_query_annotation(text))
         || (start.starts_with('/') && start.len() > 1 && !start.starts_with("/*"))
-        || (start.starts_with("/*") && start.contains("*/") && sql_requires_query_annotation(&text))
+        || (start.starts_with("/*") && start.contains("*/") && sql_requires_query_annotation(text))
     {
-        Some(text)
+        Some(text.clone())
     } else {
         None
     }
