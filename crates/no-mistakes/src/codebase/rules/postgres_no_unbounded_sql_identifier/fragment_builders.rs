@@ -11,17 +11,28 @@ mod helpers;
 mod imports;
 #[path = "fragment_builder_lifecycle.rs"]
 mod lifecycle;
+#[path = "fragment_builder_origin.rs"]
+mod origin;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 enum Key {
     Binding(PathBuf, usize, String, u32, bool, bool),
     Call(PathBuf, u32, u32, bool),
     Imports(PathBuf, String),
+    Origin(PathBuf, usize, String, u32),
+    Direct(Box<Key>),
 }
 
 struct File<'a> {
     flow: &'a ValueFlowFacts,
     calls: FxHashMap<(u32, u32), &'a ValueCall>,
+    calls_at: FxHashMap<
+        (
+            u32,
+            Option<crate::codebase::dependencies::extract::CallableId>,
+        ),
+        &'a ValueCall,
+    >,
 }
 
 pub(super) struct Proof<'a, 'facts> {
@@ -33,6 +44,8 @@ pub(super) struct Proof<'a, 'facts> {
     importers: FxHashMap<PathBuf, Option<Vec<PathBuf>>>,
     active: FxHashSet<Key>,
     done: FxHashMap<Key, bool>,
+    pub(super) direct: bool,
+    callers: Option<origin::Callers>,
 }
 
 impl<'a, 'facts> Proof<'a, 'facts> {
@@ -51,6 +64,8 @@ impl<'a, 'facts> Proof<'a, 'facts> {
             importers: FxHashMap::default(),
             active: FxHashSet::default(),
             done: FxHashMap::default(),
+            direct: false,
+            callers: None,
         }
     }
 
@@ -67,6 +82,12 @@ impl<'a, 'facts> Proof<'a, 'facts> {
                 file.to_path_buf(),
                 File {
                     flow: &ts.value_flow,
+                    calls_at: ts
+                        .value_flow
+                        .calls
+                        .iter()
+                        .map(|call| ((call.offset, call.context), call))
+                        .collect(),
                     calls: ts
                         .value_flow
                         .calls
@@ -125,7 +146,7 @@ impl<'a, 'facts> Proof<'a, 'facts> {
                                 && proof.expression(file, base, true)
                                 && proof.append_argument(file, call);
                         }
-                        helpers::returned_builder(proof, file, call)
+                        !proof.direct && helpers::returned_builder(proof, file, call)
                     },
                 )
             }
@@ -141,6 +162,11 @@ impl<'a, 'facts> Proof<'a, 'facts> {
     }
 
     fn memoized(&mut self, key: Key, evaluate: impl FnOnce(&mut Self) -> bool) -> bool {
+        let key = if self.direct {
+            Key::Direct(Box::new(key))
+        } else {
+            key
+        };
         if let Some(result) = self.done.get(&key) {
             return *result;
         }
@@ -157,3 +183,7 @@ impl<'a, 'facts> Proof<'a, 'facts> {
 #[cfg(test)]
 #[path = "fragment_builder_boundary_tests.rs"]
 mod boundary_tests;
+
+#[cfg(test)]
+#[path = "fragment_builder_origin_tests.rs"]
+mod origin_tests;

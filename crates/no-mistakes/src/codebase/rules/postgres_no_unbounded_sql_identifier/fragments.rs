@@ -37,6 +37,17 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
             } if members.as_slice() == [exported.as_str(), "text"] => {
                 self.proof.namespace(&call.file, local, exported)
             }
+            Provenance::Reference {
+                name,
+                scope,
+                offset,
+                members,
+            } if members.is_empty() => {
+                self.proof.direct = true;
+                let proven = self.proof.binding(&call.file, *scope, name, *offset, true);
+                self.proof.direct = false;
+                proven
+            }
             _ => false,
         }
     }

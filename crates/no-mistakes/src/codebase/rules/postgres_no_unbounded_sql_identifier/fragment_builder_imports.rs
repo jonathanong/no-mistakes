@@ -3,7 +3,7 @@ use crate::codebase::dependencies::extract::{CatalogRead, ValueBinding};
 use crate::codebase::dependencies::graph::{EdgeKind, NodeId};
 
 #[path = "fragment_builder_reads.rs"]
-mod reads;
+pub(super) mod reads;
 pub(super) fn owned_reads(proof: &mut Proof<'_, '_>, file: &Path, binding: &ValueBinding) -> bool {
     reads::local(proof, file, binding, true)
 }

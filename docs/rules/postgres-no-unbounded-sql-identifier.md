@@ -606,6 +606,31 @@ imports. Copy an imported fragment into a fresh empty `sql` tagged template with
 statement after safe appends. Every return must be proven; a
 `SQLStatement` annotation alone does not establish this proof.
 
+Imported fixed tagged fragments also compose through named local builders,
+fluent `.append()` chains, and conditional appends. The identifier proof checks
+each fragment's constructor, append contents, and reads across the canonical import graph. A helper copying a fixed fragment
+into a parameter must receive a genuine native SQL builder at every resolved
+call site; the parameter's type annotation alone is not a proof.
+
+```ts
+import sql from "sql-template-strings";
+import { selectedFields, fixedJoin } from "./projection.mjs";
+
+function statement(after?: string) {
+  const query = sql`SELECT `;
+  query.append(selectedFields);
+  query.append(sql` FROM painted_widgets w`).append(fixedJoin);
+  if (after) query.append(sql` WHERE w.id > ${after}`);
+  return query;
+}
+```
+
+Opaque or modified append destinations, escaped builders, and mixed native/custom
+helper callers do not establish the imported-fragment proof. Imported fragments
+with interpolations do not receive this proof for fixed exports. An imported
+helper interpolating an open string into a relation name and a raw string
+containing such an interpolation still report.
+
 The default `sql-template-strings` tag binds every interpolated value. A configured
 tag establishes this `.text` proof for literal slots and ordinary parameter or
 member values, including untyped or destructured parameters, nominal type aliases,
