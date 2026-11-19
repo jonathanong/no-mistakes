@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: './db.mjs'
+      include: ['*.mts']
+      trustedSqlTags:
+        - module: './sql.mjs'
+          name: sql
+      unanalyzableSql: report
