@@ -43,7 +43,8 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
     lower(statements, source, false)
 }
 
-// Destructured call results are lowered only for the append-callback proof.
+// Append-callback proof. Plain destructured calls become effects; defaults,
+// computed keys, and non-identifier rest stay unsupported.
 pub(super) fn append_steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
     lower(statements, source, true)
 }

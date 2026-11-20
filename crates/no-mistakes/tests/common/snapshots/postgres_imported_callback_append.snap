@@ -88,6 +88,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "callers.mts",
+          "line": 38,
+          "message": "callers.mts:38: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const silentDefault = (after?: string) => pageSilentDefault(sql`/* silentDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 39,
+          "message": "callers.mts:39: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const silentComputed = (after?: string) => pageSilentComputed(sql`/* silentComputed */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 40,
+          "message": "callers.mts:40: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const loopDefault = (after?: string) => pageLoopDefault(sql`/* loopDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 41,
+          "message": "callers.mts:41: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const arrowSilent = (after?: string) => pageArrowSilent(sql`/* arrowSilent */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "leading-annotation"
+        },
+        {
+          "file": "callers.mts",
           "line": 6,
           "message": "callers.mts:6: postgres-require-query-annotation application #0 has unresolved SQL for leading-annotation: unresolved-leading-sql",
           "rule": "postgres-require-query-annotation",
@@ -356,6 +388,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "callers.mts:37: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "export const objectAfter = (after?: string) => pageObject(sql`/* objectAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 38,
+          "message": "callers.mts:38: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const silentDefault = (after?: string) => pageSilentDefault(sql`/* silentDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 39,
+          "message": "callers.mts:39: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const silentComputed = (after?: string) => pageSilentComputed(sql`/* silentComputed */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 40,
+          "message": "callers.mts:40: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const loopDefault = (after?: string) => pageLoopDefault(sql`/* loopDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
+          "line": 41,
+          "message": "callers.mts:41: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const arrowSilent = (after?: string) => pageArrowSilent(sql`/* arrowSilent */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));",
           "target": "annotation"
         },
         {

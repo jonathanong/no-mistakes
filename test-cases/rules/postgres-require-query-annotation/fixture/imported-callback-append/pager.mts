@@ -52,6 +52,13 @@ export async function pageDefault(selectWhere: SqlStatement, afterId: string | u
   const { rows = mutate(selectWhere) } = await query(selectWhere);
   return rows;
 }
+// The loop keeps this helper unsupported, so the append proof re-lowers the defaulted call.
+export async function pageLoopDefault(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  while (afterId) break;
+  const { rows = mutate(selectWhere) } = await query(selectWhere);
+  return rows;
+}
 export async function pageComputed(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
   if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
   const { [pick(selectWhere)]: rows } = await query(selectWhere);
@@ -83,3 +90,18 @@ export async function pageObject(selectWhere: SqlStatement, afterId: string | un
   const wrapped = { y: mutate(selectWhere) };
   return wrapped;
 }
+export async function pageSilentDefault(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  const { rows = mutate() } = await query(selectWhere);
+  return rows;
+}
+export async function pageSilentComputed(selectWhere: SqlStatement, afterId: string | undefined, query: Reader) {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  const { [pick()]: rows } = await query(selectWhere);
+  return rows;
+}
+export const pageArrowSilent = async (selectWhere: SqlStatement, afterId: string | undefined, query: Reader) => {
+  if (afterId) selectWhere.append(sql` AND id > ${afterId}`);
+  const { rows = mutate() } = await query(selectWhere);
+  return rows;
+};

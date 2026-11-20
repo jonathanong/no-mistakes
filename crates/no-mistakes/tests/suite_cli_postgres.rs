@@ -28,3 +28,6 @@ mod cli_postgres_snapshot_indexed_identifier;
 
 #[path = "cli_postgres_snapshot_issue_3651.rs"]
 mod cli_postgres_snapshot_issue_3651;
+
+#[path = "cli_postgres_snapshot_require_query_annotation_destructured.rs"]
+mod cli_postgres_snapshot_require_query_annotation_destructured;

@@ -51,6 +51,10 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
     Expr::Function(summary)
 }
 
+// The proof may come from a lowering the general summary does not use, so a
+// function the evaluator treats as unsupported elsewhere stays unsupported.
+// A supported summary omits property defaults, computed keys, and
+// non-identifier rest on a destructured call; those patterns get no proof.
 fn summary_proof(
     value: &oxc_ast::ast::Function<'_>,
     source: &str,
@@ -61,6 +65,9 @@ fn summary_proof(
         .iter()
         .any(|step| matches!(step, Step::Branch(..)));
     if !branched && !super::append_callback::destructured_append(summary) {
+        return;
+    }
+    if summary.supported && super::super::statements::destructured::hides_append_proof(value) {
         return;
     }
     let candidate = if summary.supported {

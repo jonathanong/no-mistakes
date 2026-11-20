@@ -1,11 +1,13 @@
 use super::super::{expressions::expression, Expr, Step};
-use oxc_ast::ast::BindingPattern;
+use oxc_ast::ast::{BindingPattern, Expression, VariableDeclarator};
+use oxc_ast_visit::{walk, Visit};
 
 // Destructuring a call result runs the call; inert placeholders keep each
-// binding from being read as a builder. The append proof evaluates it as an
-// effect; ordinary lowering binds it as `const tmp = call()` would, so both
-// forms resolve and report identically. Defaults, computed keys and non-plain
-// rest targets run code the summary cannot see, so they stay unsupported.
+// binding from being read as a builder. Ordinary lowering binds every call
+// pattern as `const tmp = call()` would. A property default, a computed key,
+// or a rest target that is not an identifier does not change which call runs.
+// Those forms still run code the append proof cannot see, so that proof keeps
+// them unsupported.
 pub(super) fn bind(
     declaration: &oxc_ast::ast::VariableDeclarator<'_>,
     source: &str,
@@ -21,13 +23,13 @@ pub(super) fn bind(
         Some(value) => value,
         None => return steps.push(Step::Unsupported),
     };
-    if !plain(&declaration.id) {
-        return steps.push(Step::Unsupported);
-    }
     if !matches!(
         call.get_inner_expression(),
         oxc_ast::ast::Expression::CallExpression(_)
     ) {
+        return steps.push(Step::Unsupported);
+    }
+    if as_effect && !plain(&declaration.id) {
         return steps.push(Step::Unsupported);
     }
     let init = declaration.init.as_ref().expect("checked above");
@@ -100,4 +102,41 @@ fn plain(pattern: &BindingPattern<'_>) -> bool {
 
 fn plain_target(pattern: &BindingPattern<'_>) -> bool {
     matches!(pattern, BindingPattern::BindingIdentifier(_))
+}
+
+// A supported summary records the call and drops the default, computed key, or
+// non-identifier rest. Those still run after the callback, so the proof cannot
+// attach. `plain` is the same gate the append lowering uses.
+pub(in crate::codebase::postgres::query_annotation) fn hides_append_proof(
+    value: &oxc_ast::ast::Function<'_>,
+) -> bool {
+    let mut finder = NonPlainCall { found: false };
+    value
+        .body
+        .as_deref()
+        .inspect(|body| finder.visit_function_body(body));
+    finder.found
+}
+
+struct NonPlainCall {
+    found: bool,
+}
+
+impl<'a> Visit<'a> for NonPlainCall {
+    fn visit_variable_declarator(&mut self, declaration: &VariableDeclarator<'a>) {
+        self.found |= call_initializer(declaration.init.as_ref()) && !plain(&declaration.id);
+        walk::walk_variable_declarator(self, declaration);
+    }
+}
+
+// Matches `bind`: await and type wrappers still leave a call expression.
+fn call_initializer(init: Option<&Expression<'_>>) -> bool {
+    init.is_some_and(|init| {
+        let init = init.get_inner_expression();
+        let call = match init {
+            Expression::AwaitExpression(awaited) => awaited.argument.get_inner_expression(),
+            other => other,
+        };
+        matches!(call, Expression::CallExpression(_))
+    })
 }

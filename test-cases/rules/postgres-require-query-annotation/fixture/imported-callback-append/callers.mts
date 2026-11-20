@@ -1,5 +1,5 @@
 import { read } from './db.mjs';
-import { page, replaced, prepended, nested, escaped, pageRows, pageBound, pageStatement, otherBuilder, pageDefault, pageComputed, pageAfter, pageMutate, plainDestructure, pageArray, pageObject } from './pager.mjs';
+import { page, replaced, prepended, nested, escaped, pageRows, pageBound, pageStatement, otherBuilder, pageDefault, pageComputed, pageAfter, pageMutate, plainDestructure, pageArray, pageObject, pageSilentDefault, pageSilentComputed, pageLoopDefault, pageArrowSilent } from './pager.mjs';
 import { sql, type SqlStatement } from './sql.mjs';
 export const first = (after?: string) => page(sql`/* pageWidgets */ SELECT id FROM widgets WHERE TRUE`, after, 50, statement => read(statement));
 export const second = (after?: string) => page(sql`/* pageGadgets */ SELECT id FROM gadgets WHERE TRUE`, after, 50, statement => read(statement));
@@ -35,3 +35,7 @@ export const mutateAfter = (after?: string) => pageMutate(sql`/* mutateAfter */ 
 export const plainRows = () => plainDestructure(sql`/* plainRows */ SELECT id FROM widgets`, statement => read(statement).then(() => ({ rows: [] })));
 export const arrayAfter = (after?: string) => pageArray(sql`/* arrayAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));
 export const objectAfter = (after?: string) => pageObject(sql`/* objectAfter */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));
+export const silentDefault = (after?: string) => pageSilentDefault(sql`/* silentDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));
+export const silentComputed = (after?: string) => pageSilentComputed(sql`/* silentComputed */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));
+export const loopDefault = (after?: string) => pageLoopDefault(sql`/* loopDefault */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));
+export const arrowSilent = (after?: string) => pageArrowSilent(sql`/* arrowSilent */ SELECT id FROM widgets`, after, statement => read(statement).then(() => ({ rows: [] })));
