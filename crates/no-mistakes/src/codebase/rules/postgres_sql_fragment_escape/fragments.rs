@@ -2,7 +2,10 @@ use super::tags::is_fragment_binding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
+use crate::fx::{fx_map, FxHashMap};
 use std::path::{Path, PathBuf};
+
+type RelativeIndex = FxHashMap<PathBuf, FxHashMap<String, Vec<PathBuf>>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) struct Fragment {
@@ -13,6 +16,7 @@ pub(super) struct Fragment {
 pub(super) struct Catalog<'a> {
     pub(super) fragments: Vec<Fragment>,
     pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+    relative: RelativeIndex,
 }
 
 impl<'a> Catalog<'a> {
@@ -44,7 +48,19 @@ impl<'a> Catalog<'a> {
             }
         }
         dedup(&mut fragments);
-        Self { fragments, sources }
+        Self {
+            fragments,
+            sources,
+            relative: relative_index(facts),
+        }
+    }
+
+    pub(super) fn relative_candidates(&self, parent: &Path, stem: &str) -> Vec<PathBuf> {
+        self.relative
+            .get(parent)
+            .and_then(|stems| stems.get(stem))
+            .cloned()
+            .unwrap_or_default()
     }
 
     pub(super) fn local(&self, module: &Path, name: &str) -> Vec<Fragment> {
@@ -70,6 +86,38 @@ impl<'a> Catalog<'a> {
             .cloned()
             .collect()
     }
+}
+
+fn relative_index(facts: &CheckFactMap) -> RelativeIndex {
+    let mut index = fx_map();
+    for file in facts.graph_file_universe() {
+        let Some(stem) = file.file_stem().and_then(|stem| stem.to_str()) else {
+            continue;
+        };
+        let Some(parent) = file.parent() else {
+            continue;
+        };
+        push_relative(&mut index, parent, stem, file);
+        if stem == "index" {
+            let Some(name) = parent.file_name().and_then(|name| name.to_str()) else {
+                continue;
+            };
+            let Some(grand) = parent.parent() else {
+                continue;
+            };
+            push_relative(&mut index, grand, name, file);
+        }
+    }
+    index
+}
+
+fn push_relative(index: &mut RelativeIndex, parent: &Path, stem: &str, file: &Path) {
+    index
+        .entry(parent.to_path_buf())
+        .or_default()
+        .entry(stem.to_string())
+        .or_default()
+        .push(file.to_path_buf());
 }
 
 pub(super) fn dedup(found: &mut Vec<Fragment>) {

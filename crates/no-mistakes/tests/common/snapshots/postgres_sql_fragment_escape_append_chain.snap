@@ -385,6 +385,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "orderItems"
         },
         {
+          "file": "outerMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `keptColumns` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[\"order\" + \"Columns\"].append(extra);",
+          "target": "keptColumns"
+        },
+        {
           "file": "renameAllMutator.ts",
           "import": "defaultSource.ts",
           "line": 4,

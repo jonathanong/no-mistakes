@@ -11,12 +11,12 @@ pub(super) fn module_file(
     importer: &Path,
     specifier: &str,
 ) -> Option<PathBuf> {
-    if let Some(path) = relative_module(facts, importer, specifier) {
+    if let Some(path) = relative_module(catalog, importer, specifier) {
         return Some(path);
     }
     let mut hits = neighbor_hits(graph, importer, specifier);
     if hits.len() != 1 && specifier.starts_with('.') {
-        hits.extend(relative_hits(facts, importer, specifier));
+        hits.extend(relative_hits(catalog, importer, specifier));
     }
     if hits.is_empty() {
         hits.extend(ambient_hits(facts, catalog, specifier));
@@ -52,15 +52,15 @@ fn neighbor_hits(graph: &DepGraph, importer: &Path, specifier: &str) -> Vec<Path
         .collect()
 }
 
-fn relative_module(facts: &CheckFactMap, importer: &Path, specifier: &str) -> Option<PathBuf> {
+fn relative_module(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Option<PathBuf> {
     if !specifier.starts_with('.') {
         return None;
     }
-    let mut hits = relative_hits(facts, importer, specifier);
+    let mut hits = relative_hits(catalog, importer, specifier);
     (hits.len() == 1).then(|| hits.pop()).flatten()
 }
 
-fn relative_hits(facts: &CheckFactMap, importer: &Path, specifier: &str) -> Vec<PathBuf> {
+fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec<PathBuf> {
     let Some(dir) = importer.parent() else {
         return Vec::new();
     };
@@ -71,12 +71,7 @@ fn relative_hits(facts: &CheckFactMap, importer: &Path, specifier: &str) -> Vec<
     let Some(parent) = logical.parent() else {
         return Vec::new();
     };
-    facts
-        .graph_file_universe()
-        .iter()
-        .filter(|file| path_in_parent(file, parent, stem))
-        .cloned()
-        .collect()
+    catalog.relative_candidates(parent, stem)
 }
 
 fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) -> Vec<PathBuf> {
@@ -93,16 +88,6 @@ fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) ->
         })
         .cloned()
         .collect()
-}
-
-fn path_in_parent(file: &Path, parent: &Path, stem: &str) -> bool {
-    let file_stem = file.file_stem().and_then(|stem| stem.to_str());
-    (file.parent() == Some(parent) && file_stem == Some(stem))
-        || (file_stem == Some("index")
-            && file.parent().is_some_and(|dir| {
-                dir.file_name().and_then(|name| name.to_str()) == Some(stem)
-                    && dir.parent() == Some(parent)
-            }))
 }
 
 fn path_matches(path: &Path, stem: &str) -> bool {
