@@ -1,4 +1,4 @@
-<!-- cspell:ignore bunx cacheDir nameFilters nohup setupFiles testNamePattern unconfigured -->
+<!-- cspell:ignore bunx cacheDir dlx nameFilters nohup setupFiles testNamePattern unconfigured -->
 
 # `github-actions-vitest-project-selection`
 
@@ -19,22 +19,36 @@ The rule reads workflow files directly under `.github/workflows/*.{yml,yaml}`
 and composite `action.yml` / `action.yaml` files under `.github/actions/`. A
 file is judged only when a configured project lists that path or a glob that
 matches it. Other files, including a workflow that selects an unconfigured
-project, are silent. Invalid YAML is not a finding. A command that contains
-`$` or a backtick is not judged.
+project, are silent. Invalid YAML is not a finding.
+
+A `$` or a backtick leaves the command unjudged only when it is a positional,
+the value of `--project`, or the value of a flag this rule does not know.
+A known value flag still counts: `--shard ${{ matrix.shard }}`,
+`--shard "$CI_SHARD"`, `--config "$CONFIG"`, and `--outputFile "$OUT"` do not
+hide a positional file on the same command. An unquoted `${{ ... }}` value is
+one flag value, including the words before `}}`.
 
 A Vitest invocation is the `vitest` command, including a path whose last
 segment is `vitest`, or `vitest` launched by `pnpm`, `npm`, `npx`, `yarn`,
-`bun`, or `bunx` (`exec`, `x`, and `run vitest`). `pnpm run test` is not
-Vitest. Leading assignments and the wrappers `sudo`, `command`, `time`,
-`nice`, `nohup`, and `env` do not hide the command.
+`bun`, or `bunx`. `exec`, `x`, `dlx`, and `run vitest` launch that binary.
+`pnpm dlx vitest` and `yarn dlx vitest` do too. After `exec`, `x`, `dlx`,
+`npx`, or `bunx`, a later `vitest` token is the command, so
+`pnpm exec ./scripts/with-env vitest run --project widgets src/widgets.test.ts`
+is judged. Package scripts stay out of scope: `pnpm test` and
+`pnpm test -- --project widgets src/widgets.test.ts` are not Vitest, because
+the script body is not in the workflow. Leading assignments, the shell words
+`if`, `elif`, `then`, `else`, `do`, `while`, and `until`, and the wrappers
+`sudo`, `command`, `time`, `nice`, `nohup`, and `env` do not hide the command.
 
-On an invocation that passes `--project` or `--project=<name>` for a
-configured project, a positional test file is always a finding. A positional
-test name, `-t`, or `--testNamePattern` is a finding only when that project's
-`nameFilters` is `reject`. The default is `allow`, which keeps non-file name
-filters silent. When several configured projects are selected, a file finding
-names the first and a name finding names the first project whose `nameFilters`
-is `reject`.
+A positional test file is a finding for a configured project selected with
+`--project` or `--project=<name>`. The same file is a finding when the command
+omits `--project`: the workflow is already limited to the projects configured
+for it, and the finding names the first of those projects in name order. A
+positional test name, `-t`, or `--testNamePattern` is a finding only when that
+project's `nameFilters` is `reject`. The default is `allow`, which keeps
+non-file name filters silent. When several configured projects are selected, a
+file finding names the first and a name finding names the first project whose
+`nameFilters` is `reject`.
 
 A positional is a test file when it contains `/`, `\`, `*`, `?`, or `[`, or
 when it contains a dot and ends in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
@@ -42,12 +56,16 @@ when it contains a dot and ends in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
 `watch`, `dev`, `related`, `bench`, `list`, and `init` are not positionals.
 Known value flags consume their next argument or an inline `--flag=value`.
 That includes `--config`, `--dir`, `--root`/`-r`, `--workspace`, `--exclude`,
-`--coverage.include`, `--coverage.exclude`, `--cacheDir`, `--setupFiles`,
-`--changed`, `--outputFile`, and `--outputFile.<reporter>`. `--root ./apps/web`
-and `--coverage.include='src/**'` are not file filters. `--` ends option
-parsing. Flags this rule does not know do not consume the next token.
+`--coverage.include`, `--coverage.exclude`, `--coverage.thresholds.*`,
+`--cacheDir`, `--setupFiles`, `--changed`, `--shard`, `--outputFile`, and
+`--outputFile.<reporter>`. `--root ./apps/web` and
+`--coverage.include='src/**'` are not file filters. `--` ends option parsing.
+A flag this rule does not know consumes the next token only when that token is
+`true`, `false`, or a number, so `--silent false` and
+`--coverage.thresholds.lines 80` are not test names. A following file still is.
 
-Flow-style steps that the line scan cannot place are reported on line 1.
+A flow-style step is reported on the source line that contains the `run`
+script.
 
 ## Options
 
@@ -133,7 +151,7 @@ filter is intentional.
 
 ### Unanalyzable inputs
 
-Invalid YAML and commands that contain `$` or a backtick produce no finding. They are not sent through `options.unanalyzable`. A literal positional file or name on a recognized Vitest command is judged.
+Invalid YAML produces no finding. A command is also left unjudged when a positional, a `--project` value, or an unknown flag value contains `$` or a backtick. Those inputs are not sent through `options.unanalyzable`. A literal positional file or name on a recognized Vitest command is judged, including when a known value flag such as `--shard` is dynamic.
 
 ## Suppression
 

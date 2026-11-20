@@ -44,5 +44,30 @@ pub(super) const VALUE_FLAGS: &[&str] = &[
 ];
 
 pub(super) fn takes_value(name: &str) -> bool {
-    VALUE_FLAGS.contains(&name) || name.starts_with("--outputFile.")
+    VALUE_FLAGS.contains(&name)
+        || name.starts_with("--outputFile.")
+        || name.starts_with("--coverage.thresholds.")
+}
+
+pub(super) fn literal_value(text: &str) -> bool {
+    matches!(text, "true" | "false") || is_number(text)
+}
+
+fn is_number(text: &str) -> bool {
+    let mut digits = 0;
+    let mut dot = false;
+    for ch in text.chars() {
+        if ch == '.' {
+            if dot {
+                return false;
+            }
+            dot = true;
+            continue;
+        }
+        if !ch.is_ascii_digit() {
+            return false;
+        }
+        digits += 1;
+    }
+    digits > 0
 }

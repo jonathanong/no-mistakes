@@ -1,0 +1,10 @@
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: wrapper
+        run: pnpm exec ./scripts/with-env vitest run --project widgets packages/widgets/widget.test.ts
+      - name: shard
+        run: vitest run --project widgets src/widgets.test.ts --shard "$CI_SHARD"

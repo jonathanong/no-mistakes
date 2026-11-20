@@ -86,6 +86,10 @@ fn invalid_utf8_github_actions() {
                 "github-actions-docker-host-ports",
             ),
             c(
+                "github_actions_vitest_project_selection",
+                "github-actions-vitest-project-selection",
+            ),
+            c(
                 "github_actions_composite_step_schema",
                 "github-actions-composite-step-schema",
             ),
@@ -120,6 +124,11 @@ fn invalid_utf8_github_actions() {
         &report,
         "github_actions_docker_host_ports",
         "github-actions-docker-host-ports",
+    );
+    assert_definite(
+        &report,
+        "github_actions_vitest_project_selection",
+        "github-actions-vitest-project-selection",
     );
     assert_definite(
         &report,

@@ -12,3 +12,9 @@ jobs:
         run: pnpm exec vitest run --project items -t items
       - name: file filter
         run: vitest run --project items src/items.test.ts
+      - name: boolean value
+        run: pnpm exec vitest run --project items --silent false
+      - name: threshold
+        run: pnpm exec vitest run --project items --coverage.thresholds.lines 80
+      - name: shard file
+        run: pnpm exec vitest run --project items src/shard.test.ts --shard "$CI_SHARD"

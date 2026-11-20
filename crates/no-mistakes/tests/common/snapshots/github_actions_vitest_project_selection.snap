@@ -44,6 +44,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "src/items.test.ts"
         },
         {
+          "file": ".github/workflows/items.yml",
+          "line": 20,
+          "message": ".github/workflows/items.yml:20: job `unit` step 7 narrows Vitest project `items` with positional test file `src/shard.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec vitest run --project items src/shard.test.ts --shard \"$CI_SHARD\"",
+          "target": "src/shard.test.ts"
+        },
+        {
           "file": ".github/workflows/widgets.yml",
           "line": 20,
           "message": ".github/workflows/widgets.yml:20: job `unit` step 7 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
@@ -82,6 +90,94 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-vitest-project-selection",
           "sourceLine": "src/folded.test.ts",
           "target": "src/folded.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 48,
+          "message": ".github/workflows/widgets.yml:48: job `unit` step 14 narrows Vitest project `widgets` with positional test file `src/shard.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: vitest run --project widgets src/shard.test.ts --shard ${{ matrix.shard }}",
+          "target": "src/shard.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 50,
+          "message": ".github/workflows/widgets.yml:50: job `unit` step 15 narrows Vitest project `widgets` with positional test file `src/quoted.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: vitest run --project widgets src/quoted.test.ts --shard \"${{ matrix.shard }}\"",
+          "target": "src/quoted.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 52,
+          "message": ".github/workflows/widgets.yml:52: job `unit` step 16 narrows Vitest project `widgets` with positional test file `src/config.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: vitest run --project widgets src/config.test.ts --config \"$CONFIG\" --outputFile \"$OUT\"",
+          "target": "src/config.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 54,
+          "message": ".github/workflows/widgets.yml:54: job `unit` step 17 narrows Vitest project `widgets` with positional test file `src/then.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: if true; then vitest run --project widgets src/then.test.ts; fi",
+          "target": "src/then.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 56,
+          "message": ".github/workflows/widgets.yml:56: job `unit` step 18 narrows Vitest project `widgets` with positional test file `src/do.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: while true; do vitest run --project widgets src/do.test.ts; done",
+          "target": "src/do.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 58,
+          "message": ".github/workflows/widgets.yml:58: job `unit` step 19 narrows Vitest project `widgets` with positional test file `src/else.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: if false; then true; else vitest run --project widgets src/else.test.ts; fi",
+          "target": "src/else.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 60,
+          "message": ".github/workflows/widgets.yml:60: job `unit` step 20 narrows Vitest project `widgets` with positional test file `src/dlx.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm dlx vitest run --project widgets src/dlx.test.ts",
+          "target": "src/dlx.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 62,
+          "message": ".github/workflows/widgets.yml:62: job `unit` step 21 narrows Vitest project `widgets` with positional test file `src/yarn.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: yarn dlx vitest run --project widgets src/yarn.test.ts",
+          "target": "src/yarn.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 64,
+          "message": ".github/workflows/widgets.yml:64: job `unit` step 22 narrows Vitest project `widgets` with positional test file `packages/widgets/widget.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec ./scripts/with-env vitest run --project widgets packages/widgets/widget.test.ts",
+          "target": "packages/widgets/widget.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 70,
+          "message": ".github/workflows/widgets.yml:70: job `unit` step 25 narrows Vitest project `widgets` with positional test file `src/omitted.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: vitest run src/omitted.test.ts",
+          "target": "src/omitted.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 73,
+          "message": ".github/workflows/widgets.yml:73: job `flow` step 1 narrows Vitest project `widgets` with positional test file `src/flow.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "steps: [{run: pnpm exec vitest run --project widgets src/flow.test.ts}]",
+          "target": "src/flow.test.ts"
         }
       ],
       "warnings": []

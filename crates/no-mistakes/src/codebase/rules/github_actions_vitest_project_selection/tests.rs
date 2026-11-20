@@ -351,6 +351,9 @@ fn launchers_quotes_and_name_filters_follow_the_command() {
     );
 }
 
+#[cfg(test)]
+mod recall_tests;
+
 fn described(script: &str, pairs: &[(&str, NameFilters)]) -> Vec<String> {
     narrowings(script, &policies(pairs))
         .into_iter()
@@ -411,6 +414,7 @@ fn workflow_scan_reports_configured_files_only() {
     let flow = "name: Widgets\non: push\njobs:\n  unit:\n    runs-on: ubuntu-latest\n    steps: [{run: pnpm exec vitest run --project widgets src/widgets.test.ts}]\n";
     let hits = super::runs::check_source(".github/workflows/widgets.yml", flow, &compiled);
     assert_eq!(hits.len(), 1, "{hits:?}");
+    assert_eq!(hits[0].line, 6, "{hits:?}");
 }
 
 #[test]

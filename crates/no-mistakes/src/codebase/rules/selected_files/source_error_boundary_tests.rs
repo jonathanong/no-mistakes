@@ -51,6 +51,10 @@ const CHECKS: &[(&str, Check)] = &[
         rules::github_actions_docker_host_ports::check_with_files,
     ),
     (
+        "github-actions-vitest-project-selection",
+        rules::github_actions_vitest_project_selection::check_with_files,
+    ),
+    (
         "tsconfig-file-coverage",
         rules::tsconfig_file_coverage::check_with_files,
     ),
