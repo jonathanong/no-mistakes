@@ -6,13 +6,12 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-mod edit;
-mod flow;
 mod judge;
 mod options;
+mod output;
+mod output_syntax;
 mod scan;
 mod text;
-mod walk;
 
 pub const RULE_ID: &str = "github-actions-cache-key-policy";
 
@@ -78,7 +77,12 @@ fn check_path(
 }
 
 fn evaluate(rel: &str, source: &str, action: bool, options: &options::Options) -> Vec<RuleFinding> {
-    match scan::analyze(source, action) {
+    let configured: Vec<String> = options
+        .caches
+        .iter()
+        .map(|cache| text::norm_path(&cache.path))
+        .collect();
+    match scan::analyze(source, action, &configured) {
         scan::Document::Ignored => Vec::new(),
         scan::Document::Invalid { line, detail } => vec![hit(
             rel,

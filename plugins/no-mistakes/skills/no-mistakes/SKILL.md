@@ -358,7 +358,8 @@ Move oversized scripts into files and invoke them; see the
 
 For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
-`allowHashFiles` defaults to false. `matrix.os` does not satisfy `runner.os`. See the
+`allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
+`runner.os`. The output named by the key must be a hash of the lockfile. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths

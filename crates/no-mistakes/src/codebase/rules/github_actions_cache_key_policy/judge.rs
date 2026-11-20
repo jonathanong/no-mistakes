@@ -1,6 +1,7 @@
 use super::options::{CacheSpec, Options};
+use super::output::proven_output_names;
 use super::scan::{Field, Job, Step};
-use super::text::{has_fragment, hash_args, mentions_path, norm_path, output_names, path_entries};
+use super::text::{has_fragment, hash_args, norm_path, path_entries};
 use super::RuleFinding;
 use super::RULE_ID;
 
@@ -112,10 +113,7 @@ fn shell_proves(step: &Step, key: &str, lockfile: &str) -> bool {
     let Some(run) = step.run.as_deref() else {
         return false;
     };
-    if !mentions_path(run, lockfile) {
-        return false;
-    }
-    output_names(run)
+    proven_output_names(run, lockfile)
         .iter()
         .any(|name| has_fragment(key, &format!("steps.{id}.outputs.{name}")))
 }
@@ -139,11 +137,11 @@ fn digest_message(path: &str, lockfile: &str, key: &str, options: &Options) -> S
     let hashed = hash_args(key).iter().any(|arg| norm_path(arg) == lockfile);
     if hashed && !options.allow_hash_files {
         return format!(
-            "Cache key for `{path}` calls hashFiles for `{lockfile}`, but allowHashFiles is false. Set allowHashFiles to true or add a preceding run step that mentions `{lockfile}` and writes the digest to GITHUB_OUTPUT."
+            "Cache key for `{path}` calls hashFiles for `{lockfile}`, but allowHashFiles is false. Set allowHashFiles to true or add a preceding run step that writes a hash of `{lockfile}` to the GITHUB_OUTPUT name referenced by the key."
         );
     }
     format!(
-        "Cache key for `{path}` does not prove a digest of `{lockfile}`. Use hashFiles('{lockfile}') when allowHashFiles is true, or a preceding run step that mentions `{lockfile}` and writes the digest to GITHUB_OUTPUT."
+        "Cache key for `{path}` does not prove a digest of `{lockfile}`. Use hashFiles('{lockfile}') when allowHashFiles is true, or a preceding run step that writes a hash of `{lockfile}` to the GITHUB_OUTPUT name referenced by the key."
     )
 }
 

@@ -1,6 +1,6 @@
-use super::edit::{self, Slot};
-use super::flow::{self, comment_value, list_item, mapping_key, split_kv};
-use super::scan::{Job, Step};
+use super::flow::{self, comment_value, list_item, mapping_key};
+use super::scalar::{self, Scalar, Seq};
+use super::Job;
 
 #[expect(
     clippy::struct_excessive_bools,
@@ -8,31 +8,22 @@ use super::scan::{Job, Step};
 )]
 pub(super) struct Walker {
     pub(super) action: bool,
-    pub(super) in_jobs: bool,
-    pub(super) job_open: bool,
-    pub(super) jobs_indent: usize,
-    pub(super) job_indent: Option<usize>,
-    pub(super) in_steps: bool,
-    pub(super) steps_indent: usize,
-    pub(super) step_dash: Option<usize>,
+    in_jobs: bool,
+    job_open: bool,
+    jobs_indent: usize,
+    job_indent: Option<usize>,
+    in_steps: bool,
+    steps_indent: usize,
+    step_dash: Option<usize>,
     pub(super) in_with: bool,
     pub(super) with_indent: usize,
     pub(super) jobs: Vec<Job>,
-    pub(super) scalar: Option<edit::Scalar>,
-    pub(super) seq: Option<(edit::Seq, usize)>,
-}
-
-pub(super) fn walk_jobs(source: &str, action: bool) -> Vec<Job> {
-    let mut walker = Walker::new(action);
-    for (index, line) in source.lines().enumerate() {
-        walker.feed(index + 1, line);
-    }
-    edit::finish_scalar(&mut walker);
-    walker.jobs
+    pub(super) scalar: Option<Scalar>,
+    pub(super) seq: Option<Seq>,
 }
 
 impl Walker {
-    fn new(action: bool) -> Self {
+    pub(super) fn new(action: bool) -> Self {
         Self {
             action,
             in_jobs: false,
@@ -50,39 +41,39 @@ impl Walker {
         }
     }
 
-    fn feed(&mut self, line_no: usize, raw: &str) {
-        if edit::consume_scalar(self, raw) {
+    pub(super) fn feed(&mut self, line_no: usize, raw: &str) {
+        if scalar::consume_scalar(self, raw) {
             return;
         }
         let trimmed = raw.trim();
         if trimmed.is_empty() || trimmed.starts_with('#') || trimmed == "---" || trimmed == "..." {
             return;
         }
-        if edit::consume_seq(self, line_no, raw) {
+        if scalar::consume_seq(self, line_no, raw) {
             return;
         }
         if let Some((indent, rest)) = list_item(raw) {
-            self.item(line_no, indent, rest);
+            self.item(line_no, indent, rest, raw);
         } else if let Some((indent, key, value)) = mapping_key(raw) {
             self.key(line_no, indent, key, comment_value(value));
         }
     }
 
-    fn item(&mut self, line_no: usize, indent: usize, rest: &str) {
+    fn item(&mut self, line_no: usize, indent: usize, rest: &str, raw: &str) {
         if !self.in_steps
             || indent < self.steps_indent
             || self.step_dash.is_some_and(|dash| indent > dash)
         {
             return;
         }
-        edit::finish_step(self);
+        scalar::finish_step(self);
         self.step_dash = Some(indent);
         self.ensure_job();
         self.jobs
             .last_mut()
             .unwrap()
             .steps
-            .push(Step::blank(line_no));
+            .push(super::Step::blank(line_no));
         let rest = rest.trim();
         if rest.starts_with('{') {
             if let Some(step) = self.jobs.last_mut().and_then(|job| job.steps.last_mut()) {
@@ -90,13 +81,13 @@ impl Walker {
             }
             return;
         }
-        if let Some((key, value)) = split_kv(rest) {
-            self.apply_step(line_no, indent, key, comment_value(value));
+        if let Some((key, value)) = flow::split_kv(rest) {
+            self.apply_step(line_no, key_column(raw, indent), key, comment_value(value));
         }
     }
 
     fn key(&mut self, line_no: usize, indent: usize, key: &str, value: &str) {
-        if !self.action && key == "jobs" && value.is_empty() && !self.in_steps {
+        if !self.action && key == "jobs" && value.is_empty() && !self.in_steps && indent == 0 {
             self.in_jobs = true;
             self.jobs_indent = indent;
             return;
@@ -109,7 +100,7 @@ impl Walker {
             return;
         }
         if self.in_steps && indent <= self.steps_indent {
-            edit::finish_step(self);
+            scalar::finish_step(self);
             self.in_steps = false;
             self.step_dash = None;
         }
@@ -121,7 +112,7 @@ impl Walker {
             && self.job_indent.is_none_or(|job| indent == job)
         {
             self.job_indent = Some(indent);
-            self.start_job();
+            self.start_job(key);
         }
     }
 
@@ -142,24 +133,15 @@ impl Walker {
     }
 
     fn apply_step(&mut self, line: usize, indent: usize, key: &str, value: &str) {
-        match key {
-            "id" => edit::assign(self, Slot::Id, line, indent, value),
-            "uses" => edit::assign(self, Slot::Uses, line, indent, value),
-            "run" => edit::assign(self, Slot::Run, line, indent, value),
-            "with" => edit::open_with(self, line, indent, value),
-            _ if flow::block_header(value) => edit::assign(self, Slot::Skip, line, indent, value),
-            _ => {}
+        if key == "with" {
+            scalar::open_with(self, line, indent, value);
+            return;
         }
+        scalar::assign(self, key, line, indent, value);
     }
 
     fn apply_with(&mut self, line: usize, indent: usize, key: &str, value: &str) {
-        match key {
-            "path" => edit::assign(self, Slot::Path, line, indent, value),
-            "key" => edit::assign(self, Slot::Key, line, indent, value),
-            "restore-keys" => edit::assign(self, Slot::Restore, line, indent, value),
-            _ if flow::block_header(value) => edit::assign(self, Slot::Skip, line, indent, value),
-            _ => {}
-        }
+        scalar::assign(self, key, line, indent, value);
     }
 
     fn steps_allowed(&self) -> bool {
@@ -167,26 +149,38 @@ impl Walker {
     }
 
     fn enter_steps(&mut self, indent: usize) {
-        edit::finish_step(self);
+        scalar::finish_step(self);
         if self.action && self.jobs.is_empty() {
             self.job_open = true;
-            self.jobs.push(Job { steps: Vec::new() });
+            self.jobs.push(Job {
+                name: "(composite)".to_string(),
+                steps: Vec::new(),
+            });
         }
         self.in_steps = true;
         self.steps_indent = indent;
         self.step_dash = None;
     }
 
-    fn start_job(&mut self) {
-        edit::finish_step(self);
+    fn start_job(&mut self, name: &str) {
+        scalar::finish_step(self);
         self.in_steps = false;
         self.job_open = true;
-        self.jobs.push(Job { steps: Vec::new() });
+        self.jobs.push(Job {
+            name: name.to_string(),
+            steps: Vec::new(),
+        });
     }
 
     fn ensure_job(&mut self) {
         if self.jobs.is_empty() {
-            self.start_job();
+            let name = if self.action { "(composite)" } else { "" };
+            self.start_job(name);
         }
     }
+}
+
+fn key_column(raw: &str, dash: usize) -> usize {
+    let tail = raw.get(dash + 2..).unwrap_or("");
+    dash + 2 + tail.chars().take_while(|c| *c == ' ').count()
 }

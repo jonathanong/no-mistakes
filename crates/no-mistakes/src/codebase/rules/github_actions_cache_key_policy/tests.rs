@@ -19,7 +19,7 @@ fn source(root: &str, relative: &str) -> String {
 }
 
 fn expect_jobs(text: &str, action: bool) -> Vec<scan::Job> {
-    match scan::analyze(text, action) {
+    match scan::analyze(text, action, &[]) {
         scan::Document::Jobs(jobs) => jobs,
         scan::Document::Invalid { line, detail } => panic!("invalid {line}: {detail}"),
         scan::Document::Unaligned => panic!("unaligned"),
@@ -88,6 +88,12 @@ fn fragments_match_whole_expression_tokens() {
         "widgets-runner.os-${{ runner.arch }}",
         "runner.os"
     ));
+    assert!(!text::has_fragment("${{ 'runner.os' }}", "runner.os"));
+    assert!(!text::has_fragment("${{ \"runner.os\" }}", "runner.os"));
+    assert!(text::has_fragment(
+        "${{ 'runner.os' }}-${{ runner.os }}",
+        "runner.os"
+    ));
 }
 
 #[test]
@@ -135,13 +141,18 @@ fn ordinary_block_steps_keep_key_and_restore_text() {
 
 #[test]
 fn anchors_fail_closed_and_non_composite_actions_are_ignored() {
-    match scan::analyze(&source("policy", ".github/workflows/alias.yml"), false) {
+    match scan::analyze(
+        &source("policy", ".github/workflows/alias.yml"),
+        false,
+        &[".cache/widgets".to_string()],
+    ) {
         scan::Document::Unaligned => {}
         other => panic!("expected alignment finding, got {other:?}"),
     }
     match scan::analyze(
         &source("policy", ".github/actions/node-action/action.yml"),
         true,
+        &[],
     ) {
         scan::Document::Ignored => {}
         other => panic!("expected ignored node action, got {other:?}"),
@@ -184,6 +195,12 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
     assert_needles(&findings, "sequence-restore.yml", &[restore]);
     assert_needles(&findings, "multiline-path.yml", &[platform, digest]);
     assert_needles(&findings, "alias.yml", &["could not be aligned"]);
+    assert_needles(
+        &findings,
+        "literal-fragment.yml",
+        &["missing platform fragments `runner.os`"],
+    );
+    assert_needles(&findings, "unrelated-output.yml", &[digest]);
     assert_needles(&findings, "workflows/invalid.yml", &["Invalid YAML"]);
     assert_needles(
         &findings,
@@ -205,10 +222,17 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "nested/skip.yml",
         "notes/cache.yml",
         "node-action/action.yml",
+        "printf-output.yml",
+        "heredoc-output.yml",
+        "brace-output.yml",
+        "multiline-key.yml",
+        "quoted-key.yml",
+        "alias-other.yml",
+        "hash-widgets/action.yml",
     ] {
         assert_silent(&findings, file);
     }
-    assert_eq!(findings.len(), 27, "{findings:?}");
+    assert_eq!(findings.len(), 29, "{findings:?}");
 }
 
 #[test]

@@ -7,18 +7,11 @@ pub(super) fn is_cache_action(uses: &str) -> bool {
     )
 }
 
+#[cfg(test)]
+pub(super) use super::output::{output_names, proven_output_names};
+
 pub(super) fn yaml_plain(value: &str) -> String {
-    let text = value.trim();
-    if text.contains('\n') {
-        return text.to_string();
-    }
-    if let Some(inner) = quoted(text, '"') {
-        return inner.replace("\\\"", "\"");
-    }
-    if let Some(inner) = quoted(text, '\'') {
-        return inner.replace("''", "'");
-    }
-    text.split(" #").next().unwrap_or(text).trim().to_string()
+    super::super::github_actions_workflow_files::step_lines::yaml_plain(value)
 }
 
 pub(super) fn norm_path(path: &str) -> String {
@@ -37,9 +30,28 @@ pub(super) fn path_entries(value: &str) -> Vec<String> {
 }
 
 pub(super) fn has_fragment(value: &str, fragment: &str) -> bool {
+    let fragment = fragment.trim();
     expressions(value)
         .iter()
-        .any(|body| contains_token(body, fragment.trim(), false))
+        .any(|body| contains_token(&strip_expr_strings(body), fragment, false))
+}
+
+pub(super) fn command_hashes_lockfile(cmd: &str, lockfile: &str) -> bool {
+    const TOOLS: &[&str] = &[
+        "sha256sum",
+        "sha384sum",
+        "sha512sum",
+        "sha224sum",
+        "sha1sum",
+        "shasum",
+        "b2sum",
+        "b3sum",
+        "md5sum",
+        "cksum",
+    ];
+    let tool = TOOLS.iter().any(|tool| contains_token(cmd, tool, false))
+        || (contains_token(cmd, "openssl", false) && contains_token(cmd, "dgst", false));
+    tool && mentions_path(cmd, lockfile)
 }
 
 pub(super) fn hash_args(value: &str) -> Vec<String> {
@@ -53,33 +65,6 @@ pub(super) fn hash_args(value: &str) -> Vec<String> {
 pub(super) fn mentions_path(run: &str, lockfile: &str) -> bool {
     let code: String = run.lines().map(shell_line).collect::<Vec<_>>().join("\n");
     contains_token(&code, &norm_path(lockfile), true)
-}
-
-pub(super) fn output_names(run: &str) -> Vec<String> {
-    let mut names = Vec::new();
-    for line in run.lines().map(shell_line) {
-        if !line.contains("GITHUB_OUTPUT") {
-            continue;
-        }
-        let Some(name) = echo_name(line) else {
-            continue;
-        };
-        if !names.contains(&name) {
-            names.push(name);
-        }
-    }
-    names
-}
-
-fn quoted(value: &str, quote: char) -> Option<String> {
-    let rest = value.strip_prefix(quote)?;
-    let end = rest.find(quote)?;
-    let after = rest[end + 1..].trim();
-    if after.is_empty() || after.starts_with('#') {
-        Some(rest[..end].to_string())
-    } else {
-        None
-    }
 }
 
 fn expressions(value: &str) -> Vec<String> {
@@ -124,7 +109,7 @@ fn next_char(text: &str) -> char {
     text.chars().next().unwrap_or(' ')
 }
 
-fn shell_line(line: &str) -> &str {
+pub(super) fn shell_line(line: &str) -> &str {
     let trimmed = line.trim();
     if trimmed.starts_with('#') {
         return "";
@@ -132,21 +117,31 @@ fn shell_line(line: &str) -> &str {
     line.split(" #").next().unwrap_or(line)
 }
 
-fn echo_name(line: &str) -> Option<String> {
-    let rest = line.split("echo").nth(1)?.trim_start();
-    let rest = rest
-        .strip_prefix('"')
-        .or_else(|| rest.strip_prefix('\''))
-        .unwrap_or(rest);
-    let name: String = rest
-        .chars()
-        .take_while(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-')
-        .collect();
-    let first = name.chars().next()?;
-    if !first.is_ascii_alphabetic() && first != '_' {
-        return None;
+fn strip_expr_strings(body: &str) -> String {
+    let mut out = String::new();
+    let mut chars = body.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c != '\'' && c != '"' {
+            out.push(c);
+            continue;
+        }
+        let quote = c;
+        while let Some(next) = chars.next() {
+            if quote == '"' && next == '\\' {
+                chars.next();
+                continue;
+            }
+            if next == quote {
+                if quote == '\'' && chars.peek() == Some(&'\'') {
+                    chars.next();
+                    continue;
+                }
+                break;
+            }
+        }
+        out.push(' ');
     }
-    rest[name.len()..].starts_with('=').then_some(name)
+    out
 }
 
 fn push_hash_args(body: &str, args: &mut Vec<String>) {

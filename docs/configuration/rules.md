@@ -570,7 +570,9 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `caches` lists each portable cache `path`, the `lockfile` that must be digested, and the
 `keyParts` expression fragments (such as `runner.os`) that the key must contain.
 `rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. A cache path outside
-`caches` is silent. `matrix.os` does not satisfy `runner.os`.
+`caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
+`${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
+`GITHUB_OUTPUT` name the key reads.
 
 ```yaml
 rules:

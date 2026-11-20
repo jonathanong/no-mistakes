@@ -24,20 +24,25 @@ any entry equals a configured path. A comma is not a path separator.
 
 For each match, the `key` must contain every configured `keyParts` fragment as its own
 `${{ }}` expression token. `matrix.os` does not satisfy `runner.os`. `runner.os_name`,
-`runner.os.extra`, `matrix.runner.os`, and the literal text `runner.os` outside an expression do
-not satisfy `runner.os` either.
+`runner.os.extra`, `matrix.runner.os`, the literal text `runner.os` outside an expression, and a
+string literal such as `${{ 'runner.os' }}` or `${{ "runner.os" }}` do not satisfy `runner.os`.
+A fragment on a later line of a plain or double-quoted `key` scalar still counts.
 
 The key must also prove a digest of the configured lockfile, in either of these ways:
 
 - `hashFiles` with that exact path as an argument, and only when `allowHashFiles` is true.
   `hashFiles('orders.lock', 'widgets.lock')` satisfies `widgets.lock`. A glob that might include
   the lockfile does not. `hashFiles` outside `${{ }}` does not count.
-- An earlier step in the same job has an `id`, its `run` script mentions the lockfile as a path
-  token, and the same physical line writes `name=...` to `GITHUB_OUTPUT`. The key must then
-  contain `steps.<id>.outputs.<name>`. A later step, another job, a different output name, or a
-  script that does not mention the lockfile does not count. The rule does not run the script.
-  A full-line `#` comment and a trailing ` #` comment are ignored. `-` is part of a path token, so
-  `not-widgets.lock` does not match `widgets.lock`. `/` is a boundary, so `dir/widgets.lock` matches.
+- An earlier step in the same job, including an earlier step in the same composite action, has an
+  `id`. Its `run` script writes the `GITHUB_OUTPUT` name that the key reads as
+  `steps.<id>.outputs.<name>`, and that output's value is a hash of the lockfile. `echo`,
+  `printf`, an unquoted heredoc, and a brace group redirected to `GITHUB_OUTPUT` all count. A
+  variable assigned from `sha256sum widgets.lock` (or another checksum command that names the
+  lockfile) and then written to that output counts. `cat`, a constant, a hash of a different
+  file, a later step, another job, or a different output name does not. The rule does not run
+  the script. A full-line `#` comment and a trailing ` #` comment are ignored. `-` is part of a
+  path token, so `not-widgets.lock` does not match `widgets.lock`. `/` is a boundary, so
+  `dir/widgets.lock` matches.
 
 `rejectRestoreKeys` defaults to true. Any non-empty `restore-keys` value, including a YAML
 sequence, is a finding. An empty or missing value is allowed. Set `rejectRestoreKeys` to false to
@@ -47,7 +52,8 @@ A missing `key` is reported on the step. Platform and digest gaps are reported o
 `restore-keys` is reported on its own line. Invalid YAML is reported at the parser location.
 Workflow or action bytes that are not UTF-8 are reported on the line of the first invalid byte.
 Anchors, aliases, and other shapes whose cache steps cannot be aligned to ordinary block locations
-produce one finding on line 1 and are not partially judged.
+produce one finding on line 1 when a configured path is involved, and are not partially judged.
+A cache step that does not use a configured path stays silent, including when the file uses anchors.
 
 ## Options
 
@@ -75,9 +81,8 @@ rules:
 ## Valid example
 
 With `allowHashFiles` true, the first key carries both platform fragments and `hashFiles`. The
-second key uses an earlier step in the same job instead: that step has an `id`, mentions
-`widgets.lock` in `run`, and writes `GITHUB_OUTPUT` on the same physical line. Neither step sets
-`restore-keys`.
+second key uses an earlier step in the same job instead: that step has an `id`, hashes
+`widgets.lock`, and writes that digest to `GITHUB_OUTPUT`. Neither step sets `restore-keys`.
 
 ```yaml
 name: Widgets
@@ -87,7 +92,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: lock
-        run: echo "digest=$(cat widgets.lock)" >> "$GITHUB_OUTPUT"
+        run: |
+          digest=$(sha256sum widgets.lock | awk '{print $1}')
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         with:
           path: .cache/widgets
@@ -121,10 +128,10 @@ jobs:
 
 Put each configured fragment in the key as its own expression, for example `${{ runner.os }}` and
 `${{ runner.arch }}`. Add a digest with `hashFiles('widgets.lock')` when `allowHashFiles` is true,
-or with a preceding same-job step that mentions the lockfile and writes `GITHUB_OUTPUT`. Remove
+or with a preceding same-job step that writes a hash of the lockfile to `GITHUB_OUTPUT`. Remove
 `restore-keys`, or set `rejectRestoreKeys` to false when a prefix fallback is intentional. Rewrite
-anchors and aliases as ordinary block-style steps. There is no automatic fix: the platform list and
-the lockfile path come from configuration.
+anchors and aliases that affect a configured path as ordinary block-style steps. There is no
+automatic fix: the platform list and the lockfile path come from configuration.
 
 ## Analysis
 
