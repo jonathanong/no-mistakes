@@ -69,12 +69,14 @@ matches a fragment only when exactly one exported fragment has that name.
 ## Valid example
 
 ```ts
+// widget-columns.ts
 import sql from "@example/sql";
 
 export const widgetColumns = sql`id, state`;
 ```
 
 ```ts
+// list-widgets.ts
 import { type SessionExecutor } from "@example/db";
 import sql from "@example/sql";
 import { widgetColumns } from "./widget-columns";
@@ -91,6 +93,14 @@ No other file writes `widgetColumns`, rebinds it, or escapes its module.
 ## Counterexample
 
 ```ts
+// widget-columns.ts
+import sql from "@example/sql";
+
+export const widgetColumns = sql`id, state`;
+```
+
+```ts
+// extend-member.ts
 import { widgetColumns } from "./widget-columns";
 
 export function extend(extra: unknown) {
@@ -99,6 +109,7 @@ export function extend(extra: unknown) {
 ```
 
 ```ts
+// extend-namespace.ts
 import * as columns from "./widget-columns";
 
 export function extend(extra: unknown) {
