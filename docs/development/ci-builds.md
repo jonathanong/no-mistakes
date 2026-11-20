@@ -404,9 +404,8 @@ macOS queues. The first change therefore balances work across two shards rather 
 increasing that overhead. Actual batch and end-to-end durations remain the
 acceptance evidence; estimated loads do not establish a ten-minute result.
 
-The first completed follow-up run,
-[`43403560928`](https://github.com/jonathanong/no-mistakes/actions/runs/43403560928),
-at `e3d89a6f0`, passed with the weighted plan. Its macOS PostgreSQL batches took
+The first completed follow-up run `43403560928`, at `e3d89a6f0`, passed with
+the weighted plan. Its macOS PostgreSQL batches took
 153/223 seconds, compared with 318/177 seconds in the baseline. The two native
 Rust jobs took 4m22s/5m42s; the slowest job improved from 8m13s to 5m42s. The
 production inventory had grown to 374 cases, distributed 186/188 with 431/430
