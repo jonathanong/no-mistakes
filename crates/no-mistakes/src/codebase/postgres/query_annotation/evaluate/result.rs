@@ -74,3 +74,15 @@ fn primitive_result(expr: &Expr) -> bool {
 #[cfg(test)]
 #[path = "result/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+mod primitive_placeholder {
+    use super::primitive_result;
+    use crate::codebase::postgres::query_annotation::Expr;
+
+    #[test]
+    fn placeholder_is_a_primitive_result_and_unknown_is_not() {
+        assert!(primitive_result(&Expr::Primitive));
+        assert!(!primitive_result(&Expr::Unknown));
+    }
+}
