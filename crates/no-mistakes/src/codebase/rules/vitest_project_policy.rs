@@ -133,6 +133,21 @@ fn finding(root: &Path, value: &Value, project: &str, message: String) -> RuleFi
         message: format!("Vitest project {project}: {message}; declare literal test properties to keep project policy statically verifiable"),
         import: None, target: None }
 }
+
+fn exclude_finding(root: &Path, value: &Value, project: &str, missing: &[String]) -> RuleFinding {
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.into(),
+        file: relative_slash_path(root, &value.file),
+        line: value.line,
+        message: format!(
+            "Vitest project {project}: add {} to test.exclude",
+            missing.join(", ")
+        ),
+        import: None,
+        target: None,
+    }
+}
 fn incomplete(root: &Path, value: &Value, property: &str, project: &str) -> CheckFailure {
     CheckFailure { consumer: RULE_ID.into(), file: Some(PathBuf::from(relative_slash_path(root, &value.file))),
         property: Some(property.into()), message: format!("Vitest project {project} is incomplete: {property} is not statically known; replace dynamic configuration with literal properties in the config or declared helpers") }

@@ -645,7 +645,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "exclude-empty-array.ts",
           "line": 1,
-          "message": "Vitest project <root>: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project <root>: add **/node_modules/**, **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "export default { test: { exclude: [] } };"
         }
@@ -719,7 +719,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "exclude-missing-glob.ts",
           "line": 1,
-          "message": "Vitest project <root>: test.exclude must include **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "export default { test: { exclude: ['**/node_modules/**', '**/widgets/**'] } };"
         }
@@ -751,7 +751,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "exclude-non-array.ts",
           "line": 1,
-          "message": "Vitest project <root>: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project <root>: add **/node_modules/**, **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "export default { test: { exclude: 'widgets' } };"
         }
@@ -827,7 +827,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "exclude-project-empty.ts",
           "line": 2,
-          "message": "Vitest project orders: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project orders: add **/node_modules/**, **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "{ test: { name: 'orders', exclude: [] } },"
         }
@@ -847,14 +847,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "exclude-project-inherit.ts",
           "line": 2,
-          "message": "Vitest project <root>: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project <root>: add **/node_modules/**, **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "exclude: [],"
         },
         {
           "file": "exclude-project-inherit.ts",
           "line": 2,
-          "message": "Vitest project widgets: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project widgets: add **/node_modules/**, **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "exclude: [],"
         }
@@ -874,7 +874,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "exclude-project-override.ts",
           "line": 4,
-          "message": "Vitest project orders: test.exclude must include **/node_modules/**; declare literal test properties to keep project policy statically verifiable",
+          "message": "Vitest project orders: add **/node_modules/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "{ test: { name: 'orders', exclude: ['**/.git/**'] } },"
         }

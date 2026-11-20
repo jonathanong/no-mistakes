@@ -56,19 +56,27 @@ fn configured_globs_match_literal_exclude_arrays_only() {
 fn replaced_exclude_arrays_must_contain_each_configured_glob() {
     let empty = &output("exclude-empty-array").findings;
     assert_eq!(empty.len(), 1);
-    assert!(empty[0].message.contains("**/node_modules/**"));
-    assert!(empty[0].message.contains("**/.git/**"));
+    assert_eq!(
+        empty[0].message,
+        "Vitest project <root>: add **/node_modules/**, **/.git/** to test.exclude"
+    );
+    assert!(!empty[0].message.contains("declare literal test properties"));
     assert_eq!(empty[0].rule, RULE_ID);
     assert!(output("exclude-empty-array").incomplete.is_empty());
 
     let missing = &output("exclude-missing-glob").findings;
     assert_eq!(missing.len(), 1);
-    assert!(missing[0].message.contains("**/.git/**"));
-    assert!(!missing[0].message.contains("**/node_modules/**"));
+    assert_eq!(
+        missing[0].message,
+        "Vitest project <root>: add **/.git/** to test.exclude"
+    );
 
     let text = &output("exclude-non-array").findings;
     assert_eq!(text.len(), 1);
-    assert!(text[0].message.contains("test.exclude must include"));
+    assert_eq!(
+        text[0].message,
+        "Vitest project <root>: add **/node_modules/**, **/.git/** to test.exclude"
+    );
 
     let project = &output("exclude-project-empty").findings;
     assert_eq!(project.len(), 1);

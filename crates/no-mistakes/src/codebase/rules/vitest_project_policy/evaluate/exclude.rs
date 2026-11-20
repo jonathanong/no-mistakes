@@ -18,12 +18,9 @@ pub(super) fn check(
             .incomplete
             .push(incomplete(root, &exclude, "test.exclude", project)),
         Some(missing) if missing.is_empty() => {}
-        Some(missing) => output.findings.push(finding(
-            root,
-            &exclude,
-            project,
-            format!("test.exclude must include {}", missing.join(", ")),
-        )),
+        Some(missing) => output
+            .findings
+            .push(exclude_finding(root, &exclude, project, &missing)),
     }
 }
 

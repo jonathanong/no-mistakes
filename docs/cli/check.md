@@ -326,12 +326,14 @@ literal properties across declared Vitest projects. Its explicit `config` and
 `helpers` path/glob inputs bound source reads using the prepared visible-file
 inventory. Optional `requiredExcludeGlobs` requires those strings in each
 literal `test.exclude` array; an empty list and a missing `exclude` property
-leave that check silent. Optional `declared.forbiddenValues` and `declared.forbidLiteralKinds`
-check literal assignments in every object in those sources, including unimported
-helpers. Computed expressions remain allowed. Declared-only checks do not report
-dynamic projects as incomplete; unreadable or malformed selected sources and
-unresolved effective settings appear in the JSON `incomplete` list. Declaration
-sources honor each application's include/exclude filters and source suppressions. The rule never imports or executes Vitest configuration.
+leave that check silent. Optional `declared.forbiddenValues` and
+`declared.forbidLiteralKinds` check literal assignments in every object in
+those sources, including unimported helpers. Computed expressions remain
+allowed. Declared-only checks do not report dynamic projects as incomplete;
+unreadable or malformed selected sources and unresolved effective settings
+appear in the JSON `incomplete` list. Declaration sources honor each
+application's include/exclude filters and source suppressions. The rule never
+imports or executes Vitest configuration.
 
 PostgreSQL executor selection accepts `excludeExecutorNames` in rule options and
 `projects.<name>.postgres.executors`. Exclusions apply after replacement or
