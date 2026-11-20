@@ -95,8 +95,9 @@ pub(crate) fn prepare(
         plan.graph.include(fact_plan);
         plan.graph_context = fact_context;
     }
-    plan.graph.per_item_calls |=
-        config.rule_configured(no_mistakes::codebase::rules::QUERY_REACHED_PER_ITEM);
+    plan.graph.per_item_calls |= config
+        .rule_configured(no_mistakes::codebase::rules::QUERY_REACHED_PER_ITEM)
+        || no_mistakes::codebase::rules::no_single_enqueue_in_loop::demands_analysis(config);
     no_mistakes::codebase::rules::forbidden_calls::configure_argument_facts(root, config, plan);
     Ok(prepared_graph)
 }

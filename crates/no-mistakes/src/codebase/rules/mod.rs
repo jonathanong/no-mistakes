@@ -60,6 +60,7 @@ pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod no_mistakes_config;
 pub mod no_raw_ephemeral_port;
+pub mod no_single_enqueue_in_loop;
 pub mod no_sparse_checkout;
 pub mod no_test_git_sha;
 pub mod package_json_nested_workspace_coverage;

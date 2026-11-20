@@ -83,7 +83,8 @@ pub(super) fn run_check(
         fact_plan.graph = graph_facts;
         fact_plan.graph_context = graph_context;
     }
-    fact_plan.graph.per_item_calls |= config.rule_configured(super::QUERY_REACHED_PER_ITEM);
+    fact_plan.graph.per_item_calls |= config.rule_configured(super::QUERY_REACHED_PER_ITEM)
+        || super::super::no_single_enqueue_in_loop::demands_analysis(&config);
     crate::codebase::rules::forbidden_calls::configure_argument_facts(
         root,
         &config,

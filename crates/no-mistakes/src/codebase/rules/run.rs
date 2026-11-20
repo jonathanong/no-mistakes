@@ -3,7 +3,7 @@ use super::{
     require_storybook_stories, required_entrypoint_reachability, rule_enabled,
     server_route_client_boundary, suppress_rule_findings_with_sources,
     test_no_unmocked_dynamic_imports, unconstructed_error_class, RuleFinding, FORBIDDEN_CALLS,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, NO_SINGLE_ENQUEUE_IN_LOOP,
     POSTGRES_NO_MUTABLE_SQL_REGISTRY, POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
     POSTGRES_SQL_FRAGMENT_ESCAPE, QUERY_REACHED_PER_ITEM, REQUIRED_ENTRYPOINT_REACHABILITY,
     REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
@@ -185,4 +185,5 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || rule_enabled(config, POSTGRES_NO_MUTABLE_SQL_REGISTRY)
         || rule_enabled(config, POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER)
         || rule_enabled(config, POSTGRES_SQL_FRAGMENT_ESCAPE)
+        || rule_enabled(config, NO_SINGLE_ENQUEUE_IN_LOOP)
 }

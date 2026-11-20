@@ -81,6 +81,11 @@ project-relative components alongside export-kind selections. Use a top-level
 `include` to restrict the entire Storybook application; see
 [`require-storybook-stories`](../rules/require-storybook-stories.md#options-and-defaults).
 
+[`no-single-enqueue-in-loop`](../rules/no-single-enqueue-in-loop.md#options-and-defaults)
+names the single and bulk enqueue APIs by import specifier and export name.
+`options.single` and `options.bulk` both default to an empty list. An empty
+`single` list reports nothing.
+
 [`forbidden-dependencies`](../rules/forbidden-dependencies.md#glob-semantics)
 accepts file/directory/glob `options.roots` and `options.excludeRoots`, plus
 glob `options.forbiddenFiles`. Its `options.exceptions` entries contain `roots`

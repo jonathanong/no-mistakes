@@ -40,6 +40,25 @@ pub(super) fn collect(
             }
         }
     }
+    if rule_enabled(config, no_single_enqueue_in_loop::RULE_ID) {
+        let consumer = no_single_enqueue_in_loop::RULE_ID;
+        if dependency_graph.is_some()
+            || session.is_none_or(|session| session.check_consumer_ready(consumer))
+        {
+            let result = (|| -> Result<()> {
+                findings.extend(crate::perf_trace::rule(
+                    "analysis.rules.no-single-enqueue-in-loop",
+                    || no_single_enqueue_in_loop::check(root, config, dependency_graph, shared),
+                )?);
+                Ok(())
+            })();
+            if let Some(session) = session {
+                session.capture_check_result(consumer, result)?;
+            } else {
+                result?;
+            }
+        }
+    }
     if rule_enabled(
         config,
         crate::codebase::rules::POSTGRES_NO_MUTABLE_SQL_REGISTRY,

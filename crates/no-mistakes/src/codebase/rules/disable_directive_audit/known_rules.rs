@@ -12,6 +12,7 @@ pub(super) fn known_rule(rule: &str) -> bool {
             POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
             POSTGRES_SQL_FRAGMENT_ESCAPE,
             QUERY_REACHED_PER_ITEM,
+            no_single_enqueue_in_loop::RULE_ID,
             REQUIRE_STORYBOOK_STORIES,
             REQUIRED_ENTRYPOINT_REACHABILITY,
             SERVER_ROUTE_CLIENT_BOUNDARY,

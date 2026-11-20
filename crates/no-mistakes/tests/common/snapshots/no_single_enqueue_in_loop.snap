@@ -1,0 +1,156 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "configured": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 13,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 16,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(items[index]); // report:for",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 19,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-in; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(items[key]); // report:for-in",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 23,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside while; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(items[index]); // report:while",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 28,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside do; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(items[cursor]); // report:do",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 31,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside map callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "items.map(enqueueItem); // report:map callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 32,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside map callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "items.map((item) => enqueueItem(item)); // report:map callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 34,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside forEach callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:forEach callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 36,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside flatMap callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "items.flatMap(enqueueItem); // report:flatMap callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 44,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(order); // report:for",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 48,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(order); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 52,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "queueWidget",
+          "line": 38,
+          "message": "single enqueue `queueWidget` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "queueWidget(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "widgets.enqueueItem",
+          "line": 41,
+          "message": "single enqueue `widgets.enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "widgets.enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
