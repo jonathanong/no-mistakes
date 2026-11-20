@@ -2331,7 +2331,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
@@ -2389,12 +2389,12 @@ jobs:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 20
+        timeout-minutes: 12
         shell: bash
         run: |
           set -euo pipefail
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
-          node .github/scripts/standalone-shards.cjs build target/standalone-bundle
+          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
       - name: Save verified workspace artifacts
         if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
