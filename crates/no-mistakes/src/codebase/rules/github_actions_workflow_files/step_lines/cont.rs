@@ -36,9 +36,7 @@ pub(super) fn consume_plain(walker: &mut Walker, raw: &str) -> bool {
     let key_indent = walker.scalar.as_ref().unwrap().key_indent;
     if indent > key_indent {
         let scalar = walker.scalar.as_mut().unwrap();
-        if !scalar.buf.is_empty() {
-            scalar.buf.push('\n');
-        }
+        scalar.buf.push('\n');
         scalar.buf.push_str(trimmed);
         return true;
     }
@@ -57,9 +55,7 @@ pub(super) fn consume_quote(walker: &mut Walker, raw: &str) -> bool {
         }
     }
     let scalar = walker.scalar.as_mut().unwrap();
-    if !scalar.buf.is_empty() {
-        scalar.buf.push('\n');
-    }
+    scalar.buf.push('\n');
     scalar.buf.push_str(trimmed);
     if quote_closed(&scalar.buf) {
         scalar::finish_scalar(walker);

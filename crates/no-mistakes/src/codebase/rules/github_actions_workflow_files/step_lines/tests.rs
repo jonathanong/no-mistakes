@@ -162,3 +162,52 @@ fn stray_list_items_do_not_open_steps() {
         Some("actions/checkout@v4")
     );
 }
+
+#[test]
+fn quoted_scalars_keep_escapes_blank_lines_and_dedents() {
+    assert!(!cont::quote_closed(""));
+    assert!(!cont::quote_closed("widgets"));
+    assert!(cont::quote_closed("\"a\\nb\""));
+    assert!(cont::quote_closed("'it''s'"));
+    assert_eq!(cont::unwrap_quotes("\"a\\nb\""), "anb");
+    assert_eq!(cont::unwrap_quotes("'it''s'"), "it's");
+    assert_eq!(cont::unwrap_quotes("\"open"), "\"open");
+
+    let source = "\
+jobs:\n  \
+  build:\n    \
+    steps:\n      \
+      - run: \"echo\n          \
+        still\n          \
+        widgets\\nlock\"\n      \
+      - run: \"echo\n\n          \
+        widgets\"\n      \
+      - run: 'it''s\n          \
+        fine'\n      \
+      - run: \"echo widgets\n        \
+        uses: actions/checkout@v4\n";
+    let jobs = walk_steps(source, false);
+    assert_eq!(jobs.len(), 1, "{jobs:?}");
+    let steps = &jobs[0].steps;
+    assert_eq!(steps.len(), 4, "{steps:?}");
+    assert_eq!(value(&steps[0], "run"), Some("echo\nstill\nwidgetsnlock"));
+    assert_eq!(value(&steps[1], "run"), Some("echo\n\nwidgets"));
+    assert_eq!(value(&steps[2], "run"), Some("it's\nfine"));
+    assert_eq!(value(&steps[3], "run"), Some("\"echo widgets"));
+    assert_eq!(value(&steps[3], "uses"), Some("actions/checkout@v4"));
+}
+
+#[test]
+fn empty_sequence_item_appends_without_a_blank_line() {
+    let source = "\
+jobs:\n  \
+  build:\n    \
+    steps:\n      \
+      - uses: actions/cache@v4\n        \
+        with:\n          \
+          path:\n            \
+            - \"\"\n            \
+            - .cache/widgets\n";
+    let jobs = walk_steps(source, false);
+    assert_eq!(value(&jobs[0].steps[0], "path"), Some(".cache/widgets"));
+}

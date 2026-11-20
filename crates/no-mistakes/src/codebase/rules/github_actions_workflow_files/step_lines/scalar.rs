@@ -186,11 +186,7 @@ fn append_seq(walker: &mut Walker, name: &str, key_line: usize, line: usize, tex
     let Some(step) = current(walker) else {
         return;
     };
-    if step.fields.iter().any(|field| field.name == name) {
-        upsert(step, name, key_line, line, text, true, true);
-        return;
-    }
-    upsert(step, name, key_line, line, text, true, false);
+    upsert(step, name, key_line, line, text, true, true);
 }
 
 fn current(walker: &mut Walker) -> Option<&mut Step> {

@@ -68,7 +68,7 @@ impl Walker {
         }
         scalar::finish_step(self);
         self.step_dash = Some(indent);
-        self.ensure_job();
+        // enter_steps opens a job before a step item is accepted.
         self.jobs
             .last_mut()
             .unwrap()
@@ -170,13 +170,6 @@ impl Walker {
             name: name.to_string(),
             steps: Vec::new(),
         });
-    }
-
-    fn ensure_job(&mut self) {
-        if self.jobs.is_empty() {
-            let name = if self.action { "(composite)" } else { "" };
-            self.start_job(name);
-        }
     }
 }
 

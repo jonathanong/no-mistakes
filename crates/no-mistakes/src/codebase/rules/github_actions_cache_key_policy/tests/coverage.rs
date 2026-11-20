@@ -98,6 +98,14 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
         "runner.os"
     ));
     assert!(text::has_fragment("${{ runner.os-extra }}", "runner.os"));
+    assert!(!text::has_fragment(
+        "${{ \"runner.os\\extra\" }}",
+        "runner.os"
+    ));
+    assert!(!text::has_fragment(
+        "${{ 'runner.os''extra' }}",
+        "runner.os"
+    ));
 
     assert!(text::hash_args("${{ hashFiles('widgets.lock'").is_empty());
     assert!(text::hash_args("${{ hashFiles widgets.lock }}").is_empty());
@@ -285,4 +293,150 @@ fn invalid_collection_reports_the_parser_line() {
         scan::Document::Invalid { line, .. } => assert_eq!(line, 7),
         other => panic!("expected invalid yaml, got {other:?}"),
     }
+}
+
+#[test]
+fn copied_and_backtick_digests_prove_output_names() {
+    assert_eq!(
+        output::proven_output_names(
+            "proven=$(sha256sum widgets.lock)\n\
+             digest=$proven\n\
+             quoted=\"$proven\"\n\
+             tick=`sha256sum widgets.lock`\n\
+             other=plain\n\
+             echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"quoted=${quoted}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"tick=${tick}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"other=${other}\" >> \"$GITHUB_OUTPUT\"\n",
+            "widgets.lock"
+        ),
+        vec![
+            "digest".to_string(),
+            "quoted".to_string(),
+            "tick".to_string()
+        ]
+    );
+}
+
+#[test]
+fn heredoc_and_brace_shapes_record_only_real_writes() {
+    assert_eq!(
+        super::output_names(
+            "echoing=1 >> \"$GITHUB_OUTPUT\"\n\
+             printfX=1 >> \"$GITHUB_OUTPUT\"\n\
+             printf '1bad=%s' nope >> \"$GITHUB_OUTPUT\"\n\
+             cat <<\n\
+             cat >> \"$GITHUB_OUTPUT\" <<-EOF\n\
+             \tkept=from-tab\n\
+             \techo nested=1\n\
+             \techo   \n\
+             \tnote\n\
+             \tEOF\n\
+             cat >> \"$GITHUB_OUTPUT\" <<'END'\n\
+             literal=1\n\
+             END\n\
+             cat <<EOF\n\
+             ignored=1\n\
+             EOF\n\
+             cat >> \"$GITHUB_OUTPUT\" <<EOF\n\
+             open=1\n"
+        ),
+        vec![
+            "kept".to_string(),
+            "nested".to_string(),
+            "literal".to_string(),
+            "open".to_string()
+        ]
+    );
+    assert_eq!(
+        super::output_names(
+            "{\n\
+               inner=$(sha256sum widgets.lock)\n\
+               echo \"same=${inner}\" >> \"$GITHUB_OUTPUT\"\n\
+               echo \"pending=${inner}\"\n\
+               true\n\
+             } >> \"$GITHUB_OUTPUT\"\n\
+             {\n\
+               echo \"dropped=${inner}\"\n\
+             }\n\
+             {\n\
+               echo \"unclosed=${inner}\"\n"
+        ),
+        vec!["same".to_string(), "pending".to_string()]
+    );
+}
+
+#[test]
+fn misaligned_documents_expose_every_serde_path_shape() {
+    let shapes = "\
+name: Widgets
+jobs:
+  build:
+    steps:
+      - &cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: widgets
+      - *cache
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          key: widgets
+      - uses: actions/cache@v4
+        with:
+          path:
+            - .cache/widgets
+            - 4
+          key: widgets
+      - uses: actions/cache@v4
+        with:
+          path: { nested: 1 }
+          key: widgets
+  note:
+    steps: plain
+";
+    match scan::analyze(shapes, false, &[]) {
+        scan::Document::Jobs(jobs) => assert_eq!(cache_uses(&jobs), 4, "{jobs:?}"),
+        other => panic!("expected jobs when nothing is configured, got {other:?}"),
+    }
+    assert!(matches!(
+        scan::analyze(shapes, false, &["missing".to_string()]),
+        scan::Document::Jobs(_)
+    ));
+    assert!(matches!(
+        scan::analyze(shapes, false, &[".cache/widgets".to_string()]),
+        scan::Document::Unaligned
+    ));
+
+    let composite = "\
+name: Widgets
+runs:
+  using: composite
+  steps:
+    - &cache
+      uses: actions/cache@v4
+      with:
+        path: .cache/widgets
+    - *cache
+";
+    match scan::analyze(composite, true, &[]) {
+        scan::Document::Jobs(jobs) => assert_eq!(cache_uses(&jobs), 1, "{jobs:?}"),
+        other => panic!("expected composite jobs, got {other:?}"),
+    }
+    assert!(matches!(
+        scan::analyze(composite, true, &[".cache/widgets".to_string()]),
+        scan::Document::Unaligned
+    ));
+}
+
+fn cache_uses(jobs: &[scan::Job]) -> usize {
+    jobs.iter()
+        .flat_map(|job| &job.steps)
+        .filter(|step| {
+            step.uses
+                .as_deref()
+                .is_some_and(|uses| uses.contains("actions/cache"))
+        })
+        .count()
 }
