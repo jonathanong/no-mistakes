@@ -43,11 +43,21 @@ impl<'a> UrlBindings<'a> {
         if value.contains(['$', '`', '{', '}']) || value.contains(char::is_whitespace) {
             return None;
         }
-        if bare && value.contains(['*', '?', '[']) {
+        if bare && pathname_expands(value) {
             return None;
         }
         Some(value)
     }
+}
+
+fn pathname_expands(value: &str) -> bool {
+    value.contains(['*', '?']) || has_closed_bracket(value)
+}
+
+fn has_closed_bracket(value: &str) -> bool {
+    value
+        .char_indices()
+        .any(|(index, ch)| ch == '[' && value[index + 1..].contains(']'))
 }
 
 fn valid_name(name: &str) -> bool {

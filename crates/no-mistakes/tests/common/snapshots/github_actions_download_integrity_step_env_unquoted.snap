@@ -37,6 +37,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/audit.yml",
+          "line": 65,
+          "message": ".github/workflows/audit.yml:65: job `build` step 18 downloads `https://downloads.example.com/widgets[1.tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "run: curl -fsSL -o tool.tgz $WIDGET_URL",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
+          "line": 68,
+          "message": ".github/workflows/audit.yml:68: job `build` step 19 downloads `https://downloads.example.com/orders].tgz` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "run: curl -fsSL -o tool.tgz $ORDER_URL",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/audit.yml",
           "line": 9,
           "message": ".github/workflows/audit.yml:9: job `build` step 1 downloads `https://downloads.example.com/braced` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
           "rule": "github-actions-download-integrity",

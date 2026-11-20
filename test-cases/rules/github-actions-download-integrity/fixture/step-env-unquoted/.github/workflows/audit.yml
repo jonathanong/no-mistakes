@@ -60,3 +60,9 @@ jobs:
       - env:
           QUOTED_GLOB_URL: "https://downloads.example.com/quoted*.tgz"
         run: curl -fsSL -o tool.tgz "${QUOTED_GLOB_URL}"
+      - env:
+          WIDGET_URL: https://downloads.example.com/widgets[1.tgz
+        run: curl -fsSL -o tool.tgz $WIDGET_URL
+      - env:
+          ORDER_URL: https://downloads.example.com/orders].tgz
+        run: curl -fsSL -o tool.tgz $ORDER_URL
