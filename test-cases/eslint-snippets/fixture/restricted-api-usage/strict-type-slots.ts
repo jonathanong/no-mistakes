@@ -69,3 +69,22 @@ namespace shipments {
 function isOrder(blockingWait: unknown): blockingWait is string {
   return false;
 }
+
+type mapped = { [blockingWait in "item"]: number };
+type labeled = [blockingWait: number];
+[api.blockingWait] = queue;
+for ([api.blockingWait] of queue) {
+}
+for ([api.blockingWait] in queue) {
+}
+(blockingWait as any) = 1;
+[...api.blockingWait] = queue;
+({ item: api.blockingWait } = queue);
+const declared = [api.blockingWait];
+const { item = blockingWait } = queue;
+[blockingWait.item] = queue;
+[api[blockingWait]] = queue;
+const { [blockingWait]: renamed } = queue;
+const box = { item: api.blockingWait };
+for ([api.blockingWait = order] of queue) {
+}

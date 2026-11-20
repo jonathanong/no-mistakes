@@ -19,6 +19,10 @@ const duplicateTargets = [
   { referenceNamePattern: "^blockingWait$", message: "Use the async variant." },
   { referenceNamePattern: "^blockingWait$", message: "Queue the item instead." },
 ];
+const nestedCall = {
+  callNamePattern: "^paginateEntries$",
+  message: "Use explicit continuation.",
+};
 const legacyTarget = {
   source: "@example/client",
   importedNamePattern: "^paginate[A-Z]",
@@ -53,6 +57,7 @@ describe(`${id} strict selectors`, () => {
             snapshotCase("strict-construct.ts", construct),
             snapshotCase("strict-construct.ts", { constructNamePattern: "Worker$" }),
             snapshotCase("legacy-invalid.mjs", legacyTarget),
+            snapshotCase("nested-calls.mjs", nestedCall),
             {
               code: fixture(`${id}/strict-duplicate.ts`),
               filename: resolve(root, "strict-duplicate.ts"),
@@ -85,6 +90,21 @@ describe(`${id} strict selectors`, () => {
         [2, "Queue the item instead."],
         [3, "Use the async variant."],
         [3, "Queue the item instead."],
+      ],
+    );
+  });
+  it("keeps equal messages on distinct calls that share a start offset", () => {
+    const filename = resolve(root, "nested-calls.mjs");
+    const findings = lint(
+      fixture(`${id}/nested-calls.mjs`),
+      { [`no-mistakes/${id}`]: ["error", { targets: [nestedCall] }] },
+      filename,
+    );
+    assert.deepEqual(
+      findings.map((finding) => [finding.line, finding.message]),
+      [
+        [1, "Use explicit continuation."],
+        [1, "Use explicit continuation."],
       ],
     );
   });

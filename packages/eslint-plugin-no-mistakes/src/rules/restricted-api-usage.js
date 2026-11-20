@@ -35,7 +35,7 @@ module.exports = {
     if (!targets.length) return {};
     const suppressed = ruleSuppression(context, "restricted-api-usage");
     const bindings = new Map();
-    const reported = new Set();
+    const reported = new WeakMap();
     const hasCallTargets = targets.some((target) => target.call);
     function report(node, target, name, rewrite = "") {
       if (suppressed(node)) return;

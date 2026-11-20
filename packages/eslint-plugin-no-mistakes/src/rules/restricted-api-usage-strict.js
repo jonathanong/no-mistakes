@@ -29,6 +29,8 @@ const NAME_SLOTS = {
   TSPropertySignature: "key",
   TSMethodSignature: "key",
   TSTypeParameter: "name",
+  TSMappedType: "key",
+  TSNamedTupleMember: "label",
 };
 const BINDING_PARENTS =
   /^(ArrayPattern|RestElement|Import.*Specifier|ExportSpecifier|CatchClause)$/;
@@ -48,9 +50,13 @@ function findingMessage(target, name, rewrite) {
 }
 
 function rememberFinding(seen, node, message) {
-  const key = `${node.range[0]}\0${message}`;
-  if (seen.has(key)) return false;
-  seen.add(key);
+  let messages = seen.get(node);
+  if (!messages) {
+    messages = new Set();
+    seen.set(node, messages);
+  }
+  if (messages.has(message)) return false;
+  messages.add(message);
   return true;
 }
 
@@ -60,11 +66,39 @@ function invoked(node) {
   return current.parent.callee === current;
 }
 
-function isWriteTarget(node) {
+function assignmentTarget(node) {
   const parent = node.parent;
-  if (parent.type === "AssignmentExpression") return parent.left === node;
-  if (parent.type === "ForInStatement") return parent.left === node;
-  if (parent.type === "ForOfStatement") return parent.left === node;
+  if (
+    WRAPPERS.has(parent.type) ||
+    parent.type === "ArrayPattern" ||
+    parent.type === "RestElement" ||
+    parent.type === "ObjectPattern"
+  ) {
+    return parent;
+  }
+  if (parent.type === "AssignmentPattern" && parent.left === node) return parent;
+  if (
+    parent.type === "Property" &&
+    parent.value === node &&
+    parent.parent.type === "ObjectPattern"
+  ) {
+    return parent;
+  }
+  return null;
+}
+
+function isWriteTarget(node) {
+  let current = node;
+  let enclosing = assignmentTarget(current);
+  while (enclosing) {
+    current = enclosing;
+    enclosing = assignmentTarget(current);
+  }
+  const parent = current.parent;
+  if (parent.type === "VariableDeclarator") return parent.id === current;
+  if (parent.type === "AssignmentExpression") return parent.left === current;
+  if (parent.type === "ForInStatement") return parent.left === current;
+  if (parent.type === "ForOfStatement") return parent.left === current;
   return false;
 }
 
@@ -87,7 +121,10 @@ function isReference(node) {
   if (parent.params?.includes(node)) return false;
   if (parent.type === "AssignmentPattern" && parent.left === node) return false;
   if (isTypePosition(node)) return false;
-  return !(parent.type === "Property" && parent.parent.type === "ObjectPattern");
+  if (parent.type === "Property" && parent.parent.type === "ObjectPattern") {
+    return parent.computed && parent.key === node;
+  }
+  return true;
 }
 
 function mergeVisitors(...visitors) {

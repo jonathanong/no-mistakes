@@ -123,15 +123,19 @@ client.send(new ListEntriesCommand({ cursor }));
   keys, and labels do not (use `callNamePattern` or `constructNamePattern` for
   invocations).
 - A write is not a reference. Assignment targets stay silent, including
-  `blockingWait = 1`, `api.blockingWait += 1`, and the left side of
-  `for (blockingWait of items)` or `for (blockingWait in items)`. The value on
-  the right still reports.
+  `blockingWait = 1`, `api.blockingWait += 1`, the left side of
+  `for (blockingWait of items)` or `for (blockingWait in items)`, pattern
+  targets such as `[api.blockingWait] = queue`, and a target wrapped in an
+  assertion, `(blockingWait as any) = 1`. The right-hand side, a default value,
+  the object being assigned, and a computed key still report.
 - TypeScript declaration slots and type-position names stay silent: interface,
-  type-alias, enum, namespace, and type-parameter names; non-computed interface
-  and type-literal property keys and method signatures; enum members; heritage
-  and `implements` names; and annotations such as `const item: blockingWait`.
-  A computed key that is an identifier (`[blockingWait]: number`) is a value
-  read and reports. A literal computed key is not an identifier.
+  type-alias, enum, namespace, and type-parameter names; mapped-type parameters
+  (`[blockingWait in "item"]`) and tuple labels (`[blockingWait: number]`);
+  non-computed interface and type-literal property keys and method signatures;
+  enum members; heritage and `implements` names; and annotations such as
+  `const item: blockingWait`. A computed key that is an identifier
+  (`[blockingWait]: number`, including inside a destructure) is a value read
+  and reports. A literal computed key is not an identifier.
 - `declarationNamePattern`: optional regular expression for the name declared by a
   function, class, or variable declaration, such as `function enqueueItemAndWait() {}`.
 - `propertyNamePattern`: optional regular expression for a literal object key or a
@@ -157,7 +161,9 @@ client.send(new ListEntriesCommand({ cursor }));
 The strict selectors are lexical like `callNamePattern`: they ignore import origin
 and shadowing, and are off unless configured. A configuration that does not set
 them keeps the same findings. Identical messages on one node collapse to one
-finding. Distinct messages on that node both report.
+finding. Distinct messages on that node both report. Distinct nodes report
+separately when they start at the same offset, as in
+`paginateEntries().paginateEntries()`.
 
 ```js
 {
