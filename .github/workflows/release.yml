@@ -1321,7 +1321,7 @@ jobs:
       - validate
       - build-native-linux-x64
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 85
     permissions:
       contents: read
       id-token: write
@@ -1392,7 +1392,7 @@ jobs:
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 65
+        timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
@@ -1403,7 +1403,7 @@ jobs:
       - validate
       - build-native-linux-arm
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 85
     permissions:
       contents: read
       id-token: write
@@ -1474,7 +1474,7 @@ jobs:
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 65
+        timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
@@ -1486,7 +1486,7 @@ jobs:
       - validate
       - build-native-darwin
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 85
     permissions:
       contents: read
       id-token: write
@@ -1557,7 +1557,7 @@ jobs:
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 65
+        timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
@@ -1569,7 +1569,7 @@ jobs:
       - validate
       - build-native-windows
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 85
     permissions:
       contents: read
       id-token: write
@@ -1641,7 +1641,7 @@ jobs:
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 65
+        timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
@@ -1826,7 +1826,7 @@ jobs:
       - verify-npm-linux-arm
       - verify-npm-windows
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 85
     permissions:
       contents: write
       id-token: write
@@ -1875,7 +1875,7 @@ jobs:
         run: pnpm run build:js
 
       - name: Publish npm JS packages with OIDC
-        timeout-minutes: 65
+        timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" no-mistakes
 
@@ -2059,7 +2059,7 @@ jobs:
       - verify-npm-root-linux-arm
       - verify-npm-root-windows
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 85
     permissions:
       contents: read
       id-token: write
@@ -2099,7 +2099,7 @@ jobs:
           install: false
 
       - name: Publish ESLint package with OIDC
-        timeout-minutes: 65
+        timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" eslint-plugin-no-mistakes
 

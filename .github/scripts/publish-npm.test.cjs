@@ -112,12 +112,16 @@ test("npm publish steps outlast the visibility window for every package", () => 
     "publish-js",
     "publish-eslint",
   ];
-  // timeout-ms 0 still spends one 60s request. Each of three publish attempts
-  // can spend two minutes on version, latest, and npm publish before the
-  // 15 minute packument window and the 30 minute tarball wait.
+  // timeout-ms 0 still spends one 60s request. A failed attempt then spends
+  // two minutes each on version, latest, publish, and the post-failure view.
+  // The successful attempt spends two minutes on version, latest, and publish
+  // before the 15 minute packument window. Retry sleeps are 10s and 20s.
   const probeMinutes = 1;
-  const attemptMinutes = 3 * 2;
-  const overheadMinutes = probeMinutes + 3 * attemptMinutes;
+  const failedAttemptMinutes = 4 * 2;
+  const successAttemptMinutes = 3 * 2;
+  const sleepMinutes = 1;
+  const overheadMinutes =
+    probeMinutes + 2 * failedAttemptMinutes + successAttemptMinutes + sleepMinutes;
   assert.equal(publishScript.includes("--timeout-ms 0"), true);
   assert.equal(publishScript.includes("--timeout-ms 1800000"), true);
   for (const name of jobs) {
