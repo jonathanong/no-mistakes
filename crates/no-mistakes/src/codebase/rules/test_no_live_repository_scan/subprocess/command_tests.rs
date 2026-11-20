@@ -173,6 +173,11 @@ fn incomplete_argv_does_not_match_the_configured_prefix() {
     ])
     .is_empty());
     assert!(launch(vec![known("npx"), ArgumentValue::Array(vec![])]).is_empty());
+    assert!(launch(vec![
+        known("pnpm"),
+        ArgumentValue::Array(vec![known("exec"), ArgumentValue::Unknown, known("check")])
+    ])
+    .is_empty());
 }
 
 fn launch_as(command: &str, values: Vec<ArgumentValue>) -> String {
