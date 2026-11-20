@@ -456,6 +456,65 @@
       ]
     },
     {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-name-slots.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 25,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-name-slots.ts",
+          "line": 9,
+          "message": "Restricted API 'item'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 18,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-name-slots.ts",
+          "line": 10,
+          "message": "Restricted API 'item'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 14,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-name-slots.ts",
+          "line": 13,
+          "message": "Restricted API 'item'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 14,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-name-slots.ts",
+          "line": 14,
+          "message": "Restricted API 'item'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "referenceNamePattern": "^item$"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-construct.ts",
       "findings": [
         {
