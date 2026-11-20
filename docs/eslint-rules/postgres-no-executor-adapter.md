@@ -331,8 +331,9 @@ async function appendOnly(id: string, query: SessionExecutor) {
 ```
 
 An appended parameter, `let`, call result, string constant, a constant that is
-mutated in this file, a same-file constant whose tag has interpolations, or a
-constant used as the chain root (`COLS.append(...)` mutates it) keeps reporting.
+mutated in this file, a same-file constant whose tag has non-scalar
+interpolations, or a constant used as the chain root (`COLS.append(...)`
+mutates it) keeps reporting.
 
 Structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as

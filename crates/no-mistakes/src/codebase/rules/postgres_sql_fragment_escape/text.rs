@@ -8,6 +8,31 @@ pub(super) fn quoted(text: &str) -> Option<&str> {
     Some(&rest[..end])
 }
 
+pub(super) fn whole_quoted(text: &str) -> Option<&str> {
+    let text = text.trim();
+    let spec = quoted(text)?;
+    let used = spec.len().checked_add(2)?;
+    let rest = text.get(used..)?.trim_start();
+    if rest.is_empty() || rest.starts_with(')') || rest.starts_with(',') || rest.starts_with('.') {
+        Some(spec)
+    } else {
+        None
+    }
+}
+
+pub(super) fn declarator_text(rest: &str) -> &str {
+    let mut depth = 0i32;
+    for (index, ch) in rest.char_indices() {
+        match ch {
+            '(' | '[' | '{' => depth += 1,
+            ')' | ']' | '}' if depth > 0 => depth -= 1,
+            ',' | ';' | '\n' if depth == 0 => return &rest[..index],
+            _ => {}
+        }
+    }
+    rest
+}
+
 pub(super) fn export_alias_local<'a>(source: &'a str, name: &str) -> Option<&'a str> {
     let mut rest = source;
     let token = "export {";
@@ -79,18 +104,48 @@ fn is_simple(text: &str) -> bool {
 }
 
 pub(super) fn export_offset(source: &str, local: &str) -> Option<u32> {
-    let mut offset = 0u32;
-    for line in source.split_inclusive('\n') {
-        let trimmed = line.trim();
-        if trimmed.contains("export")
-            && !trimmed.contains("import ")
-            && export_mentions_local(trimmed, local)
-        {
-            return Some(offset);
+    let mut rest = source;
+    let mut base = 0u32;
+    while let Some(index) = rest.find("export") {
+        let boundary = rest[..index]
+            .chars()
+            .next_back()
+            .is_none_or(|ch| ch != '_' && !ch.is_ascii_alphanumeric());
+        let advance = index + "export".len();
+        if boundary {
+            let decl = export_declaration(&rest[index..]);
+            if !decl.contains("import ") && export_mentions_local(decl, local) {
+                return Some(base + u32::try_from(index).ok()?);
+            }
         }
-        offset += u32::try_from(line.len()).ok()?;
+        base = base.checked_add(u32::try_from(advance).ok()?)?;
+        rest = rest.get(advance..)?;
     }
     None
+}
+
+fn export_declaration(text: &str) -> &str {
+    let mut depth = 0i32;
+    for (index, ch) in text.char_indices() {
+        match ch {
+            '{' => depth += 1,
+            '}' if depth > 0 => {
+                depth -= 1;
+                if depth == 0 {
+                    let tail = &text[index + 1..];
+                    if let Some(semi) = tail.find(';') {
+                        if !tail[..semi].contains('\n') {
+                            return &text[..=index + 1 + semi];
+                        }
+                    }
+                    return &text[..=index];
+                }
+            }
+            '\n' | ';' if depth == 0 => return &text[..=index],
+            _ => {}
+        }
+    }
+    text
 }
 
 fn export_mentions_local(line: &str, local: &str) -> bool {
@@ -120,7 +175,7 @@ pub(super) fn import_call_specifier(text: &str) -> Option<&str> {
         .split("import(")
         .nth(1)
         .or_else(|| head.split("require(").nth(1))?;
-    quoted(after.trim())
+    whole_quoted(after)
 }
 
 fn alias_local<'a>(body: &'a str, name: &str) -> Option<&'a str> {

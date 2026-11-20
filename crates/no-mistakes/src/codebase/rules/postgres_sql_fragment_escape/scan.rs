@@ -1,7 +1,6 @@
+use super::dynamic::callback_modules;
 use super::fragments::{Catalog, Fragment};
-use super::resolve::{
-    binding_fragments, call_fragments, callback_modules, name_fragments, FileCtx,
-};
+use super::resolve::{binding_fragments, call_fragments, name_fragments, FileCtx};
 use super::source_text::file_text;
 use super::text::export_offset;
 use super::RULE_ID;

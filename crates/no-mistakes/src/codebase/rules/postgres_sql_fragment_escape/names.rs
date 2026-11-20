@@ -2,7 +2,7 @@ use super::fragments::Fragment;
 use super::modules::module_file;
 use super::resolve::FileCtx;
 use super::tags::{imported, is_fragment_binding};
-use super::text::{import_alias, import_call_specifier, quoted};
+use super::text::{declarator_text, import_alias, import_call_specifier, whole_quoted};
 use super::visible::visible_all;
 use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueBinding, ValueExpression};
 use std::path::PathBuf;
@@ -31,8 +31,10 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
 }
 
 fn initializer_module(ctx: &FileCtx<'_>, binding: &ValueBinding) -> Option<PathBuf> {
-    let rest = ctx.source.get(binding.declared_at as usize..)?;
-    let window = rest.split([';', '\n']).next().unwrap_or(rest);
+    let window = match &binding.value {
+        ValueExpression::Call(start, end) => ctx.source.get(*start as usize..*end as usize)?,
+        _ => declarator_text(ctx.source.get(binding.declared_at as usize..)?),
+    };
     let spec = import_call_specifier(window)?;
     module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec)
 }
@@ -83,7 +85,7 @@ fn imported_namespace(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
     import_namespace(ctx, name).or_else(|| import_equals(ctx, name))
 }
 
-fn locally_bound(ctx: &FileCtx<'_>, name: &str) -> bool {
+pub(super) fn locally_bound(ctx: &FileCtx<'_>, name: &str) -> bool {
     let Some(owner) = ctx.context else {
         return false;
     };
@@ -132,7 +134,7 @@ fn import_equals(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
     let mut rest = ctx.source;
     while let Some(index) = rest.find(&marker) {
         let after = &rest[index + marker.len()..];
-        if let Some(spec) = quoted(after.trim()) {
+        if let Some(spec) = whole_quoted(after) {
             if ctx
                 .ts
                 .namespaces
@@ -165,7 +167,7 @@ fn callee_specifier<'a>(text: &'a str, callee: &str) -> Option<&'a str> {
         let prev = rest[..index].chars().next_back();
         let boundary = prev.is_none_or(|ch| ch != '.' && ch != '_' && !ch.is_ascii_alphanumeric());
         if boundary && after.starts_with('(') {
-            return quoted(after[1..].trim());
+            return whole_quoted(&after[1..]);
         }
         rest = &rest[index + callee.len()..];
     }

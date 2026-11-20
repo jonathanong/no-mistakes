@@ -27,7 +27,7 @@ fn trusted_tag_call(ts: &TsFileFacts, tags: &[TrustedSqlTag], start: u32, end: u
     else {
         return false;
     };
-    if call.arguments.len() != 1 {
+    if call.arguments.len() != 1 || !ts.value_flow.tagged_templates.contains_key(&(start, end)) {
         return false;
     }
     let ValueExpression::Named { name, .. } = &call.callee else {

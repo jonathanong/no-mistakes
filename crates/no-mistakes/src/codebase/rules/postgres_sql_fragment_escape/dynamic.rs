@@ -4,7 +4,8 @@ use super::names::{expr_module, namespace_of};
 use super::resolve::FileCtx;
 use super::text::{import_call_specifier, quoted};
 use super::visible::{visible, visible_all};
-use crate::codebase::dependencies::extract::{ValueCall, ValueExpression};
+use crate::codebase::dependencies::extract::{CallableId, ValueCall, ValueExpression};
+use crate::fx::{fx_map, FxHashMap};
 use std::path::PathBuf;
 
 pub(super) fn then_module(
@@ -20,11 +21,37 @@ fn specifier_module(ctx: &FileCtx<'_>, start: u32, end: u32) -> Option<PathBuf> 
     module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec)
 }
 
+pub(super) fn callback_modules(ctx: &FileCtx<'_>) -> FxHashMap<CallableId, PathBuf> {
+    let mut map = fx_map();
+    for call in &ctx.ts.value_flow.calls {
+        let ValueExpression::Member(base, name) = &call.callee else {
+            continue;
+        };
+        if name != "then" {
+            continue;
+        }
+        let probe = FileCtx {
+            context: call.context,
+            ..*ctx
+        };
+        let Some(module) = then_module(&probe, call, base) else {
+            continue;
+        };
+        if let Some(ValueExpression::Callable(id)) = call.arguments.first() {
+            map.insert(*id, module);
+        }
+    }
+    map
+}
+
 pub(super) fn dynamic_head(ctx: &FileCtx<'_>, call: &ValueCall) -> Vec<Fragment> {
     (|| {
         let text = source_slice(ctx.source, call.offset, call.end)?;
-        let head = text.split_once('(')?.0.trim();
-        let receiver = head.strip_suffix(".append")?.trim();
+        let index = text.rfind(".append(")?;
+        let receiver = text[..index].trim();
+        if receiver.is_empty() {
+            return None;
+        }
         Some(dynamic_computed(ctx, receiver, true))
     })()
     .unwrap_or_default()

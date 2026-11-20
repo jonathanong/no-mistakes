@@ -1,7 +1,7 @@
-use super::dynamic::{dynamic_argument, dynamic_head, then_module};
+use super::dynamic::{dynamic_argument, dynamic_head};
 use super::fragments::{dedup, Catalog, Fragment};
 use super::modules::module_file;
-use super::names::{binding_named, expr_module, import_fragments, namespace_of};
+use super::names::{binding_named, expr_module, import_fragments, locally_bound, namespace_of};
 use super::tags::{exported_name, imported, is_fragment_binding};
 use super::text::import_equals_member;
 use super::visible::{visible, visible_all};
@@ -12,7 +12,7 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::codebase::ts_source::facts::TsFileFacts;
-use crate::fx::{fx_map, FxHashMap};
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy)]
@@ -26,25 +26,6 @@ pub(super) struct FileCtx<'a> {
     pub source: &'a str,
     pub callbacks: &'a FxHashMap<CallableId, PathBuf>,
     pub context: Option<CallableId>,
-}
-
-pub(super) fn callback_modules(ctx: &FileCtx<'_>) -> FxHashMap<CallableId, PathBuf> {
-    let mut map = fx_map();
-    for call in &ctx.ts.value_flow.calls {
-        let ValueExpression::Member(base, name) = &call.callee else {
-            continue;
-        };
-        if name != "then" {
-            continue;
-        }
-        let Some(module) = then_module(ctx, call, base) else {
-            continue;
-        };
-        if let Some(ValueExpression::Callable(id)) = call.arguments.first() {
-            map.insert(*id, module);
-        }
-    }
-    map
 }
 
 pub(super) fn call_fragments(ctx: &FileCtx<'_>, call: &ValueCall) -> Vec<Fragment> {
@@ -131,36 +112,38 @@ fn use_name(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Vec<Fragment> {
     if let Some(module) = namespace_of(ctx, name, depth) {
         return visible_all(ctx.catalog, ctx.graph, ctx.facts, &module, &mut Vec::new());
     }
-    if let Some(import) = imported(ctx.ts, name) {
-        if import.kind != ImportedBindingKind::Namespace {
-            if let Some(module) = module_file(
-                ctx.graph,
-                ctx.facts,
-                ctx.catalog,
-                ctx.file,
-                &import.specifier,
-            ) {
+    if !locally_bound(ctx, name) {
+        if let Some(import) = imported(ctx.ts, name) {
+            if import.kind != ImportedBindingKind::Namespace {
+                if let Some(module) = module_file(
+                    ctx.graph,
+                    ctx.facts,
+                    ctx.catalog,
+                    ctx.file,
+                    &import.specifier,
+                ) {
+                    return visible(
+                        ctx.catalog,
+                        ctx.graph,
+                        ctx.facts,
+                        &module,
+                        &exported_name(import),
+                        &mut Vec::new(),
+                    );
+                }
+            }
+        }
+        if let Some((object, member)) = import_equals_member(ctx.source, name) {
+            if let Some(module) = namespace_of(ctx, object, depth) {
                 return visible(
                     ctx.catalog,
                     ctx.graph,
                     ctx.facts,
                     &module,
-                    &exported_name(import),
+                    member,
                     &mut Vec::new(),
                 );
             }
-        }
-    }
-    if let Some((object, member)) = import_equals_member(ctx.source, name) {
-        if let Some(module) = namespace_of(ctx, object, depth) {
-            return visible(
-                ctx.catalog,
-                ctx.graph,
-                ctx.facts,
-                &module,
-                member,
-                &mut Vec::new(),
-            );
         }
     }
     let Some(binding) = binding_named(ctx, name) else {
