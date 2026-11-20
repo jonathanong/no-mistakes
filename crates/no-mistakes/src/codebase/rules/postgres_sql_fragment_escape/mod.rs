@@ -1,4 +1,5 @@
 //! Cross-file writes, rebinds, and namespace escapes of exported SQL fragments.
+mod alias;
 mod dynamic;
 mod fragments;
 mod modules;
@@ -9,6 +10,7 @@ mod source_text;
 mod tags;
 mod text;
 mod visible;
+mod writes;
 
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;

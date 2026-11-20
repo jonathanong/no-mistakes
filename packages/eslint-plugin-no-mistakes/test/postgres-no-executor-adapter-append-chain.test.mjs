@@ -134,6 +134,14 @@ it("accepts renames, ambient re-exports, default and require aliases", async () 
   );
 });
 
+it("reports a same-file append of an exported const", async () => {
+  const rows = suite("forwarding-only", [], ["exportedAppendControls.ts"]);
+  expect(lines(rows)).toEqual([[15]]);
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter-append-chain-exported-append.snap",
+  );
+});
+
 it("reports the same namespace-mutated constants without type information", () => {
   const rows = suite("forwarding-only", [], NAMESPACE, false);
   expect(lines(rows)).toEqual([[11], [11]]);

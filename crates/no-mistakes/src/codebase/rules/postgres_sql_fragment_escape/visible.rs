@@ -1,8 +1,7 @@
+use super::alias::{hop, source_alias};
 use super::fragments::{dedup, Catalog, Fragment};
 use super::modules::module_file;
-use super::source_text::file_text;
 use super::tags::{exported_name, imported};
-use super::text::{export_alias_local, import_specifier};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ExportedBinding;
 use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
@@ -44,9 +43,21 @@ pub(super) fn visible_all(
     stack.push(module.to_path_buf());
     let mut found = catalog.local_all(module);
     if let Some(ts) = facts.get_ts_facts(module) {
+        let explicit: Vec<&str> = ts
+            .exported_bindings
+            .iter()
+            .map(|binding| binding.exported.as_str())
+            .collect();
         for spec in &ts.star_reexport_specifiers {
             if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-                found.extend(visible_all(catalog, graph, facts, &next, stack));
+                found.extend(
+                    visible_all(catalog, graph, facts, &next, stack)
+                        .into_iter()
+                        .filter(|fragment| {
+                            fragment.exported != "default"
+                                && !explicit.contains(&fragment.exported.as_str())
+                        }),
+                );
             }
         }
         for binding in &ts.exported_bindings {
@@ -75,9 +86,16 @@ fn follow(
             found.extend(relay_one(catalog, graph, facts, module, ts, binding, stack));
         }
     }
-    for spec in &ts.star_reexport_specifiers {
-        if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-            found.extend(visible(catalog, graph, facts, &next, name, stack));
+    let shadowed = name == "default"
+        || ts
+            .exported_bindings
+            .iter()
+            .any(|binding| binding.exported == name);
+    if !shadowed {
+        for spec in &ts.star_reexport_specifiers {
+            if let Some(next) = module_file(graph, facts, catalog, module, spec) {
+                found.extend(visible(catalog, graph, facts, &next, name, stack));
+            }
         }
     }
     if found.is_empty() {
@@ -145,51 +163,4 @@ fn relay_one(
             )
         })
         .unwrap_or_default()
-}
-
-fn hop(
-    catalog: &Catalog,
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-    module: &Path,
-    spec: &str,
-    name: &str,
-    stack: &mut Vec<(PathBuf, String)>,
-) -> Vec<Fragment> {
-    if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-        visible(catalog, graph, facts, &next, name, stack)
-    } else {
-        unique_export(catalog, name)
-    }
-}
-
-fn source_alias(
-    catalog: &Catalog,
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-    module: &Path,
-    ts: &TsFileFacts,
-    name: &str,
-    stack: &mut Vec<(PathBuf, String)>,
-) -> Vec<Fragment> {
-    let owned = file_text(ts, catalog.sources, module);
-    let Some(source) = owned.as_deref() else {
-        return Vec::new();
-    };
-    let Some(local) = export_alias_local(source, name) else {
-        return Vec::new();
-    };
-    match import_specifier(source, local) {
-        Some(spec) => hop(catalog, graph, facts, module, spec, local, stack),
-        None => unique_export(catalog, local),
-    }
-}
-
-fn unique_export(catalog: &Catalog, name: &str) -> Vec<Fragment> {
-    let found = catalog.by_export(name);
-    if found.len() == 1 {
-        found
-    } else {
-        Vec::new()
-    }
 }

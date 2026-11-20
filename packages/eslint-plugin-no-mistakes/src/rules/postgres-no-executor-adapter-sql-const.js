@@ -115,7 +115,11 @@ function sharedServices(context) {
 function programConst(variable) {
   const [def] = variable.defs;
   return Boolean(
-    def?.type === "Variable" && def.parent.kind === "const" && def.parent.parent.type === "Program",
+    def?.type === "Variable" &&
+    def.parent.kind === "const" &&
+    (def.parent.parent.type === "Program" ||
+      (def.parent.parent.type === "ExportNamedDeclaration" &&
+        def.parent.parent.parent?.type === "Program")),
   );
 }
 

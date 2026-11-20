@@ -10,7 +10,7 @@ use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::{line_number, relative_slash_path};
-use std::collections::HashMap;
+use crate::fx::fx_map;
 use std::path::Path;
 
 pub(super) fn scan(
@@ -39,7 +39,7 @@ pub(super) fn scan(
             continue;
         };
         let source = owned.as_ref();
-        let empty = HashMap::new();
+        let empty = fx_map();
         let probe = FileCtx {
             graph,
             facts,
@@ -56,6 +56,9 @@ pub(super) fn scan(
             callbacks: &callbacks,
             ..probe
         };
+        for (offset, fragments) in super::writes::assignment_sites(&ctx) {
+            emit(&mut findings, root, &ctx, offset, &fragments);
+        }
         for call in &ts.value_flow.calls {
             emit(
                 &mut findings,

@@ -13,6 +13,10 @@ fn postgres_sql_fragment_escape_append_chain_snapshot() {
     );
     // The fixture tree is the existing append-chain parity set. Findings are
     // the escape site, and files that only append a fragment stay absent.
-    let cases = [("append_chain", root, config)];
+    let edges = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/edges"),
+    );
+    let cases = [("append_chain", root, config.clone()), ("edges", edges, config)];
     assert_saved_fixture("postgres_sql_fragment_escape_append_chain", &cases);
 }

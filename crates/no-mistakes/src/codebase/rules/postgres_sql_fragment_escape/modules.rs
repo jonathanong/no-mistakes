@@ -11,6 +11,9 @@ pub(super) fn module_file(
     importer: &Path,
     specifier: &str,
 ) -> Option<PathBuf> {
+    if let Some(path) = relative_module(facts, importer, specifier) {
+        return Some(path);
+    }
     let mut hits = neighbor_hits(graph, importer, specifier);
     if hits.len() != 1 && specifier.starts_with('.') {
         hits.extend(relative_hits(facts, importer, specifier));
@@ -47,6 +50,14 @@ fn neighbor_hits(graph: &DepGraph, importer: &Path, specifier: &str) -> Vec<Path
         .filter(|path| path_matches(path, stem))
         .map(Path::to_path_buf)
         .collect()
+}
+
+fn relative_module(facts: &CheckFactMap, importer: &Path, specifier: &str) -> Option<PathBuf> {
+    if !specifier.starts_with('.') {
+        return None;
+    }
+    let mut hits = relative_hits(facts, importer, specifier);
+    (hits.len() == 1).then(|| hits.pop()).flatten()
 }
 
 fn relative_hits(facts: &CheckFactMap, importer: &Path, specifier: &str) -> Vec<PathBuf> {

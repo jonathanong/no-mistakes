@@ -86,7 +86,12 @@ fn computed(text: &str) -> Option<(&str, &str)> {
 }
 
 fn string_key(key: &str) -> Option<&str> {
-    quoted(key.trim()).filter(|name| !name.is_empty())
+    let key = key.trim();
+    let name = quoted(key)?;
+    if name.is_empty() || name.len() + 2 != key.len() {
+        return None;
+    }
+    Some(name)
 }
 
 fn is_ident(text: &str) -> bool {

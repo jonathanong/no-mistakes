@@ -39,7 +39,7 @@ pub struct CallableAssignment {
 
 pub(crate) use module_provider_guards::ModuleAssignedMutations;
 pub(crate) use module_provider_intervals::ModuleProviderTarget;
-pub(crate) use mutation_history::ValueAssignedMutations;
+pub(crate) use mutation_history::{ValueAssignedMutations, ValueAssignedWriter};
 pub use mutation_history::ValueMutationHistory;
 pub use mutation_sources::{
     ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,

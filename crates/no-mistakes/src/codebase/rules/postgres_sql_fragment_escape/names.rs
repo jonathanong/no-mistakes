@@ -11,10 +11,10 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
     if depth > 4 {
         return None;
     }
-    if let Some(module) = import_namespace(ctx, name)
-        .or_else(|| callback_param(ctx, name))
-        .or_else(|| import_equals(ctx, name))
-    {
+    if let Some(module) = callback_param(ctx, name) {
+        return Some(module);
+    }
+    if let Some(module) = imported_namespace(ctx, name) {
         return Some(module);
     }
     if let Some(alias) = import_alias(ctx.source, name) {
@@ -76,6 +76,30 @@ pub(super) fn import_fragments(ctx: &FileCtx<'_>, start: u32, end: u32) -> Vec<F
         .unwrap_or_default()
 }
 
+fn imported_namespace(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
+    if locally_bound(ctx, name) {
+        return None;
+    }
+    import_namespace(ctx, name).or_else(|| import_equals(ctx, name))
+}
+
+fn locally_bound(ctx: &FileCtx<'_>, name: &str) -> bool {
+    let Some(owner) = ctx.context else {
+        return false;
+    };
+    ctx.ts
+        .value_flow
+        .parameters
+        .iter()
+        .any(|parameter| parameter.owner == owner && parameter.name == name)
+        || ctx
+            .ts
+            .value_flow
+            .bindings
+            .iter()
+            .any(|binding| binding.owner == Some(owner) && binding.name == name)
+}
+
 fn import_namespace(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
     let binding = imported(ctx.ts, name)?;
     if binding.kind != ImportedBindingKind::Namespace {
@@ -131,10 +155,19 @@ fn import_module(ctx: &FileCtx<'_>, start: u32, end: u32) -> Option<PathBuf> {
 
 fn specifier_at(source: &str, start: u32, end: u32) -> Option<&str> {
     let text = source.get(start as usize..end as usize)?;
-    let after = text
-        .split_once("import")
-        .or_else(|| text.split_once("require"))?
-        .1;
-    let open = after.find('(')?;
-    quoted(after[open + 1..].trim())
+    callee_specifier(text, "import").or_else(|| callee_specifier(text, "require"))
+}
+
+fn callee_specifier<'a>(text: &'a str, callee: &str) -> Option<&'a str> {
+    let mut rest = text;
+    while let Some(index) = rest.find(callee) {
+        let after = &rest[index + callee.len()..];
+        let prev = rest[..index].chars().next_back();
+        let boundary = prev.is_none_or(|ch| ch != '_' && !ch.is_ascii_alphanumeric());
+        if boundary && after.starts_with('(') {
+            return quoted(after[1..].trim());
+        }
+        rest = &rest[index + callee.len()..];
+    }
+    None
 }

@@ -12,7 +12,7 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::codebase::ts_source::facts::TsFileFacts;
-use std::collections::HashMap;
+use crate::fx::{fx_map, FxHashMap};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy)]
@@ -24,12 +24,12 @@ pub(super) struct FileCtx<'a> {
     pub file: &'a Path,
     pub ts: &'a TsFileFacts,
     pub source: &'a str,
-    pub callbacks: &'a HashMap<CallableId, PathBuf>,
+    pub callbacks: &'a FxHashMap<CallableId, PathBuf>,
     pub context: Option<CallableId>,
 }
 
-pub(super) fn callback_modules(ctx: &FileCtx<'_>) -> HashMap<CallableId, PathBuf> {
-    let mut map = HashMap::new();
+pub(super) fn callback_modules(ctx: &FileCtx<'_>) -> FxHashMap<CallableId, PathBuf> {
+    let mut map = fx_map();
     for call in &ctx.ts.value_flow.calls {
         let ValueExpression::Member(base, name) = &call.callee else {
             continue;
