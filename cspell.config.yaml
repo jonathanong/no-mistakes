@@ -43,6 +43,7 @@ words:
   - conrelid
   - cooldown
   - dedup
+  - dlx
   - defmodule
   - dtolnay
   - codebase

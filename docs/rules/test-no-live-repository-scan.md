@@ -61,12 +61,15 @@ bounded:
   Dynamic patterns and pattern arrays produce an unresolved-root
   advisory when their boundedness cannot be established.
 
-The built-in matcher does not cover `fdir` builder chains or enumeration through
-subprocess commands such as `git ls-files`. These are outside its current scope;
-use a dedicated static CI check for them. `enumerators` can add ordinary imported
+The built-in matcher does not cover `fdir` builder chains. Subprocess commands
+such as `git ls-files` stay outside this rule unless `analyzers` names them;
+use a dedicated static CI check for the rest. `enumerators` can add ordinary imported
 enumeration functions, but does not interpret subprocess command arguments or
-arbitrary builder chains. Aliases of `import.meta.glob` are also outside the
-direct-call matcher; keep the API call direct so this rule can inspect it.
+arbitrary builder chains. Opt-in `analyzers` entries name commands a test must
+not launch against the live working directory; see
+[Analyzer subprocesses](#analyzer-subprocesses). Aliases of `import.meta.glob`
+are also outside the direct-call matcher; keep the API call direct so this
+rule can inspect it.
 
 The enumeration is the trigger, not the later `readFileSync`: a scan that is
 never read is still a scan, and every file it yields is covered by the finding
@@ -941,6 +944,51 @@ parent `assets` are still reported, as is a path with a dynamic component. `root
 is relative to the invocation root and may not contain `..`; `reason` is
 required. Delete the entry to make the read a finding again.
 
+## Analyzer subprocesses
+
+`analyzers` is opt-in. Each entry is an executable name plus the leading
+arguments that identify the analyzer. Extra arguments may follow. The default
+list is empty, and no analyzer name is built in.
+
+```yaml
+rules:
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      analyzers:
+        - command: widget-audit
+          args: [check]
+```
+
+The match uses prepared arguments of `execFile`, `execFileSync`, `spawn`, and
+`spawnSync` from `child_process`. A `node:` specifier prefix and a `default.`
+export prefix are ignored. The executable may be a string literal or a const
+string binding. A path matches by its unmodified basename, including `node_modules/.bin`.
+One trailing `.cmd` or `.exe` is also accepted, so a configured `widget-audit`
+matches `widget-audit.exe`. These wrappers unwrap one level:
+
+- `pnpm exec <command>` and `pnpm dlx <command>`, with one optional `--` after
+  the verb
+- `npx <command>`, with leading `-y` or `--yes`, then one optional `--`
+
+A shell string passed to `exec` or `execSync` is not matched. A command that
+is not listed stays quiet, so `git ls-files` and `node fixtures/print-result.js`
+do not become findings unless config names them. `enumerators` still does not
+read subprocess arguments.
+
+The scan root is the `cwd` option. The executable string is not a directory.
+A call that passes no `cwd` uses the working directory and is reported with
+target `analyzer subprocess`. A recorded options object that omits `cwd` is
+that same live root. An options object whose properties were not recorded,
+such as one with a dotted key, is unresolved. `{ cwd: process.cwd() }` is the
+live working directory. An owned `mkdtemp` directory, or a path under
+`fixtureDirs`, is allowed. An options value or `cwd` this analysis cannot
+follow is an `unresolved root` advisory, or a finding when `unresolvedRoot`
+is `report`.
+
+`command` must be a non-empty name with no `/`, `\`, or spaces. Each leading
+argument must be a non-empty string.
+
 ## Options
 
 ```yaml
@@ -960,6 +1008,9 @@ rules:
       runtimeAssets:
         - root: backend/assets/migrations
           reason: shipped migration files read to report status
+      analyzers:
+        - command: widget-audit
+          args: [check]
 ```
 
 - `roots` uses the [`forbidden-calls` root selectors](forbidden-calls.md#options-and-roots)
@@ -973,6 +1024,9 @@ rules:
 - `unresolvedRoot` is `advise` (default) or `report`.
 - `runtimeAssets` lists shipped asset roots as `{ root, reason }`; see
   [Runtime assets](#runtime-assets). Default: none.
+- `analyzers` lists `{ command, args }` commands tests must not run against
+  the live working directory; see [Analyzer subprocesses](#analyzer-subprocesses).
+  Default: none.
 - The rule entry's `message` replaces the default finding text.
 
 The common `include` and `exclude` filters narrow which files may carry a

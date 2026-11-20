@@ -417,6 +417,7 @@
   "TestExecutionTarget",
   "TestForRow",
   "TestGraph",
+  "TestNoLiveRepositoryScanAnalyzer",
   "TestNoLiveRepositoryScanEnumerator",
   "TestNoLiveRepositoryScanOptions",
   "TestNoLiveRepositoryScanRoot",

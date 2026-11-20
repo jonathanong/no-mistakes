@@ -334,6 +334,10 @@ makes them blocking unless the rule sets `severity: advisory`.
 `options.runtimeAssets` declares shipped asset roots (each with a required
 `reason`); a literal read at or under one is listed as an advisory with target
 `runtime asset` instead of failing.
+`options.analyzers` is an opt-in list of `{ command, args }` analyzer commands
+tests must not run against the live working directory. A matching
+`execFile`, `execFileSync`, `spawn`, or `spawnSync` call with no owned `cwd`
+is a finding with target `analyzer subprocess`. The default list is empty.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
