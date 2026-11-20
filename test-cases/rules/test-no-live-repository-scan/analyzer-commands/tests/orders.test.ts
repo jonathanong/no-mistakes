@@ -17,6 +17,7 @@ execFileSync("not-widget-audit", ["check"]);
 
 const root = mkdtempSync(join(tmpdir(), "widgets-"));
 execFileSync("widget-audit", ["check"], { cwd: root });
+execFileSync("widget-audit", ["check"], { cwd: root, "order.id": "1" });
 spawnSync("widget-audit", ["check"], { cwd: process.cwd() });
 execFileSync("widget-audit", ["check"], { encoding: "utf8" });
 

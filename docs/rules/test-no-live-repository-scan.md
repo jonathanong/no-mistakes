@@ -963,12 +963,13 @@ rules:
 The match uses prepared arguments of `execFile`, `execFileSync`, `spawn`, and
 `spawnSync` from `child_process`. A `node:` specifier prefix and a `default.`
 export prefix are ignored. The executable may be a string literal or a const
-string binding. A path matches by its basename, including `node_modules/.bin`
-and one `.cmd` or `.exe` suffix. These wrappers unwrap one level:
+string binding. A path matches by its unmodified basename, including `node_modules/.bin`.
+One trailing `.cmd` or `.exe` is also accepted, so a configured `widget-audit`
+matches `widget-audit.exe`. These wrappers unwrap one level:
 
 - `pnpm exec <command>` and `pnpm dlx <command>`, with one optional `--` after
   the verb
-- `npx <command>`, with leading `-y` or `--yes`
+- `npx <command>`, with leading `-y` or `--yes`, then one optional `--`
 
 A shell string passed to `exec` or `execSync` is not matched. A command that
 is not listed stays quiet, so `git ls-files` and `node fixtures/print-result.js`
@@ -976,12 +977,14 @@ do not become findings unless config names them. `enumerators` still does not
 read subprocess arguments.
 
 The scan root is the `cwd` option. The executable string is not a directory.
-A call that passes no `cwd`, including an options object that omits `cwd`,
-uses the working directory and is reported with target `analyzer subprocess`.
-`{ cwd: process.cwd() }` is that same live root. An owned `mkdtemp` directory,
-or a path under `fixtureDirs`, is allowed. An options value or `cwd` this
-analysis cannot follow is an `unresolved root` advisory, or a finding when
-`unresolvedRoot` is `report`.
+A call that passes no `cwd` uses the working directory and is reported with
+target `analyzer subprocess`. A recorded options object that omits `cwd` is
+that same live root. An options object whose properties were not recorded,
+such as one with a dotted key, is unresolved. `{ cwd: process.cwd() }` is the
+live working directory. An owned `mkdtemp` directory, or a path under
+`fixtureDirs`, is allowed. An options value or `cwd` this analysis cannot
+follow is an `unresolved root` advisory, or a finding when `unresolvedRoot`
+is `report`.
 
 `command` must be a non-empty name with no `/`, `\`, or spaces. Each leading
 argument must be a non-empty string.

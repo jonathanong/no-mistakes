@@ -107,8 +107,18 @@ fn directory(
             Verdict::Live(_) => Directory::Live,
             Verdict::Unresolved(_) => Directory::Unresolved,
         },
-        None => Directory::Live,
+        None if object_closed(facts, offset, index) => Directory::Live,
+        None => Directory::Unresolved,
     }
+}
+
+fn object_closed(facts: &TsFileFacts, offset: u32, index: usize) -> bool {
+    facts
+        .module_bindings
+        .as_deref()
+        .and_then(|bindings| bindings.path_provenance.as_deref())
+        .and_then(|provenance| provenance.arg_closed_objects.get(&offset))
+        .is_some_and(|indexes| indexes.contains(&index))
 }
 
 fn cwd_origin(facts: &TsFileFacts, offset: u32, index: usize) -> Option<&PathOrigin> {

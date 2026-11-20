@@ -115,7 +115,7 @@ fn unwrap_wrapper(executable: &str, argv: &[Token]) -> Option<Vec<Token>> {
             }
             Some(skip_separator(rest).to_vec())
         }
-        "npx" => Some(skip_yes(argv).to_vec()),
+        "npx" => Some(skip_separator(skip_yes(argv)).to_vec()),
         _ => None,
     }
 }
@@ -152,11 +152,19 @@ fn prefix(line: &[Token], command: &str, args: &[String]) -> bool {
 }
 
 fn same_program(token: &str, command: &str) -> bool {
-    token == command || program_name(token) == command
+    let base = basename(token);
+    base == command || strip_suffix(base) == command
 }
 
 fn program_name(token: &str) -> &str {
-    let name = token.rsplit(['/', '\\']).next().unwrap_or(token);
+    strip_suffix(basename(token))
+}
+
+fn basename(token: &str) -> &str {
+    token.rsplit(['/', '\\']).next().unwrap_or(token)
+}
+
+fn strip_suffix(name: &str) -> &str {
     name.strip_suffix(".cmd")
         .or_else(|| name.strip_suffix(".exe"))
         .unwrap_or(name)

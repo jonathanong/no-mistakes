@@ -41,13 +41,23 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
             "spawnSync(\"widget-audit\", [\"check\"], { cwd: process.cwd() });",
         ]
     );
-    let advisories = configured["advisories"].as_array().unwrap();
-    assert_eq!(advisories.len(), 1);
-    assert_eq!(advisories[0]["rule"], RULE);
-    assert_eq!(advisories[0]["target"], "unresolved root");
+    let mut advisories: Vec<_> = configured["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["rule"], RULE);
+            assert_eq!(finding["target"], "unresolved root");
+            finding["sourceLine"].as_str().unwrap().to_string()
+        })
+        .collect();
+    advisories.sort();
     assert_eq!(
-        advisories[0]["sourceLine"],
-        "execFileSync(\"widget-audit\", [\"check\"], options);"
+        advisories,
+        [
+            "execFileSync(\"widget-audit\", [\"check\"], options);",
+            "execFileSync(\"widget-audit\", [\"check\"], { cwd: root, \"order.id\": \"1\" });",
+        ]
     );
     assert!(report["default"]["report"]["rules"]
         .as_array()

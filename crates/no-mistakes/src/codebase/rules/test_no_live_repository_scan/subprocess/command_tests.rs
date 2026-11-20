@@ -86,4 +86,50 @@ fn wrappers_and_basenames_match_the_configured_prefix() {
         ArgumentValue::Array(vec![known("check")])
     ])
     .is_empty());
+    assert_eq!(
+        launch(vec![
+            known("npx"),
+            ArgumentValue::Array(vec![
+                known("--yes"),
+                known("--"),
+                known("widget-audit"),
+                known("check")
+            ])
+        ]),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![
+            known("npx"),
+            ArgumentValue::Array(vec![
+                known("widget-audit"),
+                known("check"),
+                known("--"),
+                known("--json")
+            ])
+        ]),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch_as(
+            "widget-audit.exe",
+            vec![
+                known("./node_modules/.bin/widget-audit.exe"),
+                ArgumentValue::Array(vec![known("check")])
+            ]
+        ),
+        "widget-audit.exe check"
+    );
+}
+
+fn launch_as(command: &str, values: Vec<ArgumentValue>) -> String {
+    let parsed = invocation(&values).unwrap();
+    matched(
+        &parsed,
+        &[AnalyzerCommand {
+            command: command.to_string(),
+            args: vec!["check".to_string()],
+        }],
+    )
+    .unwrap_or_default()
 }
