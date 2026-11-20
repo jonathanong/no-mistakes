@@ -1,0 +1,8 @@
+{
+  "name": "foreign",
+  "version": "1.0.0",
+  "exports": "./index.js",
+  "dependencies": {
+    "orders": "1.0.0"
+  }
+}

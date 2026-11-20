@@ -1,0 +1,14 @@
+rules:
+  - rule: vite-optimize-deps-nested-imports
+    scope: repository
+    message: nested deps
+    options:
+      configFiles:
+        - vite.config.ts
+        - bound.config.ts
+        - paren.config.ts
+        - plain.config.ts
+      packages:
+        - packages/widgets
+        - packages/items
+        - packages/orders

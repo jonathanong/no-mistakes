@@ -139,6 +139,7 @@ pub mod tsconfig_file_coverage;
 pub mod tsconfig_gate_coverage;
 pub mod unconstructed_error_class;
 pub mod version_pin_consistency;
+pub mod vite_optimize_deps_nested_imports;
 pub mod vitest_ci_path_coverage;
 mod vitest_project_catalog;
 pub mod vitest_project_mapping;

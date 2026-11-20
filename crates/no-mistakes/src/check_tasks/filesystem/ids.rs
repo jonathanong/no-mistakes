@@ -109,6 +109,11 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::VITEST_PROJECT_MAPPING,
     rules::VITEST_PROJECT_POLICY,
     rules::VITEST_TEST_CORRESPONDENCE,
+    rules::VITE_OPTIMIZE_DEPS_NESTED_IMPORTS,
     rules::WORKFLOW_TOPOLOGY_POLICY,
     rules::WORKSPACE_PACKAGE_CYCLES,
 ];
+
+#[cfg(test)]
+#[path = "configured_tests.rs"]
+mod configured_tests;

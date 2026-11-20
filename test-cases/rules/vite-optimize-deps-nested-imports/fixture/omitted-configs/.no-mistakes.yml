@@ -1,0 +1,6 @@
+rules:
+  - rule: vite-optimize-deps-nested-imports
+    scope: repository
+    options:
+      packages:
+        - packages/widgets

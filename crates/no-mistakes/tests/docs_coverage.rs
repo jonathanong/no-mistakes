@@ -329,3 +329,19 @@ fn grouping_advice_documents_all_codes_and_advisory_contract() {
         assert!(page.contains(contract), "missing {contract}");
     }
 }
+
+#[test]
+fn vite_optimize_deps_nested_imports_documents_scope_options() {
+    let rule = no_mistakes::codebase::rules::VITE_OPTIMIZE_DEPS_NESTED_IMPORTS;
+    assert_eq!(rule, "vite-optimize-deps-nested-imports");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    let root = repo_root();
+    for path in [
+        "docs/rules/vite-optimize-deps-nested-imports.md",
+        "docs/configuration/rules.md",
+    ] {
+        let body = read(&root.join(path));
+        assert!(body.contains("configFiles"), "{path}");
+        assert!(body.contains("packages"), "{path}");
+    }
+}
