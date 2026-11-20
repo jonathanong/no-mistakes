@@ -107,4 +107,6 @@ fn hit(file: &str, line: usize, message: String) -> RuleFinding {
 }
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod tests;
