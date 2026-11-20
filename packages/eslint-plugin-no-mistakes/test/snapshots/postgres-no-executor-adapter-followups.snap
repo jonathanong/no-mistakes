@@ -161,6 +161,75 @@
     ]
   },
   {
+    "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-omit-branch.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "beginTransaction"
+        ],
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "forwarding-only",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-branch-kept.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "beginTransaction"
+        ],
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "forwarding-only",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-branch-kept.ts",
+    "findings": [],
+    "kind": "valid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "beginTransaction"
+        ],
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "all",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-generic.ts",
     "findings": [],
     "kind": "valid",
@@ -984,6 +1053,41 @@
         "line": 13,
         "message": "This call passes tx into a helper. Name the executor inside the helper (`tx(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "beginTransaction"
+        ],
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "all",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-omit-branch.ts",
+    "findings": [
+      {
+        "column": 13,
+        "endColumn": 32,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-omit-branch.ts",
+        "line": 18,
+        "message": "This adapter hides left or right from SQL analysis (conditional selection). Call the executor on the SQL text (`left(sql) or right(sql) or (flag ? left : right)(sql)`). `put(left, { id: row.id }) or put(right, { id: row.id })` is not a judged rewrite: analysis does not follow an executor passed as a value. Write the direct call explicitly. Analysis cannot check SQL that only reaches the executor through this adapter.",
+        "messageId": "blocked",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2
       }

@@ -25,6 +25,23 @@ function consumeOmittedOptional() {
   return marked;
 }
 
+function reportsOmittedOptional(
+  mode,
+  nested,
+  accepted,
+  call,
+  index,
+  quoteNode,
+  context,
+  options,
+  targetFacts,
+) {
+  if (mode !== "all" || nested || !accepted) return false;
+  const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
+  const proven = visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts);
+  return proven === false && consumeOmittedOptional();
+}
+
 // True when an object literal omits optional `field` (the read is undefined).
 function omittedOptionalField(node, field, context) {
   node = unwrapTs(node);
@@ -44,4 +61,5 @@ module.exports = {
   endOmittedScope,
   noteOmittedOptional,
   omittedOptionalField,
+  reportsOmittedOptional,
 };

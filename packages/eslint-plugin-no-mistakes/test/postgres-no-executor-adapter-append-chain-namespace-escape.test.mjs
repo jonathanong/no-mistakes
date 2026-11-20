@@ -52,6 +52,7 @@ const VALID = [
   "starNamespaceProof.ts",
   "elementKeep.ts",
   "typeofTypeFragments.ts",
+  "heritageQuiet.ts",
 ];
 const INVALID = [
   "starNsMutControls.ts",
@@ -69,11 +70,13 @@ const INVALID = [
   "assertedControls.ts",
   "destructureSibling.ts",
   "typeofValueFragments.ts",
+  "heritageFragments.ts",
 ];
 
 it("escapes namespace, require, and dynamic-import sql fragments", async () => {
   const rows = suite(VALID, INVALID);
   expect(lines(rows)).toEqual([
+    [],
     [],
     [],
     [],
@@ -93,6 +96,7 @@ it("escapes namespace, require, and dynamic-import sql fragments", async () => {
     [12, 22],
     [12, 20],
     [12, 20],
+    [12],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-namespace-escape.snap",

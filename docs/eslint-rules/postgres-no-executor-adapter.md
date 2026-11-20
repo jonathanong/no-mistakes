@@ -326,8 +326,10 @@ fragment, including one the local never writes, because the local is a new
 binding rather than the export symbol. A type-position `typeof parts`
 (`type Columns = typeof parts`, including `typeof parts.COLS`) does not read
 the module object and does not disprove a fragment. A value-position
-`typeof parts` does. An `export *` barrel is that same module for both a named
-import and a namespace import.
+`typeof parts` does. A class `extends` expression is also a value, so
+`class Row extends (parts.COLS.text = text, Object)` disproves that fragment.
+An `implements` clause does not. An `export *` barrel is that same module
+for both a named import and a namespace import.
 
 An `export =` assignment, `eval` of a string, and a `globalThis` write that never
 names the binding are not tracked, so a mutation through them does not disprove
@@ -782,9 +784,11 @@ run(0 ?? read, account);
   object-literal argument omits (`put(tx, { id: row.id })` where the callee
   type declares `ownerId?: string`) reads as `undefined` and proves, because
   nothing row-derived reaches it. Default `mode: "all"` still reports that
-  call. Extra optional fields the callee never binds into SQL stay silent. An
-  inline `new Date()` still proves. These stay reported: a required property, a
-  spread, a `__proto__` key, an object that is not written inline at the call,
+  call, including `put(flag ? left : right, { id: row.id })` when both
+  branches are configured executors. Extra optional fields the callee never
+  binds into SQL stay silent. An inline `new Date()` still proves. These stay
+  reported: a required property, a spread, a `__proto__` key, an object that
+  is not written inline at the call,
   `{ id } as Req` when `Req` requires the omitted field, and an omitted field
   fed to `.append(input.note ?? '')`. When the callee binds every field, a row
   `Date`, a row array, a non-row object, and a mutated `Date` still report.

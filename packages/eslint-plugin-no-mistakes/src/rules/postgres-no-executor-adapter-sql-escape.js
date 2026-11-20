@@ -97,7 +97,15 @@ function escapesDestructured(element, candidate, shared) {
 
 function inTypePosition(node, ts) {
   for (let current = node.parent; current; current = current.parent) {
-    if (current.kind === ts.SyntaxKind.TypeQuery || ts.isTypeNode(current)) return true;
+    if (current.kind === ts.SyntaxKind.TypeQuery) return true;
+    // TS 6 reports class `extends` expressions as type nodes. They still run.
+    if (
+      current.kind === ts.SyntaxKind.ExpressionWithTypeArguments &&
+      ts.isExpressionWithTypeArgumentsInClassExtendsClause(current)
+    ) {
+      continue;
+    }
+    if (ts.isTypeNode(current)) return true;
   }
   return false;
 }
