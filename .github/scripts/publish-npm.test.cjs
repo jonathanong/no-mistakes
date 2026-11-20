@@ -88,7 +88,10 @@ test("every npm channel uses workflow-owned publish tooling, including older tag
     assert.doesNotMatch(block, /npm publish /);
   }
   for (const name of ["publish-native-linux-arm", "publish-native-darwin", "publish-native-windows"]) {
-    assert.match(job(name), /steps: \*publish-native-steps/);
+    const block = job(name);
+    assert.match(block, /ref: \$\{\{ github.workflow_sha \}\}/);
+    assert.match(block, /publish-one-npm\.sh/);
+    assert.match(block, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/);
   }
   const publishAt = publishScript.indexOf('publish-npm.cjs" "$package" "$version"');
   const waitAt = publishScript.indexOf('--version "$version" --timeout-ms 1800000');

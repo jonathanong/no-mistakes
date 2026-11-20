@@ -76,8 +76,10 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   assert.match(workflow, /NM_ADDON: libno_mistakes\.dylib/);
   assert.match(workflow, /NM_ADDON: no_mistakes\.dll/);
   for (const job of ["build-native-linux-arm", "build-native-darwin", "build-native-windows"]) {
-    assert.match(jobBody(workflow, job), /steps: \*native-build-steps/);
-    assert.doesNotMatch(jobBody(workflow, job), /^ {4}- validate$/m);
+    const shared = jobBody(workflow, job);
+    assert.match(shared, /bash \.github\/scripts\/cargo-release-build\.sh/);
+    assert.match(shared, /Swatinem\/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2/);
+    assert.doesNotMatch(shared, /^ {4}- validate$/m);
   }
 });
 
@@ -185,20 +187,15 @@ test("release does not publish no-mistakes until every platform tarball installs
     const body = jobBody(workflow, verify);
     assert.match(body, new RegExp(`runs-on: ${os.replaceAll(".", "\\.")}`));
     assert.match(body, new RegExp(`NM_PACKAGE: ${packageName}`));
-    if (body.includes("steps: *verify-npm-steps")) {
-      assert.match(body, /steps: \*verify-npm-steps/);
-    } else {
-      assert.match(body, /persist-credentials: false/);
-    }
+    assert.match(body, /persist-credentials: false/);
+    assert.match(body, /smoke-published-native\.js/);
     assert.match(publishJs, new RegExp(`^ {6}- ${verify}$`, "m"));
   }
   const verifyRoot = jobBody(workflow, "verify-npm-root-linux-x64");
-  assert.match(verifyRoot, /steps: \*verify-npm-steps/);
+  assert.match(verifyRoot, /persist-credentials: false/);
+  assert.match(verifyRoot, /smoke-published-native\.js/);
   assert.match(verifyRoot, /needs:\n {6}- prepare\n {6}- publish-js/);
   assert.match(verifyRoot, /NM_PACKAGE: no-mistakes/);
-  const verifyPlatform = jobBody(workflow, "verify-npm-linux-x64");
-  assert.match(verifyPlatform, /persist-credentials: false/);
-  assert.match(verifyPlatform, /smoke-published-native\.js/);
 });
 
 test("native build timings workflow compiles darwin and linux-x64 without publishing", () => {
