@@ -4,7 +4,8 @@
 
 Keep explicitly declared Vitest projects consistent without importing live config
 or making a test scan the checkout. This opt-in rule reads TypeScript/JavaScript
-config source and checks literal properties of each `test.projects[]` entry.
+config source and checks literal properties of each `test.projects[]` entry,
+plus literal `test.exclude` arrays when `requiredExcludeGlobs` is set.
 It never executes config. Only `config` and the configured `helpers` are inputs;
 it does not discover additional config files, expand project globs, or scan tests.
 
@@ -12,8 +13,10 @@ it does not discover additional config files, expand project globs, or scan test
 
 The rule checks required scalar values, forbidden declarations, paired property
 presence, and corresponding values across the explicitly declared projects.
-Optional `declared` policies also reject literal values or literal kinds anywhere
-in object literals in the configured sources, without resolving projects.
+Optional `requiredExcludeGlobs` checks literal `test.exclude` arrays for
+configured strings. Optional `declared` policies also reject literal values or
+literal kinds anywhere in object literals in the configured sources, without
+resolving projects.
 
 ## Configuration
 
@@ -27,6 +30,9 @@ rules:
       required:
         isolate: true
       forbidden: [poolOptions]
+      requiredExcludeGlobs:
+        - "**/node_modules/**"
+        - "**/.git/**"
       parity:
         - properties: [fileParallelism, maxWorkers]
           compareRoot: false
@@ -59,6 +65,29 @@ properties need not equal one another: `fileParallelism: false` and
 `maxWorkers: 1` form a valid pair. Projects with neither property are allowed.
 With `compareRoot: true`, each corresponding value instead compares with the
 root config's `test` object; a missing or unresolved root value is incomplete.
+
+`requiredExcludeGlobs` defaults to an empty list. An empty list leaves exclude
+arrays unchecked, so existing required, forbidden, and parity behavior stays
+the same. Each entry must be a nonempty string. When the list is set, every
+literal `test.exclude` on the root config and on each literal `test.projects[]`
+entry must contain every configured string. Comparison is exact. Extra entries
+are allowed. A missing `exclude` stays silent, because Vitest's defaults still
+apply. An empty array, or any other fully known value that omits a configured
+string, is a finding.
+
+With `extends: true`, the inherited `exclude` is that project's array. A
+project that does not set `exclude` and does not inherit one stays silent.
+This check does not open another config file: a string project path or other
+non-literal project entry is incomplete while the option is set. A non-literal
+`exclude` value is incomplete. An array that already contains every configured
+string still passes when another element is unknown. If a configured string is
+not yet present and an element is unknown, the array is incomplete rather than
+a finding.
+
+Only the selected config's `test.exclude` is checked. A listed helper supplies
+the array when the config imports it into that property. An unrelated
+`exclude` on another object, including an object in a module that is not the
+configured config or helper, is outside the check.
 
 The shared `message` field replaces finding text. Normal severity and
 `include`/`exclude` application filters apply. There is no automatic fix: choosing
@@ -103,6 +132,10 @@ choose a common literal value for that property across the configured projects.
 For required or forbidden settings, add the required literal or remove the
 forbidden declaration. Move shared literal objects or arrays into a listed
 helper and import them statically to keep the source policy reviewable.
+For `requiredExcludeGlobs`, add each configured string to a literal
+`test.exclude` array that replaces Vitest's defaults. Leaving `exclude` unset
+keeps those defaults and needs no entry. `exclude: []` is a finding until it
+contains every configured string, such as `**/node_modules/**` and `**/.git/**`.
 
 ## Declared literal policies
 

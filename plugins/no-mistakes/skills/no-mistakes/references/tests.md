@@ -363,7 +363,9 @@ This does not assign neighboring helper files to those packages.
 
 For source-only Vitest project settings, configure `vitest-project-policy` with
 an explicit `config`, `helpers` paths/globs, effective required/forbidden literal
-properties, and parity pairs, then run `no-mistakes check --root . --format json`.
+properties, parity pairs, and optional `requiredExcludeGlobs`, then run `no-mistakes check --root . --format json`.
+`requiredExcludeGlobs` is empty by default. When set, each literal `test.exclude`
+array must contain those exact strings. A missing `exclude` stays silent.
 Use `declared.forbiddenValues` to ban particular literal assignments or
 `declared.forbidLiteralKinds` to require computed values for selected properties.
 These inspect every object literal in config and matched helpers, including

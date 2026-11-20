@@ -324,7 +324,9 @@ for sparse checkout coverage and suppression.
 Enable [`vitest-project-policy`](../rules/vitest-project-policy.md) to check
 literal properties across declared Vitest projects. Its explicit `config` and
 `helpers` path/glob inputs bound source reads using the prepared visible-file
-inventory. Optional `declared.forbiddenValues` and `declared.forbidLiteralKinds`
+inventory. Optional `requiredExcludeGlobs` requires those strings in each
+literal `test.exclude` array; an empty list and a missing `exclude` property
+leave that check silent. Optional `declared.forbiddenValues` and `declared.forbidLiteralKinds`
 check literal assignments in every object in those sources, including unimported
 helpers. Computed expressions remain allowed. Declared-only checks do not report
 dynamic projects as incomplete; unreadable or malformed selected sources and

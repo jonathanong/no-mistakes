@@ -887,8 +887,11 @@ runs through `check()` and `analyzeProject()` check queries using the existing
 async `checkJson` binding and JS facade. Exported `VitestProjectPolicyOptions`,
 `VitestDeclaredProjectPolicy`, `VitestPropertyLiteralKind`, `VitestPropertyParity`,
 and `VitestPropertyLiteral` describe its explicit config and helper path/glob
-inputs, effective required/forbidden properties, parity pairs, and `declared`
-literal restrictions. Helper globs select the prepared visible-file inventory.
+inputs, effective required/forbidden properties, parity pairs,
+`requiredExcludeGlobs`, and `declared`
+literal restrictions. `requiredExcludeGlobs` defaults to an empty list. When
+set, each literal `test.exclude` array on the selected config must contain
+those exact strings; a missing `exclude` stays silent. Helper globs select the prepared visible-file inventory.
 `declared.forbiddenValues` and `declared.forbidLiteralKinds` inspect every object
 literal in config and helpers, including unimported helpers; computed expressions
 remain allowed without constant propagation. Declared-only policies do not

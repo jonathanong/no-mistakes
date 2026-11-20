@@ -573,6 +573,389 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-dynamic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-dynamic.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-dynamic-config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-dynamic-config.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-dynamic-projects": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-dynamic-projects.ts",
+          "message": "Vitest project <root> is incomplete: test.projects is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.projects"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-empty-array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-empty-array.ts",
+          "line": 1,
+          "message": "Vitest project <root>: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export default { test: { exclude: [] } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-empty-glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "message": "vitest-project-policy requiredExcludeGlobs entries must be nonempty strings"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-explicit-empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-helper": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-local-binding": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-missing-glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-missing-glob.ts",
+          "line": 1,
+          "message": "Vitest project <root>: test.exclude must include **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export default { test: { exclude: ['**/node_modules/**', '**/widgets/**'] } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-no-test": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-non-array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-non-array.ts",
+          "line": 1,
+          "message": "Vitest project <root>: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "export default { test: { exclude: 'widgets' } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-omitted": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-option-off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-partial-spread": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-partial-spread.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-present": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-project-empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-project-empty.ts",
+          "line": 2,
+          "message": "Vitest project orders: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'orders', exclude: [] } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-project-inherit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-project-inherit.ts",
+          "line": 2,
+          "message": "Vitest project <root>: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "exclude: [],"
+        },
+        {
+          "file": "exclude-project-inherit.ts",
+          "line": 2,
+          "message": "Vitest project widgets: test.exclude must include **/node_modules/**, **/.git/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "exclude: [],"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-project-override": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-project-override.ts",
+          "line": 4,
+          "message": "Vitest project orders: test.exclude must include **/node_modules/**; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "{ test: { name: 'orders', exclude: ['**/.git/**'] } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-project-present": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-project-silent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-proven-spread": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-string-project": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-string-project.ts",
+          "message": "Vitest project #1 is incomplete: extends is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "extends"
+        },
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-string-project.ts",
+          "message": "Vitest project #1 is incomplete: test is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "excluded-root": {
     "exitCode": 0,
     "report": {
@@ -2338,7 +2721,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "vitest-project-policy",
-          "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `parity`, `declared`"
+          "message": "invalid options for rule `vitest-project-policy` at options.surprise: unknown field `surprise`, expected one of `config`, `helpers`, `required`, `forbidden`, `requiredExcludeGlobs`, `parity`, `declared`"
         }
       ],
       "integration": [],

@@ -1165,7 +1165,8 @@ keep PostgreSQL executor and resource bindings local to each body. Namespace
 
 TS/JS [`vitest-project-policy`](rules/vitest-project-policy.md) checks per-project
 literal properties through CLI `check`, asynchronous Node `check()`, and batched
-`analyzeProject()` checks. It reads an explicit config and helper list, reuses
+`analyzeProject()` checks. Optional `requiredExcludeGlobs` applies the same
+config selection to literal `test.exclude` arrays. It reads an explicit config and helper list, reuses
 Vitest config parsing, and reports unresolved effective values as incomplete.
 Helper globs select the prepared visible-file inventory. Optional
 `declared.forbiddenValues` and `declared.forbidLiteralKinds` check all object

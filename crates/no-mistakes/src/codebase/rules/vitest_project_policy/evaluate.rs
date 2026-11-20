@@ -1,15 +1,22 @@
 use super::*;
 mod assertions;
+mod exclude;
 mod parity;
 
 pub(super) fn check(root: &Path, options: &Options, config: Value) -> Diagnostics {
     let mut output = Diagnostics::default();
     let Some(root_test) = config.property("test") else {
-        output
-            .incomplete
-            .push(incomplete(root, &config, "test.projects", "<root>"));
+        if options.enforces_project_literals() {
+            output
+                .incomplete
+                .push(incomplete(root, &config, "test.projects", "<root>"));
+        }
         return output;
     };
+    exclude::check(root, options, &root_test, "<root>", &mut output);
+    if matches!(root_test.kind, Kind::Unknown) && !options.enforces_project_literals() {
+        return output;
+    }
     let Some(projects) = root_test.property("projects") else {
         return output;
     };
@@ -20,6 +27,7 @@ pub(super) fn check(root: &Path, options: &Options, config: Value) -> Diagnostic
         return output;
     };
     let mut baselines = vec![None; options.parity.len()];
+    let enforce = options.enforces_project_literals();
     for (index, project) in projects.iter().enumerate() {
         let test = project_test(root, project, &root_test, index, &mut output);
         let name = test
@@ -35,6 +43,10 @@ pub(super) fn check(root: &Path, options: &Options, config: Value) -> Diagnostic
             output
                 .incomplete
                 .push(incomplete(root, project, "test", &name));
+            continue;
+        }
+        exclude::check(root, options, &test, &name, &mut output);
+        if !enforce {
             continue;
         }
         assertions::check(root, options, project, &test, &name, &mut output);
