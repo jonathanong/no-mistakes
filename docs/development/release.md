@@ -4,19 +4,23 @@
 
 The manual `Release` workflow prepares one versioned commit and source archive.
 Validation and the four native CLI/addon builds start from that same source in
-parallel. Publication starts only after validation succeeds.
+parallel. Each platform npm publish starts after validation and that target's
+own build, so a finished Linux or Windows build does not wait for macOS. A
+separate job uploads the GitHub release assets after validation and every build.
 
 Cargo publication depends on validation, but does not consume native artifacts.
 It therefore runs independently of the native builds and npm publication. It
 retains Cargo's package verification and the existing version-resume checks.
-The native npm path waits for validation and every native build. The root npm
-package waits for installation and addon-loading verification of all four
-platform packages. ESLint plugin publication then waits for the root package's
-tarball verification, installation, and addon-loading checks on every platform.
-A native or root failure therefore prevents publishing a plugin whose matching
-`no-mistakes` peer is unavailable. The release workflow succeeds only when every
-job succeeds. A failed channel can still leave an earlier channel published;
+The root npm package waits until all four platform packages have been installed
+and have loaded their addons. That keeps `latest` off a version whose platform
+packages are unverified. ESLint plugin publication then waits for the root
+package's tarball verification on Linux and Windows. The macOS root verification
+still runs, and a failure still fails the release, but it does not gate the
+ESLint publish. A failed channel can still leave an earlier channel published;
 resume the same tagged version to complete the release instead of bumping again.
+The release is complete only when platform publication, the root package, the
+ESLint package, Cargo, the GitHub release, and the macOS root verification have
+all succeeded.
 
 ## Recover validation after preparation
 
@@ -45,6 +49,12 @@ automatically.
 
 See [the Rust resource budget](ci-builds.md#release-rust-resource-budget) for the
 compilation and test worker limits and memory-pressure diagnostics.
+
+Every native release build sets ThinLTO and 16 code generation units before
+restoring its cache, and `cargo build --timings` uploads `target/cargo-timings/*.html`
+as `release-timings-<target>`. The manual `Native build timings` workflow runs
+that same compile for darwin and linux-x64 without preparing a version or
+publishing. Local `cargo build --release` still uses the Cargo.toml profile.
 
 ## npm retry and backfill safety
 
@@ -88,12 +98,16 @@ so the helper reports it as a possible staging problem and stops conservatively.
 Propagation alone has taken longer than the old two minute window. For 0.109.31
 and 0.109.32, each platform package became visible 4.5 to 7.3 minutes after its
 upload exited 0. The 15 minute packument window covers that with margin. The
-platform publish step allows 80 minutes for all four packages together. Each
-`publish-npm` attempt polls the packument for up to 15 minutes, and each npm
-command uses a 2 minute process deadline. The same step then waits up to 30
-minutes per package for the tarball. The root and ESLint publish steps are 40
-minutes each. Each publish job's timeout covers its
-longest step and stays below the sum of its step timeouts, matching
+platform publish step allows 70 minutes for one package, and the four platform
+packages publish in parallel. The fetchable-tarball probe can use one minute.
+Each failed attempt can spend two minutes on the version lookup, the dist-tag
+lookup, `npm publish`, and the post-failure version lookup. The successful
+attempt spends those first three commands, then polls the packument for up to
+15 minutes. Retry sleeps add 30 seconds. The same step then waits up to 30
+minutes for the tarball. The root and ESLint publish steps are 70 minutes
+each. Each publish job allows 85 minutes, leaving 15 minutes for checkout and
+install before that step, and stays below the sum of its step timeouts,
+matching
 [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md).
 `.github/scripts/publish-npm.test.cjs` enforces those budgets.
 

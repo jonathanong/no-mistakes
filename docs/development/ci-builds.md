@@ -65,7 +65,7 @@ The current validation graph is organized as follows:
   is skipped; `Native tests` accepts that skip only when the producer was
   cancelled on a push to `main`. The macOS cache-retain jobs still require
   `success`, so a superseded run does not save a cache.
-  The [completed seed run](https://github.com/jonathanong/no-mistakes/actions/runs/43378356388)
+  The completed seed run `43378356388`
   showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
   queue waits of 8–12 minutes with roughly two jobs running concurrently.
   Fewer macOS jobs reduce repeated setup and runner contention. Native producers
