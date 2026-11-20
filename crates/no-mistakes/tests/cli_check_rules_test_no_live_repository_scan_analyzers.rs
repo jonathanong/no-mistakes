@@ -31,13 +31,31 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
     assert_eq!(
         lines,
         [
+            "exec(\"pnpm exec widget-audit check\");",
+            "execFileSync(\"bunx\", [\"widget-audit\", \"check\"]);",
+            "execFileSync(\"npm\", [\"exec\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"npx\", [\"--no-install\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"npx\", [\"-p\", \"widget-tools\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"npx\", [\"pnpm\", \"-C\", \"dir\", \"exec\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"npx\", [\"pnpm\", \"exec\", \"widget-audit\", \"check\"]);",
             "execFileSync(\"npx\", [\"widget-audit\", \"check\"]);",
+            "execFileSync(\"pnpm\", [\"--filter\", \"widgets\", \"exec\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"pnpm\", [\"-C\", \"dir\", \"exec\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"pnpm\", [\"-r\", \"exec\", \"widget-audit\", \"check\"]);",
             "execFileSync(\"pnpm\", [\"dlx\", \"widget-audit\", \"check\"]);",
             "execFileSync(\"pnpm\", [\"exec\", \"widget-audit\", \"check\", \"--json\"]);",
             "execFileSync(\"pnpm\", [\"exec\", \"widget-audit\", \"check\"]);",
             "execFileSync(\"widget-audit\", [\"check\"]);",
             "execFileSync(\"widget-audit\", [\"check\"], { encoding: \"utf8\" });",
+            "execFileSync(\"yarn\", [\"dlx\", \"widget-audit\", \"check\"]);",
+            "execFileSync(\"yarn\", [\"widget-audit\", \"check\"]);",
             "execFileSync(widgetAudit, [\"check\"]);",
+            "execSync(\"pnpm exec widget-audit check\");",
+            "execSync(\"pnpm exec widget-audit check\", { encoding: \"utf8\" });",
+            "execSync(widgetCommand);",
+            "fork(\"./node_modules/.bin/widget-audit\", [\"check\"]);",
+            "spawn(\"pnpm exec widget-audit check\", { shell: true });",
+            "spawn(\"pnpm\", [\"exec\", \"widget-audit\", \"check\"], { shell: true });",
             "spawnSync(\"widget-audit\", [\"check\"], { cwd: process.cwd() });",
         ]
     );
@@ -67,4 +85,28 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
         .as_array()
         .unwrap()
         .is_empty());
+}
+
+#[test]
+fn test_no_live_repository_scan_analyzer_suppression_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(RULE, "analyzer-suppress", "");
+    let report = crate::check_json_snapshot::assert_saved_fixture_report(
+        "test_no_live_repository_scan_analyzer_suppress",
+        &[("configured", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let configured = &report["configured"]["report"];
+    let lines: Vec<_> = configured["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["rule"], RULE);
+            assert_eq!(finding["target"], "analyzer subprocess");
+            finding["sourceLine"].as_str().unwrap().to_string()
+        })
+        .collect();
+    assert_eq!(lines, ["execSync(\"pnpm exec widget-audit check\");"]);
+    assert!(configured["advisories"].as_array().unwrap().is_empty());
 }

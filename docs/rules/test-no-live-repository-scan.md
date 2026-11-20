@@ -960,21 +960,39 @@ rules:
           args: [check]
 ```
 
-The match uses prepared arguments of `execFile`, `execFileSync`, `spawn`, and
-`spawnSync` from `child_process`. A `node:` specifier prefix and a `default.`
-export prefix are ignored. The executable may be a string literal or a const
-string binding. A path matches by its unmodified basename, including `node_modules/.bin`.
-One trailing `.cmd` or `.exe` is also accepted, so a configured `widget-audit`
-matches `widget-audit.exe`. These wrappers unwrap one level:
+The match uses prepared arguments of `exec`, `execFile`, `execFileSync`,
+`execSync`, `fork`, `spawn`, and `spawnSync` from `child_process`. A `node:`
+specifier prefix and a `default.` export prefix are ignored. The executable
+may be a string literal or a const string binding. A path matches by its
+unmodified basename, including `node_modules/.bin`. One trailing `.cmd` or
+`.exe` is also accepted, so a configured `widget-audit` matches
+`widget-audit.exe`. `fork` uses the module path the way `execFile` uses the
+executable.
 
-- `pnpm exec <command>` and `pnpm dlx <command>`, with one optional `--` after
-  the verb
-- `npx <command>`, with leading `-y` or `--yes`, then one optional `--`
+`exec` and `execSync` take a static shell string. A literal string is split
+on whitespace, and the first token is the executable. `spawn` and `spawnSync`
+use that split when `shell` is the boolean `true` and the command is not an
+argument array. A non-literal command stays unmatched. Quote characters are
+not interpreted. An argument array still matches when `shell` is `true`, so
+`spawn("pnpm", ["exec", "widget-audit", "check"], { shell: true })` is the
+configured command.
 
-A shell string passed to `exec` or `execSync` is not matched. A command that
-is not listed stays quiet, so `git ls-files` and `node fixtures/print-result.js`
-do not become findings unless config names them. `enumerators` still does not
-read subprocess arguments.
+These wrappers unwrap repeatedly, including one wrapper around another:
+
+- `pnpm exec` and `pnpm dlx`, after leading `-C`, `--dir`, `--filter`, `-F`,
+  `-r`, or `--recursive`, then one optional `--`. `-C`, `--dir`, `--filter`,
+  and `-F` consume the next literal token. A flag that already includes its
+  value, such as `--filter=widgets`, is one token.
+- `npm exec`, with the same leading flags and one optional `--`
+- `npx` and `bunx`, after leading `-y`, `--yes`, `--no-install`, `-p`, or
+  `--package`, then one optional `--`. `-p` and `--package` consume the next
+  literal token. `--package=name` is one flag.
+- `yarn <command>` and `yarn dlx <command>`, with one optional `--` after `dlx`
+
+A command that is not listed stays quiet, so `git ls-files` and
+`node fixtures/print-result.js` do not become findings unless config names
+them. `enumerators` still does not read subprocess arguments. A
+`no-mistakes-disable-next-line` on the launch suppresses that finding.
 
 The scan root is the `cwd` option. The executable string is not a directory.
 A call that passes no `cwd` uses the working directory and is reported with
