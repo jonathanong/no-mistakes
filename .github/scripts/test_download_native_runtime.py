@@ -89,6 +89,14 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertEqual(argv[argv.index("--connect-timeout") + 1], "10")
         self.assertEqual(options["stdout"], subprocess.PIPE)
 
+    def test_transports_tolerate_offline_windows_revocation_servers(self):
+        with patch.object(download.subprocess, "run", side_effect=self.transport):
+            code, _, _ = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertGreaterEqual(len(self.calls), 2)
+        for argv, _ in self.calls:
+            self.assertIn("--ssl-revoke-best-effort", argv)
+
     def test_permanent_http_failure_is_not_retried_by_python(self):
         with patch.object(download.subprocess, "run", side_effect=
                           subprocess.CalledProcessError(22, ["curl"])) as transport:
