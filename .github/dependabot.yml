@@ -76,3 +76,47 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # exclude-paths on the root entries skips version updates for saved fixtures.
+  # Security updates ignore that list and still open pull requests. These entries
+  # own fixtures/ and test-cases/ and ignore every dependency, including security
+  # updates, with an explicit versions range. A fixture whose behavior depends on
+  # a real package version needs its own entry, recorded in
+  # tests/js/dependabot-config.test.js, instead of this ignore.
+  - package-ecosystem: npm
+    directories:
+      - /fixtures/**
+      - /test-cases/**
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:45"
+      timezone: America/Los_Angeles
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 0
+    labels:
+      - dependencies
+    ignore:
+      - dependency-name: "*"
+        versions:
+          - ">= 0"
+
+  - package-ecosystem: cargo
+    directories:
+      - /fixtures/**
+      - /test-cases/**
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:50"
+      timezone: America/Los_Angeles
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 0
+    labels:
+      - dependencies
+    ignore:
+      - dependency-name: "*"
+        versions:
+          - ">= 0"
