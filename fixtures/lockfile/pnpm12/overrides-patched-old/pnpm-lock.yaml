@@ -19,11 +19,11 @@ snapshots:
 lockfileVersion: '9.0'
 
 overrides:
-  lodash: 4.17.21
+  lodash: 4.18.1
 
 patchedDependencies:
-  lodash@4.17.21: hash-old
+  lodash@4.18.1: hash-old
 
 packages:
-  lodash@4.17.21:
+  lodash@4.18.1:
     resolution: {integrity: sha512-lodash}

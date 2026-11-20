@@ -28,7 +28,7 @@ importers:
     dependencies:
       lodash:
         specifier: ^4.17.21
-        version: 4.17.21
+        version: 4.18.1
   packages/lib:
     dependencies:
       chalk:
@@ -38,7 +38,7 @@ importers:
 packages:
   react@19.0.0:
     resolution: {integrity: sha512-react}
-  lodash@4.17.21:
+  lodash@4.18.1:
     resolution: {integrity: sha512-lodash}
   chalk@5.0.0:
     resolution: {integrity: sha512-chalk}
