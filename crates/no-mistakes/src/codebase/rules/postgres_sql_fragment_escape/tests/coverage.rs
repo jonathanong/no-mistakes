@@ -469,10 +469,13 @@ fn tags_require_a_matching_sql_import() {
 }
 
 fn by_export(catalog: &Catalog<'_>, name: &str) -> Vec<Fragment> {
-    catalog
-        .fragments
-        .iter()
-        .filter(|fragment| fragment.exported == name)
-        .cloned()
-        .collect()
+    let mut found = Vec::new();
+    for names in catalog.by_export.values() {
+        if let Some(matches) = names.get(name) {
+            found.extend(matches.iter().cloned());
+        }
+    }
+    found.sort();
+    found.dedup();
+    found
 }
