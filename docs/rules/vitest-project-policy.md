@@ -73,7 +73,8 @@ literal `test.exclude` on the root config and on each literal `test.projects[]`
 entry must contain every configured string. Comparison is exact. Extra entries
 are allowed. A missing `exclude` stays silent, because Vitest's defaults still
 apply. An empty array, or any other fully known value that omits a configured
-string, is a finding.
+string, is a finding. The finding names each missing string and says to add
+it to `test.exclude`.
 
 With `extends: true`, the inherited `exclude` is that project's array. A
 project that does not set `exclude` and does not inherit one stays silent.
