@@ -204,6 +204,18 @@ parameter default (`options: QueryOptions = {}`) or an optional parameter
 Without either, an optional property, a property set to something other than an
 executor (`{ query: (statement) => read(statement) }`), a different key
 (`{ label: query }`) and a callee with another options type keep reporting.
+`options.query!(...)` is the same call as `options.query(...)` and
+`options.query?.(...)`. In `"forwarding-only"` mode, a parameter with no default
+whose type is an inline `{ query?: SessionExecutor }` or a named options type
+clears when the call site passes `{ query }` and the helper calls that property
+with proven SQL. Mode `"all"` still reports those passes. `options!.query(...)`
+on an imported helper is the same call. A parenthesized assignment
+(`(options.readOnly) = true`), a destructuring assignment
+(`({ readOnly: options.readOnly } = src)`), and that same target wrapped in
+parentheses inside the pattern (`({ readOnly: (options.readOnly) } = src)`)
+are writes. A helper that passes its
+options object to itself is unproven, and that check does not recurse without
+a bound.
 
 ### Library executor terminals
 
@@ -248,9 +260,11 @@ fromPrimary(id, { query });
 ```
 
 The closure must be non-async with one identifier parameter and either an
-expression body or a single `return`. The options argument must be an unwritten
-parameter of the enclosing function, optionally spread with literal scalar
-overrides. A closure with more statements, one that transforms the statement
+expression body or a single `return`. The library call takes at most the
+statement and that options value. The options argument must be an unwritten
+parameter of the function that encloses the closure, not the closure's own
+parameter, optionally spread with literal scalar overrides.
+`(statement) => write(statement, statement)` keeps reporting. A closure with more statements, one that transforms the statement
 (`write(String(statement), options)`), async or generator closures, options
 from another source, and a closure that is not passed directly as an argument
 keep reporting as before. A closure without an options argument
@@ -594,10 +608,15 @@ run(0 ?? read, account);
   SQL, hole-safety and executor-use checks: any other use of the parameter (a
   store, a closure return, an escape, a reassignment, a spread or an unresolved
   or overloaded callee) keeps the call reported. Hops may sit in loops and run
-  one after another. The check is depth-bounded (eight nested helpers) and a
-  cycle between helpers is unproven. A `for...of` const bound to an element of a
+  one after another. Every `run(...)` in the helper must prove its SQL; a helper
+  that runs two proven statements stays proven, and one dynamic call among them
+  reports. The check is depth-bounded (eight nested helpers, counting the helper
+  the call site checks) and a cycle between helpers is unproven. A ninth nested
+  helper stays unproven. A `for...of` const bound to an element of a
   parameter, or to a primitive, is a proven projection or scalar when nothing
-  writes it; an interpolation that uses any other iteration value reports. A
+  writes it in a same-file helper; an imported helper's loop binding stays
+  unproven and reports, as does an interpolation that uses any other iteration
+  value. A
   `const summary = await load(query, id)` result, where `load` is a proven
   helper called with a typed executor parameter, is a valid projection receiver
   for a later helper under the same typed field proof.
@@ -610,7 +629,13 @@ run(0 ?? read, account);
   result of a proven helper called with the same executor is accepted whether
   or not it is scalar (for example `number[]`), inline as
   `deliver(await build(ids, query), query)` or through a const. A mapped array
-  or result binding that is later mutated or reassigned reports. A callback
+  or result binding that is later mutated or reassigned reports. A write after
+  the use does not invalidate that earlier use. When the call passes one or more
+  executor roots, the rows must come from one of those roots; a call that passes
+  no executor still accepts rows from any executor parameter.
+  Rows read from an untagged template stay scalars when mapped to a primitive
+  field; `"forwarding-only"` judges that dynamic statement on its own.
+  A callback
   with a block body, a side effect or more than one expression, whole rows
   (`rows.map((r) => r)`), spreads of a row, non-scalar fields, other receivers,
   a result of an unproven helper and dynamic SQL in any hop keep the call
@@ -649,10 +674,15 @@ run(0 ?? read, account);
   a configured `executorTypeNames` entry, or a `const` or `await using` bound to
   `await factory()` where `factory` is an imported `executorFactoryNames` entry
   (`const tx = await beginTransaction()`, then `const { rows } = await tx(statement)`).
+  The parameter's type must be that configured import: a same-named local type,
+  an import from another module, and a string-literal import name
+  (`import { "beginTransaction" as open }`) do not count. The parameter must not
+  be reassigned, and `const next = query` does not carry the executor identity.
   That factory binding is an executor root like the typed parameter, as long as
   it is never reassigned, not a `let`, and not passed to another function before
-  the projection. A factory missing from the list, a call that is not awaited, and a
-  reassigned `let` stay reported. The local's type must supply the
+  the projection. A shadowed local with the factory's name, a factory missing
+  from the list, a call that is not awaited, and a reassigned `let` stay reported.
+  A closure that captures the factory result before the projection also reports. The local's type must supply the
   required primitive field, and neither the local nor its source parameter or
   row set may be written, aliased, iterated, passed to a writing callee, or
   otherwise escape anywhere in the function. A `let`/`var` local, a local
@@ -701,6 +731,18 @@ run(0 ?? read, account);
   the projection still does. A scalar read bound to a `const`
   (`const id = row.id`) is not an alias of the row, so later projections such as
   `const ownerId = row.ownerId` stay proved; `const copy = row` still is one.
+  Several read-only element consts from the same root
+  (`const a = rows[0]; const b = rows[1]`) do not mutate it. A write through one
+  of them does. A class field initializer is its own boundary, so a write in the
+  outer function after the class expression still counts: the field runs when the
+  class is constructed. A const declared inside a loop is a fresh object only
+  when its root's initializer is an awaited call. `const rows = cache` inside the
+  loop is not fresh. A projection in the loop header is invalidated by a write
+  in the loop body. A destructured callback parameter of
+  `map`, `flatMap`, `forEach`, `filter`, `find`, `some`, or `every` on a row
+  array is that row's field: a primitive field proves and a `Date` field reports.
+  An index signature does not prove a named field. A type parameter whose
+  constraint declares that required primitive field does (`T extends { id: string }`).
 
 - An object-literal argument is proved property by property with the same checks as
   a positional argument: `markWithInput(tx, { id: row.id, ownerId: row.ownerId, at })`
@@ -720,7 +762,9 @@ run(0 ?? read, account);
   a default such as `at = new Date()`), a `const` bound to `new Date(...)`, or an inline
   `new Date(...)` whose arguments are proven scalars. This is sound because a
   `Date` is a bind value, never a SQL fragment, and a value that does not come
-  from the row cannot carry stale row data. A `const` Date is accepted only
+  from the row cannot carry stale row data. A branded string
+  (`string & { readonly brand: "Id" }`) is not a primitive scalar. A `??` test
+  (`if (row ?? fallback)`) is not a null guard, so the row stays unproven. A `const` Date is accepted only
   when no later use (a setter call, a write, an escape) could write row data into
   it. These stay reported, in both positions: a `Date` or other non-primitive row
   field (`row.at`, `new Date(row.at)`), the row, the rows, or an alias of either,

@@ -6,6 +6,9 @@ const { memberWrite } = require("./postgres-no-executor-adapter-option-forward")
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { tsAdapterStatement, tsLibraryCall } = require("./postgres-no-executor-adapter-library");
 
+const MAX_HOPS = 8;
+const active = new Set();
+
 // An argument that is not a plain, unwritten parameter of the forwarding
 // function has no scalar proof, so the hole check rejects it.
 const UNPROVEN = { type: "ThisExpression" };
@@ -41,9 +44,24 @@ function parameterBinding(parameter, property, ts) {
 
 // The helper an adapter closure is passed to must prove its own SQL.
 function closureReceiverVisible(invoked, closure, declaration, args, shared) {
-  const inner = shared.checker.getResolvedSignature(invoked)?.getDeclaration();
-  const forwarded = forwardedArguments(invoked, declaration, args, shared);
+  const { checker, ts } = shared;
+  const inner = checker.getResolvedSignature(invoked)?.getDeclaration() ?? null;
   const at = invoked.arguments.indexOf(closure);
+  const annotated = inner?.parameters?.[at]?.type;
+  // Local acceptance is an executor type or an inline function type. Other annotations stay unproven.
+  if (
+    !annotated ||
+    !(
+      ts.isFunctionTypeNode(annotated) ||
+      require("./postgres-no-executor-adapter-type").importedExecutorType(
+        annotated,
+        checker,
+        shared.options,
+      )
+    )
+  )
+    return false;
+  const forwarded = forwardedArguments(invoked, declaration, args, shared);
   return declarationVisible(inner, at, undefined, forwarded, shared) === true;
 }
 
@@ -53,14 +71,16 @@ function declarationVisible(declaration, index, property, args, shared) {
   const { context, options, facts, checker, ts, program } = shared;
   const parameter = declaration?.parameters?.[index];
   if (!declaration?.body || !parameter) return null;
+  if (active.has(declaration) || active.size >= MAX_HOPS) return false;
   const { binding, object } = parameterBinding(parameter, property, ts);
   if (!binding || !ts.isIdentifier(binding)) return null;
   const symbol = checker.getSymbolAtLocation(binding);
   if (!symbol) return null;
+  active.add(declaration);
   let seen = false;
   let safe = true;
   function passedOn(node, invoked) {
-    const inner = checker.getResolvedSignature(invoked)?.getDeclaration();
+    const inner = checker.getResolvedSignature(invoked)?.getDeclaration() ?? null;
     const forwarded = forwardedArguments(invoked, declaration, args, shared);
     const at = invoked.arguments.indexOf(node);
     return declarationVisible(inner, at, property, forwarded, shared) === true;
@@ -70,11 +90,14 @@ function declarationVisible(declaration, index, property, args, shared) {
     if (ts.isIdentifier(node) && node.text === "arguments") safe = false;
     if (node !== binding && ts.isIdentifier(node) && checker.getSymbolAtLocation(node) === symbol) {
       seen = true;
-      let invoked = node.parent;
+      let receiver = node;
+      while (ts.isNonNullExpression(receiver.parent) && receiver.parent.expression === receiver)
+        receiver = receiver.parent;
+      let invoked = receiver.parent;
       if (
         object &&
         ts.isPropertyAccessExpression(invoked) &&
-        invoked.expression === node &&
+        invoked.expression === receiver &&
         invoked.name.text !== property
       ) {
         if (memberWrite(invoked)) safe = false;
@@ -101,11 +124,11 @@ function declarationVisible(declaration, index, property, args, shared) {
           : tsLiteralSql(library.arguments[0], checker, ts, options, hole, program);
         return;
       }
-      let callee = node;
+      let callee = receiver;
       if (
         object &&
         ts.isPropertyAccessExpression(invoked) &&
-        invoked.expression === node &&
+        invoked.expression === receiver &&
         invoked.name.text === property
       ) {
         callee = invoked;
@@ -130,8 +153,12 @@ function declarationVisible(declaration, index, property, args, shared) {
     }
     ts.forEachChild(node, visit);
   }
-  visit(declaration.body);
-  return seen && safe;
+  try {
+    visit(declaration.body);
+    return seen && safe;
+  } finally {
+    active.delete(declaration);
+  }
 }
 
 function importedVisible(call, index, property, context, options, facts) {

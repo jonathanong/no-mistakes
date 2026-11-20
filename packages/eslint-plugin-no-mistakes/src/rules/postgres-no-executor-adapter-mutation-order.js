@@ -1,6 +1,11 @@
 "use strict";
 
-const FUNCTIONS = new Set(["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"]);
+const FUNCTIONS = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+  "PropertyDefinition",
+]);
 const LOOPS = new Set([
   "WhileStatement",
   "DoWhileStatement",
@@ -40,8 +45,15 @@ function lookup(scope, name) {
   return null;
 }
 
+// An awaited call allocates a new object. An alias of another binding does not.
+// The typescript-eslint AST drops parentheses, so the initializer is the await itself.
+function awaitedCall(node) {
+  return node.type === "AwaitExpression" && node.argument.type === "CallExpression";
+}
+
 // A const declared inside `loop` whose value is rooted at another binding declared
-// inside the same loop is a new object on every iteration.
+// inside the same loop is a new object on every iteration only when that root's
+// initializer is an awaited call.
 function freshIn(variable, loop) {
   const def = variable.defs.length === 1 ? variable.defs[0] : null;
   const inside = (node) => loop.range[0] <= node.range[0] && node.range[1] <= loop.range[1];
@@ -49,7 +61,9 @@ function freshIn(variable, loop) {
   const root = strip(def.node.init);
   if (root?.type !== "Identifier") return false;
   const rootVariable = lookup(variable.scope, root.name);
-  return Boolean(rootVariable?.identifiers[0] && inside(rootVariable.identifiers[0]));
+  if (!rootVariable?.identifiers[0] || !inside(rootVariable.identifiers[0])) return false;
+  const rootDef = rootVariable.defs.length === 1 ? rootVariable.defs[0] : null;
+  return Boolean(rootDef?.type === "Variable" && awaitedCall(rootDef.node.init));
 }
 
 // Whether a use of a const local can still affect the value read at `before`.

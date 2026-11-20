@@ -51,19 +51,57 @@ function passedOn(reference) {
   return reference.identifier.parent.type === "CallExpression";
 }
 
+function unwrapParens(node, ts) {
+  let current = node;
+  while (ts.isParenthesizedExpression(current.parent)) current = current.parent;
+  return current;
+}
+
 // A write through another property of the binding changes what any callee it is
-// passed on to sees, so it is never an unrelated read.
+// passed on to sees, so it is never an unrelated read. Parentheses and
+// destructuring-assignment targets (`(options.readOnly) = true`,
+// `({ a: options.readOnly } = src)`, `({ a: (options.readOnly) } = src)`)
+// are writes too. A shorthand pattern names an identifier, never this member.
 function memberWrite(member) {
   const ts = require("typescript");
-  const parent = member.parent;
-  return Boolean(
+  const unwrapped = unwrapParens(member, ts);
+  const parent = unwrapped.parent;
+  if (
     (ts.isBinaryExpression(parent) &&
-      parent.left === member &&
+      parent.left === unwrapped &&
       ts.isAssignmentOperator(parent.operatorToken.kind)) ||
     ts.isPrefixUnaryExpression(parent) ||
     ts.isPostfixUnaryExpression(parent) ||
-    ts.isDeleteExpression(parent),
-  );
+    ts.isDeleteExpression(parent)
+  )
+    return true;
+  let cursor = member;
+  for (;;) {
+    const up = cursor.parent;
+    if (!up) return false;
+    if (ts.isParenthesizedExpression(up)) {
+      cursor = up;
+      continue;
+    }
+    if (ts.isPropertyAssignment(up) && up.initializer === cursor) {
+      cursor = up.parent;
+      continue;
+    }
+    if (ts.isArrayLiteralExpression(up) && up.elements.includes(cursor)) {
+      cursor = up;
+      continue;
+    }
+    const outer = unwrapParens(cursor, ts);
+    let pattern = outer;
+    while (ts.isParenthesizedExpression(pattern)) pattern = pattern.expression;
+    const assign = outer.parent;
+    return Boolean(
+      (ts.isObjectLiteralExpression(pattern) || ts.isArrayLiteralExpression(pattern)) &&
+      ts.isBinaryExpression(assign) &&
+      assign.left === outer &&
+      ts.isAssignmentOperator(assign.operatorToken.kind),
+    );
+  }
 }
 
 module.exports = { forwardedOption, guardedProof, memberWrite, passedOn };

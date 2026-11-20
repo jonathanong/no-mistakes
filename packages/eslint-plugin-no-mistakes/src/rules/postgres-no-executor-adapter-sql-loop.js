@@ -7,8 +7,7 @@ function loopBinding(def) {
     def?.type === "Variable" &&
     def.parent.kind === "const" &&
     def.node.id.type === "Identifier" &&
-    def.parent.parent?.type === "ForOfStatement" &&
-    def.parent.parent.left === def.parent,
+    def.parent.parent?.type === "ForOfStatement",
   );
 }
 

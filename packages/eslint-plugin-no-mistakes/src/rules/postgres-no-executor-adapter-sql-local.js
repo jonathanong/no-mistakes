@@ -6,6 +6,7 @@ const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { targetFactsFor } = require("./postgres-no-executor-adapter-facts");
 const { loopIterable } = require("./postgres-no-executor-adapter-sql-loop");
 const { objectMutation } = require("./postgres-no-executor-adapter-object-mutation");
+const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 
 function parameterVariable(node, context) {
   const variable = node.type === "Identifier" ? resolveVariable(node, context) : null;
@@ -14,13 +15,16 @@ function parameterVariable(node, context) {
     : null;
 }
 
+function unwritten(variable) {
+  return !variable.references.some((reference) => reference.isWrite() && !reference.init);
+}
+
+// The parameter's type must be a configured import, and nothing in the function may assign it.
 function executorParameter(node, context) {
   const variable = parameterVariable(node, context);
-  const type = variable?.defs[0].name.typeAnnotation?.typeAnnotation;
-  const names = executorOptionDefaults(context.options[0]).executorTypeNames;
-  return type?.type === "TSTypeReference" && type.typeName.type === "Identifier"
-    ? names.includes(type.typeName.name)
-    : false;
+  if (!variable || !unwritten(variable)) return false;
+  const type = variable.defs[0].name.typeAnnotation?.typeAnnotation;
+  return localExecutorType(type, context, executorOptionDefaults(context.options[0]));
 }
 
 function constDeclarator(variable, kinds = ["const"]) {
@@ -44,7 +48,7 @@ function factoryCall(init, context) {
 
 // `const tx = await beginTransaction()` / `await using tx = ...` with a configured factory.
 function executorFactoryLocal(node, context) {
-  const variable = node.type === "Identifier" ? resolveVariable(node, context) : null;
+  const variable = resolveVariable(node, context);
   const declarator = variable && constDeclarator(variable, ["const", "await using"]);
   return Boolean(
     declarator?.id.type === "Identifier" &&
@@ -53,18 +57,26 @@ function executorFactoryLocal(node, context) {
   );
 }
 
+function resultCall(variable) {
+  const declarator = constDeclarator(variable);
+  if (declarator?.id.type !== "ObjectPattern") return null;
+  const init = unwrapTs(declarator.init);
+  const call = unwrapTs(init?.type === "AwaitExpression" ? init.argument : init);
+  return call?.type === "CallExpression" && !call.optional ? call : null;
+}
+
+// The executor the row set was read from, when that callee is a proven root.
+function resultExecutor(variable, context) {
+  const call = resultCall(variable);
+  const callee = call ? unwrapTs(call.callee) : null;
+  if (callee?.type !== "Identifier") return null;
+  if (!executorParameter(callee, context) && !executorFactoryLocal(callee, context)) return null;
+  return resolveVariable(callee, context);
+}
+
 // `const { rows } = await query(...)` where `query` is a typed executor parameter.
 function executorResult(variable, context) {
-  const declarator = constDeclarator(variable);
-  if (declarator?.id.type !== "ObjectPattern") return false;
-  const init = unwrapTs(declarator.init);
-  const call = unwrapTs(init.type === "AwaitExpression" ? init.argument : init);
-  return (
-    call.type === "CallExpression" &&
-    !call.optional &&
-    (executorParameter(unwrapTs(call.callee), context) ||
-      executorFactoryLocal(unwrapTs(call.callee), context))
-  );
+  return Boolean(resultExecutor(variable, context));
 }
 
 // `await helper(tx, ...)` where `tx` is a typed executor parameter and the helper is proven.
@@ -103,4 +115,11 @@ function localReceiver(variable, context, before = null, seen = new Set([variabl
   );
 }
 
-module.exports = { executorResult, helperResult, localReceiver };
+module.exports = {
+  executorFactoryLocal,
+  executorParameter,
+  executorResult,
+  helperResult,
+  localReceiver,
+  resultExecutor,
+};
