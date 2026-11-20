@@ -434,9 +434,8 @@ are recorded in [PR #3329](https://github.com/jonathanong/no-mistakes/pull/3329)
 
 ### Completed parallel validation
 
-Parallel validation run
-[`43385163008`](https://github.com/jonathanong/no-mistakes/actions/runs/43385163008)
-completed successfully at `1bf45eee1`, before the macOS shard-count adjustment.
+Parallel validation run `43385163008` completed successfully at `1bf45eee1`,
+before the macOS shard-count adjustment.
 It took **26m58s** from workflow creation to the last completed job. Selected
 job intervals include setup, artifact transfer, and cleanup:
 
@@ -469,14 +468,13 @@ in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
 macOS matrices use two shards per family to reduce repeated setup and runner
 contention, while Windows retains six.
 
-A later completed run,
-[`43389713210`](https://github.com/jonathanong/no-mistakes/actions/runs/43389713210)
-at `56c7d9064`, passed in **19m49s** with 70 passing checks. Its macOS Rust
-producer restored a compatible workspace snapshot: all four Cargo commands
-reused their targets, taking 5.59 seconds combined, and the producer completed
-in 3m08s including setup and artifact handling. Linux CLI/addon producers took
-56/60 seconds. The macOS runtime producer missed every workspace fallback and
-compiled for 11m52s, taking 14m49s overall. Coverage and standalone producers
+A later completed run `43389713210` at `56c7d9064` passed in **19m49s** with
+70 passing checks. Its macOS Rust producer restored a compatible workspace
+snapshot: all four Cargo commands reused their targets, taking 5.59 seconds
+combined, and the producer completed in 3m08s including setup and artifact
+handling. Linux CLI/addon producers took 56/60 seconds. The macOS runtime
+producer missed every workspace fallback and compiled for 11m52s, taking
+14m49s overall. Coverage and standalone producers
 also missed workspace caches and took 8m42s and 7m22s overall.
 
 That run exposed a separate matrix dependency delay: macOS Rust consumers
