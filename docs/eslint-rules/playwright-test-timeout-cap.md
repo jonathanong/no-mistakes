@@ -80,18 +80,29 @@ an assertion that the legal slow operations exceed the cap.
   override, including a positive finite value within `max`. The numeric cap still
   runs, so an over-cap override reports both this ban and the cap finding.
   `test.setTimeout`, `info.setTimeout`, and their renamed destructuring report.
-  A member reference that is not called, such as `const remember = test.setTimeout`,
-  reports as an escaping reference. `test.slow()` is an override because a true
-  or unknown condition triples the deadline; a statically false condition stays
-  inert and does not report. `test.slow` taken as a value reports the same way
-  as an escaping `setTimeout` reference. Registration details such as
-  `test('widget', { timeout: 5_000 }, fn)`, hook details, and
-  `describe.configure({ timeout })` are overrides. Project configuration
+  A member reference that is not called, such as `const remember = test.setTimeout`
+  or `const savedTimeout = info.setTimeout`, reports as an escaping reference.
+  `info.slow` taken as a value, and `setTimeout` destructured from test info,
+  report the same way. `test.slow()` is an override because a true or unknown
+  condition triples the deadline; a statically false condition stays inert and
+  does not report. `test.slow` taken as a value reports the same way as an
+  escaping `setTimeout` reference. `describe.configure({ timeout })` is an
+  override. Playwright test details (`test(title, details, body)`, including
+  `describe` and `only` / `skip` / `fixme` / `fail`) accept `tag`, `annotation`,
+  and `lock` only. Hooks (`beforeAll`, `beforeEach`, `afterAll`, `afterEach`)
+  accept a title and a function. A `timeout` property on those calls has no
+  effect and reports `noEffect`, which points at `test.setTimeout` or the
+  project configuration timeout. `test.configure({ timeout })` is not reported
+  because `test.configure` is not a Playwright API. This ban does not cover
+  `expect(..., { timeout })` (owned by
+  [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md)),
+  `page.waitFor*` timeouts, or `test.step` timeouts. Project configuration
   (`defineConfig`, `playwright.config.ts`, and `configFiles`) keeps its timeout
   fields and still follows only the numeric cap. Fixture tuple budgets stay on
   `fixtureMax` and are not this ban. With the option omitted or `false`, every
   form above keeps today's cap behavior: an under-cap override is accepted, and
-  an over-cap override still reports.
+  an over-cap override still reports. A details or hook `timeout` stays silent
+  when the ban is off, because it does not change the deadline.
 
 ```ts
 import { defineConfig, test } from '@playwright/test';
@@ -100,7 +111,10 @@ test.setTimeout(10_000); // Reports only when banOverrides is true.
 const remember = test.setTimeout; // Escaping reference reports with the ban.
 test.slow(); // Deadline change; reports with the ban.
 test.slow(false); // Static false stays inert.
-test('widget loads', { timeout: 5_000 }, async () => {});
+test('widget loads', { timeout: 5_000 }, async () => {}); // Details timeout has no effect.
+test.beforeEach({ timeout: 5_000 }, async () => {}); // Hook timeout has no effect.
+test.describe.configure({ timeout: 5_000 }); // Suite override; reports with the ban.
+test.configure({ timeout: 5_000 }); // Not a Playwright API; not reported.
 test('items stay on the project deadline', async () => {}); // No override.
 ```
 
@@ -156,7 +170,9 @@ an opaque finding does not repair an over-cap consumer deadline.
 
 Use explicit bounded deadlines and synchronization signals. When `banOverrides`
 is on, delete the per-test override instead of picking a smaller number; leave
-the deadline in project configuration. Keep imported/helper
+the deadline in project configuration. A `timeout` on test details or a hook
+does not set a deadline; remove it and use `test.setTimeout` or the project
+configuration timeout. Keep imported/helper
 ownership explicit and unknown admitted carriers visible until their owning
 prepared config facts can resolve them. Do not replace uncertainty with a larger
 cap or automatically reject a proven legal short slow slot.

@@ -32,6 +32,8 @@ module.exports = {
       "Playwright {{name}} exceeds {{max}} ms. Fix the stalled work rather than increasing the deadline.",
     unknown:
       "Playwright {{name}} cannot be resolved against {{max}} ms; keep admitted timeout carriers explicit.",
+    noEffect:
+      "Playwright {{name}} has no effect. Test details and hooks do not accept a timeout property. Use test.setTimeout or the project configuration timeout.",
     override:
       "Playwright {{name}} overrides the project deadline. Remove the override and keep the deadline in project configuration.",
   },
