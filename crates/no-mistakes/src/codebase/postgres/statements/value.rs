@@ -53,7 +53,7 @@ pub(super) fn from_expr_at(expr: &Expr, positions: PlaceholderPositions<'_>) -> 
             op: UnaryOperator::Plus | UnaryOperator::Minus,
             expr,
         } => signed_literal(expr, positions),
-        Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. } => SqlValueForm::Subquery,
+        inner if super::value_form::is_subquery_value(inner) => SqlValueForm::Subquery,
         _ => SqlValueForm::Other,
     }
 }

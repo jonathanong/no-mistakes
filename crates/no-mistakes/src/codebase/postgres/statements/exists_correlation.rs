@@ -6,7 +6,7 @@ use crate::codebase::postgres::idents::{
     ident_key, insert_ident, object_name_ident, unwrap_expr, visit_function_args,
 };
 use sqlparser::ast::{
-    Expr, GroupByExpr, JoinConstraint, JoinOperator, Query, Select, SelectItem,
+    Expr, GroupByExpr, InTarget, JoinConstraint, JoinOperator, Query, Select, SelectItem,
     SelectItemQualifiedWildcardKind, SetExpr, TableFactor, TableFunctionArgs, TableWithJoins,
 };
 use std::collections::HashSet;
@@ -172,9 +172,11 @@ fn expr_refs_outside(expr: &Expr, local: &HashSet<String>) -> bool {
         Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
             !local.contains(&ident_key(&parts[parts.len() - 2]))
         }
-        Expr::InSubquery { expr, subquery, .. } => {
-            expr_refs_outside(expr, local) || query_refs_outside(subquery, local)
-        }
+        Expr::In {
+            expr,
+            target: InTarget::Subquery(subquery),
+            ..
+        } => expr_refs_outside(expr, local) || query_refs_outside(subquery, local),
         Expr::Subquery(query)
         | Expr::Exists {
             subquery: query, ..

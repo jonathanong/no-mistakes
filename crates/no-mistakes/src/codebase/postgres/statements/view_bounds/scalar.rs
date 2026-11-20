@@ -1,4 +1,4 @@
-use sqlparser::ast::{visit_expressions, Expr};
+use sqlparser::ast::{visit_expressions, Expr, InTarget};
 use std::ops::ControlFlow;
 
 pub(super) fn configured_function(expr: &Expr, functions: &[String]) -> bool {
@@ -16,7 +16,10 @@ pub(super) fn scalar(expr: &Expr, functions: &[String]) -> bool {
             | Expr::CompoundIdentifier(_)
             | Expr::Subquery(_)
             | Expr::Exists { .. }
-            | Expr::InSubquery { .. } => true,
+            | Expr::In {
+                target: InTarget::Subquery(_),
+                ..
+            } => true,
             Expr::Function(function) => {
                 let name = crate::codebase::postgres::idents::object_name_identity(&function.name);
                 function.over.is_some()

@@ -19,7 +19,10 @@ fn right_table_arms_preserve_following_statement_boundaries_and_ast_identity() {
         let SetExpr::Table(table) = &**right else {
             panic!("original TABLE AST must survive compatibility normalization");
         };
-        assert_eq!(table.table_name.as_deref(), Some(name));
+        assert_eq!(
+            table.table_name.as_ref().map(|ident| ident.value.as_str()),
+            Some(name)
+        );
     }
 }
 

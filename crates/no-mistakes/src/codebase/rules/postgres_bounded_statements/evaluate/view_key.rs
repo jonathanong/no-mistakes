@@ -78,14 +78,15 @@ pub(super) fn plain_table(factor: &TableFactor) -> Option<(String, Vec<String>)>
         partitions,
         json_path: None,
         sample: None,
-        index_hints,
+        index_directives,
+        inheritance: None,
     } = factor
     else {
         return None;
     };
     if !with_hints.is_empty()
         || !partitions.is_empty()
-        || !index_hints.is_empty()
+        || !index_directives.is_empty()
         || alias
             .as_ref()
             .is_some_and(|alias| !alias.columns.is_empty() || alias.at.is_some())

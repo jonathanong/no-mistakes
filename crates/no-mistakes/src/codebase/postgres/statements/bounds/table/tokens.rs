@@ -144,8 +144,9 @@ impl TableTokenCursor {
 
     pub(in crate::codebase::postgres) fn take(&mut self, table: &Table) -> Option<SourceTable> {
         let found = self.names[self.next..].iter().position(|source| {
-            source.schema.as_deref() == table.schema_name.as_deref()
-                && Some(source.table.as_str()) == table.table_name.as_deref()
+            source.schema.as_deref() == table.schema_name.as_ref().map(|ident| ident.value.as_str())
+                && Some(source.table.as_str())
+                    == table.table_name.as_ref().map(|ident| ident.value.as_str())
         })?;
         let source = self.names[self.next + found].clone();
         self.next += found + 1;

@@ -3,7 +3,9 @@ use super::super::select::uses::{columns::bare, scope::BaseRel};
 use super::super::value::PlaceholderPositions;
 use super::super::SqlTransformedColumnProbeFact as Probe;
 use super::scope::{base_relations, owner, push_factor, qualifier};
-use sqlparser::ast::{visit_expressions, BinaryOperator as Op, Expr, JoinOperator, TableWithJoins};
+use sqlparser::ast::{
+    visit_expressions, BinaryOperator as Op, Expr, InTarget, JoinOperator, TableWithJoins,
+};
 use std::ops::ControlFlow;
 
 pub(super) struct Anchor {
@@ -131,7 +133,10 @@ fn independent(
         let unsafe_value = match child {
             Expr::Subquery(_)
             | Expr::Exists { .. }
-            | Expr::InSubquery { .. }
+            | Expr::In {
+                target: InTarget::Subquery(_),
+                ..
+            }
             | Expr::Collate { .. } => true,
             Expr::Function(function) if is_row_variant(&function.name) => true,
             Expr::Identifier(_) | Expr::CompoundIdentifier(_)

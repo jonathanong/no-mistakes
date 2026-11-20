@@ -1,7 +1,9 @@
 use super::super::select::uses::scope::BaseRel;
 use super::scope::{self, qualifier};
 use super::SqlTransformedColumnUseFact;
-use sqlparser::ast::{BinaryOperator, Expr, JoinOperator, TableFactor, TableWithJoins, Value};
+use sqlparser::ast::{
+    BinaryOperator, Expr, InTarget, JoinOperator, TableFactor, TableWithJoins, Value,
+};
 use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 
@@ -38,7 +40,12 @@ pub(super) fn mark(
             let proof = sqlparser::ast::visit_expressions(value, |expr| {
                 if matches!(
                     expr,
-                    Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. }
+                    Expr::Subquery(_)
+                        | Expr::Exists { .. }
+                        | Expr::In {
+                            target: InTarget::Subquery(_),
+                            ..
+                        }
                 ) {
                     return ControlFlow::Break(());
                 }

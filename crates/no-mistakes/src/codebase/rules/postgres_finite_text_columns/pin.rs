@@ -1,4 +1,4 @@
-use sqlparser::ast::{BinaryOperator, Expr, Value};
+use sqlparser::ast::{BinaryOperator, Expr, InTarget, Value};
 
 pub(super) fn pinned_literals_expr(expr: &Expr, column: &str) -> Option<Vec<String>> {
     pin(expr, column)
@@ -8,10 +8,11 @@ fn pin(expr: &Expr, column: &str) -> Option<Vec<String>> {
     let expr = peel_nested(expr);
     match expr {
         Expr::BinaryOp { left, op, right } => binary(left, op, right, column),
-        Expr::InList {
+        Expr::In {
             expr,
-            list,
+            target: InTarget::List(list),
             negated: false,
+            ..
         } => in_list(expr, list, column),
         Expr::AnyOp {
             left,

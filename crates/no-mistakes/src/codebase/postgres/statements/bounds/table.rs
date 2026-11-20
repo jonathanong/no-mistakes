@@ -8,10 +8,13 @@ pub(in crate::codebase::postgres) use tokens::TableTokenIndex;
 
 /// `TABLE name` is `SELECT * FROM name`: it returns every row of the relation.
 pub(super) fn bound(table: &Table, scope: &Scope, at: (usize, usize)) -> SqlBoundQuery {
-    let name: Vec<&str> = [table.schema_name.as_deref(), table.table_name.as_deref()]
-        .into_iter()
-        .flatten()
-        .collect();
+    let name: Vec<&str> = [
+        table.schema_name.as_ref().map(|ident| ident.value.as_str()),
+        table.table_name.as_ref().map(|ident| ident.value.as_str()),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
     if name.is_empty() {
         return query::sized_by_itself(at);
     }

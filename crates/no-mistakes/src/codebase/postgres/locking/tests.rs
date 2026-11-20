@@ -5,8 +5,8 @@ use super::{
 };
 use crate::codebase::postgres::parse_postgres_sql;
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArguments, Ident, ObjectName, ObjectNamePart, OrderBy,
-    OrderByKind, OrderByOptions, Query, SetExpr, Statement, UnaryOperator, Values,
+    BinaryOperator, Expr, Function, FunctionArguments, Ident, InTarget, ObjectName, ObjectNamePart,
+    OrderBy, OrderByKind, OrderByOptions, Query, SetExpr, Statement, UnaryOperator, Values,
 };
 
 fn first(sql: &str) -> LockingSelectMetadata {
@@ -332,10 +332,11 @@ fn constructed_any_function_is_multi_row() {
 fn constructed_set_expr_and_unnest_helpers() {
     let nested = SetExpr::Query(Box::new(empty_query()));
     assert!(!set_expr_has_multi_row(&nested));
-    let unnest = Expr::InUnnest {
+    let unnest = Expr::In {
         expr: Box::new(Expr::Identifier(Ident::new("id"))),
-        array_expr: Box::new(Expr::Identifier(Ident::new("ids"))),
+        target: InTarget::Unnest(Box::new(Expr::Identifier(Ident::new("ids")))),
         negated: false,
+        global: false,
     };
     assert!(expr_has_multi_row(&unnest));
     let unary = Expr::UnaryOp {

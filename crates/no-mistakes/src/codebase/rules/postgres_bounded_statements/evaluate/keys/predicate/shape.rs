@@ -3,7 +3,7 @@ use super::columns::stored_column;
 use super::literals::{array_literals, literal, literals};
 use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::SchemaCatalog;
-use sqlparser::ast::{BinaryOperator, Expr, Value};
+use sqlparser::ast::{BinaryOperator, Expr, InTarget, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -44,10 +44,11 @@ pub(super) fn membership_with(
     types: &BTreeMap<String, String>,
 ) -> Option<Atom> {
     match unwrap_expr(expr) {
-        Expr::InList {
+        Expr::In {
             expr,
-            list,
+            target: InTarget::List(list),
             negated: false,
+            ..
         } => {
             let column = stored_column(expr, types)?;
             Some(Atom::In(

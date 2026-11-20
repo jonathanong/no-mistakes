@@ -89,7 +89,15 @@ fn walk(expr: &Expr, clause: SqlColumnClause, out: &mut Vec<Column>) {
                 out,
             );
         }
-        Expr::Between { expr, .. } | Expr::InList { expr, .. } | Expr::InSubquery { expr, .. } => {
+        Expr::Between { expr, .. } => record(
+            expr,
+            clause,
+            at(crate::codebase::postgres::idents::unwrap_expr(expr).span()),
+            out,
+        ),
+        Expr::In { expr, target, .. }
+            if super::super::super::value_form::is_list_or_subquery(target) =>
+        {
             record(
                 expr,
                 clause,

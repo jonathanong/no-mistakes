@@ -48,9 +48,7 @@ pub(super) fn boolean_result(expr: &Expr) -> bool {
                 | Expr::IsNotDistinctFrom(..)
                 | Expr::IsJson { .. }
                 | Expr::IsNormalized { .. }
-                | Expr::InList { .. }
-                | Expr::InSubquery { .. }
-                | Expr::InUnnest { .. }
+                | Expr::In { .. }
                 | Expr::Between { .. }
                 | Expr::Like { .. }
                 | Expr::ILike { .. }

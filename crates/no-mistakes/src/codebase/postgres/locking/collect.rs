@@ -3,7 +3,9 @@ use super::{
     has_for_update, locks_skip_locked, order_keys, set_expr_has_multi_row, unwrap_expr,
     LockingSelectMetadata,
 };
-use sqlparser::ast::{Expr, Query, SetExpr, Spanned, Statement, TableFactor, TableWithJoins};
+use sqlparser::ast::{
+    Expr, InTarget, Query, SetExpr, Spanned, Statement, TableFactor, TableWithJoins,
+};
 
 pub(super) trait LockOutput {
     fn record(&mut self, query: &Query, metadata: LockingSelectMetadata);
@@ -128,8 +130,9 @@ pub(super) fn collect_queries_from_expr(
 ) {
     match unwrap_expr(expr) {
         Expr::Subquery(query)
-        | Expr::InSubquery {
-            subquery: query, ..
+        | Expr::In {
+            target: InTarget::Subquery(query),
+            ..
         } => {
             collect_from_query(query, out, positions);
         }

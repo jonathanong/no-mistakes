@@ -81,7 +81,7 @@ fn set_expr_has_multi_row(expr: &SetExpr) -> bool {
 
 fn expr_has_multi_row(expr: &Expr) -> bool {
     match unwrap_expr(expr) {
-        Expr::InList { .. } | Expr::InSubquery { .. } | Expr::InUnnest { .. } => true,
+        Expr::In { .. } => true,
         Expr::AnyOp {
             compare_op: BinaryOperator::Eq,
             ..

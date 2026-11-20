@@ -1,4 +1,5 @@
 use super::*;
+use sqlparser::ast::InTarget;
 pub(in super::super) fn cte_consumers(
     query: &Query,
     catalog: &super::super::scope::CatalogScope<'_>,
@@ -74,9 +75,11 @@ pub(in super::super) fn cte_consumers(
                 safe += 1;
             };
             match expr {
-                Expr::InSubquery { subquery, .. } | Expr::Exists { subquery, .. } => {
-                    inspect(subquery)
+                Expr::In {
+                    target: InTarget::Subquery(subquery),
+                    ..
                 }
+                | Expr::Exists { subquery, .. } => inspect(subquery),
                 _ => {}
             }
             ControlFlow::Continue(())
