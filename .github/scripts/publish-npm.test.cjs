@@ -54,39 +54,56 @@ for (const [version, latest, tag] of [
 ]) test(`tag for ${version} after ${latest}`, () => assert.equal(distTag(version, latest), tag));
 
 const workflow = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
-const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [\w-]+:\n/)[0];
+const publishScript = readFileSync(path.join(root, ".github/scripts/publish-one-npm.sh"), "utf8");
+const job = (name) => {
+  const parts = workflow.split(`\n  ${name}:\n`);
+  assert.equal(parts.length, 2, name);
+  return parts[1].split(/\n  [\w-]+:\n/)[0];
+};
 test("plugin publication requires fetchable native packages and root", () => {
-  const needs = (name) => job(name).split("    needs:\n")[1].split("    runs-on:")[0];
-  assert.match(needs("publish-js"), /      - verify-npm-platform\n/);
-  assert.doesNotMatch(needs("publish-js"), /publish-eslint/);
-  assert.match(needs("verify-npm-root"), /      - publish-js\n/);
-  assert.match(needs("publish-eslint"), /      - verify-npm-root\n/);
-  for (const name of ["publish-js", "verify-npm-root", "publish-eslint"]) {
+  const needs = (name) => `${job(name).split("    needs:\n")[1].split(/\n    [a-z]/)[0]}\n`;
+  for (const verify of ["verify-npm-darwin", "verify-npm-linux-x64", "verify-npm-linux-arm", "verify-npm-windows"]) {
+    assert.match(needs("publish-js"), new RegExp(`      - ${verify}\\n`));
+  }
+  assert.doesNotMatch(needs("publish-js"), /publish-eslint|verify-npm-root/);
+  for (const verify of ["verify-npm-root-linux-x64", "verify-npm-root-linux-arm", "verify-npm-root-windows"]) {
+    assert.match(needs(verify), /      - publish-js\n/);
+    assert.match(needs("publish-eslint"), new RegExp(`      - ${verify}\\n`));
+  }
+  assert.match(needs("verify-npm-root-darwin"), /      - publish-js\n/);
+  assert.doesNotMatch(needs("publish-eslint"), /verify-npm-root-darwin/);
+  assert.match(needs("release-complete"), /      - publish-eslint\n/);
+  assert.match(needs("release-complete"), /      - verify-npm-root-darwin\n/);
+  for (const name of ["publish-js", "publish-eslint", "verify-npm-root-darwin", "verify-npm-linux-x64"]) {
     assert.doesNotMatch(job(name), /if:.*always\(\)/);
   }
 });
 test("every npm channel uses workflow-owned publish tooling, including older tags", () => {
-  for (const name of ["publish", "publish-js", "publish-eslint"]) {
+  for (const name of ["publish-native-linux-x64", "publish-js", "publish-eslint"]) {
     const block = job(name);
     assert.match(block, /ref: \$\{\{ github.workflow_sha \}\}/);
     assert.match(block, /persist-credentials: false/);
     assert.match(block, /mv -- publish-tools "\$RUNNER_TEMP\/publish-tools"/);
-    assert.match(block, /node "\$RUNNER_TEMP\/publish-tools\/\.github\/scripts\/publish-npm.cjs" "\$pkg" "\$version"/);
+    assert.match(block, /publish-one-npm\.sh/);
     assert.doesNotMatch(block, /npm publish /);
-    assert.match(block, /--timeout-ms 1800000/);
   }
+  for (const name of ["publish-native-linux-arm", "publish-native-darwin", "publish-native-windows"]) {
+    assert.match(job(name), /steps: \*publish-native-steps/);
+  }
+  const publishAt = publishScript.indexOf('publish-npm.cjs" "$package" "$version"');
+  const waitAt = publishScript.indexOf('--version "$version" --timeout-ms 1800000');
+  assert.ok(publishAt >= 0 && waitAt > publishAt);
 });
 test("npm publish steps outlast the visibility window for every package", () => {
   const windowMinutes = VISIBILITY_WINDOW_MS / 60000;
   assert.equal(windowMinutes, 15);
-  for (const name of ["publish", "publish-js", "publish-eslint"]) {
+  for (const name of ["publish-native-linux-x64", "publish-js", "publish-eslint"]) {
     const block = job(name);
-    const step = block.split(/\n      - name: Publish npm [^\n]*\n/)[1] ?? block.split(/\n      - name: Publish ESLint package with OIDC\n/)[1];
+    const step = block.split(/\n      - name: Publish [^\n]*\n/)[1];
     const stepMinutes = Number(step.match(/timeout-minutes: (\d+)/)[1]);
     const jobMinutes = Number(block.match(/\n    timeout-minutes: (\d+)/)[1]);
-    const packages = step.split("packages=(\n")[1].split(")")[0].trim().split(/\s+/).length;
-    assert.ok(stepMinutes >= packages * (windowMinutes + 2) + 5, `${name} step needs ${packages} x ${windowMinutes + 2} minutes`);
-    const stepTimeouts = block.split("\n    steps:\n")[1].split(/\n?      - /).slice(1).map((s) => Number(s.match(/\n        timeout-minutes: (\d+)/)?.[1]));
+    assert.ok(stepMinutes >= windowMinutes + 2 + 5, `${name} step needs one package window`);
+    const stepTimeouts = block.split(/\n    steps:[^\n]*\n/)[1].split(/\n?      - /).slice(1).map((s) => Number(s.match(/\n        timeout-minutes: (\d+)/)?.[1]));
     assert.ok(stepTimeouts.every(Number.isInteger), `${name} steps all need literal timeouts`);
     const stepSum = stepTimeouts.reduce((a, b) => a + b, 0);
     assert.ok(jobMinutes >= Math.max(...stepTimeouts), `${name} job must cover its longest step`);

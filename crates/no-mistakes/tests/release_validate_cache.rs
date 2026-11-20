@@ -169,32 +169,43 @@ fn validate_job_starts_isolated_catalog_postgres_after_disk_reclamation_before_t
 }
 
 #[test]
-fn macos_and_windows_releases_use_parallel_codegen_and_thin_lto_before_cache_restore() {
+fn native_releases_use_thin_lto_and_sixteen_codegen_units_before_cache_restore() {
     let workflow = release_workflow();
-    let native = job_body(&workflow, "build-native");
-    // Cold macOS and Windows MSVC releases exceeded 45 minutes with fat LTO and
-    // one codegen unit; Linux stays on full LTO. Keep the overrides job-wide so
-    // cache identity and compilation agree.
-    let (job_settings, steps) = native.split_once("\n    steps:\n").unwrap();
-    let (_, job_env) = job_settings.split_once("\n    env:\n").unwrap();
-    let env_lines: Vec<_> = job_env
-        .lines()
-        .take_while(|line| !line.starts_with("    ") || line.starts_with("      "))
-        .collect();
-    for setting in [
-        "CARGO_PROFILE_RELEASE_LTO: ${{ (matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc') && 'thin' || 'fat' }}",
-        "CARGO_PROFILE_RELEASE_CODEGEN_UNITS: ${{ (matrix.target == 'aarch64-apple-darwin' || matrix.target == 'x86_64-pc-windows-msvc') && '16' || '1' }}",
+    let script = std::fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.github/scripts/cargo-release-build.sh"),
+    )
+    .unwrap();
+    // One cargo invocation emits the rlib and cdylib, then writes timings.
+    assert!(script.contains(
+        "NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target \"$target\" -p no-mistakes --timings"
+    ));
+    assert!(script.contains("crate-type = [\"rlib\", \"cdylib\"]"));
+    assert!(!script.contains("--crate-type cdylib"));
+    let steps = job_body(&workflow, "build-native-linux-x64");
+    let (settings, step_body) = steps.split_once("\n    steps:").unwrap();
+    let cache = step_body.find("Swatinem/rust-cache").unwrap();
+    let build = step_body.find("cargo-release-build.sh").unwrap();
+    assert!(cache < build);
+    assert!(step_body.contains("fromJSON(env.NM_BUILD_TIMEOUT)"));
+    for (job, timeout, build_timeout) in [
+        ("build-native-linux-x64", "100", "65"),
+        ("build-native-linux-arm", "100", "65"),
+        ("build-native-darwin", "120", "90"),
+        ("build-native-windows", "120", "90"),
     ] {
-        assert!(
-            env_lines.contains(&format!("      {setting}").as_str()),
-            "missing job-level release profile override: {setting}"
-        );
+        let body = job_body(&workflow, job);
+        let (job_settings, _) = body.split_once("\n    steps:").unwrap();
+        assert!(job_settings.contains(&format!("\n    timeout-minutes: {timeout}\n")));
+        for setting in [
+            "CARGO_PROFILE_RELEASE_LTO: thin",
+            "CARGO_PROFILE_RELEASE_CODEGEN_UNITS: \"16\"",
+            &format!("NM_BUILD_TIMEOUT: \"{build_timeout}\""),
+        ] {
+            assert!(job_settings.contains(&format!("      {setting}")));
+        }
+        assert!(!job_settings.contains("'fat'"));
+        assert!(!job_settings.contains("|| '1'"));
     }
-    assert!(steps.contains("Swatinem/rust-cache"));
-    assert!(steps.contains("NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked"));
-    // Windows MSVC and ARM macOS are the slowest targets: they get extra headroom.
-    let slow =
-        "(matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin')";
-    assert!(native.contains(&format!("timeout-minutes: ${{{{ {slow} && 120 || 100 }}}}")));
-    assert!(native.contains(&format!("timeout-minutes: ${{{{ {slow} && 90 || 65 }}}}")));
+    assert!(settings.contains("CARGO_PROFILE_RELEASE_LTO: thin"));
 }

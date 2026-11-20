@@ -231,13 +231,13 @@ CI checks links to this repository's `main` documentation against the checked-ou
 `docs/` files, including new pages in a pull request. Missing targets still fail;
 links outside that documentation prefix continue to be checked over the network.
 
-ARM macOS and Windows MSVC release builds use ThinLTO and 16 code generation
-units so LLVM can optimize the combined CLI and N-API build in parallel on a
-cold runner. The workflow sets these Cargo profile overrides before restoring
-its build cache. Linux release targets and local builds retain full LTO and
-one code generation unit. Compile-time and runtime differences require
-measurements on the same platform; Linux benchmarks do not establish the macOS
-or Windows tradeoff.
+Every native release target uses ThinLTO and 16 code generation units so LLVM
+can optimize the combined CLI and N-API build in parallel on a cold runner.
+The workflow sets these Cargo profile overrides before restoring its build
+cache. A local `cargo build --release` still follows the Cargo.toml release
+profile, which is full LTO and one code generation unit, unless those
+environment variables are set. Compile-time and runtime differences require
+measurements on the same platform.
 
 Linux real-addon cases use isolated jobs and retain serial files within each
 job so native thread pools do not compete. The shared file catalog and case

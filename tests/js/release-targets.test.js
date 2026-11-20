@@ -6,13 +6,23 @@ const { nativePackageName } = require("../../packages/no-mistakes/scripts/native
 
 const repoRoot = join(__dirname, "..", "..");
 
-function releaseMatrixTargets(source) {
-  const match = source.match(/^ {6}matrix:\n {8}target:\n((?: {10}- [^\n]+\n)+)/m);
-  assert.ok(match, "release workflow must define the build target matrix");
-  return match[1]
-    .trim()
-    .split("\n")
-    .map((line) => line.trim().replace(/^- /, ""));
+function jobBody(source, name) {
+  const parts = source.split(`\n  ${name}:\n`);
+  assert.equal(parts.length, 2, `release workflow must define ${name}`);
+  return parts[1].split(/\n  [\w-]+:\n/)[0];
+}
+
+function releaseBuildTargets(source) {
+  return [
+    "build-native-linux-x64",
+    "build-native-linux-arm",
+    "build-native-darwin",
+    "build-native-windows",
+  ].map((name) => {
+    const target = jobBody(source, name).match(/^ {6}NM_TARGET: (\S+)$/m);
+    assert.ok(target, `${name} must name its Cargo target`);
+    return target[1];
+  });
 }
 
 test("every native optional package has a release target", () => {
@@ -20,7 +30,7 @@ test("every native optional package has a release target", () => {
     join(repoRoot, ".github", "workflows", "release.yml"),
     "utf8",
   );
-  const releaseTargets = releaseMatrixTargets(releaseWorkflow);
+  const releaseTargets = releaseBuildTargets(releaseWorkflow);
   const targets = [
     ["darwin", "arm64", "aarch64-apple-darwin"],
     ["win32", "x64", "x86_64-pc-windows-msvc"],
@@ -36,93 +46,85 @@ test("every native optional package has a release target", () => {
 
 test("release native builds emit CLI and N-API from one rustc without waiting for Validate", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
-  const job = workflow.match(/^ {2}build-native:[\s\S]*?(?=^ {2}publish:)/m);
-  assert.ok(job, "release workflow must define build-native");
-  const body = job[0];
+  const script = readFileSync(join(repoRoot, ".github/scripts/cargo-release-build.sh"), "utf8");
+  const body = jobBody(workflow, "build-native-linux-x64");
   assert.match(body, /^ {4}needs:\n {6}- prepare$/m, "native builds must start after prepare");
-  // Windows MSVC and ARM macOS are the slowest, most variable targets, so they
-  // get extra headroom; Linux targets keep 100/65 minutes.
-  const slow =
-    "(matrix.target == 'x86_64-pc-windows-msvc' || matrix.target == 'aarch64-apple-darwin')";
-  assert.ok(
-    body.includes(`\n    timeout-minutes: \${{ ${slow} && 120 || 100 }}\n`),
-    "native builds keep a 100-minute job envelope (120 for Windows and ARM macOS)",
-  );
-  assert.ok(
-    body.includes(
-      `\n      - name: Build CLI and N-API addon\n        timeout-minutes: \${{ ${slow} && 90 || 65 }}\n`,
-    ),
-    "combined compile keeps a 65-minute cold-build budget (90 for Windows and ARM macOS)",
-  );
+  assert.match(body, /\n    timeout-minutes: 100\n/);
+  assert.match(jobBody(workflow, "build-native-windows"), /\n    timeout-minutes: 120\n/);
+  assert.match(jobBody(workflow, "build-native-darwin"), /\n    timeout-minutes: 120\n/);
+  assert.match(body, /NM_BUILD_TIMEOUT: "65"/);
+  assert.match(jobBody(workflow, "build-native-windows"), /NM_BUILD_TIMEOUT: "90"/);
+  assert.match(body, /timeout-minutes: \$\{\{ fromJSON\(env\.NM_BUILD_TIMEOUT\) \}\}/);
   const stepTimeouts = [...body.matchAll(/^ {8}timeout-minutes: (\d+)$/gm)].map((timeout) =>
     Number(timeout[1]),
   );
   assert.ok(
-    stepTimeouts.every((timeout) => timeout <= 45),
-    "native steps must be at most 45 minutes",
+    stepTimeouts.every((timeout) => timeout <= 5),
+    "native steps other than the compile expression must be at most 5 minutes",
   );
+  assert.match(script, /crate-type = \["rlib", "cdylib"\]/);
   assert.match(
-    body,
-    /crate-type = \["rlib", "cdylib"\]/,
-    "native release jobs must emit rlib and cdylib from one rustc",
+    script,
+    /cargo build --release --locked --target "\$target" -p no-mistakes --timings/,
   );
-  assert.doesNotMatch(
-    body,
-    /cargo rustc --release --locked --target .* --lib --crate-type cdylib/,
-    "native release jobs must not compile the crate a second time as cdylib-only",
-  );
+  assert.doesNotMatch(script, /--crate-type cdylib/);
+  assert.match(body, /bash \.github\/scripts\/cargo-release-build\.sh/);
   assert.match(body, /Add-MpPreference -ExclusionPath/);
-  assert.match(body, /name: release-cli-\$\{\{ matrix\.target \}\}/);
-  assert.match(body, /name: release-napi-\$\{\{ matrix\.target \}\}/);
-  assert.match(body, /addon: libno_mistakes\.dylib/);
-  assert.match(body, /addon: no_mistakes\.dll/);
+  assert.match(body, /name: release-cli-\$\{\{ env\.NM_TARGET \}\}/);
+  assert.match(body, /name: release-napi-\$\{\{ env\.NM_TARGET \}\}/);
+  assert.match(body, /name: release-timings-\$\{\{ env\.NM_TARGET \}\}/);
+  assert.match(workflow, /NM_ADDON: libno_mistakes\.dylib/);
+  assert.match(workflow, /NM_ADDON: no_mistakes\.dll/);
+  for (const job of ["build-native-linux-arm", "build-native-darwin", "build-native-windows"]) {
+    assert.match(jobBody(workflow, job), /steps: \*native-build-steps/);
+    assert.doesNotMatch(jobBody(workflow, job), /^ {4}- validate$/m);
+  }
 });
 
 test("release syncs optional native package versions and publishes only through npm OIDC", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const publisher = readFileSync(join(repoRoot, ".github/scripts/publish-one-npm.sh"), "utf8");
+  const stager = readFileSync(join(repoRoot, ".github/scripts/stage-release-addon.sh"), "utf8");
   assert.match(workflow, /sync-native-package-versions\.js "\$version"/);
-  assert.match(workflow, /publish-npm\.cjs" "\$pkg" "\$version"/);
+  assert.match(publisher, /publish-npm\.cjs" "\$package" "\$version"/);
   const helper = readFileSync(join(repoRoot, ".github/scripts/publish-npm.cjs"), "utf8");
   assert.match(helper, /"--provenance", "--access", "public", "--tag"/);
   assert.doesNotMatch(workflow, /NPM_TOKEN|pnpm[^\n]* publish/);
-  const publish = workflow.match(/^ {2}publish:[\s\S]*?(?=^ {2}verify-npm-platform:)/m);
-  const publishJs = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}verify-npm-root:)/m);
-  assert.ok(publish, "release workflow must define publish");
-  assert.ok(publishJs, "release workflow must define publish-js");
+  const publish = jobBody(workflow, "publish-native-linux-x64");
+  const publishJs = jobBody(workflow, "publish-js");
   for (const name of [
     "no-mistakes-darwin-arm64",
     "no-mistakes-linux-arm64-gnu",
     "no-mistakes-linux-x64-gnu",
     "no-mistakes-win32-x64-msvc",
   ]) {
-    assert.match(publish[0], new RegExp(`            ${name}(?: \\\\|$)`, "m"));
-    assert.doesNotMatch(publishJs[0], new RegExp(`${name}`));
+    assert.match(workflow, new RegExp(`NM_PACKAGE: ${name}\\n`));
+    assert.doesNotMatch(publishJs, new RegExp(name));
   }
-  assert.match(publishJs[0], /^ {12}no-mistakes$/m);
-  // Publish every package before waiting so one slow registry tarball cannot starve the rest.
-  for (const job of [publish[0], publishJs[0]]) {
-    const publishAt = job.indexOf('publish-npm.cjs" "$pkg" "$version"');
-    const waitAt = job.indexOf('--version "$version" --timeout-ms 1800000');
-    assert.ok(publishAt >= 0 && waitAt > publishAt, "publish all packages, then wait for each");
+  assert.match(publishJs, /publish-one-npm\.sh "\$\{\{ needs\.prepare\.outputs\.version \}\}" no-mistakes/);
+  const publishAt = publisher.indexOf('publish-npm.cjs" "$package" "$version"');
+  const waitAt = publisher.indexOf('--version "$version" --timeout-ms 1800000');
+  assert.ok(publishAt >= 0 && waitAt > publishAt, "publish the package, then wait for its tarball");
+  for (const verify of [
+    "verify-npm-darwin",
+    "verify-npm-linux-x64",
+    "verify-npm-linux-arm",
+    "verify-npm-windows",
+  ]) {
+    assert.match(publishJs, new RegExp(`^ {6}- ${verify}$`, "m"));
   }
-  assert.match(publishJs[0], /needs:\n {6}- prepare\n {6}- verify-npm-platform/);
-  assert.match(publish[0], /needs:\n {6}- prepare\n {6}- validate\n {6}- build-native/);
-  assert.match(
-    workflow,
-    /addon="target\/\$\{\{ matrix\.target \}\}\/release\/\$\{\{ matrix\.addon \}\}"/,
-  );
-  assert.match(workflow, /expected_magic='Mach-O\.\*arm64'/);
-  assert.match(workflow, /expected_magic='ELF 64-bit\.\*x86-64'/);
-  assert.match(workflow, /expected_magic='PE32\\\+\.\*x86-64'/);
+  assert.match(publish, /needs:\n {6}- prepare\n {6}- validate\n {6}- build-native-linux-x64/);
+  assert.doesNotMatch(publish, /build-native-darwin/);
+  assert.match(stager, /addon="target\/\$\{target\}\/release\/\$\{addon_name\}"/);
+  assert.match(stager, /expected_magic='Mach-O\.\*arm64'/);
+  assert.match(stager, /expected_magic='ELF 64-bit\.\*x86-64'/);
+  assert.match(stager, /expected_magic='PE32\\\+\.\*x86-64'/);
 });
 
 test("Cargo publication overlaps the native and npm path after validation", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
-  const cargo = workflow.match(/^ {2}publish-cargo:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
-  const npm = workflow.match(/^ {2}publish:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
-  assert.ok(cargo, "release must define independent Cargo publication");
-  assert.ok(npm, "release must retain native npm publication");
-  // Cargo still verifies the exact validated source, without waiting for binaries.
+  const cargo = jobBody(workflow, "publish-cargo");
+  const npm = jobBody(workflow, "publish-native-linux-x64");
   assert.match(cargo, /^ {4}needs:\n {6}- prepare\n {6}- validate$/m);
   assert.match(cargo, /ref: \$\{\{ needs\.prepare\.outputs\.release-sha \}\}/);
   assert.match(cargo, /persist-credentials: false/);
@@ -131,53 +133,92 @@ test("Cargo publication overlaps the native and npm path after validation", () =
   assert.match(cargo, /already exists on crates\.io index/);
   assert.match(cargo, /crates\.io\/api\/v1\/crates\/\$pkg\/\$version/);
   assert.doesNotMatch(npm, /Publish Cargo crates|Install Rust|CARGO_REGISTRY_TOKEN|publish-cargo/);
-  assert.match(npm, /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-native$/m);
+  assert.match(npm, /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-native-linux-x64$/m);
 });
 
-test("ESLint publication waits for native and root package verification", () => {
+test("ESLint publication waits for Linux and Windows root verification only", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
-  const eslint = workflow.match(/^ {2}publish-eslint:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
-  const root = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
-  const verifyRoot = workflow.match(/^ {2}verify-npm-root:[\s\S]*$/m)?.[0];
-  assert.ok(eslint, "source-only ESLint publication must have its own job");
-  assert.ok(root);
-  assert.ok(verifyRoot);
-  assert.match(eslint, /^ {4}needs:\n {6}- prepare\n {6}- verify-npm-root$/m);
+  const publisher = readFileSync(join(repoRoot, ".github/scripts/publish-one-npm.sh"), "utf8");
+  const eslint = jobBody(workflow, "publish-eslint");
+  const root = jobBody(workflow, "publish-js");
+  const verifyMac = jobBody(workflow, "verify-npm-root-darwin");
+  assert.match(eslint, /^ {4}needs:\n {6}- prepare\n {6}- verify-npm-root-linux-x64\n {6}- verify-npm-root-linux-arm\n {6}- verify-npm-root-windows$/m);
+  assert.doesNotMatch(eslint, /verify-npm-root-darwin/);
   assert.match(eslint, /ref: \$\{\{ needs\.prepare\.outputs\.release-sha \}\}/);
   assert.match(eslint, /^ {6}contents: read$/m);
   assert.match(eslint, /^ {6}id-token: write$/m);
   assert.match(eslint, /persist-credentials: false/);
   assert.doesNotMatch(eslint, /RELEASE_TOKEN|NPM_TOKEN/);
-  assert.match(eslint, /^ {12}eslint-plugin-no-mistakes$/m);
-  assert.doesNotMatch(eslint, /^ {12}no-mistakes$/m);
-  assert.match(eslint, /publish-npm\.cjs" "\$pkg" "\$version"/);
-  assert.match(root, /^ {6}- verify-npm-platform$/m);
-  assert.match(verifyRoot, /^ {6}- publish-js$/m);
-  assert.doesNotMatch(root, /^ {6}- publish-eslint$/m);
-  assert.match(eslint, /--timeout-ms 1800000/);
-  assert.doesNotMatch(root, /eslint-plugin-no-mistakes/);
-  assert.doesNotMatch(verifyRoot, /publish-eslint/);
+  assert.match(eslint, /eslint-plugin-no-mistakes/);
+  assert.doesNotMatch(eslint, /publish-one-npm\.sh[^\n]* no-mistakes$/m);
+  assert.match(publisher, /--timeout-ms 1800000/);
+  for (const verify of [
+    "verify-npm-darwin",
+    "verify-npm-linux-x64",
+    "verify-npm-linux-arm",
+    "verify-npm-windows",
+  ]) {
+    assert.match(root, new RegExp(`^ {6}- ${verify}$`, "m"));
+  }
+  assert.match(verifyMac, /^ {6}- publish-js$/m);
+  assert.doesNotMatch(root, /publish-eslint/);
+  assert.doesNotMatch(verifyMac, /^ {6}- publish-eslint$/m);
+  const complete = jobBody(workflow, "release-complete");
+  assert.match(complete, /^ {6}- publish-eslint$/m);
+  assert.match(complete, /^ {6}- verify-npm-root-darwin$/m);
 });
 
 test("release does not publish no-mistakes until every platform tarball installs", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const publisher = readFileSync(join(repoRoot, ".github/scripts/publish-one-npm.sh"), "utf8");
   assert.match(workflow, /wait-npm-tarball\.js/);
   assert.match(workflow, /smoke-published-native\.js/);
-  assert.match(workflow, /publish-npm\.cjs" "\$pkg" "\$version"/);
-  assert.match(workflow, /--timeout-ms 0/);
-  const verifyPlatform = workflow.match(/^ {2}verify-npm-platform:[\s\S]*?(?=^ {2}publish-js:)/m);
-  const verifyRoot = workflow.match(/^ {2}verify-npm-root:[\s\S]*$/m);
-  assert.ok(verifyPlatform, "release workflow must verify platform packages before JS publish");
-  assert.ok(verifyRoot, "release workflow must verify the root package after JS publish");
-  assert.match(verifyPlatform[0], /needs:\n {6}- prepare\n {6}- publish/);
-  assert.match(verifyPlatform[0], /os: macos-15, package: no-mistakes-darwin-arm64/);
-  assert.match(verifyPlatform[0], /os: ubuntu-22\.04, package: no-mistakes-linux-x64-gnu/);
-  assert.match(verifyPlatform[0], /os: ubuntu-22\.04-arm, package: no-mistakes-linux-arm64-gnu/);
-  assert.match(verifyPlatform[0], /os: windows-2025, package: no-mistakes-win32-x64-msvc/);
-  assert.match(verifyPlatform[0], /persist-credentials: false/);
-  assert.match(verifyRoot[0], /persist-credentials: false/);
-  assert.match(verifyRoot[0], /needs:\n {6}- prepare\n {6}- publish-js/);
-  assert.match(verifyRoot[0], /no-mistakes@\$version/);
+  assert.match(publisher, /publish-npm\.cjs" "\$package" "\$version"/);
+  assert.match(publisher, /--timeout-ms 0/);
+  const publishJs = jobBody(workflow, "publish-js");
+  for (const [verify, os, packageName] of [
+    ["verify-npm-darwin", "macos-15", "no-mistakes-darwin-arm64"],
+    ["verify-npm-linux-x64", "ubuntu-22.04", "no-mistakes-linux-x64-gnu"],
+    ["verify-npm-linux-arm", "ubuntu-22.04-arm", "no-mistakes-linux-arm64-gnu"],
+    ["verify-npm-windows", "windows-2025", "no-mistakes-win32-x64-msvc"],
+  ]) {
+    const body = jobBody(workflow, verify);
+    assert.match(body, new RegExp(`runs-on: ${os.replaceAll(".", "\\.")}`));
+    assert.match(body, new RegExp(`NM_PACKAGE: ${packageName}`));
+    if (body.includes("steps: *verify-npm-steps")) {
+      assert.match(body, /steps: \*verify-npm-steps/);
+    } else {
+      assert.match(body, /persist-credentials: false/);
+    }
+    assert.match(publishJs, new RegExp(`^ {6}- ${verify}$`, "m"));
+  }
+  const verifyRoot = jobBody(workflow, "verify-npm-root-linux-x64");
+  assert.match(verifyRoot, /steps: \*verify-npm-steps/);
+  assert.match(verifyRoot, /needs:\n {6}- prepare\n {6}- publish-js/);
+  assert.match(verifyRoot, /NM_PACKAGE: no-mistakes/);
+  const verifyPlatform = jobBody(workflow, "verify-npm-linux-x64");
+  assert.match(verifyPlatform, /persist-credentials: false/);
+  assert.match(verifyPlatform, /smoke-published-native\.js/);
+});
+
+test("native build timings workflow compiles darwin and linux-x64 without publishing", () => {
+  const workflow = readFileSync(
+    join(repoRoot, ".github/workflows/native-build-timings.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /^on:\n {2}workflow_dispatch:\n/m);
+  assert.match(workflow, /^permissions: \{\}$/m);
+  assert.match(workflow, /CARGO_PROFILE_RELEASE_LTO: thin/);
+  assert.match(workflow, /CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"/);
+  assert.match(workflow, /aarch64-apple-darwin/);
+  assert.match(workflow, /x86_64-unknown-linux-gnu/);
+  assert.doesNotMatch(workflow, /x86_64-pc-windows-msvc|aarch64-unknown-linux-gnu/);
+  assert.match(workflow, /bash \.github\/scripts\/cargo-release-build\.sh/);
+  assert.match(workflow, /name: release-timings-\$\{\{ matrix\.target \}\}/);
+  assert.match(workflow, /persist-credentials: false/);
+  assert.match(workflow, /\n    timeout-minutes: 100\n/);
+  assert.match(workflow, /\n        timeout-minutes: 90\n/);
+  assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm|workflow_dispatch:[\s\S]*push:/);
 });
 
 test("CI cancels superseded PR runs but keeps active main coverage runs", () => {
@@ -406,7 +447,14 @@ test("release publication requires both parallel validation suites", () => {
       assert.equal(result.status === 0, rustResult === "success" && jsResult === "success");
     }
   }
-  for (const publisher of ["publish", "publish-cargo"]) {
+  for (const publisher of [
+    "publish-cargo",
+    "publish-github-release",
+    "publish-native-linux-x64",
+    "publish-native-linux-arm",
+    "publish-native-darwin",
+    "publish-native-windows",
+  ]) {
     assert.match(job(publisher), /^ {6}- validate$/m);
   }
 });
