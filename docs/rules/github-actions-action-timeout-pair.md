@@ -75,6 +75,8 @@ defaults to workflow and composite `.yml`/`.yaml` locations, and
 [`github-actions-job-timeouts`](github-actions-job-timeouts.md) sets the job
 ceiling, while [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md)
 keeps workflow-only timeout keys out of composite steps.
+[`github-actions-action-input-policy`](github-actions-action-input-policy.md)
+requires or bans `with:` inputs for each configured action family.
 
 Require a caller-side literal `timeout-minutes` and, for direct third-party
 `uses:`, a nested native timeout input. Composite-action steps cannot express

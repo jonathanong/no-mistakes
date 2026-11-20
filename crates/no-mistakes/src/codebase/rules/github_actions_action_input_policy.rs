@@ -8,13 +8,20 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod lines;
+mod merge;
+mod message;
 mod policy;
 mod scalar;
 mod scan;
 
 pub const RULE_ID: &str = "github-actions-action-input-policy";
 
-const DEFAULT_INCLUDE: &[&str] = &[".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"];
+const DEFAULT_INCLUDE: &[&str] = &[
+    ".github/workflows/**/*.yml",
+    ".github/workflows/**/*.yaml",
+    ".github/actions/**/action.yml",
+    ".github/actions/**/action.yaml",
+];
 
 #[derive(Deserialize, Default)]
 #[serde(default, deny_unknown_fields)]

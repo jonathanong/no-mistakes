@@ -408,10 +408,15 @@ until a configuration lists it.
 For [`github-actions-action-input-policy`](../rules/github-actions-action-input-policy.md),
 `options.actions` defaults to `[]`, which reports nothing until a repository
 lists action families. Each `uses` value is the family; a ref after `@` is
-ignored on the policy entry and on the workflow step, so a tag and a commit SHA
-are the same action. `require` maps an input name to a scalar. `ban` lists
+ignored on the policy entry and on the called step or job, so a tag and a
+commit SHA are the same action. Owner and repository are compared
+case-insensitively, and a sub-path such as `example/publish-widget/restore` is
+a different family. `require` maps an input name to a scalar. `ban` lists
 input names that must be absent. A ban-only family does not require those
-inputs. `include` defaults to workflow `.yml` and `.yaml` files. See the
+inputs. The checker reads workflow steps, job-level `uses:` calls, and
+composite `runs.steps`. `<<` merge keys in `with:` are resolved before the
+inputs are judged. `include` defaults to workflow `.yml` and `.yaml` files and
+to `.github/actions/**/action.yml` and `.github/actions/**/action.yaml`. See the
 [action input policy](../rules/github-actions-action-input-policy.md#options-and-defaults).
 
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),

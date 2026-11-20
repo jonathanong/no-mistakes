@@ -45,6 +45,24 @@ fn github_actions_action_input_policy_json_matches_snapshot() {
             (
                 "disabled_file",
                 rules_path(RULE, "fixture", "disabled-file"),
+                policy.clone(),
+            ),
+            // 1 finding: a composite step keeps the wrong artifact lifetime.
+            (
+                "composite",
+                rules_path(RULE, "fixture", "composite"),
+                policy.clone(),
+            ),
+            // 2 findings: reusable calls miss keep-days, including a case variant.
+            (
+                "reusable",
+                rules_path(RULE, "fixture", "reusable"),
+                policy.clone(),
+            ),
+            // 2 findings: a merge supplies publisher inputs; an override and a merged ban report.
+            (
+                "merge_keys",
+                rules_path(RULE, "fixture", "merge-keys"),
                 policy,
             ),
         ],

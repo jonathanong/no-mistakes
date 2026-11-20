@@ -13,6 +13,25 @@ commit SHA. Required inputs must be present as that scalar. Banned inputs must
 be absent. A family that only bans inputs does not require those inputs.
 Actions that are not listed stay silent. Other `with:` keys stay silent.
 
+Remote `owner/repo` families match case-insensitively, so
+`Example/Publish-Widget@V1` is `example/publish-widget`. A sub-path is a
+different family: `example/publish-widget/restore` does not match
+`example/publish-widget`, and the sub-path keeps the case written in `uses:`.
+A path that starts with `.` or `/`, and any `uses:` value that contains `://`,
+keeps its spelling.
+
+The same policy applies to each step and to a job-level `uses:` call. A job
+that sets both is checked for both. Composite actions are read from
+`runs.steps` when `runs.using` is `composite`.
+
+`with:` values that arrive through a YAML `<<` merge key are judged after the
+merge. Later entries in a merge sequence override earlier ones, and a key
+written next to `<<` overrides the merged value. Anchors are expanded before
+that merge. A required value written as `${{ }}` is compared as that text, so
+it is a mismatch unless the expression text is the required scalar. Suppress
+that line when the expression is intentional. A `uses:` value that contains
+`${{ }}` is not a concrete family and stays silent.
+
 Numbers and booleans match their string forms, because GitHub Actions passes
 `with:` values as strings. `1` and `"1"` are the same input. `true` and
 `"true"` are the same input.
@@ -97,7 +116,9 @@ Use a YAML comment on the input line that should stay as written.
 `no-mistakes-disable-next-line github-actions-action-input-policy` applies to
 the next line. `no-mistakes-disable-line github-actions-action-input-policy`
 applies to the same line. `no-mistakes-disable-file github-actions-action-input-policy`
-skips the file. Prefer narrowing `actions` when a family is outside the policy.
+skips the file. An expression that supplies a required input is a mismatch;
+put the line directive on that input when the expression is the value to keep.
+Prefer narrowing `actions` when a family is outside the policy.
 
 ```yaml
 steps:
@@ -116,8 +137,9 @@ number, or boolean. `ban` defaults to `[]` and lists input names that must be
 absent. The same input cannot be both required and banned. Two entries for one
 family merge; disagreeing required values are a configuration error.
 
-`include` defaults to `.github/workflows/**/*.yml` and
-`.github/workflows/**/*.yaml`. An explicit list replaces that default.
+`include` defaults to `.github/workflows/**/*.yml`,
+`.github/workflows/**/*.yaml`, `.github/actions/**/action.yml`, and
+`.github/actions/**/action.yaml`. An explicit list replaces that default.
 
 ```yaml
 rules:
@@ -152,14 +174,19 @@ rules:
 ### Unanalyzable inputs
 
 Invalid YAML is skipped and produces no finding. A `uses:` value that contains
-`${{ }}` is not a concrete action, so that step stays silent. A file that
-cannot be read is skipped and produces no finding.
+`${{ }}` is not a concrete action, so that step or job stays silent. A required
+input set to a `${{ }}` expression is a definite mismatch when that text is not
+the required scalar. The checker does not evaluate expressions. YAML `<<` merge
+keys in `with:` are resolved, so a value that arrives only through a merge is
+visible. A file that cannot be read is skipped and produces no finding.
 
 ## Related rules
 
 [`github-actions-pinned-hash`](github-actions-pinned-hash.md) requires a commit
 SHA on `uses:`. [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
 requires paired timeouts for configured actions.
+[`github-actions-composite-step-schema`](github-actions-composite-step-schema.md)
+checks the keys of composite steps this rule also reads.
 
 ## Invalid UTF-8
 

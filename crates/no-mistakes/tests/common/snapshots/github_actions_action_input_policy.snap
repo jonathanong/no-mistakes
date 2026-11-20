@@ -2,6 +2,27 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "composite": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/publish-widget/action.yml",
+          "line": 10,
+          "message": ".github/actions/publish-widget/action.yml: composite step \"publish widgets\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "keep-days: 30",
+          "target": "publish widgets"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disabled_file": {
     "exitCode": 0,
     "report": {
@@ -71,6 +92,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "merge_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 18,
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"publish orders\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "keep-days: 30",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 24,
+          "message": ".github/workflows/widgets.yml: job \"build\" step \"ship items\" calls `example/ship-items` and sets banned input `overwrite`. Remove `overwrite` from `with:`.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "overwrite: true",
+          "target": "build"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "pass": {
     "exitCode": 0,
     "report": {
@@ -80,6 +130,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "reusable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 11,
+          "message": ".github/workflows/widgets.yml: job \"pack\" calls `example/publish-widget` without required input `keep-days`. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "uses: Example/Publish-Widget@V1",
+          "target": "pack"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 8,
+          "message": ".github/workflows/widgets.yml: job \"publish\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "keep-days: 30",
+          "target": "publish"
+        }
+      ],
       "warnings": []
     }
   },

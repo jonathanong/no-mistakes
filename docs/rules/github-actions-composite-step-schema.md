@@ -72,6 +72,8 @@ directive on the unsupported key when the finding has that key's location.
 [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
 places timeouts on the caller step; [`github-actions-job-timeouts`](github-actions-job-timeouts.md)
 sets the containing job limit.
+[`github-actions-action-input-policy`](github-actions-action-input-policy.md)
+judges `with:` inputs on composite `runs.steps` for each configured action family.
 
 Validate composite-action `runs.steps` against the GitHub composite-step
 schema. GitHub documents a fixed set of step keys for `runs.using: composite`

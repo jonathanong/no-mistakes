@@ -2,6 +2,26 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "github_actions_action_input_policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 12,
+          "message": ".github/workflows/widgets.yml: job \"publish\" step \"publish widgets\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "target": "publish"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "github_actions_action_timeout_pair": {
     "exitCode": 1,
     "report": {

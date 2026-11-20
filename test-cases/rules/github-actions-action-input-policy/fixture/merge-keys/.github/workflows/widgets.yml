@@ -1,0 +1,24 @@
+name: Widgets
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish widgets
+        uses: example/publish-widget@v1
+        with:
+          <<: &widget-inputs
+            keep-days: 1
+            replace: true
+          name: widgets
+      - name: publish orders
+        uses: example/publish-widget@v1
+        with:
+          <<: *widget-inputs
+          keep-days: 30
+      - name: ship items
+        uses: example/ship-items@v1
+        with:
+          <<:
+            name: items
+            overwrite: true
