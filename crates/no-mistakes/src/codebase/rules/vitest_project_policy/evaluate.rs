@@ -21,11 +21,9 @@ pub(super) fn check(root: &Path, options: &Options, config: Value) -> Diagnostic
         return output;
     };
     let Kind::Array(projects) = &projects.kind else {
-        if options.enforces_project_literals() || options.checks_exclude_globs() {
-            output
-                .incomplete
-                .push(incomplete(root, &projects, "test.projects", "<root>"));
-        }
+        output
+            .incomplete
+            .push(incomplete(root, &projects, "test.projects", "<root>"));
         return output;
     };
     let mut baselines = vec![None; options.parity.len()];
@@ -42,11 +40,9 @@ pub(super) fn check(root: &Path, options: &Options, config: Value) -> Diagnostic
             })
             .unwrap_or_else(|| format!("#{}", index + 1));
         if !matches!(test.kind, Kind::Object(_, _)) {
-            if enforce || options.checks_exclude_globs() {
-                output
-                    .incomplete
-                    .push(incomplete(root, project, "test", &name));
-            }
+            output
+                .incomplete
+                .push(incomplete(root, project, "test", &name));
             continue;
         }
         exclude::check(root, options, &test, &name, &mut output);
