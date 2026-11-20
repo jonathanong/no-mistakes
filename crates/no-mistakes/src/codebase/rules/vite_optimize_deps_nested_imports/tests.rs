@@ -1,7 +1,7 @@
 use super::declared::{dependency_names, versioned_dependency_names, workspace_dependency_names};
 use super::entry_imports::collect;
 use super::manifest::published_entry;
-use super::specifier::{is_node_builtin, nested_pairs, package_name};
+use super::specifier::{coverage_name, is_node_builtin, nested_pairs, package_name};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -24,6 +24,20 @@ fn package_name_keeps_the_scope_and_drops_a_subpath() {
     assert_eq!(package_name("@widgets"), None);
     assert_eq!(package_name("@/ui"), None);
     assert_eq!(package_name("@widgets/"), None);
+}
+
+#[test]
+fn coverage_name_keeps_a_subpath_and_collapses_a_builtin() {
+    assert_eq!(coverage_name("lib/sub1").as_deref(), Some("lib/sub1"));
+    assert_eq!(coverage_name("items/shape").as_deref(), Some("items/shape"));
+    assert_eq!(
+        coverage_name("@widgets/ui/theme").as_deref(),
+        Some("@widgets/ui/theme")
+    );
+    assert_eq!(coverage_name("process/browser").as_deref(), Some("process"));
+    assert_eq!(coverage_name("fs/promises").as_deref(), Some("fs"));
+    assert_eq!(coverage_name("items").as_deref(), Some("items"));
+    assert_eq!(coverage_name("./local"), None);
 }
 
 #[test]
@@ -73,6 +87,7 @@ void shape;
     .imports;
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].package, "items");
+    assert_eq!(imports[0].specifier, "items");
     assert_eq!(imports[0].line, 6);
     assert_eq!(imports[0].file, "index.ts");
 
@@ -275,6 +290,36 @@ import nodeFs from 'node:fs';
         .map(|import| import.package.as_str())
         .collect();
     assert_eq!(packages, vec!["events", "process"]);
+    let specifiers: Vec<_> = imports
+        .iter()
+        .map(|import| import.specifier.as_str())
+        .collect();
+    assert_eq!(specifiers, vec!["events", "process"]);
+}
+
+#[test]
+fn collect_keeps_the_exact_subpath_specifier() {
+    let source = "\
+import { shape } from 'lib/sub1';
+import { other } from 'lib/sub2';
+";
+    let imports = collect(
+        Path::new("index.ts"),
+        source,
+        "parentA",
+        "index.ts",
+        &BTreeSet::new(),
+    )
+    .unwrap()
+    .imports;
+    assert_eq!(
+        imports
+            .iter()
+            .map(|import| import.specifier.as_str())
+            .collect::<Vec<_>>(),
+        vec!["lib/sub1", "lib/sub2"]
+    );
+    assert!(imports.iter().all(|import| import.package == "lib"));
 }
 
 #[test]

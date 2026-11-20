@@ -93,6 +93,18 @@ pub(super) fn package_name(specifier: &str) -> Option<String> {
     (!name.is_empty()).then(|| name.to_string())
 }
 
+/// Coverage key for an include child or a runtime import. A Node built-in
+/// stays the package name. Every other specifier keeps its subpath, because
+/// Vite pre-bundles that exact entry.
+pub(super) fn coverage_name(specifier: &str) -> Option<String> {
+    let package = package_name(specifier)?;
+    if is_node_builtin(specifier) {
+        Some(package)
+    } else {
+        Some(specifier.trim().to_string())
+    }
+}
+
 /// Consecutive `parent > child` steps. A direct include has none.
 /// `a > b > c` yields `(a, b)` and then `(b, c)`.
 pub(super) fn nested_pairs(entry: &str) -> Vec<(String, String)> {

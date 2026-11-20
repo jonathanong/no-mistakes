@@ -35,8 +35,9 @@ adds none. Any other value cannot be read. `devDependencies` does not count.
 The finding points at that include string.
 
 For each package directory in `packages`, runtime package imports in the
-published-entry closure must each have a matching `name > dependency`
-include. The closure starts at the dot, `module`, or `main` entry and at
+published-entry closure must each have a matching `name > specifier`
+include. The specifier is the import text, subpath included. A Node built-in
+still matches by its package name. The closure starts at the dot, `module`, or `main` entry and at
 every other file the package `exports` map publishes. Exact subpath keys
 and wildcard keys such as `"./*": "./*.ts"` are entries even when the dot
 entry does not import them. Wildcard targets use the shared package export
@@ -59,8 +60,10 @@ is skipped only when the parent does not declare the package. A declared
 dependency named `events`, `buffer`, `punycode`, or `process` is a real
 package, and a subpath such as `process/browser` is that package. An include
 of an undeclared built-in, such as `widgets > path`, is ignored. An import
-of the package's own name does not. A subpath such as `items/shape` is the
-package `items`. The finding points at the file that contains the import.
+of the package's own name does not. Any other subpath is its own specifier.
+`items/shape` is covered only by `widgets > items/shape`, not by
+`widgets > items` or `widgets > items/other`. The finding names that exact
+`parent > specifier`. The finding points at the file that contains the import.
 
 Direct includes (`react`) are ignored. A chain with more than one `>`
 (`widgets > labels > items`) is checked one step at a time (`widgets > labels`,
@@ -121,6 +124,9 @@ package is uncovered.
 
 `includeSources` is optional. Each entry names a `module` path relative to
 the check root and an `export` that is `export const name = ["parent > child", …]`.
+`[…] as const`, `[…] satisfies readonly string[]`, and
+`[…] as const satisfies readonly string[]` are still that static array.
+Comments inside the array do not change the entries.
 Those pairs are added to the static `optimizeDeps.include` entries. An
 unreadable module or a non-static export is unanalyzable, and uncovered
 imports are not reported. `ignorePackages` is an optional list of package
@@ -194,7 +200,8 @@ export const widget = shape;
 Declare the child under `dependencies`, `optionalDependencies`,
 `peerDependencies`, or `bundledDependencies`, or remove the include entry.
 For an uncovered import, add `"widgets > items"` to `optimizeDeps.include`
-or to an `includeSources` export. An undeclared Node built-in, an import of
+or to an `includeSources` export. For an uncovered subpath, add the exact
+specifier, such as `"widgets > items/shape"`. An undeclared Node built-in, an import of
 the package's own name, a `workspace:` dependency, and a name in
 `ignorePackages` are not nested dependencies, so do not add an include entry
 for them. A declared package whose name matches a built-in still needs

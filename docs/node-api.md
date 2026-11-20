@@ -862,8 +862,10 @@ intentional size. See the
 `vite-optimize-deps-nested-imports` is available through asynchronous `check()` and
 `analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
 `configFiles` and `packages` are required. Optional `includeSources` entries name a
-`module` and an `export` whose value is a static `["parent > child", …]` array.
-Optional `ignorePackages` skips uncovered imports of those package names. See the
+`module` and an `export` whose value is a static `["parent > child", …]` array,
+including an `as const` or `satisfies` wrapper. A subpath import is covered
+only by that exact `parent > specifier`. A Node built-in still matches by
+package name. Optional `ignorePackages` skips uncovered imports of those package names. See the
 [rule documentation](rules/vite-optimize-deps-nested-imports.md).
 
 ### Source-level merged configuration

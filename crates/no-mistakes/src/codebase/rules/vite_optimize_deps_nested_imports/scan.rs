@@ -3,7 +3,7 @@
 use super::include_config::{parse_vite_config, NestedInclude, ParsedConfig};
 use super::include_source;
 use super::manifest::{self, PackageFacts};
-use super::specifier::is_node_builtin;
+use super::specifier::{is_node_builtin, package_name};
 use super::{IncludeSource, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
@@ -84,7 +84,10 @@ fn invalid_mappings(
         let Some(package) = packages.get(&entry.parent) else {
             continue;
         };
-        if package.declared.contains(&entry.child) || is_node_builtin(&entry.child) {
+        let Some(declared_name) = package_name(&entry.child) else {
+            continue;
+        };
+        if package.declared.contains(&declared_name) || is_node_builtin(&entry.child) {
             continue;
         }
         findings.push(RuleFinding {
@@ -94,7 +97,7 @@ fn invalid_mappings(
             line: entry.line,
             message: format!(
                 "nested include \"{}\" is not a declared dependency of {}; declare {} under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
-                entry.text, entry.parent, entry.child
+                entry.text, entry.parent, declared_name
             ),
             import: Some(entry.text.clone()),
             target: Some("invalid-nested-child".to_string()),
@@ -120,7 +123,7 @@ fn uncovered(
             continue;
         }
         for import in &package.imports {
-            if covered.contains(&(package.name.clone(), import.package.clone()))
+            if covered.contains(&(package.name.clone(), import.specifier.clone()))
                 || skip_child(package, &import.package, configured, ignore)
             {
                 continue;
@@ -132,9 +135,9 @@ fn uncovered(
                 line: import.line,
                 message: format!(
                     "runtime import \"{}\" from {} is not covered by optimizeDeps.include; add \"{} > {}\"",
-                    import.package, package.name, package.name, import.package
+                    import.specifier, package.name, package.name, import.specifier
                 ),
-                import: Some(format!("{} > {}", package.name, import.package)),
+                import: Some(format!("{} > {}", package.name, import.specifier)),
                 target: Some("uncovered-runtime-import".to_string()),
             });
         }

@@ -99,6 +99,8 @@ Optional `options.ignorePackages` skips uncovered imports of those package
 names. A `workspace:` dependency and a child package listed in `packages`
 without a non-workspace version specifier are skipped the same way. A
 versioned dependency such as `"items": "1.0.0"` is still checked.
+A subpath import matches that exact specifier. A Node built-in still matches
+by package name.
 `bundledDependencies: true` counts the dependency objects already declared,
 and `false` adds no bundled names. A declared dependency whose name matches
 a Node built-in is still checked. An undeclared built-in include such as

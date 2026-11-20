@@ -102,6 +102,38 @@ fn include_sources_reject_blank_names_unreadable_files_and_parser_gaps() {
 }
 
 #[test]
+fn const_and_satisfies_wrappers_keep_a_static_string_array() {
+    for source in [
+        "export const deps = ['a > b', 'x > y'] as const;\n",
+        "export const deps = ['a > b' /* kept */, 'x > y'] as const;\n",
+        "export const deps = ['a > b', 'x > y'] satisfies readonly string[];\n",
+        "export const deps = ['a > b', 'x > y'] as const satisfies readonly string[];\n",
+    ] {
+        match parse_include_source(Path::new("deps.ts"), source, "deps") {
+            SourceList::Includes(entries) => {
+                let texts: Vec<_> = entries.iter().map(|entry| entry.text.as_str()).collect();
+                assert_eq!(texts, vec!["a > b", "x > y"], "{source}");
+                assert!(entries
+                    .iter()
+                    .all(|entry| entry.child == "b" || entry.child == "y"));
+            }
+            SourceList::Unanalyzable { reason, .. } => panic!("{source}: {reason}"),
+        }
+    }
+    let source = "\
+export default { optimizeDeps: { include: [\"widgets > items/shape\"] as const } };
+";
+    match parse_vite_config(Path::new("vite.config.ts"), source, false) {
+        ParsedConfig::Includes(entries) => {
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].child, "items/shape");
+            assert_eq!(entries[0].parent, "widgets");
+        }
+        ParsedConfig::Unanalyzable { reason, .. } => panic!("{reason}"),
+    }
+}
+
+#[test]
 fn an_imported_include_drops_a_non_static_array() {
     let source = "\
 const extra = [];

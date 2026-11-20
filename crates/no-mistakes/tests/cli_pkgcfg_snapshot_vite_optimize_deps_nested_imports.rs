@@ -40,6 +40,8 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
         case("include_chains", "include-chains"),
         case("top_level_conditions", "top-level-conditions"),
         case("exported_styles", "exported-styles"),
+        case("const_includes", "const-includes"),
+        case("specifier_subpaths", "specifier-subpaths"),
     ];
     assert_saved_fixture("vite_optimize_deps_nested_imports", &cases);
 }

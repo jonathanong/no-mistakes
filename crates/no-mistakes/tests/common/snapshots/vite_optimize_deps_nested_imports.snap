@@ -205,6 +205,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "const_includes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "as-const.ts",
+          "import": "widgets > missing",
+          "line": 3,
+          "message": "nested include \"widgets > missing\" is not a declared dependency of widgets; declare missing under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "\"widgets > missing\",",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "both.ts",
+          "import": "widgets > extra",
+          "line": 1,
+          "message": "nested include \"widgets > extra\" is not a declared dependency of widgets; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const deps = [\"widgets > extra\"] as const satisfies readonly string[];",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "satisfies.ts",
+          "import": "widgets > other",
+          "line": 1,
+          "message": "nested include \"widgets > other\" is not a declared dependency of widgets; declare other under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const deps = [\"widgets > other\"] satisfies readonly string[];",
+          "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "covered": {
     "exitCode": 0,
     "report": {
@@ -615,6 +655,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "packages/widgets/index.ts",
+          "import": "widgets > items/theme",
+          "line": 4,
+          "message": "nested deps runtime import \"items/theme\" from widgets is not covered by optimizeDeps.include; add \"widgets > items/theme\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import \"items/theme\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
           "import": "widgets > labels",
           "line": 2,
           "message": "nested deps runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
@@ -639,6 +688,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "\"widgets > extra\",",
           "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "specifier_subpaths": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/parentA/index.ts",
+          "import": "parentA > lib/sub1",
+          "line": 1,
+          "message": "runtime import \"lib/sub1\" from parentA is not covered by optimizeDeps.include; add \"parentA > lib/sub1\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"lib/sub1\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/parentC/index.ts",
+          "import": "parentC > lib/sub2",
+          "line": 1,
+          "message": "runtime import \"lib/sub2\" from parentC is not covered by optimizeDeps.include; add \"parentC > lib/sub2\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"lib/sub2\";",
+          "target": "uncovered-runtime-import"
         }
       ],
       "warnings": []

@@ -1,9 +1,10 @@
 //! Static `optimizeDeps.include` entries from a Vite config module.
 
 use super::config_object::default_object;
-use super::specifier::{nested_pairs, package_name};
+use super::specifier::{coverage_name, nested_pairs, package_name};
 use crate::ast::{js_literal, property_key_name, template_quasi_text};
 use crate::codebase::ts_source::byte_offset_to_line;
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 use std::path::Path;
@@ -66,24 +67,26 @@ fn extract(
             line_of(source, optimize.span.start),
             "optimizeDeps is not a static object",
         ),
-        Prop::Found(Expression::ArrayExpression(array)) => {
-            let parsed = string_entries(source, array.as_ref());
-            if allow_imported_include && matches!(parsed, ParsedConfig::Unanalyzable { .. }) {
-                ParsedConfig::Includes(Vec::new())
-            } else {
-                parsed
+        Prop::Found(value) => match unwrap_ts_wrappers(value) {
+            Expression::ArrayExpression(array) => {
+                let parsed = string_entries(source, array.as_ref());
+                if allow_imported_include && matches!(parsed, ParsedConfig::Unanalyzable { .. }) {
+                    ParsedConfig::Includes(Vec::new())
+                } else {
+                    parsed
+                }
             }
-        }
-        Prop::Found(value) => {
-            if allow_imported_include {
-                ParsedConfig::Includes(Vec::new())
-            } else {
-                unanalyzable(
-                    line_of(source, value.span().start),
-                    "optimizeDeps.include is not a static array of strings",
-                )
+            value => {
+                if allow_imported_include {
+                    ParsedConfig::Includes(Vec::new())
+                } else {
+                    unanalyzable(
+                        line_of(source, value.span().start),
+                        "optimizeDeps.include is not a static array of strings",
+                    )
+                }
             }
-        }
+        },
     }
 }
 
@@ -107,7 +110,8 @@ fn string_entries(source: &str, include: &oxc_ast::ast::ArrayExpression<'_>) -> 
             );
         };
         for (parent_raw, child_raw) in nested_pairs(&text) {
-            let (Some(parent), Some(child)) = (package_name(&parent_raw), package_name(&child_raw))
+            let (Some(parent), Some(child)) =
+                (package_name(&parent_raw), coverage_name(&child_raw))
             else {
                 continue;
             };

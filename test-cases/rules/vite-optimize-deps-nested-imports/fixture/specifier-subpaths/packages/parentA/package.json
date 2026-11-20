@@ -1,0 +1,8 @@
+{
+  "name": "parentA",
+  "version": "1.0.0",
+  "exports": "./index.ts",
+  "dependencies": {
+    "lib": "1.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 //! Runtime package imports in a published entry module.
 
-use super::specifier::{is_node_builtin, package_name};
+use super::specifier::{coverage_name, is_node_builtin, package_name};
 use crate::ast::{js_literal, template_quasi_text};
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::fetch::import_shape::{is_runtime_export, is_runtime_import};
@@ -13,6 +13,8 @@ use std::collections::BTreeSet;
 
 pub(super) struct RuntimeImport {
     pub package: String,
+    /// Exact specifier, or the package name when the specifier is a Node built-in.
+    pub specifier: String,
     pub line: usize,
     pub file: String,
 }
@@ -78,8 +80,12 @@ impl ImportVisitor<'_> {
         if package == self.own_package {
             return;
         }
+        let Some(specifier_key) = coverage_name(specifier) else {
+            return;
+        };
         self.imports.push(RuntimeImport {
             package,
+            specifier: specifier_key,
             line: byte_offset_to_line(self.source, start as usize) as usize,
             file: self.file.to_string(),
         });

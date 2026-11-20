@@ -2,6 +2,7 @@
 
 use super::include_config::{includes_in_array, NestedInclude};
 use super::{IncludeSource, RuleFinding, RULE_ID};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use oxc_ast::ast::{BindingPattern, Declaration, Expression, Statement, VariableDeclarationKind};
 use oxc_span::GetSpan;
@@ -99,7 +100,7 @@ fn extract(program: &oxc_ast::ast::Program<'_>, source: &str, export_name: &str)
             let Some(init) = declarator.init.as_ref() else {
                 return missing(export_name);
             };
-            let Expression::ArrayExpression(array) = init else {
+            let Expression::ArrayExpression(array) = unwrap_ts_wrappers(init) else {
                 return SourceList::Unanalyzable {
                     line: line_of(source, init.span().start),
                     reason: format!("export {export_name} is not a static array of strings"),
