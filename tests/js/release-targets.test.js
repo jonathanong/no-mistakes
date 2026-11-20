@@ -221,7 +221,6 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
     join(repoRoot, ".github/workflows/native-build-timings.yml"),
     "utf8",
   );
-  assert.match(workflow, /^on:\n {2}workflow_dispatch:\n/m);
   assert.match(workflow, /^permissions: \{\}$/m);
   assert.match(workflow, /CARGO_PROFILE_RELEASE_LTO: thin/);
   assert.match(workflow, /CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"/);
@@ -235,12 +234,18 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
   assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /\n    timeout-minutes: 100\n/);
   assert.match(workflow, /\n        timeout-minutes: 90\n/);
-  const triggers = workflow.match(/^on:\n((?: {2}[^\n]+\n)+)/m);
-  assert.ok(triggers, "timings workflow must declare triggers");
-  assert.deepEqual(
-    [...triggers[1].matchAll(/^ {2}([^:\n]+):/gm)].map((match) => match[1]),
-    ["workflow_dispatch"],
-  );
+  const onKeys = (source) => {
+    const keys = [];
+    for (const line of (source.split(/^on:\n/m)[1] ?? "").split("\n")) {
+      if (line === "" || line.startsWith("#")) continue;
+      if (line[0] !== " ") break;
+      const key = /^ {2}(\S[^:]*):/.exec(line);
+      if (key) keys.push(key[1]);
+    }
+    return keys;
+  };
+  assert.deepEqual(onKeys(workflow), ["workflow_dispatch"]);
+  assert.deepEqual(onKeys('on:\n  workflow_dispatch:\n\n  schedule:\n    - cron: "0 0 * * *"\njobs:\n'), ["workflow_dispatch", "schedule"]);
   assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm/);
 });
 
