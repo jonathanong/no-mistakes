@@ -41,20 +41,23 @@ the dedicated CI contract tests after dependency installation.
 A rerun of the old failed run retains its original workflow implementation.
 Recovery that needs a workflow fix therefore uses a new dispatch after the fix
 lands. npm and Cargo publication retain their exact-version checks and skip
-versions already published to those registries. A new dispatch rebuilds GitHub
-release assets and uploads them with `--clobber`, replacing existing assets.
-Their contents and
-checksums can change for the same version. No recovery dispatch is triggered
-automatically.
+versions already published to those registries. A `resume_version` dispatch
+rebuilds the native binaries and uploads the GitHub release assets with
+`--clobber`, replacing existing assets. npm keeps the platform packages it
+already published, so the GitHub release bytes and the npm package bytes can
+differ for that version. No recovery dispatch is triggered automatically.
 
 See [the Rust resource budget](ci-builds.md#release-rust-resource-budget) for the
 compilation and test worker limits and memory-pressure diagnostics.
 
 Every native release build sets ThinLTO and 16 code generation units before
 restoring its cache, and `cargo build --timings` uploads `target/cargo-timings/*.html`
-as `release-timings-<target>`. The manual `Native build timings` workflow runs
-that same compile for darwin and linux-x64 without preparing a version or
-publishing. Local `cargo build --release` still uses the Cargo.toml profile.
+as `release-timings-<target>`. That release upload sets `continue-on-error`, so
+an artifact-service failure does not fail a finished native build. The manual
+`Native build timings` workflow runs that same compile for darwin and linux-x64
+without preparing a version or publishing, and its timings upload still fails
+the job because the HTML report is the workflow's only output. Local
+`cargo build --release` still uses the Cargo.toml profile.
 
 ## npm retry and backfill safety
 

@@ -6,6 +6,12 @@ const { nativePackageName } = require("../../packages/no-mistakes/scripts/native
 
 const repoRoot = join(__dirname, "..", "..");
 
+test("oxlint turns max-lines off for JavaScript tests", () => {
+  const config = JSON.parse(readFileSync(join(repoRoot, ".oxlintrc.json"), "utf8"));
+  const tests = config.overrides.find((override) => override.files?.includes("**/*.test.js"));
+  assert.equal(tests?.rules?.["max-lines"], "off");
+});
+
 function jobBody(source, name) {
   const parts = source.split(`\n  ${name}:\n`);
   assert.equal(parts.length, 2, `release workflow must define ${name}`);
@@ -83,6 +89,20 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   assert.match(body, /name: release-napi-\$\{\{ env\.NM_TARGET \}\}/);
   assert.match(body, /name: release-timings-\$\{\{ env\.NM_TARGET \}\}/);
   assert.match(body, /path: target\/cargo-timings\/\*\.html/);
+  for (const native of [
+    body,
+    jobBody(workflow, "build-native-linux-arm"),
+    jobBody(workflow, "build-native-darwin"),
+    jobBody(workflow, "build-native-windows"),
+  ]) {
+    const timings = native.split("- name: Upload Cargo timings\n")[1] ?? "";
+    assert.match(timings, /^ {8}continue-on-error: true$/m);
+    assert.match(timings, /if-no-files-found: error/);
+    for (const artifact of ["Upload CLI artifact", "Upload N-API artifact"]) {
+      const step = native.split(`- name: ${artifact}\n`)[1]?.split("\n      - name:")[0] ?? "";
+      assert.doesNotMatch(step, /continue-on-error/);
+    }
+  }
   assert.match(script, /target\/cargo-timings\/cargo-timing-\*\.html/);
   assert.doesNotMatch(workflow, /target\/cargo-timing\.html/);
   assert.match(workflow, /NM_ADDON: libno_mistakes\.dylib/);
@@ -186,6 +206,7 @@ test("ESLint publication waits for Linux and Windows root verification only", ()
   const complete = jobBody(workflow, "release-complete");
   assert.match(complete, /^ {6}- publish-eslint$/m);
   assert.match(complete, /^ {6}- verify-npm-root-darwin$/m);
+  assert.match(complete, /^ {4}runs-on: ubuntu-slim$/m);
 });
 
 test("release does not publish no-mistakes until every platform tarball installs", () => {
@@ -230,6 +251,8 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
   assert.match(workflow, /bash \.github\/scripts\/cargo-release-build\.sh/);
   assert.match(workflow, /name: release-timings-\$\{\{ matrix\.target \}\}/);
   assert.match(workflow, /path: target\/cargo-timings\/\*\.html/);
+  assert.match(workflow, /if-no-files-found: error/);
+  assert.doesNotMatch(workflow, /continue-on-error/);
   assert.doesNotMatch(workflow, /target\/cargo-timing\.html/);
   assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /\n    timeout-minutes: 100\n/);
@@ -459,6 +482,7 @@ test("release publication requires both parallel validation suites", () => {
   assert.doesNotMatch(js, /cargo|Install Rust/);
   assert.match(gate, /needs:\n {6}- validate-rust\n {6}- validate-js/);
   assert.match(gate, /if: \$\{\{ always\(\) \}\}/);
+  assert.match(gate, /^ {4}runs-on: ubuntu-slim$/m);
   assert.match(gate, /permissions: \{\}/);
   assert.match(gate, /RUST_RESULT: \$\{\{ needs\.validate-rust\.result \}\}/);
   assert.match(gate, /JS_RESULT: \$\{\{ needs\.validate-js\.result \}\}/);
