@@ -107,6 +107,11 @@ fn shell_prefixes_are_removed_before_the_executable() {
     assert!(launch(vec![known("cd -widgets && widget-audit check")], true).is_empty());
     assert!(launch(vec![known("cd widgets; widget-audit check")], true).is_empty());
     assert!(launch(vec![known("\"widget-audit\" check")], true).is_empty());
+    assert!(launch(
+        vec![known("ITEM=\"placeholder widget-audit check extra\"")],
+        true
+    )
+    .is_empty());
 }
 
 #[test]

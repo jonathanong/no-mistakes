@@ -54,6 +54,7 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
             "execFileSync(\"yarn\", [\"widget-audit\", \"check\"]);",
             "execFileSync(widgetAudit, [\"check\"]);",
             "execSync(\"ITEM=1 widget-audit check\");",
+            "execSync(\"cd /repo && widget-audit check\", { cwd: root });",
             "execSync(\"cd widgets && ITEM=1 pnpm exec widget-audit check\");",
             "execSync(\"cd widgets && widget-audit check\");",
             "execSync(\"pnpm exec widget-audit check\");",
@@ -84,6 +85,7 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
         [
             "execFileSync(\"widget-audit\", [\"check\"], options);",
             "execFileSync(\"widget-audit\", [\"check\"], { cwd: root, \"order.id\": \"1\" });",
+            "execSync(\"cd ../widgets && widget-audit check\");",
         ]
     );
     assert!(report["default"]["report"]["rules"]

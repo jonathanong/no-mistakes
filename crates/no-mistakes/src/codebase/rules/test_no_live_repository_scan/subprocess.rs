@@ -63,7 +63,11 @@ impl<'a> Gate<'a> {
         let finding = |message: String, target: &str| {
             findings::build(self.root, self.application, site, message, target)
         };
-        match directory(facts, site.offset, invocation.options, &self.fixture_dirs) {
+        let place = match invocation.shell_dir.as_deref() {
+            Some(dir) => shell_place(dir, &self.fixture_dirs),
+            None => directory(facts, site.offset, invocation.options, &self.fixture_dirs),
+        };
+        match place {
             Directory::Allowed => {}
             Directory::Live => diagnostics.findings.push(finding(
                 format!(
@@ -91,6 +95,24 @@ enum Directory {
     Allowed,
     Live,
     Unresolved,
+}
+
+fn shell_place(dir: &str, fixture_dirs: &[&str]) -> Directory {
+    let segments: Vec<&str> = dir
+        .split(['/', '\\'])
+        .filter(|segment| !segment.is_empty() && *segment != ".")
+        .collect();
+    if segments.is_empty() || segments.contains(&"..") {
+        return Directory::Unresolved;
+    }
+    if segments
+        .iter()
+        .any(|segment| fixture_dirs.contains(segment))
+    {
+        Directory::Allowed
+    } else {
+        Directory::Live
+    }
 }
 
 fn directory(

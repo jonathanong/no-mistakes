@@ -961,7 +961,8 @@ rules:
 ```
 
 The match uses prepared arguments of `exec`, `execFile`, `execFileSync`,
-`execSync`, `fork`, `spawn`, and `spawnSync` from `child_process`. A `node:`
+`execSync`, `fork`, `spawn`, and `spawnSync` from `child_process`. A conditional
+callee uses the first of those launchers. A `node:`
 specifier prefix and a `default.` export prefix are ignored. The executable
 may be a string literal or a const string binding. A path matches by its
 unmodified basename, including `node_modules/.bin`. One trailing `.cmd`,
@@ -972,11 +973,16 @@ unmodified basename, including `node_modules/.bin`. One trailing `.cmd`,
 `exec` and `execSync` take a static shell string. A literal string is split
 on whitespace. Leading `NAME=value` assignments and `cd <dir> &&` prefixes are
 removed first, and those prefixes may repeat, before the first token is read
-as the executable. `spawn` and `spawnSync` use that split when `shell` is the
+as the executable. A stripped `cd` directory replaces the `cwd` option. A
+target with a fixture-directory segment is owned. A target that is empty,
+`.` only, or contains `..` is an unresolved root. Any other target is a live
+scan, so `cd /repo && widget-audit check` still reports when `cwd` is a
+fixture path. `spawn` and `spawnSync` use that split when `shell` is the
 boolean `true` and the command is not an argument array. A non-literal command
-stays unmatched. Quote characters are not interpreted. A semicolon, a pipe, or
-a `cd` that is not followed by a directory and `&&` is left in place, so
-`cd widgets; widget-audit check` does not match. An argument array still
+stays unmatched. A `"` or `'` leaves the whole command unmatched, so
+`ITEM="placeholder widget-audit check extra"` does not match. A semicolon, a
+pipe, or a `cd` that is not followed by a directory and `&&` is left in place,
+so `cd widgets; widget-audit check` does not match. An argument array still
 matches when `shell` is `true`, so
 `spawn("pnpm", ["exec", "widget-audit", "check"], { shell: true })` is the
 configured command.
@@ -988,7 +994,7 @@ These wrappers unwrap repeatedly, including one wrapper around another:
   and `-F` consume the next literal token. A long option with a separate
   plain value, such as `--reporter silent`, consumes that value too. A flag
   that already includes its value, such as `--filter=widgets`, is one token.
-  A short flag with its value attached and no space is one token too. Any
+  Attached values are recognized for `-C` and `-F` only. Any
   other leading flag is left in place, so
   `pnpm --ignore-scripts exec widget-audit` does not match.
 - `npm exec`, with the same leading flags and one optional `--`

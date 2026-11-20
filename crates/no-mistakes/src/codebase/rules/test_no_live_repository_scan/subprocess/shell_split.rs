@@ -14,30 +14,45 @@ pub(super) fn flag_true(values: &[ArgumentValue]) -> bool {
 
 pub(super) fn split(values: &[ArgumentValue]) -> Invocation {
     let Some(ArgumentValue::Scalar(Value::String(text))) = values.first() else {
-        return Invocation {
-            executable: Token::Unknown,
-            argv: Vec::new(),
-            options: options(values),
-        };
+        return unmatched(values);
     };
+    if text.contains(['"', '\'']) {
+        return unmatched(values);
+    }
     let mut parts: Vec<Token> = text.split_whitespace().map(known).collect();
-    strip_prefixes(&mut parts);
+    let shell_dir = strip_prefixes(&mut parts);
     let mut parts = parts.into_iter();
     Invocation {
         executable: parts.next().unwrap_or(Token::Unknown),
         argv: parts.collect(),
         options: options(values),
+        shell_dir,
     }
 }
 
-fn strip_prefixes(tokens: &mut Vec<Token>) {
+fn unmatched(values: &[ArgumentValue]) -> Invocation {
+    Invocation {
+        executable: Token::Unknown,
+        argv: Vec::new(),
+        options: options(values),
+        shell_dir: None,
+    }
+}
+
+fn strip_prefixes(tokens: &mut Vec<Token>) -> Option<String> {
+    let mut directory = None;
     while assignment(tokens.first()) || cd_and(tokens) {
         if assignment(tokens.first()) {
             tokens.remove(0);
         } else {
+            directory = match tokens.get(1) {
+                Some(Token::Known(dir)) => Some(dir.clone()),
+                _ => None,
+            };
             tokens.drain(..3);
         }
     }
+    directory
 }
 
 fn assignment(token: Option<&Token>) -> bool {

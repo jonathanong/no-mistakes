@@ -35,6 +35,8 @@ pub(super) struct Invocation {
     pub(super) executable: Token,
     pub(super) argv: Vec<Token>,
     pub(super) options: OptionsSlot,
+    /// Last `cd <dir> &&` directory. It replaces the `cwd` option.
+    pub(super) shell_dir: Option<String>,
 }
 
 pub(super) fn launcher_name(site: &ResolvedCallSite) -> Option<&str> {
@@ -79,6 +81,7 @@ pub(super) fn invocation(values: &[ArgumentValue], shell: bool) -> Option<Invoca
         executable,
         argv,
         options,
+        shell_dir: None,
     })
 }
 
@@ -182,6 +185,10 @@ mod shell_tests;
 #[cfg(test)]
 #[path = "command_wrapper_tests.rs"]
 mod wrapper_tests;
+
+#[cfg(test)]
+#[path = "command_reporter_tests.rs"]
+mod reporter_tests;
 
 #[cfg(test)]
 #[path = "command_script_tests.rs"]
