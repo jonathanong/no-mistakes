@@ -987,8 +987,9 @@ These wrappers unwrap repeatedly, including one wrapper around another:
   `-r`, or `--recursive`, then one optional `--`. `-C`, `--dir`, `--filter`,
   and `-F` consume the next literal token. A long option with a separate
   plain value, such as `--reporter silent`, consumes that value too. A flag
-  that already includes its value, such as `--filter=widgets` or `-Cdir`, is
-  one token. Any other leading flag is left in place, so
+  that already includes its value, such as `--filter=widgets`, is one token.
+  A short flag with its value attached and no space is one token too. Any
+  other leading flag is left in place, so
   `pnpm --ignore-scripts exec widget-audit` does not match.
 - `npm exec`, with the same leading flags and one optional `--`
 - `npx` and `bunx`, after leading `-y`, `--yes`, `--no-install`, `-p`, or
