@@ -73,7 +73,9 @@ module.exports = {
         } else {
           const wrapped = resolveWrapper(node) || resolveFactory(node);
           if (!wrapped) return;
-          array = unwrapExpression(wrapped.arguments[wrapped.wrapper.argumentPosition - 1]);
+          const selected = wrapped.arguments[wrapped.wrapper.argumentPosition - 1];
+          if (!selected) return;
+          array = unwrapExpression(selected);
           includesApi = wrapped.wrapper.includesApi !== false;
         }
         if (suppressed(node)) return;

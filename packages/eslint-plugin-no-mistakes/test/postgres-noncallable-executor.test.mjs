@@ -42,3 +42,30 @@ it("snapshots callable and non-callable passed executor messages", async () => {
     }),
   ).toMatchFileSnapshot("snapshots/postgres-noncallable-executor.snap");
 }, 30_000);
+
+it("keeps the call form when no TypeScript program is available", async () => {
+  const name = "untyped-call-form.ts";
+  const file = resolve(
+    __dirname,
+    "../../../test-cases/eslint-snippets/fixture/executor-target",
+    name,
+  );
+  await expect(
+    snapshotDocument({
+      "postgres-no-executor-adapter": snapshotSuite(
+        "postgres-no-executor-adapter",
+        { ecmaVersion: 2024, sourceType: "module", globals: {} },
+        {
+          invalid: [
+            {
+              code: fixture(`executor-target/${name}`),
+              filename: file,
+              options: [option],
+              languageOptions: { parser: tsParser },
+            },
+          ],
+        },
+      ),
+    }),
+  ).toMatchFileSnapshot("snapshots/postgres-untyped-call-form.snap");
+});

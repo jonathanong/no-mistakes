@@ -161,29 +161,6 @@
     ]
   },
   {
-    "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-omit.ts",
-    "findings": [],
-    "kind": "valid",
-    "options": [
-      {
-        "executorFactoryNames": [
-          "beginTransaction"
-        ],
-        "executorTypeNames": [
-          "SessionExecutor"
-        ],
-        "importSpecifier": "@example/db",
-        "mode": "all",
-        "trustedSqlTags": [
-          {
-            "module": "@example/sql",
-            "name": "default"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-generic.ts",
     "findings": [],
     "kind": "valid",
@@ -971,6 +948,41 @@
         "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-options.ts",
         "line": 16,
         "message": "This call passes query into a helper. Name the executor inside the helper (`query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+        "messageId": "passed",
+        "ruleId": "no-mistakes/postgres-no-executor-adapter",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "executorFactoryNames": [
+          "beginTransaction"
+        ],
+        "executorTypeNames": [
+          "SessionExecutor"
+        ],
+        "importSpecifier": "@example/db",
+        "mode": "all",
+        "trustedSqlTags": [
+          {
+            "module": "@example/sql",
+            "name": "default"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-omit.ts",
+    "findings": [
+      {
+        "column": 13,
+        "endColumn": 15,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/executor-adapter-followups/proofs-omit.ts",
+        "line": 13,
+        "message": "This call passes tx into a helper. Name the executor inside the helper (`tx(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
         "messageId": "passed",
         "ruleId": "no-mistakes/postgres-no-executor-adapter",
         "severity": 2

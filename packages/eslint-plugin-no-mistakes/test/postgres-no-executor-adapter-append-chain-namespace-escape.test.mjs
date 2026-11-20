@@ -47,7 +47,12 @@ function suite(valid, invalid) {
 
 const lines = (rows) => rows.map((row) => row.findings.map(({ line }) => line));
 
-const VALID = ["starNamedProof.ts", "starNamespaceProof.ts", "elementKeep.ts"];
+const VALID = [
+  "starNamedProof.ts",
+  "starNamespaceProof.ts",
+  "elementKeep.ts",
+  "typeofTypeFragments.ts",
+];
 const INVALID = [
   "starNsMutControls.ts",
   "starNamedMutControls.ts",
@@ -62,11 +67,14 @@ const INVALID = [
   "elementControls.ts",
   "computedKeyControls.ts",
   "assertedControls.ts",
+  "destructureSibling.ts",
+  "typeofValueFragments.ts",
 ];
 
 it("escapes namespace, require, and dynamic-import sql fragments", async () => {
   const rows = suite(VALID, INVALID);
   expect(lines(rows)).toEqual([
+    [],
     [],
     [],
     [],
@@ -83,6 +91,8 @@ it("escapes namespace, require, and dynamic-import sql fragments", async () => {
     [12],
     [12, 20],
     [12, 22],
+    [12, 20],
+    [12, 20],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-namespace-escape.snap",

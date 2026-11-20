@@ -71,6 +71,32 @@ describe("gh-api-argument-safety factoryWrappers", () => {
       `${JSON.stringify(rows(past, "factory-edges.ts"), null, 2)}\n`,
     ).toMatchFileSnapshot("snapshots/gh-api-factory-edges-position.snap");
   });
+  it("does not inspect an argumentPosition past the end of the call", async () => {
+    const past = check(
+      {
+        factoryWrappers: [
+          { factory: "makeClient", method: "call", argumentPosition: 2, includesApi: false },
+        ],
+      },
+      "factory-past.ts",
+    );
+    assert.deepEqual(past, []);
+    const present = check(
+      {
+        factoryWrappers: [
+          { factory: "makeClient", method: "call", argumentPosition: 1, includesApi: false },
+        ],
+      },
+      "factory-past.ts",
+    );
+    assert.deepEqual(
+      present.map((message) => [message.line, message.messageId]),
+      [[3, "endpointQuery"]],
+    );
+    await expect(
+      `${JSON.stringify(rows(present, "factory-past.ts"), null, 2)}\n`,
+    ).toMatchFileSnapshot("snapshots/gh-api-factory-past.snap");
+  });
   it("treats the first argv element as api when includesApi is not false", () => {
     const messages = check({
       factoryWrappers: [{ factory: "makeClient", method: "call", argumentPosition: 1 }],

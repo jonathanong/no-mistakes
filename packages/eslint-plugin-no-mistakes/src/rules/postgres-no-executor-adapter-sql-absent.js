@@ -2,9 +2,30 @@
 
 const { unwrapTs } = require("./postgres-query-text");
 
-// Forwarding-only hole proof. An object literal that omits `field` reads it as
-// undefined, which is non-row data only when that field is optional. Default
-// mode all is unchanged (docs/eslint-rules/postgres-no-executor-adapter.md).
+const stack = [];
+let lastOmitted = false;
+
+function noteOmittedOptional() {
+  if (stack.length) stack[stack.length - 1] = true;
+}
+
+function beginOmittedScope() {
+  stack.push(false);
+}
+
+function endOmittedScope() {
+  const marked = stack.pop() === true;
+  if (marked && stack.length) stack[stack.length - 1] = true;
+  else if (stack.length === 0) lastOmitted = marked;
+}
+
+function consumeOmittedOptional() {
+  const marked = lastOmitted;
+  lastOmitted = false;
+  return marked;
+}
+
+// True when an object literal omits optional `field` (the read is undefined).
 function omittedOptionalField(node, field, context) {
   node = unwrapTs(node);
   const services = context.sourceCode.parserServices;
@@ -17,4 +38,10 @@ function omittedOptionalField(node, field, context) {
   return parts.every((part) => Boolean(part?.getProperty(field)?.flags & ts.SymbolFlags.Optional));
 }
 
-module.exports = { omittedOptionalField };
+module.exports = {
+  beginOmittedScope,
+  consumeOmittedOptional,
+  endOmittedScope,
+  noteOmittedOptional,
+  omittedOptionalField,
+};

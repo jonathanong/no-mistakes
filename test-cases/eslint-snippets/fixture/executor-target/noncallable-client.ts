@@ -27,3 +27,11 @@ export function notify(session: SessionHandle, sourceId: string) {
 export function forwardRead(id: string, client: PoolClient) {
   addUrls(id, [id], { query: read, client });
 }
+
+export function mixedShape(client: QueryWithClient | PoolClient, sourceId: string) {
+  readRow(client, sourceId);
+}
+
+export function partialShape(client: SessionHandle | PoolClient, sourceId: string) {
+  readRow(client, sourceId);
+}

@@ -54,7 +54,6 @@ it("pins executor-row identity, read-only element consts, and the follow-up cont
       testCase("proofs-imported.ts"),
       testCase("proofs-hops.ts"),
       testCase("proofs-omit.ts"),
-      testCase("proofs-omit.ts", allMode),
       testCase("proofs-generic.ts"),
       testCase("proofs-generic.ts", allMode),
       testCase("proofs-quoted.ts"),
@@ -69,6 +68,7 @@ it("pins executor-row identity, read-only element consts, and the follow-up cont
       testCase("controls-generic.ts"),
       testCase("controls-branches.ts"),
       testCase("proofs-options.ts", allMode),
+      testCase("proofs-omit.ts", allMode),
     ],
   });
   expect(rows.filter((row) => row.kind === "valid").every((row) => row.findings.length === 0)).toBe(

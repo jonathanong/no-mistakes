@@ -19,6 +19,7 @@ const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { acceptedTarget } = require("./postgres-no-executor-adapter-supplied");
 const { directOption } = require("./postgres-no-executor-adapter-direct");
 const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
+const { consumeOmittedOptional } = require("./postgres-no-executor-adapter-sql-absent");
 const RULE_ID = "postgres-no-executor-adapter";
 
 module.exports = rule(
@@ -128,6 +129,22 @@ module.exports = rule(
       }
       const accepted =
         !nested && acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode);
+      if (mode === "all" && !nested && accepted && passed.definite) {
+        const proven = visibleSqlTarget(
+          call,
+          index,
+          quoteNode,
+          context,
+          options,
+          accepted,
+          targetFacts,
+        );
+        const omitted = consumeOmittedOptional();
+        if (proven === false && omitted) {
+          reportPassed(argument, passed);
+          return;
+        }
+      }
       const visible =
         mode === "forwarding-only" && !nested && passed.definite
           ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)

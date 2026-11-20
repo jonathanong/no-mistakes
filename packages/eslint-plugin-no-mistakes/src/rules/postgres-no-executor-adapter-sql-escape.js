@@ -95,9 +95,17 @@ function escapesDestructured(element, candidate, shared) {
   return Boolean(property && aliasTarget(property, checker, ts) === candidate);
 }
 
+function inTypePosition(node, ts) {
+  for (let current = node.parent; current; current = current.parent) {
+    if (current.kind === ts.SyntaxKind.TypeQuery || ts.isTypeNode(current)) return true;
+  }
+  return false;
+}
+
 function escapesUse(node, state) {
   const { candidate, names, shared } = state;
   const { checker, ts } = shared;
+  if (inTypePosition(node, ts)) return false;
   if (ts.isVariableDeclaration(node.parent) && node.parent.name === node) return false;
   // The parameter name is the binding. The body uses are the module reads.
   if (ts.isParameter(node.parent) && node.parent.name === node) return false;

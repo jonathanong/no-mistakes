@@ -320,8 +320,14 @@ module. `parts.COLS` and `parts["COLS"]` are uses of that export: an argument of
 disproves it. A string key names that member. A computed key that is not a string,
 or any use of the namespace that is not a member read (`Object.values(parts)`,
 `Object.assign`, `Reflect.set` or `Reflect.get`, or passing `parts` into a call),
-disproves every exported fragment. An `export *` barrel is that same module for
-both a named import and a namespace import.
+disproves every exported fragment. A destructuring binding
+(`const { COLS } = parts`) is that kind of use. It disproves every exported
+fragment, including one the local never writes, because the local is a new
+binding rather than the export symbol. A type-position `typeof parts`
+(`type Columns = typeof parts`, including `typeof parts.COLS`) does not read
+the module object and does not disprove a fragment. A value-position
+`typeof parts` does. An `export *` barrel is that same module for both a named
+import and a namespace import.
 
 An `export =` assignment, `eval` of a string, and a `globalThis` write that never
 names the binding are not tracked, so a mutation through them does not disprove
@@ -775,9 +781,9 @@ run(0 ?? read, account);
 - In `"forwarding-only"` mode, an optional property that an inline
   object-literal argument omits (`put(tx, { id: row.id })` where the callee
   type declares `ownerId?: string`) reads as `undefined` and proves, because
-  nothing row-derived reaches it. Default `mode: "all"` is unchanged. Extra
-  optional fields the callee never binds into SQL stay silent. An inline
-  `new Date()` still proves. These stay reported: a required property, a
+  nothing row-derived reaches it. Default `mode: "all"` still reports that
+  call. Extra optional fields the callee never binds into SQL stay silent. An
+  inline `new Date()` still proves. These stay reported: a required property, a
   spread, a `__proto__` key, an object that is not written inline at the call,
   `{ id } as Req` when `Req` requires the omitted field, and an omitted field
   fed to `.append(input.note ?? '')`. When the callee binds every field, a row
@@ -998,9 +1004,11 @@ The message for a passed executor names that shape (``read(sql`…`)``, and
 ``const exec = read; exec(sql`…`)`` when the executor is an imported identifier).
 It does not rewrite the call. A configured executor type with no call signatures
 does not use that call. The message names the executor inside the helper and,
-when the type has a `query` method, names ``client.query(sql`…`)``. Typed
-linting is required to tell those shapes apart. Without a TypeScript program
-the message keeps the call form.
+when the type has a `query` method, names ``client.query(sql`…`)``. A union of
+a call signature and a `query` method names both
+(``client(sql`…`) or client.query(sql`…`)``). A union that includes a type
+with neither form omits the form. Typed linting is required to tell those
+shapes apart. Without a TypeScript program the message keeps the call form.
 
 A callback can also be replaced by a direct executor call. Write the SQL as an
 argument of the executor (or of a `const` alias of an imported executor):

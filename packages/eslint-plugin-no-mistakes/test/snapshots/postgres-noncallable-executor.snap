@@ -79,6 +79,28 @@
           "messageId": "passed",
           "ruleId": "no-mistakes/postgres-no-executor-adapter",
           "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 17,
+          "endLine": 32,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/noncallable-client.ts",
+          "line": 32,
+          "message": "This call passes client into a helper. Name the executor inside the helper (`client(sql`…`) or client.query(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 17,
+          "endLine": 36,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/noncallable-client.ts",
+          "line": 36,
+          "message": "This call passes client into a helper. Name the executor inside the helper instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
         }
       ],
       "kind": "invalid",

@@ -1,0 +1,31 @@
+{
+  "postgres-no-executor-adapter": [
+    {
+      "file": "test-cases/eslint-snippets/fixture/executor-target/untyped-call-form.ts",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/executor-target/untyped-call-form.ts",
+          "line": 6,
+          "message": "This call passes client into a helper. Name the executor inside the helper (`client(sql`…`)`) instead of passing it. Analysis does not follow an executor passed as a value, so this call is not a judged rewrite. Write the SQL as an argument of that executor. Analysis cannot check SQL that only reaches the executor through a passed function.",
+          "messageId": "passed",
+          "ruleId": "no-mistakes/postgres-no-executor-adapter",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "executorTypeNames": [
+            "PoolClient",
+            "QueryWithClient",
+            "SessionHandle"
+          ],
+          "importSpecifier": "@example/db"
+        }
+      ]
+    }
+  ]
+}

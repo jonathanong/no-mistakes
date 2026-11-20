@@ -22,11 +22,17 @@ function callKind(leaf) {
   return leaf.query ? "query" : "none";
 }
 
+function leafForms(leaf) {
+  return Array.isArray(leaf.forms) && leaf.forms.length > 0 ? leaf.forms : [callKind(leaf)];
+}
+
 function callText(name, leaves) {
-  const kinds = new Set(leaves.filter((leaf) => leaf.name === name).map(callKind));
-  if (kinds.size !== 1 || kinds.has("none")) return null;
-  if (kinds.has("query")) return `${name}.query(sql\`…\`)`;
-  return `${name}(sql\`…\`)`;
+  const forms = new Set(leaves.filter((leaf) => leaf.name === name).flatMap(leafForms));
+  if (forms.size === 0 || forms.has("none")) return null;
+  const texts = [];
+  if (forms.has("call")) texts.push(`${name}(sql\`…\`)`);
+  if (forms.has("query")) texts.push(`${name}.query(sql\`…\`)`);
+  return texts.length ? texts.join(" or ") : null;
 }
 
 function passedDirect(names, leaves, conditionalText) {
