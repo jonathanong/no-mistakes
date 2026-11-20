@@ -161,7 +161,13 @@ function projectedScalar(node, field, context, allowUndefined, result) {
   return Boolean(value && scalarArgument(value, context, allowUndefined));
 }
 
+function bindProjectedScalar(context, result) {
+  return (node, field, allowUndefined) =>
+    projectedScalar(node, field, context, allowUndefined, result);
+}
+
 module.exports = {
+  bindProjectedScalar,
   localAliasField,
   localField,
   projectedScalar,

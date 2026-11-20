@@ -6,15 +6,16 @@ const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { loopBinding } = require("./postgres-no-executor-adapter-sql-loop");
 const { tsScalarDefault } = require("./postgres-no-executor-adapter-sql-primitive");
 const {
+  bindProjectedScalar,
   localAliasField,
   localField,
-  projectedScalar,
   tsAliasField,
   tsField,
   tsObjectAliased,
 } = require("./postgres-no-executor-adapter-sql-projection");
 
 function localHoleSafe(expression, call, fn, context, executorVariable, allowedProperty, result) {
+  const scalar = bindProjectedScalar(context, result);
   const parameters = fn.params.map((param) => {
     const target = param.type === "AssignmentPattern" ? param.left : param;
     return target.type === "Identifier" ? resolveVariable(target, context) : null;
@@ -56,10 +57,7 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
         if (
           variable.references.some((ref) => ref.isWrite() && !ref.init) ||
           (field !== null &&
-            !(
-              call.arguments[index] &&
-              projectedScalar(call.arguments[index], null, context, undefined, result)
-            ) &&
+            !(call.arguments[index] && scalar(call.arguments[index], null)) &&
             objectMutation(variable, executorVariable, allowedProperty, null, context))
         )
           requirements.push(null);
@@ -69,7 +67,7 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
         if (variable.references.some((ref) => ref.isWrite() && !ref.init)) requirements.push(null);
       } else if (variable.defs.some((def) => def.type === "Parameter")) requirements.push(null);
       else if (variable.defs.some(loopBinding)) {
-        if (!projectedScalar(node, field, context, undefined, result)) requirements.push(null);
+        if (!scalar(node, field)) requirements.push(null);
       } else
         for (const def of variable.defs) {
           if (def.type === "Variable") {
@@ -92,11 +90,9 @@ function localHoleSafe(expression, call, fn, context, executorVariable, allowedP
     if (!requirement) return false;
     const { index, field } = requirement;
     const fallback = fn.params[index]?.type === "AssignmentPattern" ? fn.params[index].right : null;
-    const defaultScalar = fallback
-      ? projectedScalar(fallback, field, context, undefined, result)
-      : true;
+    const defaultScalar = fallback ? scalar(fallback, field) : true;
     return call.arguments[index]
-      ? projectedScalar(call.arguments[index], field, context, defaultScalar, result)
+      ? scalar(call.arguments[index], field, defaultScalar)
       : Boolean(fallback && defaultScalar);
   });
 }
@@ -114,6 +110,7 @@ function tsHoleSafe(
   allowedProperty,
   result,
 ) {
+  const scalar = bindProjectedScalar(context, result);
   const parameters = declaration.parameters.map((param) =>
     ts.isIdentifier(param.name) ? checker.getSymbolAtLocation(param.name) : null,
   );
@@ -149,10 +146,7 @@ function tsHoleSafe(
         if (
           sourceWrites(declaration.getSourceFile(), checker, facts, program).symbols.has(symbol) ||
           (field !== null &&
-            !(
-              call.arguments[index] &&
-              projectedScalar(call.arguments[index], null, context, undefined, result)
-            ) &&
+            !(call.arguments[index] && scalar(call.arguments[index], null)) &&
             tsObjectAliased(
               declaration,
               symbol,
@@ -199,7 +193,7 @@ function tsHoleSafe(
     const fallback = declaration.parameters[index]?.initializer;
     const defaultScalar = fallback ? field === null && tsScalarDefault(fallback, ts) : true;
     return call.arguments[index]
-      ? projectedScalar(call.arguments[index], field, context, defaultScalar, result)
+      ? scalar(call.arguments[index], field, defaultScalar)
       : Boolean(fallback && defaultScalar);
   });
 }
