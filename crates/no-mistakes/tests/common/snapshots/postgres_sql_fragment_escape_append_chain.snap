@@ -601,6 +601,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "keptColumns"
         },
         {
+          "file": "partial/mut.ts",
+          "import": "partial/columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `partial/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(extra);",
+          "target": "COLS"
+        },
+        {
           "file": "plainUseMutator.ts",
           "import": "widgetColumns.ts",
           "line": 4,

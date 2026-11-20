@@ -31,9 +31,6 @@ impl<'a> Catalog<'a> {
             let Some(ts) = facts.get_ts_facts(file) else {
                 continue;
             };
-            if ts.operational_error.is_some() || ts.value_flow.incomplete_reason.is_some() {
-                continue;
-            }
             for binding in &ts.value_flow.bindings {
                 if !is_fragment_binding(ts, tags, binding) {
                     continue;

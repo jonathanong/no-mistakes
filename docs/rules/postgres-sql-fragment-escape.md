@@ -37,7 +37,9 @@ file that appends it. Another file can still call `.append` on the fragment,
 rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
-shared across files.
+shared across files. A file whose prepared facts include an operational error
+or an incomplete value-flow is still checked. A fragment binding or a write
+that those facts still record is reported.
 
 ## What it catches
 

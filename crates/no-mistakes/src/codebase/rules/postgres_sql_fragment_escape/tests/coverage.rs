@@ -11,7 +11,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 #[test]
-fn catalog_skips_files_that_cannot_prove_a_fragment() {
+fn catalog_keeps_fragments_when_collection_is_incomplete() {
     let world = world();
     let catalog = catalog(&world);
     assert_eq!(by_export(&catalog, "orderColumns").len(), 1);
@@ -23,8 +23,12 @@ fn catalog_skips_files_that_cannot_prove_a_fragment() {
     assert!(producers.contains(&world.columns.as_path()));
     assert!(producers.contains(&world.extra.as_path()));
     assert_eq!(producers.len(), 2);
-    assert!(by_export(&catalog, "badColumns").is_empty());
-    assert!(by_export(&catalog, "partialColumns").is_empty());
+    let bad = by_export(&catalog, "badColumns");
+    assert_eq!(bad.len(), 1);
+    assert!(bad[0].producer.ends_with("bad.ts"));
+    let partial = by_export(&catalog, "partialColumns");
+    assert_eq!(partial.len(), 1);
+    assert!(partial[0].producer.ends_with("incomplete.ts"));
     let unresolved_order = alias::hop(
         &catalog,
         &world.graph,

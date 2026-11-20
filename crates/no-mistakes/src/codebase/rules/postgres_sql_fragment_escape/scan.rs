@@ -31,9 +31,6 @@ pub(super) fn scan(
         let Some(ts) = facts.get_ts_facts(file) else {
             continue;
         };
-        if ts.operational_error.is_some() || ts.value_flow.incomplete_reason.is_some() {
-            continue;
-        }
         let Some(owned) = file_text(ts, sources, file) else {
             continue;
         };
