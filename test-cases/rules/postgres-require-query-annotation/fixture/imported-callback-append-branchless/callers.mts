@@ -1,5 +1,5 @@
 import { read } from './db.mjs';
-import { queryIdPage, queryIdPagePlain, queryIdPageReturn, queryIdPageBranch } from './pager.mjs';
+import { queryIdPage, queryIdPagePlain, queryIdPageReturn, queryIdPageBranch, queryFlagPage } from './pager.mjs';
 import { sql, type SqlStatement } from './sql.mjs';
 export const branchless = (limit: number) => queryIdPage(limit, sql`/* pageWidgets */ SELECT id FROM widgets WHERE TRUE`, statement => read(statement));
 export const plain = (limit: number) => queryIdPagePlain(limit, sql`/* plainLimit */ SELECT id FROM widgets WHERE TRUE`, statement => read(statement));
@@ -7,3 +7,4 @@ export const returned = (limit: number) => queryIdPageReturn(limit, sql`/* retur
 export const branched = (limit: number, after?: string) => queryIdPageBranch(limit, sql`/* branched */ SELECT id FROM widgets WHERE TRUE`, after, statement => read(statement));
 export const missing = (limit: number) => queryIdPage(limit, sql`SELECT id FROM widgets`, statement => read(statement));
 export const opaque = (limit: number, value: SqlStatement) => queryIdPage(limit, value, statement => read(statement));
+export const flagged = (f?: string) => queryFlagPage(sql`/* flagged */ SELECT id FROM widgets WHERE TRUE`, f, statement => read(statement));
