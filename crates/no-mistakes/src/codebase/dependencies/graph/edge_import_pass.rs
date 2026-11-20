@@ -1,5 +1,5 @@
 fn import_file_pass(
-    path: &PathBuf,
+    path: &Path,
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     reachable: &std::collections::HashSet<crate::codebase::dependencies::extract::CallableId>,
     resolver: &dyn ImportResolution,
@@ -13,8 +13,7 @@ fn import_file_pass(
         let Some(kind) = graph_edge_kind_for_extracted_import(imp, facts, reachable) else {
             continue;
         };
-        let classification =
-            resolver.classify_import(&imp.specifier, path, workspace, graph_files);
+        let classification = resolver.classify_import(&imp.specifier, path, workspace, graph_files);
         let resolved = resolved_import_path(kind, &classification, imp, graph_files);
         let recorded = match resolved {
             Some(target) => ImportTarget::File(target.to_path_buf()),
@@ -25,7 +24,7 @@ fn import_file_pass(
             edges.push(edge);
         }
     }
-    (path.clone(), edges, targets)
+    (path.to_path_buf(), edges, targets)
 }
 
 fn resolved_import_path<'a>(
