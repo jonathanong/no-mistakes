@@ -13,6 +13,10 @@ const option = {
   importSpecifier: "@example/db",
   executorTypeNames: ["PoolClient", "QueryWithClient", "SessionHandle"],
 };
+const nestedOption = {
+  ...option,
+  executorTypeNames: [...option.executorTypeNames, "ClientShape"],
+};
 
 it("snapshots callable and non-callable passed executor messages", async () => {
   await expect(
@@ -27,7 +31,7 @@ it("snapshots callable and non-callable passed executor messages", async () => {
             {
               code,
               filename,
-              options: [option],
+              options: [nestedOption],
               languageOptions: {
                 parser: tsParser,
                 parserOptions: {

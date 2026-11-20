@@ -1,4 +1,10 @@
-import { read, type PoolClient, type QueryWithClient, type SessionHandle } from "@example/db";
+import {
+  read,
+  type ClientShape,
+  type PoolClient,
+  type QueryWithClient,
+  type SessionHandle,
+} from "@example/db";
 
 declare function addUrls(
   userId: string,
@@ -33,5 +39,12 @@ export function mixedShape(client: QueryWithClient | PoolClient, sourceId: strin
 }
 
 export function partialShape(client: SessionHandle | PoolClient, sourceId: string) {
+  readRow(client, sourceId);
+}
+
+export function nestedShape<T extends QueryWithClient | PoolClient>(
+  client: ClientShape<T>,
+  sourceId: string,
+) {
   readRow(client, sourceId);
 }

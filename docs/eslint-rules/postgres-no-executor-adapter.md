@@ -1006,9 +1006,11 @@ It does not rewrite the call. A configured executor type with no call signatures
 does not use that call. The message names the executor inside the helper and,
 when the type has a `query` method, names ``client.query(sql`…`)``. A union of
 a call signature and a `query` method names both
-(``client(sql`…`) or client.query(sql`…`)``). A union that includes a type
-with neither form omits the form. Typed linting is required to tell those
-shapes apart. Without a TypeScript program the message keeps the call form.
+(``client(sql`…`) or client.query(sql`…`)``). So does a configured generic
+alias whose type argument is constrained to that union. A union that includes
+a type with neither form omits the form. Typed linting is required to tell
+those shapes apart. Without a TypeScript program the message keeps the call
+form.
 
 A callback can also be replaced by a direct executor call. Write the SQL as an
 argument of the executor (or of a `const` alias of an imported executor):
