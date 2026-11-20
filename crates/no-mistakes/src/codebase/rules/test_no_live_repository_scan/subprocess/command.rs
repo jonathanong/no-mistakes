@@ -37,6 +37,11 @@ pub(super) struct Invocation {
     pub(super) options: OptionsSlot,
 }
 
+#[cfg(test)]
+pub(super) fn is_launcher(site: &ResolvedCallSite) -> bool {
+    launcher_name(site).is_some()
+}
+
 pub(super) fn launcher_name(site: &ResolvedCallSite) -> Option<&str> {
     site.targets().find_map(|candidate| match candidate.target {
         KnownCallTargetRef::ModuleExport {
@@ -104,7 +109,9 @@ pub(super) fn matched(invocation: &Invocation, analyzers: &[AnalyzerCommand]) ->
     };
     let mut lines = vec![command_line(executable, &invocation.argv)];
     for _ in 0..4 {
-        let current = lines.last().expect("wrapper walk keeps a command line");
+        let Some(current) = lines.last() else {
+            break;
+        };
         let Some(Token::Known(program)) = current.first() else {
             break;
         };

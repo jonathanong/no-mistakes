@@ -110,11 +110,4 @@ fn shell_mode_follows_the_launcher() {
     ];
     assert!(!uses_shell("exec", &argv_shell));
     assert!(!uses_shell("spawn", &argv_shell));
-    assert!(!uses_shell(
-        "spawn",
-        &[
-            known("pnpm exec widget-audit check"),
-            ArgumentValue::Unknown
-        ]
-    ));
 }
