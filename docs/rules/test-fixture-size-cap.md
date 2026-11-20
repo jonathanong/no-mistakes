@@ -1,14 +1,16 @@
 # `test-fixture-size-cap`
 
 Caps literal fixture cardinalities in configured test and helper files. A
-generated row list or a numeric `it.each` table past the configured threshold
-is reported. Record tables, dynamic lengths, and files outside the configured
-scopes stay silent.
+generated row list past the configured threshold is reported. Record tables,
+dynamic lengths, and files outside the configured scopes stay silent. The each
+form stays off until `eachCalls` names a callee.
 
 The rule is opt-in. With no `threshold`, it reports nothing. It does not cap
-source-file bytes. Every numeric literal in a list passed to a configured
-`eachCalls` callee is checked. Use `exemptions`, or a narrower `eachCalls`
-list, to leave intended sizes alone.
+source-file bytes. When `eachCalls` names a callee, the each form reads numeric
+elements as cardinalities. It is meant for scale or size tables. A numeric
+element of an unconfigured table is a test input. `exemptions` allow one exact
+cardinality; they do not cover boundary-value tables, because those inputs
+change with each limit.
 
 ```yaml
 rules:
@@ -50,10 +52,12 @@ literal cardinality strictly greater than `threshold`:
   `new Array(1, 2, 3)` and `Array(1, 2, 3)` are element lists, not lengths.
   The callee must be the identifier `Array`. `window.Array` is not matched,
   and the rule does not resolve bindings.
-- Calls named by `eachCalls`, default `it.each`, when the first argument is an
-  array. Each numeric literal element is reported on its own. Records, holes,
-  spreads, nested arrays, and other non-literals are skipped, and literal
-  siblings in the same list are still reported.
+- Calls named by `eachCalls` when the first argument is an array. Each numeric
+  literal element is read as a cardinality and reported on its own. This form
+  is meant for scale or size tables. Records, holes, spreads, nested arrays,
+  and other non-literals are skipped, and literal siblings in the same list
+  are still reported. `eachCalls` defaults to `[]`, so a boundary-value table
+  stays silent.
 
 `1_001` and `0x400` use their integer values. `1_024` and `0x400` are the same
 cardinality. A value equal to `threshold` is allowed. An entry in `exemptions`
@@ -72,11 +76,11 @@ is `value > threshold`.
 `exemptions` defaults to `[]`. Each entry is an exact integer cardinality, not
 source text.
 
-`eachCalls` defaults to `["it.each"]`. Each entry is an `object.property`
-identifier pair. An explicit `[]` disables the each form and still checks
-`Array.from`, `Array(N)`, and `new Array`. `test.each` is not checked unless it
-is listed. Narrow `eachCalls` when a callee's numeric lists should stay
-unchecked.
+`eachCalls` defaults to `[]`. Each entry is an `object.property` identifier
+pair. When a callee is listed, numeric elements of its tables are cardinalities
+for scale or size tables. `Array.from`, `Array(N)`, and `new Array` are checked
+whether or not `eachCalls` is set. `it.each` and `test.each` are not checked
+unless they are listed.
 
 `scopes.tests` and `scopes.helpers` default to `[]`. Empty scopes scan
 nothing. A file is in scope when its repository-relative path matches either
@@ -101,15 +105,17 @@ export const rows = Array.from({ length: 5_000 }, () => ({ name: "order" }));
 // widgets.test.ts
 const rows = Array.from({ length: 1_001 }, () => ({ name: "widget" }));
 const wide = Array(10_000);
+// Reports 10_000 and 100_000 only when eachCalls lists it.each.
 it.each([10_000, "widget", 100_000])("scale %i", () => {});
 ```
 
 ## Fix
 
 Lower the literal to the threshold or build the rows from a small explicit
-list. Add an exact integer to `exemptions`, or narrow `eachCalls`, when a
-listed cardinality is intentional. A record element is skipped; numeric
-siblings in the same list are still checked.
+list. Add an exact integer to `exemptions` when a listed cardinality is
+intentional. List a callee in `eachCalls` only for scale or size tables.
+A record element is skipped; numeric siblings in the same list are still
+checked.
 
 ## Suppression
 

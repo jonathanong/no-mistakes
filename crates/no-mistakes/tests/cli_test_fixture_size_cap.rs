@@ -5,11 +5,12 @@ const RULE: &str = "test-fixture-size-cap";
 #[test]
 fn test_fixture_size_cap_json_matches_snapshot() {
     let policy = rules_path(RULE, "configs", "policy.yml");
+    let each = rules_path(RULE, "configs", "it-each.yml");
     assert_saved_fixture(
         "test_fixture_size_cap",
         &[
-            // Oversized Array.from, new Array, and it.each literals in tests
-            // and helpers. Boundary, exempt, record, and production files stay quiet.
+            // Oversized Array.from and new Array literals in tests and helpers.
+            // Boundary, exempt, record, production, and unconfigured each tables stay quiet.
             (
                 "policy",
                 rules_path(RULE, "fixture", "policy"),
@@ -29,11 +30,23 @@ fn test_fixture_size_cap_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "file-disabled"),
                 policy.clone(),
             ),
-            // Bare Array(N) matches new Array(N). Mixed lists report numeric literals.
+            // Bare Array(N) matches new Array(N). Configured it.each reports numeric literals.
             (
                 "recall",
                 rules_path(RULE, "fixture", "recall"),
+                each.clone(),
+            ),
+            // Boundary-value tables are inputs under the default empty eachCalls list.
+            (
+                "boundary",
+                rules_path(RULE, "fixture", "boundary"),
                 policy.clone(),
+            ),
+            // The same integers report once eachCalls lists it.each.
+            (
+                "boundary_each",
+                rules_path(RULE, "fixture", "boundary"),
+                each,
             ),
             // Later getters, setters, spreads, and dynamic keys hide an earlier length.
             // A known non-length key and a length after a spread stay reported.

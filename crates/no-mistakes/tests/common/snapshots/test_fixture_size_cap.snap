@@ -2,6 +2,59 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "boundary": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "boundary_each": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 1,
+          "message": "it.each size 1001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([0, 1001, 1.5])(\"rejects invalid batch size %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 2,
+          "message": "it.each size 3601 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([-1, 3601, 1.5])(\"rejects invalid seconds %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 3,
+          "message": "it.each size 30001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([0, -1, 30_001, NaN])(\"rejects invalid timeout %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "it.each size 20261004 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"\", \"bad-date\", 20261004])(\"rejects non-day value %s\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "dynamic_length": {
     "exitCode": 1,
     "report": {
@@ -121,20 +174,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "new Array length 10000 exceeds threshold 1000",
           "rule": "test-fixture-size-cap",
           "sourceLine": "const wide = new Array(10_000);"
-        },
-        {
-          "file": "widgets.test.ts",
-          "line": 8,
-          "message": "it.each size 10000 exceeds threshold 1000",
-          "rule": "test-fixture-size-cap",
-          "sourceLine": "it.each([10_000, 100_000])(\"scale %i\", () => {});"
-        },
-        {
-          "file": "widgets.test.ts",
-          "line": 8,
-          "message": "it.each size 100000 exceeds threshold 1000",
-          "rule": "test-fixture-size-cap",
-          "sourceLine": "it.each([10_000, 100_000])(\"scale %i\", () => {});"
         }
       ],
       "warnings": []

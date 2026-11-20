@@ -686,7 +686,8 @@ comments for source exceptions supported by a plan and benchmark.
 numeric literals in configured `eachCalls` lists in `scopes.tests` and
 `scopes.helpers`. A later getter, setter, spread, or dynamic computed key
 clears an earlier `Array.from` length. `threshold` has no default: omitting it reports nothing.
-`exemptions` defaults to `[]`, `eachCalls` defaults to `["it.each"]`, and both
-scope lists default to `[]`. A cardinality equal to the threshold is allowed.
-An exact exemption is allowed even when it is larger. Narrow `eachCalls` when
-a callee's numeric lists should stay unchecked.
+`exemptions` defaults to `[]`, `eachCalls` defaults to `[]`, and both
+scope lists default to `[]`. When `eachCalls` names a callee, numeric elements
+are cardinalities for scale or size tables. A cardinality equal to the threshold is allowed.
+An exact exemption is allowed even when it is larger. List a callee in
+`eachCalls` only for those tables.

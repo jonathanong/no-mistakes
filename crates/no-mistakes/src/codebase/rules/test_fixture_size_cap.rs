@@ -21,7 +21,6 @@ const SCRIPT_EXTENSIONS: &[&str] = &[".cjs", ".cts", ".js", ".jsx", ".mjs", ".mt
 pub(super) struct Options {
     pub(super) threshold: Option<u64>,
     pub(super) exemptions: Vec<u64>,
-    #[serde(default = "default_each_calls")]
     pub(super) each_calls: Vec<String>,
     pub(super) scopes: Scopes,
 }
@@ -46,14 +45,10 @@ impl Default for Options {
         Self {
             threshold: None,
             exemptions: Vec::new(),
-            each_calls: default_each_calls(),
+            each_calls: Vec::new(),
             scopes: Scopes::default(),
         }
     }
-}
-
-fn default_each_calls() -> Vec<String> {
-    vec!["it.each".to_string()]
 }
 
 pub(crate) fn check_with_files(

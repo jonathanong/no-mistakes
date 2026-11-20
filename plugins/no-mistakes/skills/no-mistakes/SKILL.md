@@ -358,11 +358,11 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 `allowHashFiles` defaults to false. `matrix.os` does not satisfy `runner.os`. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
-For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths,
-single-argument `Array` and `new Array` lengths, and numeric literals in `eachCalls`
-lists (default `it.each`) in `scopes.tests` and `scopes.helpers`. Omitting `threshold`
-reports nothing. Equal values and exact `exemptions` stay allowed. Narrow `eachCalls`
-to leave a callee unchecked. See the
+For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
+and single-argument `Array` and `new Array` lengths in `scopes.tests` and
+`scopes.helpers`. `eachCalls` defaults to `[]`. When it lists a callee, numeric
+elements are cardinalities for scale or size tables. Omitting `threshold`
+reports nothing. Equal values and exact `exemptions` stay allowed. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
 
 

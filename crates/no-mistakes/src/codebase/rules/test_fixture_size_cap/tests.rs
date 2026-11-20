@@ -76,16 +76,16 @@ const OVER_FROM: &str = "Array.from length 1001 exceeds threshold 1000";
 const OVER_NEW: &str = "new Array length 10000 exceeds threshold 1000";
 
 #[test]
-fn defaults_keep_it_each_and_require_a_threshold() {
+fn defaults_leave_each_calls_empty_until_configured() {
     let defaults = Options::default();
-    assert_eq!(defaults.each_calls, ["it.each"]);
+    assert!(defaults.each_calls.is_empty());
     assert!(defaults.threshold.is_none());
     assert!(defaults.exemptions.is_empty());
     assert!(defaults.scopes.tests.is_empty());
     let partial: Options = serde_yaml::from_str("threshold: 1000\n").unwrap();
-    assert_eq!(partial.each_calls, ["it.each"]);
-    let cleared: Options = serde_yaml::from_str("eachCalls: []\n").unwrap();
-    assert!(cleared.each_calls.is_empty());
+    assert!(partial.each_calls.is_empty());
+    let listed: Options = serde_yaml::from_str("eachCalls: [\"it.each\"]\n").unwrap();
+    assert_eq!(listed.each_calls, ["it.each"]);
 }
 
 #[test]
@@ -343,8 +343,6 @@ fn saved_policy_reports_only_in_scope_literals() {
         [
             "Array.from length 1001 exceeds threshold 1000",
             "Array.from length 2000 exceeds threshold 1000",
-            "it.each size 10000 exceeds threshold 1000",
-            "it.each size 100000 exceeds threshold 1000",
             OVER_NEW,
         ]
     );
@@ -401,7 +399,7 @@ fn configured_each_calls_message_and_suppression() {
 #[test]
 fn saved_recall_reports_bare_array_and_literal_siblings() {
     assert_eq!(
-        sorted_messages(&check_saved("recall", "policy.yml").unwrap()),
+        sorted_messages(&check_saved("recall", "it-each.yml").unwrap()),
         [
             "it.each size 10000 exceeds threshold 1000",
             "it.each size 10000 exceeds threshold 1000",
@@ -410,6 +408,20 @@ fn saved_recall_reports_bare_array_and_literal_siblings() {
             "it.each size 10001 exceeds threshold 1000",
             "it.each size 10001 exceeds threshold 1000",
             OVER_NEW,
+        ]
+    );
+}
+
+#[test]
+fn saved_boundary_tables_are_silent_until_each_calls_is_set() {
+    assert!(check_saved("boundary", "policy.yml").unwrap().is_empty());
+    assert_eq!(
+        sorted_messages(&check_saved("boundary", "it-each.yml").unwrap()),
+        [
+            "it.each size 1001 exceeds threshold 1000",
+            "it.each size 20261004 exceeds threshold 1000",
+            "it.each size 30001 exceeds threshold 1000",
+            "it.each size 3601 exceeds threshold 1000",
         ]
     );
 }
