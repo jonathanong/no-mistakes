@@ -33,11 +33,8 @@ pub(super) fn call_fragments(ctx: &FileCtx<'_>, call: &ValueCall) -> Vec<Fragmen
         context: call.context,
         ..*ctx
     };
-    if is_append(call) {
-        let mut found = match &call.callee {
-            ValueExpression::Member(base, _) => use_expr(&ctx, base, 0),
-            _ => Vec::new(),
-        };
+    if let Some(base) = append_receiver(call) {
+        let mut found = use_expr(&ctx, base, 0);
         if found.is_empty() {
             found.extend(dynamic_head(&ctx, call));
         }
@@ -74,10 +71,15 @@ pub(super) fn name_fragments(ctx: &FileCtx<'_>, name: &str) -> Vec<Fragment> {
     use_name(ctx, name, 0)
 }
 
-fn is_append(call: &ValueCall) -> bool {
-    matches!(&call.callee, ValueExpression::Member(_, name) if name == "append")
-        && call.arguments.len() == 1
-        && call.spread_at.is_none()
+fn append_receiver(call: &ValueCall) -> Option<&ValueExpression> {
+    let ValueExpression::Member(base, name) = &call.callee else {
+        return None;
+    };
+    if name == "append" && call.arguments.len() == 1 && call.spread_at.is_none() {
+        Some(base.as_ref())
+    } else {
+        None
+    }
 }
 
 fn use_expr(ctx: &FileCtx<'_>, expr: &ValueExpression, depth: u8) -> Vec<Fragment> {

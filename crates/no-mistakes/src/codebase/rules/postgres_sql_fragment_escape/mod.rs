@@ -12,6 +12,10 @@ mod text;
 mod visible;
 mod writes;
 
+#[cfg(test)]
+#[path = "tests/mod.rs"]
+mod coverage_tests;
+
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::rules::RuleFinding;
