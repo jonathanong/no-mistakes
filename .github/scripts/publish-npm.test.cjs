@@ -104,17 +104,33 @@ test("every npm channel uses workflow-owned publish tooling, including older tag
 test("npm publish steps outlast the visibility window for every package", () => {
   const windowMinutes = VISIBILITY_WINDOW_MS / 60000;
   assert.equal(windowMinutes, 15);
-  for (const name of ["publish-native-linux-x64", "publish-js", "publish-eslint"]) {
+  const jobs = [
+    "publish-native-linux-x64",
+    "publish-native-linux-arm",
+    "publish-native-darwin",
+    "publish-native-windows",
+    "publish-js",
+    "publish-eslint",
+  ];
+  // timeout-ms 0 still spends one 60s request. Each of three publish attempts
+  // can spend two minutes on version, latest, and npm publish before the
+  // 15 minute packument window and the 30 minute tarball wait.
+  const probeMinutes = 1;
+  const attemptMinutes = 3 * 2;
+  const overheadMinutes = probeMinutes + 3 * attemptMinutes;
+  assert.equal(publishScript.includes("--timeout-ms 0"), true);
+  assert.equal(publishScript.includes("--timeout-ms 1800000"), true);
+  for (const name of jobs) {
     const block = job(name);
     const step = block.split(/\n      - name: Publish [^\n]*\n/)[1];
     const stepMinutes = Number(step.match(/timeout-minutes: (\d+)/)[1]);
     const jobMinutes = Number(block.match(/\n    timeout-minutes: (\d+)/)[1]);
     const tarballMinutes = 30;
-    assert.equal(publishScript.includes("--timeout-ms 1800000"), true);
     assert.ok(
-      stepMinutes >= windowMinutes + tarballMinutes + 5,
-      `${name} step needs the packument window plus the tarball wait`,
+      stepMinutes >= windowMinutes + tarballMinutes + overheadMinutes,
+      `${name} step needs the probe, three publish attempts, the packument window, and the tarball wait`,
     );
+    assert.ok(jobMinutes >= stepMinutes + 10, `${name} job leaves ten minutes for setup`);
     const stepTimeouts = block.split(/\n    steps:[^\n]*\n/)[1].split(/\n?      - /).slice(1).map((s) => Number(s.match(/\n        timeout-minutes: (\d+)/)?.[1]));
     assert.ok(stepTimeouts.every(Number.isInteger), `${name} steps all need literal timeouts`);
     const stepSum = stepTimeouts.reduce((a, b) => a + b, 0);
