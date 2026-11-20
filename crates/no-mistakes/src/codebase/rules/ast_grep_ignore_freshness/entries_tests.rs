@@ -77,3 +77,23 @@ ignores:
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].line, 5);
 }
+
+#[test]
+fn block_ends_at_the_next_key_and_a_scalar_ignores_line_is_not_an_entry() {
+    let source = "\
+id: widgets
+ignores:
+  - src/missing.ts
+done: true
+---
+id: orders
+ignores: src/orders.ts
+";
+    let documents = crate::codebase::structured_value::parse_yaml_documents(source);
+    assert!(documents.errors.is_empty());
+    let entries = ignores_all(&documents.values, source);
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].pattern, "src/missing.ts");
+    assert_eq!(entries[0].line, 3);
+    assert!(entries[1].invalid_shape);
+}

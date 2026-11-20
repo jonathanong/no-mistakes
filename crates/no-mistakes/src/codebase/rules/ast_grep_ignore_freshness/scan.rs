@@ -62,11 +62,12 @@ pub(super) fn load(
         }
         let project = project_for(&relative, &documents.values, &inherited);
         let index = parsed.len();
-        if let Some(visit) = seen.get_mut(&relative) {
-            visit.parsed = Some(index);
-            if visit.project.is_empty() && !project.is_empty() {
-                visit.project = project.clone();
-            }
+        let visit = seen
+            .get_mut(&relative)
+            .expect("queued config was remembered");
+        visit.parsed = Some(index);
+        if visit.project.is_empty() && !project.is_empty() {
+            visit.project = project.clone();
         }
         for value in &documents.values {
             enqueue_rule_dirs(
@@ -160,3 +161,7 @@ fn remember(
     );
     queue.push_back(relative);
 }
+
+#[cfg(test)]
+#[path = "scan_tests.rs"]
+mod tests;
