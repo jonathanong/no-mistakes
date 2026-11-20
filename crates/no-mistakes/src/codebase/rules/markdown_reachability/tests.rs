@@ -114,6 +114,39 @@ fn exclude_roots_reject_empty_and_invalid_patterns() {
 }
 
 #[test]
+fn excluded_non_index_root_stays_a_target_when_nothing_reaches_it() {
+    let root = fixture("exclude-roots");
+    let findings = run(
+        &root,
+        &config(
+            "rootFilenames: [AGENTS.md]\nindexFilenames: [README.md]\nexcludeRoots: ['docs/**']",
+            &["**/*.md"],
+            &[],
+        ),
+        &[
+            "docs/AGENTS.md",
+            "docs/items.md",
+            "widgets/AGENTS.md",
+            "widgets/orders.md",
+        ],
+    )
+    .unwrap();
+
+    let excluded = findings
+        .iter()
+        .find(|finding| finding.file == "docs/AGENTS.md")
+        .expect("excluded root stays a target");
+    assert_eq!(excluded.rule, RULE_ID);
+    assert_eq!(
+        excluded.message,
+        "not reachable from a configured root Markdown file within 2 hops"
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.file != "widgets/AGENTS.md" && finding.file != "widgets/orders.md"));
+}
+
+#[test]
 fn accepts_only_supported_depths() {
     assert_eq!(validate_max_depth(None).unwrap(), 2);
     assert_eq!(validate_max_depth(Some(1)).unwrap(), 1);

@@ -1,0 +1,14 @@
+version: 2
+projects:
+  widgets:
+    root: packages/widgets
+rules:
+  - rule: markdown-reachability
+    projects: [widgets]
+    include:
+      - "**/*.md"
+    options:
+      rootFilenames: [AGENTS.md]
+      indexFilenames: [README.md]
+      maxDepth: 2
+      excludeRoots: ["packages/widgets/docs/**"]

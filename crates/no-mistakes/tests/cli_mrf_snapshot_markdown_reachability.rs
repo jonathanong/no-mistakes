@@ -148,6 +148,16 @@ fn markdown_reachability_json_matches_snapshot() {
             saved_root("exclude-roots"),
             config("exclude-roots-all.yml"),
         ),
+        (
+            "exclude_roots_package_repo_glob",
+            saved_root("exclude-roots-package"),
+            config("exclude-roots-package.yml"),
+        ),
+        (
+            "exclude_roots_package_docs_glob",
+            saved_root("exclude-roots-package"),
+            config("exclude-roots-package-docs.yml"),
+        ),
     ];
     assert_saved_fixture("markdown_reachability", &cases);
 }

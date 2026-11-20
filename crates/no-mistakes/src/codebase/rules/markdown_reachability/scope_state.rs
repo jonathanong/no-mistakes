@@ -40,6 +40,7 @@ pub(super) fn scoped_states(
             .or_default()
             .push(target);
     }
+    let repo_root = crate::codebase::ts_resolver::normalize_path(root);
     let mut states = RuleStates::new();
     let mut target_names = BTreeSet::new();
     let mut named_roots = 0usize;
@@ -51,16 +52,13 @@ pub(super) fn scoped_states(
             .unwrap_or_default();
         let graph = link_graph(&scope_root, scoped_markdown, options.facts, &remapper)?;
         let (seeds, named, kept) =
-            traversal_seeds(&scope_root, &graph, options.roots, options.exclude_roots);
+            traversal_seeds(&repo_root, &graph, options.roots, options.exclude_roots);
         named_roots += named;
         kept_roots += kept;
         let depths = shortest_depths(&seeds, &graph);
         let reachable = index_reachable(&seeds, options.indexes, &graph, options.max_depth);
         for target in scoped_targets.into_iter().filter(|path| {
-            !is_named(path, options.roots)
-                || options
-                    .exclude_roots
-                    .is_match(&relative_slash_path(&scope_root, path))
+            !is_named(path, options.roots) || excludes_root(&repo_root, path, options.exclude_roots)
         }) {
             let baseline_key =
                 super::super::markdown_scope::baseline_key(root, &scope_root, target);
@@ -93,8 +91,12 @@ pub(super) fn scoped_states(
     Ok((states, target_names))
 }
 
+fn excludes_root(root: &Path, path: &Path, exclude_roots: &GlobMatcher) -> bool {
+    exclude_roots.is_match(&relative_slash_path(root, path))
+}
+
 fn traversal_seeds(
-    scope_root: &Path,
+    root: &Path,
     graph: &BTreeMap<PathBuf, Vec<PathBuf>>,
     names: &BTreeSet<String>,
     exclude_roots: &GlobMatcher,
@@ -106,7 +108,7 @@ fn traversal_seeds(
             continue;
         }
         named += 1;
-        if exclude_roots.is_match(&relative_slash_path(scope_root, path)) {
+        if excludes_root(root, path, exclude_roots) {
             continue;
         }
         seeds.push(path.clone());

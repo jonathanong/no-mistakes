@@ -24,12 +24,16 @@ and `3`; depth counts links from a root. Depth `3` allows two configured index
 intermediaries, such as `AGENTS.md -> docs/README.md -> domain/README.md -> doc`.
 Every intermediary must match `indexFilenames`, even when a shorter route through
 an arbitrary Markdown page also exists. `excludeRoots` is an optional glob list.
-A root file that matches one of those globs is not a traversal root. It stays
-ordinary Markdown: another root can reach it, and after that the same index and
-depth rules follow its links. When every configured root matches `excludeRoots`,
-check fails with `excludeRoots excluded all configured roots`. An empty or blank
-pattern is a config error. Omitting `excludeRoots` keeps every matching filename
-as a root. `baselineFile` is optional and must be a tracked JSON baseline;
+Patterns match the path relative to the repository root, including when the
+application is scoped to a package. `packages/widgets/docs/**` matches
+`packages/widgets/docs/AGENTS.md`. A root file that matches one of those globs
+is not a traversal root. It stays ordinary Markdown, and another root can reach
+it. A reached excluded root forwards its links only when that file also matches
+`indexFilenames`. The all-excluded error counts only roots in scopes that have
+targets. When every such root matches `excludeRoots`, check fails with
+`excludeRoots excluded all configured roots`. An empty or blank pattern is a
+config error. Omitting `excludeRoots` keeps every matching filename as a root.
+`baselineFile` is optional and must be a tracked JSON baseline;
 generic include/exclude chooses targets.
 
 ## Valid example
@@ -63,11 +67,12 @@ rules:
       maxDepth: 2
 ```
 
-`docs/AGENTS.md` matches `excludeRoots`, so it does not start traversal. A page
-linked only from that file is not on an allowed path until a root outside
-`docs/**` reaches it through the configured indexes. `widgets/AGENTS.md` can
-still link `docs/AGENTS.md`. That link can reach the excluded file, and the
-same index and depth rules then apply to pages it links.
+`docs/AGENTS.md` matches `excludeRoots`, so it does not start traversal. It
+remains a target, and the rule reports it when nothing reaches it. Reaching
+`docs/AGENTS.md` does not forward its links, because that file does not match
+`indexFilenames`. A page linked only from it stays unreachable.
+`widgets/AGENTS.md` can still link `docs/AGENTS.md`, and that link reaches the
+excluded file.
 
 Counterexample: `CLAUDE.md -> overview.md -> detail.md`. The intermediary is
 not a configured `README.md`, so `detail.md` is not discoverable under this

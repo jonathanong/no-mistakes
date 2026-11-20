@@ -178,6 +178,45 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude_roots_package_docs_glob": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_roots_package_repo_glob": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/docs/AGENTS.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability",
+          "sourceLine": "[items](items.md)"
+        },
+        {
+          "file": "packages/widgets/docs/items.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability",
+          "sourceLine": "# Items"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "exclude_roots_reachable": {
     "exitCode": 1,
     "report": {
