@@ -59,6 +59,15 @@ fn tracked_repo() -> tempfile::TempDir {
     dir
 }
 
+fn finding<'a>(report: &'a serde_json::Value, file: &str, target: &str) -> &'a serde_json::Value {
+    report["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|hit| hit["file"] == file && hit["target"] == target)
+        .unwrap_or_else(|| panic!("missing {file} target {target}"))
+}
+
 fn targets(report: &serde_json::Value) -> Vec<String> {
     report["report"]["rules"]
         .as_array()
@@ -204,6 +213,26 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
         .unwrap();
     assert_eq!(pattern_line["line"], 6);
     assert_eq!(pattern_line["sourceLine"], "- src/missing.ts");
+    let comment_key = finding(
+        &report["tracked"],
+        "rules/comment-key.yml",
+        "src/missing.ts",
+    );
+    assert_eq!(comment_key["line"], 6);
+    assert_eq!(comment_key["sourceLine"], "- src/missing.ts");
+    let flow_missing = finding(&report["tracked"], "rules/flow-lines.yml", "src/missing.ts");
+    assert_eq!(flow_missing["line"], 3);
+    assert_eq!(flow_missing["sourceLine"], "src/missing.ts,");
+    let flow_also = finding(
+        &report["tracked"],
+        "rules/flow-lines.yml",
+        "src/also-missing.ts",
+    );
+    assert_eq!(flow_also["line"], 4);
+    assert_eq!(flow_also["sourceLine"], "src/also-missing.ts,");
+    let flat_list = finding(&report["tracked"], "rules/flat-list.yml", "src/missing.ts");
+    assert_eq!(flat_list["line"], 3);
+    assert_eq!(flat_list["sourceLine"], "- src/missing.ts");
     let repeated_errors = report["tracked"]["report"]["rules"]
         .as_array()
         .unwrap()

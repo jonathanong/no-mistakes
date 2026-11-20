@@ -1,0 +1,5 @@
+id: widgets
+ignores: [
+  src/missing.ts,
+  src/also-missing.ts,
+]

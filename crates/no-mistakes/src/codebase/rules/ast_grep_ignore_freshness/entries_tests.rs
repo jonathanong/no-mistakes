@@ -103,3 +103,45 @@ ignores:
     assert_eq!(entries[2].pattern, "src/missing.ts");
     assert_eq!(entries[2].line, 11);
 }
+
+#[test]
+fn comment_after_ignores_keeps_the_entry_line() {
+    let source = "\
+id: widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores: # generated
+  - src/missing.ts
+";
+    let entries = entries(source);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].line, 6);
+}
+
+#[test]
+fn flow_list_reports_each_continued_line() {
+    let source = "\
+id: widgets
+ignores: [
+  src/missing.ts,
+  src/also-missing.ts,
+]
+";
+    let entries = entries(source);
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].line, 3);
+    assert_eq!(entries[1].line, 4);
+}
+
+#[test]
+fn same_indent_sequence_is_an_entry() {
+    let source = "\
+id: widgets
+ignores:
+- src/missing.ts
+";
+    let entries = entries(source);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].line, 3);
+}

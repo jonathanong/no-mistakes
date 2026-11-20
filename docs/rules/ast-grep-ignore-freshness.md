@@ -37,9 +37,11 @@ A rule file may contain several YAML documents separated by `---`. Each
 document's ignores are checked. A document that is not valid YAML is a
 finding. Documents parsed before that error are still checked. A flow list
 such as `ignores: ['src/missing.ts', 'src/items.ts']` reports the line that
-contains the entry, so a `no-mistakes-disable-next-line` directive on the
-previous line applies to that entry. The same text on a `pattern:` line is
-not an ignore entry and does not move that line.
+contains the entry, including when the list continues on later lines. A
+comment after `ignores:` does not move the entry, and a `-` item at the same
+indent as `ignores:` is that entry. A `no-mistakes-disable-next-line`
+directive on the previous line applies to that entry. The same text on a
+`pattern:` line is not an ignore entry and does not move that line.
 
 An entry that matches only an untracked file or only a gitignored file is
 still reported. Inside a Git worktree the inventory is the tracked set,

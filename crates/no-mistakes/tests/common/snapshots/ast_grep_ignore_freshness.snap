@@ -134,6 +134,38 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "ignores: ["
         },
         {
+          "file": "rules/comment-key.yml",
+          "line": 6,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/flat-list.yml",
+          "line": 3,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/flow-lines.yml",
+          "line": 3,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "src/missing.ts,",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/flow-lines.yml",
+          "line": 4,
+          "message": "ast-grep ignore `src/also-missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "src/also-missing.ts,",
+          "target": "src/also-missing.ts"
+        },
+        {
           "file": "rules/flow.yml",
           "line": 5,
           "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
