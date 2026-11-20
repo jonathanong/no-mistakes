@@ -125,7 +125,7 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
     ));
     assert!(!text::mentions_path("echo widgets.lock", ""));
     assert_eq!(
-        text::output_names(
+        super::output_names(
             "echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
              echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
              echo 'other=${other}' >> $GITHUB_OUTPUT\n\
@@ -142,7 +142,7 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
         ]
     );
     assert_eq!(
-        text::proven_output_names(
+        output::proven_output_names(
             "digest=$(sha256sum widgets.lock | awk '{print $1}')\n\
              echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
              echo \"other=$(cat widgets.lock)\" >> \"$GITHUB_OUTPUT\"\n",
@@ -150,7 +150,7 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
         ),
         vec!["digest".to_string()]
     );
-    assert!(text::proven_output_names(
+    assert!(output::proven_output_names(
         "echo widgets.lock\n\
          digest=$(sha256sum orders.lock)\n\
          echo \"digest=${digest}\" >> $GITHUB_OUTPUT\n",
@@ -158,7 +158,7 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
     )
     .is_empty());
     assert_eq!(
-        text::output_names(
+        super::output_names(
             "digest=$(sha256sum widgets.lock)\n\
              printf 'digest=%s\\n' \"$digest\" >> \"$GITHUB_OUTPUT\"\n\
              cat >> \"$GITHUB_OUTPUT\" <<EOF\n\

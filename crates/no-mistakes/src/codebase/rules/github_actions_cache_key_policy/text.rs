@@ -7,9 +7,6 @@ pub(super) fn is_cache_action(uses: &str) -> bool {
     )
 }
 
-#[cfg(test)]
-pub(super) use super::output::{output_names, proven_output_names};
-
 pub(super) fn yaml_plain(value: &str) -> String {
     super::super::github_actions_workflow_files::step_lines::yaml_plain(value)
 }

@@ -5,29 +5,15 @@ use super::output_syntax::{
 use super::text::{command_hashes_lockfile, shell_line};
 use crate::fx::{fx_set, FxHashSet};
 
-struct Write {
-    name: String,
-    value: String,
-    expand: bool,
+pub(super) struct Write {
+    pub(super) name: String,
+    pub(super) value: String,
+    pub(super) expand: bool,
 }
 
-enum Event {
+pub(super) enum Event {
     Assign(String, String),
     Write(Write),
-}
-
-#[cfg(test)]
-pub(super) fn output_names(run: &str) -> Vec<String> {
-    let mut names = Vec::new();
-    for event in events(run) {
-        let Event::Write(write) = event else {
-            continue;
-        };
-        if !names.contains(&write.name) {
-            names.push(write.name);
-        }
-    }
-    names
 }
 
 pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
@@ -68,7 +54,7 @@ fn expression_hashes(value: &str, vars: &FxHashSet<String>, lockfile: &str) -> b
     strip_subst(value).is_some_and(|cmd| command_hashes_lockfile(cmd, lockfile))
 }
 
-fn events(run: &str) -> Vec<Event> {
+pub(super) fn events(run: &str) -> Vec<Event> {
     let lines: Vec<&str> = run.lines().map(shell_line).collect();
     let mut events = Vec::new();
     let mut index = 0;

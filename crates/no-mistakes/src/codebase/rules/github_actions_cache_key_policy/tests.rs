@@ -18,6 +18,19 @@ fn source(root: &str, relative: &str) -> String {
     std::fs::read_to_string(fixture(root).join(relative)).unwrap()
 }
 
+fn output_names(run: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    for event in output::events(run) {
+        let output::Event::Write(write) = event else {
+            continue;
+        };
+        if !names.contains(&write.name) {
+            names.push(write.name);
+        }
+    }
+    names
+}
+
 fn expect_jobs(text: &str, action: bool) -> Vec<scan::Job> {
     match scan::analyze(text, action, &[]) {
         scan::Document::Jobs(jobs) => jobs,
@@ -113,7 +126,7 @@ fn hash_args_require_an_expression_and_keep_each_path() {
 fn output_names_read_the_same_line_as_github_output() {
     let run = "digest=$(sha256sum widgets.lock | awk '{print $1}')\n\
                echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n";
-    assert_eq!(text::output_names(run), vec!["digest".to_string()]);
+    assert_eq!(output_names(run), vec!["digest".to_string()]);
     assert!(text::mentions_path(run, "widgets.lock"));
     assert!(text::mentions_path("cat dir/widgets.lock", "widgets.lock"));
     assert!(!text::mentions_path("echo orders.lock", "widgets.lock"));
@@ -121,7 +134,7 @@ fn output_names_read_the_same_line_as_github_output() {
         "echo not-widgets.lock",
         "widgets.lock"
     ));
-    assert!(text::output_names("echo \"digest=${digest}\"\n").is_empty());
+    assert!(output_names("echo \"digest=${digest}\"\n").is_empty());
 }
 
 #[test]
