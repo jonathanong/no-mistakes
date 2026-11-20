@@ -1,6 +1,7 @@
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 
+#[derive(Debug)]
 pub(crate) struct GlobMatcher {
     globset: Option<GlobSet>,
 }

@@ -1,0 +1,14 @@
+name: Items
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: whole project
+        run: pnpm exec vitest run --project items
+      - name: name filter
+        run: pnpm exec vitest run --project items items
+      - name: flag name
+        run: pnpm exec vitest run --project items -t items
+      - name: file filter
+        run: vitest run --project items src/items.test.ts

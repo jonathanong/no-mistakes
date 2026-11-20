@@ -1,0 +1,6 @@
+name: Widgets
+description: Run the widgets project
+runs:
+  using: composite
+  steps:
+    - run: pnpm exec vitest run --project widgets src/widgets.test.ts

@@ -1,0 +1,7 @@
+name: Orders
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec vitest run --project widgets src/orders.test.ts

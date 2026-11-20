@@ -1,0 +1,28 @@
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: whole project
+        run: pnpm exec vitest run --project widgets
+      - name: flags only
+        run: vitest run --project widgets --reporter=dot
+      - name: config file
+        run: pnpm exec vitest run --project widgets --config vitest.config.ts
+      - name: allowed name
+        run: pnpm exec vitest run --project widgets widgets
+      - name: other project
+        run: pnpm exec vitest run --project orders src/orders.test.ts
+      - name: not vitest
+        run: node scripts/build.mjs src/widgets.test.ts
+      - name: file filter
+        run: pnpm exec vitest run --project widgets src/widgets.test.ts
+      - name: equals form
+        run: pnpm exec vitest run --project=widgets src/items.test.ts
+      - name: filtered package
+        run: pnpm --filter widgets exec vitest run --project widgets src/orders.test.ts
+      - name: chained
+        run: echo ok && pnpm exec vitest run --project widgets src/widgets.test.ts
+      - name: suppressed
+        run: pnpm exec vitest run --project widgets src/items.test.ts # no-mistakes-disable-line github-actions-vitest-project-selection

@@ -12,12 +12,12 @@ use super::{
     github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
     github_actions_pinned_hash, github_actions_script_expressions, github_actions_step_timeouts,
-    github_actions_test_timeout_literals, integration_test_no_mocks, lockfile_allowlist,
-    markdown_child_links, markdown_eval_tests, markdown_link_display_text,
-    markdown_mermaid_validation, markdown_reachability, markdown_structure_budget,
-    nextjs_redirect_destinations, no_empty_or_comments_only_files, no_git_identity_mutation,
-    no_mistakes_config, no_raw_ephemeral_port, no_sparse_checkout, no_test_git_sha,
-    package_json_nested_workspace_coverage, package_json_registry_only,
+    github_actions_test_timeout_literals, github_actions_vitest_project_selection,
+    integration_test_no_mocks, lockfile_allowlist, markdown_child_links, markdown_eval_tests,
+    markdown_link_display_text, markdown_mermaid_validation, markdown_reachability,
+    markdown_structure_budget, nextjs_redirect_destinations, no_empty_or_comments_only_files,
+    no_git_identity_mutation, no_mistakes_config, no_raw_ephemeral_port, no_sparse_checkout,
+    no_test_git_sha, package_json_nested_workspace_coverage, package_json_registry_only,
     package_json_required_fields, package_json_workspace_coverage, pnpm_overrides_ban,
     pnpm_release_age_policy, postgres_array_columns, postgres_bounded_statements,
     postgres_column_check_constraints, postgres_column_naming, postgres_column_requires_trigger,
@@ -116,6 +116,8 @@ pub(super) const GITHUB_ACTIONS_SCRIPT_EXPRESSIONS: &str =
 pub(super) const GITHUB_ACTIONS_CHECKOUT_CREDENTIALS: &str =
     github_actions_checkout_credentials::RULE_ID;
 pub(super) const GITHUB_ACTIONS_DOCKER_HOST_PORTS: &str = github_actions_docker_host_ports::RULE_ID;
+pub(super) const GITHUB_ACTIONS_VITEST_PROJECT_SELECTION: &str =
+    github_actions_vitest_project_selection::RULE_ID;
 pub(super) const GITHUB_ACTIONS_DOWNLOAD_INTEGRITY: &str =
     github_actions_download_integrity::RULE_ID;
 pub(super) const GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS: &str =

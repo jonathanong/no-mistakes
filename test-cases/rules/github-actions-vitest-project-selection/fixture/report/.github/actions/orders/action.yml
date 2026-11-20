@@ -1,0 +1,5 @@
+name: Orders
+description: Orders is not a composite action
+runs:
+  using: node20
+  main: index.js

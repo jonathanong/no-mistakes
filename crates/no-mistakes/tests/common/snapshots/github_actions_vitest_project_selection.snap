@@ -1,0 +1,82 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/widgets/action.yml",
+          "line": 6,
+          "message": ".github/actions/widgets/action.yml:6: composite step 1 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "- run: pnpm exec vitest run --project widgets src/widgets.test.ts",
+          "target": "src/widgets.test.ts"
+        },
+        {
+          "file": ".github/workflows/items.yml",
+          "line": 10,
+          "message": ".github/workflows/items.yml:10: job `unit` step 2 narrows Vitest project `items` with positional test name `items`. Whole-project selection is required for this project. Drop the name filter, or set nameFilters to allow when a non-file filter is intentional.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec vitest run --project items items",
+          "target": "items"
+        },
+        {
+          "file": ".github/workflows/items.yml",
+          "line": 12,
+          "message": ".github/workflows/items.yml:12: job `unit` step 3 narrows Vitest project `items` with test name filter `items`. Whole-project selection is required for this project. Drop the name filter, or set nameFilters to allow when a non-file filter is intentional.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec vitest run --project items -t items",
+          "target": "items"
+        },
+        {
+          "file": ".github/workflows/items.yml",
+          "line": 14,
+          "message": ".github/workflows/items.yml:14: job `unit` step 4 narrows Vitest project `items` with positional test file `src/items.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: vitest run --project items src/items.test.ts",
+          "target": "src/items.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 20,
+          "message": ".github/workflows/widgets.yml:20: job `unit` step 7 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec vitest run --project widgets src/widgets.test.ts",
+          "target": "src/widgets.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 22,
+          "message": ".github/workflows/widgets.yml:22: job `unit` step 8 narrows Vitest project `widgets` with positional test file `src/items.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec vitest run --project=widgets src/items.test.ts",
+          "target": "src/items.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 24,
+          "message": ".github/workflows/widgets.yml:24: job `unit` step 9 narrows Vitest project `widgets` with positional test file `src/orders.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm --filter widgets exec vitest run --project widgets src/orders.test.ts",
+          "target": "src/orders.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 26,
+          "message": ".github/workflows/widgets.yml:26: job `unit` step 10 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: echo ok && pnpm exec vitest run --project widgets src/widgets.test.ts",
+          "target": "src/widgets.test.ts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

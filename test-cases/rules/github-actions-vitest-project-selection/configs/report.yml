@@ -1,0 +1,14 @@
+rules:
+  - rule: github-actions-vitest-project-selection
+    scope: repository
+    options:
+      projects:
+        - project: widgets
+          workflows:
+            - .github/workflows/widgets.yml
+            - .github/actions/widgets/action.yml
+            - .github/actions/orders/action.yml
+        - project: items
+          workflows:
+            - .github/workflows/items.yml
+          nameFilters: reject
