@@ -368,15 +368,13 @@ retries; a fresh attempt restarts the transfer rather than resuming partial byte
 
 ### Balancing the remaining macOS snapshot work
 
-The completed baseline for the follow-up is run
-[`43395217611`](https://github.com/jonathanong/no-mistakes/actions/runs/43395217611),
-at `b8d96eb76`: 11m42s overall, with macOS Rust shard 1 taking 8m13s. Its
+The completed baseline for the follow-up is run `43395217611`, at
+`b8d96eb76`: 11m42s overall, with macOS Rust shard 1 taking 8m13s. Its
 PostgreSQL batch contained 91 selected Rust cases and took 318 seconds; shard 2
 had 90 PostgreSQL cases and took 177 seconds in that batch. The preceding run
-[`43393167734`](https://github.com/jonathanong/no-mistakes/actions/runs/43393167734)
-had the same 91/90 split but batch durations of 218/184 seconds. Counting cases
-therefore did not balance the known slow work, and runner variance remains
-visible even with compilation reused.
+`43393167734` had the same 91/90 split but batch durations of 218/184 seconds.
+Counting cases therefore did not balance the known slow work, and runner
+variance remains visible even with compilation reused.
 
 Timestamped libtest notices identify five outliers, several present in both
 runs. A notice that a
@@ -486,12 +484,12 @@ The split removes that dependency delay while preserving the cold-compilation
 bound and cache retention limits.
 
 The independent-platform layout completed successfully in warm-cache run
-[`43393167734`](https://github.com/jonathanong/no-mistakes/actions/runs/43393167734)
-at `b17e05d2d`, with 70 passing checks and three optional skips. End-to-end wall
-time was **10m45s**. The workflow was created at 08:25:56 UTC, but its first
-job started at 08:27:04 UTC, a **1m08s scheduling interval**. From first job
-start to the final aggregate, elapsed time was **9m37s**. That sample therefore
-exceeded the end-to-end target despite an execution path below ten minutes.
+`43393167734` at `b17e05d2d`, with 70 passing checks and three optional skips.
+End-to-end wall time was **10m45s**. The workflow was created at 08:25:56 UTC,
+but its first job started at 08:27:04 UTC, a **1m08s scheduling interval**.
+From first job start to the final aggregate, elapsed time was **9m37s**. That
+sample therefore exceeded the end-to-end target despite an execution path
+below ten minutes.
 
 | Warm-cache job                                      |        Execution time |
 | --------------------------------------------------- | --------------------: |
