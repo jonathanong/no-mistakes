@@ -3,7 +3,7 @@ use super::options::NameFilters;
 use std::collections::BTreeMap;
 
 mod flags;
-use flags::{MODES, VALUE_FLAGS};
+use flags::{takes_value, MODES};
 
 pub(super) struct Narrowing {
     pub(super) line: usize,
@@ -117,8 +117,13 @@ fn take_flag(parsed: &mut Parsed, argv: &[Word], index: usize) -> usize {
             }
         });
     }
-    if inline.is_none() && VALUE_FLAGS.contains(&name) && consumes_next(argv, index) {
-        return index + 2;
+    if takes_value(name) {
+        if inline.is_some() {
+            return index + 1;
+        }
+        if consumes_next(argv, index) {
+            return index + 2;
+        }
     }
     index + 1
 }

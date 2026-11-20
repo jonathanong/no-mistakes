@@ -45,6 +45,67 @@ fn file_positionals_are_rejected_and_flags_are_not() {
 }
 
 #[test]
+fn value_flags_are_not_file_filters() {
+    let policies = widgets();
+    let scripts = [
+        "pnpm exec vitest run --project widgets --root ./apps/web",
+        "pnpm exec vitest run --project widgets -r ./apps/web",
+        "pnpm exec vitest run --project widgets -r=./apps/web",
+        "pnpm exec vitest run --project widgets --workspace ./vitest.workspace.ts",
+        "pnpm exec vitest run --project widgets --exclude 'src/legacy/**'",
+        "pnpm exec vitest run --project widgets --coverage.include 'src/**'",
+        "pnpm exec vitest run --project widgets --coverage.exclude 'src/**/*.snap'",
+        "pnpm exec vitest run --project widgets --cacheDir .vitest/cache",
+        "pnpm exec vitest run --project widgets --outputFile reports/widgets.xml",
+        "pnpm exec vitest run --project widgets --outputFile.junit reports/widgets.xml",
+        "pnpm exec vitest run --project widgets --setupFiles ./src/setup.ts",
+        "pnpm exec vitest run --project widgets --changed origin/main",
+        "pnpm exec vitest run --project widgets --root=./apps/web --workspace=./vitest.workspace.ts --coverage.include='src/**' --outputFile.junit=reports/widgets.xml",
+        "pnpm exec vitest run --project widgets --root",
+        "pnpm exec vitest run --project widgets --changed",
+    ];
+    assert!(!scripts.is_empty());
+    for script in scripts {
+        assert!(arguments(script, &policies).is_empty(), "{script}");
+    }
+    assert_eq!(
+        arguments(
+            "pnpm exec vitest run --project widgets --root ./apps/web src/widgets.test.ts",
+            &policies
+        ),
+        ["src/widgets.test.ts"]
+    );
+    assert_eq!(
+        arguments(
+            "pnpm exec vitest run --project widgets --changed origin/main src/widgets.test.ts",
+            &policies
+        ),
+        ["src/widgets.test.ts"]
+    );
+    assert_eq!(
+        arguments(
+            "pnpm exec vitest run --project widgets --coverage src/widgets.test.ts",
+            &policies
+        ),
+        ["src/widgets.test.ts"]
+    );
+    assert_eq!(
+        arguments(
+            "pnpm exec vitest run --project widgets --coverage.include='src/**' src/widgets.test.ts",
+            &policies
+        ),
+        ["src/widgets.test.ts"]
+    );
+    assert_eq!(
+        arguments(
+            "pnpm exec vitest run --project widgets --outputFile.junit=reports/widgets.xml src/items.test.ts",
+            &policies
+        ),
+        ["src/items.test.ts"]
+    );
+}
+
+#[test]
 fn name_filters_follow_the_project_policy() {
     let reject = [("items", NameFilters::Reject)];
     assert_eq!(

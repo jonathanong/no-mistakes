@@ -1,4 +1,4 @@
-<!-- cspell:ignore bunx nameFilters nohup testNamePattern unconfigured -->
+<!-- cspell:ignore bunx cacheDir nameFilters nohup setupFiles testNamePattern unconfigured -->
 
 # `github-actions-vitest-project-selection`
 
@@ -40,10 +40,14 @@ A positional is a test file when it contains `/`, `\`, `*`, `?`, or `[`, or
 when it contains a dot and ends in `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`,
 `.cjs`, `.mts`, `.cts`, `.vue`, `.svelte`, or `.json`. Mode words `run`,
 `watch`, `dev`, `related`, `bench`, `list`, and `init` are not positionals.
-Known value flags consume their next argument, so `--config vitest.config.ts`
-and `--dir` are not file filters. `--` ends option parsing. Flags this rule
-does not know do not consume the next token. Flow-style steps that the line
-scan cannot place are reported on line 1.
+Known value flags consume their next argument or an inline `--flag=value`.
+That includes `--config`, `--dir`, `--root`/`-r`, `--workspace`, `--exclude`,
+`--coverage.include`, `--coverage.exclude`, `--cacheDir`, `--setupFiles`,
+`--changed`, `--outputFile`, and `--outputFile.<reporter>`. `--root ./apps/web`
+and `--coverage.include='src/**'` are not file filters. `--` ends option
+parsing. Flags this rule does not know do not consume the next token.
+
+Flow-style steps that the line scan cannot place are reported on line 1.
 
 ## Options
 

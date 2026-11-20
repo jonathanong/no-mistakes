@@ -74,6 +74,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "github-actions-vitest-project-selection",
           "sourceLine": "run: echo ok && pnpm exec vitest run --project widgets src/widgets.test.ts",
           "target": "src/widgets.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 46,
+          "message": ".github/workflows/widgets.yml:46: job `unit` step 13 narrows Vitest project `widgets` with positional test file `src/folded.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "src/folded.test.ts",
+          "target": "src/folded.test.ts"
         }
       ],
       "warnings": []

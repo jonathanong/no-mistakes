@@ -10,6 +10,15 @@ pub(super) const VALUE_FLAGS: &[&str] = &[
     "--environment",
     "--pool",
     "--outputFile",
+    "--root",
+    "-r",
+    "--workspace",
+    "--exclude",
+    "--coverage.include",
+    "--coverage.exclude",
+    "--cacheDir",
+    "--setupFiles",
+    "--changed",
     "--api.port",
     "--browser",
     "--browser.name",
@@ -33,3 +42,7 @@ pub(super) const VALUE_FLAGS: &[&str] = &[
     "--execArgv",
     "--cache.dir",
 ];
+
+pub(super) fn takes_value(name: &str) -> bool {
+    VALUE_FLAGS.contains(&name) || name.starts_with("--outputFile.")
+}
