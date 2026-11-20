@@ -97,6 +97,10 @@ fn invalid_utf8_github_actions() {
                 "github_actions_test_timeout_literals",
                 "github-actions-test-timeout-literals",
             ),
+            c(
+                "github_actions_action_input_policy",
+                "github-actions-action-input-policy",
+            ),
         ],
         &[],
         &[],
@@ -135,6 +139,11 @@ fn invalid_utf8_github_actions() {
         &report,
         "github_actions_test_timeout_literals",
         "github-actions-test-timeout-literals",
+    );
+    assert_definite(
+        &report,
+        "github_actions_action_input_policy",
+        "github-actions-action-input-policy",
     );
 }
 

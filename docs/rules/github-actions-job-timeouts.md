@@ -204,6 +204,8 @@ Following [recall over precision](../../README.md#how-analysis-works), nothing t
 keeps tests from duplicating this policy, while
 [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
 covers nested action limits.
+[`github-actions-action-input-policy`](github-actions-action-input-policy.md)
+requires or bans `with:` inputs for each configured action family.
 
 ## Suppression
 

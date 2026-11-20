@@ -64,7 +64,24 @@ pub(super) fn family_of(uses: &str) -> Option<String> {
     if family.is_empty() {
         None
     } else {
-        Some(family.to_string())
+        Some(canonicalize_family(family))
+    }
+}
+
+fn canonicalize_family(family: &str) -> String {
+    if family.starts_with(['.', '/']) || family.contains("://") {
+        return family.to_string();
+    }
+    let Some((owner, rest)) = family.split_once('/') else {
+        return family.to_string();
+    };
+    let (repo, subpath) = rest.split_once('/').unwrap_or((rest, ""));
+    let owner = owner.to_ascii_lowercase();
+    let repo = repo.to_ascii_lowercase();
+    if subpath.is_empty() {
+        format!("{owner}/{repo}")
+    } else {
+        format!("{owner}/{repo}/{subpath}")
     }
 }
 

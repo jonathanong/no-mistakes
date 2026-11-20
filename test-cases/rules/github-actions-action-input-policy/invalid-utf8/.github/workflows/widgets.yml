@@ -1,0 +1,13 @@
+# stray ÿ
+name: Widgets
+on: push
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish widgets
+        uses: example/publish-widget@v1
+        with:
+          name: widgets
+          keep-days: 30
+          replace: true
