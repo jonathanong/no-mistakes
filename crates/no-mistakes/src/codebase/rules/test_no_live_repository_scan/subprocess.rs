@@ -134,3 +134,7 @@ fn cwd_origin(facts: &TsFileFacts, offset: u32, index: usize) -> Option<&PathOri
             (*member_index == index && key == "cwd").then_some(origin)
         })
 }
+
+#[cfg(test)]
+#[path = "subprocess/gate_tests.rs"]
+mod gate_tests;

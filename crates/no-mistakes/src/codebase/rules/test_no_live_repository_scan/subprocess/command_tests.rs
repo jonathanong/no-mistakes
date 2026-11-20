@@ -122,6 +122,56 @@ fn wrappers_and_basenames_match_the_configured_prefix() {
     );
 }
 
+#[test]
+fn incomplete_argv_does_not_match_the_configured_prefix() {
+    let executable = invocation(&[known("widget-audit")]).unwrap();
+    assert!(matches!(executable.options, super::OptionsSlot::Absent));
+    assert!(executable.argv.is_empty());
+    assert!(matched(&executable, &[analyzer()]).is_none());
+
+    let options_slot = invocation(&[
+        known("widget-audit"),
+        ArgumentValue::Object(crate::fx::FxHashMap::default()),
+    ])
+    .unwrap();
+    assert!(matches!(
+        options_slot.options,
+        super::OptionsSlot::Object(1)
+    ));
+    assert!(options_slot.argv.is_empty());
+    assert!(matched(&options_slot, &[analyzer()]).is_none());
+
+    let dynamic_argv = invocation(&[known("widget-audit"), ArgumentValue::Unknown]).unwrap();
+    assert!(matches!(dynamic_argv.options, super::OptionsSlot::Unknown));
+    assert!(matches!(
+        dynamic_argv.argv.as_slice(),
+        [super::Token::Unknown]
+    ));
+
+    let dynamic_executable = invocation(&[ArgumentValue::Unknown]).unwrap();
+    assert!(matches!(
+        dynamic_executable.executable,
+        super::Token::Unknown
+    ));
+    assert!(matched(&dynamic_executable, &[analyzer()]).is_none());
+
+    assert!(launch(vec![
+        known("pnpm"),
+        ArgumentValue::Array(vec![
+            ArgumentValue::Unknown,
+            known("widget-audit"),
+            known("check")
+        ])
+    ])
+    .is_empty());
+    assert!(launch(vec![
+        known("pnpm"),
+        ArgumentValue::Array(vec![known("run"), known("widget-audit"), known("check")])
+    ])
+    .is_empty());
+    assert!(launch(vec![known("npx"), ArgumentValue::Array(vec![])]).is_empty());
+}
+
 fn launch_as(command: &str, values: Vec<ArgumentValue>) -> String {
     let parsed = invocation(&values).unwrap();
     matched(
