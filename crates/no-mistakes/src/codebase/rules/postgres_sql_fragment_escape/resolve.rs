@@ -3,7 +3,7 @@ use super::fragments::{dedup, Catalog, Fragment};
 use super::modules::import_hit_fragments;
 use super::mutate::receiver_mutations;
 use super::names::{binding_named, expr_module, import_fragments, locally_bound, namespace_of};
-use super::tags::{imported, is_fragment_binding};
+use super::tags::{binding_is_tag, imported, is_fragment_binding};
 use super::text::import_equals_member;
 use super::visible::{visible, visible_all};
 use crate::codebase::check_facts::CheckFactMap;
@@ -118,7 +118,12 @@ fn use_name(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Vec<Fragment> {
     }
     if !locally_bound(ctx, name) {
         if let Some(import) = imported(ctx.ts, name) {
-            return import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import);
+            let mut found =
+                import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import);
+            if binding_is_tag(ctx.ts, ctx.tags, name) {
+                found.retain(|fragment| fragment.open_specifier.is_none());
+            }
+            return found;
         }
         if let Some((object, member)) = import_equals_member(ctx.source, name) {
             if let Some(module) = namespace_of(ctx, object, depth) {

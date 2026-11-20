@@ -80,15 +80,6 @@ impl<'a> Catalog<'a> {
             .cloned()
             .collect()
     }
-
-    #[cfg(test)]
-    pub(super) fn by_export(&self, name: &str) -> Vec<Fragment> {
-        self.fragments
-            .iter()
-            .filter(|fragment| fragment.exported == name)
-            .cloned()
-            .collect()
-    }
 }
 
 fn relative_index(facts: &CheckFactMap) -> RelativeIndex {

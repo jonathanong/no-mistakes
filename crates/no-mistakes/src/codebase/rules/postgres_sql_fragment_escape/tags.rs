@@ -49,6 +49,10 @@ pub(super) fn imported<'a>(ts: &'a TsFileFacts, local: &str) -> Option<&'a Impor
     bindings(ts).find(|binding| !binding.is_type_only && binding.local == local)
 }
 
+pub(super) fn binding_is_tag(ts: &TsFileFacts, tags: &[TrustedSqlTag], local: &str) -> bool {
+    tags.iter().any(|tag| tag_matches(ts, local, tag))
+}
+
 pub(super) fn exported_name(binding: &ImportedBinding) -> String {
     if binding.kind == ImportedBindingKind::Default {
         "default".to_string()

@@ -70,7 +70,10 @@ the target is missing or unresolved, a relative specifier is joined
 lexically to the importer, and a specifier can match a file that contains
 `declare module "specifier"` when that file is unique. When those steps do
 not name one file, or the recorded targets disagree, the use is reported.
-That finding names the specifier and does not attribute a local file.
+That finding names the specifier and does not attribute a local file. A use
+of the configured trusted tag itself is not a fragment, so an unresolved or
+ambiguous import of that tag stays silent. Any other binding from that
+specifier is still reported.
 
 ## Valid example
 

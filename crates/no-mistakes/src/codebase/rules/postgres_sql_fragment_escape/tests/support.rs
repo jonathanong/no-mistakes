@@ -164,7 +164,7 @@ pub(super) struct World {
     pub(super) callbacks: crate::fx::FxHashMap<CallableId, PathBuf>,
 }
 
-fn insert(facts: &mut CheckFactMap, file: PathBuf, ts: TsFileFacts) {
+pub(super) fn insert(facts: &mut CheckFactMap, file: PathBuf, ts: TsFileFacts) {
     facts.graph_files.push(file.clone());
     facts.ts.insert(
         file,

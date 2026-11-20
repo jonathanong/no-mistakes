@@ -1,4 +1,4 @@
-use super::super::fragments::dedup;
+use super::super::fragments::{dedup, Catalog, Fragment};
 use super::super::{alias, dynamic, modules, names, resolve, scan, tags, visible};
 use super::support::{
     assert_from, bind, call, catalog, ctx, fragment_facts, import, named, span, sql_tag, world,
@@ -14,8 +14,8 @@ use std::sync::Arc;
 fn catalog_skips_files_that_cannot_prove_a_fragment() {
     let world = world();
     let catalog = catalog(&world);
-    assert_eq!(catalog.by_export("orderColumns").len(), 1);
-    let widgets = catalog.by_export("widgetColumns");
+    assert_eq!(by_export(&catalog, "orderColumns").len(), 1);
+    let widgets = by_export(&catalog, "widgetColumns");
     let producers: Vec<&Path> = widgets
         .iter()
         .map(|fragment| fragment.producer.as_path())
@@ -23,8 +23,8 @@ fn catalog_skips_files_that_cannot_prove_a_fragment() {
     assert!(producers.contains(&world.columns.as_path()));
     assert!(producers.contains(&world.extra.as_path()));
     assert_eq!(producers.len(), 2);
-    assert!(catalog.by_export("badColumns").is_empty());
-    assert!(catalog.by_export("partialColumns").is_empty());
+    assert!(by_export(&catalog, "badColumns").is_empty());
+    assert!(by_export(&catalog, "partialColumns").is_empty());
     let unresolved_order = alias::hop(
         &catalog,
         &world.graph,
@@ -390,16 +390,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         .map(|finding| finding.target.as_deref().unwrap_or(""))
         .collect();
     targets.sort_unstable();
-    assert_eq!(
-        targets,
-        [
-            "@example/sql",
-            "@example/sql",
-            "@example/sql",
-            "orderColumns",
-            "widgetColumns",
-        ]
-    );
+    assert_eq!(targets, ["orderColumns", "widgetColumns"]);
     assert!(scan::scan(Path::new("/repo"), &[], &world.graph, &world.facts, None).is_empty());
     assert!(scan::scan(
         Path::new("/repo"),
@@ -460,4 +451,13 @@ fn tags_require_a_matching_sql_import() {
     ));
     named_tag.imported_bindings[0].specifier = "other".to_string();
     assert!(!tags::is_fragment_binding(&named_tag, &[tag], &proven));
+}
+
+fn by_export(catalog: &Catalog<'_>, name: &str) -> Vec<Fragment> {
+    catalog
+        .fragments
+        .iter()
+        .filter(|fragment| fragment.exported == name)
+        .cloned()
+        .collect()
 }

@@ -28,7 +28,7 @@ pub struct DepGraph {
     resource_edge_details: ResourceEdgeDetails,
     selector_import_sites: SelectorImportSites,
     resource_diagnostics: Vec<ResourceGraphDiagnostic>,
-    import_targets: ImportTargetMap,
+    pub(crate) import_targets: ImportTargetMap,
 }
 
 include!("builder_request_type.rs");

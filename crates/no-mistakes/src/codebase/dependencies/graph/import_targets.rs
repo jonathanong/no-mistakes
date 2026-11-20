@@ -51,14 +51,4 @@ impl DepGraph {
     pub(crate) fn import_target(&self, importer: &Path, specifier: &str) -> Option<&ImportTarget> {
         self.import_targets.get(importer)?.get(specifier)
     }
-
-    #[cfg(test)]
-    pub(crate) fn record_import_target(
-        &mut self,
-        importer: &Path,
-        specifier: &str,
-        target: ImportTarget,
-    ) {
-        merge_import_target(&mut self.import_targets, importer, specifier, target);
-    }
 }
