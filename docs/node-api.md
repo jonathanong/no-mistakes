@@ -850,6 +850,15 @@ Configure `caches` with a path, lockfile, and `keyParts`. `rejectRestoreKeys` de
 and `allowHashFiles` defaults to false. See the
 [rule documentation](rules/github-actions-cache-key-policy.md).
 
+`test-fixture-size-cap` is available through asynchronous `check()` and
+`analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
+Set `options.threshold` to cap literal `Array.from` lengths and single-argument `Array`
+and `new Array` lengths in `scopes.tests` and `scopes.helpers`. `eachCalls` defaults
+to `[]`. When it names a callee, numeric elements are cardinalities for scale or
+size tables. Omitting `threshold` reports nothing. Use `exemptions` for an exact
+intentional size. See the
+[rule documentation](rules/test-fixture-size-cap.md).
+
 ### Source-level merged configuration
 
 ```ts

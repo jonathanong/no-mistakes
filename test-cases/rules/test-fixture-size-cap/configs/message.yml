@@ -1,0 +1,10 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    message: widget fixtures
+    options:
+      threshold: 1000
+      scopes:
+        tests:
+          - "*.test.ts"
+          - "**/*.test.ts"

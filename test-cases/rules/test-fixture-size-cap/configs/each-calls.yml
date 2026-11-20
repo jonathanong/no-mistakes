@@ -1,0 +1,11 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      threshold: 1000
+      eachCalls:
+        - test.each
+      scopes:
+        tests:
+          - "*.test.ts"
+          - "**/*.test.ts"

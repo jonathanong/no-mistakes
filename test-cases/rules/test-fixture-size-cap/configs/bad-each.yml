@@ -1,0 +1,7 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      threshold: 1000
+      eachCalls:
+        - not-a-call

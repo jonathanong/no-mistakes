@@ -86,6 +86,7 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::SWIFT_NO_RAW_PRINT,
     rules::SWIFT_VIEWMODEL_MAIN_ACTOR,
     rules::TEST_EMAIL_DOMAIN_POLICY,
+    rules::TEST_FIXTURE_SIZE_CAP,
     rules::TEST_NO_DEPENDENCY_PINS,
     rules::POSTGRES_LOCK_ORDERING,
     rules::POSTGRES_LOCK_WRITTEN_ROWS_ONLY,
