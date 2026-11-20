@@ -68,16 +68,23 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
                          {"metadata", "download", "digest", "extraction", "total"})
         self.assertEqual(len(self.calls), 2)
         argv, options = self.calls[1]
-        for option, value in (("--retry", "2"), ("--retry-max-time", "90"),
-                              ("--connect-timeout", "10"), ("--max-time", "25")):
+        for option, value in (("--retry", "2"),
+                              ("--retry-max-time", str(download.OVERALL_SECONDS)),
+                              ("--connect-timeout", "10"),
+                              ("--continue-at", "-"),
+                              ("--speed-limit", "1024"), ("--speed-time", "30")):
             self.assertEqual(argv[argv.index(option) + 1], value)
+        self.assertNotIn("--max-time", argv)
+        self.assertIn("--speed-limit", argv)
+        self.assertIn("--speed-time", argv)
+        self.assertGreaterEqual(download.OVERALL_SECONDS, 177)
         self.assertNotIn("--location-trusted", argv)
         self.assertNotIn("--retry-all-errors", argv)
         self.assertNotIn("--retry-delay", argv)
         self.assertNotIn("test-token", " ".join(argv))
         self.assertIn("test-token", options["input"])
         self.assertGreater(options["timeout"], 0)
-        self.assertLessEqual(options["timeout"], 110)
+        self.assertLessEqual(options["timeout"], download.OVERALL_SECONDS)
 
     def test_metadata_has_separate_bounded_timeout(self):
         with patch.object(download.subprocess, "run", side_effect=self.transport):
@@ -144,7 +151,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertTrue(self.calls[-1][0][-1].endswith("per_page=100&page=10"))
 
     def test_expired_deadline_does_not_start_transport(self):
-        with patch.object(download.time, "monotonic", side_effect=[0, 111]):
+        with patch.object(download.time, "monotonic", side_effect=[0, download.OVERALL_SECONDS + 1]):
             deadline = download.Deadline()
             with patch.object(download.subprocess, "run") as transport:
                 with self.assertRaises(TimeoutError):
@@ -153,7 +160,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
 
     def test_subprocess_deadline_failure_emits_failure_timing(self):
         with patch.object(download.subprocess, "run", side_effect=
-                          subprocess.TimeoutExpired(["curl"], 110)):
+                          subprocess.TimeoutExpired(["curl"], download.OVERALL_SECONDS)):
             code, report, errors = self.run_main()
         self.assertEqual(code, 1)
         self.assertFalse(report["success"])
@@ -241,9 +248,10 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         def transport(argv, **kwargs):
             result = original(argv, **kwargs)
             if "--output" in argv:
-                now[0] = 109 if argv[-1].endswith("/124/zip") else 112
+                now[0] = (download.OVERALL_SECONDS - 1
+                          if argv[-1].endswith("/124/zip") else download.OVERALL_SECONDS + 2)
             elif len(self.calls) == 3:
-                now[0] = 111
+                now[0] = download.OVERALL_SECONDS + 1
             return result
         with patch.object(download.time, "monotonic", side_effect=lambda: now[0]), \
                 patch.object(download.subprocess, "run", side_effect=transport):
@@ -254,7 +262,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 3)
         self.assertTrue(Path("target/debug/no-mistakes").is_file())
         self.assertFalse(Path("target/debug/no-mistakes.node").exists())
-        self.assertIn("110 seconds", errors)
+        self.assertIn(f"{download.OVERALL_SECONDS} seconds", errors)
 
 
 if __name__ == "__main__":

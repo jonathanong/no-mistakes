@@ -16,14 +16,19 @@ class DownloadError(RuntimeError):
     pass
 
 
+# 177 MB at about 1 MB/s is 177s. The extra time covers a stall abort and a resume.
+OVERALL_SECONDS = 300
+
+
 class Deadline:
     def __init__(self):
-        self.end = time.monotonic() + 110
+        self.end = time.monotonic() + OVERALL_SECONDS
 
     def remaining(self):
         remaining = self.end - time.monotonic()
         if remaining <= 0:
-            raise TimeoutError("native runtime download exceeded 110 seconds")
+            raise TimeoutError(
+                f"native runtime download exceeded {OVERALL_SECONDS} seconds")
         return remaining
 
 
@@ -71,8 +76,10 @@ def download(repo, artifact, token, archive, deadline):
     subprocess.run([
         "curl", "--config", "-", "--fail", "--location", "--silent", "--show-error",
         "--ssl-revoke-best-effort",
-        "--retry", "2", "--retry-max-time", "90",
-        "--connect-timeout", "10", "--max-time", "25", "--output", str(archive), url,
+        "--retry", "2", "--retry-max-time", str(OVERALL_SECONDS),
+        "--continue-at", "-",
+        "--speed-limit", "1024", "--speed-time", "30",
+        "--connect-timeout", "10", "--output", str(archive), url,
     ], input=config, text=True, check=True, timeout=deadline.remaining())
 
 
@@ -165,7 +172,7 @@ def main(artifact_names=()):
         if isinstance(error, subprocess.CalledProcessError):
             detail = f"curl exit status {error.returncode}"
         if isinstance(error, subprocess.TimeoutExpired):
-            detail = "overall 110-second deadline exhausted"
+            detail = f"overall {OVERALL_SECONDS}-second deadline exhausted"
         print(f"native runtime download failed during {stage}: "
               f"{type(error).__name__}: {detail}", file=sys.stderr)
         return 1
