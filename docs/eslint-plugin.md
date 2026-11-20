@@ -270,8 +270,10 @@ See
 scoped executors that also match imports from `importSpecifier` subpaths and relative imports that resolve into that package, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
 `trustedSqlTags?: { module: string, name: string }[]` (default empty; tags whose
 templates expose SQL in `"forwarding-only"` mode), and `mode?: "all" |
-"forwarding-only"` (default `"all"`; the opt-in mode reports forwarding
-callbacks and hidden SQL paths). See the [rule reference](eslint-rules/postgres-no-executor-adapter.md).
+"forwarding-only"` (default `"all"`; that mode reports a call that omits an
+optional field, such as `put(tx, { id: row.id })`. The opt-in mode reports
+forwarding callbacks and hidden SQL paths, and treats that omission as
+undefined). See the [rule reference](eslint-rules/postgres-no-executor-adapter.md).
 
 `nonWritingCallees?: { module: string, export: string }[]` defaults to empty.
 Each `module` and `export` pair trusts the exact named import or `export: "default"`

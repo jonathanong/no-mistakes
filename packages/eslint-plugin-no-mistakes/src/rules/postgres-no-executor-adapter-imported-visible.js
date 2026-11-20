@@ -115,6 +115,7 @@ function declarationVisible(declaration, index, property, args, shared) {
           program,
           symbol,
           property,
+          shared.omitted,
         );
       const library = object && tsLibraryCall(node, ts, checker, options);
       if (library) {
@@ -161,14 +162,14 @@ function declarationVisible(declaration, index, property, args, shared) {
   }
 }
 
-function importedVisible(call, index, property, context, options, facts) {
+function importedVisible(call, index, property, context, options, facts, result) {
   const services = context.sourceCode.parserServices;
   if (!services?.program || !services.esTreeNodeToTSNodeMap) return null;
   const checker = services.program.getTypeChecker();
   const callee = services.esTreeNodeToTSNodeMap.get(call.callee);
   const signatures = checker.getTypeAtLocation(callee).getCallSignatures();
   if (signatures.length !== 1) return null;
-  const shared = { context, options, facts, checker, program: services.program };
+  const shared = { context, options, facts, checker, omitted: result, program: services.program };
   shared.ts = require("typescript");
   const declaration = signatures[0].getDeclaration();
   return declarationVisible(declaration, index, property, call.arguments, shared);

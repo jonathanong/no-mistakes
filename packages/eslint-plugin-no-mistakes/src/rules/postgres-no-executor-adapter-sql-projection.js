@@ -148,14 +148,14 @@ function staticObjectValue(node, field, context, seen = new Set()) {
   return value ?? ABSENT;
 }
 
-function projectedScalar(node, field, context, allowUndefined) {
+function projectedScalar(node, field, context, allowUndefined, result) {
   if (field !== null && typedScalarProjection(node, field, context, allowUndefined)) return true;
   const value = field === null ? node : staticObjectValue(node, field, context);
   if (value === ABSENT) {
     // Mode all reports this hole; only forwarding-only treats it as proven.
     if (!(allowUndefined && omittedOptionalField(node, field, context))) return false;
     if ((context.options?.[0]?.mode ?? "all") === "forwarding-only") return true;
-    noteOmittedOptional();
+    noteOmittedOptional(result);
     return false;
   }
   return Boolean(value && scalarArgument(value, context, allowUndefined));

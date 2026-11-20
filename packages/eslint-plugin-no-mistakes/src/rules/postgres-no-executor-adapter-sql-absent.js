@@ -2,27 +2,8 @@
 
 const { unwrapTs } = require("./postgres-query-text");
 
-const stack = [];
-let lastOmitted = false;
-
-function noteOmittedOptional() {
-  if (stack.length) stack[stack.length - 1] = true;
-}
-
-function beginOmittedScope() {
-  stack.push(false);
-}
-
-function endOmittedScope() {
-  const marked = stack.pop() === true;
-  if (marked && stack.length) stack[stack.length - 1] = true;
-  else if (stack.length === 0) lastOmitted = marked;
-}
-
-function consumeOmittedOptional() {
-  const marked = lastOmitted;
-  lastOmitted = false;
-  return marked;
+function noteOmittedOptional(result) {
+  if (result) result.omitted = true;
 }
 
 function reportsOmittedOptional(
@@ -37,9 +18,20 @@ function reportsOmittedOptional(
   targetFacts,
 ) {
   if (mode !== "all" || nested || !accepted) return false;
+  const result = { omitted: false };
   const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
-  const proven = visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts);
-  return proven === false && consumeOmittedOptional();
+  const proven = visibleSqlTarget(
+    call,
+    index,
+    quoteNode,
+    context,
+    options,
+    accepted,
+    targetFacts,
+    undefined,
+    result,
+  );
+  return proven === false && result.omitted;
 }
 
 // True when an object literal omits optional `field` (the read is undefined).
@@ -56,9 +48,6 @@ function omittedOptionalField(node, field, context) {
 }
 
 module.exports = {
-  beginOmittedScope,
-  consumeOmittedOptional,
-  endOmittedScope,
   noteOmittedOptional,
   omittedOptionalField,
   reportsOmittedOptional,
