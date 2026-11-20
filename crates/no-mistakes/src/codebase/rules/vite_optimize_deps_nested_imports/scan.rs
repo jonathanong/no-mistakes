@@ -1,8 +1,9 @@
 //! Compare nested include entries with declared dependencies and entry imports.
 
 use super::include_config::{parse_vite_config, NestedInclude, ParsedConfig};
+use super::include_source;
 use super::manifest::{self, PackageFacts};
-use super::{RuleFinding, RULE_ID};
+use super::{IncludeSource, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
@@ -13,15 +14,19 @@ pub(super) fn evaluate(
     sources: &SourceStore,
     config_files: &[String],
     package_dirs: &[String],
+    all_files: &[PathBuf],
+    include_sources: &[IncludeSource],
+    ignore_packages: &[String],
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     let mut includes = Vec::new();
     let mut configs_known = true;
+    let allow_imported = !include_sources.is_empty();
     for config_file in config_files {
         let path = resolve(root, config_file);
         let file = relative_slash_path(root, &path);
         match sources.read_source_path(&path) {
-            Ok(source) => match parse_vite_config(&path, &source) {
+            Ok(source) => match parse_vite_config(&path, &source, allow_imported) {
                 ParsedConfig::Includes(entries) => {
                     includes.extend(entries.into_iter().map(|entry| (file.clone(), entry)));
                 }
@@ -38,9 +43,17 @@ pub(super) fn evaluate(
             }
         }
     }
+    include_source::load(
+        root,
+        sources,
+        include_sources,
+        &mut includes,
+        &mut findings,
+        &mut configs_known,
+    );
     let mut packages = BTreeMap::new();
     for package_dir in package_dirs {
-        match manifest::load(root, &resolve(root, package_dir), sources) {
+        match manifest::load(root, &resolve(root, package_dir), sources, all_files) {
             Ok(package) => {
                 packages.insert(package.name.clone(), package);
             }
@@ -49,7 +62,9 @@ pub(super) fn evaluate(
     }
     findings.extend(invalid_mappings(&includes, &packages));
     if configs_known {
-        findings.extend(uncovered(&includes, &packages));
+        let ignore: BTreeSet<_> = ignore_packages.iter().cloned().collect();
+        let configured: BTreeSet<_> = packages.keys().cloned().collect();
+        findings.extend(uncovered(&includes, &packages, &configured, &ignore));
     }
     Ok(findings)
 }
@@ -85,6 +100,8 @@ fn invalid_mappings(
 fn uncovered(
     includes: &[(String, NestedInclude)],
     packages: &BTreeMap<String, PackageFacts>,
+    configured: &BTreeSet<String>,
+    ignore: &BTreeSet<String>,
 ) -> Vec<RuleFinding> {
     let covered: BTreeSet<_> = includes
         .iter()
@@ -96,17 +113,16 @@ fn uncovered(
             findings.push(unknown.clone());
             continue;
         }
-        let Some(file) = &package.entry_file else {
-            continue;
-        };
         for import in &package.imports {
-            if covered.contains(&(package.name.clone(), import.package.clone())) {
+            if covered.contains(&(package.name.clone(), import.package.clone()))
+                || skip_child(package, &import.package, configured, ignore)
+            {
                 continue;
             }
             findings.push(RuleFinding {
                 causes: Vec::new(),
                 rule: RULE_ID.to_string(),
-                file: file.clone(),
+                file: import.file.clone(),
                 line: import.line,
                 message: format!(
                     "runtime import \"{}\" from {} is not covered by optimizeDeps.include; add \"{} > {}\"",
@@ -118,6 +134,17 @@ fn uncovered(
         }
     }
     findings
+}
+
+fn skip_child(
+    package: &PackageFacts,
+    child: &str,
+    configured: &BTreeSet<String>,
+    ignore: &BTreeSet<String>,
+) -> bool {
+    ignore.contains(child)
+        || package.workspace.contains(child)
+        || (configured.contains(child) && !package.versioned.contains(child))
 }
 
 fn config_gap(file: &str, line: usize, reason: &str) -> RuleFinding {

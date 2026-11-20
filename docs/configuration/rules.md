@@ -93,7 +93,12 @@ reads `options.configFiles` and `options.packages`. Both are required and have
 no default. `configFiles` lists the Vite configs whose `optimizeDeps.include`
 entries are checked. `packages` lists the package directories in scope. An
 explicit empty `packages` list selects nothing. An omitted option is reported
-on the loaded config file.
+on the loaded config file. Optional `options.includeSources` names modules
+whose `export const` string arrays are unioned with those include entries.
+Optional `options.ignorePackages` skips uncovered imports of those package
+names. A `workspace:` dependency and a child package listed in `packages`
+without a non-workspace version specifier are skipped the same way. A
+versioned dependency such as `"items": "1.0.0"` is still checked.
 
 [`markdown-reachability`](../rules/markdown-reachability.md) accepts
 `options.excludeRoots` globs. Patterns match the repository-relative path. A

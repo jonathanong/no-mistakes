@@ -368,5 +368,7 @@ fn vite_optimize_deps_nested_imports_documents_scope_options() {
         let body = read(&root.join(path));
         assert!(body.contains("configFiles"), "{path}");
         assert!(body.contains("packages"), "{path}");
+        assert!(body.contains("includeSources"), "{path}");
+        assert!(body.contains("ignorePackages"), "{path}");
     }
 }

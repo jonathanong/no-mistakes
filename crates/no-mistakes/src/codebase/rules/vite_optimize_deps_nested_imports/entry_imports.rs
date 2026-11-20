@@ -13,33 +13,51 @@ use oxc_ast_visit::{walk, Visit};
 pub(super) struct RuntimeImport {
     pub package: String,
     pub line: usize,
+    pub file: String,
+}
+
+pub(super) struct ModuleImports {
+    pub imports: Vec<RuntimeImport>,
+    pub relative: Vec<String>,
 }
 
 pub(super) fn collect(
     path: &std::path::Path,
     source: &str,
     own_package: &str,
-) -> anyhow::Result<Vec<RuntimeImport>> {
+    file: &str,
+) -> anyhow::Result<ModuleImports> {
     crate::ast::with_program(path, source, |program, source| {
         let mut visitor = ImportVisitor {
             source,
             own_package,
+            file,
             imports: Vec::new(),
+            relative: Vec::new(),
         };
         visitor.visit_program(program);
-        visitor.imports
+        ModuleImports {
+            imports: visitor.imports,
+            relative: visitor.relative,
+        }
     })
 }
 
 struct ImportVisitor<'a> {
     source: &'a str,
     own_package: &'a str,
+    file: &'a str,
     imports: Vec<RuntimeImport>,
+    relative: Vec<String>,
 }
 
 impl ImportVisitor<'_> {
     fn record(&mut self, specifier: &str, start: u32) {
         let specifier = specifier.trim();
+        if specifier.starts_with("./") || specifier.starts_with("../") {
+            self.relative.push(specifier.to_string());
+            return;
+        }
         if specifier.starts_with("node:") || is_node_builtin(specifier) {
             return;
         }
@@ -52,6 +70,7 @@ impl ImportVisitor<'_> {
         self.imports.push(RuntimeImport {
             package,
             line: byte_offset_to_line(self.source, start as usize) as usize,
+            file: self.file.to_string(),
         });
     }
 }

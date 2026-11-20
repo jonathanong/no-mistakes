@@ -31,33 +31,56 @@ parent package's `dependencies`, `optionalDependencies`, `peerDependencies`,
 or `bundledDependencies`. `bundleDependencies` is that same array.
 `devDependencies` does not count. The finding points at that include string.
 
-For each package directory in `packages`, the published entry's runtime
-package imports must each have a matching `name > dependency` include.
-`import`, side-effect `import "pkg"`, value `export … from`, `export * from`,
-static `import("pkg")`, and `require("pkg")` count. `import type`,
-`export type`, relative specifiers, and specifiers that contain `:` do not.
-Node built-ins do not: a `node:` prefix, a bare built-in such as `path`,
-`fs`, or `crypto`, and a built-in subpath such as `fs/promises`. An import
-of the package's own name does not. A subpath such as `items/shape` is the
-package `items`. The finding points at the import.
+For each package directory in `packages`, runtime package imports in the
+published-entry closure must each have a matching `name > dependency`
+include. The closure starts at the dot, `module`, or `main` entry and at
+every other file the package `exports` map publishes. Exact subpath keys
+and wildcard keys such as `"./*": "./*.ts"` are entries even when the dot
+entry does not import them. Wildcard targets use the shared package export
+resolver under the `import` condition. From each of those files the check
+follows relative runtime `import`, `export … from`, `export * from`, static
+`import()`, and `require()` edges with the shared import resolver, staying
+inside the package directory. `import type`, `export type`, and other
+type-only relative edges are not followed. Bare package specifiers on those
+files count: `import`, side-effect `import "pkg"`, value `export … from`,
+`export * from`, static `import("pkg")`, and `require("pkg")`. Specifiers
+that contain `:` do not. Node built-ins do not: a `node:` prefix, a bare
+built-in such as `path`, `fs`, or `crypto`, and a built-in subpath such as
+`fs/promises`. An import of the package's own name does not. A subpath such
+as `items/shape` is the package `items`. The finding points at the file
+that contains the import.
 
 Direct includes (`react`) and chains with more than one `>` are ignored.
 A parent that is not one of the named packages is ignored. An entry whose
 child is not a package name (for example `widgets > ./local`) is ignored.
 Non-literal `import()` and `require()` arguments are ignored.
 
-The published entry is `exports` when it is a string, then `exports["."]`
-when that is a string, then the first string among `import`, `default`,
-`module`, and `require` on `exports["."]`, then `module`, then `main`. A
-manifest with none of those fields has no runtime imports.
+The dot entry is `exports` when it is a string, then `exports["."]` when
+that is a string, then the first string among `import`, `default`, `module`,
+and `require` on `exports["."]`, then `module`, then `main`. Additional
+published files come from the rest of the `exports` map. A manifest with
+none of those fields and no matching export target has no runtime imports.
 
-If any configured config cannot be read or has no static default-exported
-object with a static `optimizeDeps.include` array of string literals, the
-check reports that config and does not report uncovered imports. Invalid
-mappings from configs that did parse are still reported. `export default { … }`,
-`defineConfig({ … })`, and a top-level const or let object referenced by the
-default export are static. A spread in the config object or in `include`
-is not. `module.exports` is not treated as a static config.
+A child is not an uncovered import when the parent declares it with a
+`workspace:` specifier, when its name is `ignorePackages`, or when its name
+is another package loaded from `packages` and the parent does not declare
+it with a non-workspace version specifier. A normal version such as
+`"items": "1.0.0"` still needs a nested include, including when that package
+is also listed in `packages`. An include of a child the parent does not
+declare is still invalid.
+
+If any configured config cannot be read, has no static default-exported
+object, or spreads `optimizeDeps`, the check reports that config and does
+not report uncovered imports. The same is true when an `includeSources`
+module cannot be read or its named export is not a static string array.
+Invalid mappings from configs and include sources that did parse are still
+reported. `export default { … }`, `defineConfig({ … })`, and a top-level
+const or let object referenced by the default export are static. A spread
+in the config object or in `include` is not. `module.exports` is not treated
+as a static config. When `includeSources` is set, an `optimizeDeps.include`
+value that is an identifier or another non-literal array contributes no
+entries and does not by itself make the config unanalyzable. Omitting
+`includeSources` keeps that config unanalyzable.
 
 A missing manifest, a manifest that is not JSON, a missing `name`, or a
 dependency field that is not an object is reported on that `package.json`.
@@ -73,6 +96,14 @@ finding on the loaded config file. An explicit empty `packages` list selects
 no packages and does not read `configFiles`. An explicit empty `configFiles`
 list contributes no include entries, so every runtime import of an in-scope
 package is uncovered.
+
+`includeSources` is optional. Each entry names a `module` path relative to
+the check root and an `export` that is `export const name = ["parent > child", …]`.
+Those pairs are unioned with static `optimizeDeps.include` entries. An
+unreadable module or a non-static export is unanalyzable, and uncovered
+imports are not reported. `ignorePackages` is an optional list of package
+names whose uncovered imports are skipped even when the dependency specifier
+is a normal version.
 
 ## Valid example
 
@@ -140,10 +171,12 @@ export const widget = shape;
 
 Declare the child under `dependencies`, `optionalDependencies`,
 `peerDependencies`, or `bundledDependencies`, or remove the include entry.
-For an uncovered import, add `"widgets > items"` to `optimizeDeps.include`.
-Node built-ins and an import of the package's own name are not nested
-dependencies, so do not add an include entry for them. Export the Vite config
-as a static object so the include array can be read.
+For an uncovered import, add `"widgets > items"` to `optimizeDeps.include`
+or to an `includeSources` export. Node built-ins, an import of the package's
+own name, a `workspace:` dependency, and a name in `ignorePackages` are not
+nested dependencies, so do not add an include entry for them. Export the Vite
+config as a static object, or point `includeSources` at `export const name = […]`,
+so the include array can be read.
 
 ## Suppression
 

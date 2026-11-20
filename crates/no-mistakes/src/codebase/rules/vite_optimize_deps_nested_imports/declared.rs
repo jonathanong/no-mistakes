@@ -4,6 +4,35 @@ use super::specifier::package_name;
 use serde_json::Value;
 use std::collections::BTreeSet;
 
+pub(super) fn workspace_dependency_names(value: &Value) -> BTreeSet<String> {
+    specifier_names(value, |specifier| specifier.starts_with("workspace:"))
+}
+
+pub(super) fn versioned_dependency_names(value: &Value) -> BTreeSet<String> {
+    specifier_names(value, |specifier| !specifier.starts_with("workspace:"))
+}
+
+fn specifier_names(value: &Value, keep: impl Fn(&str) -> bool) -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
+    for field in ["dependencies", "peerDependencies", "optionalDependencies"] {
+        let Some(Value::Object(map)) = value.get(field) else {
+            continue;
+        };
+        for (key, specifier) in map {
+            let Some(text) = specifier.as_str() else {
+                continue;
+            };
+            let text = text.trim();
+            if keep(text) {
+                if let Some(package) = package_name(key) {
+                    names.insert(package);
+                }
+            }
+        }
+    }
+    names
+}
+
 pub(super) fn dependency_names(value: &Value) -> Result<BTreeSet<String>, String> {
     let mut names = BTreeSet::new();
     extend_objects(

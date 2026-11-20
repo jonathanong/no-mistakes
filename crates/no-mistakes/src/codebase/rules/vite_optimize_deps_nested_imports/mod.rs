@@ -7,21 +7,32 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod closure;
 mod config_object;
 mod declared;
 mod entry_imports;
 mod include_config;
+mod include_source;
 mod manifest;
 mod scan;
 mod specifier;
 
 pub const RULE_ID: &str = "vite-optimize-deps-nested-imports";
 
+#[derive(Deserialize, Clone)]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+pub(crate) struct IncludeSource {
+    pub(super) module: String,
+    pub(super) export: String,
+}
+
 #[derive(Deserialize, Default)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct Options {
     config_files: Option<Vec<String>>,
     packages: Option<Vec<String>>,
+    include_sources: Option<Vec<IncludeSource>>,
+    ignore_packages: Option<Vec<String>>,
 }
 
 super::borrowed_source_rule_entrypoints!();
@@ -40,7 +51,15 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
             super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
         let mut batch = match required(&opts) {
             Ok(scope) if scope.packages.is_empty() => Vec::new(),
-            Ok(scope) => scan::evaluate(root, sources, &scope.configs, &scope.packages)?,
+            Ok(scope) => scan::evaluate(
+                root,
+                sources,
+                &scope.configs,
+                &scope.packages,
+                _all_files,
+                &scope.include_sources,
+                &scope.ignore_packages,
+            )?,
             Err(missing) => vec![anchor.emit(
                 RULE_ID,
                 anchor.option_line(missing.key),
@@ -66,6 +85,8 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
 struct RequiredScope {
     configs: Vec<String>,
     packages: Vec<String>,
+    include_sources: Vec<IncludeSource>,
+    ignore_packages: Vec<String>,
 }
 
 struct MissingOption {
@@ -78,6 +99,8 @@ fn required(opts: &Options) -> std::result::Result<RequiredScope, MissingOption>
         (Some(configs), Some(packages)) => Ok(RequiredScope {
             configs: configs.clone(),
             packages: packages.clone(),
+            include_sources: opts.include_sources.clone().unwrap_or_default(),
+            ignore_packages: opts.ignore_packages.clone().unwrap_or_default(),
         }),
         (None, None) => Err(MissingOption {
             key: "configFiles",

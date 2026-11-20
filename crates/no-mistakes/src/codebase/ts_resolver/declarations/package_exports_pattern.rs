@@ -37,6 +37,22 @@ pub(super) fn pattern_export<'a>(map: &'a Map<String, Value>, key: &str) -> Opti
     })
 }
 
+/// Subpath whose `*` capture makes `template` equal `file` (`./shape.ts`).
+pub(super) fn subpath_for_file(pattern_key: &str, template: &str, file: &str) -> Option<String> {
+    let (capture, _) = matched(template, file)?;
+    if pattern_key.matches('*').count() != 1 {
+        return None;
+    }
+    let sub_key = pattern_key.replacen('*', &capture, 1);
+    matched(pattern_key, &sub_key)?;
+    Some(
+        sub_key
+            .strip_prefix("./")
+            .unwrap_or(sub_key.as_str())
+            .to_string(),
+    )
+}
+
 pub(super) fn apply_capture(targets: &mut [Target], capture: Option<&str>) -> Result<(), ()> {
     let Some(capture) = capture else {
         return Ok(());

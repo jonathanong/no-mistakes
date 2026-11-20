@@ -1,7 +1,8 @@
 //! Package name, declared dependencies, and published-entry imports.
 
+use super::closure;
 use super::declared;
-use super::entry_imports::{self, RuntimeImport};
+use super::entry_imports::RuntimeImport;
 use super::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_json::Value;
@@ -12,8 +13,9 @@ use std::sync::Arc;
 pub(super) struct PackageFacts {
     pub name: String,
     pub declared: BTreeSet<String>,
+    pub workspace: BTreeSet<String>,
+    pub versioned: BTreeSet<String>,
     pub imports: Vec<RuntimeImport>,
-    pub entry_file: Option<String>,
     pub unknown: Option<RuleFinding>,
 }
 
@@ -21,6 +23,7 @@ pub(super) fn load(
     root: &Path,
     dir: &Path,
     sources: &SourceStore,
+    all_files: &[PathBuf],
 ) -> Result<PackageFacts, Box<RuleFinding>> {
     let manifest = dir.join("package.json");
     let source = read_required(root, &manifest, sources)?;
@@ -40,54 +43,36 @@ pub(super) fn load(
         .to_string();
     let declared = declared::dependency_names(&value)
         .map_err(|reason| Box::new(unanalyzable(root, &manifest, reason)))?;
-    let Some(entry) = published_entry(&value) else {
-        return Ok(PackageFacts {
-            name,
-            declared,
-            imports: Vec::new(),
-            entry_file: None,
-            unknown: None,
-        });
-    };
-    let entry_path = entry_path(dir, &entry);
-    let entry_file = relative_slash_path(root, &entry_path);
-    let entry_source = match sources.read_source_path(&entry_path) {
-        Ok(source) => source,
-        Err(error) => {
-            return Ok(unknown_package(
-                name,
-                declared,
-                super::super::source_access::read_failure(
-                    root,
-                    &entry_path,
-                    super::RULE_ID,
-                    &error,
-                ),
-            ));
-        }
-    };
-    match entry_imports::collect(&entry_path, &entry_source, &name) {
+    let workspace = declared::workspace_dependency_names(&value);
+    let versioned = declared::versioned_dependency_names(&value);
+    match closure::runtime_imports(root, dir, &value, &name, sources, all_files) {
         Ok(imports) => Ok(PackageFacts {
             name,
             declared,
+            workspace,
+            versioned,
             imports,
-            entry_file: Some(entry_file),
             unknown: None,
         }),
-        Err(_) => Ok(unknown_package(
-            name,
-            declared,
-            unanalyzable(root, &entry_path, "cannot parse published entry"),
+        Err(finding) => Ok(unknown_package(
+            name, declared, workspace, versioned, finding,
         )),
     }
 }
 
-fn unknown_package(name: String, declared: BTreeSet<String>, finding: RuleFinding) -> PackageFacts {
+fn unknown_package(
+    name: String,
+    declared: BTreeSet<String>,
+    workspace: BTreeSet<String>,
+    versioned: BTreeSet<String>,
+    finding: RuleFinding,
+) -> PackageFacts {
     PackageFacts {
         name,
         declared,
+        workspace,
+        versioned,
         imports: Vec::new(),
-        entry_file: None,
         unknown: Some(finding),
     }
 }
@@ -107,7 +92,7 @@ fn read_required(
     })
 }
 
-fn published_entry(value: &Value) -> Option<String> {
+pub(super) fn published_entry(value: &Value) -> Option<String> {
     if let Some(exports) = value.get("exports") {
         if let Some(entry) = exports.as_str() {
             return Some(entry.to_string());
@@ -141,12 +126,12 @@ fn string_entry(value: &Value) -> Option<String> {
     None
 }
 
-fn entry_path(dir: &Path, entry: &str) -> PathBuf {
+pub(super) fn entry_path(dir: &Path, entry: &str) -> PathBuf {
     let relative = entry.strip_prefix("./").unwrap_or(entry);
     crate::codebase::ts_resolver::normalize_path(&dir.join(relative))
 }
 
-fn unanalyzable(root: &Path, path: &Path, reason: impl AsRef<str>) -> RuleFinding {
+pub(super) fn unanalyzable(root: &Path, path: &Path, reason: impl AsRef<str>) -> RuleFinding {
     let reason = reason.as_ref();
     RuleFinding {
         causes: Vec::new(),

@@ -1,4 +1,4 @@
-use super::declared::dependency_names;
+use super::declared::{dependency_names, versioned_dependency_names, workspace_dependency_names};
 use super::entry_imports::collect;
 use super::specifier::{is_node_builtin, nested_pair, package_name};
 use std::path::Path;
@@ -57,18 +57,39 @@ void read;
 void crypto;
 void shape;
 ";
-    let imports = collect(Path::new("index.ts"), source, "widgets").unwrap();
+    let imports = collect(Path::new("index.ts"), source, "widgets", "index.ts")
+        .unwrap()
+        .imports;
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].package, "items");
     assert_eq!(imports[0].line, 6);
+    assert_eq!(imports[0].file, "index.ts");
 
     let scoped = "\
 import theme from '@widgets/ui/theme';
 import { shape } from 'items';
 ";
-    let imports = collect(Path::new("index.ts"), scoped, "@widgets/ui").unwrap();
+    let imports = collect(Path::new("index.ts"), scoped, "@widgets/ui", "index.ts")
+        .unwrap()
+        .imports;
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].package, "items");
+}
+
+#[test]
+fn collect_follows_runtime_relative_edges_and_skips_type_edges() {
+    let source = "\
+export * from './shape.ts';
+export type { Theme } from './theme.ts';
+import type { Paint } from './paint.ts';
+import { badge } from './badge.ts';
+";
+    let collected = collect(Path::new("index.ts"), source, "widgets", "index.ts").unwrap();
+    assert!(collected.imports.is_empty());
+    assert_eq!(
+        collected.relative,
+        vec!["./shape.ts".to_string(), "./badge.ts".to_string()]
+    );
 }
 
 #[test]
@@ -89,6 +110,30 @@ fn dependency_names_counts_optional_and_bundled_declarations() {
     assert!(!names.contains("path"));
     assert!(!names.contains("extra"));
     assert!(!names.contains("local"));
+}
+
+#[test]
+fn workspace_specifiers_are_separate_from_versioned_dependencies() {
+    let value = serde_json::json!({
+        "dependencies": {
+            "labels": "workspace:*",
+            "items": "1.0.0",
+            "path": "workspace:^"
+        },
+        "optionalDependencies": { "orders": " workspace:~ " },
+        "peerDependencies": { "marks": { "version": "workspace:*" } },
+        "devDependencies": { "extra": "workspace:*" }
+    });
+    let workspace = workspace_dependency_names(&value);
+    let versioned = versioned_dependency_names(&value);
+    assert!(workspace.contains("labels"));
+    assert!(workspace.contains("orders"));
+    assert!(!workspace.contains("path"));
+    assert!(!workspace.contains("marks"));
+    assert!(!workspace.contains("extra"));
+    assert!(versioned.contains("items"));
+    assert!(!versioned.contains("labels"));
+    assert!(!versioned.contains("marks"));
 }
 
 #[test]

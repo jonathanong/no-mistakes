@@ -20,8 +20,14 @@ pub(super) enum ParsedConfig {
     Unanalyzable { line: usize, reason: String },
 }
 
-pub(super) fn parse_vite_config(path: &Path, source: &str) -> ParsedConfig {
-    match crate::ast::with_program(path, source, extract) {
+pub(super) fn parse_vite_config(
+    path: &Path,
+    source: &str,
+    allow_imported_include: bool,
+) -> ParsedConfig {
+    match crate::ast::with_program(path, source, |program, source| {
+        extract(program, source, allow_imported_include)
+    }) {
         Ok(parsed) => parsed,
         Err(_) => ParsedConfig::Unanalyzable {
             line: 1,
@@ -30,7 +36,11 @@ pub(super) fn parse_vite_config(path: &Path, source: &str) -> ParsedConfig {
     }
 }
 
-fn extract(program: &oxc_ast::ast::Program<'_>, source: &str) -> ParsedConfig {
+fn extract(
+    program: &oxc_ast::ast::Program<'_>,
+    source: &str,
+    allow_imported_include: bool,
+) -> ParsedConfig {
     let Some(object) = default_object(program) else {
         return unanalyzable(1, "Vite config has no static default export object");
     };
@@ -56,11 +66,34 @@ fn extract(program: &oxc_ast::ast::Program<'_>, source: &str) -> ParsedConfig {
             line_of(source, optimize.span.start),
             "optimizeDeps is not a static object",
         ),
-        Prop::Found(Expression::ArrayExpression(array)) => string_entries(source, array.as_ref()),
-        Prop::Found(value) => unanalyzable(
-            line_of(source, value.span().start),
-            "optimizeDeps.include is not a static array of strings",
-        ),
+        Prop::Found(Expression::ArrayExpression(array)) => {
+            let parsed = string_entries(source, array.as_ref());
+            if allow_imported_include && matches!(parsed, ParsedConfig::Unanalyzable { .. }) {
+                ParsedConfig::Includes(Vec::new())
+            } else {
+                parsed
+            }
+        }
+        Prop::Found(value) => {
+            if allow_imported_include {
+                ParsedConfig::Includes(Vec::new())
+            } else {
+                unanalyzable(
+                    line_of(source, value.span().start),
+                    "optimizeDeps.include is not a static array of strings",
+                )
+            }
+        }
+    }
+}
+
+pub(super) fn includes_in_array(
+    source: &str,
+    include: &oxc_ast::ast::ArrayExpression<'_>,
+) -> Result<Vec<NestedInclude>, (usize, String)> {
+    match string_entries(source, include) {
+        ParsedConfig::Includes(entries) => Ok(entries),
+        ParsedConfig::Unanalyzable { line, reason } => Err((line, reason)),
     }
 }
 

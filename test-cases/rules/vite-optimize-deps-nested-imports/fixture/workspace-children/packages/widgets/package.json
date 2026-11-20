@@ -1,0 +1,10 @@
+{
+  "name": "widgets",
+  "version": "1.0.0",
+  "module": "./index.ts",
+  "dependencies": {
+    "labels": "workspace:*",
+    "items": "1.0.0",
+    "orders": "1.0.0"
+  }
+}
