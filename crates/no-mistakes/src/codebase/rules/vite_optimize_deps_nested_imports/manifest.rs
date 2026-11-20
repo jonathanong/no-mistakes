@@ -117,10 +117,8 @@ fn string_entry(value: &Value) -> Option<String> {
     }
     let object = value.as_object()?;
     for key in ["import", "default", "module", "require"] {
-        if let Some(entry) = object.get(key).and_then(Value::as_str) {
-            if !entry.is_empty() {
-                return Some(entry.to_string());
-            }
+        if let Some(entry) = object.get(key).and_then(string_entry) {
+            return Some(entry);
         }
     }
     None

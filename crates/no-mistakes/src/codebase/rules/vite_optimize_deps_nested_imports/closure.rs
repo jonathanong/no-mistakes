@@ -72,17 +72,36 @@ pub(super) fn runtime_imports(
                 ))
             })?;
         for specifier in collected.relative {
-            let Some(resolved) = ts_resolver::resolve_import(&specifier, &path, &tsconfig) else {
+            let specifier = script_relative_specifier(&specifier);
+            let Some(resolved) = ts_resolver::resolve_import(specifier, &path, &tsconfig) else {
                 continue;
             };
             let resolved = ts_resolver::normalize_path(&resolved);
-            if resolved.starts_with(dir) {
+            if resolved.starts_with(dir) && is_script_module(&resolved) {
                 pending.push_back(resolved);
             }
         }
         imports.extend(collected.imports);
     }
     Ok(imports)
+}
+
+const SCRIPT_EXTENSIONS: &[&str] = &["js", "mjs", "cjs", "jsx", "ts", "mts", "cts", "tsx"];
+
+/// `.` and `..` are relative, but the shared resolver only treats `./` and `../` as relative.
+fn script_relative_specifier(specifier: &str) -> &str {
+    match specifier {
+        "." => "./",
+        ".." => "../",
+        other => other,
+    }
+}
+
+pub(super) fn is_script_module(path: &Path) -> bool {
+    let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
+        return false;
+    };
+    SCRIPT_EXTENSIONS.contains(&extension)
 }
 
 fn absolute_file(root: &Path, path: &Path) -> PathBuf {

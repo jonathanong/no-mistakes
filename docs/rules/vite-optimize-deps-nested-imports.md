@@ -43,7 +43,10 @@ entry does not import them. Wildcard targets use the shared package export
 resolver under the `import` condition. From each of those files the check
 follows relative runtime `import`, `export … from`, `export * from`, static
 `import()`, and `require()` edges with the shared import resolver, staying
-inside the package directory. `import type`, `export type`, and other
+inside the package directory. `.` and `..` are relative specifiers. A resolved
+target is followed only when its extension is `.js`, `.mjs`, `.cjs`, `.jsx`,
+`.ts`, `.mts`, `.cts`, or `.tsx`. Other resolved files, including `.json`,
+`.css`, `.svg`, and `.wasm`, stay out of the closure. `import type`, `export type`, and other
 type-only relative edges are not followed. Bare package specifiers on those
 files count: `import`, side-effect `import "pkg"`, value `export … from`,
 `export * from`, static `import("pkg")`, and `require("pkg")`. Specifiers
@@ -64,9 +67,12 @@ Non-literal `import()` and `require()` arguments are ignored.
 
 The dot entry is `exports` when it is a string, then `exports["."]` when
 that is a string, then the first string among `import`, `default`, `module`,
-and `require` on `exports["."]`, then `module`, then `main`. Additional
-published files come from the rest of the `exports` map. A manifest with
-none of those fields and no matching export target has no runtime imports.
+and `require` on `exports["."]`. A condition value that is itself an object
+is walked in that same order, so `exports["."].import.default` is the dot
+entry when `import` has no string of its own. The walk then uses `module`,
+then `main`. Additional published files come from the rest of the `exports`
+map. A manifest with none of those fields and no matching export target has
+no runtime imports.
 
 A child is not an uncovered import when the parent declares it with a
 `workspace:` specifier, when its name is `ignorePackages`, or when its name

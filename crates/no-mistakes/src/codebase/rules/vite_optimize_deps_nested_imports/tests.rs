@@ -1,5 +1,6 @@
 use super::declared::{dependency_names, versioned_dependency_names, workspace_dependency_names};
 use super::entry_imports::collect;
+use super::manifest::published_entry;
 use super::specifier::{is_node_builtin, nested_pair, package_name};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -99,6 +100,8 @@ export * from './shape.ts';
 export type { Theme } from './theme.ts';
 import type { Paint } from './paint.ts';
 import { badge } from './badge.ts';
+export { row } from '.';
+export { root } from '..';
 ";
     let collected = collect(
         Path::new("index.ts"),
@@ -111,7 +114,46 @@ import { badge } from './badge.ts';
     assert!(collected.imports.is_empty());
     assert_eq!(
         collected.relative,
-        vec!["./shape.ts".to_string(), "./badge.ts".to_string()]
+        vec![
+            "./shape.ts".to_string(),
+            "./badge.ts".to_string(),
+            ".".to_string(),
+            "..".to_string(),
+        ]
+    );
+}
+
+#[test]
+fn published_entry_walks_nested_condition_objects() {
+    let nested = serde_json::json!({
+        "exports": { ".": { "import": { "default": "./src/index.ts" } } },
+        "main": "./dist/index.js"
+    });
+    assert_eq!(published_entry(&nested).as_deref(), Some("./src/index.ts"));
+
+    let empty_then_require = serde_json::json!({
+        "exports": { ".": { "import": "", "require": "./index.ts" } }
+    });
+    assert_eq!(
+        published_entry(&empty_then_require).as_deref(),
+        Some("./index.ts")
+    );
+
+    let number_then_nested = serde_json::json!({
+        "exports": { ".": { "import": 1, "default": { "module": "./shape.ts" } } }
+    });
+    assert_eq!(
+        published_entry(&number_then_nested).as_deref(),
+        Some("./shape.ts")
+    );
+
+    let unrecognized = serde_json::json!({
+        "exports": { ".": { "import": { "browser": "./browser.ts" } } },
+        "main": "./index.ts"
+    });
+    assert_eq!(
+        published_entry(&unrecognized).as_deref(),
+        Some("./index.ts")
     );
 }
 

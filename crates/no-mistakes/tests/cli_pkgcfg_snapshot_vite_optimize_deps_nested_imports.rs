@@ -34,6 +34,8 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
         case("ignored_packages", "ignored-packages"),
         case("bundle_flags", "bundle-flags"),
         case("declared_builtins", "declared-builtins"),
+        case("asset_imports", "asset-imports"),
+        case("nested_conditions", "nested-conditions"),
     ];
     assert_saved_fixture("vite_optimize_deps_nested_imports", &cases);
 }

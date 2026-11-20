@@ -58,7 +58,11 @@ struct ImportVisitor<'a> {
 impl ImportVisitor<'_> {
     fn record(&mut self, specifier: &str, start: u32) {
         let specifier = specifier.trim();
-        if specifier.starts_with("./") || specifier.starts_with("../") {
+        if specifier == "."
+            || specifier == ".."
+            || specifier.starts_with("./")
+            || specifier.starts_with("../")
+        {
             self.relative.push(specifier.to_string());
             return;
         }
