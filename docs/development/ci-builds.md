@@ -272,9 +272,9 @@ substituting a wider dependency feature graph without measuring compatibility.
 
 ### Controlled Rust-cache-cold measurement
 
-Run [`43422140537`](https://github.com/jonathanong/no-mistakes/actions/runs/43422140537)
-at `fae9ed847` disabled every Rust target and registry restore. Both native
-macOS Cargo reports recorded zero fresh units, so dependencies were rebuilt too.
+Run `43422140537` at `fae9ed847` disabled every Rust target and registry
+restore. Both native macOS Cargo reports recorded zero fresh units, so
+dependencies were rebuilt too.
 The test precompile step completed in 8m30s and the CLI/N-API build in 11m18s,
 within their unchanged 15-minute bounds. The root library dominated each build:
 334.4 seconds in the test producer and 537 seconds in the runtime producer.

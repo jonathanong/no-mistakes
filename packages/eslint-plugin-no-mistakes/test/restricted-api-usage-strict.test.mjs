@@ -10,8 +10,24 @@ const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", i
 const languageOptions = { ecmaVersion: 2024, sourceType: "module", globals: {} };
 const selectors = {
   "strict-reference.ts": { referenceNamePattern: "^blockingWait$" },
+  "strict-type-slots.ts": { referenceNamePattern: "^blockingWait$" },
   "strict-declaration.ts": { declarationNamePattern: "AndWait$" },
   "strict-property.ts": { propertyNamePattern: "^blockingWait" },
+};
+const duplicateTargets = [
+  { referenceNamePattern: "^blockingWait$", message: "Use the async variant." },
+  { referenceNamePattern: "^blockingWait$", message: "Use the async variant." },
+  { referenceNamePattern: "^blockingWait$", message: "Queue the item instead." },
+];
+const nestedCall = {
+  callNamePattern: "^paginateEntries$",
+  message: "Use explicit continuation.",
+};
+const legacyTarget = {
+  source: "@example/client",
+  importedNamePattern: "^paginate[A-Z]",
+  callNamePattern: "^paginate[A-Z]",
+  message: "Use explicit continuation.",
 };
 const construct = { constructNamePattern: "^RateLimitedWorker$", constructArgumentCount: 0 };
 
@@ -40,6 +56,14 @@ describe(`${id} strict selectors`, () => {
             ...Object.entries(selectors).map(([name, target]) => snapshotCase(name, target)),
             snapshotCase("strict-construct.ts", construct),
             snapshotCase("strict-construct.ts", { constructNamePattern: "Worker$" }),
+            snapshotCase("legacy-invalid.mjs", legacyTarget),
+            snapshotCase("nested-calls.mjs", nestedCall),
+            {
+              code: fixture(`${id}/strict-duplicate.ts`),
+              filename: resolve(root, "strict-duplicate.ts"),
+              options: [{ targets: duplicateTargets }],
+              languageOptions: { parser: tsParser },
+            },
             snapshotCase("strict-none.ts", {
               ...selectors["strict-reference.ts"],
               ...selectors["strict-declaration.ts"],
@@ -51,6 +75,38 @@ describe(`${id} strict selectors`, () => {
         }),
       }),
     ).toMatchFileSnapshot("snapshots/restricted-api-usage-strict.snap");
+  });
+  it("collapses identical messages on one node", () => {
+    const filename = resolve(root, "strict-duplicate.ts");
+    const findings = lint(
+      fixture(`${id}/strict-duplicate.ts`),
+      { [`no-mistakes/${id}`]: ["error", { targets: duplicateTargets }] },
+      filename,
+    );
+    assert.deepEqual(
+      findings.map((finding) => [finding.line, finding.message]),
+      [
+        [2, "Use the async variant."],
+        [2, "Queue the item instead."],
+        [3, "Use the async variant."],
+        [3, "Queue the item instead."],
+      ],
+    );
+  });
+  it("keeps equal messages on distinct calls that share a start offset", () => {
+    const filename = resolve(root, "nested-calls.mjs");
+    const findings = lint(
+      fixture(`${id}/nested-calls.mjs`),
+      { [`no-mistakes/${id}`]: ["error", { targets: [nestedCall] }] },
+      filename,
+    );
+    assert.deepEqual(
+      findings.map((finding) => [finding.line, finding.message]),
+      [
+        [1, "Use explicit continuation."],
+        [1, "Use explicit continuation."],
+      ],
+    );
   });
   it("validates strict selector options", () => {
     const check = (target) =>

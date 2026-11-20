@@ -98,6 +98,208 @@
       ]
     },
     {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 26,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 6,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 32,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 7,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 33,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 8,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 43,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 9,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 21,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 10,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 27,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 11,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 13,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 37,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 34,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 40,
+          "endColumn": 52,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 34,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 18,
+          "endLine": 48,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 48,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 24,
+          "endLine": 59,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 59,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 35,
+          "endLine": 83,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 83,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 28,
+          "endLine": 84,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 84,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 14,
+          "endLine": 85,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 85,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 18,
+          "endLine": 86,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 86,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 87,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 87,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 37,
+          "endLine": 88,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-type-slots.ts",
+          "line": 88,
+          "message": "Restricted API 'blockingWait'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "referenceNamePattern": "^blockingWait$"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-declaration.ts",
       "findings": [
         {
@@ -318,6 +520,152 @@
           "targets": [
             {
               "constructNamePattern": "Worker$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/legacy-invalid.mjs",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/legacy-invalid.mjs",
+          "line": 1,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/legacy-invalid.mjs",
+          "line": 3,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginate[A-Z]",
+              "importedNamePattern": "^paginate[A-Z]",
+              "message": "Use explicit continuation.",
+              "source": "@example/client"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/nested-calls.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/nested-calls.mjs",
+          "line": 1,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 1,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/nested-calls.mjs",
+          "line": 1,
+          "message": "Use explicit continuation.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "callNamePattern": "^paginateEntries$",
+              "message": "Use explicit continuation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-duplicate.ts",
+      "findings": [
+        {
+          "column": 14,
+          "endColumn": 26,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-duplicate.ts",
+          "line": 2,
+          "message": "Queue the item instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 26,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-duplicate.ts",
+          "line": 2,
+          "message": "Use the async variant.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 32,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-duplicate.ts",
+          "line": 3,
+          "message": "Queue the item instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 32,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/strict-duplicate.ts",
+          "line": 3,
+          "message": "Use the async variant.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "targets": [
+            {
+              "message": "Use the async variant.",
+              "referenceNamePattern": "^blockingWait$"
+            },
+            {
+              "message": "Use the async variant.",
+              "referenceNamePattern": "^blockingWait$"
+            },
+            {
+              "message": "Queue the item instead.",
+              "referenceNamePattern": "^blockingWait$"
             }
           ]
         }
