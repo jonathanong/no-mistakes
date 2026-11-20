@@ -165,8 +165,9 @@ fn basename(token: &str) -> &str {
 }
 
 fn strip_suffix(name: &str) -> &str {
-    name.strip_suffix(".cmd")
-        .or_else(|| name.strip_suffix(".exe"))
+    [".cmd", ".exe", ".js", ".mjs", ".cjs"]
+        .into_iter()
+        .find_map(|suffix| name.strip_suffix(suffix))
         .unwrap_or(name)
 }
 

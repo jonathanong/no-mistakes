@@ -354,9 +354,12 @@ makes them blocking unless the rule sets `severity: advisory`.
 tests must not run against the live working directory. A matching `exec`,
 `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
 with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
-`execSync` match a static shell string. `spawn` and `spawnSync` match one when
-`shell` is boolean `true`. `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`,
-`yarn`, and `yarn dlx` unwrap, including a wrapper around another wrapper.
+`execSync` match a static shell string, including a leading `cd <dir> &&` or
+`NAME=value` prefix. `spawn` and `spawnSync` match one when `shell` is boolean
+`true`. A `.js`, `.mjs`, or `.cjs` module path matches the configured command.
+`pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, and
+`yarn dlx` unwrap, including a wrapper around another wrapper, a long value
+flag such as `pnpm --reporter silent`, and `yarn --cwd <dir>`.
 The default list is empty.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be

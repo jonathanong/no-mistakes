@@ -1,13 +1,14 @@
 use super::{program_name, Token};
 
+const BOOLEAN_FLAGS: &[&str] = &["-r", "--recursive"];
 const VALUE_FLAGS: &[&str] = &["-C", "--dir", "--filter", "-F"];
 const NPX_FLAGS: &[&str] = &["-y", "--yes", "--no-install"];
 const NPX_VALUES: &[&str] = &["-p", "--package"];
 
 pub(super) fn unwrap_line(executable: &str, argv: &[Token]) -> Option<Vec<Token>> {
     let line = match program_name(executable) {
-        "pnpm" => verb(skip_flags(argv, VALUE_FLAGS)?, &["exec", "dlx"])?,
-        "npm" => verb(skip_flags(argv, VALUE_FLAGS)?, &["exec"])?,
+        "pnpm" => verb(skip_flags(argv)?, &["exec", "dlx"])?,
+        "npm" => verb(skip_flags(argv)?, &["exec"])?,
         "npx" | "bunx" => skip_separator(skip_npx(argv)?).to_vec(),
         "yarn" => yarn(argv).to_vec(),
         _ => return None,
@@ -25,22 +26,39 @@ fn verb(argv: &[Token], verbs: &[&str]) -> Option<Vec<Token>> {
         .then(|| skip_separator(rest).to_vec())
 }
 
-fn skip_flags<'a>(argv: &'a [Token], values: &[&str]) -> Option<&'a [Token]> {
+fn skip_flags(argv: &[Token]) -> Option<&[Token]> {
     let mut rest = argv;
     while let Some(Token::Known(token)) = rest.first() {
         if !token.starts_with('-') {
             break;
         }
-        if values.contains(&token.as_str()) {
+        if BOOLEAN_FLAGS.contains(&token.as_str()) {
+            rest = &rest[1..];
+        } else if VALUE_FLAGS.contains(&token.as_str()) {
             if !matches!(rest.get(1), Some(Token::Known(_))) {
                 return None;
             }
             rest = &rest[2..];
-        } else {
+        } else if included_value(token) {
             rest = &rest[1..];
+        } else if long_value(token, rest) {
+            rest = &rest[2..];
+        } else {
+            return None;
         }
     }
     Some(rest)
+}
+
+fn included_value(token: &str) -> bool {
+    token.contains('=')
+        || (token.starts_with("-C") && token.len() > 2)
+        || (token.starts_with("-F") && token.len() > 2)
+}
+
+fn long_value(token: &str, argv: &[Token]) -> bool {
+    token.starts_with("--")
+        && matches!(argv.get(1), Some(Token::Known(value)) if !value.starts_with('-'))
 }
 
 fn skip_npx(argv: &[Token]) -> Option<&[Token]> {
@@ -61,9 +79,33 @@ fn skip_npx(argv: &[Token]) -> Option<&[Token]> {
 }
 
 fn yarn(argv: &[Token]) -> &[Token] {
-    match argv.first() {
-        Some(Token::Known(token)) if token == "dlx" => skip_separator(&argv[1..]),
-        _ => argv,
+    let rest = skip_cwd(argv);
+    match rest.first() {
+        Some(Token::Known(token)) if token == "dlx" || token == "run" => skip_separator(&rest[1..]),
+        _ => rest,
+    }
+}
+
+fn skip_cwd(argv: &[Token]) -> &[Token] {
+    let mut rest = argv;
+    loop {
+        let Some(Token::Known(token)) = rest.first() else {
+            return rest;
+        };
+        if token == "--cwd" {
+            if !matches!(rest.get(1), Some(Token::Known(_))) {
+                return rest;
+            }
+            rest = &rest[2..];
+            continue;
+        }
+        if let Some(dir) = token.strip_prefix("--cwd=") {
+            if !dir.is_empty() {
+                rest = &rest[1..];
+                continue;
+            }
+        }
+        return rest;
     }
 }
 

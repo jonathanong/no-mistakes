@@ -81,6 +81,32 @@ fn wrappers_and_basenames_match_the_configured_prefix() {
         ]),
         "widget-audit check"
     );
+    assert_eq!(
+        launch(vec![
+            known("./widget-audit.js"),
+            ArgumentValue::Array(vec![known("check")])
+        ]),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![
+            known("./widgets/widget-audit.mjs"),
+            ArgumentValue::Array(vec![known("check")])
+        ]),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![
+            known("widget-audit.cjs"),
+            ArgumentValue::Array(vec![known("check")])
+        ]),
+        "widget-audit check"
+    );
+    assert!(launch(vec![
+        known("./other-audit.js"),
+        ArgumentValue::Array(vec![known("check")])
+    ])
+    .is_empty());
     assert!(launch(vec![
         known("not-widget-audit"),
         ArgumentValue::Array(vec![known("check")])

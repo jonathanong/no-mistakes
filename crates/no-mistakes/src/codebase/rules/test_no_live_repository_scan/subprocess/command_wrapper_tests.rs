@@ -76,7 +76,17 @@ fn package_manager_flags_and_nested_wrappers_unwrap() {
     assert!(matches("yarn", &["widget-audit", "check"]));
     assert!(matches("yarn", &["dlx", "widget-audit", "check"]));
     assert!(matches("yarn.cmd", &["dlx", "--", "widget-audit", "check"]));
-    assert!(!matches("yarn", &["--cwd", "dir", "widget-audit", "check"]));
+    assert!(matches("yarn", &["run", "widget-audit", "check"]));
+    assert!(matches(
+        "yarn",
+        &["--cwd", "widgets", "widget-audit", "check"]
+    ));
+    assert!(matches(
+        "yarn",
+        &["--cwd=widgets", "run", "--", "widget-audit", "check"]
+    ));
+    assert!(!matches("yarn", &["--cwd", "widget-audit", "check"]));
+    assert!(!matches("yarn", &["--cwd"]));
     assert!(matches("bunx", &["--yes", "widget-audit", "check"]));
 
     assert!(matches(
@@ -108,6 +118,74 @@ fn package_manager_flags_and_nested_wrappers_unwrap() {
             "check"
         ]
     ));
+}
+
+#[test]
+fn reporter_values_unwrap_and_other_flags_do_not() {
+    assert!(matches(
+        "pnpm",
+        &["--reporter", "silent", "exec", "widget-audit", "check"]
+    ));
+    assert!(matches(
+        "pnpm",
+        &["--reporter=silent", "-r", "exec", "widget-audit", "check"]
+    ));
+    assert!(!matches(
+        "pnpm",
+        &["--ignore-scripts", "exec", "widget-audit", "check"]
+    ));
+    assert!(!matches("pnpm", &["-s", "exec", "widget-audit", "check"]));
+    assert!(!matches(
+        "pnpm",
+        &[
+            "--offline",
+            "--reporter",
+            "silent",
+            "exec",
+            "widget-audit",
+            "check"
+        ]
+    ));
+    assert!(!matches("pnpm", &["--reporter"]));
+    assert!(!matches(
+        "npm",
+        &["--reporter", "exec", "widget-audit", "check"]
+    ));
+    assert!(matches(
+        "pnpm",
+        &["--recursive", "exec", "widget-audit", "check"]
+    ));
+    assert!(matches(
+        "pnpm",
+        &["-Fwidgets", "dlx", "widget-audit", "check"]
+    ));
+    assert!(!matches("yarn", &[]));
+    assert!(!matches("yarn", &["--cwd=", "widget-audit", "check"]));
+
+    let reporter = vec![
+        known("pnpm"),
+        ArgumentValue::Array(vec![
+            known("--reporter"),
+            ArgumentValue::Unknown,
+            known("exec"),
+            known("widget-audit"),
+            known("check"),
+        ]),
+    ];
+    let parsed = invocation(&reporter, false).unwrap();
+    assert!(matched(&parsed, &[analyzer()]).is_none());
+
+    let values = vec![
+        known("yarn"),
+        ArgumentValue::Array(vec![
+            known("--cwd"),
+            ArgumentValue::Unknown,
+            known("widget-audit"),
+            known("check"),
+        ]),
+    ];
+    let parsed = invocation(&values, false).unwrap();
+    assert!(matched(&parsed, &[analyzer()]).is_none());
 }
 
 #[test]
