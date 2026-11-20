@@ -104,9 +104,7 @@ pub(super) fn matched(invocation: &Invocation, analyzers: &[AnalyzerCommand]) ->
     };
     let mut lines = vec![command_line(executable, &invocation.argv)];
     for _ in 0..4 {
-        let Some(current) = lines.last() else {
-            break;
-        };
+        let current = lines.last().expect("wrapper walk keeps a command line");
         let Some(Token::Known(program)) = current.first() else {
             break;
         };
