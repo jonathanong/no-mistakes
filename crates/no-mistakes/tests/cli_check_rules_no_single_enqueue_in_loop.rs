@@ -10,6 +10,8 @@ fn fixture(name: &str) -> PathBuf {
 fn no_single_enqueue_in_loop_check_json_snapshot() {
     let configured = fixture("configured");
     let empty = fixture("empty-targets");
+    let same_export = fixture("same-export");
+    let sibling_scopes = fixture("sibling-scopes");
     let spellings = fixture("spellings");
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "no_single_enqueue_in_loop",
@@ -21,6 +23,16 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
             ),
             ("empty", empty.clone(), empty.join(".no-mistakes.yml")),
             (
+                "same-export",
+                same_export.clone(),
+                same_export.join(".no-mistakes.yml"),
+            ),
+            (
+                "sibling-scopes",
+                sibling_scopes.clone(),
+                sibling_scopes.join(".no-mistakes.yml"),
+            ),
+            (
                 "spellings",
                 spellings.clone(),
                 spellings.join(".no-mistakes.yml"),
@@ -30,6 +42,8 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
         &[],
     );
     assert_eq!(reports["configured"]["exitCode"], 1);
+    assert_eq!(reports["same-export"]["exitCode"], 1);
+    assert_eq!(reports["sibling-scopes"]["exitCode"], 1);
     assert_eq!(reports["spellings"]["exitCode"], 1);
     assert_eq!(reports["empty"]["exitCode"], 0);
     assert!(reports["empty"]["report"]["rules"]

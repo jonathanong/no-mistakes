@@ -39,7 +39,7 @@ pub(super) fn scan(
         if !reported_construct(construct) {
             continue;
         }
-        if matches_any(graph, &targets.bulk, site, resolved) {
+        if bulk_skips(graph, targets, site, resolved) {
             continue;
         }
         let Some((module, export)) = matching_target(graph, &targets.single, site, resolved) else {
@@ -105,15 +105,33 @@ fn reported_construct(construct: &str) -> bool {
     )
 }
 
-fn matches_any(
+fn bulk_skips(
     graph: &DepGraph,
-    targets: &[(String, String)],
+    targets: &Targets,
     site: &ResolvedCallSite,
     resolved: &ResolvedModules,
 ) -> bool {
-    targets
-        .iter()
-        .any(|(module, export)| target_matches(graph, module, export, site, resolved))
+    targets.bulk.iter().any(|(module, export)| {
+        target_matches(graph, module, export, site, resolved)
+            && !same_resolved_export(module, export, &targets.single, resolved)
+    })
+}
+
+fn same_resolved_export(
+    module: &str,
+    export: &str,
+    single: &[(String, String)],
+    resolved: &ResolvedModules,
+) -> bool {
+    let Some(bulk_files) = resolved.files(module) else {
+        return false;
+    };
+    single.iter().any(|(single_module, single_export)| {
+        single_export == export
+            && resolved
+                .files(single_module)
+                .is_some_and(|files| files.iter().any(|file| bulk_files.contains(file)))
+    })
 }
 
 fn matching_target<'a>(

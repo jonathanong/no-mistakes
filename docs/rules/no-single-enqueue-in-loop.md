@@ -31,8 +31,9 @@ the canonical graph resolves that call to an imported module export, so
 `deps.enqueueItem` stays out of scope. A configured `options.bulk` target is
 never a finding, including when a loop walks batches and calls the bulk API once
 per batch. Bulk names the export that already sends the collection. Validation
-rejects the same module and export in both lists, so a bulk entry only skips a
-different export. The same local name imported from a different module stays
+rejects the same module and export in both lists. A bulk spelling that resolves
+to the same file and export as a single target does not skip that call. A
+different bulk export still skips. The same local name imported from a different module stays
 silent. An alias and a namespace member are judged by the resolved module file
 and export name. A namespace member is reported when the canonical graph
 resolves it to the configured export.

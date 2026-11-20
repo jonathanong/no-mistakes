@@ -67,26 +67,32 @@ pub(super) fn resolve_modules(
     };
     let fallback = WorkspaceFallbackResolver::new(&resolver, &workspace, &visible);
     Ok(ResolvedModules {
-        files: resolved_files(&fallback, &modules, facts),
+        files: resolved_files(&fallback, catalog.catalog, &modules, facts),
     })
 }
 
 fn resolved_files(
     resolver: &dyn ImportResolution,
+    catalog: &TsConfigCatalog,
     modules: &BTreeSet<String>,
     facts: &CheckFactMap,
 ) -> BTreeMap<String, BTreeSet<PathBuf>> {
-    let mut by_dir: BTreeMap<PathBuf, PathBuf> = BTreeMap::new();
+    let mut seen = BTreeSet::new();
+    let mut importers = Vec::new();
     for file in facts.graph_file_universe() {
         let file = normalize_path(file);
-        if let Some(dir) = file.parent() {
-            by_dir.entry(dir.to_path_buf()).or_insert(file);
+        let Some(dir) = file.parent() else {
+            continue;
+        };
+        let scope = catalog.resolver_scope_index_for(&file);
+        if seen.insert((dir.to_path_buf(), scope)) {
+            importers.push(file);
         }
     }
     let mut files = BTreeMap::new();
     for module in modules {
         let mut resolved = BTreeSet::new();
-        for importer in by_dir.values() {
+        for importer in &importers {
             if let Some(path) = resolver.resolve(module, importer) {
                 resolved.insert(normalize_path(&path));
             }

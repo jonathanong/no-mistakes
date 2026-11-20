@@ -352,6 +352,16 @@ fn resolved_spellings_match_without_the_configured_literal() {
 }
 
 #[test]
+fn sibling_scopes_resolve_an_alias_the_directory_representative_misses() {
+    assert_marked_fixture("sibling-scopes");
+}
+
+#[test]
+fn a_bulk_spelling_of_the_single_export_does_not_hide_the_call() {
+    assert_marked_fixture("same-export");
+}
+
+#[test]
 fn a_custom_message_prefixes_the_same_findings() {
     let source = saved("configured");
     let fixture = crate::test_support::materialize_saved_fixture(&source);

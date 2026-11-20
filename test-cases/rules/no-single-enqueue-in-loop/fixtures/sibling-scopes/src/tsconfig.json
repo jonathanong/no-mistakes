@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@widgets": ["widgets.ts"]
+    }
+  },
+  "include": ["b-alias.ts", "widgets.ts"]
+}

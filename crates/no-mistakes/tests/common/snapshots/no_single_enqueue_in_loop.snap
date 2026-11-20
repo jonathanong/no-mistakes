@@ -189,6 +189,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "same-export": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/direct.ts",
+          "import": "enqueueItem",
+          "line": 5,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sibling-scopes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/b-alias.ts",
+          "import": "enqueueItem",
+          "line": 5,
+          "message": "single enqueue `enqueueItem` (`@widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of target:@widgets#enqueueItem",
+          "target": "@widgets#enqueueItem"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "spellings": {
     "exitCode": 1,
     "report": {
