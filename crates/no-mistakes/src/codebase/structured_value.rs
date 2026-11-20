@@ -30,8 +30,7 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
 pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
     let mut values = Vec::new();
     let mut errors = Vec::new();
-    let mut documents = serde_yaml::Deserializer::from_str(source);
-    while let Some(document) = documents.next() {
+    for document in serde_yaml::Deserializer::from_str(source) {
         match Value::deserialize(document) {
             Ok(value) => values.push(expand_merge_keys(value)),
             Err(error) => {
