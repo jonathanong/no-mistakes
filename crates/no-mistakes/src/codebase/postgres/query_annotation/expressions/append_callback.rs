@@ -4,11 +4,23 @@ use super::super::{
 };
 use oxc_ast::ast;
 
-pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Option<AppendCallback> {
+pub(super) fn needs_body_census(function: &ast::Function<'_>, summary: &Function) -> bool {
+    admitted(function, summary).is_some()
+}
+
+struct Admitted {
+    callback: usize,
+    payload_index: usize,
+    payload: String,
+    tags: Vec<String>,
+}
+
+// Call shape, later reads, branch suffixes, tag shadowing, and the parameter
+// list. These decide many proofs before any function-body walk.
+fn admitted(function: &ast::Function<'_>, summary: &Function) -> Option<Admitted> {
     let (site, callback, payload) = call_site(summary)?;
     let payload_index = summary.params.iter().position(|name| name == &payload)?;
     let mut tags = Vec::new();
-    let mut body = Vec::with_capacity(summary.body.len());
     for (index, step) in summary.body.iter().enumerate() {
         if index > site && !inert_after_call(step, &payload) {
             return None;
@@ -20,31 +32,53 @@ pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Optio
             {
                 return None;
             }
-            // Conditional suffixes preserve only the head, never complete SQL.
-            body.push(Step::Append(payload.clone(), Expr::Unknown));
-        } else {
-            body.push(step.clone());
         }
     }
-    if tags.iter().any(|tag| {
+    if tag_shadowed(&tags, function, summary) {
+        return None;
+    }
+    parameters(function)?;
+    Some(Admitted {
+        callback,
+        payload_index,
+        payload,
+        tags,
+    })
+}
+
+fn tag_shadowed(tags: &[String], function: &ast::Function<'_>, summary: &Function) -> bool {
+    tags.iter().any(|tag| {
         let name = if tag == "String.raw" { "String" } else { tag };
         summary.params.iter().any(|param| param == name)
             || function.id.as_ref().is_some_and(|id| id.name == name)
-            || summary.body.iter().any(|step| matches!(step, Step::Reserve(names) if names.iter().any(|local| local == name)))
-    }) {
-        return None;
+            || summary.body.iter().any(|step| {
+                matches!(step, Step::Reserve(names) if names.iter().any(|local| local == name))
+            })
+    })
+}
+
+pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Option<AppendCallback> {
+    let admitted = admitted(function, summary)?;
+    let mut body = Vec::with_capacity(summary.body.len());
+    for step in &summary.body {
+        // Conditional suffixes preserve only the head, never complete SQL.
+        if matches!(step, Step::Branch(..)) {
+            body.push(Step::Append(admitted.payload.clone(), Expr::Unknown));
+        } else {
+            body.push(step.clone());
+        }
     }
     let names = parameters(function)?;
     let proof = Uses::inspect(
         function.body.as_ref()?,
         names,
-        callback,
+        admitted.callback,
         &Default::default(),
     )?;
-    (proof == Payload::Parameter(payload_index)).then_some(AppendCallback {
-        payload: payload_index,
+    (proof == Payload::Parameter(admitted.payload_index)).then_some(AppendCallback {
+        payload: admitted.payload_index,
         body,
-        tags,
+        tags: admitted.tags,
     })
 }
 

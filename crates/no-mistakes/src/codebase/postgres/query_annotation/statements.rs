@@ -46,6 +46,8 @@ pub(super) fn steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
 // Append-callback proof. Plain destructured calls become effects; defaults,
 // computed keys, and non-identifier rest stay unsupported.
 pub(super) fn append_steps(statements: &[Statement<'_>], source: &str) -> Vec<Step> {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    super::proof_walk::record();
     lower(statements, source, true)
 }
 

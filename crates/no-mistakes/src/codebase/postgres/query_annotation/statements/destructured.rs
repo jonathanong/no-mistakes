@@ -110,6 +110,8 @@ fn plain_target(pattern: &BindingPattern<'_>) -> bool {
 pub(in crate::codebase::postgres::query_annotation) fn hides_append_proof(
     value: &oxc_ast::ast::Function<'_>,
 ) -> bool {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    super::super::proof_walk::record();
     let mut finder = NonPlainCall { found: false };
     value
         .body

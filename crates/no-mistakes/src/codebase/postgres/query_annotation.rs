@@ -9,6 +9,8 @@ mod mapped_arguments;
 pub(crate) mod modules;
 mod progress;
 pub(crate) mod project;
+#[cfg(any(test, feature = "test-instrumentation"))]
+mod proof_walk;
 mod statements;
 mod trust;
 

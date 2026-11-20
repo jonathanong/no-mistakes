@@ -55,6 +55,9 @@ pub(in crate::codebase::postgres::query_annotation) fn function_expression(
 // function the evaluator treats as unsupported elsewhere stays unsupported.
 // A supported summary omits property defaults, computed keys, and
 // non-identifier rest on a destructured call; those patterns get no proof.
+// Re-lowering and the body census run only when a callback call still survives
+// the cheap step checks. A missing call, or a read that already rejects the
+// proof, does not walk the function.
 fn summary_proof(
     value: &oxc_ast::ast::Function<'_>,
     source: &str,
@@ -65,6 +68,9 @@ fn summary_proof(
         .iter()
         .any(|step| matches!(step, Step::Branch(..)));
     if !branched && !super::append_callback::destructured_append(summary) {
+        return;
+    }
+    if !super::append_callback::needs_body_census(value, summary) {
         return;
     }
     if summary.supported && super::super::statements::destructured::hides_append_proof(value) {
@@ -148,3 +154,7 @@ pub(super) fn function(
         append_callback: None,
     })
 }
+
+#[cfg(test)]
+#[path = "append_proof_walk_tests.rs"]
+mod tests;
