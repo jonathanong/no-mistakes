@@ -81,6 +81,7 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
     let explicit = git_all(&rules_path(RULE, "fixture", "explicit"));
     let no_sgconfig = git_all(&rules_path(RULE, "fixture", "no-sgconfig"));
     let sgconfig_yaml = git_all(&rules_path(RULE, "fixture", "sgconfig-yaml"));
+    let nested = git_all(&rules_path(RULE, "fixture", "nested"));
     let report = assert_saved_fixture_report(
         "ast_grep_ignore_freshness",
         &[
@@ -100,6 +101,7 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
                 sgconfig_yaml.path().to_path_buf(),
                 PathBuf::new(),
             ),
+            ("nested", nested.path().to_path_buf(), PathBuf::new()),
         ],
         &[],
         &[],
@@ -113,7 +115,6 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
         "rules/widgets.yml:src/orders/**/*.ts",
         "rules/widgets.yml:.widgets/items.ts",
         "rules/widgets.yml:.widgets/**/*.ts",
-        "rules/widgets.yml:./src/items.ts",
         "rules/widgets.yml:fixtures/orders/**/*.ts",
         "rules/widgets.yml:tracked-ignored/items.ts",
         "rules/widgets.yml:SRC/ORDERS/**/*.TS",
@@ -128,6 +129,10 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
     }
     for stale in [
         "rules/widgets.yml:src/missing.ts",
+        "rules/widgets.yml:./src/items.ts",
+        "rules/flow.yml:src/missing.ts",
+        "rules/multi.yml:src/missing.ts",
+        "rules/negated.yml:!src/items.ts",
         "rules/widgets.yml:retired/**/*.ts",
         "rules/widgets.yml:untracked/items.ts",
         "rules/widgets.yml:ignored/items.ts",
@@ -154,4 +159,30 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
     assert!(!explicit_hits
         .iter()
         .any(|hit| hit.contains("src/missing.ts")));
+    let flow = report["tracked"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| {
+            finding["file"] == "rules/flow.yml" && finding["target"] == "src/missing.ts"
+        })
+        .unwrap();
+    assert_eq!(
+        flow["sourceLine"],
+        "ignores: ['src/missing.ts', 'src/items.ts']"
+    );
+    assert!(!tracked
+        .iter()
+        .any(|hit| hit.starts_with("rules/flow-suppressed.yml:")));
+    assert!(!tracked
+        .iter()
+        .any(|hit| hit == "rules/flow.yml:src/items.ts" || hit == "rules/multi.yml:src/items.ts"));
+    let nested_hits = targets(&report["nested"]);
+    assert!(nested_hits
+        .iter()
+        .any(|hit| hit == "packages/widgets/rules/orders.yml:src/orders.ts"));
+    assert!(nested_hits
+        .iter()
+        .any(|hit| hit == "packages/widgets/rules/orders.yml:src/missing.ts"));
+    assert!(!nested_hits.iter().any(|hit| hit.ends_with(":src/items.ts")));
 }

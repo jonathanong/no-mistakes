@@ -46,6 +46,9 @@ fn ast_grep_ignore_freshness_documents_tracked_inventory_controls() {
         "untracked",
         "dotfile",
         "glob",
+        "---",
+        "flow",
+        "directory",
     ] {
         assert!(body.contains(phrase), "missing {phrase}");
     }

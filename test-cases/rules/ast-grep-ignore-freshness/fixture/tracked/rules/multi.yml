@@ -1,0 +1,13 @@
+id: first-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - src/missing.ts
+---
+id: second-widgets
+language: TypeScript
+rule:
+  pattern: listItems()
+ignores:
+  - src/items.ts

@@ -1,18 +1,19 @@
 use super::RuleFinding;
-use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_yaml::Value;
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "ast-grep-ignore-freshness";
 
 mod entries;
 mod globs;
+mod lines;
+mod scan;
 mod select;
 
 #[derive(Deserialize, Default)]
@@ -55,94 +56,46 @@ fn scan(
         .filter(|relative| !relative.is_empty())
         .collect();
     let tracked_set: BTreeSet<&str> = tracked.iter().map(String::as_str).collect();
-    let mut findings = Vec::new();
-    let (seeds, missing) = select::seeds(&opts.files, &tracked_set);
-    for relative in missing {
-        findings.push(finding(
-            &relative,
-            1,
-            format!(
-                "configured config `{relative}` is not tracked. Point files at a tracked ast-grep config, rule directory, or rule YAML file."
-            ),
-            Some(relative.clone()),
-        ));
-    }
-    let mut queue: VecDeque<String> = seeds.into();
-    let mut seen = BTreeSet::new();
-    let mut parsed = Vec::new();
-    while let Some(relative) = queue.pop_front() {
-        if !seen.insert(relative.clone()) {
-            continue;
-        }
-        let path = root.join(&relative);
-        let source = match std::fs::read_to_string(&path) {
-            Ok(source) => source,
-            Err(error) => {
-                findings.push(finding(
-                    &relative,
-                    1,
-                    format!("failed to read `{relative}` ({error})."),
-                    None,
-                ));
-                continue;
-            }
-        };
-        let value = match parse_structured_value(&path, &source) {
-            Ok(value) => value,
-            Err(error) => {
-                findings.push(finding(&relative, 1, error, None));
-                continue;
-            }
-        };
-        enqueue_rule_dirs(&relative, &value, &tracked, &mut queue);
-        parsed.push((relative, source, value));
-    }
-    let paths: Vec<PathBuf> = parsed.iter().map(|(rel, _, _)| root.join(rel)).collect();
+    let (parsed, mut findings) = scan::load(root, &opts.files, &tracked, &tracked_set);
+    let paths: Vec<PathBuf> = parsed
+        .iter()
+        .map(|item| root.join(&item.relative))
+        .collect();
     let allowed = super::path_filter::filter_rule_files(root, config, rule, &paths)?;
     let allowed_set: BTreeSet<_> = allowed
         .iter()
         .map(|path| relative_slash_path(root, path))
         .collect();
-    for (relative, source, value) in parsed {
-        if allowed_set.contains(&relative) {
-            findings.extend(ignore_findings(&relative, &source, &value, &tracked));
+    for item in parsed {
+        if allowed_set.contains(&item.relative) {
+            findings.extend(ignore_findings(
+                &item.relative,
+                &item.source,
+                &item.documents,
+                &item.project,
+                &tracked,
+            ));
         }
     }
     Ok(findings)
 }
 
-fn enqueue_rule_dirs(
-    relative: &str,
-    value: &Value,
-    tracked: &[String],
-    queue: &mut VecDeque<String>,
-) {
-    for dir in entries::rule_directories(value) {
-        let Some(prefix) = select::child_prefix(relative, &dir) else {
-            continue;
-        };
-        for candidate in tracked {
-            if candidate.starts_with(&prefix) && select::is_yaml(candidate) {
-                queue.push_back(candidate.clone());
-            }
-        }
-    }
-}
-
 fn ignore_findings(
     relative: &str,
     source: &str,
-    value: &Value,
+    documents: &[Value],
+    project: &str,
     tracked: &[String],
 ) -> Vec<RuleFinding> {
-    entries::ignores(value, source)
+    entries::ignores_all(documents, source)
         .into_iter()
-        .filter_map(|entry| ignore_finding(relative, entry, tracked))
+        .filter_map(|entry| ignore_finding(relative, project, entry, tracked))
         .collect()
 }
 
 fn ignore_finding(
     relative: &str,
+    project: &str,
     entry: entries::IgnoreEntry,
     tracked: &[String],
 ) -> Option<RuleFinding> {
@@ -154,7 +107,7 @@ fn ignore_finding(
             Some("ignores".to_string()),
         ));
     }
-    match globs::matches_tracked(&entry.pattern, entry.case_insensitive, tracked) {
+    match globs::matches_tracked(&entry.pattern, entry.case_insensitive, project, tracked) {
         Ok(true) => None,
         Ok(false) => Some(finding(
             relative,
@@ -177,7 +130,12 @@ fn ignore_finding(
     }
 }
 
-fn finding(file: &str, line: usize, message: String, target: Option<String>) -> RuleFinding {
+pub(super) fn finding(
+    file: &str,
+    line: usize,
+    message: String,
+    target: Option<String>,
+) -> RuleFinding {
     RuleFinding {
         causes: Vec::new(),
         rule: RULE_ID.to_string(),

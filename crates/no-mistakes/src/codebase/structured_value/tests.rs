@@ -1,4 +1,4 @@
-use super::{is_jsonc_path, parse_structured_value};
+use super::{is_jsonc_path, parse_structured_value, parse_yaml_documents};
 use serde_yaml::Value;
 use std::path::Path;
 
@@ -20,6 +20,46 @@ fn parses_jsonc_comments_and_trailing_commas() {
 fn jsonc_parse_errors_are_diagnostics() {
     let error = parse_structured_value(Path::new("broken.json"), "{").unwrap_err();
     assert!(error.contains("failed to parse JSONC"), "{error}");
+}
+
+#[test]
+fn yaml_documents_keep_each_mapping() {
+    let parsed = parse_yaml_documents("id: one\n---\nid: two\n");
+    assert!(parsed.errors.is_empty());
+    assert_eq!(parsed.values.len(), 2);
+    assert_eq!(parsed.values[0]["id"].as_str(), Some("one"));
+    assert_eq!(parsed.values[1]["id"].as_str(), Some("two"));
+}
+
+#[test]
+fn yaml_documents_keep_a_valid_document_before_a_broken_one() {
+    let parsed = parse_yaml_documents("id: widgets\n---\nignores: [\n---\nid: orders\n");
+    assert_eq!(parsed.values.len(), 1);
+    assert_eq!(parsed.values[0]["id"].as_str(), Some("widgets"));
+    assert_eq!(parsed.errors.len(), 1);
+    assert!(parsed.errors[0].1.contains("failed to parse YAML"));
+}
+
+#[test]
+fn yaml_documents_stop_when_a_syntax_error_ends_the_file() {
+    let parsed = parse_yaml_documents("id: widgets\n---\nignores: [\n");
+    assert_eq!(parsed.values.len(), 1);
+    assert_eq!(parsed.values[0]["id"].as_str(), Some("widgets"));
+    assert_eq!(parsed.errors.len(), 1);
+}
+
+#[test]
+fn yaml_documents_keep_an_error_on_the_last_source_line() {
+    let parsed = parse_yaml_documents("ignores: [\n");
+    assert_eq!(parsed.errors.len(), 1);
+    assert_eq!(parsed.errors[0].0, 1);
+}
+
+#[test]
+fn single_document_parser_rejects_multiple_documents() {
+    let error =
+        parse_structured_value(Path::new("rules.yml"), "id: one\n---\nid: two\n").unwrap_err();
+    assert!(error.contains("failed to parse YAML"), "{error}");
 }
 
 #[test]
