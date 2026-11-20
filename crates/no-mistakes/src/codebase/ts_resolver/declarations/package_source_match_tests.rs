@@ -20,6 +20,14 @@ fn import_condition_ignores_the_require_star_target() {
 }
 
 #[test]
+fn a_star_export_ignores_a_non_string_target() {
+    let exports = json!({ "./*": ["./*.ts"] });
+    assert!(!matches_runtime_export(&exports, "shape.ts"));
+    let nested = json!({ "./*": { "import": null } });
+    assert!(!matches_runtime_export(&nested, "shape.ts"));
+}
+
+#[test]
 fn exact_subpath_and_nested_star_use_the_runtime_target() {
     let exact = json!({ ".": "./index.ts", "./badge.ts": "./badge.ts" });
     assert!(matches_runtime_export(&exact, "badge.ts"));

@@ -141,7 +141,9 @@ fn workspace_specifiers_are_separate_from_versioned_dependencies() {
         "dependencies": {
             "labels": "workspace:*",
             "items": "1.0.0",
-            "path": "workspace:^"
+            "path": "workspace:^",
+            "./local": "1.0.0",
+            "node:fs": "workspace:*"
         },
         "optionalDependencies": { "orders": " workspace:~ " },
         "peerDependencies": { "marks": { "version": "workspace:*" } },
@@ -157,6 +159,8 @@ fn workspace_specifiers_are_separate_from_versioned_dependencies() {
     assert!(versioned.contains("items"));
     assert!(!versioned.contains("labels"));
     assert!(!versioned.contains("marks"));
+    assert!(!versioned.contains("local"));
+    assert!(!workspace.contains("fs"));
 }
 
 #[test]

@@ -15,6 +15,12 @@ fn source(
 }
 
 #[test]
+fn subpath_for_file_rejects_a_key_without_one_star() {
+    assert!(super::pattern::subpath_for_file("./*/*", "./*.ts", "./shape.ts").is_none());
+    assert!(super::pattern::subpath_for_file(".", "./*.ts", "./shape.ts").is_none());
+}
+
+#[test]
 fn star_subpath_substitutes_the_capture_into_the_target() {
     let found = source(
         json!({ "./*": "./*.mts" }),

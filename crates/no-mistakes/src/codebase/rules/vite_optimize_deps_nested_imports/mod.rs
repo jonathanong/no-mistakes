@@ -119,3 +119,7 @@ fn required(opts: &Options) -> std::result::Result<RequiredScope, MissingOption>
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "coverage_tests.rs"]
+mod coverage_tests;

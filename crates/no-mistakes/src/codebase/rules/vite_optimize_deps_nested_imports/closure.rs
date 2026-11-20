@@ -28,9 +28,10 @@ pub(super) fn runtime_imports(
             if !file.starts_with(dir) {
                 continue;
             }
-            let Some(relative) = file.strip_prefix(dir).ok().map(slash_relative) else {
-                continue;
-            };
+            let relative = file
+                .strip_prefix(dir)
+                .map(slash_relative)
+                .unwrap_or_default();
             if relative.is_empty() || relative == "package.json" || relative.contains('*') {
                 continue;
             }
