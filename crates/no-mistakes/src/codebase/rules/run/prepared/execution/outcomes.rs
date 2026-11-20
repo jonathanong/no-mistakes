@@ -115,7 +115,10 @@ fn register_value_flow_failures(
         for consumer in GRAPH_CONSUMERS
             .iter()
             .filter(|consumer| config.rule_configured(consumer))
-            .filter(|consumer| **consumer != FORBIDDEN_DEPENDENCIES || !complete_imports)
+            .filter(|consumer| {
+                **consumer != crate::codebase::rules::POSTGRES_SQL_FRAGMENT_ESCAPE
+                    && (**consumer != FORBIDDEN_DEPENDENCIES || !complete_imports)
+            })
         {
             failures.push(CheckFailure {
                 consumer: (*consumer).into(),

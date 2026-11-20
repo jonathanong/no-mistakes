@@ -313,8 +313,10 @@ files. Cross-file writes, rebinds, namespace escapes (`Object.assign`,
 `Object.values`, `Reflect`, a non-string computed key, `require`, dynamic
 `import`, and `export *`) are reported by
 [`postgres-sql-fragment-escape`](../rules/postgres-sql-fragment-escape.md) when
-`check` runs that rule. A run that uses only this rule accepts an imported
-fragment that another file escapes. Without type information only constants
+`check` runs that rule with a non-empty `trustedSqlTags` list. An empty list
+reports nothing, so an ESLint-only run, or a Rust run that never sets
+`trustedSqlTags`, accepts an imported fragment that another file escapes.
+Without type information only constants
 declared in the same file and never exported are proven. A `!` or `as`
 assertion around an otherwise append-only use still disproves it, and the chain
 reports.

@@ -8,7 +8,12 @@ fn scan_program_namespaces(collector: &mut ImportCollector, program: &Program<'_
     for statement in &program.body {
         if let Some(declaration) = top_level_namespace(statement) {
             declarations.push(declaration);
-        } else if let Some(specifier) = require_import_specifier(statement) {
+        } else if let Some((local, specifier)) = require_import(statement) {
+            collector
+                .namespace
+                .facts
+                .import_equals_requires
+                .push((local, specifier.clone()));
             collector.namespace.facts.opaque_specifiers.push(specifier);
         }
     }
@@ -52,7 +57,7 @@ fn top_level_namespace<'p, 'a>(
 
 /// The module of `import x = require("...")`: the whole module becomes a value,
 /// which the graph does not follow. `import type x = require(...)` is erased.
-fn require_import_specifier(statement: &Statement<'_>) -> Option<String> {
+fn require_import(statement: &Statement<'_>) -> Option<(String, String)> {
     let declaration = match statement {
         Statement::TSImportEqualsDeclaration(declaration) => declaration,
         Statement::ExportDeclaration(export) => match &export.declaration {
@@ -65,7 +70,10 @@ fn require_import_specifier(statement: &Statement<'_>) -> Option<String> {
         TSModuleReference::ExternalModuleReference(reference)
             if !declaration.import_kind.is_type() =>
         {
-            Some(crate::ast::js_literal(&reference.expression).into_owned())
+            Some((
+                declaration.id.name.to_string(),
+                crate::ast::js_literal(&reference.expression).into_owned(),
+            ))
         }
         _ => None,
     }

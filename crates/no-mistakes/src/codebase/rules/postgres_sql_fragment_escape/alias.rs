@@ -1,6 +1,7 @@
 use super::fragments::{Catalog, Fragment};
 use super::modules::{module_hit, ModuleHit};
 use super::source_text::file_text;
+use super::tags::{exported_name, imported};
 use super::text::{export_alias_local, import_specifier};
 use super::visible::visible;
 use crate::codebase::check_facts::CheckFactMap;
@@ -32,6 +33,9 @@ pub(super) fn source_alias(
     name: &str,
     stack: &mut Vec<(PathBuf, String)>,
 ) -> Vec<Fragment> {
+    if let Some(found) = alias_from_facts(catalog, graph, facts, module, ts, name, stack) {
+        return found;
+    }
     let owned = file_text(ts, catalog.sources, module);
     let Some(source) = owned.as_deref() else {
         return Vec::new();
@@ -43,6 +47,30 @@ pub(super) fn source_alias(
         return Vec::new();
     };
     hop(catalog, graph, facts, module, spec, local, stack)
+}
+
+fn alias_from_facts(
+    catalog: &Catalog,
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    module: &Path,
+    ts: &TsFileFacts,
+    name: &str,
+    stack: &mut Vec<(PathBuf, String)>,
+) -> Option<Vec<Fragment>> {
+    let export = ts.exported_bindings.iter().find(|binding| {
+        binding.specifier.is_none() && binding.exported == name && binding.local != name
+    })?;
+    let import = imported(ts, &export.local)?;
+    Some(hop(
+        catalog,
+        graph,
+        facts,
+        module,
+        &import.specifier,
+        &exported_name(import),
+        stack,
+    ))
 }
 
 pub(super) fn star_fragments(

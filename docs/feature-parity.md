@@ -207,7 +207,9 @@ and exact closed-object gate for a defaulted helper destructure.
 Opt-in `postgres-sql-fragment-escape` reports cross-file writes, rebinds, and
 namespace escapes of exported trusted SQL const fragments. It borrows prepared
 import and value-flow facts plus the canonical graph, and it does not change
-`postgres-no-mutable-sql-registry`.
+`postgres-no-mutable-sql-registry`. A file with an operational error, incomplete
+value flow, or unreadable source is listed on the check `incomplete` field and
+does not drop findings from complete files.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes

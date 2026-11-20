@@ -1,8 +1,7 @@
 use super::fragments::{Catalog, Fragment};
-use super::source_text::file_text;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKind};
-use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
+use crate::codebase::dependencies::graph::{DepGraph, ImportTarget};
 use std::path::{Path, PathBuf};
 
 pub(super) enum ModuleHit {
@@ -12,7 +11,7 @@ pub(super) enum ModuleHit {
 
 pub(super) fn module_hit(
     graph: &DepGraph,
-    facts: &CheckFactMap,
+    _facts: &CheckFactMap,
     catalog: &Catalog<'_>,
     importer: &Path,
     specifier: &str,
@@ -32,7 +31,7 @@ pub(super) fn module_hit(
         hits.extend(relative_hits(catalog, importer, specifier));
     }
     if hits.is_empty() {
-        hits.extend(ambient_hits(facts, catalog, specifier));
+        hits.extend(catalog.ambient_files(specifier));
     }
     hits.sort();
     hits.dedup();
@@ -97,18 +96,24 @@ fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec
     catalog.relative_candidates(parent, stem)
 }
 
-fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) -> Vec<PathBuf> {
-    let double = format!("declare module \"{specifier}\"");
-    let single = format!("declare module '{specifier}'");
-    facts
-        .graph_file_universe()
-        .iter()
-        .filter(|file| {
-            facts
-                .get_ts_facts(file)
-                .and_then(|ts| file_text(ts, catalog.sources, file))
-                .is_some_and(|source| source.contains(&double) || source.contains(&single))
-        })
-        .cloned()
-        .collect()
+pub(super) fn declare_module_specifiers(source: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    push_declare_modules(source, "declare module \"", '"', &mut found);
+    push_declare_modules(source, "declare module '", '\'', &mut found);
+    found.sort();
+    found.dedup();
+    found
+}
+
+fn push_declare_modules(source: &str, marker: &str, quote: char, found: &mut Vec<String>) {
+    let mut rest = source;
+    while let Some(index) = rest.find(marker) {
+        let after = &rest[index + marker.len()..];
+        if let Some(end) = after.find(quote) {
+            if !after[..end].is_empty() {
+                found.push(after[..end].to_string());
+            }
+        }
+        rest = &rest[index + marker.len()..];
+    }
 }
