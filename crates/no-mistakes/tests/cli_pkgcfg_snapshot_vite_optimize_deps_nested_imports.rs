@@ -24,6 +24,8 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
         case("omitted_both", "omitted-both"),
         case("omitted_configs", "omitted-configs"),
         case("omitted_packages", "omitted-packages"),
+        case("config_edges", "config-edges"),
+        case("manifest_edges", "manifest-edges"),
     ];
     assert_saved_fixture("vite_optimize_deps_nested_imports", &cases);
 }

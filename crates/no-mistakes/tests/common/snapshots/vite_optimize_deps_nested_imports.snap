@@ -2,6 +2,67 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "config_edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "broken.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse Vite config (failed to parse broken.config.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 17, end: 17 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }); export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "call-number.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "function defineConfig(value) {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "cycle.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "const settings = other;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "function.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default function widget() {}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "paren-number.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default (1);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "spread-root.config.ts",
+          "line": 3,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default {",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "covered": {
     "exitCode": 0,
     "report": {
@@ -45,6 +106,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "manifest_edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/broken-entry/index.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse published entry (failed to parse packages/broken-entry/index.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `)` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`)` expected\"), span: Span { start: 24, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }); write a static package manifest and published entry so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const broken = (",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/nameless/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: package.json has no name; write a static package manifest and published entry so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        }
+      ],
       "warnings": []
     }
   },

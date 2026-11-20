@@ -1,0 +1,5 @@
+{
+  "name": "broken-entry",
+  "version": "1.0.0",
+  "exports": "./index.ts"
+}

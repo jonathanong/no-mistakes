@@ -1,0 +1,11 @@
+{
+  "name": "conditional",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "import": "",
+      "default": 1,
+      "require": "./index.ts"
+    }
+  }
+}

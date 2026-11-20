@@ -1,0 +1,18 @@
+rules:
+  - rule: vite-optimize-deps-nested-imports
+    scope: repository
+    options:
+      configFiles:
+        - bindings.config.ts
+        - broken.config.ts
+        - call-number.config.ts
+        - cycle.config.ts
+        - function.config.ts
+        - missing-include.config.ts
+        - paren-ident.config.ts
+        - paren-number.config.ts
+        - paren-object.config.ts
+        - sibling.config.ts
+        - spread-root.config.ts
+      packages:
+        - packages/quiet

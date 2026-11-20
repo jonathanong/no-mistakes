@@ -10,6 +10,8 @@ fn package_name_keeps_the_scope_and_drops_a_subpath() {
     assert_eq!(package_name("./local"), None);
     assert_eq!(package_name("node:fs"), None);
     assert_eq!(package_name("@widgets"), None);
+    assert_eq!(package_name("@/ui"), None);
+    assert_eq!(package_name("@widgets/"), None);
 }
 
 #[test]

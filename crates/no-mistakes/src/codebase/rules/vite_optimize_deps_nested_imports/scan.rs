@@ -135,11 +135,6 @@ fn config_gap(file: &str, line: usize, reason: &str) -> RuleFinding {
 }
 
 fn resolve(root: &Path, value: &str) -> PathBuf {
-    let path = Path::new(value);
-    let joined = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        root.join(path)
-    };
-    crate::codebase::ts_resolver::normalize_path(&joined)
+    // `Path::join` keeps an absolute configured path instead of prefixing root.
+    crate::codebase::ts_resolver::normalize_path(&root.join(value))
 }
