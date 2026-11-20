@@ -25,12 +25,14 @@ that sets both is checked for both. Composite actions are read from
 `runs.steps` when `runs.using` is `composite`.
 
 `with:` values that arrive through a YAML `<<` merge key are judged after the
-merge. Later entries in a merge sequence override earlier ones, and a key
-written next to `<<` overrides the merged value. Anchors are expanded before
-that merge. A required value written as `${{ }}` is compared as that text, so
-it is a mismatch unless the expression text is the required scalar. Suppress
-that line when the expression is intentional. A `uses:` value that contains
-`${{ }}` is not a concrete family and stays silent.
+merge. Earlier entries in a merge sequence override later ones, and a key
+written next to `<<` overrides every merged value. A merge key on the step or
+job mapping itself (for example `- <<: *base` supplying `uses` or `with`) is
+not flattened. Anchors are expanded before that merge. A required value written
+as `${{ }}` is compared as that text, so it is a mismatch unless the expression
+text is the required scalar. Suppress that line when the expression is
+intentional. A `uses:` value that contains `${{ }}` is not a concrete family
+and stays silent.
 
 Numbers and booleans match their string forms, because GitHub Actions passes
 `with:` values as strings. `1` and `"1"` are the same input. `true` and

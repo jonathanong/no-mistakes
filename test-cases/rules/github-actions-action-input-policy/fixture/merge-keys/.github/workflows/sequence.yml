@@ -1,0 +1,24 @@
+name: Widget merge order
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: define strict inputs
+        uses: example/checkout-orders@v1
+        with: &strict
+          keep-days: 1
+          replace: true
+      - name: define loose inputs
+        uses: example/checkout-orders@v1
+        with: &loose
+          keep-days: 30
+          replace: false
+      - name: publish earlier strict
+        uses: example/publish-widget@v1
+        with:
+          <<: [*strict, *loose]
+      - name: publish earlier loose
+        uses: example/publish-widget@v1
+        with:
+          <<: [*loose, *strict]

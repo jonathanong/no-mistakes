@@ -28,7 +28,8 @@ fn apply_merge(out: &mut Mapping, value: &Value) {
             }
         }
         Value::Sequence(items) => {
-            for item in items {
+            // YAML 1.1: an earlier mapping overrides a later one.
+            for item in items.iter().rev() {
                 apply_merge(out, item);
             }
         }

@@ -254,7 +254,27 @@ jobs:
             - keep-days: 1
               replace: true
 "#;
-    assert!(parsed(sequence, POLICY).is_empty(), "{sequence}");
+    let sequence_findings = parsed(sequence, POLICY);
+    assert_eq!(sequence_findings.len(), 2, "{sequence_findings:?}");
+    assert!(sequence_findings
+        .iter()
+        .any(|finding| finding.message.contains("30")));
+    assert!(sequence_findings
+        .iter()
+        .any(|finding| finding.message.contains("false")));
+    let earlier = r#"
+jobs:
+  build:
+    steps:
+      - uses: example/publish-widget@v1
+        with:
+          <<:
+            - keep-days: 1
+              replace: true
+            - keep-days: 30
+              replace: false
+"#;
+    assert!(parsed(earlier, POLICY).is_empty(), "{earlier}");
     let nested = r#"
 jobs:
   build:
@@ -348,4 +368,13 @@ fn saved_call_fixtures_report_composite_reusable_and_merge_shapes() {
     assert!(merged.iter().any(|finding| {
         finding.message.contains("publish orders") && finding.message.contains("30")
     }));
+    let order = run_file("merge-keys", ".github/workflows/sequence.yml");
+    assert_eq!(order.len(), 2, "{order:?}");
+    assert!(order
+        .iter()
+        .all(|finding| { finding.message.contains("publish earlier loose") }));
+    assert!(order.iter().any(|finding| finding.message.contains("30")));
+    assert!(order
+        .iter()
+        .any(|finding| finding.message.contains("false")));
 }

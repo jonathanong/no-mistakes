@@ -102,6 +102,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": ".github/workflows/sequence.yml",
+          "line": 22,
+          "message": ".github/workflows/sequence.yml: job \"build\" step \"publish earlier loose\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "uses: example/publish-widget@v1",
+          "target": "build"
+        },
+        {
+          "file": ".github/workflows/sequence.yml",
+          "line": 22,
+          "message": ".github/workflows/sequence.yml: job \"build\" step \"publish earlier loose\" calls `example/publish-widget` with `replace` set to false. Set `replace` to true. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "sourceLine": "uses: example/publish-widget@v1",
+          "target": "build"
+        },
+        {
           "file": ".github/workflows/widgets.yml",
           "line": 18,
           "message": ".github/workflows/widgets.yml: job \"build\" step \"publish orders\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
