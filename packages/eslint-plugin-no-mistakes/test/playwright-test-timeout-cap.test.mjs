@@ -107,6 +107,9 @@ describe(rule, () => {
         registrationPackages: ["./approved-test"],
       }),
       eslintCase("ban overrides", "ban-overrides", tested, { banOverrides: true }),
+      eslintCase("ban overrides suppression", "ban-overrides-suppression", tested, {
+        banOverrides: true,
+      }),
       eslintCase("ban overrides off", "ban-overrides", tested, {}),
       eslintCase("ban overrides explicit off", "ban-overrides", tested, { banOverrides: false }),
       eslintCase("null-computed-key", "null-computed-key", "null-computed-key.ts"),

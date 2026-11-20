@@ -18,11 +18,11 @@ function createOverrideBan(context, option, bindings, evaluate, slowCondition, r
       return null;
     return concreteObject(def.node.init, seen);
   }
-  function timeoutProperty(node, name) {
+  function timeoutProperty(node, name, messageId = "override") {
     const object = concreteObject(node);
     if (!object) return;
     const entry = evaluate(object).properties?.get("timeout");
-    if (entry) report(entry.origin, "override", name);
+    if (entry) report(entry.origin, messageId, name);
   }
   function isCallee(node) {
     let current = node;
@@ -43,7 +43,9 @@ function createOverrideBan(context, option, bindings, evaluate, slowCondition, r
   function observe(node, api) {
     if (!enabled || !api) return;
     if (bindings.registration(api)) {
-      for (const argument of node.arguments) timeoutProperty(argument, "test timeout option");
+      const hook = api.kind === "method" && bindings.hooks.has(api.key);
+      const name = hook ? "hook timeout" : "test details timeout";
+      for (const argument of node.arguments) timeoutProperty(argument, name, "noEffect");
       return;
     }
     if (api.kind !== "method") return;

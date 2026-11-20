@@ -390,10 +390,14 @@ Opt-in bounded Playwright test deadline policy. Options: `max`, `fixtureMax`,
 `unknownValues`, `configUnknownValues`, `registrationPackages`, `exportRoles`,
 `configFiles`, and `banOverrides`.
 `banOverrides` defaults to false. Set it to true to report every admitted test
-deadline override, including values within the cap, bare `setTimeout` or `slow`
-references, and per-test `{ timeout }` details. `test.slow()` counts because it
-changes the deadline; a statically false condition does not. Project
-configuration timeout fields stay on the numeric cap. The plugin exports
+deadline override, including values within the cap and bare `setTimeout` or
+`slow` references, including escapes through test info. `describe.configure({ timeout })`
+is an override. A `timeout` on test details or a hook has no effect.
+`test.configure` is not a Playwright API and is not reported. The ban does not
+cover assertion timeouts, `page.waitFor*` timeouts, or `test.step` timeouts.
+`test.slow()` counts because it changes the deadline; a statically false
+condition does not. Project configuration timeout fields stay on the numeric cap.
+The plugin exports
 `PlaywrightTestTimeoutCapOptions` for TypeScript configuration.
 `configUnknownValues: "defer-to-runner"` delegates only unresolved configuration
 values to a separate effective runner policy; its default `"inherit"` keeps
