@@ -31,6 +31,16 @@ there is no additional runtime export or invocation option. The existing
 `check` → `checkJson` binding carries this rule. See
 [activity type configuration](configuration/workflow-topology-policy-activity-types.md).
 
+Configured `workflow-topology-policy.options.forbiddenEvents` and
+`forbidSecretsInherit` also run through async `check({ root, config })` and
+`analyzeProject()` check reports. Event bans use the same exact matching and
+`on` locations as CLI `check`. The secrets ban reports the same `secrets` key.
+Configure both in the YAML selected by `config`; there is no additional runtime
+export or invocation option. See
+[forbidden events](configuration/workflow-topology-policy-forbidden-events.md)
+and
+[secrets inherit](configuration/workflow-topology-policy-secrets-inherit.md).
+
 `check({ root, config })` and `{ type: "check", config }` reports in
 `analyzeProject()` honor the same `forbidden-dependencies` glob roots, root
 exclusions and per-root file exceptions as the CLI. Configure them in the YAML

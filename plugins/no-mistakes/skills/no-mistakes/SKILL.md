@@ -256,6 +256,8 @@ groups, limits, diffs, and deleted-file behavior.
 - [impact-recipes.md](references/impact-recipes.md): selector, API shape,
   package-entrypoint, workflow, test-deletion, and queue recipes.
 - [workflow-activity-types.md](references/workflow-activity-types.md): ban explicit trigger activity types with optional event filters.
+- [workflow-forbidden-events.md](references/workflow-forbidden-events.md): ban named trigger events across scalar, sequence, and mapping `on` forms.
+- [workflow-secrets-inherit.md](references/workflow-secrets-inherit.md): ban `secrets: inherit` on reusable workflow calls.
 - [workflow-secret-inventory.md](references/workflow-secret-inventory.md): configure and interpret opt-in workflow secret-name checks.
 - [monorepo-resolution.md](references/monorepo-resolution.md): workspace
   aliases and resolver ownership.

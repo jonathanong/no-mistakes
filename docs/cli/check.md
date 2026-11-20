@@ -9,6 +9,14 @@ explicit trigger activity types, optionally limited to named events. Findings
 point to `on.<event>.types`; see the
 [configuration reference](../configuration/workflow-topology-policy-activity-types.md).
 
+Configure `workflow-topology-policy.options.forbiddenEvents` to ban named
+trigger events across scalar, sequence, and mapping `on` forms, and
+`forbidSecretsInherit` to ban `secrets: inherit` on reusable-workflow calls.
+Both default off. See
+[forbidden events](../configuration/workflow-topology-policy-forbidden-events.md)
+and
+[secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
+
 Enabled TS/JS checks share one source inventory and one parse per file for their
 combined fact demand. Resolution results, including unresolved imports, are
 memoized within the request. Analysis data is discarded when the request ends.

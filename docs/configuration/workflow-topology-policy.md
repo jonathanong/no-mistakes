@@ -83,7 +83,9 @@ incomplete result never hides a static undeclared `secrets.NAME` reference. A
 name is absent from `repository` and from every environment inventory, including
 when `reportUnused` is false. A name present in either inventory is not an
 undeclared finding; the missing contract only blocks the unused proof.
-`secrets: inherit` can pass those caller secrets.
+`secrets: inherit` can pass those caller secrets. That binding is not a
+secret-inventory finding. Set `forbidSecretsInherit: true` to ban it; see
+[secrets inherit](workflow-topology-policy-secrets-inherit.md).
 
 These inputs make unused-name analysis incomplete:
 

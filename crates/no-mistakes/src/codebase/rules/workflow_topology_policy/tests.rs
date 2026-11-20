@@ -9,6 +9,8 @@ mod activity_types;
 mod concurrency_behavior;
 mod concurrency_collisions;
 mod concurrency_config;
+mod forbidden_events;
+mod secrets_inherit;
 mod support;
 
 fn fixture(name: &str) -> PathBuf {

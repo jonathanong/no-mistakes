@@ -11,7 +11,9 @@ mod evaluate;
 mod evaluate_activity_types;
 mod evaluate_collisions;
 mod evaluate_concurrency;
+mod evaluate_forbidden_events;
 mod evaluate_graph;
+mod evaluate_secrets_inherit;
 mod evaluate_steps;
 mod locations;
 #[cfg(test)]
@@ -28,6 +30,8 @@ pub(crate) struct Options {
     pub(crate) required_jobs: Vec<String>,
     pub(crate) forbidden_jobs: Vec<String>,
     pub(crate) forbidden_activity_types: Vec<ForbiddenActivityTypes>,
+    pub(crate) forbidden_events: Vec<String>,
+    pub(crate) forbid_secrets_inherit: bool,
     pub(crate) required_direct_edges: Vec<[String; 2]>,
     pub(crate) forbidden_direct_edges: Vec<[String; 2]>,
     pub(crate) required_transitive_edges: Vec<[String; 2]>,

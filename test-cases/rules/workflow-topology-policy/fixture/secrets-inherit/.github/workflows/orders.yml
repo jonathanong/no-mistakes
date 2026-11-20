@@ -1,0 +1,11 @@
+name: orders
+on:
+  workflow_call:
+    secrets:
+      ORDER_TOKEN:
+        required: true
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo order

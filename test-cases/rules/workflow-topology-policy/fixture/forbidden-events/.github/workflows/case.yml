@@ -1,0 +1,7 @@
+name: widgets
+on: Pull_Request_Target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo widget
