@@ -38,12 +38,12 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
         let anchor =
             super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
         let mut batch = match required(&opts) {
-            Ok((_configs, packages)) if packages.is_empty() => Vec::new(),
-            Ok((configs, packages)) => scan::evaluate(root, sources, &configs, &packages)?,
-            Err((key, message)) => vec![anchor.emit(
+            Ok(scope) if scope.packages.is_empty() => Vec::new(),
+            Ok(scope) => scan::evaluate(root, sources, &scope.configs, &scope.packages)?,
+            Err(missing) => vec![anchor.emit(
                 RULE_ID,
-                anchor.option_line(key),
-                format!("{RULE_ID}: {message}"),
+                anchor.option_line(missing.key),
+                format!("{RULE_ID}: {}", missing.message),
                 None,
                 None,
             )],
@@ -62,23 +62,34 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     Ok(findings)
 }
 
-fn required(
-    opts: &Options,
-) -> std::result::Result<(Vec<String>, Vec<String>), (&'static str, String)> {
+struct RequiredScope {
+    configs: Vec<String>,
+    packages: Vec<String>,
+}
+
+struct MissingOption {
+    key: &'static str,
+    message: String,
+}
+
+fn required(opts: &Options) -> std::result::Result<RequiredScope, MissingOption> {
     match (&opts.config_files, &opts.packages) {
-        (Some(configs), Some(packages)) => Ok((configs.clone(), packages.clone())),
-        (None, None) => Err((
-            "configFiles",
-            "configFiles and packages are required and have no default; list the Vite config files and the package directories in scope".to_string(),
-        )),
-        (None, Some(_)) => Err((
-            "configFiles",
-            "configFiles is required and has no default; list the Vite config files to read".to_string(),
-        )),
-        (Some(_), None) => Err((
-            "packages",
-            "packages is required and has no default; list the package directories in scope".to_string(),
-        )),
+        (Some(configs), Some(packages)) => Ok(RequiredScope {
+            configs: configs.clone(),
+            packages: packages.clone(),
+        }),
+        (None, None) => Err(MissingOption {
+            key: "configFiles",
+            message: "configFiles and packages are required and have no default; list the Vite config files and the package directories in scope".to_string(),
+        }),
+        (None, Some(_)) => Err(MissingOption {
+            key: "configFiles",
+            message: "configFiles is required and has no default; list the Vite config files to read".to_string(),
+        }),
+        (Some(_), None) => Err(MissingOption {
+            key: "packages",
+            message: "packages is required and has no default; list the package directories in scope".to_string(),
+        }),
     }
 }
 

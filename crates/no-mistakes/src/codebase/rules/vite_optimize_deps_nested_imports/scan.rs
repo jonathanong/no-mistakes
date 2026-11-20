@@ -44,7 +44,7 @@ pub(super) fn evaluate(
             Ok(package) => {
                 packages.insert(package.name.clone(), package);
             }
-            Err(finding) => findings.push(finding),
+            Err(finding) => findings.push(*finding),
         }
     }
     findings.extend(invalid_mappings(&includes, &packages));

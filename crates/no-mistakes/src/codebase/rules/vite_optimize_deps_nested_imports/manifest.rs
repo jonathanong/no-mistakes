@@ -21,25 +21,25 @@ pub(super) fn load(
     root: &Path,
     dir: &Path,
     sources: &SourceStore,
-) -> Result<PackageFacts, RuleFinding> {
+) -> Result<PackageFacts, Box<RuleFinding>> {
     let manifest = dir.join("package.json");
     let source = read_required(root, &manifest, sources)?;
     let value: Value = serde_json::from_str(&source).map_err(|error| {
-        unanalyzable(
+        Box::new(unanalyzable(
             root,
             &manifest,
             format!("package.json is not JSON ({error})"),
-        )
+        ))
     })?;
     let name = value
         .get("name")
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|name| !name.is_empty())
-        .ok_or_else(|| unanalyzable(root, &manifest, "package.json has no name"))?
+        .ok_or_else(|| Box::new(unanalyzable(root, &manifest, "package.json has no name")))?
         .to_string();
-    let declared =
-        dependency_names(&value).map_err(|reason| unanalyzable(root, &manifest, &reason))?;
+    let declared = dependency_names(&value)
+        .map_err(|reason| Box::new(unanalyzable(root, &manifest, reason)))?;
     let Some(entry) = published_entry(&value) else {
         return Ok(PackageFacts {
             name,
@@ -80,7 +80,7 @@ pub(super) fn load(
             unanalyzable(
                 root,
                 &entry_path,
-                &format!("cannot parse published entry ({error})"),
+                format!("cannot parse published entry ({error})"),
             ),
         )),
     }
@@ -96,9 +96,18 @@ fn unknown_package(name: String, declared: BTreeSet<String>, finding: RuleFindin
     }
 }
 
-fn read_required(root: &Path, path: &Path, sources: &SourceStore) -> Result<Arc<str>, RuleFinding> {
+fn read_required(
+    root: &Path,
+    path: &Path,
+    sources: &SourceStore,
+) -> Result<Arc<str>, Box<RuleFinding>> {
     sources.read_source_path(path).map_err(|error| {
-        super::super::source_access::read_failure(root, path, super::RULE_ID, &error)
+        Box::new(super::super::source_access::read_failure(
+            root,
+            path,
+            super::RULE_ID,
+            &error,
+        ))
     })
 }
 

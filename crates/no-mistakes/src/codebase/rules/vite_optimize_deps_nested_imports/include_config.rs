@@ -21,7 +21,7 @@ pub(super) enum ParsedConfig {
 }
 
 pub(super) fn parse_vite_config(path: &Path, source: &str) -> ParsedConfig {
-    match crate::ast::with_program(path, source, |program, source| extract(program, source)) {
+    match crate::ast::with_program(path, source, extract) {
         Ok(parsed) => parsed,
         Err(error) => ParsedConfig::Unanalyzable {
             line: 1,
