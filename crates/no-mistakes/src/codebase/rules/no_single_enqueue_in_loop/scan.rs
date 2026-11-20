@@ -1,3 +1,4 @@
+use super::modules::ResolvedModules;
 use super::options::Targets;
 use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite, TsFactLookup};
@@ -17,6 +18,7 @@ pub(super) fn scan(
     targets: &Targets,
     graph: &DepGraph,
     facts: &crate::codebase::check_facts::CheckFactMap,
+    resolved: &ResolvedModules,
 ) -> Result<Vec<RuleFinding>> {
     let selected = selected_files(root, config, application, facts)?;
     let positions = per_item_positions(facts);
@@ -37,10 +39,10 @@ pub(super) fn scan(
         if !reported_construct(construct) {
             continue;
         }
-        if matches_any(graph, &targets.bulk, site) {
+        if matches_any(graph, &targets.bulk, site, resolved) {
             continue;
         }
-        let Some((module, export)) = matching_target(graph, &targets.single, site) else {
+        let Some((module, export)) = matching_target(graph, &targets.single, site, resolved) else {
             continue;
         };
         findings.push(finding(
@@ -103,22 +105,40 @@ fn reported_construct(construct: &str) -> bool {
     )
 }
 
-fn matches_any(graph: &DepGraph, targets: &[(String, String)], site: &ResolvedCallSite) -> bool {
+fn matches_any(
+    graph: &DepGraph,
+    targets: &[(String, String)],
+    site: &ResolvedCallSite,
+    resolved: &ResolvedModules,
+) -> bool {
     targets
         .iter()
-        .any(|(module, export)| graph.matches_module_export(module, export, site))
+        .any(|(module, export)| target_matches(graph, module, export, site, resolved))
 }
 
 fn matching_target<'a>(
     graph: &DepGraph,
     targets: &'a [(String, String)],
     site: &ResolvedCallSite,
+    resolved: &ResolvedModules,
 ) -> Option<(&'a str, &'a str)> {
     targets.iter().find_map(|(module, export)| {
-        graph
-            .matches_module_export(module, export, site)
+        target_matches(graph, module, export, site, resolved)
             .then_some((module.as_str(), export.as_str()))
     })
+}
+
+fn target_matches(
+    graph: &DepGraph,
+    module: &str,
+    export: &str,
+    site: &ResolvedCallSite,
+    resolved: &ResolvedModules,
+) -> bool {
+    graph.matches_module_export(module, export, site)
+        || resolved
+            .files(module)
+            .is_some_and(|files| super::modules::matches_resolved(files, export, site))
 }
 
 fn finding(

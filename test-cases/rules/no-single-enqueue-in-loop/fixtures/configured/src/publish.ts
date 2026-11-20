@@ -81,6 +81,26 @@ export async function publish(
     // no-mistakes-disable-next-line no-single-enqueue-in-loop -- one reviewed widget send
     enqueueItem(item); // silent:suppressed
   }
+  for await (const item of items) {
+    enqueueItem(item); // report:for-of
+  }
+  items.forEach(enqueueItem); // report:forEach callback
+  await Promise.all(
+    items.map(async (item) => {
+      enqueueItem(item); // report:map callback
+    }),
+  );
+  items.reduce((count, item) => {
+    enqueueItem(item); // silent:reduce
+    return count + 1;
+  }, 0);
+  items.some((item) => {
+    enqueueItem(item); // silent:some
+    return false;
+  });
+  for (const item of items.map(enqueueItem)) { // report:map callback
+    void item;
+  }
 }
 
 function queueOne(item: string): void {

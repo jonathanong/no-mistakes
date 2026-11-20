@@ -1,6 +1,9 @@
 //! Direct single-enqueue calls inside open per-item loops and array callbacks.
+mod modules;
 mod options;
 mod scan;
+
+pub(crate) use modules::module_catalog;
 
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::RuleFinding;
@@ -28,11 +31,12 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     })
 }
 
-pub(crate) fn check(
+pub(crate) fn check_with_catalog(
     root: &Path,
     config: &NoMistakesConfig,
     graph: Option<&DepGraph>,
     facts: &crate::codebase::check_facts::CheckFactMap,
+    catalog: Option<modules::ModuleCatalog<'_>>,
 ) -> Result<Vec<RuleFinding>> {
     let mut prepared = Vec::new();
     for application in config.rule_applications(RULE_ID) {
@@ -50,6 +54,14 @@ pub(crate) fn check(
         bail!("{RULE_ID} requires the canonical call graph");
     };
     let root = crate::codebase::ts_resolver::normalize_path(root);
+    let specifiers = prepared.iter().flat_map(|(_, targets)| {
+        targets
+            .single
+            .iter()
+            .chain(&targets.bulk)
+            .map(|(module, _)| module.clone())
+    });
+    let resolved = modules::resolve_modules(&root, specifiers, facts, catalog)?;
     let mut findings = Vec::new();
     for (application, targets) in &prepared {
         findings.extend(scan::scan(
@@ -59,6 +71,7 @@ pub(crate) fn check(
             targets,
             graph,
             facts,
+            &resolved,
         )?);
     }
     findings.sort();

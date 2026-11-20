@@ -4,6 +4,15 @@ use std::path::{Path, PathBuf};
 use super::options::{self, ApiTarget, Options};
 use super::RULE_ID;
 
+fn check(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    graph: Option<&crate::codebase::dependencies::graph::DepGraph>,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+    super::check_with_catalog(root, config, graph, facts, None)
+}
+
 fn parse(yaml: &str) -> crate::config::v2::NoMistakesConfig {
     serde_yaml::from_str(yaml).unwrap()
 }
@@ -23,7 +32,9 @@ fn saved(kind: &str) -> PathBuf {
 fn marker(line: &str, label: &str) -> Option<String> {
     let token = format!("// {label}:");
     let index = line.find(&token)?;
-    Some(line[index + token.len()..].trim().to_string())
+    let rest = line[index + token.len()..].trim();
+    let rest = rest.split(" target:").next().unwrap_or(rest).trim();
+    (!rest.is_empty()).then(|| rest.to_string())
 }
 
 type MarkerKey = (String, usize);
@@ -33,10 +44,10 @@ type MarkerSilence = BTreeSet<MarkerKey>;
 fn markers(root: &Path) -> (MarkerReports, MarkerSilence) {
     let mut reports = BTreeMap::new();
     let mut silent = BTreeSet::new();
-    for name in ["src/publish.ts", "src/ignored.ts"] {
-        let text = std::fs::read_to_string(root.join(name)).unwrap();
+    for (name, path) in marker_files(root) {
+        let text = std::fs::read_to_string(path).unwrap();
         for (index, line) in text.lines().enumerate() {
-            let key = (name.to_string(), index + 1);
+            let key = (name.clone(), index + 1);
             if let Some(construct) = marker(line, "report") {
                 reports.insert(key.clone(), construct);
             }
@@ -48,13 +59,41 @@ fn markers(root: &Path) -> (MarkerReports, MarkerSilence) {
     (reports, silent)
 }
 
+fn marker_files(root: &Path) -> Vec<(String, PathBuf)> {
+    // The copied fixture is a temp directory, so this walk cannot use git ls-files.
+    let mut files = ignore::WalkBuilder::new(root.join("src"))
+        .hidden(false)
+        .ignore(false)
+        .git_ignore(false)
+        .git_global(false)
+        .git_exclude(false)
+        .require_git(false)
+        .parents(false)
+        .build()
+        .map(Result::unwrap)
+        .filter_map(|entry| {
+            let path = entry.into_path();
+            (path.extension().and_then(|ext| ext.to_str()) == Some("ts")).then(|| {
+                let name = path
+                    .strip_prefix(root)
+                    .unwrap()
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                (name, path)
+            })
+        })
+        .collect::<Vec<_>>();
+    files.sort();
+    files
+}
+
 #[test]
 fn empty_targets_do_not_demand_analysis_or_findings() {
     let config = configured("      single: []\n      bulk: []\n");
     assert!(!super::demands_analysis(&config));
     assert!(super::graph_plan(&config).is_none());
     assert!(!crate::codebase::rules::canonical_graph_requires_full_file_universe(&config));
-    let findings = super::check(
+    let findings = check(
         Path::new("/repo"),
         &config,
         None,
@@ -80,7 +119,7 @@ fn configured_targets_demand_calls_and_the_full_file_universe() {
 fn invalid_options_demand_analysis_and_fail_before_the_graph() {
     let config = configured("      single: 1\n");
     assert!(super::demands_analysis(&config));
-    let error = super::check(
+    let error = check(
         Path::new("/repo"),
         &config,
         None,
@@ -180,7 +219,7 @@ fn trimmed_targets_keep_the_specifier_and_export() {
 #[test]
 fn a_missing_graph_fails_only_after_targets_validate() {
     let config = configured("      single:\n        - {module: ./widgets, export: enqueueItem}\n");
-    let error = super::check(
+    let error = check(
         Path::new("/repo"),
         &config,
         None,
@@ -204,7 +243,7 @@ fn an_invalid_include_glob_is_reported() {
         HashMap::new(),
         HashMap::new(),
     );
-    let error = super::check(
+    let error = check(
         &root,
         &config,
         Some(&graph),
@@ -228,7 +267,7 @@ fn files_without_typescript_facts_are_skipped() {
         HashMap::new(),
         HashMap::new(),
     );
-    let findings = super::check(&root, &config, Some(&graph), &facts).unwrap();
+    let findings = check(&root, &config, Some(&graph), &facts).unwrap();
     assert!(findings.is_empty());
 }
 
@@ -243,7 +282,7 @@ fn an_empty_application_is_skipped_beside_a_configured_one() {
         HashMap::new(),
         HashMap::new(),
     );
-    let findings = super::check(
+    let findings = check(
         &root,
         &config,
         Some(&graph),
@@ -253,9 +292,8 @@ fn an_empty_application_is_skipped_beside_a_configured_one() {
     assert!(findings.is_empty());
 }
 
-#[test]
-fn saved_fixture_reports_only_the_marked_open_single_enqueues() {
-    let source = saved("configured");
+fn assert_marked_fixture(kind: &str) {
+    let source = saved(kind);
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path();
     let findings =
@@ -277,13 +315,21 @@ fn saved_fixture_reports_only_the_marked_open_single_enqueues() {
             "{finding:#?}"
         );
         assert_eq!(finding.rule, RULE_ID);
-        assert_eq!(finding.target.as_deref(), Some("./widgets#enqueueItem"));
         let source_line = std::fs::read_to_string(root.join(&finding.file))
             .unwrap()
             .lines()
             .nth(finding.line - 1)
             .unwrap()
             .to_string();
+        let expected_target = source_line
+            .split_once("target:")
+            .and_then(|(_, rest)| rest.split_whitespace().next())
+            .unwrap_or("./widgets#enqueueItem");
+        assert_eq!(
+            finding.target.as_deref(),
+            Some(expected_target),
+            "{finding:#?}"
+        );
         let import = if source_line.contains("queueWidget") {
             "queueWidget"
         } else if source_line.contains("widgets.enqueueItem") {
@@ -293,6 +339,16 @@ fn saved_fixture_reports_only_the_marked_open_single_enqueues() {
         };
         assert_eq!(finding.import.as_deref(), Some(import), "{finding:#?}");
     }
+}
+
+#[test]
+fn saved_fixture_reports_only_the_marked_open_single_enqueues() {
+    assert_marked_fixture("configured");
+}
+
+#[test]
+fn resolved_spellings_match_without_the_configured_literal() {
+    assert_marked_fixture("spellings");
 }
 
 #[test]
@@ -324,4 +380,105 @@ fn empty_target_lists_stay_silent_on_a_single_enqueue_loop() {
         crate::codebase::rules::run_check(root, Some(&root.join(".no-mistakes.yml")), None)
             .unwrap();
     assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn resolution_without_sources_does_not_invent_a_module_file() {
+    let config = configured("      single:\n        - {module: ./widgets, export: enqueueItem}\n");
+    let root = PathBuf::from("/repo");
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        root.clone(),
+        HashMap::new(),
+        HashMap::new(),
+    );
+    let tsconfig = crate::codebase::ts_resolver::TsConfig::default();
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig, None);
+    let findings = super::check_with_catalog(
+        &root,
+        &config,
+        Some(&graph),
+        &crate::codebase::check_facts::CheckFactMap::default(),
+        Some(super::modules::ModuleCatalog {
+            catalog: &catalog,
+            sources: None,
+            session: None,
+        }),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn a_resolved_file_matches_only_that_export() {
+    let files = BTreeSet::from([PathBuf::from("/repo/src/widgets.ts")]);
+    let unknown = call_site(crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown);
+    assert!(!super::modules::matches_resolved(
+        &files,
+        "enqueueItem",
+        &unknown
+    ));
+    assert!(!super::modules::matches_resolved(
+        &BTreeSet::new(),
+        "enqueueItem",
+        &module_call("/repo/src/widgets.ts", "../widgets", "enqueueItem"),
+    ));
+    assert!(!super::modules::matches_resolved(
+        &files,
+        "enqueueItem",
+        &module_call("/repo/src/orders.ts", "../orders", "enqueueItem"),
+    ));
+    assert!(!super::modules::matches_resolved(
+        &files,
+        "enqueueItem",
+        &module_call("/repo/src/widgets.ts", "../widgets", "enqueueItems"),
+    ));
+    assert!(!super::modules::matches_resolved(
+        &files,
+        "enqueueItem",
+        &call_site(
+            crate::codebase::dependencies::graph::ResolvedCallTarget::Global {
+                name: "enqueueItem".into(),
+            },
+        ),
+    ));
+    assert!(super::modules::matches_resolved(
+        &files,
+        "enqueueItem",
+        &module_call("/repo/src/widgets.ts", "../widgets", "enqueueItem"),
+    ));
+}
+
+fn call_site(
+    target: crate::codebase::dependencies::graph::ResolvedCallTarget,
+) -> crate::codebase::dependencies::graph::ResolvedCallSite {
+    crate::codebase::dependencies::graph::ResolvedCallSite {
+        file: PathBuf::from("src/publish.ts"),
+        caller: None,
+        caller_id: None,
+        line: 1,
+        offset: 0,
+        invocation: crate::codebase::dependencies::extract::InvocationKind::Call,
+        source_callee: "enqueueItem".into(),
+        target,
+        alternatives: Vec::new(),
+        returned_from: Vec::new(),
+        typed_from: Vec::new(),
+        returned_member_from: Vec::new(),
+        target_node: None,
+    }
+}
+
+fn module_call(
+    file: &str,
+    specifier: &str,
+    export: &str,
+) -> crate::codebase::dependencies::graph::ResolvedCallSite {
+    call_site(
+        crate::codebase::dependencies::graph::ResolvedCallTarget::ModuleExport {
+            specifier: specifier.into(),
+            export_path: export.into(),
+            repository_target: Some((PathBuf::from(file), export.into())),
+            callable_id: None,
+        },
+    )
 }

@@ -1,0 +1,7 @@
+{
+  "name": "widget-queue",
+  "private": true,
+  "exports": {
+    ".": "./index.ts"
+  }
+}

@@ -10,6 +10,7 @@ fn fixture(name: &str) -> PathBuf {
 fn no_single_enqueue_in_loop_check_json_snapshot() {
     let configured = fixture("configured");
     let empty = fixture("empty-targets");
+    let spellings = fixture("spellings");
     let reports = crate::check_json_snapshot::assert_saved_fixture_report(
         "no_single_enqueue_in_loop",
         &[
@@ -19,11 +20,17 @@ fn no_single_enqueue_in_loop_check_json_snapshot() {
                 configured.join(".no-mistakes.yml"),
             ),
             ("empty", empty.clone(), empty.join(".no-mistakes.yml")),
+            (
+                "spellings",
+                spellings.clone(),
+                spellings.join(".no-mistakes.yml"),
+            ),
         ],
         &[],
         &[],
     );
     assert_eq!(reports["configured"]["exitCode"], 1);
+    assert_eq!(reports["spellings"]["exitCode"], 1);
     assert_eq!(reports["empty"]["exitCode"], 0);
     assert!(reports["empty"]["report"]["rules"]
         .as_array()
