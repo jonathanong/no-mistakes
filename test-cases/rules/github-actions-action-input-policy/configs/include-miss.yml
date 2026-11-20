@@ -1,0 +1,10 @@
+rules:
+  - rule: github-actions-action-input-policy
+    scope: repository
+    options:
+      include: ["nope.yml"]
+      actions:
+        - uses: example/publish-widget
+          require:
+            keep-days: 1
+            replace: true

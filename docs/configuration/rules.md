@@ -394,6 +394,15 @@ service-port patterns documented on that page. Omitting the option keeps that
 default. An explicit list, including `[]`, replaces it. The rule stays off
 until a configuration lists it.
 
+For [`github-actions-action-input-policy`](../rules/github-actions-action-input-policy.md),
+`options.actions` defaults to `[]`, which reports nothing until a repository
+lists action families. Each `uses` value is the family; a ref after `@` is
+ignored on the policy entry and on the workflow step, so a tag and a commit SHA
+are the same action. `require` maps an input name to a scalar. `ban` lists
+input names that must be absent. A ban-only family does not require those
+inputs. `include` defaults to workflow `.yml` and `.yaml` files. See the
+[action input policy](../rules/github-actions-action-input-policy.md#options-and-defaults).
+
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
 `options.assumeWriteWhenUnspecified` defaults to `false`. Leave it off unless
 the repository or organization default `GITHUB_TOKEN` can write. When it is
