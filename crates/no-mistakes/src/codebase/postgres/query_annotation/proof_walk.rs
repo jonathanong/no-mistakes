@@ -7,7 +7,10 @@ pub(super) fn record() {
     WALKS.with(|walks| walks.set(walks.get() + 1));
 }
 
-#[cfg(test)]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "tests read the proof-walk counter")
+)]
 pub(super) fn count() -> u32 {
     WALKS.with(std::cell::Cell::get)
 }
