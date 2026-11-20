@@ -88,14 +88,16 @@ fn skip_flags(command: &[Word], mut index: usize, assignments: bool) -> usize {
 
 fn flag_takes_value(launcher: &str, token: &str) -> bool {
     let flag = token.split('=').next().unwrap_or(token);
-    let names: &[&str] = match launcher {
-        "pnpm" => &["--filter", "-F", "--dir", "-C", "--workspace"],
-        "npm" | "npx" => &["--prefix", "--userconfig", "--cache", "--package", "-p"],
-        "yarn" => &["--cwd"],
-        "bun" | "bunx" => &["--filter", "--cwd", "-F"],
-        _ => &[],
-    };
-    names.contains(&flag)
+    matches!(
+        (launcher, flag),
+        ("pnpm", "--filter" | "-F" | "--dir" | "-C" | "--workspace")
+            | (
+                "npm" | "npx",
+                "--prefix" | "--userconfig" | "--cache" | "--package" | "-p"
+            )
+            | ("yarn", "--cwd")
+            | ("bun" | "bunx", "--filter" | "--cwd" | "-F")
+    )
 }
 
 fn basename(text: &str) -> &str {

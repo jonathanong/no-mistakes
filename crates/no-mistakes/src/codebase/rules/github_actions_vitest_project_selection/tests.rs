@@ -84,6 +84,75 @@ fn name_filters_follow_the_project_policy() {
 }
 
 #[test]
+fn wrappers_quotes_and_bare_files_follow_the_command() {
+    let allow = widgets();
+    let reject = [("items", NameFilters::Reject)];
+    let file = ["src/widgets.test.ts"];
+    assert_eq!(
+        arguments(
+            "( { vitest run --project widgets src/widgets.test.ts; } )",
+            &allow
+        ),
+        file
+    );
+    assert_eq!(
+        arguments(
+            "pnpm -- vitest run --project widgets src/widgets.test.ts",
+            &allow
+        ),
+        file
+    );
+    assert!(arguments("pnpm exec node", &allow).is_empty());
+    assert!(arguments("pnpm --filter widgets", &allow).is_empty());
+    assert_eq!(
+        arguments(
+            "sudo -n vitest run --project widgets src/widgets.test.ts",
+            &allow
+        ),
+        file
+    );
+    for script in [
+        "npm --prefix widgets exec vitest run --project widgets src/widgets.test.ts",
+        "npx -p vitest vitest run --project widgets src/widgets.test.ts",
+        "yarn --cwd widgets exec vitest run --project widgets src/widgets.test.ts",
+        "bun --filter widgets x vitest run --project widgets src/widgets.test.ts",
+        "bunx --cwd widgets vitest run --project widgets src/widgets.test.ts",
+    ] {
+        assert_eq!(arguments(script, &allow), file, "{script}");
+    }
+    assert_eq!(
+        arguments(
+            ";; vitest run --project widgets \\\nsrc/wid\\gets.test.ts",
+            &allow
+        ),
+        file
+    );
+    assert!(arguments("vitest \\", &allow).is_empty());
+    assert_eq!(
+        arguments(
+            "vitest run --project widgets 'src/widgets.test.ts\n'",
+            &allow
+        ),
+        ["src/widgets.test.ts\n"]
+    );
+    assert_eq!(
+        arguments(
+            "vitest run --project widgets \"src/widgets.test.ts\n\"",
+            &allow
+        ),
+        ["src/widgets.test.ts\n"]
+    );
+    assert!(arguments("vitest run --project widgets \"src/$WIDGETS\"", &allow).is_empty());
+    assert!(arguments("vitest run --project items -t=", &reject).is_empty());
+    assert!(arguments("vitest run --project items -t", &reject).is_empty());
+    assert!(arguments("vitest run --project", &allow).is_empty());
+    assert_eq!(
+        arguments("vitest run --project widgets widgets.test.ts", &allow),
+        ["widgets.test.ts"]
+    );
+}
+
+#[test]
 fn options_require_unique_projects_and_known_name_filters() {
     let empty = Options::default();
     assert!(compile(&empty).unwrap().projects.is_empty());
