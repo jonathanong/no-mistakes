@@ -106,6 +106,9 @@ describe(rule, () => {
         unknownValues: "finding",
         registrationPackages: ["./approved-test"],
       }),
+      eslintCase("ban overrides", "ban-overrides", tested, { banOverrides: true }),
+      eslintCase("ban overrides off", "ban-overrides", tested, {}),
+      eslintCase("ban overrides explicit off", "ban-overrides", tested, { banOverrides: false }),
       eslintCase("null-computed-key", "null-computed-key", "null-computed-key.ts"),
       eslintCase(
         "null-computed-key unknown values",

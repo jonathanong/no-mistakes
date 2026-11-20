@@ -5,27 +5,12 @@ const { findContainingFunction, isUnconditionalBeforeReturn } = require("./async
 const { createEvaluator } = require("./vitest-timeout-values");
 const { createBindings } = require("./playwright-test-timeout-bindings");
 const { createCarriers } = require("./playwright-timeout-carriers");
+const { readTimeoutOptions } = require("./playwright-timeout-options");
+const { createOverrideBan } = require("./playwright-timeout-overrides");
 
 module.exports = rule(require("./playwright-timeout-meta"), (context) => {
-  const option = options(context),
-    max = option.max ?? 30000,
-    fixtureMax = option.fixtureMax ?? max;
-  for (const [key, value] of [
-    ["max", max],
-    ["fixtureMax", fixtureMax],
-  ])
-    if (!Number.isFinite(value) || value <= 0)
-      throw new Error(`playwright-test-timeout-cap ${key} must be positive and finite`);
-  for (const [source, roles] of Object.entries(option.exportRoles ?? {})) {
-    if (source === "@playwright/test" && Object.keys(roles).length)
-      throw new Error(
-        "playwright-test-timeout-cap exportRoles cannot override builtin SDK exports",
-      );
-    if (["test", "defineConfig", "mergeTests"].some((key) => Object.hasOwn(roles, key)))
-      throw new Error(
-        "playwright-test-timeout-cap exportRoles cannot override recognized registrar exports",
-      );
-  }
+  const option = options(context);
+  const { max, fixtureMax } = readTimeoutOptions(option);
   const suppressed = ruleSuppression(context, "playwright-test-timeout-cap");
   const calls = [],
     exports = [],
@@ -54,6 +39,7 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
     max,
     fixtureMax,
   );
+  const ban = createOverrideBan(context, option, bindings, evaluate, slowCondition, report);
   function branchFree(node, fn) {
     return fn?.body.type === "BlockStatement" && isUnconditionalBeforeReturn(node, fn.body);
   }
@@ -92,6 +78,7 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
       }
       for (const node of calls.sort((a, b) => a.range[0] - b.range[0])) {
         const api = bindings.resolve(node.callee);
+        ban.observe(node, api);
         if (bindings.registration(api) && option.unknownValues === "finding")
           report(node, "effectiveSlot", "inherited effective deadline");
         if (bindings.registration(api))
@@ -187,6 +174,7 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
         }
         states.set(fn, state);
       }
+      ban.finish();
     },
   };
 });

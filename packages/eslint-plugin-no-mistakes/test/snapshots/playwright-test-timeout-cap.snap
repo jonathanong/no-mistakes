@@ -70,6 +70,210 @@
       "file": "fixture.test.ts",
       "findings": [
         {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 5,
+          "file": "fixture.test.ts",
+          "line": 5,
+          "message": "Playwright runtime timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright runtime timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 23,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 33,
+          "endLine": 7,
+          "file": "fixture.test.ts",
+          "line": 7,
+          "message": "Playwright setTimeout reference overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 23,
+          "endLine": 8,
+          "file": "fixture.test.ts",
+          "line": 8,
+          "message": "Playwright slow reference overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 40,
+          "endLine": 9,
+          "file": "fixture.test.ts",
+          "line": 9,
+          "message": "Playwright setTimeout reference overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 25,
+          "endLine": 10,
+          "file": "fixture.test.ts",
+          "line": 10,
+          "message": "Playwright setTimeout reference overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 27,
+          "endLine": 11,
+          "file": "fixture.test.ts",
+          "line": 11,
+          "message": "Playwright setTimeout reference overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 12,
+          "endLine": 13,
+          "file": "fixture.test.ts",
+          "line": 13,
+          "message": "Playwright slow effective timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 15,
+          "file": "fixture.test.ts",
+          "line": 15,
+          "message": "Playwright slow effective timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 41,
+          "endLine": 16,
+          "file": "fixture.test.ts",
+          "line": 16,
+          "message": "Playwright suite timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 38,
+          "endLine": 25,
+          "file": "fixture.test.ts",
+          "line": 25,
+          "message": "Playwright test timeout option overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 33,
+          "endLine": 27,
+          "file": "fixture.test.ts",
+          "line": 27,
+          "message": "Playwright test timeout option overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 29,
+          "file": "fixture.test.ts",
+          "line": 29,
+          "message": "Playwright runtime timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "ban overrides",
+      "options": {
+        "banOverrides": true
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 23,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "ban overrides explicit off",
+      "options": {
+        "banOverrides": false
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 23,
+          "endLine": 6,
+          "file": "fixture.test.ts",
+          "line": 6,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "ban overrides off",
+      "options": {},
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
           "column": 17,
           "endColumn": 24,
           "endLine": 3,

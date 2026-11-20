@@ -19,6 +19,7 @@ module.exports = {
           },
         },
         configFiles: { type: "array", items: { type: "string" }, uniqueItems: true },
+        banOverrides: { type: "boolean" },
       },
       additionalProperties: false,
     },
@@ -31,5 +32,7 @@ module.exports = {
       "Playwright {{name}} exceeds {{max}} ms. Fix the stalled work rather than increasing the deadline.",
     unknown:
       "Playwright {{name}} cannot be resolved against {{max}} ms; keep admitted timeout carriers explicit.",
+    override:
+      "Playwright {{name}} overrides the project deadline. Remove the override and keep the deadline in project configuration.",
   },
 };
