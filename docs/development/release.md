@@ -186,7 +186,7 @@ reference inventory and preserves it only on success. Integration execution
 appends its references and audits the complete inventory; either test failure or
 an orphan snapshot still fails validation.
 
-In [release run 44170204235](https://github.com/jonathanong/no-mistakes/actions/runs/44170204235),
+In release run `44170204235`,
 workflow source `4122bc4fa5b81feb2ad4c935e3883c06e3987de3` validated prepared
 version `0.109.76` (`780878045e4e369309b0817108d9d25c65379dcc`) on
 `ubuntu-latest`, Rust 1.100.0, with those worker caps. The warmed Cargo invocation

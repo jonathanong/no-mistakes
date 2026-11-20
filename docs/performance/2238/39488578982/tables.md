@@ -1,4 +1,4 @@
-Matched ARM run: https://github.com/jonathanong/no-mistakes/actions/runs/39488578982
+Matched ARM run: `39488578982`
 
 Main `4d4deb9423111f6bd97f2501bdf508ef17536dc0`; candidate `bcbbf58d69f8157aab60e5f1e61decf68ad278b5`.
 

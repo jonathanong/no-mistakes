@@ -272,9 +272,9 @@ substituting a wider dependency feature graph without measuring compatibility.
 
 ### Controlled Rust-cache-cold measurement
 
-Run [`43422140537`](https://github.com/jonathanong/no-mistakes/actions/runs/43422140537)
-at `fae9ed847` disabled every Rust target and registry restore. Both native
-macOS Cargo reports recorded zero fresh units, so dependencies were rebuilt too.
+Run `43422140537` at `fae9ed847` disabled every Rust target and registry
+restore. Both native macOS Cargo reports recorded zero fresh units, so
+dependencies were rebuilt too.
 The test precompile step completed in 8m30s and the CLI/N-API build in 11m18s,
 within their unchanged 15-minute bounds. The root library dominated each build:
 334.4 seconds in the test producer and 537 seconds in the runtime producer.
@@ -292,13 +292,12 @@ The merged cold report covered 338,683/342,109 lines (99.00%),
 39,060/39,331 functions (99.31%), and 344,756/351,672 regions (98.03%). All 98%
 floors, CRAP, and complexity gates passed.
 
-The final paired measurements at `060a9edb9` both passed every gate. Rust-cache-cold
-run [`43435782830`](https://github.com/jonathanong/no-mistakes/actions/runs/43435782830)
-took 24m10s including macOS scheduling delays. Its test precompile and runtime
-build steps took 10m46s and 9m10s. The macOS Rust producer finished at +14m37s;
-its second shard waited until +20m11s and finished at +23m52s. Warm artifact-reuse
-run [`43439705900`](https://github.com/jonathanong/no-mistakes/actions/runs/43439705900)
-took 6m50s, rerunning every test with fresh coverage profiles. This demonstrates
+The final paired measurements at `060a9edb9` both passed every gate.
+Rust-cache-cold run `43435782830` took 24m10s including macOS scheduling delays.
+Its test precompile and runtime build steps took 10m46s and 9m10s. The macOS
+Rust producer finished at +14m37s; its second shard waited until +20m11s and
+finished at +23m52s. Warm artifact-reuse run `43439705900` took 6m50s,
+rerunning every test with fresh coverage profiles. This demonstrates
 successful cold completion and a warm path under ten minutes; the cold target
 still needs compilation and scheduling reductions. The final cache-generation
 and retention changes affect cache publication/restoration, not these compiler
@@ -316,9 +315,8 @@ passed through. The test stays in its partition, shares the same coverage
 profile environment, and retains its exit status and signals. This avoids both
 skipping the case and adding a Node process before every Rust test.
 
-The baseline is completed workflow run
-[`43349743109`](https://github.com/jonathanong/no-mistakes/actions/runs/43349743109),
-collected before this parallel layout. Its reported end-to-end PR wall time was
+The baseline is completed workflow run `43349743109`, collected before this
+parallel layout. Its reported end-to-end PR wall time was
 28m15s. The completed job intervals in that run show the longest jobs and the
 work that dominated them:
 
@@ -1175,8 +1173,8 @@ API step budget does not change any test deadline or the timing gate.
 
 ## Linux real-addon aggregate budget measurement
 
-[Main run 44093497081](https://github.com/jonathanong/no-mistakes/actions/runs/44093497081/job/134076443238)
-on source `44ce3c4aec` recorded 895 passing tests in 24 files. Vitest reported
+Main run `44093497081` (job 134076443238) on source `44ce3c4aec` recorded 895
+passing tests in 24 files. Vitest reported
 240.91 seconds, with 237.452 seconds summed across test bodies; no test reached
 the enforced five-second threshold. The action step ran from 13:34:56 to
 13:38:58 UTC and failed its four-minute bound. Its 242-second wrapper interval
@@ -1253,9 +1251,9 @@ outside the measured commands. Coverage remains measured in CI.
 
 ### Verified Linux runtime transfer
 
-[PR run 44112883638](https://github.com/jonathanong/no-mistakes/actions/runs/44112883638)
-completed both artifact transfers and SHA checks in two Linux shards, then kept
-the download action process alive until the three-minute deadline. Transfer
+PR run `44112883638` completed both artifact transfers and SHA checks in two
+Linux shards, then kept the download action process alive until the three-minute
+deadline. Transfer
 completion took 7.29 and 9.38 seconds; idle time after the final success message
 was 172.096 and 169.892 seconds. Successful siblings returned 18–32 ms after
 that message. The logs establish a post-success process-lifecycle stall; they
