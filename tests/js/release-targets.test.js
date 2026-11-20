@@ -93,6 +93,11 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
       shared,
       /bash "\$RUNNER_TEMP\/release-scripts\/\.github\/scripts\/cargo-release-build\.sh"/,
     );
+    assert.match(
+      shared,
+      /name: Isolate release scripts\n {8}timeout-minutes: 1\n {8}shell: bash\n {8}run: mv -- release-scripts "\$RUNNER_TEMP\/release-scripts"/,
+      `${job} must move release scripts with bash; Windows defaults to pwsh, where $RUNNER_TEMP is empty`,
+    );
     assert.match(shared, /Swatinem\/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2/);
     assert.match(shared, /^ {4}needs:\n {6}- prepare\n {4}runs-on:/m);
   }
