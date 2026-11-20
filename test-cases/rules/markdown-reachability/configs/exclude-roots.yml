@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    include:
+      - "**/*.md"
+    options:
+      rootFilenames: [AGENTS.md]
+      indexFilenames: [README.md]
+      maxDepth: 2
+      excludeRoots: ["docs/**"]

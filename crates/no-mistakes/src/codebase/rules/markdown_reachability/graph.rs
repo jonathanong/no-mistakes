@@ -71,14 +71,13 @@ pub(super) fn normalize_inside(root: &Path, path: &Path) -> Option<PathBuf> {
 }
 
 pub(super) fn index_reachable(
-    roots: &BTreeSet<String>,
+    seeds: &[PathBuf],
     indexes: &BTreeSet<String>,
     graph: &BTreeMap<PathBuf, Vec<PathBuf>>,
     max_depth: usize,
 ) -> BTreeSet<PathBuf> {
-    let mut queue = graph
-        .keys()
-        .filter(|path| is_named(path, roots))
+    let mut queue = seeds
+        .iter()
         .cloned()
         .map(|path| (path, 0usize))
         .collect::<VecDeque<_>>();
@@ -101,12 +100,11 @@ pub(super) fn index_reachable(
 }
 
 pub(super) fn shortest_depths(
-    roots: &BTreeSet<String>,
+    seeds: &[PathBuf],
     graph: &BTreeMap<PathBuf, Vec<PathBuf>>,
 ) -> BTreeMap<PathBuf, usize> {
-    let mut queue = graph
-        .keys()
-        .filter(|path| is_named(path, roots))
+    let mut queue = seeds
+        .iter()
         .cloned()
         .map(|path| (path, 0usize))
         .collect::<VecDeque<_>>();

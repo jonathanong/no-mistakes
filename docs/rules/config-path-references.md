@@ -97,7 +97,8 @@ rule-specific option fields:
 | `file-extension-policy` | `allowlist`, `scopes[].path` |
 | `forbidden-dependencies` | `roots`, `excludeRoots`, `forbiddenFiles`, `exceptions[].roots`, `exceptions[].allowedFiles` |
 | `forbidden-workspace-closure` | `lockfile` |
-| `markdown-reachability`, `markdown-structure-budget` | `baselineFile` |
+| `markdown-reachability` | `baselineFile`, `excludeRoots` |
+| `markdown-structure-budget` | `baselineFile` |
 | `nextjs-redirect-destinations` | `configPath`, `appRoot` |
 | `package-json-registry-only` | `lockfile`, `scopes` |
 | `package-json-workspace-coverage` | `packageRoots`, `allowlist` |

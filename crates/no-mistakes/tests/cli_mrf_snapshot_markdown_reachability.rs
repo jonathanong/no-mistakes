@@ -128,6 +128,36 @@ fn markdown_reachability_json_matches_snapshot() {
             saved_root("depth-three"),
             config("depth-three-shortcut-index.yml"),
         ),
+        (
+            "exclude_roots_absent",
+            saved_root("exclude-roots"),
+            config("exclude-roots-absent.yml"),
+        ),
+        (
+            "exclude_roots_drop_docs_root",
+            saved_root("exclude-roots"),
+            config("exclude-roots.yml"),
+        ),
+        (
+            "exclude_roots_reachable",
+            saved_root("exclude-roots-reachable"),
+            config("exclude-roots.yml"),
+        ),
+        (
+            "exclude_roots_all",
+            saved_root("exclude-roots"),
+            config("exclude-roots-all.yml"),
+        ),
+        (
+            "exclude_roots_package_repo_glob",
+            saved_root("exclude-roots-package"),
+            config("exclude-roots-package.yml"),
+        ),
+        (
+            "exclude_roots_package_docs_glob",
+            saved_root("exclude-roots-package"),
+            config("exclude-roots-package-docs.yml"),
+        ),
     ];
     assert_saved_fixture("markdown_reachability", &cases);
 }

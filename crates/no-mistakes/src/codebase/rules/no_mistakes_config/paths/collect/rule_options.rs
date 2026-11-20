@@ -47,7 +47,11 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &Field, refs: &mut Vec<R
             }
         }
         "forbidden-workspace-closure" => paths_at(value, "lockfile", field, Kind::File, refs),
-        "markdown-reachability" | "markdown-structure-budget" => {
+        "markdown-reachability" => {
+            paths_at(value, "baselineFile", field, Kind::File, refs);
+            paths_at(value, "excludeRoots", field, Kind::Glob, refs);
+        }
+        "markdown-structure-budget" => {
             paths_at(value, "baselineFile", field, Kind::File, refs);
         }
         "nextjs-redirect-destinations" => {
