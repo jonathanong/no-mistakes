@@ -91,8 +91,6 @@ pub(super) fn matching<'a>(uses: &str, actions: &'a [Family]) -> Option<&'a Fami
 }
 
 pub(super) fn judge(with: Option<&Mapping>, family: &Family) -> Vec<InputFault> {
-    let flattened = with.map(super::merge::flatten_mapping);
-    let with = flattened.as_ref();
     let mut faults = Vec::new();
     for (key, expected) in &family.require {
         match input_scalar(with, key) {

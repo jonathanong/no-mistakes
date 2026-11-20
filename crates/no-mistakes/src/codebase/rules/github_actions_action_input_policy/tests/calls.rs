@@ -200,10 +200,27 @@ jobs:
         super::super::lines::job_input_line(source, "missing", "uses"),
         1
     );
+    assert_eq!(
+        super::super::lines::job_input_line("name: Widgets\n", "build", "keep-days"),
+        1
+    );
+}
+
+fn messages(source: &str) -> Vec<String> {
+    parsed(source, POLICY)
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect()
+}
+
+fn misses_required(source: &str, key: &str) -> bool {
+    messages(source)
+        .iter()
+        .any(|message| message.contains(&format!("without required input `{key}`")))
 }
 
 #[test]
-fn merge_keys_resolve_before_inputs_are_judged() {
+fn merge_keys_do_not_supply_with_inputs() {
     let supplied = r#"
 jobs:
   build:
@@ -226,7 +243,10 @@ jobs:
         .unwrap();
     assert!(with.get(Value::String("<<".to_string())).is_some());
     assert!(with.get(Value::String("keep-days".to_string())).is_none());
-    assert!(parsed(supplied, POLICY).is_empty());
+    let supplied_findings = parsed(supplied, POLICY);
+    assert!(misses_required(supplied, "keep-days"));
+    assert!(misses_required(supplied, "replace"));
+    assert!(supplied_findings.iter().all(|finding| finding.line == 5));
     let overridden = r#"
 jobs:
   build:
@@ -239,8 +259,12 @@ jobs:
           keep-days: 30
 "#;
     let findings = parsed(overridden, POLICY);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("30"));
+    assert!(findings
+        .iter()
+        .any(|finding| { finding.line == 10 && finding.message.contains("30") }));
+    assert!(findings.iter().any(|finding| {
+        finding.line == 5 && finding.message.contains("without required input `replace`")
+    }));
     let sequence = r#"
 jobs:
   build:
@@ -248,33 +272,16 @@ jobs:
       - uses: example/publish-widget@v1
         with:
           <<:
-            - keep-days: 30
-              replace: false
-            - 1
-            - keep-days: 1
-              replace: true
-"#;
-    let sequence_findings = parsed(sequence, POLICY);
-    assert_eq!(sequence_findings.len(), 2, "{sequence_findings:?}");
-    assert!(sequence_findings
-        .iter()
-        .any(|finding| finding.message.contains("30")));
-    assert!(sequence_findings
-        .iter()
-        .any(|finding| finding.message.contains("false")));
-    let earlier = r#"
-jobs:
-  build:
-    steps:
-      - uses: example/publish-widget@v1
-        with:
-          <<:
             - keep-days: 1
               replace: true
             - keep-days: 30
               replace: false
 "#;
-    assert!(parsed(earlier, POLICY).is_empty(), "{earlier}");
+    assert!(misses_required(sequence, "keep-days"));
+    assert!(misses_required(sequence, "replace"));
+    assert!(messages(sequence)
+        .iter()
+        .all(|message| !message.contains("30") && !message.contains("false")));
     let nested = r#"
 jobs:
   build:
@@ -286,7 +293,8 @@ jobs:
               keep-days: 1
               replace: true
 "#;
-    assert!(parsed(nested, POLICY).is_empty());
+    assert!(misses_required(nested, "keep-days"));
+    assert!(misses_required(nested, "replace"));
     let scalar = r#"
 jobs:
   build:
@@ -295,9 +303,7 @@ jobs:
         with:
           <<: 1
 "#;
-    assert!(parsed(scalar, POLICY).iter().any(|finding| finding
-        .message
-        .contains("without required input `keep-days`")));
+    assert!(misses_required(scalar, "keep-days"));
     let nulled = r#"
 jobs:
   build:
@@ -309,17 +315,24 @@ jobs:
             replace: true
           keep-days:
 "#;
-    let cleared = parsed(nulled, POLICY);
-    assert!(cleared.iter().any(|finding| finding
-        .message
-        .contains("without required input `keep-days`")));
-    assert!(cleared
-        .iter()
-        .all(|finding| !finding.message.contains("`replace`")));
+    assert!(misses_required(nulled, "keep-days"));
+    assert!(misses_required(nulled, "replace"));
+    let alias = r#"
+jobs:
+  build:
+    steps:
+      - uses: example/publish-widget@v1
+        with: &base
+          keep-days: 1
+          replace: true
+      - uses: example/publish-widget@v1
+        with: *base
+"#;
+    assert!(parsed(alias, POLICY).is_empty(), "{alias}");
 }
 
 #[test]
-fn banned_input_from_a_merge_key_reports() {
+fn banned_input_under_a_merge_key_stays_silent() {
     let options = r#"
 actions:
   - uses: example/ship-items
@@ -334,9 +347,7 @@ jobs:
           <<:
             overwrite: true
 "#;
-    let findings = parsed(source, options);
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("banned input `overwrite`"));
+    assert!(parsed(source, options).is_empty(), "{source}");
 }
 
 #[test]
@@ -358,23 +369,67 @@ fn saved_call_fixtures_report_composite_reusable_and_merge_shapes() {
                 .contains("without required input `keep-days`")
     }));
     let merged = run_file("merge-keys", ".github/workflows/widgets.yml");
-    assert_eq!(merged.len(), 2, "{merged:?}");
-    assert!(merged
-        .iter()
-        .all(|finding| !finding.message.contains("without required")));
-    assert!(merged
-        .iter()
-        .any(|finding| finding.message.contains("banned input `overwrite`")));
+    assert_eq!(merged.len(), 4, "{merged:?}");
     assert!(merged.iter().any(|finding| {
-        finding.message.contains("publish orders") && finding.message.contains("30")
+        finding.line == 13
+            && finding.message.contains("publish nested inputs")
+            && finding
+                .message
+                .contains("without required input `keep-days`")
     }));
+    assert!(merged.iter().any(|finding| {
+        finding.line == 13
+            && finding.message.contains("publish nested inputs")
+            && finding.message.contains("without required input `replace`")
+    }));
+    assert!(merged.iter().any(|finding| {
+        finding.line == 24
+            && finding.message.contains("publish sibling lifetime")
+            && finding.message.contains("30")
+    }));
+    assert!(merged.iter().any(|finding| {
+        finding.line == 19
+            && finding.message.contains("publish sibling lifetime")
+            && finding.message.contains("without required input `replace`")
+    }));
+    assert!(merged
+        .iter()
+        .all(|finding| !finding.message.contains("banned input")));
     let order = run_file("merge-keys", ".github/workflows/sequence.yml");
     assert_eq!(order.len(), 2, "{order:?}");
-    assert!(order
+    assert!(order.iter().all(|finding| {
+        finding.line == 8
+            && finding.message.contains("publish sequence")
+            && finding.message.contains("without required input")
+    }));
+}
+
+#[test]
+fn job_level_merge_keys_use_the_job_with_mapping() {
+    let source = r#"
+jobs:
+  publish:
+    steps:
+      - uses: example/checkout-orders@v1
+        with:
+          keep-days: 9
+    uses: example/publish-widget@v1
+    with:
+      <<:
+        keep-days: 1
+        replace: true
+      keep-days: 30
+"#;
+    let findings = parsed(source, POLICY);
+    assert!(findings.iter().any(|finding| {
+        finding.line == 13
+            && finding.message.contains("job \"publish\" calls")
+            && finding.message.contains("30")
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding.line == 8 && finding.message.contains("without required input `replace`")
+    }));
+    assert!(findings
         .iter()
-        .all(|finding| { finding.message.contains("publish earlier loose") }));
-    assert!(order.iter().any(|finding| finding.message.contains("30")));
-    assert!(order
-        .iter()
-        .any(|finding| finding.message.contains("false")));
+        .all(|finding| !finding.message.contains('9')));
 }

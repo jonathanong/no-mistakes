@@ -24,15 +24,16 @@ The same policy applies to each step and to a job-level `uses:` call. A job
 that sets both is checked for both. Composite actions are read from
 `runs.steps` when `runs.using` is `composite`.
 
-`with:` values that arrive through a YAML `<<` merge key are judged after the
-merge. Earlier entries in a merge sequence override later ones, and a key
-written next to `<<` overrides every merged value. A merge key on the step or
-job mapping itself (for example `- <<: *base` supplying `uses` or `with`) is
-not flattened. Anchors are expanded before that merge. A required value written
-as `${{ }}` is compared as that text, so it is a mismatch unless the expression
-text is the required scalar. Suppress that line when the expression is
-intentional. A `uses:` value that contains `${{ }}` is not a concrete family
-and stays silent.
+GitHub's workflow reader does not apply YAML merge keys. A `<<` key in `with:`
+is an input named `<<`. Keys written under it are not inputs, so a required
+input that appears only there is missing, and a banned input that appears only
+there is not reported. A `<<` key on the step or job mapping itself also stays
+as written and does not supply `uses` or `with`. An anchor that is the whole
+`with:` value (`with: *base`) is expanded by the YAML parser and judged as that
+mapping. A required value written as `${{ }}` is compared as that text, so it
+is a mismatch unless the expression text is the required scalar. Suppress that
+line when the expression is intentional. A `uses:` value that contains `${{ }}`
+is not a concrete family and stays silent.
 
 Numbers and booleans match their string forms, because GitHub Actions passes
 `with:` values as strings. `1` and `"1"` are the same input. `true` and
@@ -178,9 +179,9 @@ rules:
 Invalid YAML is skipped and produces no finding. A `uses:` value that contains
 `${{ }}` is not a concrete action, so that step or job stays silent. A required
 input set to a `${{ }}` expression is a definite mismatch when that text is not
-the required scalar. The checker does not evaluate expressions. YAML `<<` merge
-keys in `with:` are resolved, so a value that arrives only through a merge is
-visible. A file that cannot be read is skipped and produces no finding.
+the required scalar. The checker does not evaluate expressions. A `<<` key is
+not expanded, so keys nested under it are not inputs. A file that cannot be
+read is skipped and produces no finding.
 
 ## Related rules
 

@@ -8,7 +8,6 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod lines;
-mod merge;
 mod message;
 mod policy;
 mod scalar;

@@ -59,8 +59,8 @@ fn github_actions_action_input_policy_json_matches_snapshot() {
                 rules_path(RULE, "fixture", "reusable"),
                 policy.clone(),
             ),
-            // 4 findings: a merge supplies publisher inputs; an override and a merged
-            // ban report. An earlier sequence entry wins, so loose-then-strict reports.
+            // 6 findings: keys under << are not inputs. A sibling value and a
+            // sequence still miss the nested requirements. An alias of with: passes.
             (
                 "merge_keys",
                 rules_path(RULE, "fixture", "merge-keys"),

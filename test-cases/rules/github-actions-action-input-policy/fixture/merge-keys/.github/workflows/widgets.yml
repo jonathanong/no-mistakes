@@ -4,21 +4,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: publish widgets
+      - name: define widget inputs
+        uses: example/checkout-orders@v1
+        with: &widget-inputs
+          keep-days: 1
+          replace: true
+      - name: publish nested inputs
         uses: example/publish-widget@v1
         with:
-          <<: &widget-inputs
+          <<:
             keep-days: 1
             replace: true
-          name: widgets
-      - name: publish orders
+      - name: publish sibling lifetime
         uses: example/publish-widget@v1
         with:
-          <<: *widget-inputs
+          <<:
+            keep-days: 1
+            replace: true
           keep-days: 30
-      - name: ship items
+      - name: ship nested ban
         uses: example/ship-items@v1
         with:
           <<:
-            name: items
             overwrite: true
+      - name: publish alias
+        uses: example/publish-widget@v1
+        with: *widget-inputs
