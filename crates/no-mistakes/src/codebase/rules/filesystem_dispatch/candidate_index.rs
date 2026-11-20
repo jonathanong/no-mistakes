@@ -2,11 +2,6 @@ use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
     rule_enabled, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
 };
-#[cfg(test)]
-use crate::codebase::rules::{
-    BANNED_PATHS, CONFIG_PATH_REFERENCES, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_REACHABILITY,
-    MARKDOWN_STRUCTURE_BUDGET, NO_MISTAKES_CONFIG, TSCONFIG_FILE_COVERAGE,
-};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::collections::BTreeMap;

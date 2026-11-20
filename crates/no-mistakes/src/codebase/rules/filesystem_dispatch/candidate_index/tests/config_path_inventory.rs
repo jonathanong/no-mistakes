@@ -17,8 +17,8 @@ fn config_path_references_keeps_tracked_skip_dir_inventory() {
     };
     let config = NoMistakesConfig {
         rules: vec![
-            repository_rule(super::super::CONFIG_PATH_REFERENCES),
-            repository_rule(super::super::NO_MISTAKES_CONFIG),
+            repository_rule(super::CONFIG_PATH_REFERENCES),
+            repository_rule(super::NO_MISTAKES_CONFIG),
         ],
         ..Default::default()
     };
@@ -36,12 +36,12 @@ fn config_path_references_keeps_tracked_skip_dir_inventory() {
     let mut expected = vec![skipped, tracked.clone()];
     expected.sort();
     assert_eq!(
-        index.candidates(super::super::CONFIG_PATH_REFERENCES),
+        index.candidates(super::CONFIG_PATH_REFERENCES),
         expected,
         "path existence must see tracked files under source skip directories"
     );
     assert_eq!(
-        index.candidates(super::super::NO_MISTAKES_CONFIG),
+        index.candidates(super::NO_MISTAKES_CONFIG),
         std::slice::from_ref(&tracked),
         "unrelated tracked-only rules stay on the source universe"
     );

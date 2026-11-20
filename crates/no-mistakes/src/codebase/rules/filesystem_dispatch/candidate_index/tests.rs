@@ -1,4 +1,8 @@
 use super::*;
+use crate::codebase::rules::{
+    BANNED_PATHS, CONFIG_PATH_REFERENCES, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_REACHABILITY,
+    MARKDOWN_STRUCTURE_BUDGET, NO_MISTAKES_CONFIG, TSCONFIG_FILE_COVERAGE,
+};
 use crate::config::v2::schema::{Project, RuleDef, RuleScope};
 
 fn fixture() -> (PathBuf, NoMistakesConfig, Arc<Vec<PathBuf>>) {
