@@ -94,3 +94,71 @@ fn omitted_projects_and_literal_flag_values_follow_the_policy() {
         ["items"]
     );
 }
+
+#[test]
+fn numbers_inline_flags_and_a_second_dash_stay_judgeable() {
+    let file = ["src/widgets.test.ts"];
+    assert!(super::arguments("vitest run --project items --custom 80", &reject()).is_empty());
+    assert_eq!(
+        super::arguments("vitest run --project items --custom 80 items", &reject()),
+        ["items"]
+    );
+    assert_eq!(
+        super::arguments("vitest run --project items --custom 1.5 items", &reject()),
+        ["items"]
+    );
+    assert_eq!(
+        super::arguments("vitest run --project items --custom 1.2.3", &reject()),
+        ["1.2.3"]
+    );
+    assert_eq!(
+        super::arguments("vitest run --project items --custom .", &reject()),
+        ["."]
+    );
+    assert_eq!(
+        super::arguments("vitest run --project items --bail true items", &reject()),
+        ["items"]
+    );
+    assert_eq!(
+        super::arguments(
+            "vitest run --project widgets -- -- src/widgets.test.ts",
+            &allow()
+        ),
+        file
+    );
+    assert_eq!(
+        super::arguments(
+            "vitest run --project widgets --custom=keep src/widgets.test.ts",
+            &allow()
+        ),
+        file
+    );
+    assert!(super::arguments(
+        "vitest run --project widgets --custom=$VALUE src/widgets.test.ts",
+        &allow()
+    )
+    .is_empty());
+    assert!(super::arguments(
+        "vitest run --project=$WIDGETS src/widgets.test.ts",
+        &allow()
+    )
+    .is_empty());
+    assert_eq!(
+        super::arguments("vitest run --project= src/widgets.test.ts", &allow()),
+        file
+    );
+    assert_eq!(
+        super::arguments(
+            "vitest run --project items -t \"$NAME\" src/items.test.ts",
+            &reject()
+        ),
+        ["src/items.test.ts"]
+    );
+    assert_eq!(
+        super::arguments(
+            "vitest run --project items --testNamePattern \"$NAME\" items",
+            &reject()
+        ),
+        ["items"]
+    );
+}
