@@ -93,6 +93,7 @@ describe(id, () => {
       "suppressed.mjs",
       "file-suppressed.mjs",
       "directives.mjs",
+      "legacy-invalid.mjs",
     ];
     const result = spawnSync(
       process.execPath,

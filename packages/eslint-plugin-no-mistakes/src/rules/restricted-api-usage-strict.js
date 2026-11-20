@@ -22,6 +22,13 @@ const NAME_SLOTS = {
   LabeledStatement: "label",
   BreakStatement: "label",
   ContinueStatement: "label",
+  TSInterfaceDeclaration: "id",
+  TSTypeAliasDeclaration: "id",
+  TSEnumDeclaration: "id",
+  TSModuleDeclaration: "id",
+  TSPropertySignature: "key",
+  TSMethodSignature: "key",
+  TSTypeParameter: "name",
 };
 const BINDING_PARENTS =
   /^(ArrayPattern|RestElement|Import.*Specifier|ExportSpecifier|CatchClause)$/;
@@ -36,18 +43,50 @@ function compile(target) {
   return out;
 }
 
+function findingMessage(target, name, rewrite) {
+  return (target.message || `Restricted API '${name}'. Use an allowed API instead.`) + rewrite;
+}
+
+function rememberFinding(seen, node, message) {
+  const key = `${node.range[0]}\0${message}`;
+  if (seen.has(key)) return false;
+  seen.add(key);
+  return true;
+}
+
 function invoked(node) {
   let current = node;
   while (WRAPPERS.has(current.parent.type)) current = current.parent;
   return current.parent.callee === current;
 }
 
+function isWriteTarget(node) {
+  const parent = node.parent;
+  if (parent.type === "AssignmentExpression") return parent.left === node;
+  if (parent.type === "ForInStatement") return parent.left === node;
+  if (parent.type === "ForOfStatement") return parent.left === node;
+  return false;
+}
+
+function isTypePosition(node) {
+  if (node.parent.type === "TSTypePredicate") return true;
+  let parent = node.parent;
+  while (parent.type === "TSQualifiedName") parent = parent.parent;
+  if (parent.type === "TSTypeReference") return true;
+  if (parent.type === "TSInterfaceHeritage") return true;
+  if (parent.type === "TSClassImplements") return true;
+  if (parent.type === "TSImportType") return true;
+  return false;
+}
+
 function isReference(node) {
   const parent = node.parent;
   if (BINDING_PARENTS.test(parent.type)) return false;
+  if (parent.type === "TSEnumMember" && parent.id === node) return false;
   if (parent[NAME_SLOTS[parent.type]] === node && !parent.computed) return false;
   if (parent.params?.includes(node)) return false;
   if (parent.type === "AssignmentPattern" && parent.left === node) return false;
+  if (isTypePosition(node)) return false;
   return !(parent.type === "Property" && parent.parent.type === "ObjectPattern");
 }
 
@@ -82,7 +121,8 @@ function strictVisitors(targets, report) {
     check("property", node, memberPropertyName({ property: node.key, computed: node.computed }));
   }
   function reference(node, name) {
-    if (!invoked(node)) check("reference", node, name);
+    if (isWriteTarget(node) || isTypePosition(node) || invoked(node)) return;
+    check("reference", node, name);
   }
   return {
     Identifier(node) {
@@ -118,4 +158,4 @@ function strictVisitors(targets, report) {
   };
 }
 
-module.exports = { mergeVisitors, strictVisitors };
+module.exports = { findingMessage, mergeVisitors, rememberFinding, strictVisitors };

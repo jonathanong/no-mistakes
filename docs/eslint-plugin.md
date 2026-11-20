@@ -478,7 +478,9 @@ binding identity. Lexical call patterns intentionally also match unrelated
 bindings with those names. Strict lexical selectors
 (`referenceNamePattern`, `declarationNamePattern`, `propertyNamePattern`,
 `destructureNamePattern`, `constructNamePattern` with `constructArgumentCount`) are separate opt-ins for
-owners who intend the names themselves to be forbidden. Invalid expressions fail
+owners who intend the names themselves to be forbidden. `referenceNamePattern`
+matches value reads, not TypeScript declaration slots, type names, or assignment
+targets. Identical messages on one node collapse. Invalid expressions fail
 during initialization.
 See [the rule reference](eslint-rules/restricted-api-usage.md) for file scoping,
 exclusions, suppression, and complete examples.

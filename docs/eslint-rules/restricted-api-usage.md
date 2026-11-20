@@ -118,13 +118,24 @@ client.send(new ListEntriesCommand({ cursor }));
 
 - `referenceNamePattern`: optional regular expression for a bare identifier or
   static member property that is read without being called or constructed.
-  `api.blockingWait` and `const f = blockingWait` report; `api.blockingWait()`,
-  `new api.blockingWait()`, bindings, parameters, destructure keys, and labels do
-  not (use `callNamePattern` or `constructNamePattern` for invocations).
+  `api.blockingWait`, `const f = blockingWait`, `blockingWait++`, and
+  `typeof blockingWait` report. Calls, `new`, bindings, parameters, destructure
+  keys, and labels do not (use `callNamePattern` or `constructNamePattern` for
+  invocations).
+- A write is not a reference. Assignment targets stay silent, including
+  `blockingWait = 1`, `api.blockingWait += 1`, and the left side of
+  `for (blockingWait of items)` or `for (blockingWait in items)`. The value on
+  the right still reports.
+- TypeScript declaration slots and type-position names stay silent: interface,
+  type-alias, enum, namespace, and type-parameter names; non-computed interface
+  and type-literal property keys and method signatures; enum members; heritage
+  and `implements` names; and annotations such as `const item: blockingWait`.
+  A computed key that is an identifier (`[blockingWait]: number`) is a value
+  read and reports. A literal computed key is not an identifier.
 - `declarationNamePattern`: optional regular expression for the name declared by a
   function, class, or variable declaration, such as `function enqueueItemAndWait() {}`.
 - `propertyNamePattern`: optional regular expression for a literal object key or a
-  class method or field definition (`{ blockingWait: true }`, `blockingWait = 1`).
+  class method or field definition (`{ blockingWait: true }`, `class Widget { blockingWait = 1 }`).
   Computed keys are unproven and do not report; destructuring patterns are not
   definitions.
 - `destructureNamePattern`: optional regular expression for an object
@@ -144,8 +155,9 @@ client.send(new ListEntriesCommand({ cursor }));
   arguments. A spread argument makes the arity unproven, so it does not match.
 
 The strict selectors are lexical like `callNamePattern`: they ignore import origin
-and shadowing, and are off unless configured. Existing configurations produce
-identical findings.
+and shadowing, and are off unless configured. A configuration that does not set
+them keeps the same findings. Identical messages on one node collapse to one
+finding. Distinct messages on that node both report.
 
 ```js
 {
@@ -171,23 +183,24 @@ and `ignores: ['backend/modules/client-contract.test.mts']` alongside the rule.
 The named import, namespace call, ordinary command, ordinary `paginate()` helper,
 and excluded contract-test cases then preserve the intended prevention policy.
 
-Import-origin calls use lexical binding identity, so a parameter shadowing an
-import is allowed. Declaration-level and specifier-level type imports are ignored.
-Namespace accesses accept static string keys, optional calls, and transparent
-TypeScript wrappers. Reads report before aliasing, construction, `.call` / `.apply`
-forwarding, or tagged templates can hide the restricted API. Destructuring
-reports the matching key, including renamed, defaulted, `for...of`, and
-assignment patterns, and a static computed key. Type-only re-exports are
-ignored. Dynamic imports and global `require` loads of a configured source
-ask for a static named import, including when a custom message is configured.
-Assigning the whole namespace to another variable also asks for a static named
-import before the original binding is hidden. A rest destructure copies the whole
-namespace and reports the rest element with the same static import rewrite.
-The rule does not propagate aliases after the reported access, inspect nested
-namespace objects, or resolve dynamic member keys or module specifiers.
-Import declarations remain findings even when matching calls are independently
-suppressed. A target matching both selectors reports a namespace call at its
-member access once; distinct targets can each report it.
+- Import-origin calls use lexical binding identity, so a parameter shadowing an
+  import is allowed. Declaration-level and specifier-level type imports are ignored.
+- Namespace accesses accept static string keys, optional calls, and transparent
+  TypeScript wrappers. Reads report before aliasing, construction, `.call` /
+  `.apply` forwarding, or tagged templates can hide the restricted API.
+- Destructuring reports the matching key, including renamed, defaulted,
+  `for...of`, and assignment patterns, and a static computed key.
+- Type-only re-exports are ignored. Dynamic imports and global `require` loads
+  of a configured source ask for a static named import, including when a custom
+  message is configured.
+- Assigning the whole namespace to another variable also asks for a static named
+  import before the original binding is hidden. A rest destructure copies the
+  whole namespace and reports the rest element with the same static import rewrite.
+- The rule does not propagate aliases after the reported access, inspect nested
+  namespace objects, or resolve dynamic member keys or module specifiers.
+- Import declarations remain findings even when matching calls are independently
+  suppressed. A target matching both selectors reports a namespace call at its
+  member access once.
 
 ## Fix
 

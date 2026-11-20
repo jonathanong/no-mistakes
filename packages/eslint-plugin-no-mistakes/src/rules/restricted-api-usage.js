@@ -5,7 +5,12 @@ const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
 const { resultDiscarded } = require("./restricted-api-usage-discard");
 const { targetSchema } = require("./restricted-api-usage-schema");
-const { mergeVisitors, strictVisitors } = require("./restricted-api-usage-strict");
+const {
+  findingMessage,
+  mergeVisitors,
+  rememberFinding,
+  strictVisitors,
+} = require("./restricted-api-usage-strict");
 const { isLocalRequire, memberPropertyName, resolveVariable } = require("./async-target-bindings");
 
 module.exports = {
@@ -30,17 +35,13 @@ module.exports = {
     if (!targets.length) return {};
     const suppressed = ruleSuppression(context, "restricted-api-usage");
     const bindings = new Map();
+    const reported = new Set();
     const hasCallTargets = targets.some((target) => target.call);
     function report(node, target, name, rewrite = "") {
       if (suppressed(node)) return;
-      context.report({
-        node,
-        messageId: "restrictedApi",
-        data: {
-          message:
-            (target.message || `Restricted API '${name}'. Use an allowed API instead.`) + rewrite,
-        },
-      });
+      const message = findingMessage(target, name, rewrite);
+      if (!rememberFinding(reported, node, message)) return;
+      context.report({ node, messageId: "restrictedApi", data: { message } });
     }
     function recordImports(program) {
       for (const node of program.body) {
