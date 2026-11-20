@@ -163,7 +163,7 @@ fn callee_specifier<'a>(text: &'a str, callee: &str) -> Option<&'a str> {
     while let Some(index) = rest.find(callee) {
         let after = &rest[index + callee.len()..];
         let prev = rest[..index].chars().next_back();
-        let boundary = prev.is_none_or(|ch| ch != '_' && !ch.is_ascii_alphanumeric());
+        let boundary = prev.is_none_or(|ch| ch != '.' && ch != '_' && !ch.is_ascii_alphanumeric());
         if boundary && after.starts_with('(') {
             return quoted(after[1..].trim());
         }

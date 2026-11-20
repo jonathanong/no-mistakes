@@ -383,6 +383,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "orders.orderItems.append(extra);",
           "target": "orderItems"
+        },
+        {
+          "file": "renameAllMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `default` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[\"widget\" + \"Columns\"].append(extra);",
+          "target": "default"
+        },
+        {
+          "file": "renameMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `default` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns.widgetColumns.append(extra);",
+          "target": "default"
         }
       ],
       "warnings": []

@@ -43,21 +43,16 @@ pub(super) fn visible_all(
     stack.push(module.to_path_buf());
     let mut found = catalog.local_all(module);
     if let Some(ts) = facts.get_ts_facts(module) {
-        let explicit: Vec<&str> = ts
+        let blocked: Vec<String> = ts
             .exported_bindings
             .iter()
-            .map(|binding| binding.exported.as_str())
+            .map(|binding| binding.exported.clone())
             .collect();
         for spec in &ts.star_reexport_specifiers {
             if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-                found.extend(
-                    visible_all(catalog, graph, facts, &next, stack)
-                        .into_iter()
-                        .filter(|fragment| {
-                            fragment.exported != "default"
-                                && !explicit.contains(&fragment.exported.as_str())
-                        }),
-                );
+                found.extend(super::alias::star_fragments(
+                    catalog, graph, facts, &next, &blocked, stack,
+                ));
             }
         }
         for binding in &ts.exported_bindings {
