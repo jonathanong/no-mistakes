@@ -40,3 +40,38 @@ fn exhausted_value_flow_preserves_previous_graph_prerequisite_failures() {
         .any(|failure| failure.consumer == UNCONSTRUCTED_ERROR_CLASS
             && failure.file.as_ref() == Some(&file)));
 }
+
+#[test]
+fn fragment_escape_stays_ready_when_another_graph_rule_is_incomplete() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/foreign-receiver-work-budget/fixture"),
+    );
+    let mut config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: "postgres-sql-fragment-escape".to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        options: serde_yaml::from_str(
+            "trustedSqlTags:\n  - {module: \"@example/sql\", name: default}",
+        )
+        .unwrap(),
+        ..crate::config::v2::schema::RuleDef::default()
+    });
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        vec![root.join("src/shared-2048.mts")],
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                imports: true,
+                value_flow: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    );
+    let session = AnalysisSession::disabled();
+    register_value_flow_failures(&config, &shared, &session);
+    assert!(session.check_consumer_ready("postgres-sql-fragment-escape"));
+    assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
+}

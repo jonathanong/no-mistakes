@@ -57,6 +57,11 @@ fn visit_import_expression_with_scope(
     import: &ImportExpression<'_>,
 ) {
     if let Some(specifier) = static_import_specifier(&import.source) {
+        collector
+            .namespace
+            .facts
+            .literal_import_spans
+            .push((import.span.start, specifier.clone()));
         collector.push(&specifier, ImportKind::Dynamic, import.span.start as usize);
     } else {
         collector.push_computed(
@@ -81,6 +86,11 @@ fn record_runtime_require_import(
         return;
     };
     if let Some(specifier) = static_import_specifier(expr) {
+        collector
+            .namespace
+            .facts
+            .literal_import_spans
+            .push((call.span.start, specifier.clone()));
         collector.push(&specifier, kind, call.span.start as usize);
         return;
     }

@@ -59,6 +59,16 @@ pub struct NamespaceFacts {
     pub locals: Vec<(String, String)>,
     /// Specifiers of `import x = require("...")`, whose module is used whole.
     pub opaque_specifiers: Vec<String>,
+    /// `import Local = object.member` as `(local, object, member)`.
+    pub import_equals_members: Vec<(String, String, String)>,
+    /// `import Local = Other` as `(local, target)`.
+    pub import_equals_aliases: Vec<(String, String)>,
+    /// `import Local = require("specifier")` as `(local, specifier)`.
+    pub import_equals_requires: Vec<(String, String)>,
+    /// `(local, byte offset)` of an `export` statement that names `local`.
+    pub export_name_offsets: Vec<(String, u32)>,
+    /// Literal `import()` or `require()` specifiers keyed by the call start.
+    pub literal_import_spans: Vec<(u32, String)>,
     /// Classes in an ambient declaration or in a module block that is not a
     /// tracked namespace: `declare class`, `declare module`, `declare global`.
     pub unreported_class_ids: Vec<CallableId>,

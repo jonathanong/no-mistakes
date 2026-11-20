@@ -37,9 +37,14 @@ file that appends it. Another file can still call `.append` on the fragment,
 rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
-shared across files. A file whose prepared facts include an operational error
-or an incomplete value-flow is still checked. A fragment binding or a write
-that those facts still record is reported.
+shared across files. A file whose prepared facts include an operational error,
+an incomplete value-flow, or unreadable source is still checked. A fragment
+binding or a write that those facts still record is reported. The same file is
+listed on the check result's `incomplete` field. The message names the file
+and says a write, rebind, or escape that lived only in the missing text may be
+absent. One such file does not drop findings from files whose facts are
+complete. An ESLint-only run does not report these cross-file escapes. Set
+`trustedSqlTags` here, or this rule reports nothing.
 
 ## What it catches
 

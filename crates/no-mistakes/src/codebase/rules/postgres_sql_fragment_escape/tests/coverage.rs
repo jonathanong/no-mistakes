@@ -15,6 +15,11 @@ fn catalog_keeps_fragments_when_collection_is_incomplete() {
     let world = world();
     let catalog = catalog(&world);
     assert_eq!(by_export(&catalog, "orderColumns").len(), 1);
+    assert_eq!(catalog.local(&world.columns, "widgetColumns").len(), 1);
+    assert!(catalog
+        .local_all(&world.columns)
+        .iter()
+        .any(|fragment| fragment.exported == "orderColumns"));
     let widgets = by_export(&catalog, "widgetColumns");
     let producers: Vec<&Path> = widgets
         .iter()
@@ -388,14 +393,19 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         &world.graph,
         &world.facts,
         None,
-    );
+    )
+    .findings;
     let mut targets: Vec<&str> = findings
         .iter()
         .map(|finding| finding.target.as_deref().unwrap_or(""))
         .collect();
     targets.sort_unstable();
     assert_eq!(targets, ["orderColumns", "widgetColumns"]);
-    assert!(scan::scan(Path::new("/repo"), &[], &world.graph, &world.facts, None).is_empty());
+    assert!(
+        scan::scan(Path::new("/repo"), &[], &world.graph, &world.facts, None)
+            .findings
+            .is_empty()
+    );
     assert!(scan::scan(
         Path::new("/repo"),
         &[TrustedSqlTag::default()],
@@ -403,6 +413,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         &world.facts,
         None
     )
+    .findings
     .is_empty());
     let unconfigured = super::super::check_with_graph(
         Path::new("/repo"),
@@ -412,7 +423,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         None,
     )
     .expect("unconfigured rule");
-    assert!(unconfigured.is_empty());
+    assert!(unconfigured.findings.is_empty());
 }
 
 #[test]
