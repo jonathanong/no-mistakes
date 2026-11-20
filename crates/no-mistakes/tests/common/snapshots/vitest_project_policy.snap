@@ -573,6 +573,110 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-call-spread": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-call-spread.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-conditional-exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-conditional-exclude.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-conditional-proven": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-conditional-required": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-conditional-required.ts",
+          "message": "Vitest project items is incomplete: isolate is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "isolate"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-conditional-spread": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-conditional-unknown": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-conditional-unknown.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "exclude-dynamic": {
     "exitCode": 1,
     "report": {
@@ -695,7 +799,119 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-identifier-spread": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-identifier-spread.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "exclude-local-binding": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-logical-and-exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-logical-and-exclude.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-logical-and-known": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-logical-and-known.ts",
+          "line": 4,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(base && { exclude: ['**/node_modules/**'] }),"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-logical-nullish-exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-logical-nullish-exclude.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-logical-or-exclude": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-logical-or-exclude.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-logical-spread": {
     "exitCode": 0,
     "report": {
       "advisories": [],

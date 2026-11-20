@@ -43,6 +43,9 @@ fn configured_globs_match_literal_exclude_arrays_only() {
         "exclude-local-binding",
         "exclude-helper",
         "exclude-proven-spread",
+        "exclude-conditional-spread",
+        "exclude-conditional-proven",
+        "exclude-logical-spread",
         "exclude-project-present",
         "exclude-project-silent",
         "exclude-option-off",
@@ -105,6 +108,13 @@ fn non_literal_exclude_values_stay_incomplete() {
         "exclude-dynamic",
         "exclude-partial-spread",
         "exclude-dynamic-config",
+        "exclude-conditional-exclude",
+        "exclude-conditional-unknown",
+        "exclude-logical-and-exclude",
+        "exclude-logical-or-exclude",
+        "exclude-logical-nullish-exclude",
+        "exclude-identifier-spread",
+        "exclude-call-spread",
     ] {
         let report = output(case);
         assert!(report.findings.is_empty(), "{case}: {:?}", report.findings);
@@ -129,6 +139,29 @@ fn non_literal_exclude_values_stay_incomplete() {
         .incomplete
         .iter()
         .any(|failure| failure.property.as_deref() == Some("test")));
+}
+
+#[test]
+fn conditional_required_properties_stay_incomplete_when_a_branch_omits_them() {
+    let report = output("exclude-conditional-required");
+    assert!(report.findings.is_empty(), "{:?}", report.findings);
+    assert!(report
+        .incomplete
+        .iter()
+        .any(|failure| failure.property.as_deref() == Some("isolate")));
+    assert!(report
+        .incomplete
+        .iter()
+        .all(|failure| failure.property.as_deref() != Some("test.exclude")));
+}
+
+#[test]
+fn truthy_object_and_keeps_a_definite_exclude_array() {
+    let report = output("exclude-logical-and-known");
+    assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);
+    assert_eq!(report.findings.len(), 1);
+    assert!(report.findings[0].message.contains("**/.git/**"));
+    assert!(!report.findings[0].message.contains("**/node_modules/**"));
 }
 
 #[test]

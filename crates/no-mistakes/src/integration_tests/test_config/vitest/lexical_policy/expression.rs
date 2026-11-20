@@ -1,6 +1,7 @@
 use super::{Kind, Value};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
+mod branches;
 mod containers;
 use oxc_span::GetSpan;
 use std::collections::{BTreeMap, BTreeSet};

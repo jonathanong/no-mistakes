@@ -164,6 +164,18 @@ fn vitest_project_policy_json_matches_snapshot() {
         "exclude-option-off",
         "exclude-non-array",
         "exclude-empty-glob",
+        "exclude-conditional-spread",
+        "exclude-conditional-exclude",
+        "exclude-conditional-proven",
+        "exclude-conditional-unknown",
+        "exclude-conditional-required",
+        "exclude-logical-spread",
+        "exclude-logical-and-exclude",
+        "exclude-logical-or-exclude",
+        "exclude-logical-nullish-exclude",
+        "exclude-logical-and-known",
+        "exclude-identifier-spread",
+        "exclude-call-spread",
     ] {
         let root = rules_path("vitest-project-policy", "fixture", "exclude-globs");
         cases.push((name, root.clone(), root.join(format!("{name}.yml"))));

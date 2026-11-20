@@ -85,6 +85,17 @@ string still passes when another element is unknown. If a configured string is
 not yet present and an element is unknown, the array is incomplete rather than
 a finding.
 
+A spread whose argument is a conditional (`condition ? { ... } : { ... }`) or a
+logical expression (`condition && { ... }`, `condition || { ... }`,
+`condition ?? { ... }`) contributes the keys of its literal object operands when
+every object operand has statically known keys. If none of those operands
+defines `exclude`, the spread leaves `exclude` omitted and stays silent. If any
+operand defines `exclude`, the check stays incomplete unless every branch's
+array contains each configured string. A spread of an identifier or a call stays
+unknown. The same folding applies to other `test` properties: a key with the
+same literal on every branch stays known for required, forbidden, and parity
+checks, and a key that appears on only some branches stays incomplete.
+
 Only the selected config's `test.exclude` is checked. A listed helper supplies
 the array when the config imports it into that property. An unrelated
 `exclude` on another object, including an object in a module that is not the
