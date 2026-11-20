@@ -111,6 +111,7 @@ words:
   - plpgsql
   - Pipfile
   - pkey
+  - bunx
   - pnpm
   - proretset
   - SETOF

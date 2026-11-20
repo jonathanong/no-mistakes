@@ -342,9 +342,13 @@ makes them blocking unless the rule sets `severity: advisory`.
 `reason`); a literal read at or under one is listed as an advisory with target
 `runtime asset` instead of failing.
 `options.analyzers` is an opt-in list of `{ command, args }` analyzer commands
-tests must not run against the live working directory. A matching
-`execFile`, `execFileSync`, `spawn`, or `spawnSync` call with no owned `cwd`
-is a finding with target `analyzer subprocess`. The default list is empty.
+tests must not run against the live working directory. A matching `exec`,
+`execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
+with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
+`execSync` match a static shell string. `spawn` and `spawnSync` match one when
+`shell` is boolean `true`. `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`,
+`yarn`, and `yarn dlx` unwrap, including a wrapper around another wrapper.
+The default list is empty.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

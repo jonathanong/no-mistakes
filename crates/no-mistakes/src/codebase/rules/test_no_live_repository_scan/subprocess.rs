@@ -39,9 +39,12 @@ impl<'a> Gate<'a> {
     }
 
     pub(super) fn note(&self, diagnostics: &mut AnalysisDiagnostics, site: &ResolvedCallSite) {
-        if self.options.analyzers.is_empty() || !command::is_launcher(site) {
+        if self.options.analyzers.is_empty() {
             return;
         }
+        let Some(name) = command::launcher_name(site) else {
+            return;
+        };
         let Some(facts) = self.facts.get_ts_facts(&site.file) else {
             return;
         };
@@ -50,7 +53,8 @@ impl<'a> Gate<'a> {
         else {
             return;
         };
-        let Some(invocation) = command::invocation(&arguments.values) else {
+        let shell = command::uses_shell(name, &arguments.values);
+        let Some(invocation) = command::invocation(&arguments.values, shell) else {
             return;
         };
         let Some(label) = command::matched(&invocation, &self.options.analyzers) else {
