@@ -1,0 +1,12 @@
+rules:
+  - rule: vite-optimize-deps-nested-imports
+    scope: repository
+    options:
+      configFiles:
+        - spread.config.ts
+        - include-spread.config.ts
+        - include-scalar.config.ts
+        - optimize-scalar.config.ts
+        - no-default.config.ts
+      packages:
+        - packages/widgets

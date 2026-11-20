@@ -39,6 +39,8 @@ mod cli_pkgcfg_snapshot_tsconfig_file_coverage;
 mod cli_pkgcfg_snapshot_tsconfig_gate_coverage;
 #[path = "cli_pkgcfg_snapshot_version_pin_consistency.rs"]
 mod cli_pkgcfg_snapshot_version_pin_consistency;
+#[path = "cli_pkgcfg_snapshot_vite_optimize_deps_nested_imports.rs"]
+mod cli_pkgcfg_snapshot_vite_optimize_deps_nested_imports;
 #[path = "cli_pkgcfg_snapshot_workspace_package_cycles.rs"]
 mod cli_pkgcfg_snapshot_workspace_package_cycles;
 #[path = "cli_rrb_snapshot_lexical.rs"]

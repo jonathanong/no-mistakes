@@ -178,6 +178,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`unconstructed-error-class`](unconstructed-error-class.md)                   | Flag exported error classes that no production code constructs or subclasses.   |
 | [`unique-exports`](unique-exports.md)                                         | Prevent ambiguous duplicate public export names.                                |
 | [`version-pin-consistency`](version-pin-consistency.md)                       | Keep a structured source pin in lockstep with other files.                      |
+| [`vite-optimize-deps-nested-imports`](vite-optimize-deps-nested-imports.md)   | Check Vite nested `optimizeDeps.include` entries against package imports.       |
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
 | [`vitest-project-mapping`](vitest-project-mapping.md)                         | Require Vitest tests to map to exactly one project.                             |
 | [`vitest-project-policy`](vitest-project-policy.md) | Enforce literal properties, parity, and opt-in exclude globs across declared Vitest projects. |

@@ -1,0 +1,370 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "builtins": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > labels",
+          "line": 8,
+          "message": "runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { tag } from \"labels\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "config_edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "broken.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse Vite config; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "call-number.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "function defineConfig(value) {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "cycle.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "const settings = other;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "function.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default function widget() {}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "paren-number.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default (1);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "spread-root.config.ts",
+          "line": 3,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default {",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "covered": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_configs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 1,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { label } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_packages": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "manifest_edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/broken-entry/index.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse published entry; write a static package manifest and published entry so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const broken = (",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/nameless/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: package.json has no name; write a static package manifest and published entry so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "manifest_gaps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/absent/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "vite-optimize-deps-nested-imports",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/broken/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: package.json is not JSON (EOF while parsing an object at line 2 column 0); write a static package manifest and published entry so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/gone/gone.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "vite-optimize-deps-nested-imports",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/listed/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: dependencies must be an object; write a static package manifest and published entry so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot read source: <io-error>; restore read access and save valid UTF-8 source so this check can verify the file",
+          "rule": "vite-optimize-deps-nested-imports",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "omitted_both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 2,
+          "message": "vite-optimize-deps-nested-imports: configFiles and packages are required and have no default; list the Vite config files and the package directories in scope",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "- rule: vite-optimize-deps-nested-imports"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "omitted_configs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 2,
+          "message": "vite-optimize-deps-nested-imports: configFiles is required and has no default; list the Vite config files to read",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "- rule: vite-optimize-deps-nested-imports"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "omitted_packages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 2,
+          "message": "vite-optimize-deps-nested-imports: packages is required and has no default; list the package directories in scope",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "- rule: vite-optimize-deps-nested-imports"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 2,
+          "message": "nested deps runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { label } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "vite.config.ts",
+          "import": "widgets > extra",
+          "line": 8,
+          "message": "nested deps nested include \"widgets > extra\" is not a declared dependency of widgets; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "\"widgets > extra\",",
+          "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_configs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "include-scalar.config.ts",
+          "line": 3,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps.include is not a static array of strings; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "include: \"widgets > items\",",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "include-spread.config.ts",
+          "line": 5,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps.include is not a static array of strings; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "include: [\"widgets > items\", ...more],",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "no-default.config.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: Vite config has no static default export object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const config = {",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "optimize-scalar.config.ts",
+          "line": 2,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "optimizeDeps: 1,",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "spread.config.ts",
+          "line": 4,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "optimizeDeps: {",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

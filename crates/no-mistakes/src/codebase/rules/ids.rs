@@ -110,6 +110,7 @@ pub use super::tsconfig_file_coverage::RULE_ID as TSCONFIG_FILE_COVERAGE;
 pub use super::tsconfig_gate_coverage::RULE_ID as TSCONFIG_GATE_COVERAGE;
 pub use super::unconstructed_error_class::RULE_ID as UNCONSTRUCTED_ERROR_CLASS;
 pub use super::version_pin_consistency::RULE_ID as VERSION_PIN_CONSISTENCY;
+pub use super::vite_optimize_deps_nested_imports::RULE_ID as VITE_OPTIMIZE_DEPS_NESTED_IMPORTS;
 pub use super::vitest_ci_path_coverage::RULE_ID as VITEST_CI_PATH_COVERAGE;
 pub use super::vitest_project_mapping::RULE_ID as VITEST_PROJECT_MAPPING;
 pub use super::vitest_test_correspondence::RULE_ID as VITEST_TEST_CORRESPONDENCE;

@@ -1,0 +1,14 @@
+{
+  "name": "fallback",
+  "version": "1.0.0",
+  "exports": {
+    ".": {
+      "browser": "./browser.ts"
+    }
+  },
+  "module": "",
+  "main": "./index.ts",
+  "dependencies": {
+    "items": "1.0.0"
+  }
+}

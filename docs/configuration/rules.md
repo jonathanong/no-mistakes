@@ -88,6 +88,13 @@ and `allowedFiles` for origin-specific file-target exceptions. Excluding a root
 removes it as an origin, while exceptions allow only matching reachable targets
 for that origin; neither prunes transitive dependency traversal.
 
+[`vite-optimize-deps-nested-imports`](../rules/vite-optimize-deps-nested-imports.md)
+reads `options.configFiles` and `options.packages`. Both are required and have
+no default. `configFiles` lists the Vite configs whose `optimizeDeps.include`
+entries are checked. `packages` lists the package directories in scope. An
+explicit empty `packages` list selects nothing. An omitted option is reported
+on the loaded config file.
+
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
 `options.unanalyzableSql` remains an alias for `options.unanalyzable`.
 `options.unanalyzable` inherits the repository `unanalyzable` policy and

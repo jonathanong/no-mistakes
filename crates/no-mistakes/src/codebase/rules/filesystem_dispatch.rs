@@ -37,9 +37,9 @@ use super::{
     strict_package_layout, structured_config_policy, swift_no_raw_print,
     swift_viewmodel_main_actor, test_email_domain_policy, test_no_dependency_pins,
     tsconfig_alias_folder_mapping, tsconfig_file_coverage, tsconfig_gate_coverage,
-    version_pin_consistency, vitest_ci_path_coverage, vitest_project_mapping,
-    vitest_project_policy, vitest_test_correspondence, workflow_topology_policy,
-    workspace_package_cycles,
+    version_pin_consistency, vite_optimize_deps_nested_imports, vitest_ci_path_coverage,
+    vitest_project_mapping, vitest_project_policy, vitest_test_correspondence,
+    workflow_topology_policy, workspace_package_cycles,
 };
 
 mod call_site_facts;
@@ -121,6 +121,8 @@ pub(super) const GITHUB_ACTIONS_DOWNLOAD_INTEGRITY: &str =
 pub(super) const GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS: &str =
     github_actions_test_timeout_literals::RULE_ID;
 pub(super) const VERSION_PIN_CONSISTENCY: &str = version_pin_consistency::RULE_ID;
+pub(super) const VITE_OPTIMIZE_DEPS_NESTED_IMPORTS: &str =
+    vite_optimize_deps_nested_imports::RULE_ID;
 
 macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path => $fixture_options:expr),* $(,)?) => {
