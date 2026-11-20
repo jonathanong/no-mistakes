@@ -9,6 +9,7 @@ use oxc_ast::ast::{
     ImportExpression, ImportOrExportKind,
 };
 use oxc_ast_visit::{walk, Visit};
+use std::collections::BTreeSet;
 
 pub(super) struct RuntimeImport {
     pub package: String,
@@ -26,12 +27,14 @@ pub(super) fn collect(
     source: &str,
     own_package: &str,
     file: &str,
+    declared: &BTreeSet<String>,
 ) -> anyhow::Result<ModuleImports> {
     crate::ast::with_program(path, source, |program, source| {
         let mut visitor = ImportVisitor {
             source,
             own_package,
             file,
+            declared,
             imports: Vec::new(),
             relative: Vec::new(),
         };
@@ -47,6 +50,7 @@ struct ImportVisitor<'a> {
     source: &'a str,
     own_package: &'a str,
     file: &'a str,
+    declared: &'a BTreeSet<String>,
     imports: Vec<RuntimeImport>,
     relative: Vec<String>,
 }
@@ -58,12 +62,15 @@ impl ImportVisitor<'_> {
             self.relative.push(specifier.to_string());
             return;
         }
-        if specifier.starts_with("node:") || is_node_builtin(specifier) {
+        if specifier.starts_with("node:") {
             return;
         }
         let Some(package) = package_name(specifier) else {
             return;
         };
+        if is_node_builtin(specifier) && !self.declared.contains(&package) {
+            return;
+        }
         if package == self.own_package {
             return;
         }

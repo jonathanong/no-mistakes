@@ -28,8 +28,11 @@ dependency optimization and can fail the first time the app loads that import.
 For each configured Vite config, a `parent > child` string in
 `optimizeDeps.include` is a nested mapping. `child` must be declared in the
 parent package's `dependencies`, `optionalDependencies`, `peerDependencies`,
-or `bundledDependencies`. `bundleDependencies` is that same array.
-`devDependencies` does not count. The finding points at that include string.
+or `bundledDependencies`. `bundleDependencies` is that same field. An array
+adds those package names. `true` means every dependency already declared in
+`dependencies`, `optionalDependencies`, and `peerDependencies`, and `false`
+adds none. Any other value cannot be read. `devDependencies` does not count.
+The finding points at that include string.
 
 For each package directory in `packages`, runtime package imports in the
 published-entry closure must each have a matching `name > dependency`
@@ -44,11 +47,15 @@ inside the package directory. `import type`, `export type`, and other
 type-only relative edges are not followed. Bare package specifiers on those
 files count: `import`, side-effect `import "pkg"`, value `export … from`,
 `export * from`, static `import("pkg")`, and `require("pkg")`. Specifiers
-that contain `:` do not. Node built-ins do not: a `node:` prefix, a bare
-built-in such as `path`, `fs`, or `crypto`, and a built-in subpath such as
-`fs/promises`. An import of the package's own name does not. A subpath such
-as `items/shape` is the package `items`. The finding points at the file
-that contains the import.
+that contain `:` do not, including a `node:` built-in. A bare name or
+subpath is a Node built-in when it is in the built-in list or its first
+segment is, such as `path`, `fs/promises`, or `process/browser`. That import
+is skipped only when the parent does not declare the package. A declared
+dependency named `events`, `buffer`, `punycode`, or `process` is a real
+package, and a subpath such as `process/browser` is that package. An include
+of an undeclared built-in, such as `widgets > path`, is ignored. An import
+of the package's own name does not. A subpath such as `items/shape` is the
+package `items`. The finding points at the file that contains the import.
 
 Direct includes (`react`) and chains with more than one `>` are ignored.
 A parent that is not one of the named packages is ignored. An entry whose
@@ -82,8 +89,9 @@ value that is an identifier or another non-literal array contributes no
 entries and does not by itself make the config unanalyzable. Omitting
 `includeSources` keeps that config unanalyzable.
 
-A missing manifest, a manifest that is not JSON, a missing `name`, or a
-dependency field that is not an object is reported on that `package.json`.
+A missing manifest, a manifest that is not JSON, a missing `name`, a
+dependency field that is not an object, or a `bundledDependencies` value
+that is not an array or a boolean is reported on that `package.json`.
 A missing published entry file is reported on that file when every configured
 config parsed. Package names in `packages` must be unique.
 
@@ -172,9 +180,11 @@ export const widget = shape;
 Declare the child under `dependencies`, `optionalDependencies`,
 `peerDependencies`, or `bundledDependencies`, or remove the include entry.
 For an uncovered import, add `"widgets > items"` to `optimizeDeps.include`
-or to an `includeSources` export. Node built-ins, an import of the package's
-own name, a `workspace:` dependency, and a name in `ignorePackages` are not
-nested dependencies, so do not add an include entry for them. Export the Vite
+or to an `includeSources` export. An undeclared Node built-in, an import of
+the package's own name, a `workspace:` dependency, and a name in
+`ignorePackages` are not nested dependencies, so do not add an include entry
+for them. A declared package whose name matches a built-in still needs
+`"widgets > events"`. Export the Vite
 config as a static object, or point `includeSources` at `export const name = […]`,
 so the include array can be read.
 

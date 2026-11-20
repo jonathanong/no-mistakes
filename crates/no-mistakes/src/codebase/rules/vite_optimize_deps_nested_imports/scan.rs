@@ -3,6 +3,7 @@
 use super::include_config::{parse_vite_config, NestedInclude, ParsedConfig};
 use super::include_source;
 use super::manifest::{self, PackageFacts};
+use super::specifier::is_node_builtin;
 use super::{IncludeSource, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use anyhow::Result;
@@ -78,7 +79,7 @@ fn invalid_mappings(
         let Some(package) = packages.get(&entry.parent) else {
             continue;
         };
-        if package.declared.contains(&entry.child) {
+        if package.declared.contains(&entry.child) || is_node_builtin(&entry.child) {
             continue;
         }
         findings.push(RuleFinding {

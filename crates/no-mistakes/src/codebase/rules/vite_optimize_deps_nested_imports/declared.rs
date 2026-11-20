@@ -73,6 +73,8 @@ fn extend_arrays(
     for field in fields {
         match value.get(*field) {
             None | Some(Value::Null) => {}
+            Some(Value::Bool(true)) => insert_object_names(names, value),
+            Some(Value::Bool(false)) => {}
             Some(Value::Array(items)) => {
                 for item in items {
                     let Some(name) = item.as_str() else {
@@ -83,8 +85,16 @@ fn extend_arrays(
                     }
                 }
             }
-            Some(_) => return Err(format!("{field} must be an array")),
+            Some(_) => return Err(format!("{field} must be an array or a boolean")),
         }
     }
     Ok(())
+}
+
+fn insert_object_names(names: &mut BTreeSet<String>, value: &Value) {
+    for field in ["dependencies", "peerDependencies", "optionalDependencies"] {
+        if let Some(Value::Object(map)) = value.get(field) {
+            names.extend(map.keys().filter_map(|key| package_name(key)));
+        }
+    }
 }

@@ -45,7 +45,7 @@ pub(super) fn load(
         .map_err(|reason| Box::new(unanalyzable(root, &manifest, reason)))?;
     let workspace = declared::workspace_dependency_names(&value);
     let versioned = declared::versioned_dependency_names(&value);
-    match closure::runtime_imports(root, dir, &value, &name, sources, all_files) {
+    match closure::runtime_imports(root, dir, &value, &name, sources, all_files, &declared) {
         Ok(imports) => Ok(PackageFacts {
             name,
             declared,

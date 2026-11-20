@@ -78,7 +78,6 @@ pub(super) fn package_name(specifier: &str) -> Option<String> {
         || specifier.starts_with(['.', '/'])
         || specifier.starts_with("node:")
         || specifier.contains([':', '\\'])
-        || is_node_builtin(specifier)
     {
         return None;
     }

@@ -1,6 +1,7 @@
 use super::declared::{dependency_names, versioned_dependency_names, workspace_dependency_names};
 use super::entry_imports::collect;
 use super::specifier::{is_node_builtin, nested_pair, package_name};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 #[test]
@@ -13,11 +14,12 @@ fn package_name_keeps_the_scope_and_drops_a_subpath() {
     assert_eq!(package_name("./local"), None);
     assert_eq!(package_name("node:fs"), None);
     assert_eq!(package_name("node:fs/promises"), None);
-    assert_eq!(package_name("path"), None);
-    assert_eq!(package_name("fs"), None);
-    assert_eq!(package_name("crypto"), None);
-    assert_eq!(package_name("fs/promises"), None);
-    assert_eq!(package_name("path/posix"), None);
+    assert_eq!(package_name("path").as_deref(), Some("path"));
+    assert_eq!(package_name("fs").as_deref(), Some("fs"));
+    assert_eq!(package_name("crypto").as_deref(), Some("crypto"));
+    assert_eq!(package_name("fs/promises").as_deref(), Some("fs"));
+    assert_eq!(package_name("path/posix").as_deref(), Some("path"));
+    assert_eq!(package_name("process/browser").as_deref(), Some("process"));
     assert_eq!(package_name("@widgets"), None);
     assert_eq!(package_name("@/ui"), None);
     assert_eq!(package_name("@widgets/"), None);
@@ -31,6 +33,8 @@ fn node_builtins_include_bare_names_and_subpaths() {
     assert!(is_node_builtin("fs/promises"));
     assert!(is_node_builtin("node:fs"));
     assert!(is_node_builtin("node:fs/promises"));
+    assert!(is_node_builtin("process/browser"));
+    assert!(is_node_builtin("events"));
     assert!(!is_node_builtin("items"));
     assert!(!is_node_builtin("widgets/path"));
 }
@@ -57,9 +61,15 @@ void read;
 void crypto;
 void shape;
 ";
-    let imports = collect(Path::new("index.ts"), source, "widgets", "index.ts")
-        .unwrap()
-        .imports;
+    let imports = collect(
+        Path::new("index.ts"),
+        source,
+        "widgets",
+        "index.ts",
+        &BTreeSet::new(),
+    )
+    .unwrap()
+    .imports;
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].package, "items");
     assert_eq!(imports[0].line, 6);
@@ -69,9 +79,15 @@ void shape;
 import theme from '@widgets/ui/theme';
 import { shape } from 'items';
 ";
-    let imports = collect(Path::new("index.ts"), scoped, "@widgets/ui", "index.ts")
-        .unwrap()
-        .imports;
+    let imports = collect(
+        Path::new("index.ts"),
+        scoped,
+        "@widgets/ui",
+        "index.ts",
+        &BTreeSet::new(),
+    )
+    .unwrap()
+    .imports;
     assert_eq!(imports.len(), 1);
     assert_eq!(imports[0].package, "items");
 }
@@ -84,7 +100,14 @@ export type { Theme } from './theme.ts';
 import type { Paint } from './paint.ts';
 import { badge } from './badge.ts';
 ";
-    let collected = collect(Path::new("index.ts"), source, "widgets", "index.ts").unwrap();
+    let collected = collect(
+        Path::new("index.ts"),
+        source,
+        "widgets",
+        "index.ts",
+        &BTreeSet::new(),
+    )
+    .unwrap();
     assert!(collected.imports.is_empty());
     assert_eq!(
         collected.relative,
@@ -107,7 +130,7 @@ fn dependency_names_counts_optional_and_bundled_declarations() {
     assert!(names.contains("orders"));
     assert!(names.contains("labels"));
     assert!(names.contains("widgets"));
-    assert!(!names.contains("path"));
+    assert!(names.contains("path"));
     assert!(!names.contains("extra"));
     assert!(!names.contains("local"));
 }
@@ -128,7 +151,7 @@ fn workspace_specifiers_are_separate_from_versioned_dependencies() {
     let versioned = versioned_dependency_names(&value);
     assert!(workspace.contains("labels"));
     assert!(workspace.contains("orders"));
-    assert!(!workspace.contains("path"));
+    assert!(workspace.contains("path"));
     assert!(!workspace.contains("marks"));
     assert!(!workspace.contains("extra"));
     assert!(versioned.contains("items"));
@@ -144,11 +167,63 @@ fn dependency_names_rejects_a_non_object_and_a_non_array() {
 
     let bundled = serde_json::json!({ "bundledDependencies": {} });
     let error = dependency_names(&bundled).unwrap_err();
-    assert!(error.contains("bundledDependencies must be an array"));
+    assert!(error.contains("bundledDependencies must be an array or a boolean"));
 
     let alias = serde_json::json!({ "bundleDependencies": "widgets" });
     let error = dependency_names(&alias).unwrap_err();
-    assert!(error.contains("bundleDependencies must be an array"));
+    assert!(error.contains("bundleDependencies must be an array or a boolean"));
+}
+
+#[test]
+fn bundled_boolean_keeps_declared_dependencies_and_rejects_dev_dependencies() {
+    let all = serde_json::json!({
+        "dependencies": { "items": "1.0.0", "events": "1.0.0" },
+        "optionalDependencies": { "orders": "1.0.0" },
+        "devDependencies": { "extra": "1.0.0" },
+        "bundledDependencies": true
+    });
+    let names = dependency_names(&all).unwrap();
+    assert!(names.contains("items"));
+    assert!(names.contains("events"));
+    assert!(names.contains("orders"));
+    assert!(!names.contains("extra"));
+
+    let none = serde_json::json!({
+        "dependencies": { "items": "1.0.0" },
+        "bundledDependencies": false,
+        "bundleDependencies": false
+    });
+    let names = dependency_names(&none).unwrap();
+    assert!(names.contains("items"));
+    assert_eq!(names.len(), 1);
+}
+
+#[test]
+fn collect_keeps_a_declared_builtin_name_and_its_subpath() {
+    let source = "\
+import { emitter } from 'events';
+import browser from 'process/browser';
+import path from 'path';
+import { readFile } from 'fs/promises';
+import nodeFs from 'node:fs';
+";
+    let mut declared = BTreeSet::new();
+    declared.insert("events".to_string());
+    declared.insert("process".to_string());
+    let imports = collect(
+        Path::new("index.ts"),
+        source,
+        "widgets",
+        "index.ts",
+        &declared,
+    )
+    .unwrap()
+    .imports;
+    let packages: Vec<_> = imports
+        .iter()
+        .map(|import| import.package.as_str())
+        .collect();
+    assert_eq!(packages, vec!["events", "process"]);
 }
 
 #[test]

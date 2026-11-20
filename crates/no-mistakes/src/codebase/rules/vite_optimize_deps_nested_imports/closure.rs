@@ -16,6 +16,7 @@ pub(super) fn runtime_imports(
     own_package: &str,
     sources: &SourceStore,
     all_files: &[PathBuf],
+    declared: &BTreeSet<String>,
 ) -> Result<Vec<RuntimeImport>, Box<RuleFinding>> {
     let mut seeds = BTreeSet::new();
     if let Some(entry) = published_entry(manifest_value) {
@@ -61,8 +62,8 @@ pub(super) fn runtime_imports(
                 &error,
             ))
         })?;
-        let collected =
-            entry_imports::collect(&path, &source, own_package, &file).map_err(|_| {
+        let collected = entry_imports::collect(&path, &source, own_package, &file, declared)
+            .map_err(|_| {
                 Box::new(manifest::unanalyzable(
                     root,
                     &path,
