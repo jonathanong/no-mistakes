@@ -1,7 +1,7 @@
 use super::fragments::Fragment;
 use super::resolve::{name_fragments, FileCtx};
 use crate::codebase::dependencies::extract::{
-    ValueAssignedMutations, ValueAssignedWriter, ValueMutationHistory,
+    ValueAssignedMutation, ValueAssignedMutations, ValueAssignedWriter, ValueMutationHistory,
 };
 
 pub(super) fn assignment_sites(ctx: &FileCtx<'_>) -> Vec<(u32, Vec<Fragment>)> {
@@ -41,11 +41,20 @@ fn push_assigned(
     sites: &mut Vec<(u32, Vec<Fragment>)>,
 ) {
     for mutation in assigned.members.values() {
-        push_site(ctx, name, mutation.offset, mutation.writer, sites);
+        push_mutation(ctx, name, mutation, sites);
     }
     if let Some(dynamic) = &assigned.dynamic {
-        push_site(ctx, name, dynamic.offset, dynamic.writer, sites);
+        push_mutation(ctx, name, dynamic, sites);
     }
+}
+
+fn push_mutation(
+    ctx: &FileCtx<'_>,
+    name: &str,
+    mutation: &ValueAssignedMutation,
+    sites: &mut Vec<(u32, Vec<Fragment>)>,
+) {
+    push_site(ctx, name, mutation.offset, mutation.writer, sites);
 }
 
 fn push_site(

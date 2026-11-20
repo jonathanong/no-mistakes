@@ -36,23 +36,31 @@ fn assignment_history_follows_members_and_dynamic_writes() {
     {
         let entry = world.facts.ts.get_mut(&escape).expect("escape facts");
         let mut owned = (*entry.ts).clone();
-        let mut child = ValueMutationHistory::default();
-        child.assigned = Some(Box::new(assigned(
-            mutation(4, ValueAssignedWriter::Callable(CallableId(1))),
-            Some(mutation(8, ValueAssignedWriter::Module)),
-        )));
-        let mut dynamic = ValueMutationHistory::default();
-        dynamic.assigned = Some(Box::new(assigned(
-            mutation(12, ValueAssignedWriter::Mixed),
-            None,
-        )));
-        let mut root = ValueMutationHistory::default();
-        root.assigned = Some(Box::new(assigned(
-            mutation(16, ValueAssignedWriter::Module),
-            None,
-        )));
-        root.members.insert("item".to_string(), child);
-        root.dynamic = Some(Box::new(dynamic));
+        let child = ValueMutationHistory {
+            assigned: Some(Box::new(assigned(
+                mutation(4, ValueAssignedWriter::Callable(CallableId(1))),
+                Some(mutation(8, ValueAssignedWriter::Module)),
+            ))),
+            ..ValueMutationHistory::default()
+        };
+        let dynamic = ValueMutationHistory {
+            assigned: Some(Box::new(assigned(
+                mutation(12, ValueAssignedWriter::Mixed),
+                None,
+            ))),
+            ..ValueMutationHistory::default()
+        };
+        let mut members = fx_map();
+        members.insert("item".to_string(), child);
+        let root = ValueMutationHistory {
+            assigned: Some(Box::new(assigned(
+                mutation(16, ValueAssignedWriter::Module),
+                None,
+            ))),
+            members,
+            dynamic: Some(Box::new(dynamic)),
+            ..ValueMutationHistory::default()
+        };
         let mut by_name = fx_map();
         by_name.insert("columns".to_string(), Arc::new(root));
         let mut receivers = fx_map();

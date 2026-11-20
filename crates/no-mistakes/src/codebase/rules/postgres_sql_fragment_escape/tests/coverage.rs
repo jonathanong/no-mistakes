@@ -65,7 +65,10 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
         &mut Vec::new()
     )
     .is_empty());
-    aliased.source = Some(Arc::<str>::from("export const kept = 1;"));
+    aliased = TsFileFacts {
+        source: Some(Arc::<str>::from("export const kept = 1;")),
+        ..TsFileFacts::default()
+    };
     assert!(alias::source_alias(
         &catalog,
         &world.graph,
@@ -76,7 +79,10 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
         &mut Vec::new()
     )
     .is_empty());
-    aliased.source = Some(Arc::<str>::from("export { widgetColumns as orderColumns }"));
+    aliased = TsFileFacts {
+        source: Some(Arc::<str>::from("export { widgetColumns as orderColumns }")),
+        ..TsFileFacts::default()
+    };
     assert!(alias::source_alias(
         &catalog,
         &world.graph,
@@ -87,9 +93,12 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
         &mut Vec::new()
     )
     .is_empty());
-    aliased.source = Some(Arc::<str>::from(
-        "import { widgetColumns } from \"./columns\";\nexport { widgetColumns as orderColumns }",
-    ));
+    aliased = TsFileFacts {
+        source: Some(Arc::<str>::from(
+            "import { widgetColumns } from \"./columns\";\nexport { widgetColumns as orderColumns }",
+        )),
+        ..TsFileFacts::default()
+    };
     assert_from(
         &alias::source_alias(
             &catalog,
@@ -432,7 +441,7 @@ fn tags_require_a_matching_sql_import() {
     };
     assert!(tags::is_fragment_binding(
         &named_tag,
-        &[tag.clone()],
+        std::slice::from_ref(&tag),
         &proven
     ));
     named_tag.imported_bindings[0].specifier = "other".to_string();

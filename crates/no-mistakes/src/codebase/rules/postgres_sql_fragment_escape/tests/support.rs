@@ -110,8 +110,10 @@ fn add_fragment(ts: &mut TsFileFacts, name: &str, start: u32) {
 }
 
 pub(super) fn fragment_facts(names: &[(&str, u32)]) -> TsFileFacts {
-    let mut ts = TsFileFacts::default();
-    ts.source = Some(Arc::<str>::from("import sql from \"@example/sql\";"));
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from("import sql from \"@example/sql\";")),
+        ..TsFileFacts::default()
+    };
     ts.imported_bindings.push(import(
         "@example/sql",
         "sql",
@@ -199,8 +201,10 @@ fn escape_source() -> String {
 }
 
 fn escape_facts(source: &str) -> TsFileFacts {
-    let mut ts = TsFileFacts::default();
-    ts.source = Some(Arc::<str>::from(source));
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
     ts.imported_bindings.push(import(
         "./columns",
         "columns",
@@ -267,8 +271,10 @@ fn escape_facts(source: &str) -> TsFileFacts {
 }
 
 fn index_facts() -> TsFileFacts {
-    let mut ts = TsFileFacts::default();
-    ts.source = Some(Arc::<str>::from("export * from \"./columns\";\n"));
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from("export * from \"./columns\";\n")),
+        ..TsFileFacts::default()
+    };
     ts.star_reexport_specifiers.push("./columns".to_string());
     ts.imported_bindings.push(import(
         "./columns",
@@ -292,7 +298,10 @@ pub(super) fn world() -> World {
     let widgets = path("/repo/widgets/index.ts");
     let ambient = path("/repo/ambient.ts");
     let escape_source = escape_source();
-    let mut facts = CheckFactMap::default();
+    let mut facts = CheckFactMap {
+        graph_files_complete: true,
+        ..CheckFactMap::default()
+    };
     insert(
         &mut facts,
         columns.clone(),
@@ -306,8 +315,10 @@ pub(super) fn world() -> World {
     insert(&mut facts, index.clone(), index_facts());
     insert(&mut facts, escape.clone(), escape_facts(&escape_source));
     insert(&mut facts, widgets.clone(), TsFileFacts::default());
-    let mut ambient_facts = TsFileFacts::default();
-    ambient_facts.source = Some(Arc::<str>::from("declare module \"widget-mod\" {}\n"));
+    let ambient_facts = TsFileFacts {
+        source: Some(Arc::<str>::from("declare module \"widget-mod\" {}\n")),
+        ..TsFileFacts::default()
+    };
     insert(&mut facts, ambient.clone(), ambient_facts);
     let mut bad = fragment_facts(&[("badColumns", 10)]);
     bad.operational_error = Some("unreadable".to_string());
@@ -316,7 +327,6 @@ pub(super) fn world() -> World {
     incomplete.value_flow.incomplete_reason = Some("partial".to_string());
     insert(&mut facts, path("/repo/incomplete.ts"), incomplete);
     insert(&mut facts, path("/"), TsFileFacts::default());
-    facts.graph_files_complete = true;
     let mut forward = HashMap::new();
     forward.insert(escape.clone(), vec![widgets.clone()]);
     World {
