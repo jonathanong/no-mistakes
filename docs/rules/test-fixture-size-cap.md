@@ -8,9 +8,9 @@ form stays off until `eachCalls` names a callee.
 The rule is opt-in. With no `threshold`, it reports nothing. It does not cap
 source-file bytes. When `eachCalls` names a callee, the each form reads numeric
 elements as cardinalities. It is meant for scale or size tables. A numeric
-element of an unconfigured table is a test input. `exemptions` allow one exact
-cardinality; they do not cover boundary-value tables, because those inputs
-change with each limit.
+element of a table whose callee is not listed is a test input. `exemptions`
+allow one exact cardinality; they do not cover boundary-value tables, because
+those inputs change with each limit.
 
 ```yaml
 rules:

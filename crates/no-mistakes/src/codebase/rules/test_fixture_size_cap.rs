@@ -16,7 +16,7 @@ pub const RULE_ID: &str = "test-fixture-size-cap";
 
 const SCRIPT_EXTENSIONS: &[&str] = &[".cjs", ".cts", ".js", ".jsx", ".mjs", ".mts", ".ts", ".tsx"];
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct Options {
     pub(super) threshold: Option<u64>,
@@ -38,17 +38,6 @@ pub(super) struct Compiled {
     pub(super) each_calls: Vec<(String, String)>,
     tests: GlobMatcher,
     helpers: GlobMatcher,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Self {
-            threshold: None,
-            exemptions: Vec::new(),
-            each_calls: Vec::new(),
-            scopes: Scopes::default(),
-        }
-    }
 }
 
 pub(crate) fn check_with_files(
