@@ -58,6 +58,9 @@ pub(super) fn scan(
         for (offset, fragments) in super::writes::assignment_sites(&ctx) {
             emit(&mut findings, root, &ctx, offset, &fragments);
         }
+        for (offset, fragments) in super::namespace_uses::value_sites(&ctx) {
+            emit(&mut findings, root, &ctx, offset, &fragments);
+        }
         for call in &ts.value_flow.calls {
             emit(
                 &mut findings,
@@ -95,6 +98,8 @@ pub(super) fn scan(
             );
         }
     }
+    findings.sort();
+    findings.dedup();
     findings
 }
 

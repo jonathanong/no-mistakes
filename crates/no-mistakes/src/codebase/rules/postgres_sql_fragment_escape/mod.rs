@@ -5,6 +5,7 @@ mod fragments;
 mod modules;
 mod mutate;
 mod names;
+mod namespace_uses;
 mod resolve;
 mod scan;
 mod source_text;

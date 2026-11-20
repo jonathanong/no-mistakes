@@ -66,6 +66,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "KEY_B"
         },
         {
+          "file": "destructureSiblingMutator.ts",
+          "import": "destructureSibling.ts",
+          "line": 3,
+          "message": "exported SQL fragment `SIBLING_COLS` from `destructureSibling.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const { SIBLING_COLS } = parts;",
+          "target": "SIBLING_COLS"
+        },
+        {
+          "file": "destructureSiblingMutator.ts",
+          "import": "destructureSibling.ts",
+          "line": 3,
+          "message": "exported SQL fragment `SIBLING_OTHER` from `destructureSibling.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const { SIBLING_COLS } = parts;",
+          "target": "SIBLING_OTHER"
+        },
+        {
+          "file": "destructureSiblingMutator.ts",
+          "import": "destructureSibling.ts",
+          "line": 6,
+          "message": "exported SQL fragment `SIBLING_COLS` from `destructureSibling.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "SIBLING_COLS.append(dynamicFragment);",
+          "target": "SIBLING_COLS"
+        },
+        {
           "file": "dynamicMemberMutator.ts",
           "import": "dynamicMemberControls.ts",
           "line": 3,
@@ -136,6 +163,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "SHARED_COLS.append(dynamicFragment);",
           "target": "SHARED_COLS"
+        },
+        {
+          "file": "heritageMutator.ts",
+          "import": "heritageFragments.ts",
+          "line": 5,
+          "message": "exported SQL fragment `EXTEND_COLS` from `heritageFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "class WidgetRow extends (parts.EXTEND_COLS.text = dynamicSql, Object) {}",
+          "target": "EXTEND_COLS"
         },
         {
           "file": "indexAmbient.ts",
@@ -226,6 +262,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "return MUTATED.append(sql`, extra`);",
           "target": "MUTATED"
+        },
+        {
+          "file": "namespaceDestructureMutator.ts",
+          "import": "namespaceDestructureControls.ts",
+          "line": 3,
+          "message": "exported SQL fragment `NS_DESTRUCTURED_COLS` from `namespaceDestructureControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const { NS_DESTRUCTURED_COLS } = ns;",
+          "target": "NS_DESTRUCTURED_COLS"
         },
         {
           "file": "namespaceDestructureMutator.ts",
@@ -325,6 +370,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "parts.STAR_NS_MUT.append(extra);",
           "target": "STAR_NS_MUT"
+        },
+        {
+          "file": "typeofValueControls.ts",
+          "import": "typeofValueFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `KIND_COLS` from `typeofValueFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const kind = typeof parts;",
+          "target": "KIND_COLS"
+        },
+        {
+          "file": "typeofValueControls.ts",
+          "import": "typeofValueFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `KIND_OTHER` from `typeofValueFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const kind = typeof parts;",
+          "target": "KIND_OTHER"
         },
         {
           "file": "valueMutator.ts",

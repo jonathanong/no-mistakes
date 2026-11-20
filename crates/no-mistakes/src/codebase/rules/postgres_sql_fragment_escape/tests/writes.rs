@@ -1,5 +1,5 @@
 use super::super::writes::assignment_sites;
-use super::support::{catalog, ctx, world};
+use super::support::{assert_from, catalog, ctx, world};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::dependencies::extract::{
     CallableId, ValueAssignedMutation, ValueAssignedMutations, ValueAssignedWriter,
@@ -51,7 +51,7 @@ fn assignment_history_follows_members_and_dynamic_writes() {
             ..ValueMutationHistory::default()
         };
         let mut members = fx_map();
-        members.insert("item".to_string(), child);
+        members.insert("widgetColumns".to_string(), child);
         let root = ValueMutationHistory {
             assigned: Some(Box::new(assigned(
                 mutation(16, ValueAssignedWriter::Module),
@@ -78,9 +78,14 @@ fn assignment_history_follows_members_and_dynamic_writes() {
     let mut offsets: Vec<u32> = sites.iter().map(|(offset, _)| *offset).collect();
     offsets.sort_unstable();
     assert_eq!(offsets, vec![4_u32, 8, 12, 16]);
-    assert!(sites.iter().all(|(_, fragments)| {
-        fragments.iter().any(|fragment| {
-            fragment.exported == "widgetColumns" && fragment.producer == world.columns
-        })
-    }));
+    let at = |offset: u32| {
+        sites
+            .iter()
+            .find(|(site, _)| *site == offset)
+            .map(|(_, found)| found.as_slice())
+            .expect("site")
+    };
+    assert_from(at(4), &world.columns, &["widgetColumns"]);
+    assert_from(at(8), &world.columns, &["widgetColumns"]);
+    assert_from(at(16), &world.columns, &["orderColumns", "widgetColumns"]);
 }

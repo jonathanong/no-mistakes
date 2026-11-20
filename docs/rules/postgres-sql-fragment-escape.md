@@ -52,6 +52,13 @@ is the escape:
 - A non-string computed key, `Object.assign`, `Object.values`, `Reflect.get`,
   `Reflect.set`, or any other use of the namespace that is not one member read.
   That use disproves every exported interpolation-free fragment of the module.
+  Destructuring the namespace (`const { COLS } = columns`) and value-position
+  `typeof columns` are uses of the whole module. `type Columns = typeof columns`
+  and `class Row implements columns.COLS` are types and stay silent. An
+  assignment in a class `extends` expression, such as
+  `columns.COLS.text = extra`, reports that fragment only.
+  `import Local = columns.COLS` names that export alone and stays silent until
+  a later write or escape.
 - `const parts = require(...)`, `import ext = require(...)`, and
   `await import(...)`, including `.then`.
 - An `export { local as public }` of an imported fragment, and an exported
