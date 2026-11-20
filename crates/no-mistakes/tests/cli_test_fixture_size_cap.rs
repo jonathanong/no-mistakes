@@ -27,8 +27,10 @@ fn test_fixture_size_cap_json_matches_snapshot() {
             (
                 "file_disabled",
                 rules_path(RULE, "fixture", "file-disabled"),
-                policy,
+                policy.clone(),
             ),
+            // Bare Array(N) matches new Array(N). Mixed lists report numeric literals.
+            ("recall", rules_path(RULE, "fixture", "recall"), policy),
             // 0 findings: omitting threshold reports nothing.
             (
                 "no_threshold",

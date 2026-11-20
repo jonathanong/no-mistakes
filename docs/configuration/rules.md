@@ -682,9 +682,10 @@ stays silent. Its advisory `target` identifies the shape. Use ordinary disable
 comments for source exceptions supported by a plan and benchmark.
 
 [`test-fixture-size-cap`](../rules/test-fixture-size-cap.md) caps literal
-`Array.from({ length })`, single-argument `new Array(n)`, and configured
-`eachCalls` numeric lists in `scopes.tests` and `scopes.helpers`. `threshold`
-has no default: omitting it reports nothing. `exemptions` defaults to `[]`,
-`eachCalls` defaults to `["it.each"]`, and both scope lists default to `[]`.
-A cardinality equal to the threshold is allowed. An exact exemption is allowed
-even when it is larger.
+`Array.from({ length })`, single-argument `Array(n)` and `new Array(n)`, and
+numeric literals in configured `eachCalls` lists in `scopes.tests` and
+`scopes.helpers`. `threshold` has no default: omitting it reports nothing.
+`exemptions` defaults to `[]`, `eachCalls` defaults to `["it.each"]`, and both
+scope lists default to `[]`. A cardinality equal to the threshold is allowed.
+An exact exemption is allowed even when it is larger. Narrow `eachCalls` when
+a callee's numeric lists should stay unchecked.

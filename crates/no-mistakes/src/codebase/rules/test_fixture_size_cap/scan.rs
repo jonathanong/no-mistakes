@@ -4,7 +4,7 @@ use super::literals::{
 use super::{in_scope, is_script, relative_file, Compiled, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers, SourceStore};
-use oxc_ast::ast::{CallExpression, Expression, NewExpression};
+use oxc_ast::ast::{Argument, CallExpression, Expression, NewExpression};
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 use std::path::Path;
@@ -54,6 +54,7 @@ struct Scanner<'a> {
 impl<'a> Visit<'a> for Scanner<'a> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.note_array_from(call);
+        self.note_array_call(call);
         self.note_each(call);
         walk::walk_call_expression(self, call);
     }
@@ -82,13 +83,24 @@ impl Scanner<'_> {
     }
 
     fn note_new_array(&mut self, expr: &NewExpression<'_>) {
-        let Expression::Identifier(name) = &expr.callee else {
-            return;
-        };
-        if name.name.as_str() != "Array" || expr.arguments.len() != 1 {
+        self.note_array_constructor(&expr.callee, &expr.arguments);
+    }
+
+    fn note_array_call(&mut self, call: &CallExpression<'_>) {
+        if call.optional {
             return;
         }
-        let Some(argument) = expr.arguments.first().and_then(|arg| arg.as_expression()) else {
+        self.note_array_constructor(&call.callee, &call.arguments);
+    }
+
+    fn note_array_constructor(&mut self, callee: &Expression<'_>, arguments: &[Argument<'_>]) {
+        let Expression::Identifier(name) = callee else {
+            return;
+        };
+        if name.name.as_str() != "Array" || arguments.len() != 1 {
+            return;
+        }
+        let Some(argument) = arguments.first().and_then(|arg| arg.as_expression()) else {
             return;
         };
         self.note_cardinality("new Array length", unwrap_ts_wrappers(argument));
@@ -107,10 +119,7 @@ impl Scanner<'_> {
         let Expression::ArrayExpression(array) = unwrap_ts_wrappers(argument) else {
             return;
         };
-        let Some(numbers) = numeric_list(array) else {
-            return;
-        };
-        for (value, span) in numbers {
+        for (value, span) in numeric_list(array) {
             self.note_value(&format!("{label} size"), value, span);
         }
     }

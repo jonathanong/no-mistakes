@@ -193,6 +193,16 @@ fn literal_lengths_use_integer_value_threshold_and_exemptions() {
     expect("const huge = new Array(1e20);", &[]);
     expect("const infinite = new Array(1e309);", &[]);
     expect("const spread = new Array(...items);", &[]);
+    expect("const called = Array(10_000);", &[OVER_NEW]);
+    expect("const exact_call = Array(1000);", &[]);
+    expect("const listed_call = Array(1, 2, 3);", &[]);
+    expect("const empty_call = Array();", &[]);
+    expect("const dynamic_call = Array(count);", &[]);
+    expect("Array?.(10_000);", &[]);
+    expect(
+        "const wrapped_call = Array((10001));",
+        &["new Array length 10001 exceeds threshold 1000"],
+    );
     expect(
         "const wrapped = new Array((1001));",
         &["new Array length 1001 exceeds threshold 1000"],
@@ -267,8 +277,25 @@ fn each_lists_follow_the_configured_callee() {
     expect("it.each([{ port: 5432 }])('record %j', () => {});", &[]);
     expect("it.each([10, 100])('small %i', () => {});", &[]);
     expect("it.each([])('none', () => {});", &[]);
-    expect("it.each([10_000,,1])('hole', () => {});", &[]);
-    expect("it.each([10_000, ...rest])('spread', () => {});", &[]);
+    expect(
+        "it.each([10_000,,1])('hole', () => {});",
+        &["it.each size 10000 exceeds threshold 1000"],
+    );
+    expect(
+        "it.each([10_000, ...rest])('spread', () => {});",
+        &["it.each size 10000 exceeds threshold 1000"],
+    );
+    expect(
+        "it.each([10_000, 'widget', 10_001])('mixed', () => {});",
+        &[
+            "it.each size 10000 exceeds threshold 1000",
+            "it.each size 10001 exceeds threshold 1000",
+        ],
+    );
+    expect(
+        "it.each([10_000, [10_001]])('nested', () => {});",
+        &["it.each size 10000 exceeds threshold 1000"],
+    );
     expect("it.each(items)('other', () => {});", &[]);
     expect("it.each()('missing', () => {});", &[]);
     expect("test.each([50_000])('other %i', () => {});", &[]);
@@ -350,6 +377,22 @@ fn configured_each_calls_message_and_suppression() {
     assert_eq!(
         sorted_messages(&applied),
         ["new Array length 9000 exceeds threshold 1000"]
+    );
+}
+
+#[test]
+fn saved_recall_reports_bare_array_and_literal_siblings() {
+    assert_eq!(
+        sorted_messages(&check_saved("recall", "policy.yml").unwrap()),
+        [
+            "it.each size 10000 exceeds threshold 1000",
+            "it.each size 10000 exceeds threshold 1000",
+            "it.each size 10000 exceeds threshold 1000",
+            "it.each size 10000 exceeds threshold 1000",
+            "it.each size 10001 exceeds threshold 1000",
+            "it.each size 10001 exceeds threshold 1000",
+            OVER_NEW,
+        ]
     );
 }
 

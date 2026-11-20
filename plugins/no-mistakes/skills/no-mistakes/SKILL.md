@@ -359,9 +359,10 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths,
-single-argument `new Array` lengths, and numeric `eachCalls` lists (default `it.each`)
-in `scopes.tests` and `scopes.helpers`. Omitting `threshold` reports nothing. Equal
-values and exact `exemptions` stay allowed. See the
+single-argument `Array` and `new Array` lengths, and numeric literals in `eachCalls`
+lists (default `it.each`) in `scopes.tests` and `scopes.helpers`. Omitting `threshold`
+reports nothing. Equal values and exact `exemptions` stay allowed. Narrow `eachCalls`
+to leave a callee unchecked. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
 
 

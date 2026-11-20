@@ -106,6 +106,68 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "recall": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 1,
+          "message": "new Array length 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const called = Array(10_000);"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, \"widget\", 10_001])(\"mixed %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "it.each size 10001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, \"widget\", 10_001])(\"mixed %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 5,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, [10_001]])(\"nested %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 6,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, , 10_001])(\"hole %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 6,
+          "message": "it.each size 10001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, , 10_001])(\"hole %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 8,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, ...rest])(\"spread %s\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "suppressed": {
     "exitCode": 1,
     "report": {

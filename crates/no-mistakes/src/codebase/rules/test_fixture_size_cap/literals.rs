@@ -50,16 +50,18 @@ fn is_length_key(property: &ObjectProperty) -> bool {
     }
 }
 
-pub(super) fn numeric_list(array: &ArrayExpression) -> Option<Vec<(f64, Span)>> {
+pub(super) fn numeric_list(array: &ArrayExpression) -> Vec<(f64, Span)> {
     let mut numbers = Vec::new();
     for element in &array.elements {
-        let expr = element.as_expression()?;
+        let Some(expr) = element.as_expression() else {
+            continue;
+        };
         let Expression::NumericLiteral(literal) = unwrap_ts_wrappers(expr) else {
-            return None;
+            continue;
         };
         numbers.push((literal.value, literal.span));
     }
-    Some(numbers)
+    numbers
 }
 
 pub(super) fn integer_cardinality(value: f64) -> Option<u64> {

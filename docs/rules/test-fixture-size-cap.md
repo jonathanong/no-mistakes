@@ -6,7 +6,9 @@ is reported. Record tables, dynamic lengths, and files outside the configured
 scopes stay silent.
 
 The rule is opt-in. With no `threshold`, it reports nothing. It does not cap
-source-file bytes or arbitrary numeric test data.
+source-file bytes. Every numeric literal in a list passed to a configured
+`eachCalls` callee is checked. Use `exemptions`, or a narrower `eachCalls`
+list, to leave intended sizes alone.
 
 ```yaml
 rules:
@@ -40,14 +42,15 @@ literal cardinality strictly greater than `threshold`:
   property is a numeric literal. An identifier key, a string key `"length"`,
   and a computed string `"length"` all count. A later `length` overrides an
   earlier one.
-- `new Array(N)` when the constructor has exactly one argument and that
-  argument is a numeric literal. `new Array(1, 2, 3)` is an element list, not
-  a length. The callee must be the identifier `Array`. `window.Array` is not
-  matched, and the rule does not resolve bindings.
+- `new Array(N)` and a call `Array(N)` when there is exactly one argument and
+  that argument is a numeric literal. Both use the `new Array length` message.
+  `new Array(1, 2, 3)` and `Array(1, 2, 3)` are element lists, not lengths.
+  The callee must be the identifier `Array`. `window.Array` is not matched,
+  and the rule does not resolve bindings.
 - Calls named by `eachCalls`, default `it.each`, when the first argument is an
-  array whose every element is a numeric literal. One finding is reported per
-  oversized number. A record table such as `[{ port: 5432 }]`, a hole, or a
-  spread is not a size list.
+  array. Each numeric literal element is reported on its own. Records, holes,
+  spreads, nested arrays, and other non-literals are skipped, and literal
+  siblings in the same list are still reported.
 
 `1_001` and `0x400` use their integer values. `1_024` and `0x400` are the same
 cardinality. A value equal to `threshold` is allowed. An entry in `exemptions`
@@ -68,7 +71,9 @@ source text.
 
 `eachCalls` defaults to `["it.each"]`. Each entry is an `object.property`
 identifier pair. An explicit `[]` disables the each form and still checks
-`Array.from` and `new Array`. `test.each` is not checked unless it is listed.
+`Array.from`, `Array(N)`, and `new Array`. `test.each` is not checked unless it
+is listed. Narrow `eachCalls` when a callee's numeric lists should stay
+unchecked.
 
 `scopes.tests` and `scopes.helpers` default to `[]`. Empty scopes scan
 nothing. A file is in scope when its repository-relative path matches either
@@ -92,14 +97,16 @@ export const rows = Array.from({ length: 5_000 }, () => ({ name: "order" }));
 ```ts
 // widgets.test.ts
 const rows = Array.from({ length: 1_001 }, () => ({ name: "widget" }));
-it.each([10_000, 100_000])("scale %i", () => {});
+const wide = Array(10_000);
+it.each([10_000, "widget", 100_000])("scale %i", () => {});
 ```
 
 ## Fix
 
-Lower the literal to the threshold, build the rows from a small explicit list,
-or turn a numeric size table into a record table. Add an exact integer to
-`exemptions` only when that cardinality is a deliberate boundary.
+Lower the literal to the threshold or build the rows from a small explicit
+list. Add an exact integer to `exemptions`, or narrow `eachCalls`, when a
+listed cardinality is intentional. A record element is skipped; numeric
+siblings in the same list are still checked.
 
 ## Suppression
 
