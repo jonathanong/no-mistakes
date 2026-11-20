@@ -14,6 +14,7 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     "query-reached-per-item",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
+    "postgres-sql-fragment-escape",
 ];
 
 pub(super) fn graph_failed(

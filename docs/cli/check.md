@@ -160,6 +160,10 @@ and [postgres-no-unbounded-sql-identifier](../rules/postgres-no-unbounded-sql-id
 use prepared import, value-flow, and embedded-SQL facts with the canonical graph
 to prove cross-file registry writes and unbounded identifier interpolations.
 At maximum effort, unknown provenance is never a finding.
+Opt-in [postgres-sql-fragment-escape](../rules/postgres-sql-fragment-escape.md)
+reports cross-file writes, rebinds, and namespace escapes of exported trusted
+SQL fragments. It borrows the same prepared facts and does not change the
+registry rule.
 
 Opt-in [postgres-no-test-state-mutation](../rules/postgres-no-test-state-mutation.md)
 requires explicit `testGlobs` and optionally selects helper files with

@@ -60,11 +60,12 @@ const ESCAPED = [
   "exportAssignmentControls.ts",
 ];
 const ESCAPED_LINES = [[15], [15], [15], [15], [14], [12]];
-const CONTROL_LINES = [67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100, 109];
+const CONTROL_LINES = [67, 70, 73, 76, 79, 82, 85, 88, 94, 97, 100, 109];
+const UNTYPED_CONTROL_LINES = [67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100, 109];
 
 it("proves constant append chains and reports the controls in forwarding-only mode", async () => {
   const rows = suite("forwarding-only", PROOFS, CONTROLS);
-  expect(lines(rows)).toEqual([[], [], [], CONTROL_LINES, [6, 7, 8]]);
+  expect(lines(rows)).toEqual([[], [], [], CONTROL_LINES, [7, 8]]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-forwarding-only.snap",
   );
@@ -85,15 +86,15 @@ it("proves only file-local constants without type information", async () => {
     ["importedConstProofs.ts", "controls.ts"],
     false,
   );
-  expect(lines(rows)).toEqual([[], [23, 26], CONTROL_LINES]);
+  expect(lines(rows)).toEqual([[], [23, 26], UNTYPED_CONTROL_LINES]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-untyped.snap",
   );
 });
 
-it("reports constants mutated through aliases or other modules", async () => {
-  const rows = suite("forwarding-only", [], MUTATED);
-  expect(lines(rows)).toEqual([[14, 17], [11], [11]]);
+it("accepts imported constants whose escapes are outside this file", async () => {
+  const rows = suite("forwarding-only", MUTATED, []);
+  expect(lines(rows)).toEqual([[], [], []]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-mutated.snap",
   );
@@ -117,17 +118,17 @@ it("reports the same escaped constants without type information", () => {
   expect(lines(rows)).toEqual(ESCAPED_LINES);
 });
 
-it("reports constants mutated through a namespace import", async () => {
-  const rows = suite("forwarding-only", [], NAMESPACE);
-  expect(lines(rows)).toEqual([[11], [11]]);
+it("accepts namespace imports whose escapes are outside this file", async () => {
+  const rows = suite("forwarding-only", NAMESPACE, []);
+  expect(lines(rows)).toEqual([[], []]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-namespace.snap",
   );
 });
 
-it("reports constants mutated through renames, ambient re-exports, default and require aliases", async () => {
-  const rows = suite("forwarding-only", [], ["indexControls.ts"]);
-  expect(lines(rows)).toEqual([[31, 34, 37, 40, 43]]);
+it("accepts renames, ambient re-exports, default and require aliases", async () => {
+  const rows = suite("forwarding-only", ["indexControls.ts"], []);
+  expect(lines(rows)).toEqual([[]]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-index.snap",
   );

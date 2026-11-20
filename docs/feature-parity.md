@@ -190,6 +190,11 @@ default after the first argument; extra caller objects remain unresolved.
 CLI and async Node checks share the same inert later-parameter default proof
 and exact closed-object gate for a defaulted helper destructure.
 
+Opt-in `postgres-sql-fragment-escape` reports cross-file writes, rebinds, and
+namespace escapes of exported trusted SQL const fragments. It borrows prepared
+import and value-flow facts plus the canonical graph, and it does not change
+`postgres-no-mutable-sql-registry`.
+
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
 (including re-export aliases, `export *` barrels, namespace imports, `delete`,

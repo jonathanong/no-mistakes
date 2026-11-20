@@ -136,6 +136,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-no-offset`](postgres-no-offset.md)                                 | Ban SQL OFFSET in executed PostgreSQL queries.                                  |
 | [`postgres-lock-written-rows-only`](postgres-lock-written-rows-only.md) | Keep transaction locks on written rows; flag table, global advisory, and autocommit row locks. |
 | [`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md)     | Ban cross-file member writes that reach SQL identifier interpolations.          |
+| [`postgres-sql-fragment-escape`](postgres-sql-fragment-escape.md)             | Report cross-file writes, rebinds, and namespace escapes of exported SQL fragments. |
 | [`postgres-no-test-state-mutation`](postgres-no-test-state-mutation.md) | Ban schema, server-setting, and sleep mutations executed by selected tests. |
 | [`postgres-no-unbounded-sql-identifier`](postgres-no-unbounded-sql-identifier.md) | Ban unbounded env/config/parameter/row values interpolated as SQL identifiers. |
 | [`postgres-array-columns`](postgres-array-columns.md)                        | Flag PostgreSQL array columns unless an allow entry or element type excuses them. |

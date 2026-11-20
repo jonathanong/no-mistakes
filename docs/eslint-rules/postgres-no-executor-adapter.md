@@ -302,39 +302,26 @@ or such a statement extended with `.append(<literal>)`. A dynamic fragment
 
 A helper that forwards `query(sql`...`.append(COLS).append(sql`...`))` is proven
 when the chain's root and every appended fragment are trusted `sql` tags, or a
-fragment is a constant: a module-level `const` bound to a trusted `sql` tag that
-nothing reassigns or mutates. The only uses allowed anywhere in the program are
-as the argument of `.append(...)`; `COLS.append(...)`, passing it to another
-call, or exporting it as a value that is read otherwise count as mutation. A
-constant declared in the helper's file may interpolate scalars. A constant
-imported from a sibling module (including `import * as ns` access and renamed
-imports) must have no interpolations, and the checker must be available because
-the proof reads every file of the program. Without type information only
-constants declared in the same file and never exported are proven. Uses are
-resolved through re-exports, renames and `default` aliases, so a mutation in
-another module through any alias disproves the constant. A namespace import
-(`import * as parts`), `import parts = require(...)`, `const parts = require(...)`,
-and `const parts = await import(...)` (including `import(...).then`) are that
-module. `parts.COLS` and `parts["COLS"]` are uses of that export: an argument of
-`.append(...)` is allowed, and any other use, including `parts.COLS.append(...)`,
-disproves it. A string key names that member. A computed key that is not a string,
-or any use of the namespace that is not a member read (`Object.values(parts)`,
-`Object.assign`, `Reflect.set` or `Reflect.get`, or passing `parts` into a call),
-disproves every exported fragment. A destructuring binding
-(`const { COLS } = parts`) is that kind of use. It disproves every exported
-fragment, including one the local never writes, because the local is a new
-binding rather than the export symbol. A type-position `typeof parts`
-(`type Columns = typeof parts`, including `typeof parts.COLS`) does not read
-the module object and does not disprove a fragment. A value-position
-`typeof parts` does. A class `extends` expression is also a value, so
-`class Row extends (parts.COLS.text = text, Object)` disproves that fragment.
-An `implements` clause does not. An `export *` barrel is that same module
-for both a named import and a namespace import.
+fragment is a constant: a module-level `const` bound to a trusted `sql` tag whose
+uses in this file are only the initializer and arguments of `.append(...)`.
+`COLS.append(...)`, passing the constant to another call, or any other same-file
+read counts as mutation. A constant declared in the helper's file may
+interpolate scalars. An imported interpolation-free module-level `const`,
+including `import * as ns` member access, a string computed member, and a
+renamed or default import, is accepted here. This rule does not read other
+files. Cross-file writes, rebinds, namespace escapes (`Object.assign`,
+`Object.values`, `Reflect`, a non-string computed key, `require`, dynamic
+`import`, and `export *`) are reported by
+[`postgres-sql-fragment-escape`](../rules/postgres-sql-fragment-escape.md) when
+`check` runs that rule. A run that uses only this rule accepts an imported
+fragment that another file escapes. Without type information only constants
+declared in the same file and never exported are proven. A `!` or `as`
+assertion around an otherwise append-only use still disproves it, and the chain
+reports.
 
 An `export =` assignment, `eval` of a string, and a `globalThis` write that never
 names the binding are not tracked, so a mutation through them does not disprove
-the constant. A `!` or `as` assertion around an otherwise append-only use does
-disprove it, and the chain reports.
+the constant.
 
 ```ts
 const COLS = sql`id, state`;
@@ -344,9 +331,8 @@ async function appendOnly(id: string, query: SessionExecutor) {
 ```
 
 An appended parameter, `let`, call result, string constant, a constant that is
-mutated anywhere (including in another module), a constant whose tag has
-interpolations from another module, or a constant used as the chain root
-(`COLS.append(...)` mutates it) keeps reporting.
+mutated in this file, a same-file constant whose tag has interpolations, or a
+constant used as the chain root (`COLS.append(...)` mutates it) keeps reporting.
 
 Structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as

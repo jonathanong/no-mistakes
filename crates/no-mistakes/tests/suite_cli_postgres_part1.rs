@@ -157,6 +157,8 @@ mod cli_postgres_snapshot_named_constraints;
 mod cli_postgres_snapshot_no_add_column;
 #[path = "cli_postgres_snapshot_no_mutable_sql_registry.rs"]
 mod cli_postgres_snapshot_no_mutable_sql_registry;
+#[path = "cli_postgres_snapshot_sql_fragment_escape.rs"]
+mod cli_postgres_snapshot_sql_fragment_escape;
 #[path = "cli_postgres_snapshot_no_offset.rs"]
 mod cli_postgres_snapshot_no_offset;
 #[path = "cli_postgres_snapshot_no_test_state_mutation.rs"]

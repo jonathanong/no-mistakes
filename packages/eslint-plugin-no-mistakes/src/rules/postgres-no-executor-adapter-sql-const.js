@@ -1,7 +1,6 @@
 "use strict";
 
 const { resolveVariable } = require("./postgres-query-text");
-const { escapes, resolvedSymbol } = require("./postgres-no-executor-adapter-sql-escape");
 
 // `statement.append(fragment)` stays static when both sides are static SQL; see
 // "Append chains" in docs/eslint-rules/postgres-no-executor-adapter.md.
@@ -19,6 +18,17 @@ function appendArgument(identifier) {
   return isAppend(identifier.parent) && identifier.parent.arguments[0] === identifier;
 }
 
+function aliasTarget(symbol, checker, ts) {
+  return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+}
+
+function resolvedSymbol(node, checker, ts) {
+  const symbol = ts.isShorthandPropertyAssignment(node.parent)
+    ? checker.getShorthandAssignmentValueSymbol(node.parent)
+    : checker.getSymbolAtLocation(node);
+  return symbol && aliasTarget(symbol, checker, ts);
+}
+
 function tsConstDeclaration(declaration, ts, judge) {
   const list = declaration.parent;
   return Boolean(
@@ -33,7 +43,7 @@ function tsConstDeclaration(declaration, ts, judge) {
   );
 }
 
-// An appendOnly, interpolation-free module-level `const` sql tag, imported or not.
+// An append-only, interpolation-free module-level `const` sql tag, imported or not.
 function fragmentName(node, ts) {
   if (ts.isPropertyAccessExpression(node)) return node.name;
   if (
@@ -49,9 +59,7 @@ function tsConstFragment(node, shared, judge) {
   const { checker, ts } = shared;
   const symbol = resolvedSymbol(fragmentName(node, ts), checker, ts);
   const declaration = symbol?.declarations?.length === 1 ? symbol.declarations[0] : null;
-  return Boolean(
-    declaration && tsConstDeclaration(declaration, ts, judge) && !escapes(symbol, shared),
-  );
+  return Boolean(declaration && tsConstDeclaration(declaration, ts, judge));
 }
 
 function localConst(variable, judge) {
@@ -69,8 +77,17 @@ function localConst(variable, judge) {
   );
 }
 
-// An appended fragment: a never-written, never-mutated module-level const sql tag.
-// Constants this file cannot see all uses of go through the type checker.
+function exportClause(variable) {
+  return variable.references.every(
+    (reference) =>
+      reference.init ||
+      appendArgument(reference.identifier) ||
+      reference.identifier.parent.type === "ExportSpecifier",
+  );
+}
+
+// An appended fragment: a never-written module-level const sql tag in this file.
+// An imported interpolation-free const is accepted without reading other files.
 function stringMember(node) {
   return (
     node.type === "MemberExpression" &&
@@ -95,28 +112,39 @@ function sharedServices(context) {
   };
 }
 
+function programConst(variable) {
+  const [def] = variable.defs;
+  return Boolean(
+    def?.type === "Variable" && def.parent.kind === "const" && def.parent.parent.type === "Program",
+  );
+}
+
 function constFragment(node, context, judges) {
   const variable = node.type === "Identifier" ? resolveVariable(node, context) : null;
-  const typed = sharedServices(context);
-  if (variable && localConst(variable, judges.local)) {
-    if (!typed || !typed.services.esTreeNodeToTSNodeMap?.has(node)) return true;
-    const symbol = resolvedSymbol(
-      typed.services.esTreeNodeToTSNodeMap.get(node),
-      typed.shared.checker,
-      typed.shared.ts,
-    );
-    return !symbol || !escapes(symbol, typed.shared);
+  if (variable && localConst(variable, judges.local)) return true;
+  if (
+    variable &&
+    programConst(variable) &&
+    !(typedReady(context, node) && exportClause(variable))
+  ) {
+    return false;
   }
   const reference =
     node.type === "Identifier" ||
     stringMember(node) ||
     (node.type === "MemberExpression" && !node.computed && node.object.type === "Identifier");
-  if (!reference || !typed || !typed.services.esTreeNodeToTSNodeMap?.has(node)) return false;
+  if (!reference || !typedReady(context, node)) return false;
+  const typed = sharedServices(context);
   return tsConstFragment(
     typed.services.esTreeNodeToTSNodeMap.get(node),
     typed.shared,
     judges.ts(typed.shared),
   );
+}
+
+function typedReady(context, node) {
+  const typed = sharedServices(context);
+  return Boolean(typed && typed.services.esTreeNodeToTSNodeMap?.has(node));
 }
 
 module.exports = { constFragment, isAppend, tsConstFragment };
