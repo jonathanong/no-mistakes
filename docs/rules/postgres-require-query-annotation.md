@@ -76,6 +76,10 @@ by ``statement.append(sql` ORDER BY id LIMIT ${limit + 1}`)`` and
 result (`const result = await query(statement)`), destructure it
 (`const { rows } = await query(statement)`), or stand alone
 (`await query(statement);`); the call must pass the appended builder itself.
+A helper with no conditional append is proven the same way. One in-place trusted
+tail is enough, including an arithmetic interpolation such as
+``sql` ORDER BY id LIMIT ${limit + 1}` ``, when the callback result is a plain
+destructure (`const { rows } = await query(statement); return rows`).
 A destructure may use only plain, possibly nested bindings, never defaults,
 computed keys, or non-identifier rest targets. After the call, only the result
 may be read (`return rows`, `return result.rows`); another call, an append, or

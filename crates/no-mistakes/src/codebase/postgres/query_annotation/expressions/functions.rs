@@ -58,19 +58,20 @@ fn summary_proof(
     source: &str,
     summary: &mut std::sync::Arc<Function>,
 ) {
-    if !summary
+    let branched = summary
         .body
         .iter()
-        .any(|step| matches!(step, Step::Branch(..)))
-    {
+        .any(|step| matches!(step, Step::Branch(..)));
+    if !branched && !super::append_callback::destructured_append(summary) {
         return;
     }
     let candidate = if summary.supported {
         summary.clone()
-    } else if summary
-        .body
-        .iter()
-        .any(|step| matches!(step, Step::Unsupported))
+    } else if branched
+        && summary
+            .body
+            .iter()
+            .any(|step| matches!(step, Step::Unsupported))
     {
         let body = value
             .body

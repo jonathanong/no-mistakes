@@ -48,6 +48,22 @@ pub(super) fn collect(function: &ast::Function<'_>, summary: &Function) -> Optio
     })
 }
 
+// Branchless proof: the callback call is the destructured result, and the same
+// parameter was appended in place. Re-lowering stays on the branch path.
+pub(super) fn destructured_append(summary: &Function) -> bool {
+    let Some((index, _, payload)) = call_site(summary) else {
+        return false;
+    };
+    let Step::Bind(name, _) = &summary.body[index] else {
+        return false;
+    };
+    name == super::super::statements::destructured::RESULT
+        && summary
+            .body
+            .iter()
+            .any(|step| matches!(step, Step::Append(bound, _) if bound == &payload))
+}
+
 // The callback call may be returned, bound, or a bare statement; only the SQL
 // built in place before it matters, never its result.
 fn call_site(summary: &Function) -> Option<(usize, usize, String)> {
