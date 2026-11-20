@@ -286,6 +286,7 @@ fn workflow_scan_reports_configured_files_only() {
 #[test]
 fn yaml_lines_follow_the_located_script() {
     use crate::codebase::rules::github_actions_script_expressions::StepRun;
+    use crate::codebase::rules::github_actions_workflow_files::run_scripts::scalar_name;
     let located = StepRun {
         job: "unit".to_string(),
         step: 1,
@@ -332,20 +333,14 @@ fn yaml_lines_follow_the_located_script() {
         8
     );
     assert_eq!(
-        super::runs::scalar_name(&serde_yaml::Value::String("unit".to_string())),
+        scalar_name(&serde_yaml::Value::String("unit".to_string())),
         "unit"
     );
     assert_eq!(
-        super::runs::scalar_name(&serde_yaml::Value::String(String::new())),
+        scalar_name(&serde_yaml::Value::String(String::new())),
         "job"
     );
-    assert_eq!(
-        super::runs::scalar_name(&serde_yaml::Value::from(1_i64)),
-        "1"
-    );
-    assert_eq!(
-        super::runs::scalar_name(&serde_yaml::Value::Bool(true)),
-        "true"
-    );
-    assert_eq!(super::runs::scalar_name(&serde_yaml::Value::Null), "job");
+    assert_eq!(scalar_name(&serde_yaml::Value::from(1_i64)), "1");
+    assert_eq!(scalar_name(&serde_yaml::Value::Bool(true)), "true");
+    assert_eq!(scalar_name(&serde_yaml::Value::Null), "job");
 }

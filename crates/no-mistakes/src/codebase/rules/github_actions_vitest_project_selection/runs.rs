@@ -2,6 +2,7 @@ use super::judge::{narrowings, Narrowing};
 use super::options::{Compiled, NameFilters};
 use super::{RuleFinding, RULE_ID};
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
+use crate::codebase::rules::github_actions_workflow_files::run_scripts::{run_scripts, RunScript};
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
@@ -18,7 +19,7 @@ pub(super) fn check_source(rel: &str, source: &str, compiled: &Compiled) -> Vec<
         return Vec::new();
     };
     let located = step_run_lines(source, action);
-    bodies(action, &value)
+    run_scripts(action, &value)
         .into_iter()
         .flat_map(|body| judge(rel, &body, &policies, &located))
         .collect()
@@ -33,82 +34,9 @@ fn policies_for<'a>(rel: &str, compiled: &'a Compiled) -> BTreeMap<&'a str, Name
         .collect()
 }
 
-struct Body {
-    job: String,
-    step: usize,
-    script: String,
-    composite: bool,
-}
-
-fn bodies(action: bool, value: &Value) -> Vec<Body> {
-    if action {
-        return composite_bodies(value);
-    }
-    let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
-        return Vec::new();
-    };
-    let mut out = Vec::new();
-    for (id, job) in jobs {
-        let Some(job) = job.as_mapping() else {
-            continue;
-        };
-        let Some(steps) = job
-            .get(Value::String("steps".to_owned()))
-            .and_then(Value::as_sequence)
-        else {
-            continue;
-        };
-        push_runs(&scalar_name(id), steps, false, &mut out);
-    }
-    out
-}
-
-fn composite_bodies(value: &Value) -> Vec<Body> {
-    if value
-        .get("runs")
-        .and_then(|runs| runs.get("using"))
-        .and_then(Value::as_str)
-        != Some("composite")
-    {
-        return Vec::new();
-    }
-    let Some(steps) = value
-        .get("runs")
-        .and_then(|runs| runs.get("steps"))
-        .and_then(Value::as_sequence)
-    else {
-        return Vec::new();
-    };
-    let mut out = Vec::new();
-    push_runs("", steps, true, &mut out);
-    out
-}
-
-fn push_runs(job: &str, steps: &[Value], composite: bool, out: &mut Vec<Body>) {
-    for (index, step) in steps.iter().enumerate() {
-        let Some(script) = step
-            .as_mapping()
-            .and_then(|step| step.get(Value::String("run".to_owned())))
-            .and_then(Value::as_str)
-        else {
-            continue;
-        };
-        out.push(Body {
-            job: if composite {
-                String::new()
-            } else {
-                job.to_string()
-            },
-            step: index + 1,
-            script: script.to_string(),
-            composite,
-        });
-    }
-}
-
 fn judge(
     rel: &str,
-    body: &Body,
+    body: &RunScript,
     policies: &BTreeMap<&str, NameFilters>,
     located: &[StepRun],
 ) -> Vec<RuleFinding> {
@@ -183,13 +111,4 @@ pub(super) fn yaml_line(
         .find(|(_, text)| text.contains(token))
         .map(|(line, _)| *line)
         .unwrap_or(located.lines[0].0)
-}
-
-pub(super) fn scalar_name(key: &Value) -> String {
-    match key {
-        Value::String(name) if !name.is_empty() => name.clone(),
-        Value::Number(number) => number.to_string(),
-        Value::Bool(value) => value.to_string(),
-        _ => "job".to_string(),
-    }
 }
