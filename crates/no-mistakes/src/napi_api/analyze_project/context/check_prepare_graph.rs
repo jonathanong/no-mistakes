@@ -28,6 +28,15 @@ fn configure_scopes(
     )
 }
 
+fn demand_per_item_calls(
+    config: &crate::config::v2::NoMistakesConfig,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) {
+    plan.graph.per_item_calls |=
+        config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM)
+            || crate::codebase::rules::no_single_enqueue_in_loop::demands_analysis(config);
+}
+
 fn prepare_disable_directives(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
