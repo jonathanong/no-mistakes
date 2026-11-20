@@ -36,6 +36,10 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
         case("declared_builtins", "declared-builtins"),
         case("asset_imports", "asset-imports"),
         case("nested_conditions", "nested-conditions"),
+        case("duplicate_names", "duplicate-names"),
+        case("include_chains", "include-chains"),
+        case("top_level_conditions", "top-level-conditions"),
+        case("exported_styles", "exported-styles"),
     ];
     assert_saved_fixture("vite_optimize_deps_nested_imports", &cases);
 }

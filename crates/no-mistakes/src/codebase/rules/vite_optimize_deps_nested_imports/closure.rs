@@ -20,7 +20,10 @@ pub(super) fn runtime_imports(
 ) -> Result<Vec<RuntimeImport>, Box<RuleFinding>> {
     let mut seeds = BTreeSet::new();
     if let Some(entry) = published_entry(manifest_value) {
-        seeds.insert(entry_path(dir, &entry));
+        let path = entry_path(dir, &entry);
+        if is_script_module(&path) {
+            seeds.insert(path);
+        }
     }
     if let Some(exports) = manifest_value.get("exports") {
         for file in all_files {
@@ -35,7 +38,9 @@ pub(super) fn runtime_imports(
             if relative.is_empty() || relative == "package.json" || relative.contains('*') {
                 continue;
             }
-            if ts_resolver::declarations::package_matches_runtime_export(exports, &relative) {
+            if is_script_module(&file)
+                && ts_resolver::declarations::package_matches_runtime_export(exports, &relative)
+            {
                 seeds.insert(file);
             }
         }

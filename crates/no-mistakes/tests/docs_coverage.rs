@@ -364,6 +364,8 @@ fn vite_optimize_deps_nested_imports_documents_scope_options() {
     for path in [
         "docs/rules/vite-optimize-deps-nested-imports.md",
         "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "plugins/no-mistakes/skills/no-mistakes/SKILL.md",
     ] {
         let body = read(&root.join(path));
         assert!(body.contains("configFiles"), "{path}");

@@ -1,7 +1,7 @@
 use super::declared::{dependency_names, versioned_dependency_names, workspace_dependency_names};
 use super::entry_imports::collect;
 use super::manifest::published_entry;
-use super::specifier::{is_node_builtin, nested_pair, package_name};
+use super::specifier::{is_node_builtin, nested_pairs, package_name};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -155,6 +155,11 @@ fn published_entry_walks_nested_condition_objects() {
         published_entry(&unrecognized).as_deref(),
         Some("./index.ts")
     );
+
+    let top_level = serde_json::json!({
+        "exports": { "import": "./index.ts", "default": "./index.ts" }
+    });
+    assert_eq!(published_entry(&top_level).as_deref(), Some("./index.ts"));
 }
 
 #[test]
@@ -273,11 +278,17 @@ import nodeFs from 'node:fs';
 }
 
 #[test]
-fn nested_pair_accepts_only_one_separator() {
+fn nested_pairs_check_every_step_of_a_chain() {
     assert_eq!(
-        nested_pair(" widgets > items "),
-        Some(("widgets".to_string(), "items".to_string()))
+        nested_pairs(" widgets > items "),
+        vec![("widgets".to_string(), "items".to_string())]
     );
-    assert_eq!(nested_pair("react"), None);
-    assert_eq!(nested_pair("widgets > items > extra"), None);
+    assert!(nested_pairs("react").is_empty());
+    assert_eq!(
+        nested_pairs("widgets > labels > items"),
+        vec![
+            ("widgets".to_string(), "labels".to_string()),
+            ("labels".to_string(), "items".to_string()),
+        ]
+    );
 }

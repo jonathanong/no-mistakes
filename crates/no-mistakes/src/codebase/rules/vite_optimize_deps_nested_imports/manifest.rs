@@ -100,6 +100,9 @@ pub(super) fn published_entry(value: &Value) -> Option<String> {
         if let Some(entry) = exports.get(".").and_then(string_entry) {
             return Some(entry);
         }
+        if let Some(entry) = string_entry(exports) {
+            return Some(entry);
+        }
     }
     for key in ["module", "main"] {
         if let Some(entry) = value.get(key).and_then(Value::as_str) {

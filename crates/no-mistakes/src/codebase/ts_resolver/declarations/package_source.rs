@@ -65,8 +65,23 @@ pub(crate) fn matches_runtime_export(exports: &Value, package_relative: &str) ->
         return false;
     };
     let file = format!("./{}", package_relative.replace('\\', "/"));
+    if map.keys().any(|key| key.starts_with('.')) {
+        return map.iter().any(|(key, value)| {
+            key.starts_with('.') && key_names_file(exports, key, value, &file)
+        });
+    }
     map.iter()
-        .any(|(key, value)| key.starts_with('.') && key_names_file(exports, key, value, &file))
+        .any(|(key, value)| is_runtime_condition(key) && condition_names_file(value, &file))
+}
+
+fn is_runtime_condition(key: &str) -> bool {
+    matches!(key, "import" | "default" | "module" | "require")
+}
+
+fn condition_names_file(value: &Value, file: &str) -> bool {
+    let mut targets = Vec::new();
+    collect_strings(value, &mut targets);
+    targets.iter().any(|target| same_export_path(target, file))
 }
 
 fn key_names_file(exports: &Value, key: &str, value: &Value, file: &str) -> bool {

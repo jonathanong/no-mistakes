@@ -1,0 +1,11 @@
+{
+  "name": "widgets",
+  "version": "1.0.0",
+  "exports": {
+    ".": "./index.ts",
+    "./styles.css": "./styles.css"
+  },
+  "dependencies": {
+    "items": "1.0.0"
+  }
+}

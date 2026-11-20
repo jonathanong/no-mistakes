@@ -368,6 +368,11 @@ elements are cardinalities for scale or size tables. Omitting `threshold`
 reports nothing. Equal values and exact `exemptions` stay allowed. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
 
+For `vite-optimize-deps-nested-imports`, set required `configFiles` and `packages`.
+Optional `includeSources` reads a static `parent > child` array from a named export.
+Optional `ignorePackages` skips uncovered imports of those package names. A chain
+`a > b > c` is checked one step at a time. See the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/vite-optimize-deps-nested-imports.md).
 
 Use `postgres-column-check-constraints` with a catalog path and explicit column
 globs, integer types, and `require: non-negative` to check schema lower bounds.

@@ -93,17 +93,16 @@ pub(super) fn package_name(specifier: &str) -> Option<String> {
     (!name.is_empty()).then(|| name.to_string())
 }
 
-/// A single `parent > child` pair. Direct includes and deeper chains are not
-/// this form.
-pub(super) fn nested_pair(entry: &str) -> Option<(String, String)> {
-    let mut parts = entry
+/// Consecutive `parent > child` steps. A direct include has none.
+/// `a > b > c` yields `(a, b)` and then `(b, c)`.
+pub(super) fn nested_pairs(entry: &str) -> Vec<(String, String)> {
+    let parts: Vec<&str> = entry
         .split('>')
         .map(str::trim)
-        .filter(|part| !part.is_empty());
-    let parent = parts.next()?;
-    let child = parts.next()?;
-    if parts.next().is_some() {
-        return None;
-    }
-    Some((parent.to_string(), child.to_string()))
+        .filter(|part| !part.is_empty())
+        .collect();
+    parts
+        .windows(2)
+        .map(|pair| (pair[0].to_string(), pair[1].to_string()))
+        .collect()
 }

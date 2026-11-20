@@ -46,7 +46,9 @@ follows relative runtime `import`, `export … from`, `export * from`, static
 inside the package directory. `.` and `..` are relative specifiers. A resolved
 target is followed only when its extension is `.js`, `.mjs`, `.cjs`, `.jsx`,
 `.ts`, `.mts`, `.cts`, or `.tsx`. Other resolved files, including `.json`,
-`.css`, `.svg`, and `.wasm`, stay out of the closure. `import type`, `export type`, and other
+`.css`, `.svg`, and `.wasm`, stay out of the closure. A published export
+whose target is not one of those script extensions, including `./styles.css`,
+is not parsed. `import type`, `export type`, and other
 type-only relative edges are not followed. Bare package specifiers on those
 files count: `import`, side-effect `import "pkg"`, value `export … from`,
 `export * from`, static `import("pkg")`, and `require("pkg")`. Specifiers
@@ -60,7 +62,9 @@ of an undeclared built-in, such as `widgets > path`, is ignored. An import
 of the package's own name does not. A subpath such as `items/shape` is the
 package `items`. The finding points at the file that contains the import.
 
-Direct includes (`react`) and chains with more than one `>` are ignored.
+Direct includes (`react`) are ignored. A chain with more than one `>`
+(`widgets > labels > items`) is checked one step at a time (`widgets > labels`,
+then `labels > items`).
 A parent that is not one of the named packages is ignored. An entry whose
 child is not a package name (for example `widgets > ./local`) is ignored.
 Non-literal `import()` and `require()` arguments are ignored.
@@ -69,9 +73,12 @@ The dot entry is `exports` when it is a string, then `exports["."]` when
 that is a string, then the first string among `import`, `default`, `module`,
 and `require` on `exports["."]`. A condition value that is itself an object
 is walked in that same order, so `exports["."].import.default` is the dot
-entry when `import` has no string of its own. The walk then uses `module`,
-then `main`. Additional published files come from the rest of the `exports`
-map. A manifest with none of those fields and no matching export target has
+entry when `import` has no string of its own. When `exports` has no `"."`
+entry, those same condition keys are read on `exports` itself, so
+`{ "import": "./index.ts" }` publishes `./index.ts`. The walk then uses
+`module`, then `main`. Additional published files come from the rest of the
+`exports` map. A top-level conditions object, with no key that starts with
+`.`, publishes each `import`, `default`, `module`, and `require` target. A manifest with none of those fields and no matching export target has
 no runtime imports.
 
 A child is not an uncovered import when the parent declares it with a
@@ -99,7 +106,8 @@ A missing manifest, a manifest that is not JSON, a missing `name`, a
 dependency field that is not an object, or a `bundledDependencies` value
 that is not an array or a boolean is reported on that `package.json`.
 A missing published entry file is reported on that file when every configured
-config parsed. Package names in `packages` must be unique.
+config parsed. Package names in `packages` must be unique. A later directory that repeats a
+name is reported, and the first directory is the one that is checked.
 
 ## Options and defaults
 

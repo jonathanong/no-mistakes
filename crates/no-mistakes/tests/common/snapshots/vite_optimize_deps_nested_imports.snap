@@ -248,6 +248,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "duplicate_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets-copy/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: package name \"widgets\" is configured more than once; keep one packages entry per name so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty_configs": {
     "exitCode": 1,
     "report": {
@@ -282,6 +312,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exported_styles": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "ignored_packages": {
     "exitCode": 1,
     "report": {
@@ -299,6 +351,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "import { shape } from \"items\";",
           "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_chains": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "import": "labels > items",
+          "line": 3,
+          "message": "nested include \"labels > items\" is not a declared dependency of labels; declare items under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "include: [\"widgets > labels > items\"],",
+          "target": "invalid-nested-child"
         }
       ],
       "warnings": []
@@ -550,12 +624,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "vite.config.ts",
+          "import": "items > extra",
+          "line": 12,
+          "message": "nested deps nested include \"items > extra\" is not a declared dependency of items; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "\"widgets > items > extra\",",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "vite.config.ts",
           "import": "widgets > extra",
           "line": 8,
           "message": "nested deps nested include \"widgets > extra\" is not a declared dependency of widgets; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "\"widgets > extra\",",
           "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "top_level_conditions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
         }
       ],
       "warnings": []

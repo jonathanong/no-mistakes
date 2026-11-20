@@ -56,6 +56,11 @@ pub(super) fn evaluate(
     for package_dir in package_dirs {
         match manifest::load(root, &resolve(root, package_dir), sources, all_files) {
             Ok(package) => {
+                if packages.contains_key(&package.name) {
+                    let manifest = resolve(root, package_dir).join("package.json");
+                    findings.push(duplicate_package(root, &manifest, &package.name));
+                    continue;
+                }
                 packages.insert(package.name.clone(), package);
             }
             Err(finding) => findings.push(*finding),
@@ -146,6 +151,20 @@ fn skip_child(
     ignore.contains(child)
         || package.workspace.contains(child)
         || (configured.contains(child) && !package.versioned.contains(child))
+}
+
+fn duplicate_package(root: &Path, path: &Path, name: &str) -> RuleFinding {
+    RuleFinding {
+        causes: Vec::new(),
+        rule: RULE_ID.to_string(),
+        file: relative_slash_path(root, path),
+        line: 1,
+        message: format!(
+            "cannot verify {RULE_ID}: package name \"{name}\" is configured more than once; keep one packages entry per name so this check can verify nested imports"
+        ),
+        import: None,
+        target: Some("unanalyzable".to_string()),
+    }
 }
 
 fn config_gap(file: &str, line: usize, reason: &str) -> RuleFinding {

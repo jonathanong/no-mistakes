@@ -1,7 +1,7 @@
 //! Static `optimizeDeps.include` entries from a Vite config module.
 
 use super::config_object::default_object;
-use super::specifier::{nested_pair, package_name};
+use super::specifier::{nested_pairs, package_name};
 use crate::ast::{js_literal, property_key_name, template_quasi_text};
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectExpression, ObjectPropertyKind};
@@ -106,19 +106,18 @@ fn string_entries(source: &str, include: &oxc_ast::ast::ArrayExpression<'_>) -> 
                 "optimizeDeps.include is not a static array of strings",
             );
         };
-        let Some((parent_raw, child_raw)) = nested_pair(&text) else {
-            continue;
-        };
-        let (Some(parent), Some(child)) = (package_name(&parent_raw), package_name(&child_raw))
-        else {
-            continue;
-        };
-        entries.push(NestedInclude {
-            parent,
-            child,
-            line: line_of(source, start),
-            text: format!("{parent_raw} > {child_raw}"),
-        });
+        for (parent_raw, child_raw) in nested_pairs(&text) {
+            let (Some(parent), Some(child)) = (package_name(&parent_raw), package_name(&child_raw))
+            else {
+                continue;
+            };
+            entries.push(NestedInclude {
+                parent,
+                child,
+                line: line_of(source, start),
+                text: format!("{parent_raw} > {child_raw}"),
+            });
+        }
     }
     ParsedConfig::Includes(entries)
 }

@@ -859,6 +859,13 @@ size tables. Omitting `threshold` reports nothing. Use `exemptions` for an exact
 intentional size. See the
 [rule documentation](rules/test-fixture-size-cap.md).
 
+`vite-optimize-deps-nested-imports` is available through asynchronous `check()` and
+`analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
+`configFiles` and `packages` are required. Optional `includeSources` entries name a
+`module` and an `export` whose value is a static `["parent > child", …]` array.
+Optional `ignorePackages` skips uncovered imports of those package names. See the
+[rule documentation](rules/vite-optimize-deps-nested-imports.md).
+
 ### Source-level merged configuration
 
 ```ts
