@@ -21,3 +21,8 @@ export async function queryIdPageBranch(limit: number, selectWhere: SqlStatement
   const { rows } = await query(selectWhere);
   return rows;
 }
+export async function queryFlagPage(selectWhere: SqlStatement, f: string | undefined, query: PageQuery) {
+  if (f) selectWhere.append(sql` AND a`);
+  const { rows } = await query(selectWhere);
+  return rows;
+}

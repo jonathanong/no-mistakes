@@ -24,3 +24,9 @@ export async function listShipments(statement: Sql, ready: boolean) {
   if (ready) statement.append(sql` and active`);
   return statement;
 }
+
+export async function filterWidgets(selectWhere: Sql, f: boolean, query: Query) {
+  if (f) selectWhere.append(sql` AND a`);
+  const { rows } = await query(selectWhere);
+  return rows;
+}

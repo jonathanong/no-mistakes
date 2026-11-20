@@ -13,6 +13,7 @@ fn append_callback_census_runs_only_when_the_proof_can_change() {
             proof(program, source, "listItems"),
             proof(program, source, "listOrders"),
             proof(program, source, "listShipments"),
+            proof(program, source, "filterWidgets"),
         )
     })
     .unwrap();
@@ -30,8 +31,13 @@ fn append_callback_census_runs_only_when_the_proof_can_change() {
         walks.3.walks, 0,
         "a branch without a callback call does not walk"
     );
+    assert!(
+        walks.4.proven && walks.4.walks == 1,
+        "a branched destructured callback keeps the proof: {walks:?}"
+    );
 }
 
+#[derive(Debug)]
 struct Walk {
     proven: bool,
     walks: u32,
