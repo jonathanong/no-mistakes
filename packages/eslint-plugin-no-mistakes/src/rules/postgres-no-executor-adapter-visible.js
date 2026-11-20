@@ -9,6 +9,7 @@ const {
 const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { literalSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
+const { beginOmittedScope, endOmittedScope } = require("./postgres-no-executor-adapter-sql-absent");
 const { enterHelper, forwardedHop, leaveHelper } = require("./postgres-no-executor-adapter-hop");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
@@ -87,6 +88,15 @@ function closureProven(fn, context, options, facts) {
 }
 
 function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts, callback) {
+  beginOmittedScope();
+  try {
+    return judgeVisibleSql(call, index, quoteNode, context, options, accepted, facts, callback);
+  } finally {
+    endOmittedScope();
+  }
+}
+
+function judgeVisibleSql(call, index, quoteNode, context, options, accepted, facts, callback) {
   if (call.type !== "CallExpression") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
   if (quoteNode && (quoteNode.type !== "Property" || quoteNode.computed)) return null;

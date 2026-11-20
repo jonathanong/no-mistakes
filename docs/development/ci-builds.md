@@ -368,15 +368,13 @@ retries; a fresh attempt restarts the transfer rather than resuming partial byte
 
 ### Balancing the remaining macOS snapshot work
 
-The completed baseline for the follow-up is run
-[`43395217611`](https://github.com/jonathanong/no-mistakes/actions/runs/43395217611),
-at `b8d96eb76`: 11m42s overall, with macOS Rust shard 1 taking 8m13s. Its
+The completed baseline for the follow-up is run `43395217611`, at
+`b8d96eb76`: 11m42s overall, with macOS Rust shard 1 taking 8m13s. Its
 PostgreSQL batch contained 91 selected Rust cases and took 318 seconds; shard 2
 had 90 PostgreSQL cases and took 177 seconds in that batch. The preceding run
-[`43393167734`](https://github.com/jonathanong/no-mistakes/actions/runs/43393167734)
-had the same 91/90 split but batch durations of 218/184 seconds. Counting cases
-therefore did not balance the known slow work, and runner variance remains
-visible even with compilation reused.
+`43393167734` had the same 91/90 split but batch durations of 218/184 seconds.
+Counting cases therefore did not balance the known slow work, and runner
+variance remains visible even with compilation reused.
 
 Timestamped libtest notices identify five outliers, several present in both
 runs. A notice that a
@@ -406,9 +404,8 @@ macOS queues. The first change therefore balances work across two shards rather 
 increasing that overhead. Actual batch and end-to-end durations remain the
 acceptance evidence; estimated loads do not establish a ten-minute result.
 
-The first completed follow-up run,
-[`43403560928`](https://github.com/jonathanong/no-mistakes/actions/runs/43403560928),
-at `e3d89a6f0`, passed with the weighted plan. Its macOS PostgreSQL batches took
+The first completed follow-up run `43403560928`, at `e3d89a6f0`, passed with
+the weighted plan. Its macOS PostgreSQL batches took
 153/223 seconds, compared with 318/177 seconds in the baseline. The two native
 Rust jobs took 4m22s/5m42s; the slowest job improved from 8m13s to 5m42s. The
 production inventory had grown to 374 cases, distributed 186/188 with 431/430
@@ -434,9 +431,8 @@ are recorded in [PR #3329](https://github.com/jonathanong/no-mistakes/pull/3329)
 
 ### Completed parallel validation
 
-Parallel validation run
-[`43385163008`](https://github.com/jonathanong/no-mistakes/actions/runs/43385163008)
-completed successfully at `1bf45eee1`, before the macOS shard-count adjustment.
+Parallel validation run `43385163008` completed successfully at `1bf45eee1`,
+before the macOS shard-count adjustment.
 It took **26m58s** from workflow creation to the last completed job. Selected
 job intervals include setup, artifact transfer, and cleanup:
 
@@ -469,14 +465,13 @@ in the previous completed run, API shards waited 8m23s to 12m02s. The adjusted
 macOS matrices use two shards per family to reduce repeated setup and runner
 contention, while Windows retains six.
 
-A later completed run,
-[`43389713210`](https://github.com/jonathanong/no-mistakes/actions/runs/43389713210)
-at `56c7d9064`, passed in **19m49s** with 70 passing checks. Its macOS Rust
-producer restored a compatible workspace snapshot: all four Cargo commands
-reused their targets, taking 5.59 seconds combined, and the producer completed
-in 3m08s including setup and artifact handling. Linux CLI/addon producers took
-56/60 seconds. The macOS runtime producer missed every workspace fallback and
-compiled for 11m52s, taking 14m49s overall. Coverage and standalone producers
+A later completed run `43389713210` at `56c7d9064` passed in **19m49s** with
+70 passing checks. Its macOS Rust producer restored a compatible workspace
+snapshot: all four Cargo commands reused their targets, taking 5.59 seconds
+combined, and the producer completed in 3m08s including setup and artifact
+handling. Linux CLI/addon producers took 56/60 seconds. The macOS runtime
+producer missed every workspace fallback and compiled for 11m52s, taking
+14m49s overall. Coverage and standalone producers
 also missed workspace caches and took 8m42s and 7m22s overall.
 
 That run exposed a separate matrix dependency delay: macOS Rust consumers
@@ -488,12 +483,12 @@ The split removes that dependency delay while preserving the cold-compilation
 bound and cache retention limits.
 
 The independent-platform layout completed successfully in warm-cache run
-[`43393167734`](https://github.com/jonathanong/no-mistakes/actions/runs/43393167734)
-at `b17e05d2d`, with 70 passing checks and three optional skips. End-to-end wall
-time was **10m45s**. The workflow was created at 08:25:56 UTC, but its first
-job started at 08:27:04 UTC, a **1m08s scheduling interval**. From first job
-start to the final aggregate, elapsed time was **9m37s**. That sample therefore
-exceeded the end-to-end target despite an execution path below ten minutes.
+`43393167734` at `b17e05d2d`, with 70 passing checks and three optional skips.
+End-to-end wall time was **10m45s**. The workflow was created at 08:25:56 UTC,
+but its first job started at 08:27:04 UTC, a **1m08s scheduling interval**.
+From first job start to the final aggregate, elapsed time was **9m37s**. That
+sample therefore exceeded the end-to-end target despite an execution path
+below ten minutes.
 
 | Warm-cache job                                      |        Execution time |
 | --------------------------------------------------- | --------------------: |

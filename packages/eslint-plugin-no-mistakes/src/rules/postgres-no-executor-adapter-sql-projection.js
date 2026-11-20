@@ -3,7 +3,10 @@
 const { tsNonWritingArgument } = require("./postgres-no-executor-adapter-nonwriting");
 
 const { constInitializer } = require("./postgres-no-executor-adapter-binding");
-const { omittedOptionalField } = require("./postgres-no-executor-adapter-sql-absent");
+const {
+  noteOmittedOptional,
+  omittedOptionalField,
+} = require("./postgres-no-executor-adapter-sql-absent");
 const { typedScalarProjection } = require("./postgres-no-executor-adapter-sql-type");
 const { scalarArgument } = require("./postgres-no-executor-adapter-sql-scalar");
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
@@ -148,7 +151,13 @@ function staticObjectValue(node, field, context, seen = new Set()) {
 function projectedScalar(node, field, context, allowUndefined) {
   if (field !== null && typedScalarProjection(node, field, context, allowUndefined)) return true;
   const value = field === null ? node : staticObjectValue(node, field, context);
-  if (value === ABSENT) return allowUndefined && omittedOptionalField(node, field, context);
+  if (value === ABSENT) {
+    // Mode all reports this hole; only forwarding-only treats it as proven.
+    if (!(allowUndefined && omittedOptionalField(node, field, context))) return false;
+    if ((context.options?.[0]?.mode ?? "all") === "forwarding-only") return true;
+    noteOmittedOptional();
+    return false;
+  }
   return Boolean(value && scalarArgument(value, context, allowUndefined));
 }
 

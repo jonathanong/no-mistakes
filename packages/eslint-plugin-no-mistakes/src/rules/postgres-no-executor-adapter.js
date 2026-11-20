@@ -19,6 +19,7 @@ const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { acceptedTarget } = require("./postgres-no-executor-adapter-supplied");
 const { directOption } = require("./postgres-no-executor-adapter-direct");
 const { visibleSqlTarget } = require("./postgres-no-executor-adapter-visible");
+const { reportsOmittedOptional } = require("./postgres-no-executor-adapter-sql-absent");
 const RULE_ID = "postgres-no-executor-adapter";
 
 module.exports = rule(
@@ -91,23 +92,34 @@ module.exports = rule(
         if (leaves) {
           const accepted =
             !nested && acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode);
+          const adapter = {
+            names: [...new Set(leaves.map((leaf) => leaf.name))],
+            reason: "conditional selection",
+            leaves,
+            conditionalText: source.getText(expr),
+          };
+          if (
+            reportsOmittedOptional(
+              mode,
+              nested,
+              accepted,
+              call,
+              index,
+              quoteNode,
+              context,
+              options,
+              targetFacts,
+            )
+          ) {
+            reportAdapter(argument, adapter, call, index, quoteNode);
+            return;
+          }
           const visible =
             mode === "forwarding-only" && !nested
               ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)
               : null;
           if (visible === true || (accepted && visible !== false)) return;
-          reportAdapter(
-            argument,
-            {
-              names: [...new Set(leaves.map((leaf) => leaf.name))],
-              reason: "conditional selection",
-              leaves,
-              conditionalText: source.getText(expr),
-            },
-            call,
-            index,
-            quoteNode,
-          );
+          reportAdapter(argument, adapter, call, index, quoteNode);
           return;
         }
       }
@@ -128,6 +140,23 @@ module.exports = rule(
       }
       const accepted =
         !nested && acceptedTarget(call, index, quoteNode, context, options, targetFacts, mode);
+      if (
+        passed.definite &&
+        reportsOmittedOptional(
+          mode,
+          nested,
+          accepted,
+          call,
+          index,
+          quoteNode,
+          context,
+          options,
+          targetFacts,
+        )
+      ) {
+        reportPassed(argument, passed);
+        return;
+      }
       const visible =
         mode === "forwarding-only" && !nested && passed.definite
           ? visibleSqlTarget(call, index, quoteNode, context, options, accepted, targetFacts)

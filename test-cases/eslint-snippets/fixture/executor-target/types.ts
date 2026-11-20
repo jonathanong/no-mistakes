@@ -14,3 +14,5 @@ export interface QueryWithClient {
 export interface SessionHandle {
   readonly id: string;
 }
+
+export type ClientShape<T extends QueryWithClient | PoolClient> = T | PoolClient;

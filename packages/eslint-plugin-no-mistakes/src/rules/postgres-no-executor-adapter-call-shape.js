@@ -30,6 +30,19 @@ function queryMethod(checker, type, ts) {
   return hasCallSignatures(checker, queryType, ts);
 }
 
+function unionParts(type) {
+  return type.isUnion?.() ? type.types : null;
+}
+
+function collectKinds(checker, type, ts, kinds) {
+  const apparent = checker.getNonNullableType(checker.getApparentType(type));
+  if (hasCallSignatures(checker, apparent, ts)) {
+    kinds.add("call");
+    return;
+  }
+  kinds.add(queryMethod(checker, apparent, ts) ? "query" : "none");
+}
+
 function executorCallShape(node, context) {
   const services = parserServices(context);
   if (!services || !node) return CALLABLE;
@@ -42,6 +55,12 @@ function executorCallShape(node, context) {
   );
   if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return CALLABLE;
   if (hasCallSignatures(checker, type, ts)) return CALLABLE;
+  const parts = unionParts(type);
+  if (!parts) return { callable: false, query: queryMethod(checker, type, ts) };
+  const kinds = new Set();
+  for (const part of parts) collectKinds(checker, part, ts, kinds);
+  if (kinds.size === 2 && kinds.has("call") && kinds.has("query"))
+    return { callable: false, query: false, forms: ["call", "query"] };
   return { callable: false, query: queryMethod(checker, type, ts) };
 }
 
