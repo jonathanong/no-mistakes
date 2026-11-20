@@ -62,7 +62,9 @@ command matches a direct executable, a `node_modules/.bin` basename, a
 `yarn dlx`, including `yarn --cwd` and a long value flag such as
 `--reporter <value>`. The `cwd` proof is the
 same owned `mkdtemp` or fixture-directory proof; a missing `cwd` is the live
-working directory. A `cd <dir> &&` prefix replaces that proof, and a quote
+working directory. A `cd <dir> &&` prefix, a pnpm `-C` or `--dir`, or a yarn
+`--cwd` replaces that proof. `cd .` stays in the current directory, `cd /` is
+the filesystem root, and `cd ..` leaves an unowned directory. A quote
 leaves the shell string unmatched.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory

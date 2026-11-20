@@ -25,6 +25,7 @@ pub(super) enum Token {
     Unknown,
 }
 
+#[derive(Clone, Copy)]
 pub(super) enum OptionsSlot {
     Absent,
     Unknown,
@@ -111,7 +112,7 @@ pub(super) fn matched(invocation: &Invocation, analyzers: &[AnalyzerCommand]) ->
         let Some(Token::Known(program)) = current.first() else {
             break;
         };
-        let Some(inner) = wrappers::unwrap_line(program, &current[1..]) else {
+        let Some((inner, _)) = wrappers::unwrap_line(program, &current[1..]) else {
             break;
         };
         if inner.is_empty() || lines.iter().any(|line| line == &inner) {
@@ -125,6 +126,10 @@ pub(super) fn matched(invocation: &Invocation, analyzers: &[AnalyzerCommand]) ->
             .any(|line| prefix(line, &analyzer.command, &analyzer.args))
             .then(|| display(analyzer))
     })
+}
+
+pub(super) fn wrapper_dir(invocation: &Invocation) -> Option<String> {
+    wrappers::scan_dir(&invocation.executable, &invocation.argv)
 }
 
 fn command_line(executable: &str, argv: &[Token]) -> Vec<Token> {

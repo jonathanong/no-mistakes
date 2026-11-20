@@ -973,12 +973,17 @@ unmodified basename, including `node_modules/.bin`. One trailing `.cmd`,
 `exec` and `execSync` take a static shell string. A literal string is split
 on whitespace. Leading `NAME=value` assignments and `cd <dir> &&` prefixes are
 removed first, and those prefixes may repeat, before the first token is read
-as the executable. A stripped `cd` directory replaces the `cwd` option. A
-target with a fixture-directory segment is owned. A target that is empty,
-`.` only, contains `..`, or contains a `$` or a backtick is an unresolved root,
-so `cd fixtures/$DIR && widget-audit check` is not owned. Any other target is a live
-scan, so `cd /repo && widget-audit check` still reports when `cwd` is a
-fixture path. `spawn` and `spawnSync` use that split when `shell` is the
+as the executable. A stripped `cd` directory replaces the `cwd` option.
+`cd .` stays in that directory, so the call is a live scan when it has no
+owned `cwd`. `cd /` is the filesystem root and is a live scan. `cd ..` leaves
+the working directory and is a live scan when that directory is not owned. A
+target with a fixture-directory segment is owned. A target that contains `..`
+plus another name, or a `$` or a backtick, is an unresolved root, so
+`cd fixtures/$DIR && widget-audit check` and
+`cd ../widgets && widget-audit check` are not owned. Any other target is a
+live scan, so `cd /repo && widget-audit check` still reports when `cwd` is a
+fixture path. When that `cd` replaces an owned `cwd`, the finding names the
+`cd`. `spawn` and `spawnSync` use that split when `shell` is the
 boolean `true` and the command is not an argument array. A non-literal command
 stays unmatched. A `"` or `'` leaves the whole command unmatched, so
 `ITEM="placeholder widget-audit check extra"` does not match. A semicolon, a
@@ -995,8 +1000,10 @@ These wrappers unwrap repeatedly, including one wrapper around another:
   and `-F` consume the next literal token. A long option with a separate
   plain value, such as `--reporter silent`, consumes that value too. A flag
   that already includes its value, such as `--filter=widgets`, is one token.
-  Attached values are recognized for `-C` and `-F` only. Any
-  other leading flag is left in place, so
+  Attached values are recognized for `-C` and `-F` only. `-C` and `--dir`,
+  including `-Cdir` and `--dir=<dir>`, are the scan root, the same way a
+  shell `cd` is. `--filter` and `-F` are package selectors and are not. The
+  last of those directories wins. Any other leading flag is left in place, so
   `pnpm --ignore-scripts exec widget-audit` does not match.
 - `npm exec`, with the same leading flags and one optional `--`
 - `npx` and `bunx`, after leading `-y`, `--yes`, `--no-install`, `-p`, or
@@ -1004,17 +1011,22 @@ These wrappers unwrap repeatedly, including one wrapper around another:
   literal token. `--package=name` is one flag.
 - `yarn <command>`, `yarn run <command>`, and `yarn dlx <command>`, after a
   leading `--cwd <dir>` or `--cwd=<dir>`, with one optional `--` after `run`
-  or `dlx`
+  or `dlx`. That `--cwd` directory is the scan root, the same way a shell
+  `cd` is.
 
 A command that is not listed stays quiet, so `git ls-files` and
 `node fixtures/print-result.js` do not become findings unless config names
 them. `enumerators` still does not read subprocess arguments. A
 `no-mistakes-disable-next-line` on the launch suppresses that finding.
 
-The scan root is the `cwd` option. The executable string is not a directory.
-A call that passes no `cwd` uses the working directory and is reported with
-target `analyzer subprocess`. A recorded options object that omits `cwd` is
-that same live root. An options object whose properties were not recorded,
+The scan root is the `cwd` option, unless a stripped `cd` or a pnpm `-C` /
+`--dir` or a yarn `--cwd` names another directory. A package-manager
+directory wins over a shell `cd` when both are present. That directory is
+classified the same way, and a relative directory is not joined onto `cwd`.
+The executable string is not a directory.
+A call that passes no `cwd` and no directory change uses the working
+directory and is reported with target `analyzer subprocess`. A recorded
+options object that omits `cwd` is that same live root. An options object whose properties were not recorded,
 such as one with a dotted key, is unresolved. `{ cwd: process.cwd() }` is the
 live working directory. An owned `mkdtemp` directory, or a path under
 `fixtureDirs`, is allowed. An options value or `cwd` this analysis cannot

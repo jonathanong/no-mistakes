@@ -1,0 +1,105 @@
+use super::place_support::{argv, assert_quiet, live, owned, shell};
+use crate::codebase::ts_source::module_facts::arguments::PathOrigin;
+
+#[test]
+fn a_package_manager_directory_replaces_an_owned_cwd() {
+    let message = live(&argv(
+        "pnpm",
+        &["-C", "/repo", "exec", "widget-audit", "check"],
+        Some(owned()),
+    ));
+    assert!(message.contains("in `/repo`"));
+    assert!(!message.contains("set `cwd`"));
+    assert!(live(&argv(
+        "pnpm",
+        &["--dir", "/repo", "exec", "widget-audit", "check"],
+        Some(owned()),
+    ))
+    .contains("in `/repo`"));
+    assert!(live(&argv(
+        "pnpm",
+        &["-C/repo", "exec", "widget-audit", "check"],
+        Some(owned()),
+    ))
+    .contains("in `/repo`"));
+    assert!(live(&argv(
+        "yarn",
+        &["--cwd", "/repo", "widget-audit", "check"],
+        Some(owned()),
+    ))
+    .contains("in `/repo`"));
+    assert!(live(&argv(
+        "yarn",
+        &["--cwd=/repo", "widget-audit", "check"],
+        Some(owned()),
+    ))
+    .contains("in `/repo`"));
+    assert!(live(&argv(
+        "npx",
+        &["pnpm", "-C", "/repo", "exec", "widget-audit", "check"],
+        Some(owned()),
+    ))
+    .contains("in `/repo`"));
+    assert!(live(&shell(
+        "cd fixtures && pnpm -C /repo exec widget-audit check",
+        Some(owned()),
+    ))
+    .contains("in `/repo`"));
+    let bare = live(&argv(
+        "pnpm",
+        &["-C", "/repo", "exec", "widget-audit", "check"],
+        None,
+    ));
+    assert!(bare.contains("set `cwd`"));
+    assert_quiet(&argv(
+        "pnpm",
+        &["-C", "fixtures", "exec", "widget-audit", "check"],
+        Some(owned()),
+    ));
+    assert_quiet(&argv(
+        "pnpm",
+        &["--filter", "widgets", "exec", "widget-audit", "check"],
+        Some(owned()),
+    ));
+    assert_quiet(&argv(
+        "pnpm",
+        &[
+            "-C",
+            "/repo",
+            "--dir",
+            "fixtures",
+            "exec",
+            "widget-audit",
+            "check",
+        ],
+        Some(owned()),
+    ));
+    assert_quiet(&shell(
+        "cd /repo && pnpm -C fixtures exec widget-audit check",
+        Some(owned()),
+    ));
+}
+
+#[test]
+fn shell_dot_root_and_parent_follow_the_base_directory() {
+    assert!(live(&shell("cd . && widget-audit check", None)).contains("set `cwd`"));
+    assert_quiet(&shell("cd . && widget-audit check", Some(owned())));
+    assert!(live(&shell("cd ././ && widget-audit check", None)).contains("set `cwd`"));
+    let root = live(&shell("cd / && widget-audit check", Some(owned())));
+    assert!(root.contains("after `cd /`"));
+    assert!(!root.contains("set `cwd`"));
+    assert!(live(&shell("cd / && widget-audit check", None)).contains("set `cwd`"));
+    assert!(live(&shell("cd /./ && widget-audit check", Some(owned()))).contains("after `cd /./`"));
+    assert!(live(&shell("cd .. && widget-audit check", None)).contains("set `cwd`"));
+    assert!(live(&shell(
+        "cd .. && widget-audit check",
+        Some(PathOrigin::unknown())
+    ))
+    .contains("set `cwd`"));
+    let parent = shell("cd .. && widget-audit check", Some(owned()));
+    assert!(parent.findings.is_empty());
+    assert_eq!(parent.advisories.len(), 1);
+    let named = live(&shell("cd /repo && widget-audit check", Some(owned())));
+    assert!(named.contains("after `cd /repo`"));
+    assert!(!named.contains("set `cwd`"));
+}
