@@ -51,7 +51,7 @@ See [the Rust resource budget](ci-builds.md#release-rust-resource-budget) for th
 compilation and test worker limits and memory-pressure diagnostics.
 
 Every native release build sets ThinLTO and 16 code generation units before
-restoring its cache, and `cargo build --timings` uploads `target/cargo-timing.html`
+restoring its cache, and `cargo build --timings` uploads `target/cargo-timings/*.html`
 as `release-timings-<target>`. The manual `Native build timings` workflow runs
 that same compile for darwin and linux-x64 without preparing a version or
 publishing. Local `cargo build --release` still uses the Cargo.toml profile.

@@ -73,6 +73,9 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   assert.match(body, /name: release-cli-\$\{\{ env\.NM_TARGET \}\}/);
   assert.match(body, /name: release-napi-\$\{\{ env\.NM_TARGET \}\}/);
   assert.match(body, /name: release-timings-\$\{\{ env\.NM_TARGET \}\}/);
+  assert.match(body, /path: target\/cargo-timings\/\*\.html/);
+  assert.match(script, /target\/cargo-timings\/cargo-timing-\*\.html/);
+  assert.doesNotMatch(workflow, /target\/cargo-timing\.html/);
   assert.match(workflow, /NM_ADDON: libno_mistakes\.dylib/);
   assert.match(workflow, /NM_ADDON: no_mistakes\.dll/);
   for (const job of ["build-native-linux-arm", "build-native-darwin", "build-native-windows"]) {
@@ -212,6 +215,8 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
   assert.doesNotMatch(workflow, /x86_64-pc-windows-msvc|aarch64-unknown-linux-gnu/);
   assert.match(workflow, /bash \.github\/scripts\/cargo-release-build\.sh/);
   assert.match(workflow, /name: release-timings-\$\{\{ matrix\.target \}\}/);
+  assert.match(workflow, /path: target\/cargo-timings\/\*\.html/);
+  assert.doesNotMatch(workflow, /target\/cargo-timing\.html/);
   assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /\n    timeout-minutes: 100\n/);
   assert.match(workflow, /\n        timeout-minutes: 90\n/);

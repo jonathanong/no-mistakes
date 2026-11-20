@@ -676,7 +676,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timing.html
+          path: target/cargo-timings/*.html
           if-no-files-found: error
 
   build-native-linux-arm:
@@ -833,7 +833,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timing.html
+          path: target/cargo-timings/*.html
           if-no-files-found: error
 
 
@@ -991,7 +991,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timing.html
+          path: target/cargo-timings/*.html
           if-no-files-found: error
 
 
@@ -1149,7 +1149,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: release-timings-${{ env.NM_TARGET }}
-          path: target/cargo-timing.html
+          path: target/cargo-timings/*.html
           if-no-files-found: error
 
 
