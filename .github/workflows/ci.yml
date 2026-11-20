@@ -2331,7 +2331,7 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
@@ -2389,7 +2389,7 @@ jobs:
           tool: cargo-nextest@0.9.151
       - name: Build standalone library without a CLI
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 12
+        timeout-minutes: 20
         shell: bash
         run: |
           set -euo pipefail

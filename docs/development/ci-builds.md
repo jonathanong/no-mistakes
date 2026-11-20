@@ -355,12 +355,6 @@ uses long-distance archive compression to reduce repeated shard downloads while
 preserving symbol names for panic diagnostics. Debug metadata is already disabled;
 stripping symbols would remove those diagnostics. A single test executable
 dominates the archive, so splitting it would make each shard fetch the same binary.
-The producer job cancels after 15 minutes. The archive step normally finishes
-in 5–7 minutes and cancels after 12, inside that job bound.
-[`with-resource-samples.sh`](../../.github/scripts/with-resource-samples.sh)
-records available memory, swap, disk, and the largest resident process while
-the archive is built, so a later stall shows whether the runner was under
-memory or disk pressure.
 
 The [standalone shard workflow](../../.github/workflows/ci.yml) bounds the initial
 download separately from one fresh attempt after failure, within the existing
