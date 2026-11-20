@@ -30,6 +30,7 @@ class Deadline:
 def metadata(url, token, deadline):
     result = subprocess.run([
         "curl", "--config", "-", "--fail", "--silent", "--show-error",
+        "--ssl-revoke-best-effort",
         "--connect-timeout", "10", "--max-time", "10", url,
     ], input=f"header = {json.dumps('Authorization: Bearer ' + token)}\n"
        'header = "Accept: application/vnd.github+json"\n'
@@ -69,6 +70,7 @@ def download(repo, artifact, token, archive, deadline):
     config = f"header = {json.dumps('Authorization: Bearer ' + token)}\n"
     subprocess.run([
         "curl", "--config", "-", "--fail", "--location", "--silent", "--show-error",
+        "--ssl-revoke-best-effort",
         "--retry", "2", "--retry-max-time", "90",
         "--connect-timeout", "10", "--max-time", "25", "--output", str(archive), url,
     ], input=config, text=True, check=True, timeout=deadline.remaining())
