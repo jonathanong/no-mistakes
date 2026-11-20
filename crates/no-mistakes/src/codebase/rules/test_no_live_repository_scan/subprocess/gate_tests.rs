@@ -144,7 +144,7 @@ fn a_local_callable_is_not_an_analyzer_launcher() {
     let local = site(ResolvedCallTarget::Global {
         name: "execFileSync".into(),
     });
-    assert!(!super::command::is_launcher(&local));
+    assert!(super::command::launcher_name(&local).is_none());
     let mut provenance = PathProvenance::default();
     provenance
         .arg_member_paths

@@ -37,11 +37,6 @@ pub(super) struct Invocation {
     pub(super) options: OptionsSlot,
 }
 
-#[cfg(test)]
-pub(super) fn is_launcher(site: &ResolvedCallSite) -> bool {
-    launcher_name(site).is_some()
-}
-
 pub(super) fn launcher_name(site: &ResolvedCallSite) -> Option<&str> {
     site.targets().find_map(|candidate| match candidate.target {
         KnownCallTargetRef::ModuleExport {
