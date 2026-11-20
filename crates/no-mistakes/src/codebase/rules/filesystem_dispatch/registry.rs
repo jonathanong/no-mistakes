@@ -65,6 +65,7 @@ macro_rules! filesystem_rules {
             BANNED_RENAMED_FILES => banned_renamed_files::check_with_files => "",
             INTEGRATION_TEST_NO_MOCKS => integration_test_no_mocks::check_with_files => "",
             TEST_EMAIL_DOMAIN_POLICY => test_email_domain_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/email-domain-options.yml")),
+            TEST_FIXTURE_SIZE_CAP => test_fixture_size_cap::check_with_files => "",
             TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files => "",
             POSTGRES_CONSTRAINT_VALIDATE => postgres_constraint_validate::check_with_files => "",
             POSTGRES_COLUMN_CHECK_CONSTRAINTS => postgres_column_check_constraints::check_with_files => "",

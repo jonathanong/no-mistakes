@@ -358,6 +358,12 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 `allowHashFiles` defaults to false. `matrix.os` does not satisfy `runner.os`. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
+For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths,
+single-argument `new Array` lengths, and numeric `eachCalls` lists (default `it.each`)
+in `scopes.tests` and `scopes.helpers`. Omitting `threshold` reports nothing. Equal
+values and exact `exemptions` stay allowed. See the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
+
 
 Use `postgres-column-check-constraints` with a catalog path and explicit column
 globs, integer types, and `require: non-negative` to check schema lower bounds.
