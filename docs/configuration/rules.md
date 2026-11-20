@@ -529,8 +529,11 @@ rules:
 
 [`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit
 `options.config` and `options.helpers` paths or globs, with `required` scalar
-properties, `forbidden` names, and `parity` pairs. Helper globs select only the
-prepared visible-file inventory. Optional `declared.forbiddenValues` maps
+properties, `forbidden` names, and `parity` pairs. Optional
+`requiredExcludeGlobs` lists nonempty strings that every literal `test.exclude`
+array on that config must contain. The list defaults to empty, and a missing
+`exclude` stays silent because Vitest defaults still apply. Helper globs select
+only the prepared visible-file inventory. Optional `declared.forbiddenValues` maps
 property names to forbidden literal arrays; `declared.forbidLiteralKinds` maps
 names to arrays of `number`, `string`, or `boolean`. They check every object
 literal in these sources, including unimported helpers, and permit computed

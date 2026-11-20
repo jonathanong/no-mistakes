@@ -27,6 +27,8 @@ export interface VitestProjectPolicyOptions {
   required?: Record<string, VitestPropertyLiteral>;
   /** Properties that must be absent from each project's test options. */
   forbidden?: string[];
+  /** Exact strings every literal `test.exclude` array must contain. Empty skips the check. */
+  requiredExcludeGlobs?: string[];
   parity?: VitestPropertyParity[];
   declared?: VitestDeclaredProjectPolicy;
 }

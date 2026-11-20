@@ -331,6 +331,7 @@ test("Vitest project property policy exports named configuration types", () => {
   assert.match(types, /helpers\?: string\[\];/);
   assert.match(types, /required\?: Record<string, VitestPropertyLiteral>;/);
   assert.match(types, /forbidden\?: string\[\];/);
+  assert.match(types, /requiredExcludeGlobs\?: string\[\];/);
   assert.match(types, /parity\?: VitestPropertyParity\[\];/);
   assert.ok(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(

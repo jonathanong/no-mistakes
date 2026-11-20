@@ -249,6 +249,23 @@ fn vitest_project_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn vitest_project_policy_documents_required_exclude_globs() {
+    let root = repo_root();
+    for path in [
+        "docs/rules/vitest-project-policy.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+    ] {
+        assert!(
+            read(&root.join(path)).contains("requiredExcludeGlobs"),
+            "{path}"
+        );
+    }
+}
+
+#[test]
 fn postgres_materialized_view_shape_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::POSTGRES_MATERIALIZED_VIEW_SHAPE;
     assert_eq!(rule, "postgres-materialized-view-shape");

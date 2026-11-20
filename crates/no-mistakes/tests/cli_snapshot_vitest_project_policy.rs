@@ -141,6 +141,43 @@ fn vitest_project_policy_json_matches_snapshot() {
         let root = rules_path("vitest-project-policy", "fixture", "policy-boundaries");
         cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
     }
+    for name in [
+        "exclude-empty-array",
+        "exclude-missing-glob",
+        "exclude-present",
+        "exclude-omitted",
+        "exclude-no-test",
+        "exclude-explicit-empty",
+        "exclude-local-binding",
+        "exclude-helper",
+        "exclude-proven-spread",
+        "exclude-partial-spread",
+        "exclude-dynamic",
+        "exclude-dynamic-config",
+        "exclude-dynamic-projects",
+        "exclude-string-project",
+        "exclude-project-present",
+        "exclude-project-silent",
+        "exclude-project-empty",
+        "exclude-project-override",
+        "exclude-project-inherit",
+        "exclude-option-off",
+        "exclude-non-array",
+        "exclude-empty-glob",
+    ] {
+        let root = rules_path("vitest-project-policy", "fixture", "exclude-globs");
+        cases.push((name, root.clone(), root.join(format!("{name}.yml"))));
+    }
+    let root = rules_path(
+        "vitest-project-policy",
+        "fixture",
+        "exclude-globs-suppressed",
+    );
+    cases.push((
+        "exclude-suppressed",
+        root.clone(),
+        root.join("exclude-suppressed.yml"),
+    ));
     let root = rules_path("vitest-project-policy", "fixture", "helper-glob-skip");
     cases.push((
         "helper-glob-config-excluded",

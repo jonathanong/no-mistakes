@@ -7,6 +7,7 @@ pub(crate) struct Options {
     pub(crate) helpers: Vec<String>,
     pub(crate) required: BTreeMap<String, serde_json::Value>,
     pub(crate) forbidden: Vec<String>,
+    pub(crate) required_exclude_globs: Vec<String>,
     pub(crate) parity: Vec<Parity>,
     pub(crate) declared: Option<Declared>,
 }
@@ -27,11 +28,24 @@ pub(super) enum LiteralKind {
 }
 
 impl Options {
+    pub(super) fn checks_exclude_globs(&self) -> bool {
+        !self.required_exclude_globs.is_empty()
+    }
+
+    pub(super) fn enforces_project_literals(&self) -> bool {
+        let project_policy =
+            !self.required.is_empty() || !self.forbidden.is_empty() || !self.parity.is_empty();
+        if self.declared.is_some() && !project_policy {
+            return false;
+        }
+        if self.checks_exclude_globs() && self.declared.is_none() && !project_policy {
+            return false;
+        }
+        true
+    }
+
     pub(super) fn check_effective(&self) -> bool {
-        self.declared.is_none()
-            || !self.required.is_empty()
-            || !self.forbidden.is_empty()
-            || !self.parity.is_empty()
+        self.enforces_project_literals() || self.checks_exclude_globs()
     }
 
     pub(super) fn source_paths(
@@ -67,6 +81,12 @@ impl Options {
         anyhow::ensure!(
             self.required.values().all(scalar),
             "{RULE_ID} required values must be scalar JSON literals"
+        );
+        anyhow::ensure!(
+            self.required_exclude_globs
+                .iter()
+                .all(|glob| !glob.is_empty()),
+            "{RULE_ID} requiredExcludeGlobs entries must be nonempty strings"
         );
         let declared = self.declared.as_ref();
         anyhow::ensure!(
