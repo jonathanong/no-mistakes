@@ -56,6 +56,8 @@ fn semantic_plan(root: &Path, changed: &str, global_fallback: bool) -> serde_jso
         "--global-config-fallback",
         if global_fallback { "true" } else { "false" },
         "--json",
+        "--timeout",
+        "120",
     ]);
     assert!(
         output.status.success(),
