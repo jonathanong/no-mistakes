@@ -1,0 +1,5 @@
+id: flow-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores: ['src/missing.ts', 'src/items.ts']

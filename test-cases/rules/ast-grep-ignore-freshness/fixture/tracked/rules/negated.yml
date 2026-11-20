@@ -1,0 +1,6 @@
+id: negated-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - '!src/items.ts'

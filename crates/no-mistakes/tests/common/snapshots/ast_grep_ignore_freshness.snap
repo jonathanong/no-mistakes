@@ -37,6 +37,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "nested": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/rules/orders.yml",
+          "line": 7,
+          "message": "ast-grep ignore `src/orders.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/orders.ts",
+          "target": "src/orders.ts"
+        },
+        {
+          "file": "packages/widgets/rules/orders.yml",
+          "line": 8,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "no_sgconfig": {
     "exitCode": 0,
     "report": {
@@ -84,12 +113,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "ignores: ["
         },
         {
+          "file": "rules/flow.yml",
+          "line": 5,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "ignores: ['src/missing.ts', 'src/items.ts']",
+          "target": "src/missing.ts"
+        },
+        {
           "file": "rules/listed.yml",
           "line": 7,
           "message": "ast-grep ignore `listed/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
           "rule": "ast-grep-ignore-freshness",
           "sourceLine": "- listed/missing.ts",
           "target": "listed/missing.ts"
+        },
+        {
+          "file": "rules/multi.yml",
+          "line": 6,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/negated.yml",
+          "line": 6,
+          "message": "ast-grep ignore `!src/items.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- '!src/items.ts'",
+          "target": "!src/items.ts"
         },
         {
           "file": "rules/scalar.yml",
@@ -114,6 +167,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "ast-grep-ignore-freshness",
           "sourceLine": "- ignored/items.ts",
           "target": "ignored/items.ts"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 14,
+          "message": "ast-grep ignore `./src/items.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- ./src/items.ts",
+          "target": "./src/items.ts"
         },
         {
           "file": "rules/widgets.yml",

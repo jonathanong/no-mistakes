@@ -21,11 +21,28 @@ wildcard matches some inventory path.
 
 Each string ignore, and each `{glob, caseInsensitive}` object, must match at
 least one tracked path. A glob matches with ast-grep's glob rules: `*` can
-cross `/`, and a dotfile path matches. The tracked path and the same path with
-a `./` prefix are both tried. An entry that matches only an untracked file or
-only a gitignored file is still reported. Inside a Git worktree the inventory
-is the tracked set, including tracked files under source skip directories such
-as `fixtures/`. Outside Git, the rule uses the ignore-aware visible inventory.
+cross `/`, and a dotfile path matches. `!` is a literal character, not a
+negated glob. Ast-grep strips a leading `./` from the file path and matches
+the ignore text as written, so `./src/items.ts` does not match `src/items.ts`.
+
+Paths are relative to the directory of the `sgconfig` file that discovered the
+rule. A root `sgconfig.yml` uses repository paths. With
+`files: [packages/widgets/sgconfig.yml]`, `src/items.ts` matches
+`packages/widgets/src/items.ts` and not a repository-root `src/items.ts`. A
+rule file named directly in `files`, with no `sgconfig`, stays relative to the
+repository root.
+
+A rule file may contain several YAML documents separated by `---`. Each
+document's ignores are checked. A document that is not valid YAML is a
+finding. Documents parsed before that error are still checked. A flow list
+such as `ignores: ['src/missing.ts', 'src/items.ts']` reports the line that
+contains the entry, so a `no-mistakes-disable-next-line` directive on the
+previous line applies to that entry.
+
+An entry that matches only an untracked file or only a gitignored file is
+still reported. Inside a Git worktree the inventory is the tracked set,
+including tracked files under source skip directories such as `fixtures/`.
+Outside Git, the rule uses the ignore-aware visible inventory.
 
 `files` names the configs to read. Each entry is a tracked rule YAML file, a
 directory of tracked rule YAML, or a tracked `sgconfig` file whose `ruleDirs`
@@ -83,6 +100,9 @@ ignores:
 Delete the stale ignore entry, or restore a tracked file that matches it.
 Creating an untracked or gitignored file does not satisfy the entry. A dotfile
 path such as `.widgets/items.ts` is a normal tracked path when Git tracks it.
+Remove a leading `./` from an ignore when the tracked path does not include
+it. Write paths relative to the `sgconfig` directory, not the repository root,
+when that config is nested.
 
 ## Suppression
 

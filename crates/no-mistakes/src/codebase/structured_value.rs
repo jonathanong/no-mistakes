@@ -1,8 +1,14 @@
 mod merge_keys;
 
 use merge_keys::expand_merge_keys;
+use serde::Deserialize;
 use serde_yaml::Value;
 use std::path::Path;
+
+pub(crate) struct YamlDocuments {
+    pub(crate) values: Vec<Value>,
+    pub(crate) errors: Vec<(usize, String)>,
+}
 
 /// Parse YAML or JSONC into a YAML value used by structured config rules.
 ///
@@ -17,6 +23,36 @@ pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String
             .map(expand_merge_keys)
             .map_err(|error| format!("failed to parse YAML ({error})"))
     }
+}
+
+/// Every YAML document in `source`. Documents parsed before a syntax error
+/// are kept. `parse_structured_value` still rejects multiple documents.
+pub(crate) fn parse_yaml_documents(source: &str) -> YamlDocuments {
+    let mut values = Vec::new();
+    let mut errors = Vec::new();
+    for document in serde_yaml::Deserializer::from_str(source) {
+        match Value::deserialize(document) {
+            Ok(value) => values.push(expand_merge_keys(value)),
+            Err(error) => {
+                let reported = error
+                    .location()
+                    .map(|location| location.line())
+                    .unwrap_or(1);
+                let last_line = source.lines().count().max(1);
+                let line = reported.min(last_line);
+                let message = format!("failed to parse YAML ({error})");
+                // A syntax error can make the YAML parser repeat one document.
+                let repeated = errors.last().is_some_and(|previous: &(usize, String)| {
+                    previous.0 == line && previous.1 == message
+                });
+                if repeated {
+                    break;
+                }
+                errors.push((line, message));
+            }
+        }
+    }
+    YamlDocuments { values, errors }
 }
 
 fn is_jsonc_path(path: &Path) -> bool {

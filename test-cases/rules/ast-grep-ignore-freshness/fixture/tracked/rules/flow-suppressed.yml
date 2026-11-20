@@ -1,0 +1,6 @@
+id: flow-suppressed
+language: TypeScript
+rule:
+  pattern: listWidgets()
+# no-mistakes-disable-next-line ast-grep-ignore-freshness
+ignores: ['retired/**/*.ts']
