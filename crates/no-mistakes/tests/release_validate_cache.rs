@@ -184,9 +184,6 @@ fn native_releases_use_thin_lto_and_sixteen_codegen_units_before_cache_restore()
     assert!(!script.contains("--crate-type cdylib"));
     let steps = job_body(&workflow, "build-native-linux-x64");
     let (settings, step_body) = steps.split_once("\n    steps:").unwrap();
-    let cache = step_body.find("Swatinem/rust-cache").unwrap();
-    let build = step_body.find("cargo-release-build.sh").unwrap();
-    assert!(cache < build);
     assert!(step_body.contains("fromJSON(env.NM_BUILD_TIMEOUT)"));
     for (job, timeout, build_timeout) in [
         ("build-native-linux-x64", "100", "65"),
@@ -195,7 +192,13 @@ fn native_releases_use_thin_lto_and_sixteen_codegen_units_before_cache_restore()
         ("build-native-windows", "120", "90"),
     ] {
         let body = job_body(&workflow, job);
-        let (job_settings, _) = body.split_once("\n    steps:").unwrap();
+        let (job_settings, job_steps) = body.split_once("\n    steps:").unwrap();
+        let cache = job_steps.find("Swatinem/rust-cache").unwrap();
+        let build = job_steps.find("cargo-release-build.sh").unwrap();
+        assert!(
+            cache < build,
+            "{job} must restore rust-cache before compiling"
+        );
         assert!(job_settings.contains(&format!("\n    timeout-minutes: {timeout}\n")));
         for setting in [
             "CARGO_PROFILE_RELEASE_LTO: thin",

@@ -48,7 +48,11 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   const script = readFileSync(join(repoRoot, ".github/scripts/cargo-release-build.sh"), "utf8");
   const body = jobBody(workflow, "build-native-linux-x64");
-  assert.match(body, /^ {4}needs:\n {6}- prepare$/m, "native builds must start after prepare");
+  assert.match(
+    body,
+    /^ {4}needs:\n {6}- prepare\n {4}runs-on:/m,
+    "native builds need prepare and nothing else",
+  );
   assert.match(body, /\n    timeout-minutes: 100\n/);
   assert.match(jobBody(workflow, "build-native-windows"), /\n    timeout-minutes: 120\n/);
   assert.match(jobBody(workflow, "build-native-darwin"), /\n    timeout-minutes: 120\n/);
@@ -90,7 +94,7 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
       /bash "\$RUNNER_TEMP\/release-scripts\/\.github\/scripts\/cargo-release-build\.sh"/,
     );
     assert.match(shared, /Swatinem\/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2/);
-    assert.doesNotMatch(shared, /^ {4}- validate$/m);
+    assert.match(shared, /^ {4}needs:\n {6}- prepare\n {4}runs-on:/m);
   }
 });
 
@@ -231,7 +235,13 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
   assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /\n    timeout-minutes: 100\n/);
   assert.match(workflow, /\n        timeout-minutes: 90\n/);
-  assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm|workflow_dispatch:[\s\S]*push:/);
+  const triggers = workflow.match(/^on:\n((?: {2}[^\n]+\n)+)/m);
+  assert.ok(triggers, "timings workflow must declare triggers");
+  assert.deepEqual(
+    [...triggers[1].matchAll(/^ {2}([^:\n]+):/gm)].map((match) => match[1]),
+    ["workflow_dispatch"],
+  );
+  assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm/);
 });
 
 test("CI cancels superseded PR runs but keeps active main coverage runs", () => {
@@ -469,5 +479,15 @@ test("release publication requires both parallel validation suites", () => {
     "publish-native-windows",
   ]) {
     assert.match(job(publisher), /^ {6}- validate$/m);
+  }
+  const github = job("publish-github-release");
+  assert.match(github, /::error::missing GitHub release asset/);
+  for (const target of [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+  ]) {
+    assert.match(github, new RegExp(target));
   }
 });

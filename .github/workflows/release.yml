@@ -1304,7 +1304,33 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag="v${{ needs.prepare.outputs.version }}"
+          version="${{ needs.prepare.outputs.version }}"
+          tag="v$version"
+          missing=0
+          for target in \
+            x86_64-unknown-linux-gnu \
+            aarch64-unknown-linux-gnu \
+            aarch64-apple-darwin \
+            x86_64-pc-windows-msvc
+          do
+            case "$target" in
+              *windows*) bin_ext=".exe" ;;
+              *) bin_ext="" ;;
+            esac
+            for asset in \
+              "dist/no-mistakes-v${version}-${target}${bin_ext}" \
+              "dist/no-mistakes-v${version}-${target}${bin_ext}.sha256" \
+              "dist/no-mistakes-napi-v${version}-${target}.node"
+            do
+              if [ ! -f "$asset" ]; then
+                echo "::error::missing GitHub release asset $asset"
+                missing=1
+              fi
+            done
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" dist/* --clobber
           else
