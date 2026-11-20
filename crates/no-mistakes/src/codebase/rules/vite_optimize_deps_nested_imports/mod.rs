@@ -123,3 +123,7 @@ mod tests;
 #[cfg(test)]
 #[path = "coverage_tests.rs"]
 mod coverage_tests;
+
+#[cfg(test)]
+#[path = "closure_follow_tests.rs"]
+mod closure_follow_tests;
