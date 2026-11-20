@@ -559,6 +559,21 @@ jobs:
           }
           '@
 
+      # Build scripts belong to the running workflow, even when the release
+      # source is an older tag. Never overlay current product source onto that tag.
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: release-scripts
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate release scripts
+        timeout-minutes: 1
+        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -615,12 +630,12 @@ jobs:
       - name: Build CLI and N-API addon
         timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
         shell: bash
-        run: bash .github/scripts/cargo-release-build.sh
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
 
       - name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-cli.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
@@ -661,7 +676,7 @@ jobs:
       - name: Stage N-API addon
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-addon.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Upload N-API artifact
         timeout-minutes: 5
@@ -716,6 +731,21 @@ jobs:
           }
           '@
 
+      # Build scripts belong to the running workflow, even when the release
+      # source is an older tag. Never overlay current product source onto that tag.
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: release-scripts
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate release scripts
+        timeout-minutes: 1
+        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -772,12 +802,12 @@ jobs:
       - name: Build CLI and N-API addon
         timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
         shell: bash
-        run: bash .github/scripts/cargo-release-build.sh
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
 
       - name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-cli.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
@@ -818,7 +848,7 @@ jobs:
       - name: Stage N-API addon
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-addon.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Upload N-API artifact
         timeout-minutes: 5
@@ -874,6 +904,21 @@ jobs:
           }
           '@
 
+      # Build scripts belong to the running workflow, even when the release
+      # source is an older tag. Never overlay current product source onto that tag.
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: release-scripts
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate release scripts
+        timeout-minutes: 1
+        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -930,12 +975,12 @@ jobs:
       - name: Build CLI and N-API addon
         timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
         shell: bash
-        run: bash .github/scripts/cargo-release-build.sh
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
 
       - name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-cli.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
@@ -976,7 +1021,7 @@ jobs:
       - name: Stage N-API addon
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-addon.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Upload N-API artifact
         timeout-minutes: 5
@@ -1032,6 +1077,21 @@ jobs:
           }
           '@
 
+      # Build scripts belong to the running workflow, even when the release
+      # source is an older tag. Never overlay current product source onto that tag.
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: release-scripts
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Isolate release scripts
+        timeout-minutes: 1
+        run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
+
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -1088,12 +1148,12 @@ jobs:
       - name: Build CLI and N-API addon
         timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
         shell: bash
-        run: bash .github/scripts/cargo-release-build.sh
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
 
       - name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-cli.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
@@ -1134,7 +1194,7 @@ jobs:
       - name: Stage N-API addon
         timeout-minutes: 2
         shell: bash
-        run: bash .github/scripts/stage-release-addon.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Upload N-API artifact
         timeout-minutes: 5
@@ -1261,7 +1321,7 @@ jobs:
       - validate
       - build-native-linux-x64
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     permissions:
       contents: read
       id-token: write
@@ -1329,12 +1389,12 @@ jobs:
       - name: Stage platform package
         timeout-minutes: 5
         shell: bash
-        run: bash .github/scripts/stage-one-platform.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 40
+        timeout-minutes: 50
         shell: bash
-        run: bash .github/scripts/publish-one-npm.sh "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
   publish-native-linux-arm:
     name: Publish no-mistakes-linux-arm64-gnu
@@ -1343,7 +1403,7 @@ jobs:
       - validate
       - build-native-linux-arm
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     permissions:
       contents: read
       id-token: write
@@ -1411,12 +1471,12 @@ jobs:
       - name: Stage platform package
         timeout-minutes: 5
         shell: bash
-        run: bash .github/scripts/stage-one-platform.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 40
+        timeout-minutes: 50
         shell: bash
-        run: bash .github/scripts/publish-one-npm.sh "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
 
   publish-native-darwin:
@@ -1426,7 +1486,7 @@ jobs:
       - validate
       - build-native-darwin
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     permissions:
       contents: read
       id-token: write
@@ -1494,12 +1554,12 @@ jobs:
       - name: Stage platform package
         timeout-minutes: 5
         shell: bash
-        run: bash .github/scripts/stage-one-platform.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 40
+        timeout-minutes: 50
         shell: bash
-        run: bash .github/scripts/publish-one-npm.sh "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
 
   publish-native-windows:
@@ -1509,7 +1569,7 @@ jobs:
       - validate
       - build-native-windows
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     permissions:
       contents: read
       id-token: write
@@ -1578,12 +1638,12 @@ jobs:
       - name: Stage platform package
         timeout-minutes: 5
         shell: bash
-        run: bash .github/scripts/stage-one-platform.sh "${{ needs.prepare.outputs.version }}"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
       - name: Publish npm platform package with OIDC
-        timeout-minutes: 40
+        timeout-minutes: 50
         shell: bash
-        run: bash .github/scripts/publish-one-npm.sh "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
 
 
   # Root publication waits for all four of these, so latest cannot point at a
@@ -1766,7 +1826,7 @@ jobs:
       - verify-npm-linux-arm
       - verify-npm-windows
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     permissions:
       contents: write
       id-token: write
@@ -1815,9 +1875,9 @@ jobs:
         run: pnpm run build:js
 
       - name: Publish npm JS packages with OIDC
-        timeout-minutes: 40
+        timeout-minutes: 50
         shell: bash
-        run: bash .github/scripts/publish-one-npm.sh "${{ needs.prepare.outputs.version }}" no-mistakes
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" no-mistakes
 
   # Linux and Windows root checks gate the ESLint publish. The macOS check
   # still runs and still fails the release through release-complete.
@@ -1999,7 +2059,7 @@ jobs:
       - verify-npm-root-linux-arm
       - verify-npm-root-windows
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     permissions:
       contents: read
       id-token: write
@@ -2039,9 +2099,9 @@ jobs:
           install: false
 
       - name: Publish ESLint package with OIDC
-        timeout-minutes: 40
+        timeout-minutes: 50
         shell: bash
-        run: bash .github/scripts/publish-one-npm.sh "${{ needs.prepare.outputs.version }}" eslint-plugin-no-mistakes
+        run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" eslint-plugin-no-mistakes
 
   release-complete:
     name: Release complete

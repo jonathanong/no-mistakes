@@ -68,7 +68,12 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
     /cargo build --release --locked --target "\$target" -p no-mistakes --timings/,
   );
   assert.doesNotMatch(script, /--crate-type cdylib/);
-  assert.match(body, /bash \.github\/scripts\/cargo-release-build\.sh/);
+  assert.match(
+    body,
+    /bash "\$RUNNER_TEMP\/release-scripts\/\.github\/scripts\/cargo-release-build\.sh"/,
+  );
+  assert.match(body, /ref: \$\{\{ github\.workflow_sha \}\}/);
+  assert.match(body, /mv -- release-scripts "\$RUNNER_TEMP\/release-scripts"/);
   assert.match(body, /Add-MpPreference -ExclusionPath/);
   assert.match(body, /name: release-cli-\$\{\{ env\.NM_TARGET \}\}/);
   assert.match(body, /name: release-napi-\$\{\{ env\.NM_TARGET \}\}/);
@@ -80,7 +85,10 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
   assert.match(workflow, /NM_ADDON: no_mistakes\.dll/);
   for (const job of ["build-native-linux-arm", "build-native-darwin", "build-native-windows"]) {
     const shared = jobBody(workflow, job);
-    assert.match(shared, /bash \.github\/scripts\/cargo-release-build\.sh/);
+    assert.match(
+      shared,
+      /bash "\$RUNNER_TEMP\/release-scripts\/\.github\/scripts\/cargo-release-build\.sh"/,
+    );
     assert.match(shared, /Swatinem\/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2/);
     assert.doesNotMatch(shared, /^ {4}- validate$/m);
   }
@@ -106,7 +114,10 @@ test("release syncs optional native package versions and publishes only through 
     assert.match(workflow, new RegExp(`NM_PACKAGE: ${name}\\n`));
     assert.doesNotMatch(publishJs, new RegExp(name));
   }
-  assert.match(publishJs, /publish-one-npm\.sh "\$\{\{ needs\.prepare\.outputs\.version \}\}" no-mistakes/);
+  assert.match(
+    publishJs,
+    /publish-tools\/\.github\/scripts\/publish-one-npm\.sh" "\$\{\{ needs\.prepare\.outputs\.version \}\}" no-mistakes/,
+  );
   const publishAt = publisher.indexOf('publish-npm.cjs" "$package" "$version"');
   const waitAt = publisher.indexOf('--version "$version" --timeout-ms 1800000');
   assert.ok(publishAt >= 0 && waitAt > publishAt, "publish the package, then wait for its tarball");

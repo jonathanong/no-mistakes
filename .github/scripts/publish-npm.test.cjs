@@ -84,13 +84,17 @@ test("every npm channel uses workflow-owned publish tooling, including older tag
     assert.match(block, /ref: \$\{\{ github.workflow_sha \}\}/);
     assert.match(block, /persist-credentials: false/);
     assert.match(block, /mv -- publish-tools "\$RUNNER_TEMP\/publish-tools"/);
-    assert.match(block, /publish-one-npm\.sh/);
+    assert.match(block, /bash "\$RUNNER_TEMP\/publish-tools\/\.github\/scripts\/publish-one-npm\.sh"/);
+    if (name.startsWith("publish-native-")) {
+      assert.match(block, /bash "\$RUNNER_TEMP\/publish-tools\/\.github\/scripts\/stage-one-platform\.sh"/);
+    }
     assert.doesNotMatch(block, /npm publish /);
   }
   for (const name of ["publish-native-linux-arm", "publish-native-darwin", "publish-native-windows"]) {
     const block = job(name);
     assert.match(block, /ref: \$\{\{ github.workflow_sha \}\}/);
-    assert.match(block, /publish-one-npm\.sh/);
+    assert.match(block, /bash "\$RUNNER_TEMP\/publish-tools\/\.github\/scripts\/publish-one-npm\.sh"/);
+    assert.match(block, /bash "\$RUNNER_TEMP\/publish-tools\/\.github\/scripts\/stage-one-platform\.sh"/);
     assert.match(block, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/);
   }
   const publishAt = publishScript.indexOf('publish-npm.cjs" "$package" "$version"');
@@ -105,7 +109,12 @@ test("npm publish steps outlast the visibility window for every package", () => 
     const step = block.split(/\n      - name: Publish [^\n]*\n/)[1];
     const stepMinutes = Number(step.match(/timeout-minutes: (\d+)/)[1]);
     const jobMinutes = Number(block.match(/\n    timeout-minutes: (\d+)/)[1]);
-    assert.ok(stepMinutes >= windowMinutes + 2 + 5, `${name} step needs one package window`);
+    const tarballMinutes = 30;
+    assert.equal(publishScript.includes("--timeout-ms 1800000"), true);
+    assert.ok(
+      stepMinutes >= windowMinutes + tarballMinutes + 5,
+      `${name} step needs the packument window plus the tarball wait`,
+    );
     const stepTimeouts = block.split(/\n    steps:[^\n]*\n/)[1].split(/\n?      - /).slice(1).map((s) => Number(s.match(/\n        timeout-minutes: (\d+)/)?.[1]));
     assert.ok(stepTimeouts.every(Number.isInteger), `${name} steps all need literal timeouts`);
     const stepSum = stepTimeouts.reduce((a, b) => a + b, 0);
