@@ -1,8 +1,8 @@
 use super::super::{expressions::expression, Expr, Step};
 use oxc_ast::ast::BindingPattern;
 
-// Destructuring a call result runs the call; the unknown bindings keep the
-// result from being read as a builder. The append proof evaluates it as an
+// Destructuring a call result runs the call; inert placeholders keep each
+// binding from being read as a builder. The append proof evaluates it as an
 // effect; ordinary lowering binds it as `const tmp = call()` would, so both
 // forms resolve and report identically. Defaults, computed keys and non-plain
 // rest targets run code the summary cannot see, so they stay unsupported.
@@ -42,7 +42,8 @@ pub(super) fn bind(
             .id
             .get_binding_identifiers()
             .into_iter()
-            .map(|id| Step::Bind(id.name.to_string(), Expr::Unknown)),
+            // Primitive, not Unknown: an unlowered expression after the call is rejected.
+            .map(|id| Step::Bind(id.name.to_string(), Expr::Primitive)),
     );
 }
 

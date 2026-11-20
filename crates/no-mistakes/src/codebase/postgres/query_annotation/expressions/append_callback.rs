@@ -87,8 +87,8 @@ fn call_site(summary: &Function) -> Option<(usize, usize, String)> {
         })
 }
 
-// After the callback call only the result may be read: never a call, never the
-// builder itself.
+// After the callback call only a lowered result may be read: never a call,
+// never the builder, and never an expression the summary did not lower.
 fn inert_after_call(step: &Step, payload: &str) -> bool {
     match step {
         Step::Return(expr) | Step::Bind(_, expr) => result_read(expr, payload),
@@ -100,9 +100,7 @@ fn result_read(expr: &Expr, payload: &str) -> bool {
     match expr {
         Expr::Name(name) => name != payload,
         Expr::Member(inner, _) | Expr::Await(inner) => result_read(inner, payload),
-        Expr::Unknown | Expr::Primitive | Expr::Text(_) | Expr::Number(_) | Expr::Boolean(_) => {
-            true
-        }
+        Expr::Primitive | Expr::Text(_) | Expr::Number(_) | Expr::Boolean(_) => true,
         _ => false,
     }
 }

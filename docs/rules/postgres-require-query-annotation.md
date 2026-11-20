@@ -529,6 +529,15 @@ An async inline callback may append to its parameter through direct static
 appends or a source-proven append-only helper before one configured executor
 call. Aliases, writes, escaping parameters, or unknown helper effects remain
 unanalyzable.
+After that executor call, the helper may only read the result: a name other than
+the builder, a member or await of such a read, or a literal. An expression the
+summary does not lower is not inspected for a later call or builder use, so it
+is not a result read and the callback proof is dropped. An array or object
+literal after the call is not a result read either, including when it calls
+into the builder. A plain destructure of the callback result binds each name to
+an inert placeholder and may return that name. That destructured lowering is
+only an input to this proof: the function stays unsupported on every other
+path, and any other function with a destructured call stays unsupported.
 A direct imported immutable string constant has the same fixed-head proof when
 its source file is prepared and the import/export identity is exact. Re-exports,
 mutable values, and missing source files remain unresolved.
