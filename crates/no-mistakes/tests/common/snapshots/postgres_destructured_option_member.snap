@@ -13,6 +13,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/query.ts",
+          "line": 112,
+          "message": "src/query.ts:112: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const { rows = [] } = await run(sql`SELECT 5`)",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
           "line": 41,
           "message": "src/query.ts:41: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
@@ -33,6 +41,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "src/query.ts:53: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",
           "sourceLine": "const result = await run(sql`SELECT 4`)",
+          "target": "annotation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 95,
+          "message": "src/query.ts:95: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "const { rows } = await run(sql`${x} SELECT 1`)",
           "target": "annotation"
         }
       ],
