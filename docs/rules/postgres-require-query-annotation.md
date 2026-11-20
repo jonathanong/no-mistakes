@@ -535,9 +535,10 @@ summary does not lower is not inspected for a later call or builder use, so it
 is not a result read and the callback proof is dropped. An array or object
 literal after the call is not a result read either, including when it calls
 into the builder. A plain destructure of the callback result binds each name to
-an inert placeholder and may return that name. That placeholder evaluates as
-unknown, the same value as an unresolved expression, so ordinary SQL findings
-stay the same. Await suspension treats the placeholder and an unresolved
+an inert placeholder and may return that name. The summary lowers that
+placeholder to a primitive result, not to an unresolved expression. The
+primitive-result proof accepts the placeholder and rejects an unresolved
+expression. Await suspension treats the placeholder and an unresolved
 expression as inert. Only this proof accepts a later read of the bound name.
 That destructured lowering is only an input to this proof: the function stays
 unsupported on every other path, and any other function with a destructured
