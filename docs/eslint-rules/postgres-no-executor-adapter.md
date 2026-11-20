@@ -780,12 +780,12 @@ run(0 ?? read, account);
   built from row fields and then mutated), a shadowed `Date`, and a non-row object
   or array, whose contents cannot be proved free of SQL fragments. `string | null`
   row fields still prove.
-- In `"forwarding-only"` mode, an optional property that an inline
-  object-literal argument omits (`put(tx, { id: row.id })` where the callee
-  type declares `ownerId?: string`) reads as `undefined` and proves, because
-  nothing row-derived reaches it. Default `mode: "all"` still reports that
-  call, including `put(flag ? left : right, { id: row.id })` when both
-  branches are configured executors. Extra optional fields the callee never
+- In the default `mode: "all"`, a call that omits an optional field reports
+  (`put(tx, { id: row.id })` where the callee type declares `ownerId?: string`,
+  including `put(flag ? left : right, { id: row.id })` when both branches are
+  configured executors). In `"forwarding-only"` mode that omission reads as
+  `undefined` and proves, because nothing row-derived reaches it. Extra
+  optional fields the callee never
   binds into SQL stay silent. An inline `new Date()` still proves. These stay
   reported: a required property, a spread, a `__proto__` key, an object that
   is not written inline at the call,

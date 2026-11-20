@@ -104,19 +104,33 @@ function isWriteTarget(node) {
 
 function isTypePosition(node) {
   if (node.parent.type === "TSTypePredicate") return true;
-  let parent = node.parent;
-  while (parent.type === "TSQualifiedName") parent = parent.parent;
-  if (parent.type === "TSTypeReference") return true;
-  if (parent.type === "TSInterfaceHeritage") return true;
-  if (parent.type === "TSClassImplements") return true;
-  if (parent.type === "TSImportType") return true;
-  return false;
+  let current = node;
+  while (current.parent?.type === "TSQualifiedName") current = current.parent;
+  const parent = current.parent;
+  if (parent?.type === "TSModuleDeclaration" && parent.id === current) return true;
+  return (
+    parent.type === "TSTypeReference" ||
+    parent.type === "TSInterfaceHeritage" ||
+    parent.type === "TSClassImplements" ||
+    parent.type === "TSImportType"
+  );
 }
 
 function isReference(node) {
   const parent = node.parent;
+  const statement = parent.parent;
+  if (
+    parent.type === "ExportSpecifier" &&
+    parent.local === node &&
+    statement?.type === "ExportNamedDeclaration" &&
+    !statement.source &&
+    statement.exportKind !== "type" &&
+    parent.exportKind !== "type"
+  )
+    return true;
   if (BINDING_PARENTS.test(parent.type)) return false;
   if (parent.type === "TSEnumMember" && parent.id === node) return false;
+  if (parent.type === "TSIndexSignature" && parent.parameters.includes(node)) return false;
   if (parent[NAME_SLOTS[parent.type]] === node && !parent.computed) return false;
   if (parent.params?.includes(node)) return false;
   if (parent.type === "AssignmentPattern" && parent.left === node) return false;

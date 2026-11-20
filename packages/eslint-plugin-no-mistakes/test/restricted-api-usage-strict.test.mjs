@@ -55,6 +55,7 @@ describe(`${id} strict selectors`, () => {
           invalid: [
             ...Object.entries(selectors).map(([name, target]) => snapshotCase(name, target)),
             snapshotCase("strict-construct.ts", construct),
+            snapshotCase("strict-name-slots.ts", { referenceNamePattern: "^item$" }),
             snapshotCase("strict-construct.ts", { constructNamePattern: "Worker$" }),
             snapshotCase("legacy-invalid.mjs", legacyTarget),
             snapshotCase("nested-calls.mjs", nestedCall),

@@ -136,6 +136,13 @@ client.send(new ListEntriesCommand({ cursor }));
   `const item: blockingWait`. A computed key that is an identifier
   (`[blockingWait]: number`, including inside a destructure) is a value read
   and reports. A literal computed key is not an identifier.
+  An index-signature parameter (`[item: string]`) and a qualified namespace name
+  (`namespace widgets.item {}`) are declarations, not reads. A local value
+  export reads the local binding, so `export { item }` and
+  `export { item as default }` match `item`. The exported alias is not a read,
+  so `export { kept as item }` stays silent. Type-only exports
+  (`export type { item }`, `export { type item }`) and re-exports
+  (`export { item } from "./orders"`) are not local value reads.
 - `declarationNamePattern`: optional regular expression for the name declared by a
   function, class, or variable declaration, such as `function enqueueItemAndWait() {}`.
 - `propertyNamePattern`: optional regular expression for a literal object key or a

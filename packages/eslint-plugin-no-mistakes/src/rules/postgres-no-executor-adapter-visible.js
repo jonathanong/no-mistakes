@@ -9,7 +9,6 @@ const {
 const { callbackTarget } = require("./postgres-no-executor-adapter-callback");
 const { literalSql } = require("./postgres-no-executor-adapter-sql");
 const { localHoleSafe } = require("./postgres-no-executor-adapter-sql-origin");
-const { beginOmittedScope, endOmittedScope } = require("./postgres-no-executor-adapter-sql-absent");
 const { enterHelper, forwardedHop, leaveHelper } = require("./postgres-no-executor-adapter-hop");
 const { localExecutorType } = require("./postgres-no-executor-adapter-type");
 const { passedOn } = require("./postgres-no-executor-adapter-option-forward");
@@ -77,33 +76,59 @@ function otherPropertyRead(reference, property) {
 
 // The same judgement that leaves an adapter closure unreported where it is an
 // argument: its receiver accepts it and the receiver's SQL is visible.
-function closureProven(fn, context, options, facts) {
+function closureProven(fn, context, options, facts, result) {
   const call = fn.parent;
   const at = call.arguments.indexOf(fn);
   return (
     (acceptsExecutor(call, at, null, context, options, facts) ||
       callbackTarget(call, at, context, facts)) &&
-    visibleSqlTarget(call, at, null, context, options, true, facts, true) === true
+    visibleSqlTarget(call, at, null, context, options, true, facts, true, result) === true
   );
 }
 
-function visibleSqlTarget(call, index, quoteNode, context, options, accepted, facts, callback) {
-  beginOmittedScope();
-  try {
-    return judgeVisibleSql(call, index, quoteNode, context, options, accepted, facts, callback);
-  } finally {
-    endOmittedScope();
-  }
+function visibleSqlTarget(
+  call,
+  index,
+  quoteNode,
+  context,
+  options,
+  accepted,
+  facts,
+  callback,
+  result,
+) {
+  return judgeVisibleSql(
+    call,
+    index,
+    quoteNode,
+    context,
+    options,
+    accepted,
+    facts,
+    callback,
+    result,
+  );
 }
 
-function judgeVisibleSql(call, index, quoteNode, context, options, accepted, facts, callback) {
+function judgeVisibleSql(
+  call,
+  index,
+  quoteNode,
+  context,
+  options,
+  accepted,
+  facts,
+  callback,
+  result,
+) {
   if (call.type !== "CallExpression") return null;
   if (call.arguments.some((argument) => argument.type === "SpreadElement")) return null;
   if (quoteNode && (quoteNode.type !== "Property" || quoteNode.computed)) return null;
   const fn = localFunction(call.callee, context, facts);
   if (!fn)
     return accepted && isImportedHelper(call.callee, context)
-      ? (importedVisible(call, index, quoteNode?.key.name, context, options, facts) ?? false)
+      ? (importedVisible(call, index, quoteNode?.key.name, context, options, facts, result) ??
+          false)
       : null;
   if (fn.params.some((param) => param.type === "RestElement")) return false;
   const property = quoteNode?.key.name;
@@ -127,11 +152,11 @@ function judgeVisibleSql(call, index, quoteNode, context, options, accepted, fac
       if (reference.init) return true;
       if (reference.isWrite()) return false;
       if (binding.object && otherPropertyRead(reference, property)) return true;
-      const hole = (value) => localHoleSafe(value, call, fn, context, variable, property);
+      const hole = (value) => localHoleSafe(value, call, fn, context, variable, property, result);
       const terminal =
         accepted && binding.object
           ? libraryVisible(reference.identifier, context, options, hole, (fn) =>
-              closureProven(fn, context, options, facts),
+              closureProven(fn, context, options, facts, result),
             )
           : null;
       if (terminal !== null) return terminal;
@@ -139,12 +164,12 @@ function judgeVisibleSql(call, index, quoteNode, context, options, accepted, fac
         const inner = reference.identifier.parent;
         const at = inner.arguments.indexOf(reference.identifier);
         const next = [inner, at, quoteNode, context, options, accepted, facts];
-        return visibleSqlTarget(...next) === true;
+        return visibleSqlTarget(...next, undefined, result) === true;
       }
       const invocation = executorCall(reference, property);
       if (!invocation) return !property && forwardedHop(reference, context, options, facts);
       return literalSql(invocation.arguments[0], context, options, (hole) =>
-        localHoleSafe(hole, call, fn, context, variable, property),
+        localHoleSafe(hole, call, fn, context, variable, property, result),
       );
     });
   } finally {
