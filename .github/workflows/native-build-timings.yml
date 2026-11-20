@@ -5,6 +5,11 @@ name: Native build timings
 # workflow does not prepare a version, tag, or publish.
 on:
   workflow_dispatch:
+  # One-shot so this branch can record timings before the workflow file is on
+  # the default branch. workflow_dispatch is not registered until then.
+  push:
+    branches:
+      - fix/issue-3736
 
 permissions: {}
 
