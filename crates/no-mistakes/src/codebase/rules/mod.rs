@@ -23,6 +23,7 @@ pub mod forbidden_lint_suppressions;
 pub mod forbidden_workspace_closure;
 pub mod github_actions_action_input_policy;
 pub mod github_actions_action_timeout_pair;
+pub mod github_actions_cache_key_policy;
 pub mod github_actions_checkout_credentials;
 pub mod github_actions_composite_step_schema;
 pub mod github_actions_docker_host_ports;

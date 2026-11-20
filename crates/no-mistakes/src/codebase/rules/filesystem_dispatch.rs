@@ -6,9 +6,10 @@ use super::{
     config_path_references, csharp_max_lines_per_file, csharp_no_async_void_delegate,
     declared_payload_compatibility, doc_consistency, file_extension_policy, finite_set_consistency,
     forbidden_lint_suppressions, forbidden_workspace_closure, github_actions_action_input_policy,
-    github_actions_action_timeout_pair, github_actions_checkout_credentials,
-    github_actions_composite_step_schema, github_actions_docker_host_ports,
-    github_actions_download_integrity, github_actions_job_permissions, github_actions_job_timeouts,
+    github_actions_action_timeout_pair, github_actions_cache_key_policy,
+    github_actions_checkout_credentials, github_actions_composite_step_schema,
+    github_actions_docker_host_ports, github_actions_download_integrity,
+    github_actions_job_permissions, github_actions_job_timeouts,
     github_actions_local_action_checkout, github_actions_max_inline_script_lines,
     github_actions_pinned_hash, github_actions_script_expressions, github_actions_step_timeouts,
     github_actions_test_timeout_literals, integration_test_no_mocks, lockfile_allowlist,
@@ -99,6 +100,7 @@ pub(super) const GITHUB_ACTIONS_ACTION_INPUT_POLICY: &str =
     github_actions_action_input_policy::RULE_ID;
 pub(super) const GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR: &str =
     github_actions_action_timeout_pair::RULE_ID;
+pub(super) const GITHUB_ACTIONS_CACHE_KEY_POLICY: &str = github_actions_cache_key_policy::RULE_ID;
 pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
     github_actions_composite_step_schema::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;

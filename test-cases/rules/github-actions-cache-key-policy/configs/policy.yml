@@ -1,0 +1,10 @@
+rules:
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      rejectRestoreKeys: true
+      allowHashFiles: true
+      caches:
+        - path: .cache/widgets
+          lockfile: widgets.lock
+          keyParts: [runner.os, runner.arch]

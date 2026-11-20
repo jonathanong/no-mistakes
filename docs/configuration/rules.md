@@ -529,6 +529,27 @@ rules:
       maxLines: 3
 ```
 
+For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy.md),
+`caches` lists each portable cache `path`, the `lockfile` that must be digested, and the
+`keyParts` expression fragments (such as `runner.os`) that the key must contain.
+`rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. A cache path outside
+`caches` is silent. `matrix.os` does not satisfy `runner.os`.
+
+```yaml
+rules:
+  - rule: github-actions-cache-key-policy
+    scope: repository
+    options:
+      rejectRestoreKeys: true
+      allowHashFiles: true
+      caches:
+        - path: .cache/widgets
+          lockfile: widgets.lock
+          keyParts:
+            - runner.os
+            - runner.arch
+```
+
 ### Vitest project properties
 
 [`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit

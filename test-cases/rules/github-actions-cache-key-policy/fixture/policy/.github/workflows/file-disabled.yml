@@ -1,0 +1,12 @@
+# no-mistakes-disable-file github-actions-cache-key-policy
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: widgets-shared
+          restore-keys: widgets-
