@@ -1,6 +1,6 @@
 use super::*;
 use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
+    schema::{RuleDef, RuleScope, StringOrList},
     NoMistakesConfig,
 };
 
@@ -81,6 +81,36 @@ fn resolves_only_links_inside_root() {
         graph::normalize_inside(Path::new(""), Path::new("/b.md")),
         None
     );
+}
+
+#[test]
+fn exclude_roots_reject_empty_and_invalid_patterns() {
+    let empty = super::exclude_roots(&Some(StringOrList::Many(Vec::new())));
+    let Err(empty) = empty else {
+        panic!("empty excludeRoots must fail");
+    };
+    assert!(empty
+        .to_string()
+        .contains("excludeRoots must contain non-empty glob patterns"));
+    let blank = super::exclude_roots(&Some(StringOrList::One("  ".to_string())));
+    let Err(blank) = blank else {
+        panic!("blank excludeRoots must fail");
+    };
+    assert!(blank
+        .to_string()
+        .contains("excludeRoots must contain non-empty glob patterns"));
+    let invalid = super::exclude_roots(&Some(StringOrList::One("docs/**[".to_string())));
+    let Err(invalid) = invalid else {
+        panic!("invalid excludeRoots glob must fail");
+    };
+    assert!(invalid
+        .to_string()
+        .contains("excludeRoots contains invalid glob"));
+    let absent = super::exclude_roots(&None);
+    let Ok(absent) = absent else {
+        panic!("omitted excludeRoots must be accepted");
+    };
+    assert!(absent.is_empty());
 }
 
 #[test]
@@ -240,10 +270,7 @@ fn shortest_depths_use_a_single_multi_source_bfs_and_skip_duplicate_queue_entrie
         (target.clone(), Vec::new()),
     ]);
     assert_eq!(
-        graph::shortest_depths(
-            &BTreeSet::from(["CLAUDE.md".to_string(), "SECOND.md".to_string()]),
-            &graph,
-        ),
+        graph::shortest_depths(&[claude.clone(), second_root.clone()], &graph),
         BTreeMap::from([
             (claude, 0),
             (second_root, 0),

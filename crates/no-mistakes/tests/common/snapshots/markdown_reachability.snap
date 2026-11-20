@@ -121,6 +121,83 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude_roots_absent": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_roots_all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "markdown-reachability",
+          "message": "markdown-reachability: excludeRoots excluded all configured roots"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_roots_drop_docs_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/AGENTS.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability",
+          "sourceLine": "[items](items.md)"
+        },
+        {
+          "file": "docs/items.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability",
+          "sourceLine": "# Items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude_roots_reachable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "docs/items.md",
+          "line": 1,
+          "message": "reachable at depth 2, but an intermediary must be a configured index Markdown file",
+          "rule": "markdown-reachability",
+          "sourceLine": "# Items"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "excluded_root_still_links": {
     "exitCode": 0,
     "report": {

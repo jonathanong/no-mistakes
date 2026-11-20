@@ -95,6 +95,15 @@ entries are checked. `packages` lists the package directories in scope. An
 explicit empty `packages` list selects nothing. An omitted option is reported
 on the loaded config file.
 
+[`markdown-reachability`](../rules/markdown-reachability.md) accepts
+`options.excludeRoots` globs. Patterns match the repository-relative path. A
+file named in `options.rootFilenames` that matches one of those globs is not a
+traversal root. The file remains ordinary Markdown and can be reached from
+another root. It forwards its links only when it also matches `indexFilenames`.
+The all-excluded error counts only roots in scopes that have targets. When
+every such root matches, the rule reports a config error.
+`options.baselineFile` remains the tracked JSON baseline path.
+
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
 `options.unanalyzableSql` remains an alias for `options.unanalyzable`.
 `options.unanalyzable` inherits the repository `unanalyzable` policy and

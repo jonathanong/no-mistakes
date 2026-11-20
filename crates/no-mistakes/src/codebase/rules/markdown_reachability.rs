@@ -1,5 +1,7 @@
 //! Enforces the deliberately small documentation discovery graph used by agents.
+use super::path_filter::GlobMatcher;
 use super::RuleFinding;
+use crate::config::v2::schema::StringOrList;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -28,6 +30,7 @@ type RuleStates = BTreeMap<String, RuleState>;
 pub(crate) struct Options {
     root_filenames: Option<Vec<String>>,
     index_filenames: Option<Vec<String>>,
+    exclude_roots: Option<StringOrList>,
     max_depth: Option<usize>,
     baseline_file: Option<PathBuf>,
 }
@@ -44,6 +47,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         let options: Options = rule.try_rule_options()?;
         let roots = filenames(&options.root_filenames, DEFAULT_ROOT_FILENAMES);
         let indexes = filenames(&options.index_filenames, DEFAULT_INDEX_FILENAMES);
+        let exclude_roots = exclude_roots(&options.exclude_roots)?;
         let max_depth = validate_max_depth(options.max_depth)?;
         let target_paths =
             super::path_filter::filter_markdown_rule_files(root, config, rule, &markdown)?;
@@ -51,6 +55,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         let scope_options = ScopeOptions {
             roots: &roots,
             indexes: &indexes,
+            exclude_roots: &exclude_roots,
             max_depth,
             facts,
         };
@@ -112,6 +117,17 @@ fn collect_findings(
         }
     }
     Ok(())
+}
+
+fn exclude_roots(configured: &Option<StringOrList>) -> Result<GlobMatcher> {
+    let Some(configured) = configured else {
+        return GlobMatcher::new(&[], &format!("{RULE_ID} excludeRoots"));
+    };
+    let patterns = configured.values();
+    if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {
+        anyhow::bail!("{RULE_ID}: excludeRoots must contain non-empty glob patterns");
+    }
+    GlobMatcher::new(&patterns, &format!("{RULE_ID} excludeRoots"))
 }
 
 fn validate_max_depth(configured: Option<usize>) -> Result<usize> {

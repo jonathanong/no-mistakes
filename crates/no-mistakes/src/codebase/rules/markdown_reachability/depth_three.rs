@@ -24,15 +24,12 @@ fn bounded_index_traversal_handles_cycles_duplicate_links_and_multiple_roots() {
         (path("direct.md"), vec![]),
         (path("forbidden.md"), vec![]),
     ]);
-    let roots = BTreeSet::from(["AGENTS.md".to_string()]);
+    let seeds = [path("AGENTS.md"), path("other/AGENTS.md")];
     let indexes = BTreeSet::from(["README.md".to_string()]);
-    let reachable = graph::index_reachable(&roots, &indexes, &graph, 3);
+    let reachable = graph::index_reachable(&seeds, &indexes, &graph, 3);
     assert!(reachable.contains(Path::new("guide.md")));
     assert!(reachable.contains(Path::new("direct.md")));
     assert!(!reachable.contains(Path::new("forbidden.md")));
-    assert!(!graph::index_reachable(&roots, &indexes, &graph, 2).contains(Path::new("guide.md")));
-    assert!(
-        !graph::index_reachable(&BTreeSet::new(), &indexes, &graph, 3)
-            .contains(Path::new("guide.md"))
-    );
+    assert!(!graph::index_reachable(&seeds, &indexes, &graph, 2).contains(Path::new("guide.md")));
+    assert!(!graph::index_reachable(&[], &indexes, &graph, 3).contains(Path::new("guide.md")));
 }
