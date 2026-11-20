@@ -1,0 +1,6 @@
+id: fresh-orders
+language: TypeScript
+rule:
+  pattern: listOrders()
+ignores:
+  - 'src/orders/**/*.ts'

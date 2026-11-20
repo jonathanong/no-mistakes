@@ -68,7 +68,8 @@ Source, dependency-graph, and test discovery derive narrower views from that
 inventory and prune built-in source skip directories such as `fixtures`,
 `build`, `dist`, and `target`. Repository-state policies such as a
 repository-scoped `banned-paths` rule, and path-existence checks such as
-`config-path-references`, consume the repository inventory instead, so putting
+`config-path-references` and `ast-grep-ignore-freshness`, consume the repository
+inventory instead, so putting
 a tracked artifact below a source skip directory does not exempt it from the
 policy or make a required config path look missing.
 

@@ -34,6 +34,24 @@ mod docs_coverage_commands;
 mod docs_coverage_rules;
 
 #[test]
+fn ast_grep_ignore_freshness_documents_tracked_inventory_controls() {
+    let rule = no_mistakes::codebase::rules::AST_GREP_IGNORE_FRESHNESS;
+    assert_eq!(rule, "ast-grep-ignore-freshness");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    let body = read(&repo_root().join(format!("docs/rules/{rule}.md")));
+    for phrase in [
+        "files",
+        "sgconfig.yml",
+        "tracked",
+        "untracked",
+        "dotfile",
+        "glob",
+    ] {
+        assert!(body.contains(phrase), "missing {phrase}");
+    }
+}
+
+#[test]
 fn github_actions_action_input_policy_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_ACTION_INPUT_POLICY;
     assert_eq!(rule, "github-actions-action-input-policy");

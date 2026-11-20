@@ -28,6 +28,47 @@ pub(super) fn normalized_paths(paths: &[PathBuf]) -> Cow<'_, [PathBuf]> {
     Cow::Owned(normalized)
 }
 
+pub(super) struct CandidateClass {
+    pub(super) includes_metadata: bool,
+    pub(super) tracked_only: bool,
+    pub(super) includes_repository_inventory: bool,
+    pub(super) inventory_only: bool,
+}
+
+pub(super) fn classify(rule_id: &str, repository_scoped: bool) -> CandidateClass {
+    use super::{
+        AST_GREP_IGNORE_FRESHNESS, BANNED_PATHS, CONFIG_PATH_REFERENCES,
+        FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY,
+        MARKDOWN_STRUCTURE_BUDGET, NO_MISTAKES_CONFIG, PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE,
+        PRODUCTION_DEPENDENCY_DECLARATIONS, TSCONFIG_FILE_COVERAGE, VERSION_PIN_CONSISTENCY,
+    };
+    let markdown = matches!(
+        rule_id,
+        MARKDOWN_MERMAID_VALIDATION | MARKDOWN_REACHABILITY | MARKDOWN_STRUCTURE_BUDGET
+    );
+    CandidateClass {
+        includes_metadata: rule_id == FORBIDDEN_WORKSPACE_CLOSURE
+            || rule_id == PRODUCTION_DEPENDENCY_DECLARATIONS,
+        tracked_only: rule_id == BANNED_PATHS
+            || rule_id == TSCONFIG_FILE_COVERAGE
+            || rule_id == VERSION_PIN_CONSISTENCY
+            || matches!(
+                rule_id,
+                CONFIG_PATH_REFERENCES
+                    | AST_GREP_IGNORE_FRESHNESS
+                    | NO_MISTAKES_CONFIG
+                    | PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE
+            ),
+        includes_repository_inventory: (rule_id == BANNED_PATHS && repository_scoped)
+            || markdown
+            || matches!(
+                rule_id,
+                CONFIG_PATH_REFERENCES | AST_GREP_IGNORE_FRESHNESS | TSCONFIG_FILE_COVERAGE
+            ),
+        inventory_only: markdown,
+    }
+}
+
 pub(super) fn markdown_inventory_path_allowed(
     request_root: &Path,
     path: &Path,

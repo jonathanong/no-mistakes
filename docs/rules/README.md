@@ -55,6 +55,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | Rule                                                                          | Purpose                                                                         |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | [`agents-md-max-size`](agents-md-max-size.md)                                 | Keep agent instruction files small enough for context.                          |
+| [`ast-grep-ignore-freshness`](ast-grep-ignore-freshness.md)                   | Report ast-grep ignore entries that match no tracked path.                      |
 | [`banned-paths`](banned-paths.md)                                             | Ban tracked files matching configured path globs.                               |
 | [`banned-renamed-files`](banned-renamed-files.md)                             | Ban legacy filenames that should be renamed.                                    |
 | [`config-path-references`](config-path-references.md)                         | Validate path strings in structured config files, including well-known presets. |

@@ -1,4 +1,8 @@
 use super::*;
+use crate::codebase::rules::{
+    BANNED_PATHS, CONFIG_PATH_REFERENCES, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_REACHABILITY,
+    MARKDOWN_STRUCTURE_BUDGET, NO_MISTAKES_CONFIG, TSCONFIG_FILE_COVERAGE,
+};
 use crate::config::v2::schema::{Project, RuleDef, RuleScope};
 
 fn fixture() -> (PathBuf, NoMistakesConfig, Arc<Vec<PathBuf>>) {
@@ -213,6 +217,7 @@ fn tracked_reference_rules_reject_visible_untracked_candidates() {
     };
     let config = NoMistakesConfig {
         rules: vec![
+            repository_rule(super::super::AST_GREP_IGNORE_FRESHNESS),
             repository_rule(super::super::CONFIG_PATH_REFERENCES),
             repository_rule(super::super::NO_MISTAKES_CONFIG),
             repository_rule(super::super::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE),
@@ -232,6 +237,7 @@ fn tracked_reference_rules_reject_visible_untracked_candidates() {
     .unwrap();
 
     for rule_id in [
+        super::super::AST_GREP_IGNORE_FRESHNESS,
         super::super::CONFIG_PATH_REFERENCES,
         super::super::NO_MISTAKES_CONFIG,
         super::super::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE,

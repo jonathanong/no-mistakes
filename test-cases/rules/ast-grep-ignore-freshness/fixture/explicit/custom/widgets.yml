@@ -1,0 +1,7 @@
+id: custom-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - src/items.ts
+  - custom/missing.ts

@@ -2,6 +2,7 @@ use no_mistakes::codebase::rules;
 
 pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::AGENTS_MD_MAX_SIZE,
+    rules::AST_GREP_IGNORE_FRESHNESS,
     rules::BANNED_PATHS,
     rules::GITHUB_ACTIONS_ACTION_INPUT_POLICY,
     rules::GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR,

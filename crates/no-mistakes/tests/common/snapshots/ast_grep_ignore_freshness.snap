@@ -1,0 +1,186 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "explicit_files": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "absent",
+          "line": 1,
+          "message": "configured config `absent` is not tracked. Point files at a tracked ast-grep config, rule directory, or rule YAML file.",
+          "rule": "ast-grep-ignore-freshness",
+          "target": "absent"
+        },
+        {
+          "file": "custom/widgets.yml",
+          "line": 7,
+          "message": "ast-grep ignore `custom/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- custom/missing.ts",
+          "target": "custom/missing.ts"
+        },
+        {
+          "file": "missing/widgets.yml",
+          "line": 1,
+          "message": "configured config `missing/widgets.yml` is not tracked. Point files at a tracked ast-grep config, rule directory, or rule YAML file.",
+          "rule": "ast-grep-ignore-freshness",
+          "target": "missing/widgets.yml"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_sgconfig": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "sgconfig_yaml": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tracked": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "rules/broken-encoding.yml",
+          "line": 1,
+          "message": "failed to read `rules/broken-encoding.yml` (stream did not contain valid UTF-8).",
+          "rule": "ast-grep-ignore-freshness"
+        },
+        {
+          "file": "rules/broken.yml",
+          "line": 1,
+          "message": "failed to parse YAML (did not find expected node content at line 2 column 1, while parsing a flow node)",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "ignores: ["
+        },
+        {
+          "file": "rules/listed.yml",
+          "line": 7,
+          "message": "ast-grep ignore `listed/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- listed/missing.ts",
+          "target": "listed/missing.ts"
+        },
+        {
+          "file": "rules/scalar.yml",
+          "line": 5,
+          "message": "ast-grep ignores entry is not a string or {glob, caseInsensitive} mapping, so it matches no tracked path. Use one of those forms.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "ignores: src/items.ts",
+          "target": "ignores"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 12,
+          "message": "ast-grep ignore `untracked/items.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- untracked/items.ts",
+          "target": "untracked/items.ts"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 13,
+          "message": "ast-grep ignore `ignored/items.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- ignored/items.ts",
+          "target": "ignored/items.ts"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 22,
+          "message": "ast-grep ignore `RETIRED/**/*.TS` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- glob: 'RETIRED/**/*.TS'",
+          "target": "RETIRED/**/*.TS"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 24,
+          "message": "ast-grep ignore `[unterminated` is not a valid glob, so it matches no tracked path. Replace it with a valid ignore glob.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- '[unterminated'",
+          "target": "[unterminated"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 25,
+          "message": "ast-grep ignores entry is not a string or {glob, caseInsensitive} mapping, so it matches no tracked path. Use one of those forms.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- true",
+          "target": "ignores"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 26,
+          "message": "ast-grep ignores entry is not a string or {glob, caseInsensitive} mapping, so it matches no tracked path. Use one of those forms.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- false",
+          "target": "ignores"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 27,
+          "message": "ast-grep ignores entry is not a string or {glob, caseInsensitive} mapping, so it matches no tracked path. Use one of those forms.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- 1",
+          "target": "ignores"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 28,
+          "message": "ast-grep ignores entry is not a string or {glob, caseInsensitive} mapping, so it matches no tracked path. Use one of those forms.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- glob: \"\"",
+          "target": "ignores"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 7,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/widgets.yml",
+          "line": 9,
+          "message": "ast-grep ignore `retired/**/*.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- 'retired/**/*.ts'",
+          "target": "retired/**/*.ts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

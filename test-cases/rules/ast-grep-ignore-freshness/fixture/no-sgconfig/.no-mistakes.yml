@@ -1,0 +1,3 @@
+rules:
+  - rule: ast-grep-ignore-freshness
+    scope: repository

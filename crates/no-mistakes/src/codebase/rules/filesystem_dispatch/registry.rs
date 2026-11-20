@@ -5,6 +5,7 @@ macro_rules! filesystem_rules {
     ($macro:ident) => {
         $macro! {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files => "",
+            AST_GREP_IGNORE_FRESHNESS => ast_grep_ignore_freshness::check_with_files => "",
             GITHUB_ACTIONS_ACTION_INPUT_POLICY => github_actions_action_input_policy::check_with_files => "",
             GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => github_actions_action_timeout_pair::check_with_files => "",
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files => "",

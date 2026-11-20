@@ -1,0 +1,7 @@
+# no-mistakes-disable-file ast-grep-ignore-freshness
+id: skipped-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - src/retired.ts

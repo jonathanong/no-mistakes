@@ -1,0 +1,7 @@
+- id: listed-widgets
+  language: TypeScript
+  rule:
+    pattern: listWidgets()
+  ignores:
+    - src/items.ts
+    - listed/missing.ts
