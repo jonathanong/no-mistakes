@@ -1,0 +1,4 @@
+id: note-widgets
+language: TypeScript
+rule:
+  pattern: note()

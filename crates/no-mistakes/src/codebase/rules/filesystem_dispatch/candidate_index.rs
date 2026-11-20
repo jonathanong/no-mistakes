@@ -1,9 +1,11 @@
 use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
-    rule_enabled, BANNED_PATHS, CONFIG_PATH_REFERENCES, FORBIDDEN_WORKSPACE_CLOSURE,
-    MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
-    NO_MISTAKES_CONFIG, PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE, PRODUCTION_DEPENDENCY_DECLARATIONS,
-    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, TSCONFIG_FILE_COVERAGE,
+    rule_enabled, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
+};
+#[cfg(test)]
+use crate::codebase::rules::{
+    BANNED_PATHS, CONFIG_PATH_REFERENCES, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_REACHABILITY,
+    MARKDOWN_STRUCTURE_BUDGET, NO_MISTAKES_CONFIG, TSCONFIG_FILE_COVERAGE,
 };
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -40,43 +42,23 @@ impl RuleCandidateIndex {
             .copied()
             .filter(|rule_id| rule_enabled(config, rule_id))
         {
+            let class = super::candidate_helpers::classify(
+                rule_id,
+                config
+                    .rule_applications(rule_id)
+                    .iter()
+                    .any(|rule| rule.applies_to_repository()),
+            );
             plans
                 .entry((
                     preserved::filesystem_rule_preserved_roots(&root, config, rule_id)?
                         .into_iter()
                         .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
                         .collect(),
-                    rule_id == FORBIDDEN_WORKSPACE_CLOSURE
-                        || rule_id == PRODUCTION_DEPENDENCY_DECLARATIONS,
-                    rule_id == BANNED_PATHS
-                        || rule_id == TSCONFIG_FILE_COVERAGE
-                        || rule_id == super::VERSION_PIN_CONSISTENCY
-                        // Tracked-only: generated/visible files must not satisfy these.
-                        || matches!(
-                            rule_id,
-                            CONFIG_PATH_REFERENCES
-                                | NO_MISTAKES_CONFIG
-                                | PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE
-                        ),
-                    (rule_id == BANNED_PATHS
-                        && config
-                            .rule_applications(rule_id)
-                            .iter()
-                            .any(|rule| rule.applies_to_repository()))
-                        || matches!(
-                            rule_id,
-                            CONFIG_PATH_REFERENCES
-                                | TSCONFIG_FILE_COVERAGE
-                                | MARKDOWN_MERMAID_VALIDATION
-                                | MARKDOWN_REACHABILITY
-                                | MARKDOWN_STRUCTURE_BUDGET
-                        ),
-                    matches!(
-                        rule_id,
-                        MARKDOWN_MERMAID_VALIDATION
-                            | MARKDOWN_REACHABILITY
-                            | MARKDOWN_STRUCTURE_BUDGET
-                    ),
+                    class.includes_metadata,
+                    class.tracked_only,
+                    class.includes_repository_inventory,
+                    class.inventory_only,
                 ))
                 .or_default()
                 .push(rule_id);

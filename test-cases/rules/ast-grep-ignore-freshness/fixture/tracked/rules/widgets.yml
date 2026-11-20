@@ -1,0 +1,30 @@
+id: list-widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - src/items.ts
+  - src/missing.ts
+  - 'src/orders/**/*.ts'
+  - 'retired/**/*.ts'
+  - .widgets/items.ts
+  - '.widgets/**/*.ts'
+  - untracked/items.ts
+  - ignored/items.ts
+  - ./src/items.ts
+  - 'fixtures/orders/**/*.ts'
+  - tracked-ignored/items.ts
+  - glob: src/items.ts
+  - glob: 'SRC/ORDERS/**/*.TS'
+    caseInsensitive: true
+  - glob: src/items.ts
+    caseInsensitive: false
+  - glob: 'RETIRED/**/*.TS'
+    caseInsensitive: true
+  - '[unterminated'
+  - true
+  - false
+  - 1
+  - glob: ""
+  # no-mistakes-disable-next-line ast-grep-ignore-freshness
+  - src/also-missing.ts

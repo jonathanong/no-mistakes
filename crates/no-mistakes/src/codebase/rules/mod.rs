@@ -2,6 +2,7 @@ pub mod advisory_rules;
 pub mod agents_md_max_size;
 pub(crate) mod allow_audit;
 pub mod analysis_policy;
+pub mod ast_grep_ignore_freshness;
 pub mod banned_paths;
 pub mod banned_renamed_files;
 pub mod config_path_references;

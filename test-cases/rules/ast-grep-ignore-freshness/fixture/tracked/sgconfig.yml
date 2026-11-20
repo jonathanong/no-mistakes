@@ -1,0 +1,7 @@
+ruleDirs:
+  - rules
+  - ../outside
+  - /tmp/orders
+  - ""
+  - '\widgets'
+  - 'widgets\extra'

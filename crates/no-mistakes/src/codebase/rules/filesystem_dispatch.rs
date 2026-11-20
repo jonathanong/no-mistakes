@@ -2,10 +2,10 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 use super::{
-    agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
-    csharp_max_lines_per_file, csharp_no_async_void_delegate, declared_payload_compatibility,
-    doc_consistency, file_extension_policy, finite_set_consistency, forbidden_lint_suppressions,
-    forbidden_workspace_closure, github_actions_action_input_policy,
+    agents_md_max_size, ast_grep_ignore_freshness, banned_paths, banned_renamed_files,
+    config_path_references, csharp_max_lines_per_file, csharp_no_async_void_delegate,
+    declared_payload_compatibility, doc_consistency, file_extension_policy, finite_set_consistency,
+    forbidden_lint_suppressions, forbidden_workspace_closure, github_actions_action_input_policy,
     github_actions_action_timeout_pair, github_actions_checkout_credentials,
     github_actions_composite_step_schema, github_actions_docker_host_ports,
     github_actions_download_integrity, github_actions_job_permissions, github_actions_job_timeouts,
@@ -56,9 +56,9 @@ mod run_rule_engines;
 mod registry;
 use super::{
     rule_enabled, suppress_rule_findings_with_sources_except, RuleFinding, AGENTS_MD_MAX_SIZE,
-    BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, CSHARP_MAX_LINES_PER_FILE,
-    CSHARP_NO_ASYNC_VOID_DELEGATE, DECLARED_PAYLOAD_COMPATIBILITY, DOC_CONSISTENCY,
-    FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_LINT_SUPPRESSIONS,
+    AST_GREP_IGNORE_FRESHNESS, BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES,
+    CSHARP_MAX_LINES_PER_FILE, CSHARP_NO_ASYNC_VOID_DELEGATE, DECLARED_PAYLOAD_COMPATIBILITY,
+    DOC_CONSISTENCY, FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_LINT_SUPPRESSIONS,
     FORBIDDEN_WORKSPACE_CLOSURE, INTEGRATION_TEST_NO_MOCKS, LOCKFILE_ALLOWLIST,
     MARKDOWN_CHILD_LINKS, MARKDOWN_EVAL_TESTS, MARKDOWN_LINK_DISPLAY_TEXT,
     MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,

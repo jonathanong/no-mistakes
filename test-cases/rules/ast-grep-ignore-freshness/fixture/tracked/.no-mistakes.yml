@@ -1,0 +1,5 @@
+rules:
+  - rule: ast-grep-ignore-freshness
+    scope: repository
+    exclude:
+      - rules/notes.yml

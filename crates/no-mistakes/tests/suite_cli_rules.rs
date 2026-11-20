@@ -179,6 +179,8 @@ mod cli_gha_snapshot_step_timeouts;
 mod cli_gha_snapshot_test_timeout_literals;
 #[path = "cli_gha_snapshot_workflow_topology.rs"]
 mod cli_gha_snapshot_workflow_topology;
+#[path = "cli_rra_snapshot_ast_grep_ignore_freshness.rs"]
+mod cli_rra_snapshot_ast_grep_ignore_freshness;
 #[path = "cli_rra_snapshot_banned_paths.rs"]
 mod cli_rra_snapshot_banned_paths;
 #[path = "cli_rra_snapshot_banned_renamed_files.rs"]

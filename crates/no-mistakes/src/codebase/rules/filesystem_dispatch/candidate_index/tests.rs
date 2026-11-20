@@ -213,6 +213,7 @@ fn tracked_reference_rules_reject_visible_untracked_candidates() {
     };
     let config = NoMistakesConfig {
         rules: vec![
+            repository_rule(super::super::AST_GREP_IGNORE_FRESHNESS),
             repository_rule(super::super::CONFIG_PATH_REFERENCES),
             repository_rule(super::super::NO_MISTAKES_CONFIG),
             repository_rule(super::super::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE),
@@ -232,6 +233,7 @@ fn tracked_reference_rules_reject_visible_untracked_candidates() {
     .unwrap();
 
     for rule_id in [
+        super::super::AST_GREP_IGNORE_FRESHNESS,
         super::super::CONFIG_PATH_REFERENCES,
         super::super::NO_MISTAKES_CONFIG,
         super::super::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE,

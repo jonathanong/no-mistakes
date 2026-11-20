@@ -1,0 +1,5 @@
+id: plain-widgets
+language: TypeScript
+rule:
+  pattern: note()
+ruleDirs: 1

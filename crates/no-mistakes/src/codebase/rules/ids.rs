@@ -1,4 +1,5 @@
 pub use super::agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
+pub use super::ast_grep_ignore_freshness::RULE_ID as AST_GREP_IGNORE_FRESHNESS;
 pub use super::banned_paths::RULE_ID as BANNED_PATHS;
 pub use super::banned_renamed_files::RULE_ID as BANNED_RENAMED_FILES;
 pub use super::config_path_references::RULE_ID as CONFIG_PATH_REFERENCES;
