@@ -2,6 +2,40 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "dynamic_length": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 13,
+          "message": "Array.from length 5000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const keptName = Array.from({ length: 5000, [\"name\"]: 1 });"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 14,
+          "message": "Array.from length 5000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const keptIndex = Array.from({ length: 5000, [0]: 1 });"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 15,
+          "message": "Array.from length 5000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const keptAfterSpread = Array.from({ ...extra, length: 5000 });"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "file_disabled": {
     "exitCode": 0,
     "report": {

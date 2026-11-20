@@ -39,9 +39,12 @@ In files matching `scopes.tests` or `scopes.helpers`, the rule reports each
 literal cardinality strictly greater than `threshold`:
 
 - `Array.from({ length: N }, ...)` when the object initializer's last `length`
-  property is a numeric literal. An identifier key, a string key `"length"`,
-  and a computed string `"length"` all count. A later `length` overrides an
-  earlier one.
+  data property is a numeric literal. An identifier key, a string key `"length"`,
+  and a computed string `"length"` all count. A later `length` data property
+  overrides an earlier one. A later getter or setter named `length`, a spread,
+  or a computed key that is not a known non-`length` literal clears that
+  length, so the call stays silent. A computed string or number that is not
+  `length` leaves the earlier literal in place.
 - `new Array(N)` and a call `Array(N)` when there is exactly one argument and
   that argument is a numeric literal. Both use the `new Array length` message.
   `new Array(1, 2, 3)` and `Array(1, 2, 3)` are element lists, not lengths.

@@ -30,7 +30,18 @@ fn test_fixture_size_cap_json_matches_snapshot() {
                 policy.clone(),
             ),
             // Bare Array(N) matches new Array(N). Mixed lists report numeric literals.
-            ("recall", rules_path(RULE, "fixture", "recall"), policy),
+            (
+                "recall",
+                rules_path(RULE, "fixture", "recall"),
+                policy.clone(),
+            ),
+            // Later getters, setters, spreads, and dynamic keys hide an earlier length.
+            // A known non-length key and a length after a spread stay reported.
+            (
+                "dynamic_length",
+                rules_path(RULE, "fixture", "dynamic-length"),
+                policy,
+            ),
             // 0 findings: omitting threshold reports nothing.
             (
                 "no_threshold",

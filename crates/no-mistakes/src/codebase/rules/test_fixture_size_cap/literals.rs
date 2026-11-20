@@ -30,23 +30,47 @@ pub(super) fn length_expression<'a>(
     let mut length = None;
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
+            // A spread can replace `length` at runtime.
+            length = None;
             continue;
         };
-        if is_length_key(property) {
-            length = Some(unwrap_ts_wrappers(&property.value));
+        match length_key(property) {
+            LengthKey::Other => {}
+            LengthKey::Dynamic => length = None,
+            LengthKey::Named => {
+                length = match property.kind {
+                    PropertyKind::Init => Some(unwrap_ts_wrappers(&property.value)),
+                    PropertyKind::Get | PropertyKind::Set => None,
+                };
+            }
         }
     }
     length
 }
 
-fn is_length_key(property: &ObjectProperty) -> bool {
-    if property.kind != PropertyKind::Init {
-        return false;
-    }
+enum LengthKey {
+    Named,
+    Dynamic,
+    Other,
+}
+
+fn length_key(property: &ObjectProperty) -> LengthKey {
     match &property.key {
-        PropertyKey::StaticIdentifier(identifier) => identifier.name.as_str() == "length",
-        PropertyKey::StringLiteral(literal) => literal.value == "length",
-        _ => false,
+        PropertyKey::StaticIdentifier(identifier) => named_length(identifier.name.as_str()),
+        PropertyKey::StringLiteral(literal) if literal.value == "length" => LengthKey::Named,
+        PropertyKey::StringLiteral(_)
+        | PropertyKey::NumericLiteral(_)
+        | PropertyKey::PrivateIdentifier(_) => LengthKey::Other,
+        _ if property.computed => LengthKey::Dynamic,
+        _ => LengthKey::Other,
+    }
+}
+
+fn named_length(name: &str) -> LengthKey {
+    if name == "length" {
+        LengthKey::Named
+    } else {
+        LengthKey::Other
     }
 }
 

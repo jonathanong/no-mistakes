@@ -263,6 +263,24 @@ fn array_from_uses_the_last_literal_length_only() {
         "const rows = Array.from({ length: 5, length: 1001 });",
         &[OVER_FROM],
     );
+    expect(
+        "const rows = Array.from({ length: 1001, get length() { return 1; } });",
+        &[],
+    );
+    expect(
+        "const rows = Array.from({ length: 1001, set length(value) { stored = value; } });",
+        &[],
+    );
+    expect("const rows = Array.from({ length: 1001, ...extra });", &[]);
+    expect("const rows = Array.from({ length: 1001, [key]: 1 });", &[]);
+    expect(
+        "const rows = Array.from({ length: 1001, [\"name\"]: 1 });",
+        &[OVER_FROM],
+    );
+    expect(
+        "const rows = Array.from({ length: 1001, [0]: 1 });",
+        &[OVER_FROM],
+    );
 }
 
 #[test]
@@ -392,6 +410,18 @@ fn saved_recall_reports_bare_array_and_literal_siblings() {
             "it.each size 10001 exceeds threshold 1000",
             "it.each size 10001 exceeds threshold 1000",
             OVER_NEW,
+        ]
+    );
+}
+
+#[test]
+fn saved_dynamic_length_drops_a_length_a_later_form_can_replace() {
+    assert_eq!(
+        sorted_messages(&check_saved("dynamic-length", "policy.yml").unwrap()),
+        [
+            "Array.from length 5000 exceeds threshold 1000",
+            "Array.from length 5000 exceeds threshold 1000",
+            "Array.from length 5000 exceeds threshold 1000",
         ]
     );
 }
