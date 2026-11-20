@@ -67,12 +67,23 @@ pub struct WorkflowConcurrency {
     pub effective: ConcurrencyEffective,
 }
 
+/// Where an `on` entry is written. Omitted from schema v1 JSON.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum TriggerSite {
+    Scalar,
+    Sequence(usize),
+    Mapping,
+}
+
 /// One entry from a workflow's `on:` block.
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct WorkflowTrigger {
     pub event: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<OrderedJson>,
+    /// Schema v1 emits `event` and `config` only.
+    #[serde(skip_serializing)]
+    pub(crate) site: TriggerSite,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]

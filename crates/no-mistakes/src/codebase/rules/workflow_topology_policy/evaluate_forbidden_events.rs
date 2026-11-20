@@ -1,5 +1,5 @@
 use super::{workflow_finding, LocatedFinding, Options};
-use crate::codebase::workflow_topology::model::WorkflowTopology;
+use crate::codebase::workflow_topology::model::{TriggerSite, WorkflowTopology};
 use crate::config::source_locations::ConfigPath;
 use rayon::prelude::*;
 use std::collections::BTreeSet;
@@ -31,9 +31,10 @@ pub(super) fn lint(topology: &WorkflowTopology, options: &Options) -> Vec<Locate
                         trigger.event
                     ),
                 );
-                finding.path = match trigger.config {
-                    Some(_) => ConfigPath::default().key("on").key(&trigger.event),
-                    None => ConfigPath::default().key("on"),
+                finding.path = match trigger.site {
+                    TriggerSite::Mapping => ConfigPath::default().key("on").key(&trigger.event),
+                    TriggerSite::Sequence(index) => ConfigPath::default().key("on").index(index),
+                    TriggerSite::Scalar => ConfigPath::default().key("on"),
                 };
                 findings.push(finding);
             }

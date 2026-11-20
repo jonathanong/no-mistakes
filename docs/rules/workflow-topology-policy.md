@@ -160,11 +160,12 @@ forbiddenEvents: [pull_request_target]
 `on: pull_request_target`, `on: [push, pull_request_target]`, and
 `on: {pull_request_target: {types: [opened]}}` are counterexamples.
 `on: pull_request` in the same form is valid. Matching is exact and
-case-sensitive. A mapping entry with a value is reported on that event key.
-A scalar, a sequence, and a null mapping value are reported on the `on` key.
-Duplicate names in one workflow produce one finding. Remove the event. The
-standard rule-level `message` and suppression directives apply at the reported
-key. See the
+case-sensitive. A mapping entry, including a null value, is reported on
+that event key. A sequence item is reported on the item's line. A scalar
+`on` value is reported on the `on` key. A flow sequence item shares that
+`on` line. Duplicate names in one workflow produce one finding. Remove
+the event. The standard rule-level `message` and suppression directives
+apply at the reported key. See the
 [configuration guide](../configuration/workflow-topology-policy-forbidden-events.md).
 
 ### `forbidSecretsInherit`
@@ -269,9 +270,9 @@ line and next-line suppressions there. See the
 [configuration examples](../configuration/workflow-topology-policy-activity-types.md).
 
 For a forbidden event, remove that event from `on`. Findings point to the
-event key when the mapping entry has a value, and to the `on` key for a
-scalar, a sequence, or a null mapping value. Place line and next-line
-suppressions on that key. See the
+event key for a mapping entry, including a null value, and to the sequence
+item for a list. A scalar `on: <event>` points at the `on` key. Place line
+and next-line suppressions on that reported line. See the
 [forbidden events guide](../configuration/workflow-topology-policy-forbidden-events.md).
 
 For `secrets: inherit`, replace the value with an explicit mapping. Findings

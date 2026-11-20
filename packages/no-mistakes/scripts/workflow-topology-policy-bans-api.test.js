@@ -31,8 +31,9 @@ test(
       [
         ["workflow-topology-policy", ".github/workflows/duplicate.yml", 2],
         ["workflow-topology-policy", ".github/workflows/mapping.yml", 3],
-        ["workflow-topology-policy", ".github/workflows/null-mapping.yml", 2],
+        ["workflow-topology-policy", ".github/workflows/null-mapping.yml", 3],
         ["workflow-topology-policy", ".github/workflows/scalar.yml", 2],
+        ["workflow-topology-policy", ".github/workflows/sequence-block.yml", 4],
         ["workflow-topology-policy", ".github/workflows/sequence.yml", 2],
       ],
     );
@@ -45,7 +46,7 @@ test(
     });
     assert.deepEqual(
       custom.rules.map(({ message }) => message),
-      Array(5).fill("Use pull_request for these widget workflows."),
+      Array(6).fill("Use pull_request for these widget workflows."),
     );
     const empty = await cjs.check({
       root: eventsRoot,

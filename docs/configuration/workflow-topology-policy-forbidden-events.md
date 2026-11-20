@@ -50,10 +50,11 @@ on:
     types: [opened]
 ```
 
-A mapping entry with a value, including `types`, is reported on that event
-key. A scalar, a sequence, and a mapping entry whose value is null
-(`pull_request_target:`) are reported on the `on` key, because those forms do
-not store a child configuration object. Duplicate event names in one `on`
+A mapping entry is reported on that event key, including `types` and a null
+value such as `pull_request_target:`. A sequence item is reported on the
+item's line. A scalar `on: pull_request_target` is reported on the `on` key.
+A flow sequence such as `on: [push, pull_request_target]` shares the `on`
+line, because the item is written there. Duplicate event names in one `on`
 produce one finding. Non-string sequence members are ignored.
 
 The standard rule-level `message` overrides the diagnostic text. Use a line or
@@ -61,6 +62,17 @@ next-line directive at the reported key for a deliberate exception:
 
 ```yaml
 on: pull_request_target # no-mistakes-disable-line workflow-topology-policy
+```
+
+```yaml
+on:
+  pull_request_target: # no-mistakes-disable-line workflow-topology-policy
+```
+
+```yaml
+on:
+  - push
+  - pull_request_target # no-mistakes-disable-line workflow-topology-policy
 ```
 
 ```yaml

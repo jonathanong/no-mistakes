@@ -27,10 +27,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/null-mapping.yml",
-          "line": 2,
+          "line": 3,
           "message": "forbidden workflow event: pull_request_target; remove it from on to avoid unwanted workflow runs",
           "rule": "workflow-topology-policy",
-          "sourceLine": "on:"
+          "sourceLine": "pull_request_target:"
         },
         {
           "file": ".github/workflows/scalar.yml",
@@ -38,6 +38,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "forbidden workflow event: pull_request_target; remove it from on to avoid unwanted workflow runs",
           "rule": "workflow-topology-policy",
           "sourceLine": "on: pull_request_target"
+        },
+        {
+          "file": ".github/workflows/sequence-block.yml",
+          "line": 4,
+          "message": "forbidden workflow event: pull_request_target; remove it from on to avoid unwanted workflow runs",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- pull_request_target"
         },
         {
           "file": ".github/workflows/sequence.yml",
@@ -75,10 +82,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/null-mapping.yml",
-          "line": 2,
+          "line": 3,
           "message": "Use pull_request for these widget workflows.",
           "rule": "workflow-topology-policy",
-          "sourceLine": "on:"
+          "sourceLine": "pull_request_target:"
         },
         {
           "file": ".github/workflows/scalar.yml",
@@ -86,6 +93,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Use pull_request for these widget workflows.",
           "rule": "workflow-topology-policy",
           "sourceLine": "on: pull_request_target"
+        },
+        {
+          "file": ".github/workflows/sequence-block.yml",
+          "line": 4,
+          "message": "Use pull_request for these widget workflows.",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "- pull_request_target"
         },
         {
           "file": ".github/workflows/sequence.yml",
@@ -119,11 +133,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "workflow-topology-policy"
         },
         {
+          "file": ".github/workflows/suppressed-null.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "pull_request_target: # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
           "file": ".github/workflows/suppressed-scalar.yml",
           "line": 2,
           "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "on: pull_request_target # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-sequence.yml",
+          "line": 4,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "- pull_request_target # no-mistakes-disable-line workflow-topology-policy",
           "target": "workflow-topology-policy"
         }
       ],
@@ -156,11 +186,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "workflow-topology-policy"
         },
         {
+          "file": ".github/workflows/suppressed-null.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "pull_request_target: # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
           "file": ".github/workflows/suppressed-scalar.yml",
           "line": 2,
           "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "on: pull_request_target # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-sequence.yml",
+          "line": 4,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "- pull_request_target # no-mistakes-disable-line workflow-topology-policy",
           "target": "workflow-topology-policy"
         }
       ],
@@ -193,11 +239,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "workflow-topology-policy"
         },
         {
+          "file": ".github/workflows/suppressed-null.yml",
+          "line": 3,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "pull_request_target: # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
           "file": ".github/workflows/suppressed-scalar.yml",
           "line": 2,
           "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "unused-disable-directive",
           "sourceLine": "on: pull_request_target # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed-sequence.yml",
+          "line": 4,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "- pull_request_target # no-mistakes-disable-line workflow-topology-policy",
           "target": "workflow-topology-policy"
         }
       ],
