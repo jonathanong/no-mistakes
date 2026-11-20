@@ -182,3 +182,7 @@ mod shell_tests;
 #[cfg(test)]
 #[path = "command_wrapper_tests.rs"]
 mod wrapper_tests;
+
+#[cfg(test)]
+#[path = "command_script_tests.rs"]
+mod script_tests;
