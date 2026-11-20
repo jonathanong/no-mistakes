@@ -23,9 +23,9 @@ pub(super) enum ParsedConfig {
 pub(super) fn parse_vite_config(path: &Path, source: &str) -> ParsedConfig {
     match crate::ast::with_program(path, source, extract) {
         Ok(parsed) => parsed,
-        Err(error) => ParsedConfig::Unanalyzable {
+        Err(_) => ParsedConfig::Unanalyzable {
             line: 1,
-            reason: format!("cannot parse Vite config ({error})"),
+            reason: "cannot parse Vite config".to_string(),
         },
     }
 }

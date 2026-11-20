@@ -74,14 +74,10 @@ pub(super) fn load(
             entry_file: Some(entry_file),
             unknown: None,
         }),
-        Err(error) => Ok(unknown_package(
+        Err(_) => Ok(unknown_package(
             name,
             declared,
-            unanalyzable(
-                root,
-                &entry_path,
-                format!("cannot parse published entry ({error})"),
-            ),
+            unanalyzable(root, &entry_path, "cannot parse published entry"),
         )),
     }
 }

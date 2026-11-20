@@ -14,7 +14,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "broken.config.ts",
           "line": 1,
-          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse Vite config (failed to parse broken.config.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 17, end: 17 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }); export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse Vite config; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "export default {",
           "target": "unanalyzable"
@@ -121,7 +121,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "packages/broken-entry/index.ts",
           "line": 1,
-          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse published entry (failed to parse packages/broken-entry/index.ts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `)` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`)` expected\"), span: Span { start: 24, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }); write a static package manifest and published entry so this check can verify nested imports",
+          "message": "cannot verify vite-optimize-deps-nested-imports: cannot parse published entry; write a static package manifest and published entry so this check can verify nested imports",
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "export const broken = (",
           "target": "unanalyzable"
