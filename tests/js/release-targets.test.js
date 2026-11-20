@@ -218,7 +218,8 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
   assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /\n    timeout-minutes: 100\n/);
   assert.match(workflow, /\n        timeout-minutes: 90\n/);
-  assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm|workflow_dispatch:[\s\S]*push:/);
+  assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm/);
+  assert.match(workflow, /branches:\n {6}- fix\/issue-3736/);
 });
 
 test("CI cancels superseded PR runs but keeps active main coverage runs", () => {
