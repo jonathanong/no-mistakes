@@ -72,6 +72,7 @@ fn check_json_snapshot_rule_recall_audit() {
             ".no-mistakes.yml",
         ),
         ("storybook/required-props-malformed", ".no-mistakes.yml"),
+        ("vitest-project-selection/shard-wrapper", ".no-mistakes.yml"),
     ]
     .into_iter()
     .map(|(name, config)| {

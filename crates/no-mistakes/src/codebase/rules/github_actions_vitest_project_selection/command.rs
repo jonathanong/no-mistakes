@@ -10,14 +10,11 @@ pub(super) fn vitest_argv(script: &str) -> Vec<Vec<Word>> {
 }
 
 fn invocation(command: &[Word]) -> Option<Vec<Word>> {
-    if command.iter().any(|word| word.dynamic) {
-        return None;
-    }
     let mut index = 0;
     while index < command.len() {
         let text = &command[index].text;
         let base = basename(text);
-        if is_assignment(text) || matches!(base, "(" | "{" | ")" | "}") {
+        if is_assignment(text) || matches!(base, "(" | "{" | ")" | "}") || is_shell_keyword(base) {
             index += 1;
             continue;
         }
@@ -53,7 +50,7 @@ fn launched(command: &[Word], start: usize, launcher: &str) -> Option<Vec<Word>>
             index += 1 + usize::from(takes);
             continue;
         }
-        if !exec && matches!(text.as_str(), "exec" | "x") {
+        if !exec && matches!(text.as_str(), "exec" | "x" | "dlx") {
             index += 1;
             exec = true;
             continue;
@@ -65,9 +62,20 @@ fn launched(command: &[Word], start: usize, launcher: &str) -> Option<Vec<Word>>
         if basename(text) == "vitest" {
             return Some(command[index + 1..].to_vec());
         }
+        if exec || matches!(launcher, "npx" | "bunx") {
+            index += 1;
+            continue;
+        }
         return None;
     }
     None
+}
+
+fn is_shell_keyword(base: &str) -> bool {
+    matches!(
+        base,
+        "if" | "elif" | "then" | "else" | "do" | "while" | "until"
+    )
 }
 
 fn skip_flags(command: &[Word], mut index: usize, assignments: bool) -> usize {

@@ -450,7 +450,12 @@ For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-p
 `options.projects` defaults to none. Each entry names a Vitest `project`, the
 workflow or composite-action paths that may select it, and `nameFilters`
 (`allow` or `reject`, default `allow`). The rule stays off until a configuration
-lists it. An empty `projects` list reports nothing.
+lists it. An empty `projects` list reports nothing. A Vitest command in a
+matching workflow is judged even when it omits `--project`. `pnpm dlx`,
+`yarn dlx`, and a later `vitest` token after `exec` or `npx` count; `pnpm test`
+and other package scripts do not. A `$` in a known value such as `--shard`
+does not hide the rest of the command. Narrow `workflows` when a file runs
+more than one project.
 
 For `pull_request_target`, PR-head refs are definite risks even with false
 persistence; unresolved refs or repositories use the shared policy. The optional

@@ -21,7 +21,7 @@ pub(super) fn check_source(rel: &str, source: &str, compiled: &Compiled) -> Vec<
     let located = step_run_lines(source, action);
     run_scripts(action, &value)
         .into_iter()
-        .flat_map(|body| judge(rel, &body, &policies, &located))
+        .flat_map(|body| judge(rel, source, &body, &policies, &located))
         .collect()
 }
 
@@ -36,6 +36,7 @@ fn policies_for<'a>(rel: &str, compiled: &'a Compiled) -> BTreeMap<&'a str, Name
 
 fn judge(
     rel: &str,
+    source: &str,
     body: &RunScript,
     policies: &BTreeMap<&str, NameFilters>,
     located: &[StepRun],
@@ -50,18 +51,19 @@ fn judge(
         .find(|item| item.job == body.job && item.step == body.step);
     narrowings(&body.script, policies)
         .into_iter()
-        .map(|hit| finding(rel, &place, &body.script, lines, hit))
+        .map(|hit| finding(rel, source, &place, &body.script, lines, hit))
         .collect()
 }
 
 fn finding(
     rel: &str,
+    source: &str,
     place: &str,
     script: &str,
     located: Option<&StepRun>,
     hit: Narrowing,
 ) -> RuleFinding {
-    let line = yaml_line(located, script, hit.line, &hit.argument);
+    let line = report_line(source, located, script, &hit);
     let detail = if hit.flag {
         format!("test name filter `{}`", hit.argument)
     } else if hit.name {
@@ -87,6 +89,19 @@ fn finding(
         import: None,
         target: Some(hit.argument),
     }
+}
+
+fn report_line(source: &str, located: Option<&StepRun>, script: &str, hit: &Narrowing) -> usize {
+    let placed = yaml_line(located, script, hit.line, &hit.argument);
+    if placed != 1 {
+        return placed;
+    }
+    source
+        .lines()
+        .enumerate()
+        .find(|(_, line)| line.contains(&hit.argument) && line.contains("run"))
+        .map(|(index, _)| index + 1)
+        .unwrap_or(placed)
 }
 
 pub(super) fn yaml_line(

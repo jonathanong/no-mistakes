@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-vitest-project-selection
+    scope: repository
+    options:
+      projects:
+        - project: widgets
+          workflows:
+            - .github/workflows/widgets.yml
+          nameFilters: allow

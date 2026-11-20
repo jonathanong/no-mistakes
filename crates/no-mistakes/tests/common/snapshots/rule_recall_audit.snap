@@ -690,6 +690,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "vitest-project-selection/shard-wrapper": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 10,
+          "message": ".github/workflows/widgets.yml:10: job `unit` step 2 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: vitest run --project widgets src/widgets.test.ts --shard \"$CI_SHARD\"",
+          "target": "src/widgets.test.ts"
+        },
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 8,
+          "message": ".github/workflows/widgets.yml:8: job `unit` step 1 narrows Vitest project `widgets` with positional test file `packages/widgets/widget.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "run: pnpm exec ./scripts/with-env vitest run --project widgets packages/widgets/widget.test.ts",
+          "target": "packages/widgets/widget.test.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "workflow/edge-control": {
     "exitCode": 0,
     "report": {
