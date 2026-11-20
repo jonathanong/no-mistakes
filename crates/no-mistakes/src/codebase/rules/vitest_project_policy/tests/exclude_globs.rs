@@ -156,6 +156,30 @@ fn conditional_required_properties_stay_incomplete_when_a_branch_omits_them() {
 }
 
 #[test]
+fn a_forbidden_key_on_only_some_branches_stays_incomplete() {
+    let report = output("exclude-conditional-forbidden");
+    assert!(report.findings.is_empty(), "{:?}", report.findings);
+    assert!(report.incomplete.iter().any(|failure| {
+        failure.property.as_deref() == Some("poolOptions")
+            && failure.message.contains("not statically known")
+    }));
+    assert!(report
+        .incomplete
+        .iter()
+        .all(|failure| failure.property.as_deref() != Some("test.exclude")));
+}
+
+#[test]
+fn a_forbidden_key_on_every_branch_stays_a_finding() {
+    let report = output("exclude-conditional-forbidden-known");
+    assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);
+    assert_eq!(report.findings.len(), 1);
+    assert!(report.findings[0]
+        .message
+        .contains("test.poolOptions is forbidden"));
+}
+
+#[test]
 fn truthy_object_and_keeps_a_definite_exclude_array() {
     let report = output("exclude-logical-and-known");
     assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);

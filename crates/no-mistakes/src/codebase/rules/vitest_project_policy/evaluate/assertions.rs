@@ -27,7 +27,7 @@ pub(super) fn check(
     }
     for property in &options.forbidden {
         if let Some(value) = test.property(property) {
-            if matches!(&test.kind, Kind::Object(fields, true) if !fields.contains_key(property)) {
+            if matches!(value.kind, Kind::Unknown) {
                 output
                     .incomplete
                     .push(incomplete(root, &value, property, name));

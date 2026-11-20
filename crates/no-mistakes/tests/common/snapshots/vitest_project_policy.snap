@@ -613,6 +613,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-conditional-forbidden": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-conditional-forbidden.ts",
+          "message": "Vitest project widgets is incomplete: poolOptions is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "poolOptions"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-conditional-forbidden-known": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-conditional-forbidden-known.ts",
+          "line": 7,
+          "message": "Vitest project items: test.poolOptions is forbidden; declare literal test properties to keep project policy statically verifiable",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(orders ? { poolOptions: {} } : { poolOptions: {} }),"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "exclude-conditional-proven": {
     "exitCode": 0,
     "report": {

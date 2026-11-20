@@ -169,6 +169,8 @@ fn vitest_project_policy_json_matches_snapshot() {
         "exclude-conditional-proven",
         "exclude-conditional-unknown",
         "exclude-conditional-required",
+        "exclude-conditional-forbidden",
+        "exclude-conditional-forbidden-known",
         "exclude-logical-spread",
         "exclude-logical-and-exclude",
         "exclude-logical-or-exclude",
