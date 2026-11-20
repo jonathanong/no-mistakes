@@ -30,7 +30,7 @@ fn uses_prepared_catalog_relationships_without_suffix_collisions() {
 }
 
 #[test]
-fn partition_ordering_preserves_other_policies_recovery_uncertainty() {
+fn parsed_detach_partition_is_complete_for_later_policies() {
     let path = fixture("ddl-related").join("src/query.ts");
     let source = std::fs::read_to_string(&path).unwrap();
     let config = config();
@@ -51,9 +51,12 @@ fn partition_ordering_preserves_other_policies_recovery_uncertainty() {
         .unwrap();
     let facts =
         crate::codebase::postgres::extract_sql_statement_facts_for_embedded_call(call).unwrap();
-    assert!(facts.parse_failed);
-    assert_eq!(facts.parse_failures.len(), 1);
-    assert!(facts.parse_failures[0].head.contains("DETACH PARTITION"));
+    assert!(!facts.parse_failed);
+    assert!(
+        facts.parse_failures.is_empty(),
+        "{:?}",
+        facts.parse_failures
+    );
 }
 
 #[test]

@@ -169,6 +169,12 @@ pub(super) fn recover(
     super::super::super::ddl_compat::normalize(&mut located);
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(located);
     let statement = parser.parse_statement().ok()?;
+    if super::partition_sound::has_pg_partition(&statement)
+        && (parser.peek_token().token != Token::EOF
+            || !super::partition_sound::acceptable(&statement, allow_concurrent_detach))
+    {
+        return None;
+    }
     let utility = utility_start(tokens, start);
     if (utility || action.is_some()) && parser.peek_token().token != Token::EOF {
         return None;

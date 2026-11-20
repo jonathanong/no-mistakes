@@ -51,12 +51,14 @@ fn supported_postgres_ddl_has_no_schema_diagnostics_even_with_report_policy() {
 fn schema_defaults_advise_for_valid_unsupported_sql_and_report_malformed_sql() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/unsupported-policy");
+    // sqlparser 0.64 parses the complete ALTER DEFAULT PRIVILEGES and
+    // REFRESH MATERIALIZED VIEW CONCURRENTLY statements in this fixture.
     for (config, findings, advisories) in [
-        ("default.yml", 121, 77),
-        ("report.yml", 198, 0),
-        ("advise.yml", 0, 198),
+        ("default.yml", 121, 33),
+        ("report.yml", 154, 0),
+        ("advise.yml", 0, 154),
         ("ignore.yml", 0, 0),
-        ("override.yml", 198, 0),
+        ("override.yml", 154, 0),
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
             .args(["check", "--format", "json", "--root"])

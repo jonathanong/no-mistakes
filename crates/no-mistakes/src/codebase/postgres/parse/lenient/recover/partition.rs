@@ -1,13 +1,35 @@
 use super::super::keyword_of;
+use super::super::LocatedStatement;
 use sqlparser::ast::{AlterTableOperation, Expr, Partition, Statement};
 use sqlparser::dialect::GenericDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-// sqlparser's PostgreSQL dialect does not yet parse PostgreSQL's ALTER TABLE
-// ATTACH/DETACH PARTITION grammar. Recover only that complete statement with its
-// compatible generic-dialect AST; leave all other failed SQL on the normal path.
+// sqlparser 0.64 parses PostgreSQL ATTACH/DETACH PARTITION. A concurrent detach
+// inside a transaction stays untrusted. Generic recovery covers the rest.
+pub(super) fn parsed(statement: Statement, allow_concurrent_detach: bool) -> Vec<LocatedStatement> {
+    if !super::partition_sound::acceptable(&statement, allow_concurrent_detach) {
+        return Vec::new();
+    }
+    let mut located = LocatedStatement::plain(statement);
+    located.complete = true;
+    located.partition_complete = named_partition(&located.statement);
+    vec![located]
+}
+
+fn named_partition(statement: &Statement) -> bool {
+    let Statement::AlterTable(table) = statement else {
+        return false;
+    };
+    table.operations.iter().any(|operation| {
+        matches!(
+            operation,
+            AlterTableOperation::AttachPartitionOf { .. }
+                | AlterTableOperation::DetachPartitionOf { .. }
+        )
+    })
+}
 pub(super) fn recover_partition_change(
     chunk: &[Token],
     original: Option<&[TokenWithSpan]>,

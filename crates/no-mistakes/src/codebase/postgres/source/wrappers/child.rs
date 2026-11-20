@@ -140,5 +140,8 @@ pub(in crate::codebase::postgres::source) fn keyword(
     token: &Token,
     expected: sqlparser::keywords::Keyword,
 ) -> bool {
+    if expected == sqlparser::keywords::Keyword::ATOMIC {
+        return super::super::begin_atomic::is_keyword(token);
+    }
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
 }

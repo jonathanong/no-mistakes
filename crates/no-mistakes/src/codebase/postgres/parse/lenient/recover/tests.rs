@@ -12,27 +12,13 @@ fn recovers_only_complete_postgres_partition_transitions() {
     .unwrap();
     assert!(crate::codebase::postgres::parse_postgres_sql(&sql).is_err());
     let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
-    assert_eq!(statements.len(), 8);
-    let changes: Vec<_> = statements
-        .iter()
-        .filter_map(|statement| match statement {
-            sqlparser::ast::Statement::AlterTable(table) => table.operations.first(),
-            _ => None,
-        })
-        .collect();
-    assert!(matches!(
-        changes.as_slice(),
+    assert_eq!(
+        statements.iter().map(partition_label).collect::<Vec<_>>(),
         [
-            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
-            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
-            sqlparser::ast::AlterTableOperation::DetachPartition { .. },
-            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
-            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
-            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
-            sqlparser::ast::AlterTableOperation::AttachPartition { .. },
-            sqlparser::ast::AlterTableOperation::AddColumn { .. }
+            "DetachOf", "DetachOf", "DetachOf", "AttachOf", "AttachOf", "AttachOf", "AttachOf",
+            "Add",
         ]
-    ));
+    );
     let ordinary = sql
         .lines()
         .find(|line| line.starts_with("ALTER TABLE accounts ADD COLUMN"))
@@ -48,12 +34,24 @@ fn recovers_only_structurally_valid_partition_bounds() {
     )
     .unwrap();
     let statements = crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql);
-    assert_eq!(statements.len(), 6);
-    assert!(statements.iter().all(|statement| matches!(
-        statement,
-        sqlparser::ast::Statement::AlterTable(table)
-            if matches!(table.operations.as_slice(), [sqlparser::ast::AlterTableOperation::AttachPartition { .. }])
-    )));
+    assert_eq!(
+        statements.iter().map(partition_label).collect::<Vec<_>>(),
+        ["AttachOf", "AttachOf", "AttachOf", "Attach", "AttachOf", "AttachOf",]
+    );
+}
+
+fn partition_label(statement: &sqlparser::ast::Statement) -> &'static str {
+    let sqlparser::ast::Statement::AlterTable(table) = statement else {
+        return "Other";
+    };
+    match table.operations.first() {
+        Some(sqlparser::ast::AlterTableOperation::DetachPartitionOf { .. }) => "DetachOf",
+        Some(sqlparser::ast::AlterTableOperation::DetachPartition { .. }) => "Detach",
+        Some(sqlparser::ast::AlterTableOperation::AttachPartitionOf { .. }) => "AttachOf",
+        Some(sqlparser::ast::AlterTableOperation::AttachPartition { .. }) => "Attach",
+        Some(sqlparser::ast::AlterTableOperation::AddColumn { .. }) => "Add",
+        _ => "Other",
+    }
 }
 
 fn tokens(sql: &str) -> Vec<Token> {

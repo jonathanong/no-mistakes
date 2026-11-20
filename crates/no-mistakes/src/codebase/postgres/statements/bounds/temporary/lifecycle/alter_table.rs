@@ -20,14 +20,16 @@ impl TemporaryRelations {
                     self.state
                         .rename(&items::sql_name(&table.name), &items::sql_name(name));
                 }
-                AlterTableOperation::AttachPartition { partition } => {
-                    if let Some(child) = partition_name(partition) {
+                AlterTableOperation::AttachPartition { .. }
+                | AlterTableOperation::AttachPartitionOf { .. } => {
+                    if let Some(child) = partition_relation(operation) {
                         self.state
                             .attach_partition(&items::sql_name(&table.name), &child, catalog);
                     }
                 }
-                AlterTableOperation::DetachPartition { partition } => {
-                    if let Some(child) = partition_name(partition) {
+                AlterTableOperation::DetachPartition { .. }
+                | AlterTableOperation::DetachPartitionOf { .. } => {
+                    if let Some(child) = partition_relation(operation) {
                         self.state
                             .detach_partition(&items::sql_name(&table.name), &child, catalog);
                     }
@@ -38,7 +40,19 @@ impl TemporaryRelations {
     }
 }
 
-pub(in super::super) fn partition_name(partition: &Partition) -> Option<String> {
+pub(in super::super) fn partition_relation(operation: &AlterTableOperation) -> Option<String> {
+    match operation {
+        AlterTableOperation::AttachPartition { partition }
+        | AlterTableOperation::DetachPartition { partition } => partition_name(partition),
+        AlterTableOperation::AttachPartitionOf { partition, .. }
+        | AlterTableOperation::DetachPartitionOf { partition, .. } => {
+            Some(items::sql_name(partition))
+        }
+        _ => None,
+    }
+}
+
+fn partition_name(partition: &Partition) -> Option<String> {
     let Partition::Expr(expression) = partition else {
         return None;
     };

@@ -139,7 +139,11 @@ pub(super) fn boundary(
     position: usize,
 ) -> bool {
     let keyword = |at: usize, expected: Keyword| {
-        significant.get(at).is_some_and(|index| matches!(&tokens[*index].token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected))
+        significant.get(at).is_some_and(|index| {
+            let token = &tokens[*index].token;
+            (expected == Keyword::ATOMIC && super::begin_atomic::is_keyword(token))
+                || matches!(token, Token::Word(word) if word.quote_style.is_none() && word.keyword == expected)
+        })
     };
     if tokens[significant[position]].token == Token::SemiColon
         || keyword(position, Keyword::THEN)

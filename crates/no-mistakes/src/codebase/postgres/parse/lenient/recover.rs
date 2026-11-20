@@ -5,6 +5,7 @@ pub(crate) mod failure;
 pub(super) use failure::failed_source;
 mod locations;
 mod partition;
+mod partition_sound;
 mod procedural;
 mod queries;
 mod query_locks;
@@ -33,11 +34,10 @@ pub(super) fn parse_chunks_with_function_calls(
     let mut copy_data_pending = false;
     let mut ordinal = 0;
     for chunk in chunks {
-        let original = located.next();
-        if copy_data_pending && original.is_some_and(copy::is_terminator) {
-            copy_data_pending = false;
+        let mut original = located.next();
+        let Some(chunk) = copy::pending_body(&mut copy_data_pending, &mut original, chunk) else {
             continue;
-        }
+        };
         let chunk_ordinal = ordinal;
         ordinal += 1;
         let aligned = original.map(|source| locations::align(&chunk, source));
@@ -139,9 +139,7 @@ fn parse_chunk(
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(parse_tokens);
     match parser.parse_statement() {
         Ok(statement) if targets_valid && matches!(parser.peek_token().token, Token::EOF) => {
-            let mut located = LocatedStatement::plain(statement);
-            located.complete = true;
-            vec![located]
+            partition::parsed(statement, allow_concurrent_detach)
         }
         _ if !create_valid => Vec::new(),
         _ => {

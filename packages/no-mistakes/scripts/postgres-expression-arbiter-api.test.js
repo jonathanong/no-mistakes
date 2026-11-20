@@ -233,11 +233,11 @@ for (const [scenario, config, findings, advisories, subdirectory = ""] of [
   ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
   ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
   ["postgres-ddl-unanalyzable", "report.yml", 64, 0, "procedural"],
-  ["postgres-ddl-unanalyzable", "default.yml", 121, 77, "unsupported-policy"],
-  ["postgres-ddl-unanalyzable", "report.yml", 198, 0, "unsupported-policy"],
-  ["postgres-ddl-unanalyzable", "advise.yml", 0, 198, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "default.yml", 121, 33, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "report.yml", 154, 0, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "advise.yml", 0, 154, "unsupported-policy"],
   ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0, "unsupported-policy"],
-  ["postgres-ddl-unanalyzable", "override.yml", 198, 0, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "override.yml", 154, 0, "unsupported-policy"],
   ["postgres-ddl-unanalyzable", "execute-using.yml", 7, 0, "opaque-functions"],
   ["postgres-ddl-unanalyzable", "execute-into.yml", 7, 0, "opaque-functions"],
   ["postgres-ddl-unanalyzable", "conflict-row.yml", 7, 0, "opaque-functions"],
@@ -335,9 +335,18 @@ for (const policy of ["default", "report", "ignore", "malformed"]) {
         __dirname,
         "../../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey",
       );
-      const malformedCount = readFileSync(join(root, "malformed/001.sql"), "utf8")
+      const parsedBySqlparser064 = new Set([
+        "CREATE FOREIGN TABLE integer_typmod (v int(3)) SERVER server_name;",
+        "CREATE FOREIGN TABLE float_scale (v float(3, 2)) SERVER server_name;",
+        "CREATE FOREIGN TABLE bare_between (v BETWEEN) SERVER server_name;",
+        "CREATE FOREIGN TABLE bare_precision (v PRECISION) SERVER server_name;",
+      ]);
+      const malformedLines = readFileSync(join(root, "malformed/001.sql"), "utf8")
         .trim()
-        .split("\n").length;
+        .split("\n");
+      const malformedCount = malformedLines.filter(
+        (line) => !parsedBySqlparser064.has(line),
+      ).length;
       const options = { root, config: `${policy}.yml` };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
@@ -350,6 +359,11 @@ for (const policy of ["default", "report", "ignore", "malformed"]) {
       const advisories = unanalyzable(report.advisories);
       if (policy === "malformed") {
         assert.equal(findings.length, malformedCount * 11);
+        assert.equal(
+          findings.filter((finding) => parsedBySqlparser064.has(malformedLines[finding.line - 1]))
+            .length,
+          0,
+        );
         assert.deepEqual(advisories, []);
       } else if (policy === "ignore") {
         assert.deepEqual(findings, []);

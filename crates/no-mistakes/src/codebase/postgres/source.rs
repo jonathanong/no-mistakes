@@ -3,6 +3,7 @@
 mod adjacent_strings;
 mod alter;
 mod batch_pool;
+mod begin_atomic;
 mod body;
 mod columns;
 mod completeness;

@@ -71,8 +71,7 @@ fn conditional_view_sources_and_destinations_follow_database_identity() {
 #[test]
 fn conditional_temporary_partition_ownership_follows_database_identity() {
     let facts = extract_sql_statement_facts(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-current-database-partitions.sql")));
-    // GenericDialect rejects ATTACH/DETACH; the narrow statement recovery is intentional.
-    assert!(facts.parse_failed);
+    assert!(!facts.parse_failed);
     let candidates = facts
         .bounds
         .iter()

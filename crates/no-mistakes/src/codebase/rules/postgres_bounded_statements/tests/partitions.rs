@@ -7,7 +7,7 @@ fn temporary_partitions_only_expose_permanent_names_after_cascade() {
             .join("sql/temporary-partitions.sql"),
     )
     .unwrap();
-    assert!(extract_sql_statement_facts(&sql).parse_failed);
+    assert!(!extract_sql_statement_facts(&sql).parse_failed);
 }
 
 #[test]

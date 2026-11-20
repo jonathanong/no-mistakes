@@ -37,8 +37,7 @@ fn database_and_search_path_evidence_must_both_match() {
 #[test]
 fn conditional_partition_lifetimes_reuse_facts_across_catalog_databases() {
     let facts = extract_sql_statement_facts(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-current-database-partitions.sql")));
-    // GenericDialect rejects ATTACH/DETACH; the narrow statement recovery is intentional.
-    assert!(facts.parse_failed);
+    assert!(!facts.parse_failed);
     assert_eq!(facts.bounds.len(), 6);
 }
 
