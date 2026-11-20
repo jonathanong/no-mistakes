@@ -22,9 +22,10 @@ fn reports_scalar_sequence_and_mapping_forms_on_the_offending_key() {
     let found = findings("forbiddenEvents: [pull_request_target]");
     assert_eq!(lines_in(&found, "scalar.yml"), vec![2]);
     assert_eq!(lines_in(&found, "sequence.yml"), vec![2]);
+    assert_eq!(lines_in(&found, "sequence-block.yml"), vec![4]);
     assert_eq!(lines_in(&found, "duplicate.yml"), vec![2]);
     assert_eq!(lines_in(&found, "mapping.yml"), vec![3]);
-    assert_eq!(lines_in(&found, "null-mapping.yml"), vec![2]);
+    assert_eq!(lines_in(&found, "null-mapping.yml"), vec![3]);
     assert!(lines_in(&found, "case.yml").is_empty());
     assert!(lines_in(&found, "scalar-allowed.yml").is_empty());
     assert!(lines_in(&found, "sequence-allowed.yml").is_empty());
@@ -32,20 +33,20 @@ fn reports_scalar_sequence_and_mapping_forms_on_the_offending_key() {
     assert!(found.iter().all(|finding| finding.message.contains(
         "forbidden workflow event: pull_request_target; remove it from on to avoid unwanted workflow runs"
     )));
-    assert_eq!(found.len(), 5);
+    assert_eq!(found.len(), 6);
 }
 
 #[test]
 fn reports_each_distinct_forbidden_event_once() {
     let found = findings("forbiddenEvents: [pull_request_target, workflow_dispatch]");
-    assert_eq!(lines_in(&found, "mapping.yml"), vec![2, 3]);
+    assert_eq!(lines_in(&found, "mapping.yml"), vec![3, 5]);
     let mapping: Vec<_> = found
         .iter()
         .filter(|finding| finding.file.ends_with("/mapping.yml"))
         .map(|finding| finding.message.as_str())
         .collect();
-    assert!(mapping[0].contains("workflow_dispatch"));
-    assert!(mapping[1].contains("pull_request_target"));
+    assert!(mapping[0].contains("pull_request_target"));
+    assert!(mapping[1].contains("workflow_dispatch"));
     assert_eq!(lines_in(&found, "duplicate.yml"), vec![2]);
 }
 
@@ -77,8 +78,24 @@ fn custom_messages_replace_only_that_application() {
         .into_iter()
         .filter(|finding| !finding.file.contains("suppressed-"))
         .collect::<Vec<_>>();
-    assert_eq!(found.len(), 5);
+    assert_eq!(found.len(), 6);
     assert!(found
         .iter()
         .all(|finding| finding.message == "Use pull_request for these widget workflows."));
+}
+
+#[test]
+fn directive_lines_are_the_event_key_for_mapping_and_sequence_forms() {
+    // check_with_files defers suppression. The CLI snapshot drops these.
+    let root = super::fixture("forbidden-events");
+    let found = super::super::prepare::check_with_files(
+        &root,
+        &super::config("forbiddenEvents: [pull_request_target]"),
+        &[],
+    )
+    .unwrap();
+    assert_eq!(lines_in(&found, "suppressed-null.yml"), vec![3]);
+    assert_eq!(lines_in(&found, "suppressed-sequence.yml"), vec![4]);
+    assert_eq!(lines_in(&found, "suppressed-mapping.yml"), vec![4]);
+    assert_eq!(lines_in(&found, "suppressed-scalar.yml"), vec![2]);
 }

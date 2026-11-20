@@ -27,13 +27,16 @@ pub fn parse_triggers(value: Option<&Value>) -> Vec<model::WorkflowTrigger> {
         Some(Value::String(event)) => vec![model::WorkflowTrigger {
             event: event.clone(),
             config: None,
+            site: model::TriggerSite::Scalar,
         }],
         Some(Value::Sequence(items)) => items
             .iter()
-            .filter_map(|item| {
+            .enumerate()
+            .filter_map(|(index, item)| {
                 item.as_str().map(|event| model::WorkflowTrigger {
                     event: event.to_string(),
                     config: None,
+                    site: model::TriggerSite::Sequence(index),
                 })
             })
             .collect(),
@@ -44,7 +47,11 @@ pub fn parse_triggers(value: Option<&Value>) -> Vec<model::WorkflowTrigger> {
                     let event = key_name(key)?;
                     let config =
                         (!matches!(config, Value::Null)).then(|| value_primitives::to_json(config));
-                    Some(model::WorkflowTrigger { event, config })
+                    Some(model::WorkflowTrigger {
+                        event,
+                        config,
+                        site: model::TriggerSite::Mapping,
+                    })
                 })
                 .collect();
             triggers.sort_by(|left, right| left.event.cmp(&right.event));

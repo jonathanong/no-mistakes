@@ -13,10 +13,11 @@ rules:
 ```
 
 Use `no-mistakes check --root <repo> --format json`. Scalar `on`, sequence
-`on`, and mapping `on` are all checked. A mapping entry with a value is
-reported on that event key. A scalar, a sequence, and a null mapping value are
-reported on the `on` key. Put line and next-line suppressions on the reported
-key. Duplicate names in one workflow produce one finding.
+`on`, and mapping `on` are all checked. A mapping entry, including a null
+value, is reported on that event key. A sequence item is reported on the
+item's line. A scalar is reported on the `on` key, and a flow sequence item
+shares that line. Put line and next-line suppressions on the reported line.
+Duplicate names in one workflow produce one finding.
 
 Replace the banned event with the intended event, such as `pull_request`.
 Standard rule-level `message` and `no-mistakes-disable-file
