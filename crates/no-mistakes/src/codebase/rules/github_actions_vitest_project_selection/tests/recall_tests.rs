@@ -13,6 +13,7 @@ fn dynamic_flag_values_stay_judgeable() {
     let file = ["src/widgets.test.ts"];
     for script in [
         "vitest run --project widgets src/widgets.test.ts --shard ${{ matrix.shard }}",
+        "vitest run --project widgets src/widgets.test.ts --shard=${{ matrix.shard }}",
         "vitest run --project widgets src/widgets.test.ts --shard \"${{ matrix.shard }}\"",
         "vitest run --project widgets src/widgets.test.ts --shard \"$CI_SHARD\"",
         "vitest run --project widgets src/widgets.test.ts --config \"$CONFIG\"",
@@ -35,6 +36,18 @@ fn dynamic_flag_values_stay_judgeable() {
         &allow()
     )
     .is_empty());
+    assert!(super::arguments(
+        "vitest run --project \"$PROJECT\" --custom=keep src/widgets.test.ts",
+        &allow()
+    )
+    .is_empty());
+    assert_eq!(
+        super::arguments(
+            "vitest run --project items --shard=${{ matrix.shard }} items",
+            &reject()
+        ),
+        ["items"]
+    );
 }
 
 #[test]

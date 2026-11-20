@@ -24,7 +24,8 @@ project, are silent. Invalid YAML is not a finding.
 A `$` or a backtick leaves the command unjudged only when it is a positional,
 the value of `--project`, or the value of a flag this rule does not know.
 A known value flag still counts: `--shard ${{ matrix.shard }}`,
-`--shard "$CI_SHARD"`, `--config "$CONFIG"`, and `--outputFile "$OUT"` do not
+`--shard=${{ matrix.shard }}`, `--shard "$CI_SHARD"`, `--config "$CONFIG"`,
+and `--outputFile "$OUT"` do not
 hide a positional file on the same command. An unquoted `${{ ... }}` value is
 one flag value, including the words before `}}`.
 

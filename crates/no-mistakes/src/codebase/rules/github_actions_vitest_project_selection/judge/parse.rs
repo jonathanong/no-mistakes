@@ -61,13 +61,13 @@ fn take_flag(parsed: &mut Parsed, argv: &[Word], index: usize) -> usize {
     }
     if takes_value(name) {
         return if inline.is_some() {
-            index + 1
+            end_of_value(argv, index)
         } else {
             consume_value(argv, index)
         };
     }
     if inline.is_some() {
-        parsed.blocked = dynamic;
+        parsed.blocked |= dynamic;
         return index + 1;
     }
     match argv.get(index + 1) {
