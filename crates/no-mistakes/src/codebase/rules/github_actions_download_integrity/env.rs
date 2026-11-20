@@ -55,9 +55,15 @@ fn pathname_expands(value: &str) -> bool {
 }
 
 fn has_closed_bracket(value: &str) -> bool {
-    value
-        .char_indices()
-        .any(|(index, ch)| ch == '[' && value[index + 1..].contains(']'))
+    let mut opened = false;
+    for byte in value.bytes() {
+        if byte == b'[' {
+            opened = true;
+        } else if opened && byte == b']' {
+            return true;
+        }
+    }
+    false
 }
 
 fn valid_name(name: &str) -> bool {
