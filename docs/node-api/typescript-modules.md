@@ -132,7 +132,10 @@ and [`postgres-no-unbounded-sql-identifier`](../rules/postgres-no-unbounded-sql-
 use the same async `check()` path. They borrow prepared import, value-flow, and
 embedded-SQL facts plus the canonical graph; report fields are unchanged.
 [`postgres-sql-fragment-escape`](../rules/postgres-sql-fragment-escape.md) uses
-that same path to report cross-file escapes of exported SQL fragments.
+that same path to report cross-file escapes of exported SQL fragments. A file
+with an operational error, incomplete value flow, or unreadable source is
+listed on `CheckReport.incomplete` and does not drop findings from complete
+files.
 
 `parsePostgresSql()` exposes structured trigger `eventFacts`, cast
 `dataTypeFacts`, and literal EXECUTE `using` expressions through the same async

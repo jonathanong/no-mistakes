@@ -622,7 +622,9 @@ unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.
 
 `postgres-sql-fragment-escape` runs through the same async `check()` path. It
 reports cross-file writes, rebinds, and namespace escapes of exported trusted
-SQL fragments and does not add a separate function.
+SQL fragments and does not add a separate function. A file with an operational
+error, incomplete value flow, or unreadable source is listed on
+`CheckReport.incomplete` for this consumer.
 
 Configured [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
 applications run through the existing async `check()` binding and through

@@ -77,14 +77,7 @@ pub(super) fn run(
     {
         graph_plan = Prerequisite::Failed(failures);
     }
-    if matches!(graph_plan, Prerequisite::Failed(_))
-        && session.partial_checks_enabled()
-        && session.check_consumer_ready(FORBIDDEN_DEPENDENCIES)
-    {
-        if let Some(plan) = forbidden_dependencies::eligible_partial_graph_plan(config) {
-            graph_plan = Prerequisite::Ready(Some(plan));
-        }
-    }
+    graph_plan = ready_graph_plan(config, session.as_ref(), graph_plan);
     let owned_graph;
     let dependency_graph = if matches!(graph_plan, Prerequisite::Failed(_)) {
         None
@@ -159,3 +152,33 @@ pub(super) fn run(
     }
     Ok(finalize_findings(findings, suppression_sources, advisories))
 }
+
+fn ready_graph_plan(
+    config: &crate::config::v2::NoMistakesConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    mut graph_plan: Prerequisite<Option<crate::codebase::dependencies::graph::GraphBuildPlan>>,
+) -> Prerequisite<Option<crate::codebase::dependencies::graph::GraphBuildPlan>> {
+    let partial = session.partial_checks_enabled();
+    if matches!(graph_plan, Prerequisite::Failed(_))
+        && partial
+        && session.check_consumer_ready(FORBIDDEN_DEPENDENCIES)
+    {
+        if let Some(plan) = forbidden_dependencies::eligible_partial_graph_plan(config) {
+            graph_plan = Prerequisite::Ready(Some(plan));
+        }
+    }
+    let fragment = crate::codebase::rules::POSTGRES_SQL_FRAGMENT_ESCAPE;
+    if matches!(graph_plan, Prerequisite::Failed(_))
+        && partial
+        && session.check_consumer_ready(fragment)
+        && config.rule_configured(fragment)
+    {
+        if let Ok(Some(plan)) = super::try_canonical_graph_plan(config) {
+            graph_plan = Prerequisite::Ready(Some(plan));
+        }
+    }
+    graph_plan
+}
+
+#[cfg(test)]
+mod plan_tests;
