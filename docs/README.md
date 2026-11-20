@@ -37,7 +37,7 @@ the job you have; the rest of this index is reference.
 
 ## Validation
 
-`docs/performance/2238/39488578982/README.md` and `tables.md` stay byte-for-byte with `checksums.json`. The check skips those two hash-locked files. The other matched documents stay in the check.
+`docs/performance/2238/39488578982/README.md` and `tables.md` stay byte-for-byte with `checksums.json`. The check skips those two files because their recorded Actions URL is no longer served. The other matched documents stay in the check.
 
 ```sh
 lychee --no-progress --exclude-path '^fixtures/' --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$' README.md 'docs/**/*.md' 'plugins/*/skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' AGENTS.md

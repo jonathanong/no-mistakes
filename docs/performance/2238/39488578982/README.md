@@ -1,6 +1,6 @@
 # SQL verdict resource evidence
 
-This generated snapshot preserves ARM run `39488578982`. The measured candidate is `bcbbf58d69f8157aab60e5f1e61decf68ad278b5`; frozen main is `4d4deb9423111f6bd97f2501bdf508ef17536dc0`; harness is `510a88d5102b230b4fb626051c4141f670aedf10`.
+This generated snapshot preserves [ARM run 39488578982](https://github.com/jonathanong/no-mistakes/actions/runs/39488578982). The measured candidate is `bcbbf58d69f8157aab60e5f1e61decf68ad278b5`; frozen main is `4d4deb9423111f6bd97f2501bdf508ef17536dc0`; harness is `510a88d5102b230b4fb626051c4141f670aedf10`.
 
 [Both resource tables](tables.md) report the ordering-only cohort at 1, 4 and maximum jobs (maximum is 4 on this ARM runner), diagnostics off/on and ledger off/on. Each cell has three same-VM main/main control blocks and three balanced baseline/candidate/candidate/baseline blocks, six adjacent pairs per stage. All 288 arms finished uncensored.
 
