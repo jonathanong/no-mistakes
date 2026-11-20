@@ -18,11 +18,9 @@ pub(super) struct Fragment {
 }
 
 pub(super) struct Catalog<'a> {
-    #[cfg(test)]
-    pub(super) fragments: Vec<Fragment>,
     pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
     relative: RelativeIndex,
-    by_export: FragmentIndex,
+    pub(super) by_export: FragmentIndex,
     by_producer: ProducerIndex,
     ambient: AmbientIndex,
 }
@@ -56,8 +54,6 @@ impl<'a> Catalog<'a> {
         dedup(&mut fragments);
         let (by_export, by_producer) = index_fragments(&fragments);
         Self {
-            #[cfg(test)]
-            fragments,
             sources,
             relative: relative_index(facts),
             by_export,
