@@ -257,7 +257,8 @@ workflow can avoid subprocess overhead.
 
 ### Agent plugin
 
-This repository is a plugin marketplace for Claude Code and Codex. The
+This repository ships plugins for Claude Code and Codex through the
+[`harness-plugins`](https://github.com/jonathanong/harness-plugins) marketplace. The
 `no-mistakes` plugin ships the [packaged agent skill](plugins/no-mistakes/skills/no-mistakes/SKILL.md),
 which calls the `no-mistakes` CLI, so the CLI must be on `PATH` (for example
 `npm install --global no-mistakes`).
@@ -270,12 +271,31 @@ rollout, observability, native apps), each loaded only when that topic comes up.
 
 ```sh
 # Claude Code
-claude plugin marketplace add jonathanong/no-mistakes
-claude plugin install no-mistakes@no-mistakes
-claude plugin install no-mistakes-rules@no-mistakes
+claude plugin marketplace add jonathanong/harness-plugins
+claude plugin install no-mistakes@harness-plugins
+claude plugin install no-mistakes-rules@harness-plugins
 
-# Codex (then enable the no-mistakes and no-mistakes-rules plugins)
-codex plugin marketplace add jonathanong/no-mistakes
+# Codex
+codex plugin marketplace add jonathanong/harness-plugins --ref main
+codex plugin add no-mistakes@harness-plugins
+codex plugin add no-mistakes-rules@harness-plugins
+```
+
+If you added the old `no-mistakes` marketplace, migrate. Claude Code uninstalls a
+marketplace's plugins when it is removed, so reinstall both plugins afterward:
+
+```sh
+claude plugin marketplace remove no-mistakes
+claude plugin marketplace add jonathanong/harness-plugins
+claude plugin install no-mistakes@harness-plugins
+claude plugin install no-mistakes-rules@harness-plugins
+
+codex plugin remove no-mistakes@no-mistakes
+codex plugin remove no-mistakes-rules@no-mistakes
+codex plugin marketplace remove no-mistakes
+codex plugin marketplace add jonathanong/harness-plugins --ref main
+codex plugin add no-mistakes@harness-plugins
+codex plugin add no-mistakes-rules@harness-plugins
 ```
 
 ### Example recipes

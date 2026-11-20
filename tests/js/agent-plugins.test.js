@@ -13,17 +13,7 @@ function readJson(...parts) {
   return JSON.parse(readFileSync(join(repoRoot, ...parts), "utf8"));
 }
 
-test("Claude and Codex marketplaces point at each plugin directory", () => {
-  const claude = readJson(".claude-plugin", "marketplace.json");
-  assert.deepEqual(
-    claude.plugins.map((plugin) => [plugin.name, plugin.source]),
-    PLUGINS.map((name) => [name, `./plugins/${name}`]),
-  );
-  const codex = readJson(".agents", "plugins", "marketplace.json");
-  assert.deepEqual(
-    codex.plugins.map((plugin) => [plugin.name, plugin.source]),
-    PLUGINS.map((name) => [name, { source: "local", path: `./plugins/${name}` }]),
-  );
+test("each plugin ships Claude and Codex manifests", () => {
   for (const name of PLUGINS) {
     assert.ok(existsSync(join(repoRoot, "plugins", name, ".claude-plugin", "plugin.json")));
     assert.ok(existsSync(join(repoRoot, "plugins", name, ".codex-plugin", "plugin.json")));
