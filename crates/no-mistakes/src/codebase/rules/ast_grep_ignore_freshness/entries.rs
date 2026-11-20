@@ -121,10 +121,6 @@ fn mapping_entry(
     }
 }
 
-#[cfg(test)]
-#[path = "entries_tests.rs"]
-mod tests;
-
 fn invalid(line: usize, pattern: String, case_insensitive: bool) -> IgnoreEntry {
     IgnoreEntry {
         line,
@@ -133,3 +129,7 @@ fn invalid(line: usize, pattern: String, case_insensitive: bool) -> IgnoreEntry 
         invalid_shape: true,
     }
 }
+
+#[cfg(test)]
+#[path = "entries_tests.rs"]
+mod tests;

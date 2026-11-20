@@ -2,7 +2,7 @@ use super::entries;
 use super::select;
 use crate::codebase::structured_value::parse_yaml_documents;
 use serde_yaml::Value;
-use std::collections::{BTreeSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::Path;
 
 pub(super) struct ParsedConfig {
@@ -30,13 +30,17 @@ pub(super) fn load(
             Some(relative.clone()),
         ));
     }
-    let mut seen = BTreeSet::new();
+    let mut seen = BTreeMap::new();
     let mut queue = VecDeque::new();
-    for relative in seeds {
-        remember(&mut seen, &mut queue, relative, String::new());
-    }
     let mut parsed = Vec::new();
-    while let Some((relative, inherited)) = queue.pop_front() {
+    for relative in seeds {
+        remember(&mut seen, &mut queue, &mut parsed, relative, String::new());
+    }
+    while let Some(relative) = queue.pop_front() {
+        let inherited = seen
+            .get(&relative)
+            .map(|visit| visit.project.clone())
+            .unwrap_or_default();
         let source = match std::fs::read_to_string(root.join(&relative)) {
             Ok(source) => source,
             Err(error) => {
@@ -57,8 +61,23 @@ pub(super) fn load(
             continue;
         }
         let project = project_for(&relative, &documents.values, &inherited);
+        let index = parsed.len();
+        if let Some(visit) = seen.get_mut(&relative) {
+            visit.parsed = Some(index);
+            if visit.project.is_empty() && !project.is_empty() {
+                visit.project = project.clone();
+            }
+        }
         for value in &documents.values {
-            enqueue_rule_dirs(&relative, value, tracked, &project, &mut seen, &mut queue);
+            enqueue_rule_dirs(
+                &relative,
+                value,
+                tracked,
+                &project,
+                &mut seen,
+                &mut queue,
+                &mut parsed,
+            );
         }
         parsed.push(ParsedConfig {
             relative,
@@ -90,13 +109,19 @@ fn config_directory(relative: &str) -> String {
     }
 }
 
+struct Visit {
+    project: String,
+    parsed: Option<usize>,
+}
+
 fn enqueue_rule_dirs(
     relative: &str,
     value: &Value,
     tracked: &[String],
     project: &str,
-    seen: &mut BTreeSet<String>,
-    queue: &mut VecDeque<(String, String)>,
+    seen: &mut BTreeMap<String, Visit>,
+    queue: &mut VecDeque<String>,
+    parsed: &mut [ParsedConfig],
 ) {
     for dir in entries::rule_directories(value) {
         let Some(prefix) = select::child_prefix(relative, &dir) else {
@@ -104,19 +129,34 @@ fn enqueue_rule_dirs(
         };
         for candidate in tracked {
             if candidate.starts_with(&prefix) && select::is_yaml(candidate) {
-                remember(seen, queue, candidate.clone(), project.to_string());
+                remember(seen, queue, parsed, candidate.clone(), project.to_string());
             }
         }
     }
 }
 
 fn remember(
-    seen: &mut BTreeSet<String>,
-    queue: &mut VecDeque<(String, String)>,
+    seen: &mut BTreeMap<String, Visit>,
+    queue: &mut VecDeque<String>,
+    parsed: &mut [ParsedConfig],
     relative: String,
     project: String,
 ) {
-    if seen.insert(relative.clone()) {
-        queue.push_back((relative, project));
+    if let Some(visit) = seen.get_mut(&relative) {
+        if visit.project.is_empty() && !project.is_empty() {
+            visit.project = project.clone();
+            if let Some(index) = visit.parsed {
+                parsed[index].project = project;
+            }
+        }
+        return;
     }
+    seen.insert(
+        relative.clone(),
+        Visit {
+            project,
+            parsed: None,
+        },
+    );
+    queue.push_back(relative);
 }

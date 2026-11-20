@@ -144,6 +144,16 @@ fn json_keeps_a_literal_merge_key() {
 }
 
 #[test]
+fn repeated_yaml_syntax_error_is_reported_once() {
+    let source = include_str!(
+        "../../../../../test-cases/rules/ast-grep-ignore-freshness/fixture/tracked/rules/repeated-doc.yml"
+    );
+    let parsed = parse_yaml_documents(source);
+    assert_eq!(parsed.errors.len(), 1);
+    assert_eq!(parsed.values[0]["id"].as_str(), Some("widgets"));
+}
+
+#[test]
 fn converts_json_integers_that_do_not_fit_i64() {
     let source = r#"{ "u": 18446744073709551615 }"#;
     let value = parse_structured_value(Path::new("n.json"), source).unwrap();

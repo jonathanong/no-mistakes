@@ -82,6 +82,7 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
     let no_sgconfig = git_all(&rules_path(RULE, "fixture", "no-sgconfig"));
     let sgconfig_yaml = git_all(&rules_path(RULE, "fixture", "sgconfig-yaml"));
     let nested = git_all(&rules_path(RULE, "fixture", "nested"));
+    let listed = git_all(&rules_path(RULE, "fixture", "listed-with-config"));
     let report = assert_saved_fixture_report(
         "ast_grep_ignore_freshness",
         &[
@@ -102,6 +103,11 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
                 PathBuf::new(),
             ),
             ("nested", nested.path().to_path_buf(), PathBuf::new()),
+            (
+                "listed_with_config",
+                listed.path().to_path_buf(),
+                PathBuf::new(),
+            ),
         ],
         &[],
         &[],
@@ -185,4 +191,29 @@ fn ast_grep_ignore_freshness_json_matches_snapshot() {
         .iter()
         .any(|hit| hit == "packages/widgets/rules/orders.yml:src/missing.ts"));
     assert!(!nested_hits.iter().any(|hit| hit.ends_with(":src/items.ts")));
+    let listed_hits = targets(&report["listed_with_config"]);
+    assert!(listed_hits
+        .iter()
+        .any(|hit| hit == "packages/widgets/rules/orders.yml:src/orders.ts"));
+    assert!(!listed_hits.iter().any(|hit| hit.ends_with(":src/items.ts")));
+    let pattern_line = report["tracked"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["file"] == "rules/pattern-text.yml")
+        .unwrap();
+    assert_eq!(pattern_line["line"], 6);
+    assert_eq!(pattern_line["sourceLine"], "- src/missing.ts");
+    let repeated_errors = report["tracked"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| {
+            finding["file"] == "rules/repeated-doc.yml"
+                && finding["message"]
+                    .as_str()
+                    .is_some_and(|message| message.starts_with("failed to parse YAML"))
+        })
+        .count();
+    assert_eq!(repeated_errors, 1);
 }

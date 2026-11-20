@@ -12,8 +12,12 @@ pub(super) fn take_pattern_line(
 ) -> usize {
     let want = seen.get(pattern).copied().unwrap_or(0);
     let mut passed = 0usize;
+    let mut block = None;
     for (index, line) in source.lines().enumerate() {
-        let count = pattern_occurrences(line, pattern);
+        let Some(span) = ignore_span(line, &mut block) else {
+            continue;
+        };
+        let count = pattern_occurrences(span, pattern);
         if count == 0 {
             continue;
         }
@@ -42,6 +46,33 @@ fn take_unused(source: &str, used: &mut BTreeSet<usize>, matches: impl Fn(&str) 
             })
         })
         .unwrap_or(1)
+}
+
+fn ignore_span<'a>(line: &'a str, block: &mut Option<usize>) -> Option<&'a str> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || trimmed.starts_with('#') {
+        return None;
+    }
+    if trimmed == "---" || trimmed.starts_with("--- ") {
+        *block = None;
+        return None;
+    }
+    let indent = line.len() - line.trim_start().len();
+    if let Some(key_indent) = *block {
+        if indent <= key_indent {
+            *block = None;
+        } else {
+            return Some(line);
+        }
+    }
+    let rest = trimmed.strip_prefix("ignores:")?;
+    if rest.contains('[') {
+        return Some(rest);
+    }
+    if rest.trim().is_empty() {
+        *block = Some(indent);
+    }
+    None
 }
 
 fn pattern_occurrences(line: &str, pattern: &str) -> usize {

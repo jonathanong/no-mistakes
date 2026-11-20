@@ -63,3 +63,17 @@ ignores:
     assert_eq!(entries[1].pattern, "src/items.ts");
     assert_eq!(entries[1].line, 7);
 }
+
+#[test]
+fn pattern_key_does_not_shift_the_ignore_line() {
+    let source = "\
+id: widgets
+rule:
+  pattern: src/missing.ts
+ignores:
+  - src/missing.ts
+";
+    let entries = entries(source);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].line, 5);
+}

@@ -1,0 +1,7 @@
+id: list-orders
+language: TypeScript
+rule:
+  pattern: listOrders()
+ignores:
+  - src/items.ts
+  - src/orders.ts

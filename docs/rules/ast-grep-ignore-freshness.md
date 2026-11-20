@@ -30,14 +30,16 @@ rule. A root `sgconfig.yml` uses repository paths. With
 `files: [packages/widgets/sgconfig.yml]`, `src/items.ts` matches
 `packages/widgets/src/items.ts` and not a repository-root `src/items.ts`. A
 rule file named directly in `files`, with no `sgconfig`, stays relative to the
-repository root.
+repository root. When `files` also lists the `sgconfig` that owns that rule
+directory, the `sgconfig` directory still wins.
 
 A rule file may contain several YAML documents separated by `---`. Each
 document's ignores are checked. A document that is not valid YAML is a
 finding. Documents parsed before that error are still checked. A flow list
 such as `ignores: ['src/missing.ts', 'src/items.ts']` reports the line that
 contains the entry, so a `no-mistakes-disable-next-line` directive on the
-previous line applies to that entry.
+previous line applies to that entry. The same text on a `pattern:` line is
+not an ignore entry and does not move that line.
 
 An entry that matches only an untracked file or only a gitignored file is
 still reported. Inside a Git worktree the inventory is the tracked set,

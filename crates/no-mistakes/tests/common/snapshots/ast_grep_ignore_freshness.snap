@@ -37,6 +37,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "listed_with_config": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/rules/orders.yml",
+          "line": 7,
+          "message": "ast-grep ignore `src/orders.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/orders.ts",
+          "target": "src/orders.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "nested": {
     "exitCode": 1,
     "report": {
@@ -143,6 +164,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "ast-grep-ignore-freshness",
           "sourceLine": "- '!src/items.ts'",
           "target": "!src/items.ts"
+        },
+        {
+          "file": "rules/pattern-text.yml",
+          "line": 6,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/repeated-doc.yml",
+          "line": 6,
+          "message": "ast-grep ignore `src/missing.ts` matches no tracked path. Delete the entry or restore a tracked file that matches it.",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "- src/missing.ts",
+          "target": "src/missing.ts"
+        },
+        {
+          "file": "rules/repeated-doc.yml",
+          "line": 9,
+          "message": "failed to parse YAML (did not find expected node content at line 9 column 1, while parsing a flow node)",
+          "rule": "ast-grep-ignore-freshness",
+          "sourceLine": "---"
         },
         {
           "file": "rules/scalar.yml",
