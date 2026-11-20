@@ -1001,8 +1001,8 @@ These wrappers unwrap repeatedly, including one wrapper around another:
   plain value, such as `--reporter silent`, consumes that value too. A flag
   that already includes its value, such as `--filter=widgets`, is one token.
   Attached values are recognized for `-C` and `-F` only. `-C` and `--dir`,
-  including `-Cdir` and `--dir=<dir>`, are the scan root, the same way a
-  shell `cd` is. `--filter` and `-F` are package selectors and are not. The
+  including an attached `-C` value and `--dir=<dir>`, are the scan root, the
+  same way a shell `cd` is. `--filter` and `-F` are package selectors and are not. The
   last of those directories wins. Any other leading flag is left in place, so
   `pnpm --ignore-scripts exec widget-audit` does not match.
 - `npm exec`, with the same leading flags and one optional `--`
