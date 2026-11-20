@@ -1,13 +1,14 @@
 use super::dynamic::{dynamic_argument, dynamic_head};
 use super::fragments::{dedup, Catalog, Fragment};
-use super::modules::module_file;
+use super::modules::import_hit_fragments;
+use super::mutate::receiver_mutations;
 use super::names::{binding_named, expr_module, import_fragments, locally_bound, namespace_of};
-use super::tags::{exported_name, imported, is_fragment_binding};
+use super::tags::{imported, is_fragment_binding};
 use super::text::import_equals_member;
 use super::visible::{visible, visible_all};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::{
-    CallableId, ImportedBindingKind, ValueBinding, ValueCall, ValueExpression,
+    CallableId, ValueBinding, ValueCall, ValueExpression,
 };
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
@@ -43,6 +44,7 @@ pub(super) fn call_fragments(ctx: &FileCtx<'_>, call: &ValueCall) -> Vec<Fragmen
         return found;
     }
     let mut found = use_expr(&ctx, &call.callee, 0);
+    found.extend(receiver_mutations(&ctx, call));
     for argument in call.arguments.iter() {
         if matches!(
             argument,
@@ -82,7 +84,7 @@ fn append_receiver(call: &ValueCall) -> Option<&ValueExpression> {
     }
 }
 
-fn use_expr(ctx: &FileCtx<'_>, expr: &ValueExpression, depth: u8) -> Vec<Fragment> {
+pub(super) fn use_expr(ctx: &FileCtx<'_>, expr: &ValueExpression, depth: u8) -> Vec<Fragment> {
     if depth > 4 {
         return Vec::new();
     }
@@ -116,24 +118,7 @@ fn use_name(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Vec<Fragment> {
     }
     if !locally_bound(ctx, name) {
         if let Some(import) = imported(ctx.ts, name) {
-            if import.kind != ImportedBindingKind::Namespace {
-                if let Some(module) = module_file(
-                    ctx.graph,
-                    ctx.facts,
-                    ctx.catalog,
-                    ctx.file,
-                    &import.specifier,
-                ) {
-                    return visible(
-                        ctx.catalog,
-                        ctx.graph,
-                        ctx.facts,
-                        &module,
-                        &exported_name(import),
-                        &mut Vec::new(),
-                    );
-                }
-            }
+            return import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import);
         }
         if let Some((object, member)) = import_equals_member(ctx.source, name) {
             if let Some(module) = namespace_of(ctx, object, depth) {
@@ -169,7 +154,12 @@ fn use_name(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Vec<Fragment> {
     use_expr(ctx, &value, depth + 1)
 }
 
-fn member_of(ctx: &FileCtx<'_>, base: &ValueExpression, member: &str, depth: u8) -> Vec<Fragment> {
+pub(super) fn member_of(
+    ctx: &FileCtx<'_>,
+    base: &ValueExpression,
+    member: &str,
+    depth: u8,
+) -> Vec<Fragment> {
     let Some(module) = expr_module(ctx, base, depth) else {
         return Vec::new();
     };

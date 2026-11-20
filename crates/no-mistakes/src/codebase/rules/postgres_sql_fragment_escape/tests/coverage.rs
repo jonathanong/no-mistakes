@@ -25,29 +25,34 @@ fn catalog_skips_files_that_cannot_prove_a_fragment() {
     assert_eq!(producers.len(), 2);
     assert!(catalog.by_export("badColumns").is_empty());
     assert!(catalog.by_export("partialColumns").is_empty());
-    assert_from(
-        &alias::hop(
-            &catalog,
-            &world.graph,
-            &world.facts,
-            &world.escape,
-            "missing",
-            "orderColumns",
-            &mut Vec::new(),
-        ),
-        &world.columns,
-        &["orderColumns"],
+    let unresolved_order = alias::hop(
+        &catalog,
+        &world.graph,
+        &world.facts,
+        &world.escape,
+        "missing",
+        "orderColumns",
+        &mut Vec::new(),
     );
-    assert!(alias::hop(
+    assert_eq!(unresolved_order.len(), 1);
+    assert_eq!(
+        unresolved_order[0].open_specifier.as_deref(),
+        Some("missing")
+    );
+    let unresolved_widget = alias::hop(
         &catalog,
         &world.graph,
         &world.facts,
         &world.escape,
         "missing",
         "widgetColumns",
-        &mut Vec::new()
-    )
-    .is_empty());
+        &mut Vec::new(),
+    );
+    assert_eq!(unresolved_widget.len(), 1);
+    assert_eq!(
+        unresolved_widget[0].open_specifier.as_deref(),
+        Some("missing")
+    );
 }
 
 #[test]
@@ -229,7 +234,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
             &world.escape,
             "widgets.mts"
         ),
-        Some(world.widgets.clone())
+        None
     );
     assert_eq!(
         modules::module_file(
@@ -385,7 +390,16 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         .map(|finding| finding.target.as_deref().unwrap_or(""))
         .collect();
     targets.sort_unstable();
-    assert_eq!(targets, both);
+    assert_eq!(
+        targets,
+        [
+            "@example/sql",
+            "@example/sql",
+            "@example/sql",
+            "orderColumns",
+            "widgetColumns",
+        ]
+    );
     assert!(scan::scan(Path::new("/repo"), &[], &world.graph, &world.facts, None).is_empty());
     assert!(scan::scan(
         Path::new("/repo"),

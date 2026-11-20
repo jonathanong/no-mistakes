@@ -119,18 +119,30 @@ fn emit(
     fragments: &[Fragment],
 ) {
     for fragment in fragments {
-        let producer = relative_slash_path(root, &fragment.producer);
+        let (message, import, target) = if let Some(specifier) = &fragment.open_specifier {
+            (
+                format!(
+                    "unresolved import `{specifier}` may write, rebind, or escape an exported SQL fragment"
+                ),
+                specifier.clone(),
+                specifier.clone(),
+            )
+        } else {
+            let producer = relative_slash_path(root, &fragment.producer);
+            let message = format!(
+                "exported SQL fragment `{}` from `{producer}` is written, rebound, or escaped",
+                fragment.exported
+            );
+            (message, producer, fragment.exported.clone())
+        };
         findings.push(RuleFinding {
             causes: Vec::new(),
             rule: RULE_ID.to_string(),
             file: relative_slash_path(root, ctx.file),
             line: line_number(ctx.source, offset),
-            message: format!(
-                "exported SQL fragment `{}` from `{producer}` is written, rebound, or escaped",
-                fragment.exported
-            ),
-            import: Some(producer),
-            target: Some(fragment.exported.clone()),
+            message,
+            import: Some(import),
+            target: Some(target),
         });
     }
 }

@@ -1,8 +1,47 @@
-use super::fragments::Catalog;
+use super::fragments::{Catalog, Fragment};
 use super::source_text::file_text;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
+use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKind};
+use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
 use std::path::{Path, PathBuf};
+
+pub(super) enum ModuleHit {
+    File(PathBuf),
+    Open,
+}
+
+pub(super) fn module_hit(
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    catalog: &Catalog<'_>,
+    importer: &Path,
+    specifier: &str,
+) -> ModuleHit {
+    if let Some(recorded) = graph.import_target(importer, specifier) {
+        match recorded {
+            ImportTarget::File(path) => return ModuleHit::File(path.clone()),
+            ImportTarget::Ambiguous => return ModuleHit::Open,
+            ImportTarget::Unresolved => {}
+        }
+    }
+    if let Some(path) = relative_module(catalog, importer, specifier) {
+        return ModuleHit::File(path);
+    }
+    let mut hits = Vec::new();
+    if specifier.starts_with('.') {
+        hits.extend(relative_hits(catalog, importer, specifier));
+    }
+    if hits.is_empty() {
+        hits.extend(ambient_hits(facts, catalog, specifier));
+    }
+    hits.sort();
+    hits.dedup();
+    if hits.len() == 1 {
+        ModuleHit::File(hits.remove(0))
+    } else {
+        ModuleHit::Open
+    }
+}
 
 pub(super) fn module_file(
     graph: &DepGraph,
@@ -11,45 +50,29 @@ pub(super) fn module_file(
     importer: &Path,
     specifier: &str,
 ) -> Option<PathBuf> {
-    if let Some(path) = relative_module(catalog, importer, specifier) {
-        return Some(path);
+    match module_hit(graph, facts, catalog, importer, specifier) {
+        ModuleHit::File(path) => Some(path),
+        ModuleHit::Open => None,
     }
-    let mut hits = neighbor_hits(graph, importer, specifier);
-    if hits.len() != 1 && specifier.starts_with('.') {
-        hits.extend(relative_hits(catalog, importer, specifier));
-    }
-    if hits.is_empty() {
-        hits.extend(ambient_hits(facts, catalog, specifier));
-    }
-    hits.sort();
-    hits.dedup();
-    (hits.len() == 1).then(|| hits.pop()).flatten()
 }
 
-fn neighbor_hits(graph: &DepGraph, importer: &Path, specifier: &str) -> Vec<PathBuf> {
-    let stem = file_stem(specifier);
-    if stem.is_empty() {
-        return Vec::new();
+pub(super) fn import_hit_fragments(
+    catalog: &Catalog<'_>,
+    graph: &DepGraph,
+    facts: &CheckFactMap,
+    importer: &Path,
+    import: &ImportedBinding,
+) -> Vec<Fragment> {
+    match module_hit(graph, facts, catalog, importer, &import.specifier) {
+        ModuleHit::Open => vec![Fragment::open(&import.specifier)],
+        ModuleHit::File(module) if import.kind == ImportedBindingKind::Namespace => {
+            super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
+        }
+        ModuleHit::File(module) => {
+            let name = super::tags::exported_name(import);
+            super::visible::visible(catalog, graph, facts, &module, &name, &mut Vec::new())
+        }
     }
-    let Some(neighbors) = graph.dependencies_of_node(&NodeId::file(importer)) else {
-        return Vec::new();
-    };
-    neighbors
-        .iter()
-        .filter_map(|(target, kind)| {
-            matches!(
-                kind,
-                EdgeKind::Import
-                    | EdgeKind::Require
-                    | EdgeKind::DynamicImport
-                    | EdgeKind::ConditionalDynamicImport
-            )
-            .then_some(target.as_file())
-            .flatten()
-        })
-        .filter(|path| path_matches(path, stem))
-        .map(Path::to_path_buf)
-        .collect()
 }
 
 fn relative_module(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Option<PathBuf> {
@@ -88,25 +111,4 @@ fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) ->
         })
         .cloned()
         .collect()
-}
-
-fn path_matches(path: &Path, stem: &str) -> bool {
-    let file_stem = path.file_stem().and_then(|stem| stem.to_str());
-    file_stem == Some(stem)
-        || (file_stem == Some("index")
-            && path
-                .parent()
-                .and_then(|dir| dir.file_name())
-                .and_then(|name| name.to_str())
-                == Some(stem))
-}
-
-fn file_stem(specifier: &str) -> &str {
-    let segment = specifier.rsplit(['/', '\\']).next().unwrap_or(specifier);
-    for ext in [".mts", ".cts", ".tsx", ".jsx", ".mjs", ".cjs", ".ts", ".js"] {
-        if let Some(stem) = segment.strip_suffix(ext) {
-            return stem;
-        }
-    }
-    segment
 }

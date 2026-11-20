@@ -1,6 +1,6 @@
 use super::alias::{hop, source_alias};
 use super::fragments::{dedup, Catalog, Fragment};
-use super::modules::module_file;
+use super::modules::{module_hit, ModuleHit};
 use super::tags::{exported_name, imported};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ExportedBinding;
@@ -49,10 +49,11 @@ pub(super) fn visible_all(
             .map(|binding| binding.exported.clone())
             .collect();
         for spec in &ts.star_reexport_specifiers {
-            if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-                found.extend(super::alias::star_fragments(
+            match module_hit(graph, facts, catalog, module, spec) {
+                ModuleHit::File(next) => found.extend(super::alias::star_fragments(
                     catalog, graph, facts, &next, &blocked, stack,
-                ));
+                )),
+                ModuleHit::Open => found.push(Fragment::open(spec)),
             }
         }
         for binding in &ts.exported_bindings {
@@ -88,8 +89,11 @@ fn follow(
             .any(|binding| binding.exported == name);
     if !shadowed {
         for spec in &ts.star_reexport_specifiers {
-            if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-                found.extend(visible(catalog, graph, facts, &next, name, stack));
+            match module_hit(graph, facts, catalog, module, spec) {
+                ModuleHit::File(next) => {
+                    found.extend(visible(catalog, graph, facts, &next, name, stack));
+                }
+                ModuleHit::Open => found.push(Fragment::open(spec)),
             }
         }
     }

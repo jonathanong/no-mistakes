@@ -3,6 +3,7 @@ mod alias;
 mod dynamic;
 mod fragments;
 mod modules;
+mod mutate;
 mod names;
 mod resolve;
 mod scan;

@@ -41,11 +41,14 @@ shared across files.
 
 ## What it catches
 
-One finding names the exported fragment and the file that declares it. The line
+One finding names the exported fragment and the file that declares it. An
+unresolved or ambiguous import names the specifier instead of a file. The line
 is the escape:
 
 - `.append` on the fragment, or on a member reached through a namespace import,
-  a string key, a rename, a default import, or `export *`.
+  a string key, a rename, a default import, or `export *`. A spread or
+  multi-argument `.append`, and a method call on a member of the fragment
+  such as `.strings.push` or `.values.splice`, are the same kind of write.
 - A non-string computed key, `Object.assign`, `Object.values`, `Reflect.get`,
   `Reflect.set`, or any other use of the namespace that is not one member read.
   That use disproves every exported interpolation-free fragment of the module.
@@ -60,11 +63,14 @@ or `as` assertion around that argument is left to `postgres-no-executor-adapter`
 The same-file adapter finding and this rule can both report when one file both
 calls the executor and escapes the fragment.
 
-The rule abstains when the graph cannot name one defining module. A relative
-specifier with no import edge is joined lexically to the importer. A
-non-relative specifier can match a file that contains `declare module "specifier"`
-when that file is unique. A re-export whose specifier still does not resolve
-matches a fragment only when exactly one exported fragment has that name.
+Each import uses the shared resolver's target for that specifier. The rule
+does not match a specifier to a neighbor by file stem. When that target is
+a file, the file is used even if its name differs from the specifier. When
+the target is missing or unresolved, a relative specifier is joined
+lexically to the importer, and a specifier can match a file that contains
+`declare module "specifier"` when that file is unique. When those steps do
+not name one file, or the recorded targets disagree, the use is reported.
+That finding names the specifier and does not attribute a local file.
 
 ## Valid example
 

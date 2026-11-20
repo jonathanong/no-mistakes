@@ -1,5 +1,5 @@
 use super::fragments::{Catalog, Fragment};
-use super::modules::module_file;
+use super::modules::{module_hit, ModuleHit};
 use super::source_text::file_text;
 use super::text::{export_alias_local, import_specifier};
 use super::visible::visible;
@@ -17,10 +17,9 @@ pub(super) fn hop(
     name: &str,
     stack: &mut Vec<(PathBuf, String)>,
 ) -> Vec<Fragment> {
-    if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-        visible(catalog, graph, facts, &next, name, stack)
-    } else {
-        unique_export(catalog, name)
+    match module_hit(graph, facts, catalog, module, spec) {
+        ModuleHit::File(next) => visible(catalog, graph, facts, &next, name, stack),
+        ModuleHit::Open => vec![Fragment::open(spec)],
     }
 }
 
@@ -82,26 +81,18 @@ pub(super) fn star_fragments(
             .map(|binding| binding.exported.clone()),
     );
     for spec in &ts.star_reexport_specifiers {
-        if let Some(next) = module_file(graph, facts, catalog, module, spec) {
-            found.extend(star_fragments(
+        match module_hit(graph, facts, catalog, module, spec) {
+            ModuleHit::File(next) => found.extend(star_fragments(
                 catalog,
                 graph,
                 facts,
                 &next,
                 &next_blocked,
                 stack,
-            ));
+            )),
+            ModuleHit::Open => found.push(Fragment::open(spec)),
         }
     }
     stack.pop();
     found
-}
-
-fn unique_export(catalog: &Catalog, name: &str) -> Vec<Fragment> {
-    let found = catalog.by_export(name);
-    if found.len() == 1 {
-        found
-    } else {
-        Vec::new()
-    }
 }

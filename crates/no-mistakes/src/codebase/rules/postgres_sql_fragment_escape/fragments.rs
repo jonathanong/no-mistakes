@@ -11,6 +11,7 @@ type RelativeIndex = FxHashMap<PathBuf, FxHashMap<String, Vec<PathBuf>>>;
 pub(super) struct Fragment {
     pub producer: PathBuf,
     pub exported: String,
+    pub open_specifier: Option<String>,
 }
 
 pub(super) struct Catalog<'a> {
@@ -42,6 +43,7 @@ impl<'a> Catalog<'a> {
                         fragments.push(Fragment {
                             producer: file.clone(),
                             exported: export.exported.clone(),
+                            open_specifier: None,
                         });
                     }
                 }
@@ -79,6 +81,7 @@ impl<'a> Catalog<'a> {
             .collect()
     }
 
+    #[cfg(test)]
     pub(super) fn by_export(&self, name: &str) -> Vec<Fragment> {
         self.fragments
             .iter()
@@ -118,6 +121,16 @@ fn push_relative(index: &mut RelativeIndex, parent: &Path, stem: &str, file: &Pa
         .entry(stem.to_string())
         .or_default()
         .push(file.to_path_buf());
+}
+
+impl Fragment {
+    pub(super) fn open(specifier: &str) -> Self {
+        Self {
+            producer: PathBuf::new(),
+            exported: String::new(),
+            open_specifier: Some(specifier.to_string()),
+        }
+    }
 }
 
 pub(super) fn dedup(found: &mut Vec<Fragment>) {

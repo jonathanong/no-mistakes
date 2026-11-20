@@ -138,6 +138,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "SHARED_COLS"
         },
         {
+          "file": "indexAmbient.ts",
+          "import": "indexFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `AMBIENT_COLS` from `indexFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export { AMBIENT_COLS as VIRTUAL_COLS };",
+          "target": "AMBIENT_COLS"
+        },
+        {
           "file": "indexAmbientMutator.ts",
           "import": "indexFragments.ts",
           "line": 4,
@@ -145,6 +154,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "VIRTUAL_COLS.append(dynamicFragment);",
           "target": "AMBIENT_COLS"
+        },
+        {
+          "file": "indexControls.ts",
+          "import": "./not-a-module",
+          "line": 9,
+          "message": "unresolved import `./not-a-module` may write, rebind, or escape an exported SQL fragment",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export const unresolved = [missing];",
+          "target": "./not-a-module"
         },
         {
           "file": "indexDefaultMutator.ts",
@@ -340,6 +358,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
+          "file": "aliasStemMutator.ts",
+          "import": "widgets/items.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetItems` from `widgets/items.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetItems.append(extra);",
+          "target": "widgetItems"
+        },
+        {
+          "file": "ambiguousStemMutator.ts",
+          "import": "orders/columns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `widgetColumns` from `orders/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "ambiguousStemMutator.ts",
+          "import": "users/columns.ts",
+          "line": 6,
+          "message": "exported SQL fragment `userColumns` from `users/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "userColumns.append(extra);",
+          "target": "userColumns"
+        },
+        {
           "file": "assignMutator.ts",
           "import": "widgetColumns.ts",
           "line": 4,
@@ -412,6 +457,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "widgetColumns"
         },
         {
+          "file": "externalStemMutator.ts",
+          "import": "local/sql.ts",
+          "line": 6,
+          "message": "exported SQL fragment `localColumns` from `local/sql.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "localColumns.append(extra);",
+          "target": "localColumns"
+        },
+        {
+          "file": "externalStemMutator.ts",
+          "import": "pkg/sql",
+          "line": 5,
+          "message": "unresolved import `pkg/sql` may write, rebind, or escape an exported SQL fragment",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.assign(external, { extra });",
+          "target": "pkg/sql"
+        },
+        {
           "file": "itemMutator.ts",
           "import": "orders/items.ts",
           "line": 5,
@@ -436,6 +499,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "parts.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "memberMutateMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.strings.push(\"id\");",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "memberMutateMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.values.splice(0, 0, \"id\");",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "namespaceMemberMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns.widgetColumns.strings.push(\"id\");",
           "target": "widgetColumns"
         },
         {
@@ -490,6 +580,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "other.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "spreadAppendMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 8,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(...parts);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "spreadAppendMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 9,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(left, right);",
           "target": "widgetColumns"
         },
         {
