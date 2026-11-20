@@ -1,0 +1,15 @@
+name: widgets
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo widget
+---
+name: orders
+on: push
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo order

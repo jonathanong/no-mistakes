@@ -1,0 +1,9 @@
+name: orders
+on:
+  # catalog note
+  pull_request_target:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo order

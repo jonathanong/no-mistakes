@@ -50,12 +50,22 @@ on:
     types: [opened]
 ```
 
-A mapping entry is reported on that event key, including `types` and a null
-value such as `pull_request_target:`. A sequence item is reported on the
-item's line. A scalar `on: pull_request_target` is reported on the `on` key.
-A flow sequence such as `on: [push, pull_request_target]` shares the `on`
-line, because the item is written there. Duplicate event names in one `on`
-produce one finding. Non-string sequence members are ignored.
+A mapping entry is reported on that event key, including `types`, a null
+value such as `pull_request_target:`, a quoted `"pull_request_target":`,
+and a quoted `"on":` key. A comment between `on:` and the event key does
+not move the finding. A sequence item is reported on the item's line. A
+one-line flow sequence such as `on: [push, pull_request_target]` shares
+the `on` line, because the item is written there. An item on its own line
+in a multi-line flow sequence is reported on that line. Duplicate event
+names in one `on` produce one finding. Non-string sequence members are
+ignored. A `no-mistakes-disable-line` directive on the `on:` line of a
+null mapping or a block sequence no longer applies, because the finding
+now lands on the event key, and that directive is an
+`unused-disable-directive` advisory.
+
+A YAML tag or a second document leaves the file without a source map. A
+tagged workflow still reports the forbidden event on line 1. A
+multi-document file is not one workflow, so its events are not reported.
 
 The standard rule-level `message` overrides the diagnostic text. Use a line or
 next-line directive at the reported key for a deliberate exception:

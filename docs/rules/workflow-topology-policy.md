@@ -160,12 +160,18 @@ forbiddenEvents: [pull_request_target]
 `on: pull_request_target`, `on: [push, pull_request_target]`, and
 `on: {pull_request_target: {types: [opened]}}` are counterexamples.
 `on: pull_request` in the same form is valid. Matching is exact and
-case-sensitive. A mapping entry, including a null value, is reported on
-that event key. A sequence item is reported on the item's line. A scalar
-`on` value is reported on the `on` key. A flow sequence item shares that
-`on` line. Duplicate names in one workflow produce one finding. Remove
-the event. The standard rule-level `message` and suppression directives
-apply at the reported key. See the
+case-sensitive. A mapping entry, including a null value, a quoted event
+key, or a quoted `on` key, is reported on that event key. A comment
+between `on:` and the event key does not move the finding. A sequence
+item is reported on the item's line, including an item written on its own
+line in a flow sequence. A one-line flow sequence shares the `on` line. A
+scalar `on` value is reported on the `on` key. Duplicate names in one
+workflow produce one finding. Remove the event. The standard rule-level
+`message` and suppression directives apply at the reported key. A
+`no-mistakes-disable-line` directive on the `on:` line of a null mapping
+or a block sequence no longer applies, because the finding now lands on
+the event key, and that directive is an `unused-disable-directive`
+advisory. See the
 [configuration guide](../configuration/workflow-topology-policy-forbidden-events.md).
 
 ### `forbidSecretsInherit`
@@ -316,6 +322,11 @@ one source finding with `no-mistakes-disable-line workflow-topology-policy` or
 exception such as a generated workflow.
 
 ## Limitations
+
+A workflow file that contains a YAML tag, or more than one YAML document,
+has no source map. A forbidden-event finding in a tagged file is reported
+on line 1. A multi-document file is not one workflow, so its events are
+not reported.
 
 A directory symlink is not followed. `uses: ./actions/link`, where
 `actions/link` is a symlink to `actions/real` and the undeclared secret exists
