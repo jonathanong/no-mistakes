@@ -99,7 +99,7 @@ package is uncovered.
 
 `includeSources` is optional. Each entry names a `module` path relative to
 the check root and an `export` that is `export const name = ["parent > child", …]`.
-Those pairs are unioned with static `optimizeDeps.include` entries. An
+Those pairs are added to the static `optimizeDeps.include` entries. An
 unreadable module or a non-static export is unanalyzable, and uncovered
 imports are not reported. `ignorePackages` is an optional list of package
 names whose uncovered imports are skipped even when the dependency specifier

@@ -55,7 +55,7 @@ pub(super) fn load(
             unknown: None,
         }),
         Err(finding) => Ok(unknown_package(
-            name, declared, workspace, versioned, finding,
+            name, declared, workspace, versioned, *finding,
         )),
     }
 }

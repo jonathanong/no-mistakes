@@ -16,7 +16,7 @@ pub(super) fn runtime_imports(
     own_package: &str,
     sources: &SourceStore,
     all_files: &[PathBuf],
-) -> Result<Vec<RuntimeImport>, RuleFinding> {
+) -> Result<Vec<RuntimeImport>, Box<RuleFinding>> {
     let mut seeds = BTreeSet::new();
     if let Some(entry) = published_entry(manifest_value) {
         seeds.insert(entry_path(dir, &entry));
@@ -54,10 +54,21 @@ pub(super) fn runtime_imports(
         }
         let file = relative_slash_path(root, &path);
         let source = sources.read_source_path(&path).map_err(|error| {
-            super::super::source_access::read_failure(root, &path, super::RULE_ID, &error)
+            Box::new(super::super::source_access::read_failure(
+                root,
+                &path,
+                super::RULE_ID,
+                &error,
+            ))
         })?;
-        let collected = entry_imports::collect(&path, &source, own_package, &file)
-            .map_err(|_| manifest::unanalyzable(root, &path, "cannot parse published entry"))?;
+        let collected =
+            entry_imports::collect(&path, &source, own_package, &file).map_err(|_| {
+                Box::new(manifest::unanalyzable(
+                    root,
+                    &path,
+                    "cannot parse published entry",
+                ))
+            })?;
         for specifier in collected.relative {
             let Some(resolved) = ts_resolver::resolve_import(&specifier, &path, &tsconfig) else {
                 continue;

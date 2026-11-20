@@ -94,7 +94,7 @@ no default. `configFiles` lists the Vite configs whose `optimizeDeps.include`
 entries are checked. `packages` lists the package directories in scope. An
 explicit empty `packages` list selects nothing. An omitted option is reported
 on the loaded config file. Optional `options.includeSources` names modules
-whose `export const` string arrays are unioned with those include entries.
+whose `export const` string arrays are added to those include entries.
 Optional `options.ignorePackages` skips uncovered imports of those package
 names. A `workspace:` dependency and a child package listed in `packages`
 without a non-workspace version specifier are skipped the same way. A
