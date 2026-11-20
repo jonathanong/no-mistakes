@@ -572,6 +572,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source
@@ -745,6 +746,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source
@@ -919,6 +921,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source
@@ -1093,6 +1096,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source

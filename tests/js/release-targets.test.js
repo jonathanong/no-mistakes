@@ -113,6 +113,11 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
       shared,
       /bash "\$RUNNER_TEMP\/release-scripts\/\.github\/scripts\/cargo-release-build\.sh"/,
     );
+    assert.match(
+      shared,
+      /name: Isolate release scripts\n {8}timeout-minutes: 1\n {8}shell: bash\n {8}run: mv -- release-scripts "\$RUNNER_TEMP\/release-scripts"/,
+      `${job} must move release scripts with bash; Windows defaults to pwsh, where $RUNNER_TEMP is empty`,
+    );
     assert.match(shared, /Swatinem\/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2/);
     assert.match(shared, /^ {4}needs:\n {6}- prepare\n {4}runs-on:/m);
   }
@@ -182,7 +187,10 @@ test("ESLint publication waits for Linux and Windows root verification only", ()
   const eslint = jobBody(workflow, "publish-eslint");
   const root = jobBody(workflow, "publish-js");
   const verifyMac = jobBody(workflow, "verify-npm-root-darwin");
-  assert.match(eslint, /^ {4}needs:\n {6}- prepare\n {6}- verify-npm-root-linux-x64\n {6}- verify-npm-root-linux-arm\n {6}- verify-npm-root-windows$/m);
+  assert.match(
+    eslint,
+    /^ {4}needs:\n {6}- prepare\n {6}- verify-npm-root-linux-x64\n {6}- verify-npm-root-linux-arm\n {6}- verify-npm-root-windows$/m,
+  );
   assert.doesNotMatch(eslint, /verify-npm-root-darwin/);
   assert.match(eslint, /ref: \$\{\{ needs\.prepare\.outputs\.release-sha \}\}/);
   assert.match(eslint, /^ {6}contents: read$/m);
@@ -268,7 +276,10 @@ test("native build timings workflow compiles darwin and linux-x64 without publis
     return keys;
   };
   assert.deepEqual(onKeys(workflow), ["workflow_dispatch"]);
-  assert.deepEqual(onKeys('on:\n  workflow_dispatch:\n\n  schedule:\n    - cron: "0 0 * * *"\njobs:\n'), ["workflow_dispatch", "schedule"]);
+  assert.deepEqual(
+    onKeys('on:\n  workflow_dispatch:\n\n  schedule:\n    - cron: "0 0 * * *"\njobs:\n'),
+    ["workflow_dispatch", "schedule"],
+  );
   assert.doesNotMatch(workflow, /pull_request:|id-token:|publish-npm/);
 });
 
