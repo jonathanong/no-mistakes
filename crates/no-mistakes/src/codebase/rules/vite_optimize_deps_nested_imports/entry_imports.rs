@@ -1,6 +1,6 @@
 //! Runtime package imports in a published entry module.
 
-use super::specifier::package_name;
+use super::specifier::{is_node_builtin, package_name};
 use crate::ast::{js_literal, template_quasi_text};
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::fetch::import_shape::{is_runtime_export, is_runtime_import};
@@ -15,10 +15,15 @@ pub(super) struct RuntimeImport {
     pub line: usize,
 }
 
-pub(super) fn collect(path: &std::path::Path, source: &str) -> anyhow::Result<Vec<RuntimeImport>> {
+pub(super) fn collect(
+    path: &std::path::Path,
+    source: &str,
+    own_package: &str,
+) -> anyhow::Result<Vec<RuntimeImport>> {
     crate::ast::with_program(path, source, |program, source| {
         let mut visitor = ImportVisitor {
             source,
+            own_package,
             imports: Vec::new(),
         };
         visitor.visit_program(program);
@@ -28,14 +33,22 @@ pub(super) fn collect(path: &std::path::Path, source: &str) -> anyhow::Result<Ve
 
 struct ImportVisitor<'a> {
     source: &'a str,
+    own_package: &'a str,
     imports: Vec<RuntimeImport>,
 }
 
 impl ImportVisitor<'_> {
     fn record(&mut self, specifier: &str, start: u32) {
+        let specifier = specifier.trim();
+        if specifier.starts_with("node:") || is_node_builtin(specifier) {
+            return;
+        }
         let Some(package) = package_name(specifier) else {
             return;
         };
+        if package == self.own_package {
+            return;
+        }
         self.imports.push(RuntimeImport {
             package,
             line: byte_offset_to_line(self.source, start as usize) as usize,

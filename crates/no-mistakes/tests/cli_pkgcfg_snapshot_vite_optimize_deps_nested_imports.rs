@@ -16,6 +16,7 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
     let cases = vec![
         case("reported", "reported"),
         case("covered", "covered"),
+        case("builtins", "builtins"),
         case("unanalyzable_configs", "unanalyzable-configs"),
         case("manifest_gaps", "manifest-gaps"),
         case("missing_config", "missing-config"),

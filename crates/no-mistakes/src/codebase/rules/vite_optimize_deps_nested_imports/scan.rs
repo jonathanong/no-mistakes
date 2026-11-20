@@ -72,7 +72,7 @@ fn invalid_mappings(
             file: file.clone(),
             line: entry.line,
             message: format!(
-                "nested include \"{}\" is not a declared dependency of {}; declare {} under dependencies or peerDependencies, or remove the include entry",
+                "nested include \"{}\" is not a declared dependency of {}; declare {} under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
                 entry.text, entry.parent, entry.child
             ),
             import: Some(entry.text.clone()),

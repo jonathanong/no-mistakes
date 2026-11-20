@@ -26,17 +26,20 @@ dependency optimization and can fail the first time the app loads that import.
 ## What it catches
 
 For each configured Vite config, a `parent > child` string in
-`optimizeDeps.include` is a nested mapping. `child` must be a key of the
-parent package's `dependencies` or `peerDependencies`. `devDependencies` does
-not count. The finding points at that include string.
+`optimizeDeps.include` is a nested mapping. `child` must be declared in the
+parent package's `dependencies`, `optionalDependencies`, `peerDependencies`,
+or `bundledDependencies`. `bundleDependencies` is that same array.
+`devDependencies` does not count. The finding points at that include string.
 
 For each package directory in `packages`, the published entry's runtime
 package imports must each have a matching `name > dependency` include.
 `import`, side-effect `import "pkg"`, value `export … from`, `export * from`,
 static `import("pkg")`, and `require("pkg")` count. `import type`,
 `export type`, relative specifiers, and specifiers that contain `:` do not.
-A subpath such as `items/shape` is the package `items`. The finding points at
-the import.
+Node built-ins do not: a `node:` prefix, a bare built-in such as `path`,
+`fs`, or `crypto`, and a built-in subpath such as `fs/promises`. An import
+of the package's own name does not. A subpath such as `items/shape` is the
+package `items`. The finding points at the import.
 
 Direct includes (`react`) and chains with more than one `>` are ignored.
 A parent that is not one of the named packages is ignored. An entry whose
@@ -135,10 +138,12 @@ export const widget = shape;
 
 ## Fix
 
-Declare the child under `dependencies` or `peerDependencies`, or remove the
-include entry. For an uncovered import, add `"widgets > items"` to
-`optimizeDeps.include`. Export the Vite config as a static object so the
-include array can be read.
+Declare the child under `dependencies`, `optionalDependencies`,
+`peerDependencies`, or `bundledDependencies`, or remove the include entry.
+For an uncovered import, add `"widgets > items"` to `optimizeDeps.include`.
+Node built-ins and an import of the package's own name are not nested
+dependencies, so do not add an include entry for them. Export the Vite config
+as a static object so the include array can be read.
 
 ## Suppression
 

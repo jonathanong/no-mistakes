@@ -1,7 +1,7 @@
 //! Package name, declared dependencies, and published-entry imports.
 
+use super::declared;
 use super::entry_imports::{self, RuntimeImport};
-use super::specifier::package_name;
 use super::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_json::Value;
@@ -38,7 +38,7 @@ pub(super) fn load(
         .filter(|name| !name.is_empty())
         .ok_or_else(|| Box::new(unanalyzable(root, &manifest, "package.json has no name")))?
         .to_string();
-    let declared = dependency_names(&value)
+    let declared = declared::dependency_names(&value)
         .map_err(|reason| Box::new(unanalyzable(root, &manifest, reason)))?;
     let Some(entry) = published_entry(&value) else {
         return Ok(PackageFacts {
@@ -66,7 +66,7 @@ pub(super) fn load(
             ));
         }
     };
-    match entry_imports::collect(&entry_path, &entry_source) {
+    match entry_imports::collect(&entry_path, &entry_source, &name) {
         Ok(imports) => Ok(PackageFacts {
             name,
             declared,
@@ -105,20 +105,6 @@ fn read_required(
             &error,
         ))
     })
-}
-
-fn dependency_names(value: &Value) -> Result<BTreeSet<String>, String> {
-    let mut names = BTreeSet::new();
-    for field in ["dependencies", "peerDependencies"] {
-        match value.get(field) {
-            None | Some(Value::Null) => {}
-            Some(Value::Object(map)) => {
-                names.extend(map.keys().filter_map(|key| package_name(key)));
-            }
-            Some(_) => return Err(format!("{field} must be an object")),
-        }
-    }
-    Ok(names)
 }
 
 fn published_entry(value: &Value) -> Option<String> {

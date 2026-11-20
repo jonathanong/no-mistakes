@@ -8,6 +8,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod config_object;
+mod declared;
 mod entry_imports;
 mod include_config;
 mod manifest;

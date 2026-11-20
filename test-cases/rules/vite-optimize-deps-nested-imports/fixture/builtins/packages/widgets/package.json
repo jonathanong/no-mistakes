@@ -1,0 +1,9 @@
+{
+  "name": "widgets",
+  "version": "1.0.0",
+  "module": "./index.ts",
+  "optionalDependencies": {
+    "items": "1.0.0"
+  },
+  "bundledDependencies": ["orders"]
+}
