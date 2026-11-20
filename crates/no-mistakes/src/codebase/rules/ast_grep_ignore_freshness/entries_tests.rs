@@ -83,17 +83,23 @@ fn block_ends_at_the_next_key_and_a_scalar_ignores_line_is_not_an_entry() {
     let source = "\
 id: widgets
 ignores:
-  - src/missing.ts
+  - src/orders.ts
 done: true
 ---
+id: also
+ignores: src/also.ts
+---
 id: orders
-ignores: src/orders.ts
+ignores:
+  - src/missing.ts
 ";
     let documents = crate::codebase::structured_value::parse_yaml_documents(source);
     assert!(documents.errors.is_empty());
     let entries = ignores_all(&documents.values, source);
-    assert_eq!(entries.len(), 2);
-    assert_eq!(entries[0].pattern, "src/missing.ts");
+    assert_eq!(entries.len(), 3);
+    assert_eq!(entries[0].pattern, "src/orders.ts");
     assert_eq!(entries[0].line, 3);
     assert!(entries[1].invalid_shape);
+    assert_eq!(entries[2].pattern, "src/missing.ts");
+    assert_eq!(entries[2].line, 11);
 }
