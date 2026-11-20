@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 fn spec(path: &str, lockfile: &str, parts: &[&str]) -> options::CacheSpec {
     options::CacheSpec {
