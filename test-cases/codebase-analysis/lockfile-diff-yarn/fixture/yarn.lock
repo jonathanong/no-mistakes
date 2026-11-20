@@ -1,6 +1,6 @@
 # yarn lockfile v1
 
 lodash@^4.0.0:
-  version "4.17.21"
+  version "4.18.1"
   resolved "https://r.yarn/lodash.tgz"
   integrity sha512-x

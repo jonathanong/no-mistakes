@@ -1,6 +1,6 @@
 {
   "name": "@services/api",
   "devDependencies": {
-    "vitest": "^2.0.0"
+    "vitest": "^3.2.7"
   }
 }

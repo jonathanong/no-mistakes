@@ -235,7 +235,7 @@ fn revision_keeps_integrity_as_the_registry_fingerprint() {
         .unwrap();
     assert_eq!(package.kind, ResolutionKind::Registry);
     assert_eq!(package.fingerprint, "sha512-replacement");
-    assert_eq!(package.version, "4.17.21");
+    assert_eq!(package.version, "4.18.1");
 }
 
 #[test]
