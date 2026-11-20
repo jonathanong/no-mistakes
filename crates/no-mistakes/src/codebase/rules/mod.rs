@@ -36,6 +36,7 @@ pub mod github_actions_pinned_hash;
 pub mod github_actions_script_expressions;
 pub mod github_actions_step_timeouts;
 pub mod github_actions_test_timeout_literals;
+pub mod github_actions_vitest_project_selection;
 mod github_actions_workflow_files;
 mod ids;
 pub use advisory_rules::ADVISORY_RULE_IDS;

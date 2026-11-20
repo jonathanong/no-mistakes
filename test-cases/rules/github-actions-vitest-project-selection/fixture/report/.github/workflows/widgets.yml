@@ -1,0 +1,46 @@
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: whole project
+        run: pnpm exec vitest run --project widgets
+      - name: flags only
+        run: vitest run --project widgets --reporter=dot
+      - name: config file
+        run: pnpm exec vitest run --project widgets --config vitest.config.ts
+      - name: allowed name
+        run: pnpm exec vitest run --project widgets widgets
+      - name: other project
+        run: pnpm exec vitest run --project orders src/orders.test.ts
+      - name: not vitest
+        run: node scripts/build.mjs src/widgets.test.ts
+      - name: file filter
+        run: pnpm exec vitest run --project widgets src/widgets.test.ts
+      - name: equals form
+        run: pnpm exec vitest run --project=widgets src/items.test.ts
+      - name: filtered package
+        run: pnpm --filter widgets exec vitest run --project widgets src/orders.test.ts
+      - name: chained
+        run: echo ok && pnpm exec vitest run --project widgets src/widgets.test.ts
+      - name: suppressed
+        run: pnpm exec vitest run --project widgets src/items.test.ts # no-mistakes-disable-line github-actions-vitest-project-selection
+      - name: value flags
+        run: |
+          pnpm exec vitest run --project widgets --root ./apps/web
+          pnpm exec vitest run --project widgets -r ./apps/web
+          pnpm exec vitest run --project widgets --workspace ./vitest.workspace.ts
+          pnpm exec vitest run --project widgets --exclude 'src/legacy/**'
+          pnpm exec vitest run --project widgets --coverage.include 'src/**'
+          pnpm exec vitest run --project widgets --coverage.exclude 'src/**/*.snap'
+          pnpm exec vitest run --project widgets --cacheDir .vitest/cache
+          pnpm exec vitest run --project widgets --outputFile reports/widgets.xml
+          pnpm exec vitest run --project widgets --outputFile.junit reports/widgets.xml
+          pnpm exec vitest run --project widgets --setupFiles ./src/setup.ts
+          pnpm exec vitest run --project widgets --changed origin/main
+          pnpm exec vitest run --project widgets --root=./apps/web --workspace=./vitest.workspace.ts --coverage.include='src/**' --outputFile.junit=reports/widgets.xml
+      - name: folded file
+        run: |
+          pnpm exec vitest run --project widgets \
+            src/folded.test.ts
