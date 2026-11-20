@@ -85,9 +85,7 @@ updates:
   # tests/js/dependabot-config.test.js, instead of this ignore.
   - package-ecosystem: npm
     directories:
-      - /fixtures
       - /fixtures/**
-      - /test-cases
       - /test-cases/**
     schedule:
       interval: weekly
@@ -106,9 +104,7 @@ updates:
 
   - package-ecosystem: cargo
     directories:
-      - /fixtures
       - /fixtures/**
-      - /test-cases
       - /test-cases/**
     schedule:
       interval: weekly

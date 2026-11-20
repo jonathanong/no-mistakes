@@ -5,7 +5,7 @@ const test = globalThis.test || require("node:test").test;
 
 const repoRoot = join(__dirname, "..", "..");
 const fixtureExclusions = ["fixtures/**", "test-cases/**"];
-const fixtureDirectories = ["/fixtures", "/fixtures/**", "/test-cases", "/test-cases/**"];
+const fixtureDirectories = ["/fixtures/**", "/test-cases/**"];
 // Fixture directories whose behavior depends on the real package version.
 // Each one must be omitted from the blanket fixture ignore and given its own
 // Dependabot entry that does not ignore every dependency.
