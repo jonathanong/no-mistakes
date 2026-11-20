@@ -30,6 +30,12 @@ use anyhow::Result;
 use std::path::Path;
 
 pub(crate) fn needs_deep_analysis(config: &NoMistakesConfig) -> bool {
+    if !config
+        .rule_applications("postgres-sql-fragment-escape")
+        .is_empty()
+    {
+        return true;
+    }
     [
         "postgres-no-mutable-sql-registry",
         "postgres-no-unbounded-sql-identifier",

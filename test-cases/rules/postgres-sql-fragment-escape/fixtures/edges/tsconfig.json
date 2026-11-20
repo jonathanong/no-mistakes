@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@app/order-list": ["./widgets/items.ts"],
+      "@app/orders/columns": ["./orders/columns.ts"],
+      "@app/users/columns": ["./users/columns.ts"],
+      "@example/sql": ["./sql.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

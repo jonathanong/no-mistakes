@@ -27,6 +27,7 @@ impl DepGraph {
             resource_edge_details: fx_map(),
             selector_import_sites: fx_map(),
             resource_diagnostics: Vec::new(),
+            import_targets: fx_map(),
             root_mock_boundaries: fx_map(),
         };
         record_graph_observability(&graph, session);

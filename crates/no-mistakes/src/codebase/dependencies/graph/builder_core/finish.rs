@@ -85,6 +85,7 @@
             resource_edge_details,
             selector_import_sites,
             resource_diagnostics,
+            import_targets,
             root_mock_boundaries: fx_map(),
         };
         if plan.mock_boundaries {

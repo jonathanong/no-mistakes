@@ -620,6 +620,10 @@ checks direct literal SQL through named executor imports without preparing
 cross-file mutation analysis;
 unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.
 
+`postgres-sql-fragment-escape` runs through the same async `check()` path. It
+reports cross-file writes, rebinds, and namespace escapes of exported trusted
+SQL fragments and does not add a separate function.
+
 Configured [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
 applications run through the existing async `check()` binding and through
 `analyzeProject()` check reports, with the same findings and advisories as CLI

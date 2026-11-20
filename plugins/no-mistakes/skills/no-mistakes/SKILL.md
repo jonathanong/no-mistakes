@@ -310,6 +310,9 @@ prepared import, value-flow, and embedded-SQL facts. Unknown provenance stays
 silent.
 See [mutable SQL registries](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-mutable-sql-registry.md)
 and [unbounded SQL identifiers](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-unbounded-sql-identifier.md).
+`postgres-sql-fragment-escape` reports cross-file writes, rebinds, and namespace
+escapes of exported trusted SQL const fragments and does not change the registry
+rule. See [SQL fragment escapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-fragment-escape.md).
 
 To ban SQL sleeps or another configured function family, enable
 `postgres-sql-shape-policy` with `bannedShapes: [banned-function-call]` and a

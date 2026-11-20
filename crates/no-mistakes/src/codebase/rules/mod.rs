@@ -105,6 +105,7 @@ pub mod postgres_require_query_annotation;
 pub mod postgres_required_comments;
 pub mod postgres_required_predicates;
 mod postgres_sql_cross_file;
+pub mod postgres_sql_fragment_escape;
 pub mod postgres_sql_shape_policy;
 pub mod postgres_sql_statement_policy;
 pub mod postgres_status_with_lifecycle_timestamps;

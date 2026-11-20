@@ -195,7 +195,10 @@ fn a_value_use_names_the_declared_namespace_it_resolves_to() {
             "namespace A.B { export const x = B; }\nregister(B);",
             vec!["A.B"],
         ),
-        ("namespace N {}\nfunction f(N: unknown) { register(N); }", vec![]),
+        (
+            "namespace N {}\nfunction f(N: unknown) { register(N); }",
+            vec![],
+        ),
         (
             "namespace N {}\nfunction f() { const N = 1; register(N); }",
             vec![],
@@ -247,10 +250,56 @@ fn an_erased_type_name_is_no_use_of_a_namespace() {
         "namespace N { export interface I {} }\ninterface J extends N.I {}",
         "import { Lib } from './lib';\ntype T = typeof Lib;",
     ] {
-        assert!(uses(&namespaces(source)).is_empty(), "{source}");
+        let facts = namespaces(source);
+        assert!(uses(&facts).is_empty(), "{source}");
+        assert!(facts.value_use_offsets.is_empty(), "{source}");
     }
-    let facts = namespaces("namespace N {}\ntype T = typeof N;\nregister(N);");
+    let source = "namespace N {}\ntype T = typeof N;\nregister(N);";
+    let facts = namespaces(source);
     assert_eq!(uses(&facts), ["N"]);
+    let at = u32::try_from(source.rfind('N').expect("use")).expect("offset");
+    assert_eq!(facts.value_use_offsets, vec![("N".to_string(), at)]);
+}
+
+#[test]
+fn an_import_equals_of_one_member_is_not_a_whole_module_use() {
+    let facts = namespaces(concat!(
+        "import * as qualified from \"./mod\";\n",
+        "import Qualified = qualified.QUAL_COLS;\n",
+    ));
+    assert!(facts.value_uses.iter().all(|name| name != "qualified"));
+    assert!(facts
+        .value_use_offsets
+        .iter()
+        .all(|(name, _)| name != "qualified"));
+    assert_eq!(
+        facts.member_uses,
+        vec![("qualified".to_string(), "QUAL_COLS".to_string())]
+    );
+}
+
+#[test]
+fn destructure_and_value_typeof_record_the_namespace_offset() {
+    let source = concat!(
+        "import * as parts from \"./mod\";\n",
+        "const { COLS } = parts;\n",
+        "const kind = typeof parts;\n",
+        "type Columns = typeof parts;\n",
+        "class Row implements parts.Cols {}\n",
+    );
+    let facts = namespaces(source);
+    let mut offsets: Vec<u32> = facts
+        .value_use_offsets
+        .iter()
+        .filter(|(name, _)| name == "parts")
+        .map(|(_, offset)| *offset)
+        .collect();
+    offsets.sort_unstable();
+    let destructure =
+        u32::try_from(source.find("= parts").expect("destructure")).expect("offset") + 2;
+    let kind = u32::try_from(source.find("typeof parts").expect("typeof")).expect("offset")
+        + u32::try_from("typeof ".len()).expect("len");
+    assert_eq!(offsets, vec![destructure, kind]);
 }
 
 /// `bind`, `call` and `apply` receive the member they are called on, so a

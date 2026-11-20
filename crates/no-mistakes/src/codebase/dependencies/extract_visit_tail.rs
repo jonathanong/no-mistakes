@@ -13,6 +13,14 @@ macro_rules! visit_import_collector_tail {
             visit_identifier_reference_with_namespaces(self, identifier);
         }
 
+        fn visit_ts_import_equals_declaration(
+            &mut self,
+            declaration: &oxc_ast::ast::TSImportEqualsDeclaration<'a>,
+        ) {
+            self.note_import_equals_member(declaration);
+            walk::walk_ts_import_equals_declaration(self, declaration);
+        }
+
         fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
             visit_static_member_expression_with_getters(self, member);
         }
