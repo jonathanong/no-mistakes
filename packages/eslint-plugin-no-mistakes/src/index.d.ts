@@ -7,6 +7,19 @@ declare namespace plugin {
     message?: string;
   }
 
+  export type PlaywrightTimeoutExportRole = "assertion" | "ordinary" | "opaque";
+
+  export interface PlaywrightTestTimeoutCapOptions {
+    max?: number;
+    fixtureMax?: number;
+    unknownValues?: "ignore" | "finding";
+    configUnknownValues?: "inherit" | "defer-to-runner";
+    registrationPackages?: string[];
+    exportRoles?: Record<string, Record<string, PlaywrightTimeoutExportRole>>;
+    configFiles?: string[];
+    banOverrides?: boolean;
+  }
+
   export interface NoLocaleLessDateFormatOptions {
     methods?: string[];
     allowUndefinedLocale?: boolean;

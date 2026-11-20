@@ -1,6 +1,7 @@
 import plugin, {
   type NoTopLevelAwaitOptions,
   type NoLocaleLessDateFormatOptions,
+  type PlaywrightTestTimeoutCapOptions,
   type PostgresNoExecutorAdapterMode,
   type PostgresNonWritingCallee,
   type PostgresNoExecutorAdapterOptions,
@@ -43,6 +44,22 @@ export const commonJsRule = pluginRequire.rules?.["postgres-no-executor-adapter"
 
 // @ts-expect-error Unknown mode must fail at the declaration boundary.
 export const invalid: PostgresNoExecutorAdapterMode = "quiet";
+
+export const timeoutCapOptions: PlaywrightTestTimeoutCapOptions = {
+  max: 30000,
+  fixtureMax: 30000,
+  unknownValues: "ignore",
+  configUnknownValues: "inherit",
+  registrationPackages: ["@example/widgets"],
+  exportRoles: { "@example/widgets": { expect: "assertion" } },
+  configFiles: ["playwright.config.ts"],
+  banOverrides: true,
+};
+export const defaultTimeoutCapOptions: pluginRequire.PlaywrightTestTimeoutCapOptions = {};
+export const invalidBanOverrides: PlaywrightTestTimeoutCapOptions = {
+  // @ts-expect-error Override ban must be boolean.
+  banOverrides: "yes",
+};
 
 export const awaitOptions: NoTopLevelAwaitOptions = {
   allowInImportMetaMain: false,

@@ -31,7 +31,8 @@ test('too slow', async ({}, info) => {
 
 The following describes locally legal operations, not full inherited-slot proof.
 
-Positive finite values at or below the cap are accepted. Numeric arithmetic uses
+Positive finite values at or below the cap are accepted when `banOverrides` is
+left off. Numeric arithmetic uses
 an existing value evaluator, not execution or coercion. False slow conditions are
 inert. A proven5000 slot becomes15000 after one slow call; repeated slow calls do
 not multiply again. A later setter replaces the slot without resetting the SDK
@@ -75,6 +76,33 @@ an assertion that the legal slow operations exceed the cap.
   cannot be overridden in any module. Known SDK/registrar identity is immutable.
 - `configFiles`: exact filenames or path suffixes whose plain default export is
   a Playwright config root. An unrelated default-export object is not a config.
+- `banOverrides`: `false` by default. `true` reports every admitted test deadline
+  override, including a positive finite value within `max`. The numeric cap still
+  runs, so an over-cap override reports both this ban and the cap finding.
+  `test.setTimeout`, `info.setTimeout`, and their renamed destructuring report.
+  A member reference that is not called, such as `const remember = test.setTimeout`,
+  reports as an escaping reference. `test.slow()` is an override because a true
+  or unknown condition triples the deadline; a statically false condition stays
+  inert and does not report. `test.slow` taken as a value reports the same way
+  as an escaping `setTimeout` reference. Registration details such as
+  `test('widget', { timeout: 5_000 }, fn)`, hook details, and
+  `describe.configure({ timeout })` are overrides. Project configuration
+  (`defineConfig`, `playwright.config.ts`, and `configFiles`) keeps its timeout
+  fields and still follows only the numeric cap. Fixture tuple budgets stay on
+  `fixtureMax` and are not this ban. With the option omitted or `false`, every
+  form above keeps today's cap behavior: an under-cap override is accepted, and
+  an over-cap override still reports.
+
+```ts
+import { defineConfig, test } from '@playwright/test';
+export default defineConfig({ timeout: 10_000 }); // Project default stays legal.
+test.setTimeout(10_000); // Reports only when banOverrides is true.
+const remember = test.setTimeout; // Escaping reference reports with the ban.
+test.slow(); // Deadline change; reports with the ban.
+test.slow(false); // Static false stays inert.
+test('widget loads', { timeout: 5_000 }, async () => {});
+test('items stay on the project deadline', async () => {}); // No override.
+```
 
 Known later object fields overwrite earlier fields. Unknown spreads preserve
 uncertainty unless a relevant field is explicitly replaced later. Config timeout
@@ -126,7 +154,9 @@ an opaque finding does not repair an over-cap consumer deadline.
 
 ## Fix
 
-Use explicit bounded deadlines and synchronization signals. Keep imported/helper
+Use explicit bounded deadlines and synchronization signals. When `banOverrides`
+is on, delete the per-test override instead of picking a smaller number; leave
+the deadline in project configuration. Keep imported/helper
 ownership explicit and unknown admitted carriers visible until their owning
 prepared config facts can resolve them. Do not replace uncertainty with a larger
 cap or automatically reject a proven legal short slow slot.
