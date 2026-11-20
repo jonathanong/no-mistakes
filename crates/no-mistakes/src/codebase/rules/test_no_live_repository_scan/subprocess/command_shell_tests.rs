@@ -89,6 +89,10 @@ fn shell_prefixes_are_removed_before_the_executable() {
         "widget-audit check"
     );
     assert_eq!(
+        launch(vec![known("cd fixtures/$DIR && widget-audit check")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
         launch(
             vec![known(
                 "cd widgets && ITEM=1 cd items && pnpm exec widget-audit check"

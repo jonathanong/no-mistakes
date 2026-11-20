@@ -186,12 +186,15 @@ fn a_shell_cd_replaces_the_cwd_option() {
     let live = shell_note("cd /repo && widget-audit check", owned);
     assert_eq!(live.findings.len(), 1);
     assert!(live.advisories.is_empty());
-
     let quiet = shell_note("cd fixtures && widget-audit check", PathOrigin::unknown());
     assert!(quiet.findings.is_empty());
     assert!(quiet.advisories.is_empty());
-
     let climb = shell_note("cd ../widgets && widget-audit check", PathOrigin::unknown());
     assert!(climb.findings.is_empty());
     assert_eq!(climb.advisories.len(), 1);
+    let expanded = shell_note(
+        "cd fixtures/$DIR && widget-audit check",
+        PathOrigin::unknown(),
+    );
+    assert!(expanded.findings.is_empty() && expanded.advisories.len() == 1);
 }

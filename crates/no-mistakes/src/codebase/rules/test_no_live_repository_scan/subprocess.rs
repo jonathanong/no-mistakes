@@ -98,6 +98,9 @@ enum Directory {
 }
 
 fn shell_place(dir: &str, fixture_dirs: &[&str]) -> Directory {
+    if dir.contains(['$', '`']) {
+        return Directory::Unresolved;
+    }
     let segments: Vec<&str> = dir
         .split(['/', '\\'])
         .filter(|segment| !segment.is_empty() && *segment != ".")

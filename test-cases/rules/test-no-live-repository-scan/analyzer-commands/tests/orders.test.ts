@@ -39,6 +39,7 @@ execSync("cd widgets && widget-audit check");
 execSync("cd /repo && widget-audit check", { cwd: root });
 execSync("cd fixtures && widget-audit check", { cwd: process.cwd() });
 execSync("cd ../widgets && widget-audit check");
+execSync("cd fixtures/$DIR && widget-audit check");
 execSync('ITEM="placeholder widget-audit check extra"');
 execSync("ITEM=1 widget-audit check");
 execSync("cd widgets && ITEM=1 pnpm exec widget-audit check");

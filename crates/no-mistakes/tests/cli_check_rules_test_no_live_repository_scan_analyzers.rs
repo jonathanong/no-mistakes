@@ -86,6 +86,7 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
             "execFileSync(\"widget-audit\", [\"check\"], options);",
             "execFileSync(\"widget-audit\", [\"check\"], { cwd: root, \"order.id\": \"1\" });",
             "execSync(\"cd ../widgets && widget-audit check\");",
+            "execSync(\"cd fixtures/$DIR && widget-audit check\");",
         ]
     );
     assert!(report["default"]["report"]["rules"]

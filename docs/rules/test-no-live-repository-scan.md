@@ -975,7 +975,8 @@ on whitespace. Leading `NAME=value` assignments and `cd <dir> &&` prefixes are
 removed first, and those prefixes may repeat, before the first token is read
 as the executable. A stripped `cd` directory replaces the `cwd` option. A
 target with a fixture-directory segment is owned. A target that is empty,
-`.` only, or contains `..` is an unresolved root. Any other target is a live
+`.` only, contains `..`, or contains a `$` or a backtick is an unresolved root,
+so `cd fixtures/$DIR && widget-audit check` is not owned. Any other target is a live
 scan, so `cd /repo && widget-audit check` still reports when `cwd` is a
 fixture path. `spawn` and `spawnSync` use that split when `shell` is the
 boolean `true` and the command is not an argument array. A non-literal command
