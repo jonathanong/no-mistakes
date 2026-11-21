@@ -79,18 +79,15 @@ pub(super) fn run(
         graph_plan = Prerequisite::Failed(failures);
     }
     graph_plan = ready_graph_plan(config, session.as_ref(), graph_plan);
-    graph_plan = fragment_plan::without_value_flow_when_partial(
-        config,
-        session.as_ref(),
-        shared,
-        graph_plan,
-    );
+    let graph_files =
+        fragment_plan::shared_graph_files(config, session.as_ref(), shared, &graph_plan);
     let owned_graph;
     let dependency_graph = if matches!(graph_plan, Prerequisite::Failed(_)) {
         None
     } else if let Some(graph) = dependency_graph {
         Some(graph)
     } else if let Prerequisite::Ready(Some(plan)) = graph_plan {
+        let calls = plan.calls;
         owned_graph =
             crate::perf_trace::trace(
                 "rules.canonical_dependency_graph",
@@ -101,7 +98,7 @@ pub(super) fn run(
                             tsconfig: prepared_tsconfig,
                             tsconfig_catalog: prepared_tsconfig_catalog,
                             plan,
-                            files: shared.graph_file_universe().to_vec(),
+                            files: graph_files.clone(),
                             config_path,
                             facts: shared,
                             prepared,
@@ -114,7 +111,7 @@ pub(super) fn run(
                             tsconfig: prepared_tsconfig,
                             tsconfig_catalog: prepared_tsconfig_catalog,
                             plan,
-                            files: shared.graph_file_universe().to_vec(),
+                            files: graph_files,
                             config_path,
                             facts: shared,
                         },
@@ -123,7 +120,7 @@ pub(super) fn run(
                 },
             );
         match owned_graph {
-            Ok(ref graph) => Some(graph),
+            Ok(ref graph) => fragment_plan::note_call_graph(session.as_ref(), calls, graph),
             Err(error) if session.partial_checks_enabled() => {
                 outcomes::graph_failed(config, &session, &error);
                 None
@@ -193,3 +190,5 @@ mod fragment_graph_facts;
 mod fragment_graph_tests;
 #[cfg(test)]
 mod plan_tests;
+#[cfg(test)]
+mod sibling_graph_tests;
