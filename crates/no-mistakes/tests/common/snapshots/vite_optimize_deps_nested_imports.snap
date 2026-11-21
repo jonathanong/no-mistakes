@@ -706,6 +706,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "reexport_binding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "listed.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: include source does not export const listed; export a static array of string literals from includeSources so this check can read nested includes",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "const nested = [\"widgets > items\", \"widgets > orders\"];",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "reported": {
     "exitCode": 1,
     "report": {
@@ -781,6 +802,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "import { shape } from \"lib/sub2\";",
           "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spread_after_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "line": 4,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "optimizeDeps: {",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spread_after_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "line": 3,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default {",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

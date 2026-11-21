@@ -98,18 +98,19 @@ including when that package is also listed in `packages`. An include of a
 child the parent does not declare is still invalid.
 
 If `includeSources` is omitted and any configured config cannot be read, has
-no static default-exported object, or spreads `optimizeDeps` without a
-static `include` property, the check reports that config and does not report
-uncovered imports. The same is true when an `includeSources` module cannot
-be read or its named export is not a static string array. Invalid mappings
+no static default-exported object, or contains any spread in the config
+object, in `optimizeDeps`, or in `include`, the check reports that config and
+does not report uncovered imports. A static key next to that spread does not
+make the config analyzable. The same is true when an `includeSources` module
+cannot be read or its named export is not a static string array. Invalid mappings
 from configs and include sources that did parse are still reported.
 `export default { … }`, `defineConfig({ … })`, and a top-level const or let
-object referenced by the default export are static. A spread in the config
-object or in `include` is not, unless `includeSources` is set.
+object referenced by the default export are static. When `includeSources` is
+set, a spread before a static key still lets that key win, and a spread after
+the key replaces it, so the config stays unanalyzable.
 `module.exports` is not treated as a static config. When `includeSources` is
 set, string literals inside `optimizeDeps.include` are kept when another
-element is a spread or a non-literal, and a static `include` key next to a
-spread of `optimizeDeps` is kept. An include value that is only an identifier
+element is a spread or a non-literal. An include value that is only an identifier
 contributes no entries. A config with no static default-exported object,
 including a plugin `export default function` that returns `configResolved`,
 contributes no entries from that file. Those forms do not by themselves make
@@ -138,8 +139,10 @@ strings. `export const name = […]`, `[…] as const`,
 `[…] satisfies readonly string[]`, `[…] as const satisfies readonly string[]`,
 and a top-level `const name = […]` followed by `export { name }` or
 `export { name as exportName }` are that array. Comments inside the array
-do not change the entries. `export { name } from "./other"` is not followed;
-the named module has to hold the array. A spread or other non-literal inside
+do not change the entries. `export { name } from "./other"` is not followed,
+including when the file also declares `const name` or `const local` and
+re-exports `export { local as name } from "./other"`. The named module has
+to hold the array. A spread or other non-literal inside
 that array is not static.
 Those pairs are added to the static `optimizeDeps.include` entries. An
 unreadable module or a non-static export is unanalyzable, and uncovered

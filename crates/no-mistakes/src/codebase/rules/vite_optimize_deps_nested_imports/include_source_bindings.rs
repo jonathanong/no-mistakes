@@ -63,12 +63,12 @@ fn const_export(
 
 fn named_export_local<'a>(program: &'a Program<'a>, export_name: &str) -> Option<&'a str> {
     for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
-            continue;
+        // `export { local as name } from "./other"` names the other module, not `const local`.
+        let export = match statement {
+            Statement::ExportFromDeclaration(_) => continue,
+            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => export,
+            _ => continue,
         };
-        if export.export_kind.is_type() {
-            continue;
-        }
         for specifier in &export.specifiers {
             if specifier.export_kind.is_type() {
                 continue;

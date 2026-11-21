@@ -52,8 +52,7 @@ fn extract(
     let optimize = match property(object, "optimizeDeps", allow_imported_include) {
         Prop::Missing => return ParsedConfig::Includes(Vec::new()),
         Prop::Dynamic => {
-            return imported_or_gap(
-                allow_imported_include,
+            return unanalyzable(
                 line_of(source, object.span.start),
                 "optimizeDeps is not a static object",
             );
@@ -69,8 +68,7 @@ fn extract(
     };
     match property(optimize, "include", allow_imported_include) {
         Prop::Missing => ParsedConfig::Includes(Vec::new()),
-        Prop::Dynamic => imported_or_gap(
-            allow_imported_include,
+        Prop::Dynamic => unanalyzable(
             line_of(source, optimize.span.start),
             "optimizeDeps is not a static object",
         ),
@@ -153,18 +151,29 @@ enum Prop<'a> {
 
 fn property<'a>(object: &'a ObjectExpression<'a>, name: &str, tolerate_spread: bool) -> Prop<'a> {
     let mut found = None;
+    let mut replaced = false;
     for prop in &object.properties {
         match prop {
             ObjectPropertyKind::SpreadProperty(_) if !tolerate_spread => return Prop::Dynamic,
-            ObjectPropertyKind::SpreadProperty(_) => {}
+            ObjectPropertyKind::SpreadProperty(_) => {
+                if found.is_some() {
+                    found = None;
+                    replaced = true;
+                }
+            }
             ObjectPropertyKind::ObjectProperty(prop) => {
                 if property_key_name(&prop.key).as_deref() == Some(name) {
                     found = Some(&prop.value);
+                    replaced = false;
                 }
             }
         }
     }
-    found.map_or(Prop::Missing, Prop::Found)
+    if replaced {
+        Prop::Dynamic
+    } else {
+        found.map_or(Prop::Missing, Prop::Found)
+    }
 }
 
 fn array_string(element: &ArrayExpressionElement<'_>) -> Option<(String, u32)> {

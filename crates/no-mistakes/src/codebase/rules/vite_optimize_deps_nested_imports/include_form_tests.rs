@@ -71,6 +71,63 @@ export { listed };
 }
 
 #[test]
+fn a_reexport_does_not_read_a_local_const_with_the_same_name() {
+    let source = "\
+const nested = ['widgets > items', 'widgets > orders'];
+export { nested as listed } from './other';
+";
+    assert!(unanalyzable(source, "listed").contains("does not export const"));
+    let local_after = "\
+const nested = ['widgets > items'];
+export { nested as other } from './other';
+export { nested as listed };
+";
+    assert_eq!(
+        include_texts(local_after, "listed"),
+        vec!["widgets > items"]
+    );
+}
+
+#[test]
+fn a_spread_after_a_static_key_stays_unanalyzable() {
+    let include = "\
+const overrides = { include: [] };
+export default { optimizeDeps: { include: ['widgets > items', 'widgets > orders'], ...overrides } };
+";
+    assert_spread_unknown(include);
+    let root = "\
+const shared = {};
+export default { optimizeDeps: { include: ['widgets > items'] }, ...shared };
+";
+    assert_spread_unknown(root);
+    let before = "\
+const shared = {};
+export default { ...shared, optimizeDeps: { include: ['widgets > items'] } };
+";
+    match parse_vite_config(Path::new("vite.config.ts"), before, true) {
+        ParsedConfig::Includes(entries) => assert_eq!(entries[0].text, "widgets > items"),
+        ParsedConfig::Unanalyzable { reason, .. } => panic!("{reason}"),
+    }
+    match parse_vite_config(Path::new("vite.config.ts"), before, false) {
+        ParsedConfig::Unanalyzable { reason, .. } => {
+            assert!(reason.contains("not a static object"));
+        }
+        ParsedConfig::Includes(_) => panic!("a spread stays unanalyzable without includeSources"),
+    }
+}
+
+fn assert_spread_unknown(source: &str) {
+    for allow_imported in [true, false] {
+        match parse_vite_config(Path::new("vite.config.ts"), source, allow_imported) {
+            ParsedConfig::Unanalyzable { reason, .. } => {
+                assert!(reason.contains("not a static object"), "{reason}");
+            }
+            ParsedConfig::Includes(_) => panic!("a later spread replaces the static key"),
+        }
+    }
+}
+
+#[test]
 fn export_braces_reject_indirect_and_non_const_bindings() {
     assert!(
         unanalyzable("export { listed } from './other';\n", "listed")
