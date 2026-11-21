@@ -40,8 +40,9 @@ rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
 shared across files. A file whose prepared facts include an operational error,
-an incomplete value-flow, or unreadable source is still checked. A fragment
-binding or a write that those facts still record is reported. The same file is
+a fatal parse error, an incomplete value-flow, or unreadable source is still
+checked. A fragment binding or a write that those facts still record is
+reported. The same file is
 listed on the check result's `incomplete` field. The message names the file
 and says a write, rebind, or escape that lived only in the missing text may be
 absent. One such file does not drop findings from files whose facts are
@@ -72,7 +73,8 @@ is the escape:
   `import Local = columns.COLS` names that export alone and stays silent until
   a later write or escape.
 - `const parts = require(...)`, `import ext = require(...)`, and
-  `await import(...)`, including `.then`.
+  `await import(...)`, including `.then`. A member on that call, such as
+  `require("./producer").version`, is not the whole module.
 - An `export { local as public }` of an imported fragment, and an exported
   binding whose value is a member of an imported namespace.
 

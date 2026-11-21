@@ -34,6 +34,14 @@ pub(super) fn one(
             ),
         ));
     }
+    if ts.fatal_parse_error {
+        gaps.push(gap(
+            file,
+            format!(
+                "`{relative}` has a fatal parse error, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the syntax error and rerun the check."
+            ),
+        ));
+    }
     if let Some(reason) = &ts.value_flow.incomplete_reason {
         gaps.push(gap(
             file,
