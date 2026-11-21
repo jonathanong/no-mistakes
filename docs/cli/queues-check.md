@@ -24,6 +24,7 @@ connected. `check` is empty when the graph is consistent. Findings use these
 | `scheduler-template-option` | A job-scheduler template sets `delay`, `deduplication`, `parent`, or `jobId`. The scheduler's repeat settings control timing and identity, so the call does not do what that option reads as. Remove the option from the template. The check reads literal keys on the template and inside its `opts`, including a spread of a same-file `const` object literal. The last `opts` supplied by an explicit property or a known spread determines which options are checked. A module `const` is visible to functions declared earlier in the file. An unknown or cyclic spread, a non-literal key, or a binding that is not a `const` object literal makes that call abstain. Keys nested under `data` or any other object are not options. Built-in `upsertJobScheduler` and a literal computed `queue["upsertJobScheduler"]` read the third argument. `queues.factories.jobScheduler` reads the configured `template` argument on calls to the named import, including its local alias. |
 | `empty-glob` | A configured `enqueues` or `workers` glob matches no file. Fix the glob or remove it. An empty list still disables that side and is not a finding. |
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
+| `mixed-priority` | Producers on one queue enqueue both priority 0 and a priority greater than 0. See [Mixed priority](#mixed-priority). |
 
 The wait check recognizes member calls such as `this.queue.addAndWait(...)`
 and literal computed members such as `queue["addAndWait"](...)`. It also
@@ -65,6 +66,30 @@ helper does not adopt that helper module's job names.
 The scheduler template check takes same-file binding declarations from the
 queue processor index, which already visits the file to resolve named
 callbacks. It groups those declarations by name on the first template lookup.
+
+## Mixed priority
+
+BullMQ and glide-mq keep jobs with a priority and jobs with no priority in
+separate structures. Mixing them on one queue makes the processing order
+surprising, and jobs with no priority can be starved or overtaken.
+
+The check reports each producer of the smaller form and names the producers of
+the other form. When the two forms have the same count, it reports both forms.
+Each finding's `message` names the other producers.
+
+It reads `queue.add`'s third argument, an `addBulk` item's `opts`, a flow
+job's `opts`, and the `options` argument of a configured enqueue factory. A
+missing priority, a literal `0`, and a same-file `const` whose value is `0`
+are priority 0. A finite integer greater than 0, including a same-file `const`
+and unary `+`, is the other form. Parentheses and `as const` on that integer
+stay static.
+
+The check abstains for the whole queue when any producer priority is not one
+of those two forms. That includes a trailing spread, a computed key that may
+overwrite `priority` or `opts`, a non-integer, a negative number, a `let` or
+`var` binding, an imported number, and any other dynamic expression. An
+unresolved queue is not grouped with a resolved one. Give every producer on
+the queue priority 0, or give every producer a priority greater than 0.
 
 ## Suppression
 

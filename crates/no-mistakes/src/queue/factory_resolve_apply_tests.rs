@@ -30,6 +30,7 @@ fn producer(job: Option<&str>) -> ProducerSite {
         raw_job: None,
         worker_index: None,
         self_dedup: false,
+        priority: crate::queue::extract_model::EnqueuePriority::Unprioritized,
     }
 }
 

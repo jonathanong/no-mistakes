@@ -13,6 +13,7 @@ fn site(worker_index: Option<usize>) -> ProducerSite {
         raw_job: None,
         worker_index,
         self_dedup: false,
+        priority: crate::queue::extract_model::EnqueuePriority::Unprioritized,
     }
 }
 

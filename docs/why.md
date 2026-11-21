@@ -123,6 +123,7 @@ frontends, and repository rules.
 | Change a signature and miss import-based callers | Callers the graph can see; confirm exact lines with `rg` | [`symbols --mode signature-impact`](cli/symbols.md), [`call-sites`](cli/call-sites.md) |
 | Rename a queue job and miss the worker | Producers with no processor | [`queues check`](cli/queues-check.md), [`queues related`](cli/queues-related.md) |
 | Rate-limit one job on a shared queue | Every other job on that queue stalls | [`queues check`](cli/queues-check.md) |
+| Mix priority 0 and a higher priority on one queue | Jobs with no priority can be starved | [`queues check`](cli/queues-check.md) |
 | Hoist a uniqueness token above re-entrant `beforeAll` | Duplicate-key failures that depend on the worker | [`playwright-no-hoisted-unique-token`](eslint-rules/playwright-no-hoisted-unique-token.md) |
 | One raw `scrollTo` racing cursor pagination | A wait that burns its timeout | [`playwright-no-raw-scroll-pagination`](eslint-rules/playwright-no-raw-scroll-pagination.md) |
 | Catch `isVisible()` and return a boolean | A broken locator looks like a normal absence | [`playwright-no-swallowed-visibility`](eslint-rules/playwright-no-swallowed-visibility.md) |

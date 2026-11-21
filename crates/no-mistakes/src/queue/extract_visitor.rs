@@ -21,6 +21,7 @@ pub(super) struct QueueVisitor<'a> {
     pub job_id_flows: crate::fx::FxHashSet<oxc_syntax::symbol::SymbolId>,
     pub job_id_queues: crate::fx::FxHashSet<oxc_syntax::symbol::SymbolId>,
     pub job_id_pending: Vec<super::extract_job_id::PendingCheck>,
+    pub binding_is_const: bool,
     pub queue_classes: HashSet<String>,
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
@@ -124,8 +125,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_variable_declaration(&mut self, decl: &oxc_ast::ast::VariableDeclaration<'a>) {
-        self.note_wait_aliases(decl);
-        super::extract_factory::visit_variable_declaration(self, decl);
+        self.note_const_declaration(decl);
     }
 
     fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {

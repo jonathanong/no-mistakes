@@ -23,6 +23,10 @@ pub(super) fn record_enqueue(
             .and_then(Argument::as_expression)
             .map(|expr| literal_or_import(expr, consts, &facts.string_imports))
             .unwrap_or((None, None));
+        let priority = crate::queue::extract_priority::from_optional_argument(
+            call.arguments.get(2),
+            &facts.const_numbers,
+        );
         facts.producers.push(ProducerSite {
             file: path.to_path_buf(),
             line: line_number(source, call.span.start),
@@ -32,6 +36,7 @@ pub(super) fn record_enqueue(
             job_import,
             worker_index: None,
             self_dedup: false,
+            priority,
         });
         return;
     }
@@ -74,6 +79,7 @@ pub(super) fn record_flow(
     let Some(queue) = queue else {
         return;
     };
+    let priority = crate::queue::extract_priority::from_job_object(object, &facts.const_numbers);
     let binding = format!("__flow__{queue}");
     facts.queue_bindings.insert(binding.clone(), queue.clone());
     facts.queue_exports.insert(binding.clone(), queue);
@@ -86,6 +92,7 @@ pub(super) fn record_flow(
         job_import,
         worker_index: None,
         self_dedup: false,
+        priority,
     });
 }
 
@@ -98,6 +105,7 @@ fn record_bulk_items(
     call: &CallExpression<'_>,
     object: &oxc_ast::ast::ObjectExpression<'_>,
 ) {
+    let priority = crate::queue::extract_priority::from_job_object(object, &facts.const_numbers);
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
             if crate::ast::property_key_name(&property.key).as_deref() == Some("name") {
@@ -112,6 +120,7 @@ fn record_bulk_items(
                     job_import,
                     worker_index: None,
                     self_dedup: false,
+                    priority,
                 });
             }
         }

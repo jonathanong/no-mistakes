@@ -1,0 +1,98 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "mixed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "batches.ts",
+          "job": "countBatch",
+          "kind": "mixed-priority",
+          "line": 10,
+          "message": "queue \"batches\" mixes priority 0 and priority > 0; this producer sets priority 2 while other producers enqueue with priority 0: batches.ts:6 (countBatch)",
+          "queueFile": "queues.ts",
+          "queueName": "batches",
+          "sourceLine": "return batches.add(\"countBatch\", { id }, { priority: RUSH });"
+        },
+        {
+          "file": "batches.ts",
+          "job": "countBatch",
+          "kind": "mixed-priority",
+          "line": 6,
+          "message": "queue \"batches\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: batches.ts:10 (countBatch, priority 2)",
+          "queueFile": "queues.ts",
+          "queueName": "batches",
+          "sourceLine": "return batches.add(\"countBatch\", { id });"
+        },
+        {
+          "file": "catalog.ts",
+          "job": "listItem",
+          "kind": "mixed-priority",
+          "line": 5,
+          "message": "queue \"catalog\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: catalog.ts:9 (rushItem, priority 8), catalog.ts:13 (fastItem, priority 1)",
+          "queueFile": "queues.ts",
+          "queueName": "catalog",
+          "sourceLine": "return enqueueWidget(catalog, \"listItem\");"
+        },
+        {
+          "file": "labels.ts",
+          "job": "rushLabel",
+          "kind": "mixed-priority",
+          "line": 9,
+          "message": "queue \"labels\" mixes priority 0 and priority > 0; this producer sets priority 4 while other producers enqueue with priority 0: labels.ts:5 (printLabel)",
+          "queueFile": "queues.ts",
+          "queueName": "labels",
+          "sourceLine": "return labels.add(\"rushLabel\", { id }, { priority: 4 });"
+        },
+        {
+          "file": "mixed.ts",
+          "job": "packWidget",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"widgets\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: mixed.ts:8 (rushWidget, priority 5), mixed.ts:12 (fastWidget, priority 2)",
+          "queueFile": "queues.ts",
+          "queueName": "widgets",
+          "sourceLine": "return widgets.add(\"packWidget\", { id });"
+        },
+        {
+          "file": "parcels.ts",
+          "job": "rushParcel",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"parcels\" mixes priority 0 and priority > 0; this producer sets priority 7 while other producers enqueue with priority 0: parcels.ts:4 (holdParcel), parcels.ts:4 (storeParcel)",
+          "queueFile": "queues.ts",
+          "queueName": "parcels",
+          "sourceLine": "return parcels.addBulk(["
+        },
+        {
+          "file": "routes.ts",
+          "job": "planRoute",
+          "kind": "mixed-priority",
+          "line": 6,
+          "message": "queue \"routes\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: routes.ts:10 (rushRoute, priority 6), routes.ts:19 (fastRoute, priority 1)",
+          "queueFile": "routes.ts",
+          "queueName": "routes",
+          "sourceLine": "return flow.add({ name: \"planRoute\", queueName: \"routes\", data: { id } });"
+        },
+        {
+          "file": "uniform.ts",
+          "job": "freeHold",
+          "kind": "mixed-priority",
+          "line": 28,
+          "message": "queue \"holds\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: uniform.ts:32 (paidHold, priority 3), uniform.ts:36 (firmHold, priority 3)",
+          "queueFile": "queues.ts",
+          "queueName": "holds",
+          "sourceLine": "return holds.add(\"freeHold\", { id }, { priority: NONE });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

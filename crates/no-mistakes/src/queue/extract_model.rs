@@ -21,6 +21,15 @@ pub(crate) struct ProducerSite {
     pub worker_index: Option<usize>,
     /// The add reuses the active job's dedup id or job id. Judged after queue resolution.
     pub self_dedup: bool,
+    /// Static `priority` on this enqueue. `Dynamic` makes the queue abstain.
+    pub priority: EnqueuePriority,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum EnqueuePriority {
+    Unprioritized,
+    Prioritized(u32),
+    Dynamic,
 }
 
 #[derive(Debug, Clone)]
@@ -86,4 +95,6 @@ pub(crate) struct FileFacts {
     pub referenced_jobs_dynamic: bool,
     pub checks: Vec<LocalCheck>,
     pub job_id_sites: Vec<(JobIdQueue, LocalCheck)>,
+    /// Same-file `const` integers seen while extracting this file.
+    pub const_numbers: HashMap<String, u32>,
 }

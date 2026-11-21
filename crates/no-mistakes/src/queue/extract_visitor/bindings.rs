@@ -6,6 +6,14 @@ use oxc_ast::ast::{Argument, Expression, VariableDeclarator};
 use oxc_ast_visit::walk;
 
 impl<'a> QueueVisitor<'a> {
+    pub(super) fn note_const_declaration(&mut self, decl: &oxc_ast::ast::VariableDeclaration<'a>) {
+        let previous = self.binding_is_const;
+        self.binding_is_const = decl.kind == oxc_ast::ast::VariableDeclarationKind::Const;
+        self.note_wait_aliases(decl);
+        super::super::extract_factory::visit_variable_declaration(self, decl);
+        self.binding_is_const = previous;
+    }
+
     pub(super) fn note_variable(&mut self, decl: &VariableDeclarator<'a>) {
         let Some(name) = binding_name(&decl.id) else {
             walk::walk_variable_declarator(self, decl);
@@ -14,6 +22,13 @@ impl<'a> QueueVisitor<'a> {
         if let Some(init) = &decl.init {
             if let Some(value) = static_string(init) {
                 self.const_strings.insert(name.clone(), value);
+            }
+            if self.binding_is_const {
+                let value =
+                    crate::queue::extract_priority::const_u32(init, &self.facts.const_numbers);
+                if let Some(value) = value {
+                    self.facts.const_numbers.insert(name.clone(), value);
+                }
             }
         }
         if let Some(Expression::NewExpression(new_expr)) = &decl.init {

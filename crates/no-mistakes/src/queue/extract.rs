@@ -83,6 +83,7 @@ fn extract_queue_facts<'a>(
         job_id_flows: Default::default(),
         job_id_queues: Default::default(),
         job_id_pending: Vec::new(),
+        binding_is_const: false,
         queue_classes: HashSet::new(),
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),

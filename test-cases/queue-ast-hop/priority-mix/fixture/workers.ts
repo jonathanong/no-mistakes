@@ -1,0 +1,18 @@
+import { Worker } from "bullmq";
+
+export const widgetsWorker = new Worker("widgets", async () => {});
+export const itemsWorker = new Worker("items", async () => {});
+export const ordersWorker = new Worker("orders", async () => {});
+export const holdsWorker = new Worker("holds", async () => {});
+export const shipmentsWorker = new Worker("shipments", async () => {});
+export const weightsWorker = new Worker("weights", async () => {});
+export const creditsWorker = new Worker("credits", async () => {});
+export const extrasWorker = new Worker("extras", async () => {});
+export const draftsWorker = new Worker("drafts", async () => {});
+export const tagsWorker = new Worker("tags", async () => {});
+export const batchesWorker = new Worker("batches", async () => {});
+export const parcelsWorker = new Worker("parcels", async () => {});
+export const routesWorker = new Worker("routes", async () => {});
+export const labelsWorker = new Worker("labels", async () => {});
+export const notesWorker = new Worker("notes", async () => {});
+export const catalogWorker = new Worker("catalog", async () => {});

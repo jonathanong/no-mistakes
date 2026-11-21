@@ -7,6 +7,7 @@ mod factory_roles;
 mod job_id;
 mod lang;
 mod prepared;
+mod priority_mix;
 mod processor_identifiers;
 mod resolver;
 mod scheduler_template;
