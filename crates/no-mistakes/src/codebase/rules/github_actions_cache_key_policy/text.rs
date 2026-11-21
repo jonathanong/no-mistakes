@@ -54,7 +54,7 @@ fn part_hashes(part: &str, lockfile: &str) -> bool {
     ];
     let tool = TOOLS.iter().any(|tool| contains_token(part, tool, false))
         || (contains_token(part, "openssl", false) && contains_token(part, "dgst", false));
-    tool && mentions_path(part, lockfile)
+    tool && mentions_path(&super::shell_cmd::mask_output_redirects(part), lockfile)
 }
 
 pub(super) fn hash_args(value: &str) -> Vec<String> {

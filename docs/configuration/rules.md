@@ -604,13 +604,21 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. The checksum command must name the lockfile in that same
-simple command. Reassigning the variable drops the proof unless the whole new value is a
-parameter expansion of that same variable (`"$digest"`, `${digest}`, `${digest%% *}`,
-`${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other text drops
-the proof. A `<<<` redirect is not a
-heredoc, and `<<` inside `$(( ))` is not a heredoc. A variable assigned from `$GITHUB_OUTPUT` is the same redirect
-target. A local `uses: ./...` composite action counts when its declared output reads a proven
-`run` step in that action.
+simple command. A standalone `&` splits commands. An `&` in `2>&1`, `>&2`, `&>`, `&>>`, or `<&`
+does not, and neither does `&` inside `$(( ))`. A digit prefix and a quoted suffix are one
+word, so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or
+`>` has no redirect target, so that ending does not hide the lockfile. Reassigning the variable drops the proof unless the
+whole new value is a parameter expansion of that same variable (`"$digest"`, `${digest}`,
+`${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other
+text drops the proof. A `<<<` redirect is not a heredoc, and `<<` inside `$(( ))` is not a heredoc.
+A variable assigned from `$GITHUB_OUTPUT` is a `>` or `>>` redirect target, and `>&` before a
+non-numeric target is too. `>&2` is not a write. Single quotes do not expand, so `> '$OUT'` is
+not a write. A suffix on the redirect word is part of the filename, an escaped `$` is
+literal, and empty quotes do not make a single-quoted `$OUT` expand. Joining `"$"` to a
+name is not an expansion, and a quoted piece of a redirect name stays part of that filename.
+Mentioning that
+variable is not a write. A local `uses: ./...` composite action
+counts when its declared output reads a proven `run` step in that action.
 
 ```yaml
 rules:

@@ -58,6 +58,46 @@ fn checksum_and_lockfile_must_share_one_command() {
         "sha256sum widgets.lock &&",
         "widgets.lock"
     ));
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum orders.lock & cat widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock & echo done",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock &> /tmp/orders",
+        "widgets.lock"
+    ));
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum orders.lock &> widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum $((1 & 2)) widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum 2>&1 widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum >&2 widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock <&0",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "& sha256sum widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum 2>&1 orders.lock & cat widgets.lock",
+        "widgets.lock"
+    ));
 }
 
 #[test]
@@ -227,6 +267,72 @@ fn an_output_path_variable_redirects_a_heredoc() {
          echo \"digest=$digest\" >> \"$OUT\"\n"
     )
     .is_empty());
+}
+
+#[test]
+fn an_output_variable_counts_only_as_a_redirect_target() {
+    assert!(names(
+        "digest=$(sha256sum widgets.lock)\n\
+         OUT=$GITHUB_OUTPUT\n\
+         echo \"$OUT\"\n\
+         test -f \"$OUT\"\n\
+         echo \"digest=$digest\" \"$OUT\"\n\
+         echo \"digest=$digest\" \"note > $OUT\"\n\
+         echo \"digest=$digest\" $((1>0))\n\
+         echo \"digest=$digest\" > '$OUT'\n\
+         echo \"digest=$digest\" > '${OUT}'\n\
+         echo \"digest=$digest\" > 'orders.lock'\n\
+         echo \"digest=$digest\" >&2\n\
+         echo \"digest=$digest\" >& 2\n\
+         echo \"digest=$digest\" >= \"$OUT\"\n\
+         echo \"digest=$digest\" >\n\
+         echo \"digest=$digest\" > \"\"\n\
+         echo \"digest=$digest\" > \"$OUT\n\
+         echo \"digest=$digest\" >> /tmp/orders\n\
+         {\n\
+         echo \"digest=$digest\"\n\
+         } && test -f \"$OUT\"\n"
+    )
+    .is_empty());
+    assert_eq!(
+        names(
+            "digest=$(sha256sum 2>&1 widgets.lock)\n\
+             OUT=$GITHUB_OUTPUT\n\
+             echo \"digest=$digest\" >> \"$OUT\"\n\
+             echo \"digest=$digest\" > \"$OUT\"\n\
+             echo \"digest=$digest\" >>\"$GITHUB_OUTPUT\"\n\
+             echo \"digest=$digest\" >& \"$OUT\"\n\
+             echo \"digest=$digest\" >&\"$OUT\"\n\
+             echo \"digest=$digest\" >& $OUT\n\
+             echo \"digest=$digest\" >> $OUT;\n\
+             {\n\
+             echo \"digest=$digest\"\n\
+             } >> \"$OUT\"\n\
+             cat <<EOF >> \"$OUT\"\n\
+             digest=$digest\n\
+             EOF\n"
+        ),
+        vec!["digest".to_string()]
+    );
+}
+
+#[test]
+fn quoted_and_copied_redirects_keep_only_expanded_file_targets() {
+    let targets = super::super::shell_cmd::redirect_targets;
+    assert!(targets("echo x > '$OUT'").is_empty());
+    assert!(targets("echo x > '${OUT}'").is_empty());
+    assert!(targets("echo x >&2").is_empty());
+    assert!(targets("echo x >& 2").is_empty());
+    assert!(targets("echo x >&").is_empty());
+    assert_eq!(
+        targets("echo x > 'orders.lock'"),
+        vec!["orders.lock".to_string()]
+    );
+    assert_eq!(targets("echo x > \"$OUT\""), vec!["$OUT".to_string()]);
+    assert_eq!(targets("echo x >& \"$OUT\""), vec!["$OUT".to_string()]);
+    assert_eq!(targets("echo x >&\"$OUT\""), vec!["$OUT".to_string()]);
+    assert_eq!(targets("echo x >& $OUT"), vec!["$OUT".to_string()]);
+    assert_eq!(targets("echo x > '$1'"), vec!["$1".to_string()]);
 }
 
 #[test]

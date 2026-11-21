@@ -360,10 +360,16 @@ For `github-actions-cache-key-policy`, list each portable cache path with its lo
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
-must name that lockfile in the same simple command. Reassignment drops the proof unless the whole
-new value is a parameter expansion of that same variable. Mixing that expansion with other text
-drops the proof. A local composite `uses: ./...` counts when its declared output reads that proof.
-See the
+must name that lockfile in the same simple command. A standalone `&` splits commands; an `&` in
+`2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. A digit prefix and a quoted suffix are one word,
+so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or `>`
+has no redirect target, so that ending does not hide the lockfile. Reassignment
+drops the proof unless the whole new value is a parameter expansion of that same variable.
+Mixing that expansion with other text drops the proof. A `>`, `>>`, or non-numeric `>&` redirect
+is required. Single quotes do not expand. A suffix on the redirect word is part of the
+filename, an escaped `$` is literal, and empty quotes do not make a single-quoted `$OUT`
+expand. Joining `"$"` to a name is not an expansion. A local
+composite `uses: ./...` counts when its declared output reads that proof. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
