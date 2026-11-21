@@ -529,15 +529,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "localColumns"
         },
         {
-          "file": "externalStemMutator.ts",
-          "import": "pkg/sql",
-          "line": 5,
-          "message": "unresolved import `pkg/sql` may write, rebind, or escape an exported SQL fragment",
-          "rule": "postgres-sql-fragment-escape",
-          "sourceLine": "Object.assign(external, { extra });",
-          "target": "pkg/sql"
-        },
-        {
           "file": "itemMutator.ts",
           "import": "orders/items.ts",
           "line": 5,
@@ -581,6 +572,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "widgetColumns.values.splice(0, 0, \"id\");",
           "target": "widgetColumns"
+        },
+        {
+          "file": "missingAliasMutator.ts",
+          "import": "@widgets/missing-item",
+          "line": 4,
+          "message": "unresolved import `@widgets/missing-item` may write, rebind, or escape an exported SQL fragment",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.assign(items, { extra });",
+          "target": "@widgets/missing-item"
+        },
+        {
+          "file": "missingLocalMutator.ts",
+          "import": "./missing-widget",
+          "line": 4,
+          "message": "unresolved import `./missing-widget` may write, rebind, or escape an exported SQL fragment",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.assign(items, { extra });",
+          "target": "./missing-widget"
         },
         {
           "file": "namespaceMemberMutator.ts",
@@ -680,6 +689,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "ns.widgetColumns.append(extra);",
           "target": "widgetColumns"
+        },
+        {
+          "file": "wildcardFragmentMutator.ts",
+          "import": "widgets/items.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetItems` from `widgets/items.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetItems.append(extra);",
+          "target": "widgetItems"
         }
       ],
       "warnings": []

@@ -15,16 +15,73 @@ fn import_file_pass(
         };
         let classification = resolver.classify_import(&imp.specifier, path, workspace, graph_files);
         let resolved = resolved_import_path(kind, &classification, imp, graph_files);
-        let recorded = match resolved {
-            Some(target) => ImportTarget::File(target.to_path_buf()),
-            None => ImportTarget::Unresolved,
-        };
+        let recorded = import_target_for(
+            resolved,
+            &classification,
+            resolver,
+            path,
+            &imp.specifier,
+            workspace,
+            graph_files,
+        );
         targets.push((imp.specifier.clone(), recorded));
         if let Some(edge) = import_edge(interner, path, kind, imp, resolved, &classification) {
             edges.push(edge);
         }
     }
     (path.to_path_buf(), edges, targets)
+}
+
+fn import_target_for(
+    resolved: Option<&Path>,
+    classification: &crate::codebase::ts_resolver::ImportClassification,
+    resolver: &dyn ImportResolution,
+    importer: &Path,
+    specifier: &str,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    graph_files: &GraphFiles,
+) -> ImportTarget {
+    if let Some(target) = resolved {
+        return ImportTarget::File(target.to_path_buf());
+    }
+    // Static workspace imports keep their visible package file here. The import
+    // edge for that path is recorded by the workspace pass.
+    if let Some(target) = classification
+        .workspace_path()
+        .and_then(|target| graph_files.visible_path(target))
+    {
+        return ImportTarget::File(target.to_path_buf());
+    }
+    if specifier_is_project(resolver, importer, specifier, classification, workspace) {
+        ImportTarget::Unresolved
+    } else {
+        ImportTarget::External
+    }
+}
+
+fn specifier_is_project(
+    resolver: &dyn ImportResolution,
+    importer: &Path,
+    specifier: &str,
+    classification: &crate::codebase::ts_resolver::ImportClassification,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+) -> bool {
+    specifier_is_local(specifier)
+        || resolver.matches_paths_alias(specifier, importer)
+        || classification.workspace_path().is_some()
+        || workspace.recognizes_specifier_from(specifier, importer)
+}
+
+fn specifier_is_local(specifier: &str) -> bool {
+    specifier.starts_with(['.', '/', '#', '\\']) || specifier_has_drive(specifier)
+}
+
+fn specifier_has_drive(specifier: &str) -> bool {
+    let bytes = specifier.as_bytes();
+    bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && (bytes[2] == b'/' || bytes[2] == b'\\')
 }
 
 fn resolved_import_path<'a>(

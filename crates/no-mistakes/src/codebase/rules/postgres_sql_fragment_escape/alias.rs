@@ -19,6 +19,7 @@ pub(super) fn hop(
 ) -> Vec<Fragment> {
     match module_hit(graph, facts, catalog, module, spec) {
         ModuleHit::File(next) => visible(catalog, graph, facts, &next, name, stack),
+        ModuleHit::External => Vec::new(),
         ModuleHit::Open => vec![Fragment::open(spec)],
     }
 }
@@ -90,6 +91,7 @@ pub(super) fn star_fragments(
                 &next_blocked,
                 stack,
             )),
+            ModuleHit::External => {}
             ModuleHit::Open => found.push(Fragment::open(spec)),
         }
     }

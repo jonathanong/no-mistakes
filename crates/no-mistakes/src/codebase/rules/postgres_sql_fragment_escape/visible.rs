@@ -53,6 +53,7 @@ pub(super) fn visible_all(
                 ModuleHit::File(next) => found.extend(super::alias::star_fragments(
                     catalog, graph, facts, &next, &blocked, stack,
                 )),
+                ModuleHit::External => {}
                 ModuleHit::Open => found.push(Fragment::open(spec)),
             }
         }
@@ -93,6 +94,7 @@ fn follow(
                 ModuleHit::File(next) => {
                     found.extend(visible(catalog, graph, facts, &next, name, stack));
                 }
+                ModuleHit::External => {}
                 ModuleHit::Open => found.push(Fragment::open(spec)),
             }
         }

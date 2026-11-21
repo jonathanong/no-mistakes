@@ -72,17 +72,25 @@ or `as` assertion around that argument is left to `postgres-no-executor-adapter`
 The same-file adapter finding and this rule can both report when one file both
 calls the executor and escapes the fragment.
 
-Each import uses the shared resolver's target for that specifier. The rule
-does not match a specifier to a neighbor by file stem. When that target is
-a file, the file is used even if its name differs from the specifier. When
-the target is missing or unresolved, a relative specifier is joined
+Each import uses the canonical graph's recorded target for that specifier.
+The rule does not match a specifier to a neighbor by file stem, and it does
+not re-match tsconfig `paths` itself. A recorded file is that file, including
+a path alias or workspace package the graph already resolved, even when the
+file name differs from the specifier. A `node:` builtin or an external
+package is not a project file. The rule does not read that package, so the
+import is not a finding unless one project file contains
+`declare module "specifier"`. Silence here is that analysis boundary. It
+does not prove that the unread package is free of SQL fragments. When the
+graph leaves a project specifier unresolved, a relative specifier is joined
 lexically to the importer, and a specifier can match a file that contains
-`declare module "specifier"` when that file is unique. When those steps do
-not name one file, or the recorded targets disagree, the use is reported.
-That finding names the specifier and does not attribute a local file. A use
-of the configured trusted tag itself is not a fragment, so an unresolved or
+`declare module "specifier"` when that file is unique. When those steps do not name one file, or the recorded
+targets disagree, a specifier inside the project is reported. That finding names the
+specifier and does not attribute a local file. A missing relative import, a
+missing absolute path (including a Windows drive path), and a paths alias
+whose target file is absent stay in this group. A use of the
+configured trusted tag itself is not a fragment, so an unresolved or
 ambiguous import of that tag stays silent. Any other binding from that
-specifier is still reported.
+in-project specifier is still reported.
 
 ## Valid example
 
