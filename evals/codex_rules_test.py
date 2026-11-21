@@ -496,6 +496,11 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertFalse(fired(f"cd {skill.parent} | cat SKILL.md"))
         self.assertFalse(fired("python -c \"print('see SKILL.md for details')\""))
         self.assertFalse(fired("python -c \"print('" + str(skill) + "')\""))
+        self.assertTrue(
+            fired("python -c \"from pathlib import Path; print(Path('" + str(skill) + "').read_text())\"")
+        )
+        self.assertTrue(fired("python -c \"from pathlib import Path; Path('" + str(skill) + "').read_bytes()\""))
+        self.assertFalse(fired("python -c \"from pathlib import Path; print(Path('" + str(skill) + "'))\""))
         home = codex_rules_grade.trigger.Path
         with mock.patch.object(home, "home", return_value=skill.parent):
             self.assertFalse(fired("cd && cat SKILL.md"))

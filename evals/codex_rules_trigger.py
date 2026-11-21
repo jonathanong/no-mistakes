@@ -313,11 +313,16 @@ def _script_tokens(argv: list) -> list:
     return tokens
 
 
-_SCRIPT_READ = re.compile(r"""(?:\bopen|\breadFileSync|\breadFile)\(\s*(['"])(.*?)\1""")
+_SCRIPT_READ = re.compile(
+    r"""(?:\b(?:open|readFileSync|readFile)\(\s*(['"])(.*?)\1|\bPath\(\s*(['"])(.*?)\3\)\s*\.read_(?:text|bytes)\()"""
+)
 
 
 def _script_reads(text: str) -> list:
-    return [match.group(2) for match in _SCRIPT_READ.finditer(text)]
+    found = []
+    for match in _SCRIPT_READ.finditer(text):
+        found.append(match.group(2) or match.group(4))
+    return found
 
 
 def _subshell(text: str) -> str | None:
