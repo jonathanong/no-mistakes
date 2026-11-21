@@ -717,6 +717,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-computed-partial-or-empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-computed-partial-or-empty.ts",
+          "line": 8,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag ? { exclude: ['**/node_modules/**'] } : {}),"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "exclude-computed-then-partial": {
     "exitCode": 1,
     "report": {

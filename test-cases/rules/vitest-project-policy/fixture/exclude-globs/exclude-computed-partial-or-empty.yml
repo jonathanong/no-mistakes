@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: exclude-computed-partial-or-empty.ts
+      helpers: []
+      requiredExcludeGlobs:
+        - "**/node_modules/**"
+        - "**/.git/**"

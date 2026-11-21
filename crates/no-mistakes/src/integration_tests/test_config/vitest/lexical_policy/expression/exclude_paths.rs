@@ -20,15 +20,14 @@ pub(super) fn merged_exclude(
         .into_iter()
         .map(|value| bind_omitted(&value, previous, incoming_opaque))
         .collect();
-    let first = &present[0];
+    let file = present[0].file.clone();
+    let line = present[0].line;
     let omitted = absent || present.len() != object_count;
-    if incoming_opaque && previous.is_none() && omitted {
-        return unknown_value(&first.file, first.line);
-    }
     let mut paths = present;
     if omitted {
         paths.push(match previous {
             Some(previous) => previous.clone(),
+            None if incoming_opaque => unknown_value(&file, line),
             None => omitted_marker(),
         });
     }

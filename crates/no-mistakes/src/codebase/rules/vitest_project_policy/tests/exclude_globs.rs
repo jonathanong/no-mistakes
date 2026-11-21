@@ -193,6 +193,7 @@ fn folded_exclude_paths_name_each_missing_glob() {
         "exclude-earlier-then-partial",
         "exclude-computed-then-partial",
         "exclude-computed-nested-partial",
+        "exclude-computed-partial-or-empty",
     ] {
         let report = output(case);
         assert!(
