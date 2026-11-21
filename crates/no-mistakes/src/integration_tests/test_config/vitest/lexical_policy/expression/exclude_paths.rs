@@ -18,7 +18,7 @@ pub(super) fn merged_exclude(
 ) -> Value {
     let present: Vec<Value> = present
         .into_iter()
-        .map(|value| bind_omitted(&value, previous))
+        .map(|value| bind_omitted(&value, previous, incoming_opaque))
         .collect();
     let first = &present[0];
     let omitted = absent || present.len() != object_count;
@@ -35,13 +35,17 @@ pub(super) fn merged_exclude(
     collapse(paths)
 }
 
-fn bind_omitted(value: &Value, previous: Option<&Value>) -> Value {
+fn bind_omitted(value: &Value, previous: Option<&Value>, incoming_opaque: bool) -> Value {
     match &value.kind {
-        Kind::Omitted => previous.cloned().unwrap_or_else(|| value.clone()),
+        Kind::Omitted => match previous {
+            Some(previous) => previous.clone(),
+            None if incoming_opaque => unknown_value(&value.file, value.line),
+            None => value.clone(),
+        },
         Kind::OneOf(options) => collapse(
             options
                 .iter()
-                .map(|option| bind_omitted(option, previous))
+                .map(|option| bind_omitted(option, previous, incoming_opaque))
                 .collect(),
         ),
         _ => value.clone(),

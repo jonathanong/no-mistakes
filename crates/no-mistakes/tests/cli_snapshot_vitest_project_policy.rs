@@ -181,6 +181,8 @@ fn vitest_project_policy_json_matches_snapshot() {
         "exclude-computed-or-empty",
         "exclude-computed-both",
         "exclude-computed-then-partial",
+        "exclude-computed-nested-omitted",
+        "exclude-computed-nested-partial",
         "exclude-nested-omitted",
         "exclude-conditional-required",
         "exclude-conditional-forbidden",

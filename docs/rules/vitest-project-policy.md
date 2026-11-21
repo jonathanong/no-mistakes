@@ -100,7 +100,8 @@ identifier or a call, such as `...makeExtra()`, stays unknown. A nested
 object spread keeps an omitted `exclude` until the enclosing object applies
 its earlier literal. A computed key before the spread makes an omitted path
 unknown unless a later literal `exclude` is written, because that key may
-itself be `exclude`. Other `test`
+itself be `exclude`. An omit nested inside another object spread follows
+that same rule. Other `test`
 properties keep the earlier rule: a key with the same literal on every branch
 stays known for required, forbidden, and parity checks, and a key that appears
 on only some branches stays incomplete.

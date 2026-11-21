@@ -192,6 +192,7 @@ fn folded_exclude_paths_name_each_missing_glob() {
         "exclude-ternary-partial-or-call",
         "exclude-earlier-then-partial",
         "exclude-computed-then-partial",
+        "exclude-computed-nested-partial",
     ] {
         let report = output(case);
         assert!(
@@ -220,6 +221,7 @@ fn non_literal_spreads_leave_only_exclude_incomplete() {
         "exclude-call-make-extra",
         "exclude-ternary-complete-or-call",
         "exclude-computed-or-empty",
+        "exclude-computed-nested-omitted",
     ] {
         let report = output(case);
         assert!(report.findings.is_empty(), "{case}: {:?}", report.findings);
