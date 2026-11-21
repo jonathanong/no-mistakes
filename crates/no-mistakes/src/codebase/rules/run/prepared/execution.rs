@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::check_outcome::Prerequisite;
 
+mod fragment_plan;
 mod graph_rules;
 mod helpers;
 mod independent;
@@ -78,6 +79,12 @@ pub(super) fn run(
         graph_plan = Prerequisite::Failed(failures);
     }
     graph_plan = ready_graph_plan(config, session.as_ref(), graph_plan);
+    graph_plan = fragment_plan::without_value_flow_when_partial(
+        config,
+        session.as_ref(),
+        shared,
+        graph_plan,
+    );
     let owned_graph;
     let dependency_graph = if matches!(graph_plan, Prerequisite::Failed(_)) {
         None
@@ -180,5 +187,9 @@ fn ready_graph_plan(
     graph_plan
 }
 
+#[cfg(test)]
+mod fragment_graph_facts;
+#[cfg(test)]
+mod fragment_graph_tests;
 #[cfg(test)]
 mod plan_tests;

@@ -17,11 +17,13 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
     if let Some(module) = imported_namespace(ctx, name) {
         return Some(module);
     }
-    if let Some(alias) = super::fact_reads::equals_alias(ctx.ts, name) {
-        return namespace_of(ctx, &alias, depth + 1);
-    }
-    if let Some(alias) = import_alias(ctx.source, name) {
-        return namespace_of(ctx, alias, depth + 1);
+    if !locally_bound(ctx, name) {
+        if let Some(alias) = super::fact_reads::equals_alias(ctx.ts, name) {
+            return namespace_of(ctx, &alias, depth + 1);
+        }
+        if let Some(alias) = import_alias(ctx.source, name) {
+            return namespace_of(ctx, alias, depth + 1);
+        }
     }
     let binding = binding_named(ctx, name)?;
     if is_fragment_binding(ctx.ts, ctx.tags, binding) {
@@ -35,6 +37,9 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
 
 fn initializer_module(ctx: &FileCtx<'_>, binding: &ValueBinding) -> Option<PathBuf> {
     let (start, end, window) = initializer_window(ctx, binding)?;
+    if !super::fact_reads::window_loads_module(window) {
+        return None;
+    }
     if let Some(spec) = super::fact_reads::specifier_between(ctx.ts, start, end) {
         return module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec);
     }
@@ -178,8 +183,7 @@ fn import_equals(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
 }
 
 fn import_module(ctx: &FileCtx<'_>, start: u32, end: u32) -> Option<PathBuf> {
-    let recorded = super::fact_reads::specifier_between(ctx.ts, start, end).map(str::to_string);
-    let parsed = super::fact_reads::specifier_at(ctx.source, start, end).map(str::to_string);
-    let spec = recorded.or(parsed)?;
+    let window = ctx.source.get(start as usize..end as usize).unwrap_or("");
+    let spec = super::fact_reads::depth_zero_module_specifier(ctx.ts, window, start)?;
     module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, &spec)
 }
