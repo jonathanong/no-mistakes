@@ -989,7 +989,10 @@ stays unmatched. A quoted argument is one token, so
 `widget-audit check --label 'nightly'` matches. A quoted executable stays
 unmatched, and an analyzer name inside a quoted assignment value does not
 match, so `"widget-audit" check` and
-`ITEM="placeholder widget-audit check extra"` do not match. An unclosed quote or a backslash leaves the command unmatched. `$` and a
+`ITEM="placeholder widget-audit check extra"` do not match. A quoted word is
+not an assignment, so `'ITEM=$item' widget-audit check` does not match.
+`ITEM='$item' widget-audit check` does, because the name and `=` are unquoted.
+An unclosed quote or a backslash leaves the command unmatched. `$` and a
 backtick are literal inside single quotes, so
 `widget-audit check --label '$item'` matches. They leave the command unmatched
 inside double quotes, or in unquoted text next to a quote, so

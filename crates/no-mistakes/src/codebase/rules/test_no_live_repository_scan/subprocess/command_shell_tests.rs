@@ -156,6 +156,7 @@ fn quoted_arguments_match_and_quoted_commands_do_not() {
         launch(vec![known("ITEM='$item' widget-audit check")], true),
         "widget-audit check"
     );
+    assert!(launch(vec![known("'ITEM=$item' widget-audit check")], true).is_empty());
     let quoted_operator = invocation(&[known("cd \"&&\" && widget-audit check")], true).unwrap();
     assert_eq!(
         matched(&quoted_operator, &[analyzer()]).as_deref(),
