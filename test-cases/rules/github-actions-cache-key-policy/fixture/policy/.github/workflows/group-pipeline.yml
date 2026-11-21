@@ -7,7 +7,9 @@ jobs:
       - id: lock
         run: |
           digest=$(sha256sum widgets.lock)
-          ( echo "digest=$digest" | cat /tmp/orders ) >> "$GITHUB_OUTPUT"
+          (
+            echo "digest=$digest" | cat /tmp/orders
+          ) >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         with:
           path: .cache/widgets
