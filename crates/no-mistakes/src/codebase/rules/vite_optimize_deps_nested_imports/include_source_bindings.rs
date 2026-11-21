@@ -76,9 +76,11 @@ fn named_export_local<'a>(program: &'a Program<'a>, export_name: &str) -> Option
             if crate::ast::module_export_name(&specifier.exported) != export_name {
                 continue;
             }
-            if let Some(local) = identifier_name(&specifier.local) {
-                return Some(local);
-            }
+            // oxc rewrites a local export name to an identifier reference.
+            let ModuleExportName::IdentifierReference(identifier) = &specifier.local else {
+                continue;
+            };
+            return Some(identifier.name.as_str());
         }
     }
     None
@@ -131,14 +133,6 @@ fn array_export(source: &str, export_name: &str, init: &Expression<'_>) -> Sourc
     match includes_in_array(source, array.as_ref()) {
         Ok(entries) => SourceList::Includes(entries),
         Err((line, reason)) => SourceList::Unanalyzable { line, reason },
-    }
-}
-
-fn identifier_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
-    match name {
-        ModuleExportName::IdentifierName(identifier) => Some(identifier.name.as_str()),
-        ModuleExportName::IdentifierReference(identifier) => Some(identifier.name.as_str()),
-        ModuleExportName::StringLiteral(_) => None,
     }
 }
 

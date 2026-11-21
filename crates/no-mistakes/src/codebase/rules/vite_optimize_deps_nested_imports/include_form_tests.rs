@@ -42,6 +42,24 @@ export { nested as listed };
 }
 
 #[test]
+fn export_braces_skip_unrelated_names_and_non_const_exports() {
+    let source = "\
+const hidden = ['widgets > orders'];
+const extra = ['widgets > labels'];
+const skipped = ['widgets > ignored'], listed = ['widgets > items'];
+export function shape() { return 1; }
+export const other = ['widgets > orders'];
+export { type hidden, extra as otherName, listed };
+";
+    assert_eq!(include_texts(source, "listed"), vec!["widgets > items"]);
+    assert!(unanalyzable(
+        "const listed = ['widgets > items'];\nexport { type listed };\n",
+        "listed"
+    )
+    .contains("does not export const"));
+}
+
+#[test]
 fn export_braces_reject_indirect_and_non_const_bindings() {
     assert!(
         unanalyzable("export { listed } from './other';\n", "listed")
