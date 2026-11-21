@@ -21,6 +21,21 @@ impl ImportCollector {
             .push((local.to_string(), offset));
     }
 
+    fn note_sourced_export_offset(
+        &mut self,
+        specifier: &str,
+        local: &str,
+        exported: &str,
+        offset: u32,
+    ) {
+        self.namespace.facts.sourced_export_offsets.push((
+            specifier.to_string(),
+            local.to_string(),
+            exported.to_string(),
+            offset,
+        ));
+    }
+
     fn collect_local_export_specifiers(&mut self, export: &ExportNamedDeclaration<'_>) {
         self.mark_export_clause_locals(export);
         if self.collect_value_flow {
@@ -84,8 +99,15 @@ impl ImportCollector {
                         module_export_name_name(&specifier.local),
                         module_export_name_name(&specifier.exported),
                     ) {
+                        let source = crate::ast::js_literal(&export.source);
+                        self.note_sourced_export_offset(
+                            source.as_ref(),
+                            local.as_ref(),
+                            exported.as_ref(),
+                            export.span.start,
+                        );
                         self.call_export_bindings.push(ExportedBinding {
-                            specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
+                            specifier: Some(source.into_owned()),
                             local: local.to_string(),
                             exported: exported.to_string(),
                         });

@@ -355,6 +355,9 @@ mod dynamic_callee_shapes;
 #[path = "tests/eager_requires.rs"]
 mod eager_requires;
 #[cfg(test)]
+#[path = "tests/literal_import_spans.rs"]
+mod literal_import_spans;
+#[cfg(test)]
 #[path = "tests/namespace_facts.rs"]
 mod namespace_facts;
 #[cfg(test)]
