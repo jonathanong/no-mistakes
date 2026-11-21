@@ -184,7 +184,7 @@ fn strip_suffix(name: &str) -> &str {
 mod tests;
 
 #[cfg(test)]
-#[path = "command_shell_tests.rs"]
+#[path = "tests/command_shell_tests.rs"]
 mod shell_tests;
 
 #[cfg(test)]

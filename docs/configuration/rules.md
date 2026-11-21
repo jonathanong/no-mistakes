@@ -375,8 +375,10 @@ tests must not run against the live working directory. A matching `exec`,
 `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
 with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
 `execSync` match a static shell string, including a leading `cd <dir> &&` or
-`NAME=value` prefix. A quoted argument is one token. A quoted executable, or an
-analyzer name inside a quoted assignment value, leaves that string unmatched,
+`NAME=value` prefix. A quoted argument is one token. `$` and a backtick are literal inside single
+quotes and unmatched inside double quotes. A quoted executable, or an analyzer
+name inside a quoted assignment value, leaves that string unmatched. `cd`
+matches on its quote-stripped text. `&&` matches only as an unquoted token,
 and the `cd` directory replaces the `cwd` option. `spawn` and `spawnSync` match one when
 `shell` is boolean `true`. A `.js`, `.mjs`, or `.cjs` module path matches the configured command.
 `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, and

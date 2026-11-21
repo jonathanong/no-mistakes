@@ -36,11 +36,14 @@ pub(super) fn split(values: &[ArgumentValue]) -> Invocation {
 struct Word {
     text: String,
     quoted: bool,
+    /// The name and `=` were unquoted, so this word is an assignment prefix.
+    assignment: bool,
 }
 
 /// Words of a static shell string. A quote wraps one argument, including the
-/// value of `NAME="..."`. An unclosed quote, a backslash, or `$` or a backtick
-/// inside quotes is not static.
+/// value of `NAME="..."`. An unclosed quote or a backslash is not static.
+/// `$` and a backtick are literal inside single quotes. Inside double quotes,
+/// or in unquoted text of a command that also contains a quote, they are not.
 fn shell_words(text: &str) -> Option<Vec<Word>> {
     if text.contains(['"', '\'']) {
         quoted_words(text)
@@ -50,6 +53,9 @@ fn shell_words(text: &str) -> Option<Vec<Word>> {
                 .map(|part| Word {
                     text: part.to_string(),
                     quoted: false,
+                    assignment: part
+                        .split_once('=')
+                        .is_some_and(|(name, _)| identifier(name)),
                 })
                 .collect(),
         )
@@ -72,7 +78,9 @@ fn quoted_words(text: &str) -> Option<Vec<Word>> {
         let mut word = Word {
             text: String::new(),
             quoted: false,
+            assignment: false,
         };
+        let mut name_open = true;
         while let Some(character) = chars.peek().copied() {
             if character.is_whitespace() {
                 break;
@@ -81,6 +89,9 @@ fn quoted_words(text: &str) -> Option<Vec<Word>> {
                 return None;
             }
             if character == '\'' || character == '"' {
+                if name_open {
+                    name_open = false;
+                }
                 chars.next();
                 word.quoted = true;
                 loop {
@@ -88,13 +99,24 @@ fn quoted_words(text: &str) -> Option<Vec<Word>> {
                     if inner == character {
                         break;
                     }
-                    if matches!(inner, '\\' | '`' | '$' | '\n' | '\r') {
+                    // Single quotes keep `$` and backticks. Double quotes do not.
+                    if inner == '\\' || inner == '\n' || inner == '\r' {
+                        return None;
+                    }
+                    if character == '"' && matches!(inner, '`' | '$') {
                         return None;
                     }
                     word.text.push(inner);
                 }
             } else {
+                if matches!(character, '`' | '$') {
+                    return None;
+                }
                 chars.next();
+                if name_open && character == '=' {
+                    word.assignment = identifier(&word.text);
+                    name_open = false;
+                }
                 word.text.push(character);
             }
         }
@@ -114,8 +136,8 @@ fn unmatched(values: &[ArgumentValue]) -> Invocation {
 
 fn strip_prefixes(words: &mut Vec<Word>) -> Option<String> {
     let mut directory = None;
-    while assignment(words.first().map(|word| word.text.as_str())) || cd_and(words) {
-        if assignment(words.first().map(|word| word.text.as_str())) {
+    while words.first().is_some_and(|word| word.assignment) || cd_and(words) {
+        if words.first().is_some_and(|word| word.assignment) {
             words.remove(0);
         } else {
             directory = words.get(1).map(|word| word.text.clone());
@@ -125,14 +147,8 @@ fn strip_prefixes(words: &mut Vec<Word>) -> Option<String> {
     directory
 }
 
-fn assignment(text: Option<&str>) -> bool {
-    let Some(text) = text else {
-        return false;
-    };
-    let Some((name, _)) = text.split_once('=') else {
-        return false;
-    };
-    let mut chars = name.chars();
+fn identifier(text: &str) -> bool {
+    let mut chars = text.chars();
     match chars.next() {
         Some(first) if first.is_ascii_alphabetic() || first == '_' => {
             chars.all(|character| character.is_ascii_alphanumeric() || character == '_')
@@ -142,14 +158,15 @@ fn assignment(text: Option<&str>) -> bool {
 }
 
 fn cd_and(words: &[Word]) -> bool {
-    let (Some(cd), Some(dir), Some(and)) = (
-        words.first().map(|word| word.text.as_str()),
-        words.get(1).map(|word| word.text.as_str()),
-        words.get(2).map(|word| word.text.as_str()),
-    ) else {
+    let (Some(cd), Some(dir), Some(and)) = (words.first(), words.get(1), words.get(2)) else {
         return false;
     };
-    cd == "cd" && and == "&&" && dir != "&&" && !dir.starts_with('-')
+    // `&&` is an operator only when that token is unquoted. `cd` matches on its text.
+    !and.quoted
+        && cd.text == "cd"
+        && and.text == "&&"
+        && (dir.quoted || dir.text != "&&")
+        && !dir.text.starts_with('-')
 }
 
 fn known(part: &str) -> Token {
