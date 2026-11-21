@@ -3,6 +3,7 @@ const { readdirSync, readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
+const { libraryShardCoverage } = require("./standalone-shard-modules.cjs");
 const evidence = require("./fixtures/standalone-build-resources.json");
 
 const root = join(__dirname, "../..");
@@ -117,4 +118,18 @@ test("unit-test modules are split across three compile shards", () => {
   const buildRs = readFileSync(join(root, "crates/no-mistakes/build.rs"), "utf8");
   assert.match(buildRs, /nm_shard_all/);
   assert.match(buildRs, /NM_TEST_SHARD must be 0, 1, or 2/);
+});
+
+test("nested test modules inherit the parent shard", () => {
+  const report = libraryShardCoverage(root);
+  assert.deepEqual(report.unresolved, []);
+  assert.deepEqual(
+    report.nested.map((item) => `${item.file}:${item.line}:${item.name}`),
+    [],
+  );
+  assert.deepEqual(
+    report.droppedTests.map((item) => `${item.file}:${item.line}:${item.name}`),
+    [],
+  );
+  assert.ok(report.testCount > 10000, String(report.testCount));
 });

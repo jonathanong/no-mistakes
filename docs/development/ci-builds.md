@@ -556,10 +556,15 @@ three shards below that ceiling. The heaviest shard peaked at 10164 MiB.
 Run `44884243196` recorded the hosted compiler at 9160 MiB
 (`top_rss=9160MiB:rustc`) with `oom_kills=0`.
 
-Those modules are split into three compile shards. Each `mod tests` and
-`mod *_tests` is included for `nm_shard_all` or for one of `nm_shard_0`,
-`nm_shard_1`, and `nm_shard_2`. Modules that production code or several shards
-call stay on plain `cfg(test)` and compile with every shard. A shard's
+Those modules are split into three compile shards. Only a top-level test
+module root is included for `nm_shard_all` or for one of `nm_shard_0`,
+`nm_shard_1`, and `nm_shard_2`. That root is a `mod tests` or `mod *_tests`
+declared from a module every shard compiles. A module nested inside the root
+stays on plain `cfg(test)` and compiles with its parent's shard. A shard
+attribute on that child compiles it into no archive: the parent's shard skips
+the child, and the child's shard never loads the parent. Modules that
+production code or several shards call stay on plain `cfg(test)` and compile
+with every shard. A shard's
 `rustc` allows `dead_code` and `unused_imports` for the `no_mistakes` crate
 only, because an item used solely by another shard is not dead in the full
 suite. `cargo clippy --all-targets` leaves `NM_TEST_SHARD` unset and still

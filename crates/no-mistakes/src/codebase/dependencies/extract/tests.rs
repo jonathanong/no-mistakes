@@ -357,10 +357,10 @@ mod eager_requires;
 #[cfg(test)]
 #[path = "tests/namespace_facts.rs"]
 mod namespace_facts;
-#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[cfg(test)]
 #[path = "tests/namespace_locals.rs"]
 mod namespace_locals;
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(test)]
 #[path = "tests/namespace_uses.rs"]
 mod namespace_uses;
 #[path = "tests/object_spread_regressions.rs"]

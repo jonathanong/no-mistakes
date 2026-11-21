@@ -184,7 +184,7 @@ fn duplicate_statement_files_dedupe_identical_findings() {
 
 mod predicate_escaping;
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[cfg(test)]
 mod negated_keysets;
 mod semantic_zero;
 
