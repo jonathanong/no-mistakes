@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 
 pub(super) enum ModuleHit {
     File(PathBuf),
+    /// A builtin or package that cannot import the trusted SQL tag.
+    External,
     Open,
 }
 
@@ -20,6 +22,7 @@ pub(super) fn module_hit(
     if let Some(recorded) = graph.import_target(importer, specifier) {
         match recorded {
             ImportTarget::File(path) => return ModuleHit::File(path.clone()),
+            ImportTarget::External => return ambient_or_external(facts, catalog, specifier),
             ImportTarget::Ambiguous => return ModuleHit::Open,
             ImportTarget::Unresolved => {}
         }
@@ -52,7 +55,7 @@ pub(super) fn module_file(
 ) -> Option<PathBuf> {
     match module_hit(graph, facts, catalog, importer, specifier) {
         ModuleHit::File(path) => Some(path),
-        ModuleHit::Open => None,
+        ModuleHit::External | ModuleHit::Open => None,
     }
 }
 
@@ -64,6 +67,7 @@ pub(super) fn import_hit_fragments(
     import: &ImportedBinding,
 ) -> Vec<Fragment> {
     match module_hit(graph, facts, catalog, importer, &import.specifier) {
+        ModuleHit::External => Vec::new(),
         ModuleHit::Open => vec![Fragment::open(&import.specifier)],
         ModuleHit::File(module) if import.kind == ImportedBindingKind::Namespace => {
             super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
@@ -72,6 +76,17 @@ pub(super) fn import_hit_fragments(
             let name = super::tags::exported_name(import);
             super::visible::visible(catalog, graph, facts, &module, &name, &mut Vec::new())
         }
+    }
+}
+
+fn ambient_or_external(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) -> ModuleHit {
+    let mut hits = ambient_hits(facts, catalog, specifier);
+    hits.sort();
+    hits.dedup();
+    match hits.len() {
+        1 => ModuleHit::File(hits.remove(0)),
+        0 => ModuleHit::External,
+        _ => ModuleHit::Open,
     }
 }
 
