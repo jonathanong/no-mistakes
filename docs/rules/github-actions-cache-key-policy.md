@@ -36,7 +36,12 @@ The key must also prove a digest of the configured lockfile, in either of these 
 - An earlier step in the same job, including an earlier step in the same composite action, has an
   `id`. Its `run` script writes the `GITHUB_OUTPUT` name that the key reads as
   `steps.<id>.outputs.<name>`, and that output's value is a hash of the lockfile. `echo`,
-  `printf`, an unquoted heredoc, and a brace group redirected to `GITHUB_OUTPUT` all count.
+  `printf`, an unquoted heredoc, and a brace group or subshell redirected to `GITHUB_OUTPUT`
+  all count. A redirect after the closing `}` or `)` applies to every command in that group
+  that does not already redirect standard output, including
+  `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` and
+  `( echo "digest=$digest" ) >> "$GITHUB_OUTPUT"`. A group with no redirect, or a redirect
+  to another file, does not count.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not

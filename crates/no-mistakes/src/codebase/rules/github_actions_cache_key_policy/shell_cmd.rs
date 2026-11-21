@@ -51,7 +51,7 @@ pub(super) fn parts(cmd: &str) -> Vec<&str> {
     parts
 }
 
-fn operator_width(chars: &[(usize, char)], index: usize) -> usize {
+pub(super) fn operator_width(chars: &[(usize, char)], index: usize) -> usize {
     match chars.get(index).map(|(_, ch)| *ch) {
         Some(';') => 1,
         Some('&') if next_is(chars, index, '&') => 2,

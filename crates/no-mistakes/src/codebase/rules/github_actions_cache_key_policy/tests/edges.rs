@@ -82,3 +82,73 @@ fn incomplete_redirect_fixtures_still_prove_the_lockfile() {
         &["does not prove a digest of `widgets.lock`"],
     );
 }
+
+fn proven(script: &str) -> Vec<String> {
+    let run = format!("digest=$(sha256sum widgets.lock)\n{script}\n");
+    output::proven_output_names(&run, "widgets.lock")
+}
+
+#[test]
+fn group_redirect_applies_to_commands_that_do_not_redirect_stdout() {
+    let digest = vec!["digest".to_string()];
+    for script in [
+        "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"",
+        "( echo \"digest=$digest\" ) >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; }>>\"$GITHUB_OUTPUT\"",
+        "(echo \"digest=$digest\")>>\"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" 2>&1; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" 2>/tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"}; }\"; echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo '}; }'; echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"",
+        "(\n  echo \"digest=$digest\"\n) >> \"$GITHUB_OUTPUT\"",
+        "{\n  digest=$(sha256sum widgets.lock)\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"",
+    ] {
+        assert_eq!(proven(script), digest, "{script}");
+    }
+    assert_eq!(
+        output::proven_output_names(
+            "{ digest=$(sha256sum widgets.lock); echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"\n",
+            "widgets.lock",
+        ),
+        digest
+    );
+    for script in [
+        "{ echo \"digest=$digest\"; }",
+        "( echo \"digest=$digest\" )",
+        "{ echo \"digest=$digest\"; } >> /tmp/orders",
+        "( echo \"digest=$digest\" ) >> /tmp/orders",
+        "{ echo \"digest=$digest\"; } >> '$GITHUB_OUTPUT'",
+        "{ echo \"digest=$digest\"; } 2>&1",
+        "{ echo \"digest=$digest\" > /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >&2; } >> \"$GITHUB_OUTPUT\"",
+        "{echo \"digest=$digest\";} >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" | cat /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+    ] {
+        assert!(proven(script).is_empty(), "{script}");
+    }
+    assert_eq!(
+        proven(
+            "{ echo \"skip=1\"; } >> /tmp/orders\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\""
+        ),
+        digest
+    );
+}
+
+#[test]
+fn group_redirect_fixtures_match_the_suffix() {
+    let findings = super::rows("policy", "policy");
+    for file in ["group-output.yml", "subshell-output.yml"] {
+        let source = super::source("policy", &format!(".github/workflows/{file}"));
+        assert!(source.contains(">> \"$GITHUB_OUTPUT\""), "{file}");
+        super::assert_silent(&findings, file);
+    }
+    for file in ["group-plain.yml", "group-other-file.yml"] {
+        let source = super::source("policy", &format!(".github/workflows/{file}"));
+        assert!(source.contains("echo \"digest=$digest\""), "{file}");
+        super::assert_needles(
+            &findings,
+            file,
+            &["does not prove a digest of `widgets.lock`"],
+        );
+    }
+}

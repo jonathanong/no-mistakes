@@ -1,9 +1,12 @@
 use super::output_syntax::{
-    brace_close, brace_open, command_assign, heredoc_end, heredoc_start, inline_assign,
-    shell_assignment, strip_subst, unquote, var_ref,
+    command_assign, heredoc_end, heredoc_start, inline_assign, shell_assignment, strip_subst,
+    unquote, var_ref,
 };
 use super::text::{command_hashes_lockfile, shell_line};
 use crate::fx::{fx_set, FxHashSet};
+
+#[path = "group.rs"]
+mod group;
 
 pub(super) struct Write {
     pub(super) name: String,
@@ -89,8 +92,8 @@ pub(super) fn events(run: &str) -> Vec<Event> {
             }
             continue;
         }
-        if brace_open(line) {
-            index = brace_events(&lines, index, &mut events, &mut outputs);
+        if let Some(next) = group::consume(&lines, index, &mut events, &mut outputs) {
+            index = next;
             continue;
         }
         if let Some((name, rhs)) = shell_assignment(line) {
@@ -132,51 +135,8 @@ fn output_path(rhs: &str, outputs: &FxHashSet<String>) -> bool {
     }
 }
 
-fn writes_output(line: &str, outputs: &FxHashSet<String>) -> bool {
+pub(super) fn writes_output(line: &str, outputs: &FxHashSet<String>) -> bool {
     super::shell_cmd::redirect_targets(line)
         .iter()
         .any(|target| output_path(target, outputs))
-}
-
-fn brace_events(
-    lines: &[&str],
-    start: usize,
-    events: &mut Vec<Event>,
-    outputs: &mut FxHashSet<String>,
-) -> usize {
-    let mut armed = writes_output(lines[start], outputs);
-    let mut pending = Vec::new();
-    let mut index = start + 1;
-    while index < lines.len() && !brace_close(lines[index]) {
-        let line = lines[index].trim();
-        if let Some((name, rhs)) = shell_assignment(line) {
-            remember_assign(events, outputs, name, rhs);
-        } else if let Some((name, value)) = command_assign(line) {
-            if writes_output(line, outputs) {
-                events.push(Event::Write(Write {
-                    name,
-                    value,
-                    expand: true,
-                }));
-            } else {
-                pending.push(Write {
-                    name,
-                    value,
-                    expand: true,
-                });
-            }
-        }
-        index += 1;
-    }
-    if index < lines.len() && writes_output(lines[index], outputs) {
-        armed = true;
-    }
-    if armed {
-        events.extend(pending.into_iter().map(Event::Write));
-    }
-    if index < lines.len() {
-        index + 1
-    } else {
-        index
-    }
 }
