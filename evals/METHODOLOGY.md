@@ -360,7 +360,7 @@ without `--tag`, `--case`, or `--all` is refused. So is a run with no
 spare-budget credential:
 
 ```sh
-python3 evals/codex_rules.py
+python3 evals/codex_rules.py --case rules-testing-write-error-text --runs 1
 CODEX_AUTH_FILE=/path/to/spare-auth.json \
   python3 evals/codex_rules.py --run --case rules-testing-write-error-text --runs 1 \
   --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
