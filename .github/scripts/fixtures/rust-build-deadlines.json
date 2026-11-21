@@ -5,7 +5,7 @@
     "testPrecompileStep": 2100,
     "nativeBuildJob": 2700,
     "standaloneBuildStep": 1200,
-    "standaloneBuildJob": 1800,
+    "standaloneBuildJob": 1500,
     "packageStep": 1500,
     "packageJob": 2100,
     "qualityStep": 1800,

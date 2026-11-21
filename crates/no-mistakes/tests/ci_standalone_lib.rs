@@ -77,12 +77,16 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
     );
     assert_eq!(job["needs"].as_str(), Some("standalone-build"));
     let producer = &workflow["jobs"]["standalone-build"];
+    assert_eq!(producer["timeout-minutes"].as_u64(), Some(25));
     let build = step_named(
         producer["steps"].as_sequence().unwrap(),
         "Build standalone library without a CLI",
     );
-    assert!(build["run"].as_str().unwrap().lines().any(|line| {
-        line.trim() == "node .github/scripts/standalone-shards.cjs build target/standalone-bundle"
+    assert_eq!(build["timeout-minutes"].as_u64(), Some(20));
+    let build_run = build["run"].as_str().unwrap();
+    assert!(build_run.lines().any(|line| {
+        line.trim()
+            == "bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle"
     }));
     let helper = include_str!("../../../.github/scripts/standalone-shards.cjs");
     assert!(helper.contains("delete childEnv[\"CARGO_BIN_EXE_no-mistakes\"]"));
