@@ -12,6 +12,7 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     "coverage-producer-assertion-owner",
     "test-no-live-repository-scan",
     "query-reached-per-item",
+    "no-single-enqueue-in-loop",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
     "postgres-sql-fragment-escape",

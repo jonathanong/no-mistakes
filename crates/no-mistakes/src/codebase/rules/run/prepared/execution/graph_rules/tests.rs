@@ -188,6 +188,7 @@ fn failed_consumers_do_not_dispatch_without_their_canonical_graph() {
         REQUIRED_ENTRYPOINT_REACHABILITY,
         UNCONSTRUCTED_ERROR_CLASS,
         "query-reached-per-item",
+        "no-single-enqueue-in-loop",
         "postgres-no-mutable-sql-registry",
         "postgres-no-unbounded-sql-identifier",
     ] {
@@ -329,4 +330,87 @@ fn invalid_demand_filter_is_recorded_before_partial_source_registration() {
                 .contains("include contains invalid glob"));
         }
     }
+}
+
+fn enqueue_config(options: &str) -> crate::config::v2::NoMistakesConfig {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: crate::codebase::rules::no_single_enqueue_in_loop::RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(options).unwrap(),
+        ..Default::default()
+    });
+    config
+}
+
+#[test]
+fn no_single_enqueue_in_loop_graph_failure_is_attributed() {
+    let config = enqueue_config("single:\n  - {module: ./widgets, export: enqueueItem}\n");
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    session.enable_partial_checks();
+    super::super::outcomes::graph_failed(
+        &config,
+        &session,
+        &anyhow::anyhow!("canonical graph input could not be parsed"),
+    );
+    assert_eq!(session.check_failures().len(), 1);
+    assert_eq!(
+        session.check_failures()[0].consumer,
+        "no-single-enqueue-in-loop"
+    );
+}
+
+#[test]
+fn no_single_enqueue_in_loop_without_a_session_returns_no_findings() {
+    let config = enqueue_config("single:\n  - {module: ./widgets, export: enqueueItem}\n");
+    let root = Path::new("/repo");
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
+        root.to_path_buf(),
+        HashMap::new(),
+        HashMap::new(),
+    );
+    let output = graph_rule_findings(GraphRuleRequest {
+        root,
+        config: &config,
+        config_path: None,
+        shared: &shared,
+        prepared_graph: None,
+        dependency_graph: Some(&graph),
+        inferred_roots: None,
+        sources: None,
+        tsconfig_catalog: None,
+        prepared_vitest_projects: None,
+        prepared_playwright_projects: None,
+    })
+    .unwrap();
+    assert!(output.findings.is_empty());
+}
+
+#[test]
+fn no_single_enqueue_in_loop_without_a_graph_or_session_fails() {
+    let config = enqueue_config("single:\n  - {module: ./widgets, export: enqueueItem}\n");
+    let error = match graph_rule_findings(GraphRuleRequest {
+        root: Path::new("/repo"),
+        config: &config,
+        config_path: None,
+        shared: &crate::codebase::check_facts::CheckFactMap::default(),
+        prepared_graph: None,
+        dependency_graph: None,
+        inferred_roots: None,
+        sources: None,
+        tsconfig_catalog: None,
+        prepared_vitest_projects: None,
+        prepared_playwright_projects: None,
+    }) {
+        Err(error) => error,
+        Ok(output) => panic!(
+            "missing graph must fail, findings={}",
+            output.findings.len()
+        ),
+    };
+    assert!(
+        error.to_string().contains("canonical call graph"),
+        "{error:#}"
+    );
 }

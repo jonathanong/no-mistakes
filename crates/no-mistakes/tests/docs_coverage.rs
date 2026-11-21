@@ -255,6 +255,15 @@ fn github_actions_max_inline_script_lines_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn no_single_enqueue_in_loop_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::NO_SINGLE_ENQUEUE_IN_LOOP;
+    assert_eq!(rule, "no-single-enqueue-in-loop");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
+    assert!(read(&repo_root().join("docs/configuration/rules.md")).contains(rule));
+}
+
+#[test]
 fn github_actions_cache_key_policy_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_CACHE_KEY_POLICY;
     assert_eq!(rule, "github-actions-cache-key-policy");

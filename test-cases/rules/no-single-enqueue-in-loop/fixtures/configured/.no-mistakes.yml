@@ -1,0 +1,12 @@
+rules:
+  - rule: no-single-enqueue-in-loop
+    scope: repository
+    exclude:
+      - src/ignored.ts
+    options:
+      single:
+        - module: ./widgets
+          export: enqueueItem
+      bulk:
+        - module: ./widgets
+          export: enqueueItems

@@ -333,3 +333,6 @@ mod cli_check_queue_waits;
 
 #[path = "cli_check_queue_wait_wrappers.rs"]
 mod cli_check_queue_wait_wrappers;
+
+#[path = "cli_check_rules_no_single_enqueue_in_loop.rs"]
+mod cli_check_rules_no_single_enqueue_in_loop;
