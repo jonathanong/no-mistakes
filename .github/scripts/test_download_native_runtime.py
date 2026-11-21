@@ -26,14 +26,25 @@ def download_step_timeouts(source):
     steps = []
     name = None
     timeout = None
+    run_block_indent = None
     for line in source.splitlines():
         if line.startswith("  ") and not line.startswith("   ") and line.rstrip().endswith(":"):
             name = None
             timeout = None
+            run_block_indent = None
             continue
+        if run_block_indent is not None:
+            indent = len(line) - len(line.lstrip(" "))
+            if not line.strip() or indent > run_block_indent:
+                if "download-native-runtime.py" in line:
+                    steps.append((name, timeout))
+                    name = None
+                    run_block_indent = None
+                continue
+            run_block_indent = None
         stripped = line.strip()
         if stripped.startswith("- name:"):
-            name = stripped.split(":", 1)[1].strip()
+            name = stripped.split(":", 1)[1].strip().strip("'\"")
             timeout = None
             continue
         if name is None:
@@ -42,7 +53,13 @@ def download_step_timeouts(source):
             value = stripped.split(":", 1)[1].strip()
             timeout = int(value) if value.isdigit() else None
             continue
-        if "download-native-runtime.py" in stripped and stripped.startswith("run:"):
+        if not stripped.startswith("run:"):
+            continue
+        script = stripped.split(":", 1)[1].strip()
+        if script in {"|", ">", "|-", "|+", ">-", ">+"}:
+            run_block_indent = len(line) - len(line.lstrip(" "))
+            continue
+        if "download-native-runtime.py" in script:
             steps.append((name, timeout))
             name = None
     return steps
@@ -371,6 +388,10 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         for name, minutes in steps:
             self.assertIsNotNone(minutes, name)
             self.assertGreaterEqual(minutes * 60, floor, name)
+
+    def test_block_scalar_download_step_keeps_its_timeout(self):
+        steps = download_step_timeouts((FIXTURES / "widgets-workflow.yml").read_text())
+        self.assertEqual(steps, [("Download orders", 6)])
 
 
 if __name__ == "__main__":

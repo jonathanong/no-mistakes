@@ -1,0 +1,10 @@
+jobs:
+  widgets:
+    timeout-minutes: 9
+    steps:
+      - name: Prepare items
+        timeout-minutes: 2
+      - name: Download orders
+        timeout-minutes: 6
+        run: |
+          python3 .github/scripts/download-native-runtime.py orders
