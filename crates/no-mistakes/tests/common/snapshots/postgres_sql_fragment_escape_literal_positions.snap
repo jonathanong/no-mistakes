@@ -1,0 +1,52 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "literal_positions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "computed-load.ts",
+          "message": "`computed-load.ts` has no recorded specifier for a direct `import()` or `require()`, so a write, rebind, or escape of an exported SQL fragment is not recovered from source text. Restore the literal import fact and rerun the check."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "function-load.ts",
+          "import": "columns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "mock-factory.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(1);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "namespace-export.ts",
+          "import": "columns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export { sdk };",
+          "target": "widgetColumns"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

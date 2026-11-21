@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@example/sql": ["./sql.ts"]
+    }
+  },
+  "include": ["**/*.ts"]
+}
