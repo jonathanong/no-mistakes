@@ -152,8 +152,9 @@ entry identifies the unresolved specifier. Built-in Node modules, external
 packages (including external trusted-tag modules and their subpaths), and
 resolved non-code files are outside this search. Relative JSON and asset
 specifiers with extensions recognized by the TypeScript resolver also stay
-outside the search. Missing relative imports and path aliases whose target
-files are absent remain unresolved. A use of the configured trusted tag itself
+outside the search. Missing relative imports, missing absolute paths (including
+Windows drive paths), and path aliases whose target files are absent remain
+unresolved. A use of the configured trusted tag itself
 is not a fragment; other bindings from the same project specifier still follow
 the ordinary fragment checks. `check` exits 1 when the report contains an
 incomplete entry, even if the report has zero findings.

@@ -88,3 +88,31 @@ fn workspace_files_are_recorded_and_packages_are_external() {
         ImportTarget::Unresolved
     );
 }
+
+#[test]
+fn missing_absolute_paths_stay_unresolved() {
+    let importer = path("/repo/widgets/list.ts");
+    let entry = path("/repo/orders/index.ts");
+    let files = GraphFiles::from_files(vec![importer.clone(), entry.clone()]);
+    let packages = workspace(&entry);
+    let config = tsconfig(Vec::new());
+    let resolver = ImportResolver::new(&config);
+    for specifier in [
+        "C:/repo/widgets/missing.ts",
+        "C:\\repo\\widgets\\missing.ts",
+        "\\\\repo\\widgets\\missing.ts",
+    ] {
+        assert_eq!(
+            recorded(specifier, &importer, &resolver, &packages, &files),
+            ImportTarget::Unresolved,
+            "{specifier}"
+        );
+    }
+    for specifier in ["C:missing", "C:"] {
+        assert_eq!(
+            recorded(specifier, &importer, &resolver, &packages, &files),
+            ImportTarget::External,
+            "{specifier}"
+        );
+    }
+}
