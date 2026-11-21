@@ -443,6 +443,7 @@ remain failures. See
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
+`queueCheck()` reports `shared-queue-rate-limit` when a processor throws `RateLimitError` or calls `.rateLimit()` on a queue that carries more than one known job name, and abstains when that set is unknown.
 `queueCheck()` shares the [wait detection](cli/queues-check.md) for literal computed members, immutable local aliases, and direct callback references. Exact wrappers share that handling, including member calls and import aliases.
 Configure wrapper names with `queues.factories.enqueueAndWait`, Rust `regex`
 name patterns with `queues.factories.enqueueAndWaitPatterns` (default `[]`),

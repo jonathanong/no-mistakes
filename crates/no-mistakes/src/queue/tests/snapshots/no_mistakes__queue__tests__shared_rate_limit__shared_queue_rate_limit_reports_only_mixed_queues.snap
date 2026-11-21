@@ -1,0 +1,54 @@
+---
+source: crates/no-mistakes/src/queue/tests/shared_rate_limit.rs
+expression: "serde_json::to_string_pretty(&json!({\n    \"check\": check, \"diagnostics\": diagnostics,\n})).unwrap()"
+---
+{
+  "check": [
+    {
+      "kind": "shared-queue-rate-limit",
+      "file": "mixed-call.ts",
+      "line": 4,
+      "queueFile": "queues.ts",
+      "queueName": "items",
+      "job": null,
+      "message": "`items` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+      "sourceLine": "await worker.rateLimit(1000);"
+    },
+    {
+      "kind": "shared-queue-rate-limit",
+      "file": "mixed-error.ts",
+      "line": 4,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": null,
+      "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+      "sourceLine": "throw new RateLimitError();"
+    },
+    {
+      "kind": "shared-queue-rate-limit",
+      "file": "mixed-error.ts",
+      "line": 5,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": null,
+      "message": "`widgets` carries more than one job (pack, ship), so this rate limit stalls every job on that queue. Move that job kind to its own queue, or use per-group rate limits.",
+      "sourceLine": "throw Worker.RateLimitError();"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "warning",
+      "file": "unknown.ts",
+      "line": 4,
+      "message": "the set of job names on `drafts` is unknown, so this rate limit was not judged",
+      "sourceLine": "throw new RateLimitError();"
+    },
+    {
+      "severity": "warning",
+      "file": "unresolved.ts",
+      "line": 5,
+      "message": "the worker queue did not resolve, so this rate limit was not judged",
+      "sourceLine": "throw new RateLimitError();"
+    }
+  ]
+}

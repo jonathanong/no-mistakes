@@ -8,6 +8,7 @@ use std::path::Path;
 
 mod bindings;
 mod helpers;
+mod rate_limit;
 mod wait_wrappers;
 mod waits;
 
@@ -55,6 +56,11 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
         self.note_wait_variable(decl);
         self.note_variable(decl);
+    }
+
+    fn visit_throw_statement(&mut self, stmt: &oxc_ast::ast::ThrowStatement<'a>) {
+        self.note_rate_limit_throw(stmt);
+        walk::walk_throw_statement(self, stmt);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {

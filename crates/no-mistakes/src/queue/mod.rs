@@ -17,6 +17,7 @@ mod graph_related;
 mod graph_resolution;
 mod lang;
 mod outcomes;
+mod rate_limit;
 mod resolver;
 mod source;
 mod types;
