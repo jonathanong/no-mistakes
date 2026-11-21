@@ -853,7 +853,7 @@ jobs:
     name: Linux N-API tests (${{ matrix.shard }}/4)
     needs: linux-runtime
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -2944,7 +2944,7 @@ jobs:
     name: AST analysis
     needs: linux-runtime
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 11
 
     steps:
       - name: Checkout

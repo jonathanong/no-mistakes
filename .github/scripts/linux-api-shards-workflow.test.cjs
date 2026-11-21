@@ -108,3 +108,32 @@ test("AST analysis downloads only the verified CLI through the bounded helper", 
   assert.equal(download.uses, undefined);
   assert.equal(ast.steps.filter((step) => step.uses?.startsWith("pnpm/setup@")).length, 0);
 });
+
+test("native runtime download jobs outlive the download step and earlier step bounds", () => {
+  const covered = [];
+  for (const [jobId, job] of Object.entries(workflow.jobs)) {
+    const steps = Array.isArray(job.steps) ? job.steps : [];
+    const downloadAt = steps.findIndex(
+      (step) => typeof step.run === "string" && step.run.includes("download-native-runtime.py"),
+    );
+    if (downloadAt < 0) continue;
+    covered.push(jobId);
+    const required = steps.slice(0, downloadAt + 1).reduce((sum, step, index) => {
+      const minutes = step["timeout-minutes"];
+      assert.equal(typeof minutes, "number", `${jobId} step ${index} needs a literal timeout`);
+      return sum + minutes;
+    }, 0);
+    const jobMinutes = job["timeout-minutes"];
+    assert.equal(typeof jobMinutes, "number", `${jobId} needs a literal job timeout`);
+    assert.ok(
+      jobMinutes >= required,
+      `${jobId} timeout-minutes ${jobMinutes} is below ${required}, the sum of step bounds through the download`,
+    );
+  }
+  assert.deepEqual(covered.sort(), [
+    "ast-analysis",
+    "linux-api-tests",
+    "native-api-tests",
+    "native-api-tests-macos",
+  ]);
+});

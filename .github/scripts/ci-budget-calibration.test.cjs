@@ -140,7 +140,7 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
     elapsed(data.startedAt, step(data, apiName).startedAt) + api + data.postJobReserveSeconds;
   assert.equal(historicalSerialRequired, 908);
   assert.ok(jobBudget(consumer) >= api + data.postJobReserveSeconds);
-  assert.equal(jobBudget(consumer), 480);
+  assert.equal(jobBudget(consumer), 1500);
   assert.match(consumer, /needs: linux-runtime/);
   assert.doesNotMatch(consumer, /build-native\.cjs|cargo build/);
   const gate = job("javascript-tests");
