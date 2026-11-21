@@ -157,6 +157,8 @@ fn finish_namespace_facts(state: NamespaceState) -> NamespaceFacts {
     facts.roots.sort_by(|a, b| a.name.cmp(&b.name));
     facts.value_uses = state.value_uses.into_iter().collect();
     facts.value_uses.sort();
+    facts.value_use_offsets = state.value_use_offsets.into_iter().collect();
+    facts.value_use_offsets.sort();
     facts.member_uses = state.member_uses.into_iter().collect();
     facts.member_uses.sort();
     facts

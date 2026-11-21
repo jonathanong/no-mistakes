@@ -1,0 +1,688 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "append_chain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "aliasMutator.ts",
+          "import": "aliasSource.ts",
+          "line": 5,
+          "message": "exported SQL fragment `ALIASED` from `aliasSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "RENAMED.append(dynamicFragment);",
+          "target": "ALIASED"
+        },
+        {
+          "file": "aliasMutator.ts",
+          "import": "aliasSource.ts",
+          "line": 6,
+          "message": "exported SQL fragment `DEFAULTED` from `aliasSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "DEFAULTED.append(dynamicFragment);",
+          "target": "DEFAULTED"
+        },
+        {
+          "file": "assignMutator.ts",
+          "import": "assignControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `ASSIGN_COLS` from `assignControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.assign(ns, { extra });",
+          "target": "ASSIGN_COLS"
+        },
+        {
+          "file": "assignMutator.ts",
+          "import": "assignControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `ASSIGN_OTHER` from `assignControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.assign(ns, { extra });",
+          "target": "ASSIGN_OTHER"
+        },
+        {
+          "file": "computedKeyMutator.ts",
+          "import": "computedKeyControls.ts",
+          "line": 5,
+          "message": "exported SQL fragment `KEY_A` from `computedKeyControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "ns[key].append(extra);",
+          "target": "KEY_A"
+        },
+        {
+          "file": "computedKeyMutator.ts",
+          "import": "computedKeyControls.ts",
+          "line": 5,
+          "message": "exported SQL fragment `KEY_B` from `computedKeyControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "ns[key].append(extra);",
+          "target": "KEY_B"
+        },
+        {
+          "file": "destructureSiblingMutator.ts",
+          "import": "destructureSibling.ts",
+          "line": 3,
+          "message": "exported SQL fragment `SIBLING_COLS` from `destructureSibling.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const { SIBLING_COLS } = parts;",
+          "target": "SIBLING_COLS"
+        },
+        {
+          "file": "destructureSiblingMutator.ts",
+          "import": "destructureSibling.ts",
+          "line": 3,
+          "message": "exported SQL fragment `SIBLING_OTHER` from `destructureSibling.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const { SIBLING_COLS } = parts;",
+          "target": "SIBLING_OTHER"
+        },
+        {
+          "file": "destructureSiblingMutator.ts",
+          "import": "destructureSibling.ts",
+          "line": 6,
+          "message": "exported SQL fragment `SIBLING_COLS` from `destructureSibling.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "SIBLING_COLS.append(dynamicFragment);",
+          "target": "SIBLING_COLS"
+        },
+        {
+          "file": "dynamicMemberMutator.ts",
+          "import": "dynamicMemberControls.ts",
+          "line": 3,
+          "message": "exported SQL fragment `DYNAMIC_AWAIT` from `dynamicMemberControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "loaded.DYNAMIC_AWAIT.append(extra);",
+          "target": "DYNAMIC_AWAIT"
+        },
+        {
+          "file": "dynamicMemberMutator.ts",
+          "import": "dynamicMemberControls.ts",
+          "line": 5,
+          "message": "exported SQL fragment `DYNAMIC_THEN` from `dynamicMemberControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.DYNAMIC_THEN.append(extra);",
+          "target": "DYNAMIC_THEN"
+        },
+        {
+          "file": "dynamicValueMutator.ts",
+          "import": "dynamicValueControls.ts",
+          "line": 7,
+          "message": "exported SQL fragment `DYNAMIC_VALUE_OTHER` from `dynamicValueControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "use(loaded);",
+          "target": "DYNAMIC_VALUE_OTHER"
+        },
+        {
+          "file": "dynamicValueMutator.ts",
+          "import": "dynamicValueControls.ts",
+          "line": 7,
+          "message": "exported SQL fragment `DYNAMIC_VALUE` from `dynamicValueControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "use(loaded);",
+          "target": "DYNAMIC_VALUE"
+        },
+        {
+          "file": "elementMutator.ts",
+          "import": "elementControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `ELEMENT_MUT` from `elementControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "ns[\"ELEMENT_MUT\"].append(extra);",
+          "target": "ELEMENT_MUT"
+        },
+        {
+          "file": "equalsMutator.ts",
+          "import": "equalsControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `EQUALS_COLS` from `equalsControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "ext.EQUALS_COLS.append(extra);",
+          "target": "EQUALS_COLS"
+        },
+        {
+          "file": "exportedAppendControls.ts",
+          "import": "exportedAppendControls.ts",
+          "line": 9,
+          "message": "exported SQL fragment `widgetColumns` from `exportedAppendControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": ".append(widgetColumns.append(sql`, extra`))",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "exportedConstMutator.ts",
+          "import": "exportedConstControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `SHARED_COLS` from `exportedConstControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "SHARED_COLS.append(dynamicFragment);",
+          "target": "SHARED_COLS"
+        },
+        {
+          "file": "heritageMutator.ts",
+          "import": "heritageFragments.ts",
+          "line": 5,
+          "message": "exported SQL fragment `EXTEND_COLS` from `heritageFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "class WidgetRow extends (parts.EXTEND_COLS.text = dynamicSql, Object) {}",
+          "target": "EXTEND_COLS"
+        },
+        {
+          "file": "indexAmbient.ts",
+          "import": "indexFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `AMBIENT_COLS` from `indexFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export { AMBIENT_COLS as VIRTUAL_COLS };",
+          "target": "AMBIENT_COLS"
+        },
+        {
+          "file": "indexAmbientMutator.ts",
+          "import": "indexFragments.ts",
+          "line": 4,
+          "message": "exported SQL fragment `AMBIENT_COLS` from `indexFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "VIRTUAL_COLS.append(dynamicFragment);",
+          "target": "AMBIENT_COLS"
+        },
+        {
+          "file": "indexControls.ts",
+          "import": "./not-a-module",
+          "line": 9,
+          "message": "unresolved import `./not-a-module` may write, rebind, or escape an exported SQL fragment",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export const unresolved = [missing];",
+          "target": "./not-a-module"
+        },
+        {
+          "file": "indexDefaultMutator.ts",
+          "import": "indexFragments.ts",
+          "line": 4,
+          "message": "exported SQL fragment `default` from `indexFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "DefaultCols.append(dynamicFragment);",
+          "target": "default"
+        },
+        {
+          "file": "indexQualMutator.ts",
+          "import": "indexQualFragments.ts",
+          "line": 6,
+          "message": "exported SQL fragment `QUAL_COLS` from `indexQualFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Qualified.append(dynamicFragment);",
+          "target": "QUAL_COLS"
+        },
+        {
+          "file": "indexRenamedConsumer.ts",
+          "import": "indexFragments.ts",
+          "line": 4,
+          "message": "exported SQL fragment `RENAMED_COLS` from `indexFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Final.append(dynamicFragment);",
+          "target": "RENAMED_COLS"
+        },
+        {
+          "file": "indexRenamedMutator.ts",
+          "import": "indexFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `RENAMED_COLS` from `indexFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export { Renamed as Final };",
+          "target": "RENAMED_COLS"
+        },
+        {
+          "file": "indexRequireMutator.ts",
+          "import": "indexRequireFragments.ts",
+          "line": 5,
+          "message": "exported SQL fragment `REQ_COLS` from `indexRequireFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export const copy = Again[\"REQ_COLS\"];",
+          "target": "REQ_COLS"
+        },
+        {
+          "file": "listedConstMutator.ts",
+          "import": "listedConstControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `LISTED_COLS` from `listedConstControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "LISTED_COLS.append(dynamicFragment);",
+          "target": "LISTED_COLS"
+        },
+        {
+          "file": "mutator.ts",
+          "import": "fragments.ts",
+          "line": 4,
+          "message": "exported SQL fragment `MUTATED` from `fragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "return MUTATED.append(sql`, extra`);",
+          "target": "MUTATED"
+        },
+        {
+          "file": "namespaceDestructureMutator.ts",
+          "import": "namespaceDestructureControls.ts",
+          "line": 3,
+          "message": "exported SQL fragment `NS_DESTRUCTURED_COLS` from `namespaceDestructureControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const { NS_DESTRUCTURED_COLS } = ns;",
+          "target": "NS_DESTRUCTURED_COLS"
+        },
+        {
+          "file": "namespaceDestructureMutator.ts",
+          "import": "namespaceDestructureControls.ts",
+          "line": 8,
+          "message": "exported SQL fragment `NS_DESTRUCTURED_COLS` from `namespaceDestructureControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "NS_DESTRUCTURED_COLS.append(dynamicFragment);",
+          "target": "NS_DESTRUCTURED_COLS"
+        },
+        {
+          "file": "namespaceElementMutator.ts",
+          "import": "namespaceElementControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `NS_ELEMENT_COLS` from `namespaceElementControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "ns[\"NS_ELEMENT_COLS\"].append(dynamicFragment);",
+          "target": "NS_ELEMENT_COLS"
+        },
+        {
+          "file": "reflectMutator.ts",
+          "import": "reflectControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `REFLECT_COLS` from `reflectControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Reflect.set(ns, \"label\", extra);",
+          "target": "REFLECT_COLS"
+        },
+        {
+          "file": "reflectMutator.ts",
+          "import": "reflectControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `REFLECT_OTHER` from `reflectControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Reflect.set(ns, \"label\", extra);",
+          "target": "REFLECT_OTHER"
+        },
+        {
+          "file": "reflectMutator.ts",
+          "import": "reflectControls.ts",
+          "line": 5,
+          "message": "exported SQL fragment `REFLECT_COLS` from `reflectControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "return Reflect.get(ns, \"label\");",
+          "target": "REFLECT_COLS"
+        },
+        {
+          "file": "reflectMutator.ts",
+          "import": "reflectControls.ts",
+          "line": 5,
+          "message": "exported SQL fragment `REFLECT_OTHER` from `reflectControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "return Reflect.get(ns, \"label\");",
+          "target": "REFLECT_OTHER"
+        },
+        {
+          "file": "requireMemberMutator.ts",
+          "import": "requireMemberControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `REQUIRE_MEMBER` from `requireMemberControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.REQUIRE_MEMBER.append(extra);",
+          "target": "REQUIRE_MEMBER"
+        },
+        {
+          "file": "requireValueMutator.ts",
+          "import": "requireValueControls.ts",
+          "line": 8,
+          "message": "exported SQL fragment `REQUIRE_VALUE_OTHER` from `requireValueControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "return use(parts);",
+          "target": "REQUIRE_VALUE_OTHER"
+        },
+        {
+          "file": "requireValueMutator.ts",
+          "import": "requireValueControls.ts",
+          "line": 8,
+          "message": "exported SQL fragment `REQUIRE_VALUE` from `requireValueControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "return use(parts);",
+          "target": "REQUIRE_VALUE"
+        },
+        {
+          "file": "starNamedMutator.ts",
+          "import": "starSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `STAR_NAMED_MUT` from `starSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "STAR_NAMED_MUT.append(extra);",
+          "target": "STAR_NAMED_MUT"
+        },
+        {
+          "file": "starNsMutator.ts",
+          "import": "starSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `STAR_NS_MUT` from `starSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.STAR_NS_MUT.append(extra);",
+          "target": "STAR_NS_MUT"
+        },
+        {
+          "file": "typeofValueControls.ts",
+          "import": "typeofValueFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `KIND_COLS` from `typeofValueFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const kind = typeof parts;",
+          "target": "KIND_COLS"
+        },
+        {
+          "file": "typeofValueControls.ts",
+          "import": "typeofValueFragments.ts",
+          "line": 3,
+          "message": "exported SQL fragment `KIND_OTHER` from `typeofValueFragments.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "const kind = typeof parts;",
+          "target": "KIND_OTHER"
+        },
+        {
+          "file": "valueMutator.ts",
+          "import": "valueControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `VALUE_COLS` from `valueControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.values(ns).forEach((part: any) => part.append(extra));",
+          "target": "VALUE_COLS"
+        },
+        {
+          "file": "valueMutator.ts",
+          "import": "valueControls.ts",
+          "line": 4,
+          "message": "exported SQL fragment `VALUE_OTHER` from `valueControls.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.values(ns).forEach((part: any) => part.append(extra));",
+          "target": "VALUE_OTHER"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "aliasStemMutator.ts",
+          "import": "widgets/items.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetItems` from `widgets/items.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetItems.append(extra);",
+          "target": "widgetItems"
+        },
+        {
+          "file": "ambiguousStemMutator.ts",
+          "import": "orders/columns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `widgetColumns` from `orders/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "ambiguousStemMutator.ts",
+          "import": "users/columns.ts",
+          "line": 6,
+          "message": "exported SQL fragment `userColumns` from `users/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "userColumns.append(extra);",
+          "target": "userColumns"
+        },
+        {
+          "file": "assignMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.text = extra;",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "chooseKeyMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 6,
+          "message": "exported SQL fragment `orderColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[chooseKey()].append(extra);",
+          "target": "orderColumns"
+        },
+        {
+          "file": "chooseKeyMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 6,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[chooseKey()].append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "concatMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `orderColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[\"widget\" + \"Columns\"].append(extra);",
+          "target": "orderColumns"
+        },
+        {
+          "file": "concatMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[\"widget\" + \"Columns\"].append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "defaultMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 5,
+          "message": "exported SQL fragment `keptColumns` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns.keptColumns.append(extra);",
+          "target": "keptColumns"
+        },
+        {
+          "file": "exportListMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `orderColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export {",
+          "target": "orderColumns"
+        },
+        {
+          "file": "exportListMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export {",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "externalStemMutator.ts",
+          "import": "local/sql.ts",
+          "line": 6,
+          "message": "exported SQL fragment `localColumns` from `local/sql.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "localColumns.append(extra);",
+          "target": "localColumns"
+        },
+        {
+          "file": "externalStemMutator.ts",
+          "import": "pkg/sql",
+          "line": 5,
+          "message": "unresolved import `pkg/sql` may write, rebind, or escape an exported SQL fragment",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "Object.assign(external, { extra });",
+          "target": "pkg/sql"
+        },
+        {
+          "file": "itemMutator.ts",
+          "import": "orders/items.ts",
+          "line": 5,
+          "message": "exported SQL fragment `orderItems` from `orders/items.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "orders.orderItems.append(extra);",
+          "target": "orderItems"
+        },
+        {
+          "file": "literalImportMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `orderColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.append(extra);",
+          "target": "orderColumns"
+        },
+        {
+          "file": "literalImportMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "memberMutateMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.strings.push(\"id\");",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "memberMutateMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.values.splice(0, 0, \"id\");",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "namespaceMemberMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns.widgetColumns.strings.push(\"id\");",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "outerMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `keptColumns` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[\"order\" + \"Columns\"].append(extra);",
+          "target": "keptColumns"
+        },
+        {
+          "file": "partial/mut.ts",
+          "import": "partial/columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `partial/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(extra);",
+          "target": "COLS"
+        },
+        {
+          "file": "plainUseMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "consume(widgetColumns);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "renameAllMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `default` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns[\"widget\" + \"Columns\"].append(extra);",
+          "target": "default"
+        },
+        {
+          "file": "renameMutator.ts",
+          "import": "defaultSource.ts",
+          "line": 4,
+          "message": "exported SQL fragment `default` from `defaultSource.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "columns.widgetColumns.append(extra);",
+          "target": "default"
+        },
+        {
+          "file": "requireSiblingMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `orderColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "other.append(extra);",
+          "target": "orderColumns"
+        },
+        {
+          "file": "requireSiblingMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 5,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "other.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "spreadAppendMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 8,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(...parts);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "spreadAppendMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 9,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(left, right);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "thenMutator.ts",
+          "import": "widgetColumns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `widgetColumns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "ns.widgetColumns.append(extra);",
+          "target": "widgetColumns"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

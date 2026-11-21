@@ -171,3 +171,7 @@ fn pure(expr: &Expr, tags: &mut Vec<String>) -> bool {
         _ => false,
     }
 }
+
+#[cfg(test)]
+#[path = "append_callback/proof_tests.rs"]
+mod proof_tests;

@@ -1,0 +1,14 @@
+name: Widgets
+on: push
+jobs:
+  publish:
+    uses: example/publish-widget@v1
+    with:
+      name: widgets
+      keep-days: 30
+      replace: true
+  pack:
+    uses: Example/Publish-Widget@V1
+    with:
+      name: widgets
+      replace: true

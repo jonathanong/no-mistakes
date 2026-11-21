@@ -1,5 +1,5 @@
 /// Collects every configured edge kind and merges each into `forward`/`reverse`.
-/// Independent core kinds collect `Vec<Edge>` in parallel; merge order stays
+/// Independent core kinds collect their edges in parallel; merge order stays
 /// the historical serial sequence so public graph JSON stays byte-identical.
 /// Playwright selector edges still attach after the partial graph in
 /// `builder_core.rs`. `graph.ci` still writes maps in place later.
@@ -31,7 +31,7 @@ fn collect_and_merge_all_edges(
     parsed_imports: &ParsedImports<'_>,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     maps: EdgeMaps<'_>,
-) -> Result<()> {
+) -> Result<ImportTargetMap> {
     let EdgeMaps {
         forward,
         reverse,
@@ -57,6 +57,7 @@ fn collect_and_merge_all_edges(
         workspace,
     );
     selector_import_sites.extend(std::mem::take(&mut core.symbols.1));
+    let import_targets = std::mem::take(&mut core.import_targets);
     merge_independent_core_edges(forward, reverse, core);
     if edge_inputs.plan.calls || edge_inputs.plan.extends {
         // Call targets and class bases follow workspace package names exactly
@@ -100,7 +101,8 @@ fn collect_and_merge_all_edges(
             call_prerequisites,
             class_declarations,
         },
-    )
+    )?;
+    Ok(import_targets)
 }
 
 fn collect_import_edges_for_core(
@@ -108,9 +110,9 @@ fn collect_import_edges_for_core(
     parsed_imports: &ParsedImports<'_>,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-) -> Vec<Edge> {
+) -> ImportPass {
     if !edge_inputs.plan.imports {
-        return Vec::new();
+        return ImportPass::default();
     }
     collect_import_edges(
         parsed_imports,

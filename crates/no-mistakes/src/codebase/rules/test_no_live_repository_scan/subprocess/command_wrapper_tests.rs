@@ -76,7 +76,17 @@ fn package_manager_flags_and_nested_wrappers_unwrap() {
     assert!(matches("yarn", &["widget-audit", "check"]));
     assert!(matches("yarn", &["dlx", "widget-audit", "check"]));
     assert!(matches("yarn.cmd", &["dlx", "--", "widget-audit", "check"]));
-    assert!(!matches("yarn", &["--cwd", "dir", "widget-audit", "check"]));
+    assert!(matches("yarn", &["run", "widget-audit", "check"]));
+    assert!(matches(
+        "yarn",
+        &["--cwd", "widgets", "widget-audit", "check"]
+    ));
+    assert!(matches(
+        "yarn",
+        &["--cwd=widgets", "run", "--", "widget-audit", "check"]
+    ));
+    assert!(!matches("yarn", &["--cwd", "widget-audit", "check"]));
+    assert!(!matches("yarn", &["--cwd"]));
     assert!(matches("bunx", &["--yes", "widget-audit", "check"]));
 
     assert!(matches(

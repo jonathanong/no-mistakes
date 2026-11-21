@@ -156,3 +156,45 @@ fn a_local_callable_is_not_an_analyzer_launcher() {
     assert!(diagnostics.findings.is_empty());
     assert!(diagnostics.advisories.is_empty());
 }
+
+fn shell_note(command: &str, cwd: PathOrigin) -> AnalysisDiagnostics {
+    let call = site(ResolvedCallTarget::ModuleExport {
+        specifier: "node:child_process".into(),
+        export_path: "execSync".into(),
+        repository_target: None,
+        callable_id: None,
+    });
+    let arguments = ArgumentValues {
+        values: vec![
+            ArgumentValue::Scalar(serde_json::Value::String(command.into())),
+            ArgumentValue::Object(crate::fx::FxHashMap::default()),
+        ],
+        spread_from: None,
+        path: None,
+    };
+    let mut provenance = PathProvenance::default();
+    provenance
+        .arg_member_paths
+        .insert(7, vec![(1, "cwd".to_string(), cwd)]);
+    note(&Lookup(Some(bindings(arguments, Some(provenance)))), &call)
+}
+
+#[test]
+fn a_shell_cd_replaces_the_cwd_option() {
+    let mut owned = PathOrigin::unknown();
+    owned.segments = vec!["fixtures".to_string()];
+    let live = shell_note("cd /repo && widget-audit check", owned);
+    assert_eq!(live.findings.len(), 1);
+    assert!(live.advisories.is_empty());
+    let quiet = shell_note("cd fixtures && widget-audit check", PathOrigin::unknown());
+    assert!(quiet.findings.is_empty());
+    assert!(quiet.advisories.is_empty());
+    let climb = shell_note("cd ../widgets && widget-audit check", PathOrigin::unknown());
+    assert!(climb.findings.is_empty());
+    assert_eq!(climb.advisories.len(), 1);
+    let expanded = shell_note(
+        "cd fixtures/$DIR && widget-audit check",
+        PathOrigin::unknown(),
+    );
+    assert!(expanded.findings.is_empty() && expanded.advisories.len() == 1);
+}

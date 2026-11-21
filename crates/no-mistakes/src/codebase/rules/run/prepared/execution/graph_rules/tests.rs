@@ -85,10 +85,17 @@ fn unbounded_identifier_requires_canonical_graph() {
 }
 
 #[test]
+#[should_panic(expected = "postgres-sql-fragment-escape requires canonical graph")]
+fn sql_fragment_escape_requires_canonical_graph() {
+    panic_without_graph("postgres-sql-fragment-escape");
+}
+
+#[test]
 fn propagates_sql_cross_file_filter_errors() {
     for rule in [
         "postgres-no-mutable-sql-registry",
         "postgres-no-unbounded-sql-identifier",
+        "postgres-sql-fragment-escape",
     ] {
         let error = error_from(&invalid_filter_config(
             rule,

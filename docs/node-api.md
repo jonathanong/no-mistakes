@@ -620,6 +620,10 @@ checks direct literal SQL through named executor imports without preparing
 cross-file mutation analysis;
 unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.
 
+`postgres-sql-fragment-escape` runs through the same async `check()` path. It
+reports cross-file writes, rebinds, and namespace escapes of exported trusted
+SQL fragments and does not add a separate function.
+
 Configured [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
 applications run through the existing async `check()` binding and through
 `analyzeProject()` check reports, with the same findings and advisories as CLI
@@ -845,6 +849,24 @@ script-body lines, joining backslash continuations, in workflows and composite a
 Configure `caches` with a path, lockfile, and `keyParts`. `rejectRestoreKeys` defaults to true
 and `allowHashFiles` defaults to false. See the
 [rule documentation](rules/github-actions-cache-key-policy.md).
+
+`test-fixture-size-cap` is available through asynchronous `check()` and
+`analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
+Set `options.threshold` to cap literal `Array.from` lengths and single-argument `Array`
+and `new Array` lengths in `scopes.tests` and `scopes.helpers`. `eachCalls` defaults
+to `[]`. When it names a callee, numeric elements are cardinalities for scale or
+size tables. Omitting `threshold` reports nothing. Use `exemptions` for an exact
+intentional size. See the
+[rule documentation](rules/test-fixture-size-cap.md).
+
+`vite-optimize-deps-nested-imports` is available through asynchronous `check()` and
+`analyzeProject()` using the same configuration and `RuleFinding` report as CLI `check`.
+`configFiles` and `packages` are required. Optional `includeSources` entries name a
+`module` and an `export` whose value is a static `["parent > child", …]` array,
+including an `as const` or `satisfies` wrapper. A subpath import is covered
+only by that exact `parent > specifier`. A Node built-in still matches by
+package name. Optional `ignorePackages` skips uncovered imports of those package names. See the
+[rule documentation](rules/vite-optimize-deps-nested-imports.md).
 
 ### Source-level merged configuration
 

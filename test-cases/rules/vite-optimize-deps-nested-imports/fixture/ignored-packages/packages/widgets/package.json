@@ -1,0 +1,9 @@
+{
+  "name": "widgets",
+  "version": "1.0.0",
+  "module": "./index.ts",
+  "dependencies": {
+    "labels": "1.0.0",
+    "items": "1.0.0"
+  }
+}

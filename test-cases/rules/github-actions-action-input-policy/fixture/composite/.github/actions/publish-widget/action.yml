@@ -1,0 +1,21 @@
+name: Publish widget
+description: Publish a widget artifact
+runs:
+  using: composite
+  steps:
+    - name: publish widgets
+      uses: example/publish-widget@v1
+      with:
+        name: widgets
+        keep-days: 30
+        replace: true
+    - name: publish items
+      uses: example/publish-widget@v1
+      with:
+        name: items
+        keep-days: 1
+        replace: true
+    - name: checkout orders
+      uses: example/checkout-orders@v1
+      with:
+        path: orders

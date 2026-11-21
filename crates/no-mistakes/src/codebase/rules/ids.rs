@@ -78,6 +78,7 @@ pub use super::postgres_require_named_constraints::RULE_ID as POSTGRES_REQUIRE_N
 pub use super::postgres_require_query_annotation::RULE_ID as POSTGRES_REQUIRE_QUERY_ANNOTATION;
 pub use super::postgres_required_comments::RULE_ID as POSTGRES_REQUIRED_COMMENTS;
 pub use super::postgres_required_predicates::RULE_ID as POSTGRES_REQUIRED_PREDICATES;
+pub use super::postgres_sql_fragment_escape::RULE_ID as POSTGRES_SQL_FRAGMENT_ESCAPE;
 pub use super::postgres_sql_shape_policy::RULE_ID as POSTGRES_SQL_SHAPE_POLICY;
 pub use super::postgres_sql_statement_policy::RULE_ID as POSTGRES_SQL_STATEMENT_POLICY;
 pub use super::postgres_status_with_lifecycle_timestamps::RULE_ID as POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS;
@@ -102,6 +103,7 @@ pub use super::structured_config_policy::RULE_ID as STRUCTURED_CONFIG_POLICY;
 pub use super::swift_no_raw_print::RULE_ID as SWIFT_NO_RAW_PRINT;
 pub use super::swift_viewmodel_main_actor::RULE_ID as SWIFT_VIEWMODEL_MAIN_ACTOR;
 pub use super::test_email_domain_policy::RULE_ID as TEST_EMAIL_DOMAIN_POLICY;
+pub use super::test_fixture_size_cap::RULE_ID as TEST_FIXTURE_SIZE_CAP;
 pub use super::test_no_dependency_pins::RULE_ID as TEST_NO_DEPENDENCY_PINS;
 pub use super::test_no_live_repository_scan::RULE_ID as TEST_NO_LIVE_REPOSITORY_SCAN;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;

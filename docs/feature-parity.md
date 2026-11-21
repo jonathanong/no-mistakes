@@ -54,12 +54,18 @@ and the return value of callback `fs.mkdtemp`, are not that owned directory.
 Awaiting an immutable `const` alias of that promise is the directory. Another
 use of a mutable buffer result leaves the binding unproven.
 Opt-in `analyzers` entries share this CLI and async Node check. A configured
-command matches a direct executable, a `node_modules/.bin` basename, a static
-`exec` or `execSync` shell string, a `spawn` or `spawnSync` call with boolean
-`shell: true`, `fork`, and repeated wrapping by `pnpm exec`, `pnpm dlx`,
-`npm exec`, `npx`, `bunx`, `yarn`, or `yarn dlx`. The `cwd` proof is the
+command matches a direct executable, a `node_modules/.bin` basename, a
+`.js`, `.mjs`, or `.cjs` path, a static `exec` or `execSync` shell string
+(including a leading `cd <dir> &&` or `NAME=value` prefix), a `spawn` or
+`spawnSync` call with boolean `shell: true`, `fork`, and repeated wrapping by
+`pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, or
+`yarn dlx`, including `yarn --cwd` and a long value flag such as
+`--reporter <value>`. The `cwd` proof is the
 same owned `mkdtemp` or fixture-directory proof; a missing `cwd` is the live
-working directory.
+working directory. A `cd <dir> &&` prefix, a pnpm `-C` or `--dir`, or a yarn
+`--cwd` replaces that proof. `cd .` stays in the current directory, `cd /` is
+the filesystem root, and `cd ..` leaves an unowned directory. A quote
+leaves the shell string unmatched.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory
 and loader aliases do not grant a bounded-path proof.
@@ -191,6 +197,11 @@ checks every parameter and alias reference and permits only an inert native
 default after the first argument; extra caller objects remain unresolved.
 CLI and async Node checks share the same inert later-parameter default proof
 and exact closed-object gate for a defaulted helper destructure.
+
+Opt-in `postgres-sql-fragment-escape` reports cross-file writes, rebinds, and
+namespace escapes of exported trusted SQL const fragments. It borrows prepared
+import and value-flow facts plus the canonical graph, and it does not change
+`postgres-no-mutable-sql-registry`.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes

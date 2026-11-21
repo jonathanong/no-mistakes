@@ -44,3 +44,30 @@ jobs:
         run: |
           pnpm exec vitest run --project widgets \
             src/folded.test.ts
+      - name: shard expression
+        run: vitest run --project widgets src/shard.test.ts --shard ${{ matrix.shard }}
+      - name: quoted shard
+        run: vitest run --project widgets src/quoted.test.ts --shard "${{ matrix.shard }}"
+      - name: dynamic config
+        run: vitest run --project widgets src/config.test.ts --config "$CONFIG" --outputFile "$OUT"
+      - name: shell then
+        run: if true; then vitest run --project widgets src/then.test.ts; fi
+      - name: shell do
+        run: while true; do vitest run --project widgets src/do.test.ts; done
+      - name: shell else
+        run: if false; then true; else vitest run --project widgets src/else.test.ts; fi
+      - name: pnpm dlx
+        run: pnpm dlx vitest run --project widgets src/dlx.test.ts
+      - name: yarn dlx
+        run: yarn dlx vitest run --project widgets src/yarn.test.ts
+      - name: wrapper
+        run: pnpm exec ./scripts/with-env vitest run --project widgets packages/widgets/widget.test.ts
+      - name: package script
+        run: pnpm test -- --project widgets src/widgets.test.ts
+      - name: dynamic positional
+        run: vitest run --project widgets $WIDGETS
+      - name: omitted project
+        run: vitest run src/omitted.test.ts
+  flow:
+    runs-on: ubuntu-latest
+    steps: [{run: pnpm exec vitest run --project widgets src/flow.test.ts}]

@@ -13,6 +13,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "callers.mts",
+          "line": 12,
+          "message": "callers.mts:12: query annotation cannot be verified because the leading SQL is unanalyzable; make the prefix static or add a leading /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "export const reassigned = (limit: number) => queryItemsReassign(limit, sql`/* reassigned */ SELECT id FROM orders WHERE TRUE`, statement => read(statement));",
+          "target": "annotation"
+        },
+        {
+          "file": "callers.mts",
           "line": 8,
           "message": "callers.mts:8: query execution must start with a /* name */ annotation",
           "rule": "postgres-require-query-annotation",

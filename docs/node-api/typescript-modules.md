@@ -131,6 +131,8 @@ Opt-in [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-reg
 and [`postgres-no-unbounded-sql-identifier`](../rules/postgres-no-unbounded-sql-identifier.md)
 use the same async `check()` path. They borrow prepared import, value-flow, and
 embedded-SQL facts plus the canonical graph; report fields are unchanged.
+[`postgres-sql-fragment-escape`](../rules/postgres-sql-fragment-escape.md) uses
+that same path to report cross-file escapes of exported SQL fragments.
 
 `parsePostgresSql()` exposes structured trigger `eventFacts`, cast
 `dataTypeFacts`, and literal EXECUTE `using` expressions through the same async

@@ -140,6 +140,13 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
+        TEST_FIXTURE_SIZE_CAP => test_fixture_size_cap::check_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        ),
         NO_EMPTY_OR_COMMENTS_ONLY_FILES => {
             no_empty_or_comments_only_files::check_with_files_and_sources(
                 root, config, files, sources,

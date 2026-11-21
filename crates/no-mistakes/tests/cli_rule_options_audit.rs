@@ -58,6 +58,7 @@ fn rule_options_json_matches_snapshot() {
         "finite-shared-yaml",
         "finite-valid-low",
         "timeout-literals-stale-allow",
+        "vitest-project-file",
     ];
     let cases: Vec<_> = names
         .iter()
@@ -91,6 +92,7 @@ fn required_options_and_yaml_are_hard_errors() {
         ("email-missing-options", "bannedDomains"),
         ("email-null-options", "bannedDomains"),
         ("timeout-literals-missing-file", "allow[0].file"),
+        ("vitest-project-duplicate", "duplicated"),
     ];
     let mut diagnostics = serde_json::Map::new();
     for (name, expected) in cases {

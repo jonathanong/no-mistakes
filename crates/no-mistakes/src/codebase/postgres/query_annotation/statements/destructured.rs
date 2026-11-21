@@ -44,7 +44,6 @@ pub(super) fn bind(
             .id
             .get_binding_identifiers()
             .into_iter()
-            // Primitive, not Unknown: an unlowered expression after the call is rejected.
             .map(|id| Step::Bind(id.name.to_string(), Expr::Primitive)),
     );
 }

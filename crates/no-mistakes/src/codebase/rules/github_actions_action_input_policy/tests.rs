@@ -4,6 +4,9 @@ use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 use std::path::PathBuf;
 
+#[path = "tests/calls.rs"]
+mod calls;
+
 fn rule_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/github-actions-action-input-policy")

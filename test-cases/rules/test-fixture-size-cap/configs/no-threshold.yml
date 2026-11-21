@@ -1,0 +1,11 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      scopes:
+        tests:
+          - "*.test.ts"
+          - "**/*.test.ts"
+        helpers:
+          - "helpers/*.ts"
+          - "helpers/**/*.ts"

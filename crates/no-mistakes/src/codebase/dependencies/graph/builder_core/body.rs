@@ -144,7 +144,7 @@
         let playwright_snapshot = edge_inputs
             .visible_paths
             .or(owned_playwright_snapshot.as_ref());
-        collect_and_merge_all_edges(
+        let import_targets = collect_and_merge_all_edges(
             &edge_inputs,
             playwright_snapshot,
             facts,

@@ -45,6 +45,7 @@ behavior.
 | Keep PostgreSQL tests from changing shared state | [`postgres-no-test-state-mutation`](postgres-no-test-state-mutation.md) |
 | Keep transaction locks on written rows | [`postgres-lock-written-rows-only`](postgres-lock-written-rows-only.md) |
 | Check PostgreSQL migrations and query safety | [`postgres-array-columns`](postgres-array-columns.md), [`postgres-bounded-statements`](postgres-bounded-statements.md), [`postgres-column-naming`](postgres-column-naming.md), [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md), [`postgres-conflict-ordering`](postgres-conflict-ordering.md), [`postgres-constraint-validate`](postgres-constraint-validate.md), [`postgres-explicit-columns`](postgres-explicit-columns.md), [`postgres-generated-column-predicates`](postgres-generated-column-predicates.md), [`postgres-fk-index`](postgres-fk-index.md), [`postgres-key-column-types`](postgres-key-column-types.md), [`postgres-lock-ordering`](postgres-lock-ordering.md), [`postgres-no-transformed-uuid-predicates`](postgres-no-transformed-uuid-predicates.md), [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md), [`postgres-finite-text-columns`](postgres-finite-text-columns.md), [`postgres-identifier-length`](postgres-identifier-length.md), [`postgres-json-relation-ids`](postgres-json-relation-ids.md), [`postgres-grouping-not-aggregation`](postgres-grouping-not-aggregation.md), [`postgres-required-comments`](postgres-required-comments.md), [`postgres-materialized-view-shape`](postgres-materialized-view-shape.md), [`postgres-table-shape`](postgres-table-shape.md), [`postgres-status-with-lifecycle-timestamps`](postgres-status-with-lifecycle-timestamps.md), [`postgres-object-naming`](postgres-object-naming.md) |
+| Cap literal fixture sizes in tests and helpers | [`test-fixture-size-cap`](test-fixture-size-cap.md) |
 | Enforce language-specific source policy | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md), [`rust-no-inline-tests`](rust-no-inline-tests.md), [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md) |
 
 These are starting points, not presets. The related-rules section on each page
@@ -137,6 +138,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-no-offset`](postgres-no-offset.md)                                 | Ban SQL OFFSET in executed PostgreSQL queries.                                  |
 | [`postgres-lock-written-rows-only`](postgres-lock-written-rows-only.md) | Keep transaction locks on written rows; flag table, global advisory, and autocommit row locks. |
 | [`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md)     | Ban cross-file member writes that reach SQL identifier interpolations.          |
+| [`postgres-sql-fragment-escape`](postgres-sql-fragment-escape.md)             | Report cross-file writes, rebinds, and namespace escapes of exported SQL fragments. |
 | [`postgres-no-test-state-mutation`](postgres-no-test-state-mutation.md) | Ban schema, server-setting, and sleep mutations executed by selected tests. |
 | [`postgres-no-unbounded-sql-identifier`](postgres-no-unbounded-sql-identifier.md) | Ban unbounded env/config/parameter/row values interpolated as SQL identifiers. |
 | [`postgres-array-columns`](postgres-array-columns.md)                        | Flag PostgreSQL array columns unless an allow entry or element type excuses them. |
@@ -170,6 +172,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
 | [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
+| [`test-fixture-size-cap`](test-fixture-size-cap.md)                           | Cap literal fixture cardinalities in configured test and helper files.          |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |
 | [`test-no-live-repository-scan`](test-no-live-repository-scan.md)             | Ban live-repository directory scans reachable from Vitest roots.                |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |

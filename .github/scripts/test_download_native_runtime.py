@@ -68,16 +68,86 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
                          {"metadata", "download", "digest", "extraction", "total"})
         self.assertEqual(len(self.calls), 2)
         argv, options = self.calls[1]
-        for option, value in (("--retry", "2"), ("--retry-max-time", "90"),
-                              ("--connect-timeout", "10"), ("--max-time", "25")):
+        for option, value in (("--connect-timeout", "10"),
+                              ("--continue-at", "-"),
+                              ("--speed-limit", "1024"), ("--speed-time", "30")):
             self.assertEqual(argv[argv.index(option) + 1], value)
+        self.assertNotIn("--max-time", argv)
+        self.assertNotIn("--retry", argv)
+        self.assertIn("--speed-limit", argv)
+        self.assertIn("--speed-time", argv)
+        self.assertGreaterEqual(download.OVERALL_SECONDS, 177)
         self.assertNotIn("--location-trusted", argv)
         self.assertNotIn("--retry-all-errors", argv)
         self.assertNotIn("--retry-delay", argv)
         self.assertNotIn("test-token", " ".join(argv))
         self.assertIn("test-token", options["input"])
         self.assertGreater(options["timeout"], 0)
-        self.assertLessEqual(options["timeout"], 110)
+        self.assertLessEqual(options["timeout"], download.OVERALL_SECONDS)
+
+    def test_stall_retries_keep_partial_bytes(self):
+        downloads = {"count": 0}
+
+        def transport(argv, **kwargs):
+            self.calls.append((argv, kwargs))
+            if "--output" not in argv:
+                return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
+            archive = Path(argv[argv.index("--output") + 1])
+            downloads["count"] += 1
+            if downloads["count"] == 1:
+                archive.write_bytes(b"partial")
+                raise subprocess.CalledProcessError(28, argv)
+            self.assertTrue(archive.is_file())
+            self.assertEqual(archive.read_bytes(), b"partial")
+            self.assertIn("--continue-at", argv)
+            with archive.open("wb") as output:
+                output.write(base64.b64decode((FIXTURES / "runtime.zip.base64").read_bytes()))
+            return subprocess.CompletedProcess(argv, 0)
+
+        with patch.object(download.subprocess, "run", side_effect=transport):
+            code, report, _ = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertTrue(report["success"])
+        self.assertEqual(downloads["count"], 2)
+
+    def test_range_rejection_discards_partial_and_downloads_fresh(self):
+        downloads = {"count": 0}
+
+        def transport(argv, **kwargs):
+            self.calls.append((argv, kwargs))
+            if "--output" not in argv:
+                return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
+            archive = Path(argv[argv.index("--output") + 1])
+            downloads["count"] += 1
+            if downloads["count"] == 1:
+                archive.write_bytes(b"partial")
+                raise subprocess.CalledProcessError(33, argv)
+            self.assertFalse(archive.exists())
+            self.assertNotIn("--continue-at", argv)
+            self.assertNotIn("--max-time", argv)
+            with archive.open("wb") as output:
+                output.write(base64.b64decode((FIXTURES / "runtime.zip.base64").read_bytes()))
+            return subprocess.CompletedProcess(argv, 0)
+
+        with patch.object(download.subprocess, "run", side_effect=transport):
+            code, report, _ = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertTrue(report["success"])
+        self.assertEqual(Path("target/debug/no-mistakes.exe").read_bytes(),
+                         b"native runtime fixture\n")
+
+    def test_http_failure_during_download_is_not_retried(self):
+        def transport(argv, **kwargs):
+            self.calls.append((argv, kwargs))
+            if "--output" in argv:
+                raise subprocess.CalledProcessError(22, argv)
+            return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
+
+        with patch.object(download.subprocess, "run", side_effect=transport):
+            code, report, _ = self.run_main()
+        self.assertEqual(code, 1)
+        self.assertFalse(report["success"])
+        self.assertEqual(sum("--output" in argv for argv, _ in self.calls), 1)
 
     def test_metadata_has_separate_bounded_timeout(self):
         with patch.object(download.subprocess, "run", side_effect=self.transport):
@@ -88,6 +158,14 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertEqual(argv[argv.index("--max-time") + 1], "10")
         self.assertEqual(argv[argv.index("--connect-timeout") + 1], "10")
         self.assertEqual(options["stdout"], subprocess.PIPE)
+
+    def test_transports_tolerate_offline_windows_revocation_servers(self):
+        with patch.object(download.subprocess, "run", side_effect=self.transport):
+            code, _, _ = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertGreaterEqual(len(self.calls), 2)
+        for argv, _ in self.calls:
+            self.assertIn("--ssl-revoke-best-effort", argv)
 
     def test_permanent_http_failure_is_not_retried_by_python(self):
         with patch.object(download.subprocess, "run", side_effect=
@@ -136,7 +214,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertTrue(self.calls[-1][0][-1].endswith("per_page=100&page=10"))
 
     def test_expired_deadline_does_not_start_transport(self):
-        with patch.object(download.time, "monotonic", side_effect=[0, 111]):
+        with patch.object(download.time, "monotonic", side_effect=[0, download.OVERALL_SECONDS + 1]):
             deadline = download.Deadline()
             with patch.object(download.subprocess, "run") as transport:
                 with self.assertRaises(TimeoutError):
@@ -145,7 +223,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
 
     def test_subprocess_deadline_failure_emits_failure_timing(self):
         with patch.object(download.subprocess, "run", side_effect=
-                          subprocess.TimeoutExpired(["curl"], 110)):
+                          subprocess.TimeoutExpired(["curl"], download.OVERALL_SECONDS)):
             code, report, errors = self.run_main()
         self.assertEqual(code, 1)
         self.assertFalse(report["success"])
@@ -233,9 +311,10 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         def transport(argv, **kwargs):
             result = original(argv, **kwargs)
             if "--output" in argv:
-                now[0] = 109 if argv[-1].endswith("/124/zip") else 112
+                now[0] = (download.OVERALL_SECONDS - 1
+                          if argv[-1].endswith("/124/zip") else download.OVERALL_SECONDS + 2)
             elif len(self.calls) == 3:
-                now[0] = 111
+                now[0] = download.OVERALL_SECONDS + 1
             return result
         with patch.object(download.time, "monotonic", side_effect=lambda: now[0]), \
                 patch.object(download.subprocess, "run", side_effect=transport):
@@ -246,7 +325,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 3)
         self.assertTrue(Path("target/debug/no-mistakes").is_file())
         self.assertFalse(Path("target/debug/no-mistakes.node").exists())
-        self.assertIn("110 seconds", errors)
+        self.assertIn(f"{download.OVERALL_SECONDS} seconds", errors)
 
 
 if __name__ == "__main__":

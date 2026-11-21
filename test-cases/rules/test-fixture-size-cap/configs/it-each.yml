@@ -1,0 +1,16 @@
+rules:
+  - rule: test-fixture-size-cap
+    scope: repository
+    options:
+      threshold: 1000
+      exemptions:
+        - 1024
+      eachCalls:
+        - it.each
+      scopes:
+        tests:
+          - "*.test.ts"
+          - "**/*.test.ts"
+        helpers:
+          - "helpers/*.ts"
+          - "helpers/**/*.ts"

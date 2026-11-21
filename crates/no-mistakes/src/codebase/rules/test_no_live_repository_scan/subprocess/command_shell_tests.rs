@@ -75,6 +75,50 @@ fn shell_strings_split_on_whitespace() {
 }
 
 #[test]
+fn shell_prefixes_are_removed_before_the_executable() {
+    assert_eq!(
+        launch(vec![known("ITEM=1 widget-audit check")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![known("_ITEM=1 widget-audit check")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![known("cd widgets && widget-audit check")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![known("cd fixtures/$DIR && widget-audit check")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(
+            vec![known(
+                "cd widgets && ITEM=1 cd items && pnpm exec widget-audit check"
+            )],
+            true
+        ),
+        "widget-audit check"
+    );
+    assert!(launch(vec![known("cd widgets &&")], true).is_empty());
+    assert!(launch(vec![known("ITEM=1")], true).is_empty());
+    assert!(launch(vec![known("2=1 widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("ITEM-COUNT=1 widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("cd && widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("cd widgets widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("cd && && widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("cd -widgets && widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("cd widgets; widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("\"widget-audit\" check")], true).is_empty());
+    assert!(launch(
+        vec![known("ITEM=\"placeholder widget-audit check extra\"")],
+        true
+    )
+    .is_empty());
+}
+
+#[test]
 fn shell_mode_follows_the_launcher() {
     let string = vec![known("pnpm exec widget-audit check")];
     assert!(uses_shell("exec", &string));

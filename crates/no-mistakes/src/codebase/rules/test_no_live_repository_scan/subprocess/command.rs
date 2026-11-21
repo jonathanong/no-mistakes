@@ -25,6 +25,7 @@ pub(super) enum Token {
     Unknown,
 }
 
+#[derive(Clone, Copy)]
 pub(super) enum OptionsSlot {
     Absent,
     Unknown,
@@ -35,6 +36,8 @@ pub(super) struct Invocation {
     pub(super) executable: Token,
     pub(super) argv: Vec<Token>,
     pub(super) options: OptionsSlot,
+    /// Last `cd <dir> &&` directory. It replaces the `cwd` option.
+    pub(super) shell_dir: Option<String>,
 }
 
 pub(super) fn launcher_name(site: &ResolvedCallSite) -> Option<&str> {
@@ -79,6 +82,7 @@ pub(super) fn invocation(values: &[ArgumentValue], shell: bool) -> Option<Invoca
         executable,
         argv,
         options,
+        shell_dir: None,
     })
 }
 
@@ -108,7 +112,7 @@ pub(super) fn matched(invocation: &Invocation, analyzers: &[AnalyzerCommand]) ->
         let Some(Token::Known(program)) = current.first() else {
             break;
         };
-        let Some(inner) = wrappers::unwrap_line(program, &current[1..]) else {
+        let Some((inner, _)) = wrappers::unwrap_line(program, &current[1..]) else {
             break;
         };
         if inner.is_empty() || lines.iter().any(|line| line == &inner) {
@@ -122,6 +126,10 @@ pub(super) fn matched(invocation: &Invocation, analyzers: &[AnalyzerCommand]) ->
             .any(|line| prefix(line, &analyzer.command, &analyzer.args))
             .then(|| display(analyzer))
     })
+}
+
+pub(super) fn wrapper_dir(invocation: &Invocation) -> Option<String> {
+    wrappers::scan_dir(&invocation.executable, &invocation.argv)
 }
 
 fn command_line(executable: &str, argv: &[Token]) -> Vec<Token> {
@@ -165,8 +173,9 @@ fn basename(token: &str) -> &str {
 }
 
 fn strip_suffix(name: &str) -> &str {
-    name.strip_suffix(".cmd")
-        .or_else(|| name.strip_suffix(".exe"))
+    [".cmd", ".exe", ".js", ".mjs", ".cjs"]
+        .into_iter()
+        .find_map(|suffix| name.strip_suffix(suffix))
         .unwrap_or(name)
 }
 
@@ -181,3 +190,11 @@ mod shell_tests;
 #[cfg(test)]
 #[path = "command_wrapper_tests.rs"]
 mod wrapper_tests;
+
+#[cfg(test)]
+#[path = "command_reporter_tests.rs"]
+mod reporter_tests;
+
+#[cfg(test)]
+#[path = "command_script_tests.rs"]
+mod script_tests;

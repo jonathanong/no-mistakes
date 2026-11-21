@@ -2,6 +2,26 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "github_actions_action_input_policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 12,
+          "message": ".github/workflows/widgets.yml: job \"publish\" step \"publish widgets\" calls `example/publish-widget` with `keep-days` set to 30. Set `keep-days` to 1. The action policy requires this value on every ref.",
+          "rule": "github-actions-action-input-policy",
+          "target": "publish"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "github_actions_action_timeout_pair": {
     "exitCode": 1,
     "report": {
@@ -137,6 +157,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
           "rule": "github-actions-test-timeout-literals",
           "target": "expect(workflowSource).toContain('timeout-minutes: 15')"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "github_actions_vitest_project_selection": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/compact.yml",
+          "line": 8,
+          "message": ".github/workflows/compact.yml:8: job `unit` step 1 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "target": "src/widgets.test.ts"
         }
       ],
       "warnings": []

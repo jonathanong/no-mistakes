@@ -11,6 +11,8 @@ fn scoped_states_ignore_targets_without_a_matching_scope() {
     let mut plan = super::super::super::markdown_facts::MarkdownFactPlan::default();
     plan.request_pulldown(targets.clone());
     let facts = super::super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    let exclude_roots =
+        super::super::super::path_filter::GlobMatcher::new(&[], "excludeRoots").unwrap();
     let (states, names) = scoped_states(
         &root,
         &[root.join("docs")],
@@ -19,6 +21,7 @@ fn scoped_states_ignore_targets_without_a_matching_scope() {
         ScopeOptions {
             roots: &BTreeSet::from(["CLAUDE.md".to_string()]),
             indexes: &BTreeSet::from(["README.md".to_string()]),
+            exclude_roots: &exclude_roots,
             max_depth: DEFAULT_MAX_DEPTH,
             facts: &facts,
         },

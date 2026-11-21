@@ -1,0 +1,15 @@
+rules:
+  - rule: vite-optimize-deps-nested-imports
+    scope: repository
+    options:
+      configFiles:
+        - vite.config.ts
+      packages:
+        - packages/widgets
+      includeSources:
+        - module: as-const.ts
+          export: deps
+        - module: satisfies.ts
+          export: deps
+        - module: both.ts
+          export: deps

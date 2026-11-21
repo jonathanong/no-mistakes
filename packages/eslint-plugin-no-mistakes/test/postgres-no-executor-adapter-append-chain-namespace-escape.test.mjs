@@ -51,10 +51,6 @@ const VALID = [
   "starNamedProof.ts",
   "starNamespaceProof.ts",
   "elementKeep.ts",
-  "typeofTypeFragments.ts",
-  "heritageQuiet.ts",
-];
-const INVALID = [
   "starNsMutControls.ts",
   "starNamedMutControls.ts",
   "requireMemberControls.ts",
@@ -67,13 +63,10 @@ const INVALID = [
   "reflectControls.ts",
   "elementControls.ts",
   "computedKeyControls.ts",
-  "assertedControls.ts",
-  "destructureSibling.ts",
-  "typeofValueFragments.ts",
-  "heritageFragments.ts",
 ];
+const INVALID = ["assertedControls.ts"];
 
-it("escapes namespace, require, and dynamic-import sql fragments", async () => {
+it("keeps same-file assertions and accepts imported fragments", async () => {
   const rows = suite(VALID, INVALID);
   expect(lines(rows)).toEqual([
     [],
@@ -81,22 +74,17 @@ it("escapes namespace, require, and dynamic-import sql fragments", async () => {
     [],
     [],
     [],
-    [10],
-    [10],
-    [12],
-    [12, 20],
-    [13, 21],
-    [12, 20],
-    [12],
-    [12, 20],
-    [12, 20],
-    [12, 20],
-    [12],
-    [12, 20],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
     [12, 22],
-    [12, 20],
-    [12, 20],
-    [12],
   ]);
   await expect(snapshotDocument(rows)).toMatchFileSnapshot(
     "snapshots/postgres-no-executor-adapter-append-chain-namespace-escape.snap",

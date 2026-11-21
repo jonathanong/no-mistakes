@@ -19,58 +19,32 @@ fn collect_import_edges(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
-) -> Vec<Edge> {
-    parsed_imports
+) -> ImportPass {
+    let grouped = parsed_imports
         .par_iter()
-        .flat_map_iter(|(path, facts, reachable)| {
-            facts
-                .imports
-                .iter()
-                .filter_map(|imp| {
-                    let kind = graph_edge_kind_for_extracted_import(imp, facts, reachable)?;
-                    let classification =
-                        resolver.classify_import(&imp.specifier, path, workspace, graph_files);
-                    let target = if kind == EdgeKind::RequireResolve {
-                        classification
-                            .preferred_path()
-                            .and_then(|target| graph_files.visible_path(target))
-                    } else {
-                        classification
-                            .resolver_path()
-                            .and_then(|target| graph_files.visible_path(target))
-                            // Workspace exports may resolve through an invisible node_modules symlink.
-                            // Keep the literal dynamic edge kind while using the prepared visible target.
-                            .or_else(|| {
-                                matches!(imp.kind, ImportKind::Dynamic)
-                                    .then(|| {
-                                        classification
-                                            .workspace_path()
-                                            .and_then(|target| graph_files.visible_path(target))
-                                    })
-                                    .flatten()
-                            })
-                    };
-                    if let Some(target) = target {
-                        return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(
-                            || {
-                                (
-                                    NodeId::file_in(interner, *path),
-                                    NodeId::file_in(interner, target),
-                                    kind,
-                                )
-                            },
-                        );
-                    }
-                    if classification.is_unresolved_external() {
-                        return bare_module_node_in(interner, &imp.specifier)
-                            .map(|module| (NodeId::file_in(interner, *path), module, kind));
-                    }
-                    None
-                })
-                .collect::<Vec<_>>()
+        .map(|(path, facts, reachable)| {
+            import_file_pass(
+                path,
+                facts,
+                reachable,
+                resolver,
+                workspace,
+                graph_files,
+                interner,
+            )
         })
-        .collect()
+        .collect::<Vec<_>>();
+    let mut pass = ImportPass::default();
+    for (importer, edges, targets) in grouped {
+        pass.edges.extend(edges);
+        for (specifier, target) in targets {
+            merge_import_target(&mut pass.targets, &importer, &specifier, target);
+        }
+    }
+    pass
 }
+
+include!("edge_import_pass.rs");
 
 fn collect_asset_edges(
     parsed_imports: &ParsedImports<'_>,

@@ -1,5 +1,6 @@
-use super::lines::input_line;
-use super::policy::{self, Compiled, InputFault};
+use super::lines::{input_line, job_input_line};
+use super::message::{self, Site};
+use super::policy::{self, Compiled};
 use super::{RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::{Mapping, Value};
@@ -36,9 +37,15 @@ pub(super) fn check_parsed(
     value: &Value,
     opts: &Compiled,
 ) -> Vec<RuleFinding> {
-    let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
-        return Vec::new();
-    };
+    let mut findings = Vec::new();
+    if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
+        findings.extend(check_jobs(rel, source, jobs, opts));
+    }
+    findings.extend(check_composite(rel, source, value, opts));
+    findings
+}
+
+fn check_jobs(rel: &str, source: &str, jobs: &Mapping, opts: &Compiled) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for (key, job) in jobs {
         let Some(job_id) = key.as_str() else {
@@ -47,81 +54,91 @@ pub(super) fn check_parsed(
         let Some(job) = job.as_mapping() else {
             continue;
         };
-        let Some(steps) = mapping_get(job, "steps").and_then(Value::as_sequence) else {
-            continue;
-        };
-        for (index, step) in steps.iter().enumerate() {
-            let Some(step) = step.as_mapping() else {
-                continue;
-            };
-            findings.extend(check_step(rel, source, job_id, step, index, opts));
+        if let Some(steps) = mapping_get(job, "steps").and_then(Value::as_sequence) {
+            for (index, step) in steps.iter().enumerate() {
+                let Some(step) = step.as_mapping() else {
+                    continue;
+                };
+                findings.extend(judge_call(
+                    rel,
+                    source,
+                    step,
+                    Site::Step { job_id, index },
+                    opts,
+                ));
+            }
         }
+        findings.extend(judge_call(rel, source, job, Site::Job { job_id }, opts));
     }
     findings
 }
 
-fn check_step(
+fn check_composite(rel: &str, source: &str, value: &Value, opts: &Compiled) -> Vec<RuleFinding> {
+    let Some(runs) = value.get("runs").and_then(Value::as_mapping) else {
+        return Vec::new();
+    };
+    if mapping_get(runs, "using").and_then(Value::as_str) != Some("composite") {
+        return Vec::new();
+    }
+    let Some(steps) = mapping_get(runs, "steps").and_then(Value::as_sequence) else {
+        return Vec::new();
+    };
+    let mut findings = Vec::new();
+    for (index, step) in steps.iter().enumerate() {
+        let Some(step) = step.as_mapping() else {
+            continue;
+        };
+        findings.extend(judge_call(
+            rel,
+            source,
+            step,
+            Site::Composite { index },
+            opts,
+        ));
+    }
+    findings
+}
+
+fn judge_call(
     rel: &str,
     source: &str,
-    job_id: &str,
-    step: &Mapping,
-    index: usize,
+    map: &Mapping,
+    site: Site<'_>,
     opts: &Compiled,
 ) -> Vec<RuleFinding> {
-    let Some(uses) = mapping_string(step, "uses") else {
+    let Some(uses) = mapping_string(map, "uses") else {
         return Vec::new();
     };
     let Some(family) = policy::matching(&uses, &opts.actions) else {
         return Vec::new();
     };
-    let label = step_label(step, &uses);
-    let with = mapping_get(step, "with").and_then(Value::as_mapping);
+    let label = step_label(map, &uses);
+    let with = mapping_get(map, "with").and_then(Value::as_mapping);
     policy::judge(with, family)
         .into_iter()
         .map(|fault| {
-            let key = fault_key(&fault);
-            finding(
+            let key = message::fault_key(&fault);
+            let (line, target) = place(source, site, key, &label);
+            message::finding(
                 rel,
-                input_line(source, job_id, index, key),
-                message(rel, job_id, &label, &family.name, &fault),
-                job_id,
+                line,
+                message::message(rel, site, &label, &family.name, &fault),
+                &target,
             )
         })
         .collect()
 }
 
-fn fault_key(fault: &InputFault) -> &str {
-    match fault {
-        InputFault::Missing { key, .. }
-        | InputFault::Mismatch { key, .. }
-        | InputFault::Banned { key } => key,
-    }
-}
-
-fn message(rel: &str, job_id: &str, label: &str, family: &str, fault: &InputFault) -> String {
-    let where_ = format!("{rel}: job \"{job_id}\" step \"{label}\" calls `{family}`");
-    match fault {
-        InputFault::Missing { key, expected } => format!(
-            "{where_} without required input `{key}`. Set `{key}` to {expected}. The action policy requires this value on every ref."
+fn place(source: &str, site: Site<'_>, key: &str, label: &str) -> (usize, String) {
+    match site {
+        Site::Step { job_id, index } => {
+            (input_line(source, job_id, index, key), job_id.to_string())
+        }
+        Site::Composite { index } => (
+            input_line(source, "(composite)", index, key),
+            label.to_string(),
         ),
-        InputFault::Mismatch { key, expected, got } => format!(
-            "{where_} with `{key}` set to {got}. Set `{key}` to {expected}. The action policy requires this value on every ref."
-        ),
-        InputFault::Banned { key } => format!(
-            "{where_} and sets banned input `{key}`. Remove `{key}` from `with:`."
-        ),
-    }
-}
-
-fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
-    RuleFinding {
-        causes: Vec::new(),
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line,
-        message,
-        import: None,
-        target: Some(target.to_string()),
+        Site::Job { job_id } => (job_input_line(source, job_id, key), job_id.to_string()),
     }
 }
 

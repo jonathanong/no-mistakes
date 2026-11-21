@@ -1,5 +1,6 @@
 struct CoreIndependentEdges {
     imports: Vec<Edge>,
+    import_targets: ImportTargetMap,
     route_imports: Vec<Edge>,
     workspace: Vec<Edge>,
     package: Vec<Edge>,
@@ -130,7 +131,8 @@ fn collect_independent_core_edges(
             },
         );
     CoreIndependentEdges {
-        imports,
+        imports: imports.edges,
+        import_targets: imports.targets,
         route_imports,
         workspace: workspace_edges,
         package,

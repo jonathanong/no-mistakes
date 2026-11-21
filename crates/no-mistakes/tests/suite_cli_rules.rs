@@ -221,6 +221,8 @@ mod cli_rrb_snapshot_policy;
 mod cli_rrb_snapshot_scope;
 #[path = "cli_rrb_snapshot_tests.rs"]
 mod cli_rrb_snapshot_tests;
+#[path = "cli_test_fixture_size_cap.rs"]
+mod cli_test_fixture_size_cap;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;

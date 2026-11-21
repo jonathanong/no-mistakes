@@ -43,6 +43,9 @@ pub struct NamespaceFacts {
     /// access, `export default`. Only names of declared namespaces and
     /// imports are recorded.
     pub value_uses: Vec<String>,
+    /// `(name, byte offset)` for each occurrence in [`Self::value_uses`].
+    /// One name may appear more than once. Sorted by name, then offset.
+    pub value_use_offsets: Vec<(String, u32)>,
     /// Imports read through one static member, `(local, member)` for
     /// `mod.version`, that are no use of the whole module: only the export the
     /// member names is read.
@@ -79,6 +82,8 @@ struct NamespaceState {
     benign_heads: FxHashSet<u32>,
     /// Declared namespace paths and import names read as a value.
     value_uses: FxHashSet<String>,
+    /// Each value-use occurrence, including repeats of one name.
+    value_use_offsets: FxHashSet<(String, u32)>,
     /// Imports read through one static member.
     member_uses: FxHashSet<(String, String)>,
     /// Offset of an identifier that is the object of a static member

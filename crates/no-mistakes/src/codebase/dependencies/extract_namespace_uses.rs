@@ -68,8 +68,34 @@ impl ImportCollector {
                 self.namespace.member_uses.insert((path, member));
             }
             _ => {
+                self.namespace
+                    .value_use_offsets
+                    .insert((path.clone(), identifier.span.start));
                 self.namespace.value_uses.insert(path);
             }
+        }
+    }
+
+    /// `import Local = ns.Member` is one export. A qualified name is not a
+    /// static member expression, so the later identifier walk would otherwise
+    /// read `ns` as the whole module.
+    fn note_import_equals_member(
+        &mut self,
+        declaration: &oxc_ast::ast::TSImportEqualsDeclaration<'_>,
+    ) {
+        if declaration.import_kind.is_type() {
+            return;
+        }
+        let TSModuleReference::QualifiedName(qualified) = &declaration.module_reference else {
+            return;
+        };
+        let Some((identifier, member)) = import_equals_root(qualified) else {
+            return;
+        };
+        if self.namespace.names.contains(identifier.name.as_str()) {
+            self.namespace
+                .selected
+                .insert(identifier.span.start, member.to_string());
         }
     }
 
@@ -102,6 +128,21 @@ impl ImportCollector {
         self.namespace.type_depth += 1;
         visit(self);
         self.namespace.type_depth -= 1;
+    }
+}
+
+fn import_equals_root<'a>(
+    qualified: &'a TSQualifiedName<'a>,
+) -> Option<(&'a IdentifierReference<'a>, &'a str)> {
+    let mut current = qualified;
+    loop {
+        match &current.left {
+            TSTypeName::IdentifierReference(identifier) => {
+                return Some((identifier, current.right.name.as_str()));
+            }
+            TSTypeName::QualifiedName(inner) => current = inner,
+            TSTypeName::ThisExpression(_) => return None,
+        }
     }
 }
 

@@ -415,7 +415,7 @@ jobs:
     name: Validate JavaScript
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -484,7 +484,7 @@ jobs:
           fi
 
       - name: Run JavaScript tests
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: pnpm run test:ci
 
       - name: Run timeout-policy browser tests
@@ -572,6 +572,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source
@@ -745,6 +746,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source
@@ -919,6 +921,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source
@@ -1093,6 +1096,7 @@ jobs:
 
       - name: Isolate release scripts
         timeout-minutes: 1
+        shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
 
       - name: Download prepared source

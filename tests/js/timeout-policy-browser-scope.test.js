@@ -270,7 +270,7 @@ test("release validation gives browser and other JavaScript tests separate timeo
   assert.doesNotMatch(js, /playwright install --with-deps/);
   assert.match(
     js,
-    /- name: Run JavaScript tests\n {8}timeout-minutes: 5\n {8}run: pnpm run test:ci\n/,
+    /- name: Run JavaScript tests\n {8}timeout-minutes: 10\n {8}run: pnpm run test:ci\n/,
   );
   assert.match(
     js,

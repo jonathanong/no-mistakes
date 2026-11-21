@@ -138,3 +138,5 @@ composite action files.
 [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
 and [`github-actions-job-timeouts`](github-actions-job-timeouts.md) enforce
 the other per-step and per-job workflow contracts.
+[`github-actions-action-input-policy`](github-actions-action-input-policy.md)
+requires or bans `with:` inputs for each configured action family.

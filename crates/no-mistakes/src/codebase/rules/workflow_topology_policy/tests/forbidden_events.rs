@@ -33,7 +33,21 @@ fn reports_scalar_sequence_and_mapping_forms_on_the_offending_key() {
     assert!(found.iter().all(|finding| finding.message.contains(
         "forbidden workflow event: pull_request_target; remove it from on to avoid unwanted workflow runs"
     )));
-    assert_eq!(found.len(), 6);
+    assert_eq!(found.len(), 14);
+}
+
+#[test]
+fn reports_quoted_flow_comment_and_unmapped_forms_on_the_event_line() {
+    let found = findings("forbiddenEvents: [pull_request_target]");
+    assert_eq!(lines_in(&found, "quoted-event.yml"), vec![3]);
+    assert_eq!(lines_in(&found, "quoted-on.yml"), vec![3]);
+    assert_eq!(lines_in(&found, "flow-mapping.yml"), vec![2]);
+    assert_eq!(lines_in(&found, "flow-sequence.yml"), vec![4]);
+    assert_eq!(lines_in(&found, "comment-gap.yml"), vec![4]);
+    assert_eq!(lines_in(&found, "stale-null.yml"), vec![3]);
+    assert_eq!(lines_in(&found, "stale-sequence.yml"), vec![3]);
+    assert_eq!(lines_in(&found, "tagged-on.yml"), vec![1]);
+    assert!(lines_in(&found, "multi-document.yml").is_empty());
 }
 
 #[test]
@@ -78,7 +92,7 @@ fn custom_messages_replace_only_that_application() {
         .into_iter()
         .filter(|finding| !finding.file.contains("suppressed-"))
         .collect::<Vec<_>>();
-    assert_eq!(found.len(), 6);
+    assert_eq!(found.len(), 14);
     assert!(found
         .iter()
         .all(|finding| finding.message == "Use pull_request for these widget workflows."));

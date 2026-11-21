@@ -1,0 +1,264 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "boundary": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "boundary_each": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 1,
+          "message": "it.each size 1001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([0, 1001, 1.5])(\"rejects invalid batch size %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 2,
+          "message": "it.each size 3601 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([-1, 3601, 1.5])(\"rejects invalid seconds %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 3,
+          "message": "it.each size 30001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([0, -1, 30_001, NaN])(\"rejects invalid timeout %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "it.each size 20261004 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([\"\", \"bad-date\", 20261004])(\"rejects non-day value %s\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_length": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 13,
+          "message": "Array.from length 5000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const keptName = Array.from({ length: 5000, [\"name\"]: 1 });"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 14,
+          "message": "Array.from length 5000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const keptIndex = Array.from({ length: 5000, [0]: 1 });"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 15,
+          "message": "Array.from length 5000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const keptAfterSpread = Array.from({ ...extra, length: 5000 });"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "file_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 1,
+          "message": "widget fixtures Array.from length 1001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const rows = Array.from({ length: 1_001 }, () => ({ name: \"widget\" }));"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_threshold": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "policy": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "helpers/make-widgets.ts",
+          "line": 1,
+          "message": "Array.from length 2000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "export const rows = Array.from({ length: 2_000 }, () => ({ name: \"widget\" }));"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 2,
+          "message": "Array.from length 1001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const rows = Array.from({ length: 1_001 }, () => ({ name: \"widget\" }));"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 5,
+          "message": "new Array length 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const wide = new Array(10_000);"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "recall": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 1,
+          "message": "new Array length 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const called = Array(10_000);"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, \"widget\", 10_001])(\"mixed %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "it.each size 10001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, \"widget\", 10_001])(\"mixed %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 5,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, [10_001]])(\"nested %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 6,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, , 10_001])(\"hole %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 6,
+          "message": "it.each size 10001 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, , 10_001])(\"hole %s\", () => {});"
+        },
+        {
+          "file": "widgets.test.ts",
+          "line": 8,
+          "message": "it.each size 10000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "it.each([10_000, ...rest])(\"spread %s\", () => {});"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "widgets.test.ts",
+          "line": 4,
+          "message": "new Array length 9000 exceeds threshold 1000",
+          "rule": "test-fixture-size-cap",
+          "sourceLine": "const wide = new Array(9_000);"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

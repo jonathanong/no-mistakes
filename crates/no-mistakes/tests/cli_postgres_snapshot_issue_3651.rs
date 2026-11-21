@@ -18,35 +18,38 @@ fn postgres_branchless_append_destructure_check_json_snapshot() {
     let report = &reports["report"]["report"];
     assert_eq!(reports["report"]["exitCode"], 1);
     assert_eq!(report["warnings"], serde_json::json!([]));
-    let mut sites = report["rules"]
+    let mut reported = report["rules"]
         .as_array()
         .unwrap()
         .iter()
         .map(|finding| {
-            (
-                finding["file"].as_str().unwrap(),
-                finding["line"].as_u64().unwrap(),
-            )
+            let message = finding["message"].as_str().unwrap();
+            let kind = if message.contains("must start with a /* name */ annotation") {
+                "missing"
+            } else if message.contains("leading SQL is unanalyzable") {
+                "unanalyzable"
+            } else {
+                message
+            };
+            (finding["sourceLine"].as_str().unwrap(), kind)
         })
         .collect::<Vec<_>>();
-    sites.sort_unstable();
-    assert_eq!(sites, vec![("callers.mts", 8), ("callers.mts", 9)]);
-    let messages = report["rules"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|finding| finding["message"].as_str().unwrap())
-        .collect::<Vec<_>>();
-    assert!(
-        messages
-            .iter()
-            .any(|message| message.contains("must start with a /* name */ annotation")),
-        "{messages:?}"
-    );
-    assert!(
-        messages
-            .iter()
-            .any(|message| message.contains("leading SQL is unanalyzable")),
-        "{messages:?}"
+    reported.sort_unstable();
+    assert_eq!(
+        reported,
+        vec![
+            (
+                "export const missing = (limit: number) => queryIdPage(limit, sql`SELECT id FROM widgets`, statement => read(statement));",
+                "missing",
+            ),
+            (
+                "export const opaque = (limit: number, value: SqlStatement) => queryIdPage(limit, value, statement => read(statement));",
+                "unanalyzable",
+            ),
+            (
+                "export const reassigned = (limit: number) => queryItemsReassign(limit, sql`/* reassigned */ SELECT id FROM orders WHERE TRUE`, statement => read(statement));",
+                "unanalyzable",
+            ),
+        ]
     );
 }

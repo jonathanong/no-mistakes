@@ -14,7 +14,7 @@ mod mode;
 mod paths;
 #[path = "package_source.rs"]
 mod source;
-pub(crate) use source::resolve_source;
+pub(crate) use source::{matches_runtime_export, resolve_source};
 
 pub(crate) fn resolve_in_context(
     specifier: &str,

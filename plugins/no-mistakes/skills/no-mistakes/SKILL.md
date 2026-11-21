@@ -310,6 +310,9 @@ prepared import, value-flow, and embedded-SQL facts. Unknown provenance stays
 silent.
 See [mutable SQL registries](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-mutable-sql-registry.md)
 and [unbounded SQL identifiers](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-unbounded-sql-identifier.md).
+`postgres-sql-fragment-escape` reports cross-file writes, rebinds, and namespace
+escapes of exported trusted SQL const fragments and does not change the registry
+rule. See [SQL fragment escapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-fragment-escape.md).
 
 To ban SQL sleeps or another configured function family, enable
 `postgres-sql-shape-policy` with `bannedShapes: [banned-function-call]` and a
@@ -358,6 +361,20 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 `allowHashFiles` defaults to false. `matrix.os` does not satisfy `runner.os`. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
+For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
+and single-argument `Array` and `new Array` lengths in `scopes.tests` and
+`scopes.helpers`. `eachCalls` defaults to `[]`. When it lists a callee, numeric
+elements are cardinalities for scale or size tables. Omitting `threshold`
+reports nothing. Equal values and exact `exemptions` stay allowed. See the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
+
+For `vite-optimize-deps-nested-imports`, set required `configFiles` and `packages`.
+Optional `includeSources` reads a static `parent > child` array from a named export,
+including an `as const` or `satisfies` wrapper. A subpath import matches that
+exact specifier. A Node built-in still matches by package name.
+Optional `ignorePackages` skips uncovered imports of those package names. A chain
+`a > b > c` is checked one step at a time. See the
+[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/vite-optimize-deps-nested-imports.md).
 
 Use `postgres-column-check-constraints` with a catalog path and explicit column
 globs, integer types, and `require: non-negative` to check schema lower bounds.

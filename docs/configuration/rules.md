@@ -93,7 +93,27 @@ reads `options.configFiles` and `options.packages`. Both are required and have
 no default. `configFiles` lists the Vite configs whose `optimizeDeps.include`
 entries are checked. `packages` lists the package directories in scope. An
 explicit empty `packages` list selects nothing. An omitted option is reported
-on the loaded config file.
+on the loaded config file. Optional `options.includeSources` names modules
+whose `export const` string arrays are added to those include entries.
+Optional `options.ignorePackages` skips uncovered imports of those package
+names. A `workspace:` dependency and a child package listed in `packages`
+without a non-workspace version specifier are skipped the same way. A
+versioned dependency such as `"items": "1.0.0"` is still checked.
+A subpath import matches that exact specifier. A Node built-in still matches
+by package name.
+`bundledDependencies: true` counts the dependency objects already declared,
+and `false` adds no bundled names. A declared dependency whose name matches
+a Node built-in is still checked. An undeclared built-in include such as
+`widgets > path` is ignored.
+
+[`markdown-reachability`](../rules/markdown-reachability.md) accepts
+`options.excludeRoots` globs. Patterns match the repository-relative path. A
+file named in `options.rootFilenames` that matches one of those globs is not a
+traversal root. The file remains ordinary Markdown and can be reached from
+another root. It forwards its links only when it also matches `indexFilenames`.
+The all-excluded error counts only roots in scopes that have targets. When
+every such root matches, the rule reports a config error.
+`options.baselineFile` remains the tracked JSON baseline path.
 
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
 `options.unanalyzableSql` remains an alias for `options.unanalyzable`.
@@ -345,9 +365,13 @@ makes them blocking unless the rule sets `severity: advisory`.
 tests must not run against the live working directory. A matching `exec`,
 `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
 with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
-`execSync` match a static shell string. `spawn` and `spawnSync` match one when
-`shell` is boolean `true`. `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`,
-`yarn`, and `yarn dlx` unwrap, including a wrapper around another wrapper.
+`execSync` match a static shell string, including a leading `cd <dir> &&` or
+`NAME=value` prefix. A quote leaves that string unmatched, and the `cd`
+directory replaces the `cwd` option. `spawn` and `spawnSync` match one when
+`shell` is boolean `true`. A `.js`, `.mjs`, or `.cjs` module path matches the configured command.
+`pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, and
+`yarn dlx` unwrap, including a wrapper around another wrapper, a long value
+flag such as `pnpm --reporter silent`, and `yarn --cwd <dir>`.
 The default list is empty.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
@@ -412,10 +436,16 @@ until a configuration lists it.
 For [`github-actions-action-input-policy`](../rules/github-actions-action-input-policy.md),
 `options.actions` defaults to `[]`, which reports nothing until a repository
 lists action families. Each `uses` value is the family; a ref after `@` is
-ignored on the policy entry and on the workflow step, so a tag and a commit SHA
-are the same action. `require` maps an input name to a scalar. `ban` lists
+ignored on the policy entry and on the called step or job, so a tag and a
+commit SHA are the same action. Owner and repository are compared
+case-insensitively, and a sub-path such as `example/publish-widget/restore` is
+a different family. `require` maps an input name to a scalar. `ban` lists
 input names that must be absent. A ban-only family does not require those
-inputs. `include` defaults to workflow `.yml` and `.yaml` files. See the
+inputs. The checker reads workflow steps, job-level `uses:` calls, and
+composite `runs.steps`. A `<<` key in `with:` is an input name, not a merge, so
+keys nested under it are not judged as inputs. `include` defaults to workflow
+`.yml` and `.yaml` files and
+to `.github/actions/**/action.yml` and `.github/actions/**/action.yaml`. See the
 [action input policy](../rules/github-actions-action-input-policy.md#options-and-defaults).
 
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
@@ -435,7 +465,12 @@ For [`github-actions-vitest-project-selection`](../rules/github-actions-vitest-p
 `options.projects` defaults to none. Each entry names a Vitest `project`, the
 workflow or composite-action paths that may select it, and `nameFilters`
 (`allow` or `reject`, default `allow`). The rule stays off until a configuration
-lists it. An empty `projects` list reports nothing.
+lists it. An empty `projects` list reports nothing. A Vitest command in a
+matching workflow is judged even when it omits `--project`. `pnpm dlx`,
+`yarn dlx`, and a later `vitest` token after `exec` or `npx` count; `pnpm test`
+and other package scripts do not. A `$` in a known value such as `--shard`
+does not hide the rest of the command. Narrow `workflows` when a file runs
+more than one project.
 
 For `pull_request_target`, PR-head refs are definite risks even with false
 persistence; unresolved refs or repositories use the shared policy. The optional
@@ -684,3 +719,14 @@ must be `advisory`; `error`, `fail`, and `options.fail` are rejected. Set
 `schemaCatalogPath` to enable all five shapes; without a catalog every shape
 stays silent. Its advisory `target` identifies the shape. Use ordinary disable
 comments for source exceptions supported by a plan and benchmark.
+
+[`test-fixture-size-cap`](../rules/test-fixture-size-cap.md) caps literal
+`Array.from({ length })`, single-argument `Array(n)` and `new Array(n)`, and
+numeric literals in configured `eachCalls` lists in `scopes.tests` and
+`scopes.helpers`. A later getter, setter, spread, or dynamic computed key
+clears an earlier `Array.from` length. `threshold` has no default: omitting it reports nothing.
+`exemptions` defaults to `[]`, `eachCalls` defaults to `[]`, and both
+scope lists default to `[]`. When `eachCalls` names a callee, numeric elements
+are cardinalities for scale or size tables. A cardinality equal to the threshold is allowed.
+An exact exemption is allowed even when it is larger. List a callee in
+`eachCalls` only for those tables.

@@ -266,6 +266,17 @@ fn github_actions_cache_key_policy_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn test_fixture_size_cap_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::TEST_FIXTURE_SIZE_CAP;
+    assert_eq!(rule, "test-fixture-size-cap");
+    assert!(rule_ids_from_source(&repo_root()).contains(rule));
+    assert!(repo_root().join(format!("docs/rules/{rule}.md")).is_file());
+    let root = repo_root();
+    assert!(read(&root.join("docs/configuration/rules.md")).contains(rule));
+    assert!(read(&root.join("docs/node-api.md")).contains(rule));
+}
+
+#[test]
 fn github_actions_local_action_checkout_is_in_the_public_rule_inventory() {
     let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT;
     assert_eq!(rule, "github-actions-local-action-checkout");
@@ -353,9 +364,13 @@ fn vite_optimize_deps_nested_imports_documents_scope_options() {
     for path in [
         "docs/rules/vite-optimize-deps-nested-imports.md",
         "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "plugins/no-mistakes/skills/no-mistakes/SKILL.md",
     ] {
         let body = read(&root.join(path));
         assert!(body.contains("configFiles"), "{path}");
         assert!(body.contains("packages"), "{path}");
+        assert!(body.contains("includeSources"), "{path}");
+        assert!(body.contains("ignorePackages"), "{path}");
     }
 }

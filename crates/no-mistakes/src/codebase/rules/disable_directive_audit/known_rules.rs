@@ -10,6 +10,7 @@ pub(super) fn known_rule(rule: &str) -> bool {
             NEXTJS_NO_CACHING,
             POSTGRES_NO_MUTABLE_SQL_REGISTRY,
             POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
+            POSTGRES_SQL_FRAGMENT_ESCAPE,
             QUERY_REACHED_PER_ITEM,
             REQUIRE_STORYBOOK_STORIES,
             REQUIRED_ENTRYPOINT_REACHABILITY,

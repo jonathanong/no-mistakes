@@ -111,3 +111,26 @@ rules:
         "rules[0].options.exceptions[0].allowedFiles[0]"
     );
 }
+
+#[test]
+fn markdown_reachability_collects_exclude_root_globs() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: markdown-reachability
+    options:
+      baselineFile: docs/baseline.json
+      excludeRoots: ["docs/**", "guides/*.md"]
+"#,
+    )
+    .unwrap();
+    let refs = super::paths::references(&config);
+    assert_eq!(refs.len(), 3);
+    assert_eq!(refs[0].field, "rules[0].options.baselineFile[0]");
+    assert!(refs[0].kind == super::paths::Kind::File);
+    assert_eq!(refs[1].field, "rules[0].options.excludeRoots[0]");
+    assert!(refs[1].kind == super::paths::Kind::Glob);
+    assert_eq!(refs[1].value, "docs/**");
+    assert_eq!(refs[2].field, "rules[0].options.excludeRoots[1]");
+    assert_eq!(refs[2].value, "guides/*.md");
+}

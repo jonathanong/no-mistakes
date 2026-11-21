@@ -1,0 +1,14 @@
+name: Widget merge sequence
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish sequence
+        uses: example/publish-widget@v1
+        with:
+          <<:
+            - keep-days: 1
+              replace: true
+            - keep-days: 30
+              replace: false

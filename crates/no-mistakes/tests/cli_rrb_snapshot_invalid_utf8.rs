@@ -86,6 +86,10 @@ fn invalid_utf8_github_actions() {
                 "github-actions-docker-host-ports",
             ),
             c(
+                "github_actions_vitest_project_selection",
+                "github-actions-vitest-project-selection",
+            ),
+            c(
                 "github_actions_composite_step_schema",
                 "github-actions-composite-step-schema",
             ),
@@ -96,6 +100,10 @@ fn invalid_utf8_github_actions() {
             c(
                 "github_actions_test_timeout_literals",
                 "github-actions-test-timeout-literals",
+            ),
+            c(
+                "github_actions_action_input_policy",
+                "github-actions-action-input-policy",
             ),
         ],
         &[],
@@ -123,6 +131,11 @@ fn invalid_utf8_github_actions() {
     );
     assert_definite(
         &report,
+        "github_actions_vitest_project_selection",
+        "github-actions-vitest-project-selection",
+    );
+    assert_definite(
+        &report,
         "github_actions_composite_step_schema",
         "github-actions-composite-step-schema",
     );
@@ -135,6 +148,11 @@ fn invalid_utf8_github_actions() {
         &report,
         "github_actions_test_timeout_literals",
         "github-actions-test-timeout-literals",
+    );
+    assert_definite(
+        &report,
+        "github_actions_action_input_policy",
+        "github-actions-action-input-policy",
     );
 }
 

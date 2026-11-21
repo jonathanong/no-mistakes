@@ -12,7 +12,8 @@ pub use extract_value_flow::{
     ValueReplacementWrite, ValueType,
 };
 pub(crate) use extract_value_flow::{
-    ModuleAssignedMutations, TextOrigin, TextOrigins, ValueAssignedMutations,
+    ModuleAssignedMutations, TextOrigin, TextOrigins, ValueAssignedMutation,
+    ValueAssignedMutations, ValueAssignedWriter,
 };
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {

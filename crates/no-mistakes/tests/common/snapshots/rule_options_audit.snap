@@ -622,5 +622,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [],
       "warnings": []
     }
+  },
+  "vitest-project-file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/widgets.yml",
+          "line": 7,
+          "message": ".github/workflows/widgets.yml:7: job `unit` step 1 narrows Vitest project `widgets` with positional test file `src/widgets.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "- run: pnpm exec vitest run --project widgets src/widgets.test.ts",
+          "target": "src/widgets.test.ts"
+        }
+      ],
+      "warnings": []
+    }
   }
 }
