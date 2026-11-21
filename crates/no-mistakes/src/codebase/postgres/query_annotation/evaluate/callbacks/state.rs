@@ -193,6 +193,6 @@ impl View<'_> {
     }
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[cfg(test)]
 #[path = "state/tests.rs"]
 mod tests;
