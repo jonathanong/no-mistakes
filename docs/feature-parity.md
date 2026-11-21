@@ -65,8 +65,10 @@ same owned `mkdtemp` or fixture-directory proof; a missing `cwd` is the live
 working directory. A `cd <dir> &&` prefix, a pnpm `-C` or `--dir`, or a yarn
 `--cwd` replaces that proof. `cd .` stays in the current directory, `cd /` is
 the filesystem root, and `cd ..` leaves an unowned directory. A quoted
-argument stays one token. A quoted executable, or an analyzer name inside a
-quoted assignment value, leaves the shell string unmatched.
+argument stays one token. `$` and a backtick stay literal inside single quotes.
+A quoted executable, an analyzer name inside a quoted assignment value, or `$`
+or a backtick inside double quotes, leaves the shell string unmatched. `cd` and
+`&&` match only as unquoted tokens.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory
 and loader aliases do not grant a bounded-path proof.

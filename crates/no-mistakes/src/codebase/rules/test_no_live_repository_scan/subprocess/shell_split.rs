@@ -39,8 +39,9 @@ struct Word {
 }
 
 /// Words of a static shell string. A quote wraps one argument, including the
-/// value of `NAME="..."`. An unclosed quote, a backslash, or `$` or a backtick
-/// inside quotes is not static.
+/// value of `NAME="..."`. An unclosed quote or a backslash is not static.
+/// `$` and a backtick are literal inside single quotes. Inside double quotes,
+/// or in unquoted text of a command that also contains a quote, they are not.
 fn shell_words(text: &str) -> Option<Vec<Word>> {
     if text.contains(['"', '\'']) {
         quoted_words(text)
@@ -88,12 +89,19 @@ fn quoted_words(text: &str) -> Option<Vec<Word>> {
                     if inner == character {
                         break;
                     }
-                    if matches!(inner, '\\' | '`' | '$' | '\n' | '\r') {
+                    // Single quotes keep `$` and backticks. Double quotes do not.
+                    if inner == '\\' || inner == '\n' || inner == '\r' {
+                        return None;
+                    }
+                    if character == '"' && matches!(inner, '`' | '$') {
                         return None;
                     }
                     word.text.push(inner);
                 }
             } else {
+                if matches!(character, '`' | '$') {
+                    return None;
+                }
                 chars.next();
                 word.text.push(character);
             }
@@ -142,14 +150,16 @@ fn assignment(text: Option<&str>) -> bool {
 }
 
 fn cd_and(words: &[Word]) -> bool {
-    let (Some(cd), Some(dir), Some(and)) = (
-        words.first().map(|word| word.text.as_str()),
-        words.get(1).map(|word| word.text.as_str()),
-        words.get(2).map(|word| word.text.as_str()),
-    ) else {
+    let (Some(cd), Some(dir), Some(and)) = (words.first(), words.get(1), words.get(2)) else {
         return false;
     };
-    cd == "cd" && and == "&&" && dir != "&&" && !dir.starts_with('-')
+    // `cd` and `&&` are operators only when they are unquoted tokens.
+    !cd.quoted
+        && !and.quoted
+        && cd.text == "cd"
+        && and.text == "&&"
+        && (dir.quoted || dir.text != "&&")
+        && !dir.text.starts_with('-')
 }
 
 fn known(part: &str) -> Token {

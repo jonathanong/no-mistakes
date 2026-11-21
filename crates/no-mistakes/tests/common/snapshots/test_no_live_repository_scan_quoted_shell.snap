@@ -14,6 +14,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "tests/orders.test.ts",
           "import": "execSync",
+          "line": 12,
+          "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync('cd \"widgets\" && widget-audit check');",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "import": "execSync",
+          "line": 13,
+          "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync('cd \"&&\" && widget-audit check');",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "import": "execSync",
           "line": 3,
           "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
           "rule": "test-no-live-repository-scan",
@@ -27,6 +45,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
           "rule": "test-no-live-repository-scan",
           "sourceLine": "execSync('widget-audit check --label \"nightly\"');",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "import": "execSync",
+          "line": 7,
+          "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"widget-audit check --label '$item'\");",
+          "target": "analyzer subprocess"
+        },
+        {
+          "file": "tests/orders.test.ts",
+          "import": "execSync",
+          "line": 8,
+          "message": "live repository scan: `execSync` runs `widget-audit check` against the working directory, and a test root reaches it. `analyzers` names that command, and this call passes no owned `cwd`. Fix: run it in static CI, or set `cwd` to a fixtures path or an mkdtemp directory the test owns.",
+          "rule": "test-no-live-repository-scan",
+          "sourceLine": "execSync(\"widget-audit check --label '`item`'\");",
           "target": "analyzer subprocess"
         }
       ],

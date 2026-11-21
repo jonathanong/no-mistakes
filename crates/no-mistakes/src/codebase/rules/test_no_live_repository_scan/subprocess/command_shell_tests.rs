@@ -142,14 +142,37 @@ fn quoted_arguments_match_and_quoted_commands_do_not() {
         Some("widget-audit check")
     );
     assert_eq!(quoted_dir.shell_dir.as_deref(), Some("widgets"));
+    let literal = invocation(&[known("widget-audit check --label '$item'")], true).unwrap();
+    assert_eq!(
+        matched(&literal, &[analyzer()]).as_deref(),
+        Some("widget-audit check")
+    );
+    assert!(matches!(literal.argv.last(), Some(Token::Known(text)) if text == "$item"));
+    assert_eq!(
+        launch(vec![known("widget-audit check --label '`item`'")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![known("ITEM='$item' widget-audit check")], true),
+        "widget-audit check"
+    );
+    let quoted_operator = invocation(&[known("cd \"&&\" && widget-audit check")], true).unwrap();
+    assert_eq!(
+        matched(&quoted_operator, &[analyzer()]).as_deref(),
+        Some("widget-audit check")
+    );
+    assert_eq!(quoted_operator.shell_dir.as_deref(), Some("&&"));
     assert!(launch(vec![known("widget-audit check --label 'nightly")], true).is_empty());
     assert!(launch(vec![known("widget-audit check --label 'ni\\ghtly'")], true).is_empty());
-    assert!(launch(vec![known("widget-audit check --label '$nightly'")], true).is_empty());
+    assert!(launch(vec![known("widget-audit check --label \"$item\"")], true).is_empty());
+    assert!(launch(vec![known("widget-audit check --label \"`item`\"")], true).is_empty());
     assert!(launch(
-        vec![known("widget-audit check --label \"`nightly`\"")],
+        vec![known("widget-audit check $item --label 'nightly'")],
         true
     )
     .is_empty());
+    assert!(launch(vec![known("ITEM=\"$item\" widget-audit check")], true).is_empty());
+    assert!(launch(vec![known("cd widgets \"&&\" widget-audit check")], true).is_empty());
 }
 
 #[test]

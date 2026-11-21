@@ -989,10 +989,14 @@ stays unmatched. A quoted argument is one token, so
 `widget-audit check --label 'nightly'` matches. A quoted executable stays
 unmatched, and an analyzer name inside a quoted assignment value does not
 match, so `"widget-audit" check` and
-`ITEM="placeholder widget-audit check extra"` do not match. An unclosed quote,
-a backslash, or `$` or a backtick inside quotes leaves the command unmatched.
-A semicolon, a pipe, or a `cd` that is not followed by a directory and `&&` is left in place,
-so `cd widgets; widget-audit check` does not match. An argument array still
+`ITEM="placeholder widget-audit check extra"` do not match. An unclosed quote or a backslash leaves the command unmatched. `$` and a
+backtick are literal inside single quotes, so
+`widget-audit check --label '$item'` matches. They leave the command unmatched
+inside double quotes, or in unquoted text next to a quote, so
+`widget-audit check --label "$item"` does not match. `cd` and `&&` match only
+when those tokens are unquoted, so `cd widgets "&&" widget-audit check` does
+not match. A semicolon, a pipe, or a `cd` that is not followed by a directory
+and `&&` is left in place, so `cd widgets; widget-audit check` does not match. An argument array still
 matches when `shell` is `true`, so
 `spawn("pnpm", ["exec", "widget-audit", "check"], { shell: true })` is the
 configured command.
