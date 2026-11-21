@@ -29,12 +29,20 @@ test(
     assert.deepEqual(
       report.rules.map(({ rule, file, line }) => [rule, file, line]),
       [
+        ["workflow-topology-policy", ".github/workflows/comment-gap.yml", 4],
         ["workflow-topology-policy", ".github/workflows/duplicate.yml", 2],
+        ["workflow-topology-policy", ".github/workflows/flow-mapping.yml", 2],
+        ["workflow-topology-policy", ".github/workflows/flow-sequence.yml", 4],
         ["workflow-topology-policy", ".github/workflows/mapping.yml", 3],
         ["workflow-topology-policy", ".github/workflows/null-mapping.yml", 3],
+        ["workflow-topology-policy", ".github/workflows/quoted-event.yml", 3],
+        ["workflow-topology-policy", ".github/workflows/quoted-on.yml", 3],
         ["workflow-topology-policy", ".github/workflows/scalar.yml", 2],
         ["workflow-topology-policy", ".github/workflows/sequence-block.yml", 4],
         ["workflow-topology-policy", ".github/workflows/sequence.yml", 2],
+        ["workflow-topology-policy", ".github/workflows/stale-null.yml", 3],
+        ["workflow-topology-policy", ".github/workflows/stale-sequence.yml", 3],
+        ["workflow-topology-policy", ".github/workflows/tagged-on.yml", 1],
       ],
     );
     assert.ok(report.rules.every((finding) => finding.message.includes("pull_request_target")));
@@ -46,7 +54,7 @@ test(
     });
     assert.deepEqual(
       custom.rules.map(({ message }) => message),
-      Array(6).fill("Use pull_request for these widget workflows."),
+      Array(14).fill("Use pull_request for these widget workflows."),
     );
     const empty = await cjs.check({
       root: eventsRoot,
