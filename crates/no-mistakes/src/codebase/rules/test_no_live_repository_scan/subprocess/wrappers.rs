@@ -1,4 +1,19 @@
-use super::{program_name, Token};
+use super::Token;
+
+pub(super) fn program_name(token: &str) -> &str {
+    strip_suffix(basename(token))
+}
+
+pub(super) fn basename(token: &str) -> &str {
+    token.rsplit(['/', '\\']).next().unwrap_or(token)
+}
+
+pub(super) fn strip_suffix(name: &str) -> &str {
+    [".cmd", ".exe", ".js", ".mjs", ".cjs"]
+        .into_iter()
+        .find_map(|suffix| name.strip_suffix(suffix))
+        .unwrap_or(name)
+}
 
 const BOOLEAN_FLAGS: &[&str] = &["-r", "--recursive"];
 const DIR_FLAGS: &[&str] = &["-C", "--dir"];

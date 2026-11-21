@@ -970,38 +970,47 @@ unmodified basename, including `node_modules/.bin`. One trailing `.cmd`,
 `widget-audit` matches `widget-audit.exe` and `fork("./widget-audit.js", ...)`.
 `fork` uses the module path the way `execFile` uses the executable.
 
-`exec` and `execSync` take a static shell string. A literal string is split
-on whitespace. Leading `NAME=value` assignments and `cd <dir> &&` prefixes are
-removed first, and those prefixes may repeat, before the first token is read
-as the executable. A stripped `cd` directory replaces the `cwd` option.
-`cd .` stays in that directory, so the call is a live scan when it has no
-owned `cwd`. `cd /` is the filesystem root and is a live scan. `cd ..` leaves
-the working directory and is a live scan when that directory is not owned. A
-target with a fixture-directory segment is owned. A target that contains `..`
-plus another name, or a `$` or a backtick, is an unresolved root, so
-`cd fixtures/$DIR && widget-audit check` and
-`cd ../widgets && widget-audit check` are not owned. Any other target is a
-live scan, so `cd /repo && widget-audit check` still reports when `cwd` is a
-fixture path. When that `cd` replaces an owned `cwd`, the finding names the
-`cd`. `spawn` and `spawnSync` use that split when `shell` is the
-boolean `true` and the command is not an argument array. A non-literal command
-stays unmatched. A quoted argument is one token, so
-`widget-audit check --label 'nightly'` matches. A quoted executable stays
-unmatched, and an analyzer name inside a quoted assignment value does not
-match, so `"widget-audit" check` and
-`ITEM="placeholder widget-audit check extra"` do not match. A quoted word is
+`exec` and `execSync` take a static shell string. Unquoted `&&`, `;`, and `||`
+separate simple commands, including when the operator is glued to a word
+(`true&&widget-audit check`). A single `&` or `|` is not that separator, and a
+quoted operator stays text. Each simple command is matched. The first whose
+directory is not an owned fixture path is the finding, so
+`cd fixtures && widget-audit check && cd /repo && widget-audit check` reports
+the `/repo` scan. Leading `NAME=value` assignments are removed from each
+command and may repeat. A `cd <dir>` command followed by `&&` or `;` is not
+itself a scan; that directory replaces the `cwd` option for later commands, and
+the last such `cd` wins. `||` does not apply the `cd`, because the next command
+runs only when `cd` fails. `cd .` stays in that directory, so the call is a
+live scan when it has no owned `cwd`. `cd /` is the filesystem root and is a
+live scan. `cd ..` leaves the working directory and is a live scan when that
+directory is not owned. A target with a fixture-directory segment is owned. A
+target that contains `..` plus another name is an unresolved root, so
+`cd ../widgets && widget-audit check` is not owned. `$` and a backtick in
+unquoted text, or inside double quotes, leave the whole string unmatched, so
+`cd fixtures/$DIR && widget-audit check` is not a finding. Inside single quotes
+they are literal, and a `cd` target that still contains them is an unresolved
+root. Any other target is a live scan, so `cd /repo && widget-audit check`
+still reports when `cwd` is a fixture path. When that `cd` replaces an owned
+`cwd`, the finding names the `cd`. `spawn` and `spawnSync` use that split when
+`shell` is the boolean `true` and the command is not an argument array. A
+non-literal command stays unmatched. A quoted argument is one token, so
+`widget-audit check --label 'nightly'` matches. The executable matches on its
+quote-stripped text, so `"widget-audit" check` and `widget-au''dit check`
+match. An analyzer name inside a quoted assignment value does not match, so
+`ITEM="placeholder widget-audit check extra"` does not match. A quoted word is
 not an assignment, so `'ITEM=$item' widget-audit check` does not match.
 `ITEM='$item' widget-audit check` does, because the name and `=` are unquoted.
 An unclosed quote or a backslash leaves the command unmatched. `$` and a
 backtick are literal inside single quotes, so
-`widget-audit check --label '$item'` matches. They leave the command unmatched
-inside double quotes, or in unquoted text next to a quote, so
-`widget-audit check --label "$item"` does not match. `cd` matches on its
+`widget-audit check --label '$item'` matches. `cd` matches on its
 quote-stripped text, so `"cd" widgets && widget-audit check` and
-`c''d widgets && widget-audit check` match. `&&` matches only as an unquoted
-token, so `cd widgets "&&" widget-audit check` does not match. A semicolon, a pipe, or a `cd` that is not followed by a directory
-and `&&` is left in place, so `cd widgets; widget-audit check` does not match. An argument array still
-matches when `shell` is `true`, so
+`c''d widgets && widget-audit check` match. `&&`, `;`, and `||` separate
+commands only when the operator is unquoted, so
+`cd widgets "&&" widget-audit check` does not match.
+`cd widgets; widget-audit check` matches in `widgets`.
+`cd widgets || widget-audit check` matches in the original directory.
+`cd widgets widget-audit check` has no operator, so it stays one command and
+does not match. An argument array still matches when `shell` is `true`, so
 `spawn("pnpm", ["exec", "widget-audit", "check"], { shell: true })` is the
 configured command.
 

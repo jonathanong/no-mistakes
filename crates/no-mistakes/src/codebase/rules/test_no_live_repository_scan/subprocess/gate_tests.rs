@@ -196,5 +196,5 @@ fn a_shell_cd_replaces_the_cwd_option() {
         "cd fixtures/$DIR && widget-audit check",
         PathOrigin::unknown(),
     );
-    assert!(expanded.findings.is_empty() && expanded.advisories.len() == 1);
+    assert!(expanded.findings.is_empty() && expanded.advisories.is_empty());
 }

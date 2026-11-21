@@ -51,42 +51,45 @@ impl<'a> Gate<'a> {
             return;
         };
         let shell = command::uses_shell(name, &arguments.values);
-        let Some(invocation) = command::invocation(&arguments.values, shell) else {
-            return;
-        };
-        let Some(label) = command::matched(&invocation, &self.options.analyzers) else {
-            return;
-        };
         let finding = |message: String, target: &str| {
             findings::build(self.root, self.application, site, message, target)
         };
-        let wrapped = command::wrapper_dir(&invocation);
-        let shell = invocation.shell_dir.as_deref();
-        let base = place::directory(facts, site.offset, invocation.options, &self.fixture_dirs);
-        let located = match wrapped.as_deref().or(shell) {
-            Some(dir) => place::shell_place(dir, &self.fixture_dirs, base),
-            None => base,
-        };
-        match located {
-            place::Directory::Allowed => {}
-            place::Directory::Live => diagnostics.findings.push(finding(
-                place::live_message(
-                    &site.source_callee,
-                    &label,
-                    place::owned_shift(base, wrapped.as_deref(), shell),
-                ),
-                "analyzer subprocess",
-            )),
-            place::Directory::Unresolved => {
-                findings::unresolved_findings(diagnostics, self.options.unresolved_root).push(
-                    finding(
-                        format!(
-                            "unresolved root: `{}` runs `{label}`, but its cwd cannot be shown to be a fixtures path or an owned temporary directory. Fix: pass a const fixture path or owned mkdtemp directory as `cwd`. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
-                            site.source_callee
+        for invocation in command::launches(&arguments.values, shell) {
+            let Some(label) = command::matched(&invocation, &self.options.analyzers) else {
+                continue;
+            };
+            let wrapped = command::wrapper_dir(&invocation);
+            let shell_dir = invocation.shell_dir.as_deref();
+            let base = place::directory(facts, site.offset, invocation.options, &self.fixture_dirs);
+            let located = match wrapped.as_deref().or(shell_dir) {
+                Some(dir) => place::shell_place(dir, &self.fixture_dirs, base),
+                None => base,
+            };
+            match located {
+                place::Directory::Allowed => continue,
+                place::Directory::Live => {
+                    diagnostics.findings.push(finding(
+                        place::live_message(
+                            &site.source_callee,
+                            &label,
+                            place::owned_shift(base, wrapped.as_deref(), shell_dir),
                         ),
-                        "unresolved root",
-                    ),
-                );
+                        "analyzer subprocess",
+                    ));
+                    return;
+                }
+                place::Directory::Unresolved => {
+                    findings::unresolved_findings(diagnostics, self.options.unresolved_root).push(
+                        finding(
+                            format!(
+                                "unresolved root: `{}` runs `{label}`, but its cwd cannot be shown to be a fixtures path or an owned temporary directory. Fix: pass a const fixture path or owned mkdtemp directory as `cwd`. As a last option, add `no-mistakes-disable-next-line {RULE_ID}` with a reason.",
+                                site.source_callee
+                            ),
+                            "unresolved root",
+                        ),
+                    );
+                    return;
+                }
             }
         }
     }

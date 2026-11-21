@@ -1,4 +1,6 @@
-use super::{invocation, matched, uses_shell, AnalyzerCommand, ArgumentValue, OptionsSlot, Token};
+use super::{
+    invocation, launches, matched, uses_shell, AnalyzerCommand, ArgumentValue, OptionsSlot, Token,
+};
 use serde_json::Value;
 
 fn analyzer() -> AnalyzerCommand {
@@ -26,8 +28,17 @@ fn shell_flag(value: bool) -> ArgumentValue {
 }
 
 fn launch(values: Vec<ArgumentValue>, shell: bool) -> String {
-    let parsed = invocation(&values, shell).unwrap();
-    matched(&parsed, &[analyzer()]).unwrap_or_default()
+    launches(&values, shell)
+        .iter()
+        .find_map(|parsed| matched(parsed, &[analyzer()]))
+        .unwrap_or_default()
+}
+
+fn matched_dir(text: &str) -> Option<String> {
+    launches(&[known(text)], true)
+        .into_iter()
+        .find(|parsed| matched(parsed, &[analyzer()]).is_some())
+        .and_then(|parsed| parsed.shell_dir)
 }
 
 fn matched_text(text: &str) -> String {
@@ -97,10 +108,6 @@ fn shell_prefixes_are_removed_before_the_executable() {
         "widget-audit check"
     );
     assert_eq!(
-        launch(vec![known("cd fixtures/$DIR && widget-audit check")], true),
-        "widget-audit check"
-    );
-    assert_eq!(
         launch(
             vec![known(
                 "cd widgets && ITEM=1 cd items && pnpm exec widget-audit check"
@@ -113,12 +120,7 @@ fn shell_prefixes_are_removed_before_the_executable() {
     assert!(launch(vec![known("ITEM=1")], true).is_empty());
     assert!(launch(vec![known("2=1 widget-audit check")], true).is_empty());
     assert!(launch(vec![known("ITEM-COUNT=1 widget-audit check")], true).is_empty());
-    assert!(launch(vec![known("cd && widget-audit check")], true).is_empty());
     assert!(launch(vec![known("cd widgets widget-audit check")], true).is_empty());
-    assert!(launch(vec![known("cd && && widget-audit check")], true).is_empty());
-    assert!(launch(vec![known("cd -widgets && widget-audit check")], true).is_empty());
-    assert!(launch(vec![known("cd widgets; widget-audit check")], true).is_empty());
-    assert!(launch(vec![known("\"widget-audit\" check")], true).is_empty());
     assert!(launch(
         vec![known("ITEM=\"placeholder widget-audit check extra\"")],
         true
@@ -127,7 +129,7 @@ fn shell_prefixes_are_removed_before_the_executable() {
 }
 
 #[test]
-fn quoted_arguments_match_and_quoted_commands_do_not() {
+fn quoted_arguments_match_on_static_text() {
     assert_matched("widget-audit check --label 'nightly'");
     assert_matched("widget-audit check --label \"nightly\"");
     let parsed = invocation(&[known("widget-audit check --label 'nightly'")], true).unwrap();
@@ -179,6 +181,45 @@ fn quoted_arguments_match_and_quoted_commands_do_not() {
     assert!(matched_text("widget-audit check $item --label 'nightly'").is_empty());
     assert!(matched_text("ITEM=\"$item\" widget-audit check").is_empty());
     assert!(matched_text("cd widgets \"&&\" widget-audit check").is_empty());
+}
+
+#[test]
+fn operators_and_quoted_executables_expose_each_simple_command() {
+    assert_matched("true && widget-audit check");
+    assert_matched("true&&widget-audit check");
+    assert_matched("true; widget-audit check");
+    assert_matched("true||widget-audit check");
+    assert_matched("\"widget-audit\" check");
+    assert_matched("widget-au''dit check");
+    assert_matched("cd && widget-audit check");
+    assert_matched("cd && && widget-audit check");
+    assert_matched("cd -widgets && widget-audit check");
+    assert_matched("cd widgets; widget-audit check");
+    assert_matched("cd widgets || widget-audit check");
+    assert_eq!(
+        matched_dir("cd widgets; widget-audit check").as_deref(),
+        Some("widgets")
+    );
+    assert_eq!(
+        matched_dir("cd \"widgets\" && widget-audit check").as_deref(),
+        Some("widgets")
+    );
+    assert_eq!(
+        matched_dir("cd widgets || widget-audit check").as_deref(),
+        None
+    );
+    assert_eq!(matched_dir("true && widget-audit check").as_deref(), None);
+    assert!(matched_text("cd fixtures/$DIR && widget-audit check").is_empty());
+    assert!(matched_text("cd fixtures/`item` && widget-audit check").is_empty());
+    assert!(matched_text("widget-audit check `date`").is_empty());
+    assert!(matched_text("ITEM=$item widget-audit check").is_empty());
+    assert!(matched_text("widget-audit check \\--json").is_empty());
+    assert!(matched_text("cd widgets | widget-audit check").is_empty());
+    assert!(matched_text("cd widgets & widget-audit check").is_empty());
+    assert_eq!(
+        matched_dir("cd 'fixtures/$item' && widget-audit check").as_deref(),
+        Some("fixtures/$item")
+    );
 }
 
 #[test]

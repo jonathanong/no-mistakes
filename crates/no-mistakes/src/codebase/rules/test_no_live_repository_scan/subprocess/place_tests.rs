@@ -103,3 +103,26 @@ fn shell_dot_root_and_parent_follow_the_base_directory() {
     assert!(named.contains("after `cd /repo`"));
     assert!(!named.contains("set `cwd`"));
 }
+
+#[test]
+fn later_simple_commands_and_quote_free_expansions() {
+    assert_quiet(&shell("cd fixtures/$DIR && widget-audit check", None));
+    assert_quiet(&shell("cd fixtures/`item` && widget-audit check", None));
+    assert!(live(&shell("true && widget-audit check", None)).contains("set `cwd`"));
+    assert!(live(&shell("true&&widget-audit check", None)).contains("set `cwd`"));
+    assert!(live(&shell("\"widget-audit\" check", None)).contains("set `cwd`"));
+    assert!(live(&shell("widget-au''dit check", None)).contains("set `cwd`"));
+    let sequenced = live(&shell("cd widgets; widget-audit check", Some(owned())));
+    assert!(sequenced.contains("after `cd widgets`"));
+    let alternate = live(&shell("cd widgets || widget-audit check", None));
+    assert!(alternate.contains("set `cwd`"));
+    assert!(!alternate.contains("after `cd"));
+    let carried = live(&shell(
+        "cd fixtures && widget-audit check && cd /repo && widget-audit check",
+        Some(owned()),
+    ));
+    assert!(carried.contains("after `cd /repo`"));
+    let literal = shell("cd 'fixtures/$item' && widget-audit check", None);
+    assert!(literal.findings.is_empty());
+    assert_eq!(literal.advisories.len(), 1);
+}

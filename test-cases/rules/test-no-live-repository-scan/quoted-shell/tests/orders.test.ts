@@ -6,6 +6,7 @@ execSync('ITEM="placeholder widget-audit check extra"');
 execSync("ITEM='$item' widget-audit check");
 execSync("'ITEM=$item' widget-audit check");
 execSync('"widget-audit" check');
+execSync("widget-au''dit check");
 execSync("widget-audit check --label '$item'");
 execSync("widget-audit check --label '`item`'");
 execSync('widget-audit check --label "$item"');
