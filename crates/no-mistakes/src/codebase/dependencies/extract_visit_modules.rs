@@ -37,8 +37,15 @@ fn visit_export_all_declaration_with_scope(
     // a later named import of that name may call one member of its source.
     if !export.export_kind.is_type() {
         if let Some(exported) = export.exported.as_ref().and_then(module_export_name_name) {
+            let specifier = crate::ast::js_literal(&export.source);
+            collector.note_sourced_export_offset(
+                specifier.as_ref(),
+                "*",
+                exported.as_ref(),
+                export.span.start,
+            );
             collector.call_export_bindings.push(ExportedBinding {
-                specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
+                specifier: Some(specifier.into_owned()),
                 // `*` cannot be an ECMAScript export name. It distinguishes
                 // the namespace object from a normal named re-export.
                 local: "*".to_string(),
@@ -57,6 +64,11 @@ fn visit_import_expression_with_scope(
     import: &ImportExpression<'_>,
 ) {
     if let Some(specifier) = static_import_specifier(&import.source) {
+        collector
+            .namespace
+            .facts
+            .literal_import_spans
+            .push((import.span.start, specifier.clone()));
         collector.push(&specifier, ImportKind::Dynamic, import.span.start as usize);
     } else {
         collector.push_computed(
@@ -81,6 +93,11 @@ fn record_runtime_require_import(
         return;
     };
     if let Some(specifier) = static_import_specifier(expr) {
+        collector
+            .namespace
+            .facts
+            .literal_import_spans
+            .push((call.span.start, specifier.clone()));
         collector.push(&specifier, kind, call.span.start as usize);
         return;
     }
@@ -113,8 +130,16 @@ fn computed_import_specifier(expr: &Expression<'_>) -> String {
 }
 
 fn visit_ts_import_type_with_scope(collector: &mut ImportCollector, import: &TSImportType<'_>) {
+    let specifier = crate::ast::js_literal(&import.source);
+    // `typeof import("./mod")` is a type node. Its keyword is still the
+    // offset a direct `import()` scan uses.
+    collector
+        .namespace
+        .facts
+        .literal_import_spans
+        .push((import.span.start, specifier.clone().into_owned()));
     collector.push(
-        crate::ast::js_literal(&import.source).as_ref(),
+        specifier.as_ref(),
         ImportKind::Type,
         import.span.start as usize,
     );

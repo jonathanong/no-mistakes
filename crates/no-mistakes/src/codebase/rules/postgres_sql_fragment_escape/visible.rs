@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn visible(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     name: &str,
@@ -32,7 +32,7 @@ pub(super) fn visible(
 
 pub(super) fn visible_all(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     stack: &mut Vec<PathBuf>,
@@ -54,6 +54,7 @@ pub(super) fn visible_all(
                     catalog, graph, facts, &next, &blocked, stack,
                 )),
                 ModuleHit::Open => found.push(Fragment::open(spec)),
+                ModuleHit::Unproven => {}
             }
         }
         for binding in &ts.exported_bindings {
@@ -67,7 +68,7 @@ pub(super) fn visible_all(
 
 fn follow(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     name: &str,
@@ -94,6 +95,7 @@ fn follow(
                     found.extend(visible(catalog, graph, facts, &next, name, stack));
                 }
                 ModuleHit::Open => found.push(Fragment::open(spec)),
+                ModuleHit::Unproven => {}
             }
         }
     }
@@ -105,7 +107,7 @@ fn follow(
 
 fn relay_all(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,
@@ -139,7 +141,7 @@ fn relay_all(
 
 fn relay_one(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,

@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: postgres-sql-fragment-escape
+    scope: repository
+    options:
+      trustedSqlTags:
+        - module: "@example/sql"
+          name: default
+  - rule: unconstructed-error-class
+    scope: repository
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: place-order.ts
+      traversal: file
+      targets:
+        - global: setTimeout

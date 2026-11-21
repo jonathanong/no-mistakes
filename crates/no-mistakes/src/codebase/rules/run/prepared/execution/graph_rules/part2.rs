@@ -84,11 +84,11 @@ pub(super) fn collect(
         let consumer = "postgres-sql-fragment-escape";
         if dependency_graph.is_some()
             || session.is_none_or(|session| session.check_consumer_ready(consumer))
+            || session.is_some_and(|session| session.partial_checks_enabled())
         {
             let result = (|| -> Result<()> {
-                findings.extend(crate::perf_trace::rule(
-                    "analysis.rules.postgres-sql-fragment-escape",
-                    || {
+                let report =
+                    crate::perf_trace::rule("analysis.rules.postgres-sql-fragment-escape", || {
                         crate::codebase::rules::postgres_sql_fragment_escape::check_with_graph(
                             root,
                             config,
@@ -96,8 +96,13 @@ pub(super) fn collect(
                             shared,
                             request.sources,
                         )
-                    },
-                )?);
+                    })?;
+                if let Some(session) = session {
+                    for gap in report.gaps {
+                        session.record_check_failure(gap);
+                    }
+                }
+                findings.extend(report.findings);
                 Ok(())
             })();
             if let Some(session) = session {

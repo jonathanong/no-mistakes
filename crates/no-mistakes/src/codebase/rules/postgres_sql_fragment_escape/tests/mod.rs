@@ -1,4 +1,5 @@
 mod coverage;
+mod facts;
 mod import_targets;
 mod incomplete;
 mod namespace_uses;

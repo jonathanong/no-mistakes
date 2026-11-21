@@ -24,6 +24,9 @@ pub(super) fn graph_rule_findings_with_session(
         .map(|session| {
             let mut config = request.config.clone();
             for application in &mut config.rules {
+                if application.rule == crate::codebase::rules::POSTGRES_SQL_FRAGMENT_ESCAPE {
+                    continue;
+                }
                 application.enabled &= session.check_consumer_ready(&application.rule);
             }
             config

@@ -2,7 +2,7 @@ use super::fragments::Fragment;
 use super::modules::module_file;
 use super::resolve::FileCtx;
 use super::tags::{imported, is_fragment_binding};
-use super::text::{declarator_text, import_alias, import_call_specifier, whole_quoted};
+use super::text::{declarator_text, import_alias, whole_quoted};
 use super::visible::visible_all;
 use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueBinding, ValueExpression};
 use std::path::PathBuf;
@@ -17,8 +17,13 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
     if let Some(module) = imported_namespace(ctx, name) {
         return Some(module);
     }
-    if let Some(alias) = import_alias(ctx.source, name) {
-        return namespace_of(ctx, alias, depth + 1);
+    if !locally_bound(ctx, name) {
+        if let Some(alias) = super::fact_reads::equals_alias(ctx.ts, name) {
+            return namespace_of(ctx, &alias, depth + 1);
+        }
+        if let Some(alias) = import_alias(ctx.source, name) {
+            return namespace_of(ctx, alias, depth + 1);
+        }
     }
     let binding = binding_named(ctx, name)?;
     if is_fragment_binding(ctx.ts, ctx.tags, binding) {
@@ -31,12 +36,33 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
 }
 
 fn initializer_module(ctx: &FileCtx<'_>, binding: &ValueBinding) -> Option<PathBuf> {
-    let window = match &binding.value {
-        ValueExpression::Call(start, end) => ctx.source.get(*start as usize..*end as usize)?,
-        _ => declarator_text(ctx.source.get(binding.declared_at as usize..)?),
-    };
-    let spec = import_call_specifier(window)?;
-    module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec)
+    let (start, _, window) = initializer_window(ctx, binding)?;
+    if !super::fact_reads::window_loads_module(window) {
+        return None;
+    }
+    let spec = super::fact_reads::depth_zero_module_specifier(ctx.ts, window, start)?;
+    module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, &spec)
+}
+
+fn initializer_window<'a>(
+    ctx: &'a FileCtx<'_>,
+    binding: &ValueBinding,
+) -> Option<(u32, u32, &'a str)> {
+    match &binding.value {
+        ValueExpression::Call(start, end) => Some((
+            *start,
+            *end,
+            ctx.source.get(*start as usize..*end as usize)?,
+        )),
+        _ => {
+            let rest = ctx.source.get(binding.declared_at as usize..)?;
+            let window = declarator_text(rest);
+            let end = binding
+                .declared_at
+                .checked_add(u32::try_from(window.len()).ok()?)?;
+            Some((binding.declared_at, end, window))
+        }
+    }
 }
 
 pub(super) fn binding_named<'a>(ctx: &'a FileCtx<'_>, name: &str) -> Option<&'a ValueBinding> {
@@ -130,6 +156,9 @@ fn callback_param(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
 }
 
 fn import_equals(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
+    if let Some(spec) = super::fact_reads::require_specifier(ctx.ts, name) {
+        return module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec);
+    }
     let marker = format!("import {name} = require(");
     let mut rest = ctx.source;
     while let Some(index) = rest.find(&marker) {
@@ -151,25 +180,7 @@ fn import_equals(ctx: &FileCtx<'_>, name: &str) -> Option<PathBuf> {
 }
 
 fn import_module(ctx: &FileCtx<'_>, start: u32, end: u32) -> Option<PathBuf> {
-    let spec = specifier_at(ctx.source, start, end)?;
-    module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec)
-}
-
-fn specifier_at(source: &str, start: u32, end: u32) -> Option<&str> {
-    let text = source.get(start as usize..end as usize)?;
-    callee_specifier(text, "import").or_else(|| callee_specifier(text, "require"))
-}
-
-fn callee_specifier<'a>(text: &'a str, callee: &str) -> Option<&'a str> {
-    let mut rest = text;
-    while let Some(index) = rest.find(callee) {
-        let after = &rest[index + callee.len()..];
-        let prev = rest[..index].chars().next_back();
-        let boundary = prev.is_none_or(|ch| ch != '.' && ch != '_' && !ch.is_ascii_alphanumeric());
-        if boundary && after.starts_with('(') {
-            return whole_quoted(&after[1..]);
-        }
-        rest = &rest[index + callee.len()..];
-    }
-    None
+    let window = ctx.source.get(start as usize..end as usize).unwrap_or("");
+    let spec = super::fact_reads::depth_zero_module_specifier(ctx.ts, window, start)?;
+    module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, &spec)
 }

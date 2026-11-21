@@ -86,16 +86,30 @@ impl ImportCollector {
         if declaration.import_kind.is_type() {
             return;
         }
-        let TSModuleReference::QualifiedName(qualified) = &declaration.module_reference else {
-            return;
-        };
-        let Some((identifier, member)) = import_equals_root(qualified) else {
-            return;
-        };
-        if self.namespace.names.contains(identifier.name.as_str()) {
-            self.namespace
-                .selected
-                .insert(identifier.span.start, member.to_string());
+        let local = declaration.id.name.to_string();
+        match &declaration.module_reference {
+            TSModuleReference::QualifiedName(qualified) => {
+                let Some((identifier, member)) = import_equals_root(qualified) else {
+                    return;
+                };
+                self.namespace.facts.import_equals_members.push((
+                    local,
+                    identifier.name.to_string(),
+                    member.to_string(),
+                ));
+                if self.namespace.names.contains(identifier.name.as_str()) {
+                    self.namespace
+                        .selected
+                        .insert(identifier.span.start, member.to_string());
+                }
+            }
+            TSModuleReference::IdentifierReference(identifier) => {
+                self.namespace
+                    .facts
+                    .import_equals_aliases
+                    .push((local, identifier.name.to_string()));
+            }
+            TSModuleReference::ExternalModuleReference(_) => {}
         }
     }
 

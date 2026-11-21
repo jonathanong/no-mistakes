@@ -7,9 +7,9 @@ is the escape site: the call, export, or binding that writes, rebinds, or
 passes the fragment outside an `.append(...)` argument.
 
 `postgres-no-executor-adapter` still proves append chains inside one file. This
-rule borrows the prepared inventory, TypeScript facts, and canonical import
-graph. It does not re-parse files and it does not join SQL identifier
-interpolation. There is no autofix.
+rule reads prepared TypeScript facts. When the canonical import graph was
+built, it uses recorded import targets. It does not re-parse files and it does
+not join SQL identifier interpolation. There is no autofix.
 
 ```yaml
 rules:
@@ -26,7 +26,9 @@ empty list reports nothing. Each entry needs a non-empty `module` and `name`.
 `name: default` matches a default import of that module, including
 `import sql from "@example/sql"`. A bare name matches a named import. `module`
 matches that specifier or a subpath under it. `include` and `exclude` are the
-shared path filters and are not options of this rule. A project `postgres`
+shared path filters and are not options of this rule. They select both findings
+and gaps. A gap for a file outside that filter is omitted, including when an
+included file imports the excluded file. A project `postgres`
 block can supply `trustedSqlTags`; do not restate them on the rule when it
 does.
 
@@ -37,9 +39,18 @@ file that appends it. Another file can still call `.append` on the fragment,
 rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
-shared across files. A file whose prepared facts include an operational error
-or an incomplete value-flow is still checked. A fragment binding or a write
-that those facts still record is reported.
+shared across files. A file whose prepared facts include an operational error,
+a fatal parse error, an incomplete value-flow, or unreadable source is still
+checked from those facts. A fragment binding or a write that those facts still
+record is reported. The same file is listed on the check result's `incomplete`
+field. The message names the file and says a write, rebind, or escape that
+lived only in the missing text may be absent. One such file does not drop
+findings from files whose facts are complete. This rule does not change the
+shared canonical graph. When value flow is incomplete, the canonical-graph
+prerequisite stays failed, and every other graph rule keeps the same readiness
+and output as a run that does not configure this rule. An ESLint-only run does
+not report these cross-file escapes. Set `trustedSqlTags` here, or this rule
+reports nothing.
 
 ## What it catches
 
@@ -62,7 +73,8 @@ is the escape:
   `import Local = columns.COLS` names that export alone and stays silent until
   a later write or escape.
 - `const parts = require(...)`, `import ext = require(...)`, and
-  `await import(...)`, including `.then`.
+  `await import(...)`, including `.then`. A member on that call, such as
+  `require("./producer").version`, is not the whole module.
 - An `export { local as public }` of an imported fragment, and an exported
   binding whose value is a member of an imported namespace.
 

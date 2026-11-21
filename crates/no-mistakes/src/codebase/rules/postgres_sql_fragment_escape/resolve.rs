@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy)]
 pub(super) struct FileCtx<'a> {
-    pub graph: &'a DepGraph,
+    pub graph: Option<&'a DepGraph>,
     pub facts: &'a CheckFactMap,
     pub catalog: &'a Catalog<'a>,
     pub tags: &'a [TrustedSqlTag],
@@ -125,14 +125,18 @@ fn use_name(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Vec<Fragment> {
             }
             return found;
         }
-        if let Some((object, member)) = import_equals_member(ctx.source, name) {
-            if let Some(module) = namespace_of(ctx, object, depth) {
+        let equals = super::fact_reads::equals_member(ctx.ts, name).or_else(|| {
+            import_equals_member(ctx.source, name)
+                .map(|(object, member)| (object.to_string(), member.to_string()))
+        });
+        if let Some((object, member)) = equals {
+            if let Some(module) = namespace_of(ctx, &object, depth) {
                 return visible(
                     ctx.catalog,
                     ctx.graph,
                     ctx.facts,
                     &module,
-                    member,
+                    &member,
                     &mut Vec::new(),
                 );
             }
