@@ -118,6 +118,9 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
         if further == next_at {
             break;
         }
+        if extends_name(&word, &piece) {
+            word.push('.');
+        }
         word.push_str(&piece);
         next_at = further;
         single_var = false;
@@ -128,6 +131,11 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
     (word, next_at)
 }
 
+fn extends_name(word: &str, piece: &str) -> bool {
+    super::super::output_syntax::var_ref(word).is_some()
+        && piece.starts_with(|ch: char| ch == '_' || ch.is_ascii_alphanumeric())
+}
+
 fn fragment(line: &str, start: usize, ch: char) -> (String, usize, bool) {
     if ch == '"' || ch == '\'' {
         let body_at = start + ch.len_utf8();
@@ -135,9 +143,9 @@ fn fragment(line: &str, start: usize, ch: char) -> (String, usize, bool) {
         let Some(end) = body.find(ch) else {
             return (String::new(), line.len(), false);
         };
-        let single_var = ch == '\'' && whole_var(&body[..end]);
-        let text = body[..end].to_string();
-        return (text, body_at + end + ch.len_utf8(), single_var);
+        let body = &body[..end];
+        let single_var = ch == '\'' && super::super::output_syntax::var_ref(body).is_some();
+        return (body.to_string(), body_at + end + ch.len_utf8(), single_var);
     }
     let (text, next_at) = bare_word(line, start);
     (text, next_at, false)
@@ -154,22 +162,6 @@ fn bare_fd(line: &str, chars: &[(usize, char)], at: usize) -> bool {
     !token.is_empty() && token.bytes().all(|byte| byte.is_ascii_digit())
 }
 
-fn whole_var(text: &str) -> bool {
-    let Some(rest) = text.strip_prefix('$') else {
-        return false;
-    };
-    match rest.strip_prefix('{') {
-        Some(body) => body.strip_suffix('}').is_some_and(shell_name),
-        None => shell_name(rest),
-    }
-}
-
-fn shell_name(name: &str) -> bool {
-    let mut chars = name.chars();
-    matches!(chars.next(), Some(ch) if ch == '_' || ch.is_ascii_alphabetic())
-        && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
-}
-
 fn bare_word(line: &str, start: usize) -> (String, usize) {
     let rest = &line[start..];
     let mut end = 0;
@@ -182,6 +174,9 @@ fn bare_word(line: &str, start: usize) -> (String, usize) {
                 end = rest.len();
                 break;
             };
+            if escaped == '$' {
+                token.push('\\');
+            }
             token.push(escaped);
             end = after + escaped.len_utf8();
             continue;

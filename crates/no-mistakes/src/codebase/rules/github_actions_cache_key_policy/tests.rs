@@ -225,6 +225,8 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "split-ampersand.yml",
         "numeric-redirect.yml",
         "suffix-output.yml",
+        "glued-suffix.yml",
+        "escaped-output.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -268,6 +270,8 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "tight-redirect.yml",
         "adjacent-redirect.yml",
         "wide-redirect.yml",
+        "named-alias.yml",
+        "bare-output.yml",
         "composite-digest.yml",
         "composite-yaml.yml",
         "lock-digest/action.yml",
@@ -282,7 +286,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 41, "{findings:?}");
+    assert_eq!(findings.len(), 43, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {
@@ -422,13 +426,33 @@ fn redirect_words_keep_suffixes_escapes_and_the_next_operator() {
         targets("echo x >/tmp/orders\\>name"),
         vec!["/tmp/orders>name".to_string()]
     );
+    assert_eq!(
+        targets("echo x > \"$OUT\"bak"),
+        vec!["$OUT.bak".to_string()]
+    );
+    assert_eq!(
+        targets("echo x >\\$GITHUB_OUTPUT"),
+        vec!["\\$GITHUB_OUTPUT".to_string()]
+    );
     let prove = |run: &str| output::proven_output_names(run, "widgets.lock");
     assert!(prove(
         "digest=$(sha256sum widgets.lock)\n\
          OUT=$GITHUB_OUTPUT\n\
-         echo \"digest=$digest\" > \"$OUT\".bak\n"
+         OUTbak=$GITHUB_OUTPUT\n\
+         echo \"digest=$digest\" > \"$OUT\".bak\n\
+         echo \"digest=$digest\" > \"$OUT\"bak\n\
+         echo \"digest=$digest\" >\\$GITHUB_OUTPUT\n"
     )
     .is_empty());
+    assert_eq!(
+        prove(
+            "digest=$(sha256sum widgets.lock)\n\
+             OUTbak=$GITHUB_OUTPUT\n\
+             echo \"digest=$digest\" > \"$OUTbak\"\n\
+             echo \"digest=$digest\" >$GITHUB_OUTPUT\n"
+        ),
+        vec!["digest".to_string()]
+    );
     assert_eq!(
         prove(
             "digest=$(sha256sum widgets.lock)\n\
