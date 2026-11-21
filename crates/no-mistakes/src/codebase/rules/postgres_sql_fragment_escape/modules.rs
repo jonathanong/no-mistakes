@@ -113,8 +113,6 @@ fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec
 }
 
 fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) -> Vec<PathBuf> {
-    let double = format!("declare module \"{specifier}\"");
-    let single = format!("declare module '{specifier}'");
     facts
         .graph_file_universe()
         .iter()
@@ -122,8 +120,51 @@ fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) ->
             facts
                 .get_ts_facts(file)
                 .and_then(|ts| file_text(ts, catalog.sources, file))
-                .is_some_and(|source| source.contains(&double) || source.contains(&single))
+                .is_some_and(|source| declares_ambient_module(&source, specifier))
         })
         .cloned()
         .collect()
+}
+
+/// `declare module "specifier"` with any whitespace between the tokens.
+fn declares_ambient_module(source: &str, specifier: &str) -> bool {
+    let double = format!("\"{specifier}\"");
+    let single = format!("'{specifier}'");
+    let mut index = 0;
+    while let Some(found) = source[index..].find("declare") {
+        let at = index + found;
+        let boundary = at == 0 || !is_ident_byte(source.as_bytes()[at - 1]);
+        let after = at + "declare".len();
+        if boundary && module_name_follows(&source[after..], &double, &single) {
+            return true;
+        }
+        index = after;
+    }
+    false
+}
+
+fn module_name_follows(after_declare: &str, double: &str, single: &str) -> bool {
+    let trimmed = after_declare.trim_start();
+    if trimmed.len() == after_declare.len() {
+        return false;
+    }
+    let Some(after_keyword) = trimmed.strip_prefix("module") else {
+        return false;
+    };
+    if after_keyword.starts_with(|ch: char| is_ident_char(ch)) {
+        return false;
+    }
+    let quoted = after_keyword.trim_start();
+    if quoted.len() == after_keyword.len() {
+        return false;
+    }
+    quoted.starts_with(double) || quoted.starts_with(single)
+}
+
+fn is_ident_byte(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
+}
+
+fn is_ident_char(ch: char) -> bool {
+    ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }

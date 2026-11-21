@@ -77,9 +77,10 @@ The rule does not match a specifier to a neighbor by file stem, and it does
 not re-match tsconfig `paths` itself. A recorded file is that file, including
 a path alias or workspace package the graph already resolved, even when the
 file name differs from the specifier. A `node:` builtin or an external
-package has no project file and cannot import the trusted SQL tag, so that
-import is not a finding unless one project file contains
-`declare module "specifier"`. When the graph leaves a project specifier
+package is not a project file. The rule does not read that package, and the
+package cannot import the configured trusted SQL tag, so the import is not a
+finding unless one project file contains `declare module "specifier"`.
+Silence here is that analysis boundary. When the graph leaves a project specifier
 unresolved, a relative specifier is joined lexically to the importer, and a
 specifier can match a file that contains `declare module "specifier"` when
 that file is unique. When those steps do not name one file, or the recorded
