@@ -2,7 +2,7 @@ use super::fragments::Fragment;
 use super::modules::module_file;
 use super::resolve::FileCtx;
 use super::tags::{imported, is_fragment_binding};
-use super::text::{declarator_text, import_alias, import_call_specifier, whole_quoted};
+use super::text::{declarator_text, import_alias, whole_quoted};
 use super::visible::visible_all;
 use crate::codebase::dependencies::extract::{ImportedBindingKind, ValueBinding, ValueExpression};
 use std::path::PathBuf;
@@ -36,15 +36,12 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
 }
 
 fn initializer_module(ctx: &FileCtx<'_>, binding: &ValueBinding) -> Option<PathBuf> {
-    let (start, end, window) = initializer_window(ctx, binding)?;
+    let (start, _, window) = initializer_window(ctx, binding)?;
     if !super::fact_reads::window_loads_module(window) {
         return None;
     }
-    if let Some(spec) = super::fact_reads::specifier_between(ctx.ts, start, end) {
-        return module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec);
-    }
-    let spec = import_call_specifier(window)?;
-    module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, spec)
+    let spec = super::fact_reads::depth_zero_module_specifier(ctx.ts, window, start)?;
+    module_file(ctx.graph, ctx.facts, ctx.catalog, ctx.file, &spec)
 }
 
 fn initializer_window<'a>(
