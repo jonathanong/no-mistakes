@@ -2,6 +2,7 @@
 """Arm isolation and grader tests. These never call a model."""
 import json
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,11 +11,27 @@ from unittest import mock
 import codex_rules
 import codex_rules_env
 import codex_rules_grade
+import codex_rules_store as store
 import power
 import summarize
 
 MARKER = "USER_HOME_MARKER_3580"
 REPO = Path(__file__).resolve().parents[1]
+
+
+def _read_event(command: str, *, exit_code: int = 0) -> str:
+    return json.dumps(
+        {
+            "type": "item.completed",
+            "item": {
+                "type": "command_execution",
+                "command": command,
+                "aggregated_output": "",
+                "exit_code": exit_code,
+                "status": "completed",
+            },
+        }
+    )
 
 
 def _rel_bytes(root: Path) -> dict:
@@ -234,24 +251,30 @@ class PreviewAndGradeTest(unittest.TestCase):
 
     def test_fake_exec_writes_the_aggregate_shape(self):
         plans = []
-
-        def run_exec(plan):
-            plans.append(plan)
-            line = json.dumps(
-                {
-                    "type": "item.completed",
-                    "item": {
-                        "type": "mcp_tool_call",
-                        "tool": "Skill",
-                        "arguments": {"skill": "testing-rules"},
-                    },
-                }
-            )
-            return {"returncode": 0, "stdout": line, "stderr": "", "last_message": "code"}
-
         case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
         output = Path(tempfile.mkdtemp(prefix="codex-rules-out-"))
         self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+
+        def run_exec(plan):
+            plans.append(plan)
+            root = plan.get("plugin_root")
+            if root:
+                command = f"cat {Path(root) / 'skills' / 'testing-rules' / 'SKILL.md'}"
+            else:
+                command = "echo no-plugin"
+            if plan["arm"] == "without":
+                saved = json.loads((output / "aggregate-result.json").read_text())
+                self.assertTrue(saved["partial"])
+                self.assertEqual(len(saved["cases"][0]["arms"]["with"]), 1)
+                transcript = output / "attempts" / case["name"] / "with" / "1" / "transcript.jsonl"
+                self.assertIn("command_execution", transcript.read_text())
+            return {
+                "returncode": 0,
+                "stdout": _read_event(command) + "\n",
+                "stderr": "",
+                "last_message": "code",
+            }
+
         with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")):
             report = codex_rules.run_suite(
                 [case],
@@ -263,6 +286,7 @@ class PreviewAndGradeTest(unittest.TestCase):
                 None,
                 None,
                 keep_temp=False,
+                check_plugins=False,
             )
         self.assertEqual(len(plans), 2)
         self.assertEqual(plans[0]["prompt"], plans[1]["prompt"])
@@ -270,10 +294,12 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertNotEqual(plans[0]["codex_home"], plans[1]["codex_home"])
         saved = json.loads((output / "aggregate-result.json").read_text())
         self.assertEqual(saved["suite"]["ablation"], "codex-with-without")
+        self.assertFalse(saved["partial"])
         self.assertEqual(summarize._fired(report["cases"][0]["arms"]["with"]), 1)
-        self.assertEqual(summarize._fired(report["cases"][0]["arms"]["without"]), 1)
+        self.assertEqual(summarize._fired(report["cases"][0]["arms"]["without"]), 0)
         self.assertIn("with: should-fire 1/1", codex_rules_grade.format_trigger(report))
-        self.assertIn("without: should-fire 1/1", codex_rules_grade.format_trigger(report))
+        self.assertIn("without: should-fire 0/1", codex_rules_grade.format_trigger(report))
+        self.assertTrue((output / "attempts" / case["name"] / "without" / "1" / "result.json").is_file())
 
     def test_empty_final_message_is_an_error(self):
         case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
@@ -298,6 +324,7 @@ class PreviewAndGradeTest(unittest.TestCase):
                 Path("/codex-rules-user-home-unused"),
                 None,
                 None,
+                check_plugins=False,
             )
         self.assertEqual(
             report["cases"][0]["arms"]["with"][0]["error"],
@@ -314,51 +341,83 @@ class PreviewAndGradeTest(unittest.TestCase):
             code = codex_rules.main(["--run", "--all", "--output", "/tmp/codex-rules-should-not-write"])
         self.assertEqual(code, 2)
 
-    def test_skill_fired_ignores_message_text(self):
+    def test_skill_fired_counts_only_a_real_read(self):
         meta, _ = codex_rules_grade.parse_frontmatter(
             (REPO / "evals" / "rules-testing-write-error-text" / "graders" / "skill-fired.md").read_text()
         )
+        off, _ = codex_rules_grade.parse_frontmatter(
+            (REPO / "evals" / "rules-offtopic-neg-big-o" / "graders" / "skill-fired.md").read_text()
+        )
+        root = Path(tempfile.mkdtemp(prefix="codex-rules-plugin-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(root, ignore_errors=True))
+        skill = root / "skills" / "testing-rules" / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("skill body\n")
+        other = root / "skills" / "queue-rules" / "SKILL.md"
+        other.parent.mkdir(parents=True)
+        other.write_text("other\n")
+        outside = Path(tempfile.mkdtemp(prefix="codex-rules-outside-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(outside, ignore_errors=True))
+        stray = outside / "testing-rules" / "SKILL.md"
+        stray.parent.mkdir(parents=True)
+        stray.write_text("stray\n")
         spoken = json.dumps(
-            {"type": "item.completed", "item": {"type": "agent_message", "text": meta["input_match"]}}
-        )
-        self.assertFalse(codex_rules_grade.skill_fired(meta, spoken))
-        called = json.dumps(
             {
                 "type": "item.completed",
-                "item": {
-                    "type": "mcp_tool_call",
-                    "tool": "Skill",
-                    "arguments": {"skill": "testing-rules"},
-                },
+                "item": {"type": "agent_message", "text": f"{meta['input_match']} {skill}"},
             }
         )
-        self.assertTrue(codex_rules_grade.skill_fired(meta, called))
-        invoked = json.dumps(
-            {
-                "type": "item.completed",
-                "item": {
-                    "type": "skill_invocation",
-                    "skill_name": "testing-rules",
-                    "plugin_id": "no-mistakes-rules",
-                },
-            }
-        )
-        self.assertTrue(codex_rules_grade.skill_fired(meta, invoked))
-        command = json.dumps(
+        self.assertFalse(codex_rules_grade.skill_fired(meta, spoken, root))
+        self.assertFalse(codex_rules_grade.skill_fired(meta, _read_event(f"cat {skill}"), None))
+        self.assertTrue(codex_rules_grade.skill_fired(meta, _read_event(f"cat {skill}"), root))
+        self.assertTrue(codex_rules_grade.skill_fired(meta, _read_event(f"head -n 20 {skill}"), root))
+        self.assertTrue(codex_rules_grade.skill_fired(meta, _read_event(f"sed -n '1,20p' {skill}"), root))
+        wrapped = "bash -lc " + json.dumps(f"cat {skill}")
+        self.assertTrue(codex_rules_grade.skill_fired(meta, _read_event(wrapped), root))
+        self.assertFalse(codex_rules_grade.skill_fired(meta, _read_event(f"ls -l {skill}"), root))
+        self.assertFalse(codex_rules_grade.skill_fired(meta, _read_event(f"echo {skill}"), root))
+        self.assertFalse(codex_rules_grade.skill_fired(meta, _read_event(f"cat {stray}"), root))
+        self.assertFalse(codex_rules_grade.skill_fired(meta, _read_event(f"cat {other}"), root))
+        self.assertTrue(codex_rules_grade.skill_fired(off, _read_event(f"cat {other}"), root))
+        self.assertFalse(codex_rules_grade.skill_fired(off, spoken, root))
+        mentioned = json.dumps(
             {
                 "type": "item.completed",
                 "item": {
                     "type": "command_execution",
-                    "command": "cat /tmp/skills/testing-rules/SKILL.md",
+                    "command": "ls -l /work",
+                    "aggregated_output": str(skill),
+                    "exit_code": 0,
+                    "status": "completed",
                 },
             }
         )
-        self.assertTrue(codex_rules_grade.skill_fired(meta, command))
-        off, _ = codex_rules_grade.parse_frontmatter(
-            (REPO / "evals" / "rules-offtopic-neg-big-o" / "graders" / "skill-fired.md").read_text()
+        self.assertFalse(codex_rules_grade.skill_fired(meta, mentioned, root))
+        started = json.dumps(
+            {
+                "type": "item.started",
+                "item": {
+                    "type": "command_execution",
+                    "command": f"cat {skill}",
+                    "status": "in_progress",
+                    "exit_code": None,
+                },
+            }
         )
-        self.assertTrue(codex_rules_grade.skill_fired(off, called))
-        self.assertFalse(codex_rules_grade.skill_fired(off, spoken))
+        self.assertFalse(codex_rules_grade.skill_fired(meta, started, root))
+        for event_type in ("skill_invocation", "mcp_tool_call"):
+            ignored = json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": event_type,
+                        "tool": "Skill",
+                        "skill_name": "testing-rules",
+                        "arguments": {"skill": "testing-rules"},
+                    },
+                }
+            )
+            self.assertFalse(codex_rules_grade.skill_fired(meta, ignored, root))
 
     def test_judge_prompt_uses_grader_markdown_and_report_shape(self):
         case = REPO / "evals" / "rules-testing-write-error-text"
@@ -374,13 +433,13 @@ class PreviewAndGradeTest(unittest.TestCase):
             self.assertEqual(rubric_meta["type"], "llm")
             return True
 
-        transcript = json.dumps(
-            {
-                "type": "item.completed",
-                "item": {"type": "mcp_tool_call", "tool": "Skill", "arguments": {"skill": "testing-rules"}},
-            }
-        )
-        run = codex_rules_grade.grade_run(case, transcript, "final answer text", judge)
+        root = Path(tempfile.mkdtemp(prefix="codex-rules-plugin-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(root, ignore_errors=True))
+        skill = root / "skills" / "testing-rules" / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("skill body\n")
+        transcript = _read_event(f"cat {skill}")
+        run = codex_rules_grade.grade_run(case, transcript, "final answer text", judge, root)
         self.assertEqual(len(seen), 1)
         self.assertIn(JUDGE := codex_rules_grade.JUDGE_MODEL, codex_rules_grade.judge_argv())
         script = (REPO / "scripts" / "run-evals.sh").read_text()
@@ -393,6 +452,259 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertEqual(summarize._mean_score(report["cases"][0]["arms"]["with"]), 1)
         self.assertIn("should-fire 1/1", codex_rules_grade.format_trigger(report))
         self.assertTrue(_summarize_ok(report))
+
+    def test_runs_zero_is_not_the_default(self):
+        text = codex_rules.format_preview(codex_rules.discover(), 0)
+        self.assertIn("runs: 0\n", text)
+        self.assertIn("attempts: 0 (18 x 2 x 0)\n", text)
+        with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")):
+            self.assertEqual(codex_rules.main(["--runs", "0"]), 0)
+            self.assertEqual(
+                codex_rules.main(["--run", "--all", "--runs", "0", "--output", "/tmp/codex-rules-should-not-write"]),
+                2,
+            )
+
+    def test_judge_failure_keeps_skill_fired(self):
+        case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
+        output = Path(tempfile.mkdtemp(prefix="codex-rules-out-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+        calls = []
+
+        def run_exec(plan):
+            calls.append(plan["arm"])
+            root = plan.get("plugin_root")
+            command = f"cat {Path(root) / 'skills' / 'testing-rules' / 'SKILL.md'}" if root else "echo no-plugin"
+            return {
+                "returncode": 0,
+                "stdout": _read_event(command) + "\n",
+                "stderr": "",
+                "last_message": "code",
+            }
+
+        def judge(_prompt):
+            raise RuntimeError("judge down")
+
+        report = codex_rules.run_suite(
+            [case],
+            1,
+            output,
+            run_exec,
+            judge,
+            Path("/codex-rules-user-home-unused"),
+            None,
+            None,
+            check_plugins=False,
+        )
+        row = report["cases"][0]["arms"]["with"][0]
+        self.assertNotIn("error", row)
+        self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in row["graders"]))
+        graded = [item for item in row["graders"] if item["name"] != "skill-fired"]
+        self.assertTrue(graded)
+        self.assertTrue(all(item.get("error") == "judge down" and "passed" not in item for item in graded))
+        self.assertIn("with: should-fire 1/1", codex_rules_grade.format_trigger(report))
+        calls.clear()
+
+        def refuse(_plan):
+            raise AssertionError("exec")
+
+        again = codex_rules.run_suite(
+            [case],
+            1,
+            output,
+            refuse,
+            judge,
+            Path("/codex-rules-user-home-unused"),
+            None,
+            None,
+            check_plugins=False,
+        )
+        self.assertEqual(calls, [])
+        again_row = again["cases"][0]["arms"]["with"][0]
+        self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in again_row["graders"]))
+        self.assertNotIn("error", again_row)
+
+    def test_saved_transcript_skips_exec(self):
+        case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
+        output = Path(tempfile.mkdtemp(prefix="codex-rules-out-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+        root = output / "plugin"
+        skill = root / "skills" / "testing-rules" / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("skill body\n")
+        store.save_exec(
+            store.slot(output, case["name"], "with", 1),
+            {
+                "returncode": 0,
+                "stdout": _read_event(f"cat {skill}") + "\n",
+                "stderr": "",
+                "last_message": "code",
+                "plugin_root": str(root),
+            },
+        )
+        calls = []
+
+        def run_exec(plan):
+            calls.append(plan["arm"])
+            return {
+                "returncode": 0,
+                "stdout": _read_event("echo no-plugin") + "\n",
+                "stderr": "",
+                "last_message": "code",
+            }
+
+        report = codex_rules.run_suite(
+            [case],
+            1,
+            output,
+            run_exec,
+            lambda _prompt: True,
+            Path("/codex-rules-user-home-unused"),
+            None,
+            None,
+            check_plugins=False,
+        )
+        self.assertEqual(calls, ["without"])
+        self.assertTrue(report["cases"][0]["arms"]["with"][0]["graders"][0]["passed"])
+        self.assertFalse(report["partial"])
+
+    def test_preflight_aborts_before_a_paid_attempt(self):
+        case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
+        output = Path(tempfile.mkdtemp(prefix="codex-rules-out-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+        calls = []
+
+        def run_exec(_plan):
+            calls.append("exec")
+            raise AssertionError("exec")
+
+        def empty(_built):
+            return {"installed": [], "available": []}
+
+        with self.assertRaises(SystemExit) as raised:
+            codex_rules.run_suite(
+                [case],
+                1,
+                output,
+                run_exec,
+                lambda _prompt: True,
+                Path("/codex-rules-user-home-unused"),
+                None,
+                None,
+                check_plugins=True,
+                list_fn=empty,
+            )
+        self.assertIn("no-mistakes-rules", str(raised.exception))
+        self.assertEqual(calls, [])
+
+        def disabled(built):
+            if built["arm"] == "with":
+                return {
+                    "installed": [{"name": "no-mistakes-rules", "installed": True, "enabled": False}],
+                    "available": [],
+                }
+            return {"installed": [], "available": []}
+
+        with self.assertRaises(SystemExit):
+            codex_rules.run_suite(
+                [case],
+                1,
+                output,
+                run_exec,
+                lambda _prompt: True,
+                Path("/codex-rules-user-home-unused"),
+                None,
+                None,
+                check_plugins=True,
+                list_fn=disabled,
+            )
+        self.assertEqual(calls, [])
+
+    def test_preflight_allows_only_the_enabled_rules_plugin(self):
+        case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
+        output = Path(tempfile.mkdtemp(prefix="codex-rules-out-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+        seen = []
+
+        def list_fn(built):
+            seen.append(built["arm"])
+            home = Path(built["env"]["CODEX_HOME"])
+            self.assertEqual(home, built["codex_home"])
+            self.assertFalse(str(home).startswith(str(Path("/codex-rules-user-home-unused"))))
+            self.assertEqual(codex_rules.plugin_list_argv(), ["codex", "plugin", "list", "--json"])
+            if built["arm"] == "with":
+                return {
+                    "installed": [{"name": "no-mistakes-rules", "installed": True, "enabled": True}],
+                    "available": [],
+                }
+            self.assertEqual(built["arm"], "without")
+            return {"installed": [], "available": []}
+
+        def run_exec(plan):
+            self.assertEqual(seen, ["with", "without"])
+            root = plan.get("plugin_root")
+            command = f"cat {Path(root) / 'skills' / 'testing-rules' / 'SKILL.md'}" if root else "echo no-plugin"
+            return {
+                "returncode": 0,
+                "stdout": _read_event(command) + "\n",
+                "stderr": "",
+                "last_message": "code",
+            }
+
+        codex_rules.run_suite(
+            [case],
+            1,
+            output,
+            run_exec,
+            lambda _prompt: True,
+            Path("/codex-rules-user-home-unused"),
+            None,
+            None,
+            check_plugins=True,
+            list_fn=list_fn,
+        )
+        self.assertEqual(seen, ["with", "without"])
+
+    def test_exec_codex_writes_the_transcript_file(self):
+        slot = Path(tempfile.mkdtemp(prefix="codex-rules-exec-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(slot, ignore_errors=True))
+        last = slot / "last-message.txt"
+        script = (
+            "import json, pathlib, sys\n"
+            "pathlib.Path(sys.argv[1]).write_text('final\\n')\n"
+            "print(json.dumps({'type':'item.completed','item':{'type':'command_execution',"
+            "'command':'echo hi','status':'completed','exit_code':0}}))\n"
+            "sys.stdout.flush()\n"
+        )
+        plan = {
+            "argv": [sys.executable, "-c", script, str(last)],
+            "env": os.environ.copy(),
+            "cwd": str(slot),
+            "timeout_seconds": 30,
+            "last_message": str(last),
+            "transcript": str(slot / "transcript.jsonl"),
+        }
+        result = codex_rules.exec_codex(plan)
+        self.assertEqual(result["returncode"], 0)
+        self.assertEqual(result["last_message"], "final\n")
+        self.assertIn("command_execution", (slot / "transcript.jsonl").read_text())
+        self.assertFalse((slot / "transcript.jsonl.partial").exists())
+
+    def test_exec_timeout_keeps_the_transcript(self):
+        slot = Path(tempfile.mkdtemp(prefix="codex-rules-exec-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(slot, ignore_errors=True))
+        script = "import time\nprint('hello', flush=True)\ntime.sleep(30)\n"
+        plan = {
+            "argv": [sys.executable, "-c", script],
+            "env": os.environ.copy(),
+            "cwd": str(slot),
+            "timeout_seconds": 1,
+            "last_message": str(slot / "missing-last.txt"),
+            "transcript": str(slot / "transcript.jsonl"),
+        }
+        result = codex_rules.exec_codex(plan)
+        self.assertEqual(result["returncode"], 124)
+        self.assertIn("hello", (slot / "transcript.jsonl").read_text())
+        self.assertFalse((slot / "transcript.jsonl.partial").exists())
 
 
 def _summarize_ok(report) -> bool:

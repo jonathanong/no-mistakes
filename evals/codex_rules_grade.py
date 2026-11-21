@@ -7,19 +7,16 @@ matches the aggregate-result.json shape summarize.py and power.py already read.
 """
 import json
 import re
+import shlex
 from pathlib import Path
 
 JUDGE_MODEL = "claude-opus-5-5"
-_SKILL_PATH = re.compile(r"([\w-]+-rules)/SKILL\.md")
 _PASSED = re.compile(r"\{[^{}]*\"passed\"\s*:\s*(true|false)[^{}]*\}")
-_TOOL_TYPES = {
-    "mcp_tool_call",
-    "McpToolCall",
-    "function_call",
-    "custom_tool_call",
-    "skill_invocation",
-    "SkillInvocation",
-}
+_SKILL_DIR = re.compile(r"[\w-]+-rules")
+# Content readers only. `ls` and `echo` mention a path without reading it.
+_READERS = {"cat", "sed", "head", "tail", "less", "more"}
+_SHELLS = {"bash", "sh", "zsh", "dash"}
+_SHELL_FLAGS = {"-lc", "-c", "-cl"}
 
 
 def parse_frontmatter(text: str) -> tuple:
@@ -70,58 +67,109 @@ def case_prompt(case_dir: Path) -> dict:
     }
 
 
-def _add_skill(found: list, name, plugin) -> None:
-    if not isinstance(name, str) or not name or name == "Skill":
-        return
-    value = f"{plugin}:{name}" if isinstance(plugin, str) and plugin else name
-    found.append(json.dumps({"skill": value}))
+def _split_shell(script: str) -> list:
+    parts = []
+    buf = []
+    quote = None
+    index = 0
+    while index < len(script):
+        char = script[index]
+        if quote:
+            buf.append(char)
+            if char == quote:
+                quote = None
+            index += 1
+            continue
+        if char in "'\"":
+            quote = char
+            buf.append(char)
+            index += 1
+            continue
+        if script.startswith("&&", index) or script.startswith("||", index):
+            parts.append("".join(buf).strip())
+            buf = []
+            index += 2
+            continue
+        if char in "|;\n":
+            parts.append("".join(buf).strip())
+            buf = []
+            index += 1
+            continue
+        buf.append(char)
+        index += 1
+    tail = "".join(buf).strip()
+    if tail:
+        parts.append(tail)
+    return [part for part in parts if part]
 
 
-def skill_inputs(event) -> list:
-    """Tool inputs a `skill-fired` regex can match. Message text is ignored."""
+def _inner_scripts(command: str) -> list:
+    try:
+        argv = shlex.split(command)
+    except ValueError:
+        return []
+    if len(argv) >= 3 and Path(argv[0]).name in _SHELLS and argv[1] in _SHELL_FLAGS:
+        return [argv[2] if len(argv) == 3 else " ".join(argv[2:])]
+    return [command]
+
+
+def _skill_name(token: str, plugin_root: Path) -> str | None:
+    if not token or token.startswith("-"):
+        return None
+    candidate = Path(token)
+    if not candidate.is_absolute():
+        return None
+    root = plugin_root
+    try:
+        if root.exists():
+            root = root.resolve()
+            candidate = candidate.resolve()
+    except OSError:
+        return None
+    if not _is_under(candidate, root):
+        return None
+    if candidate.name != "SKILL.md" or not _SKILL_DIR.fullmatch(candidate.parent.name):
+        return None
+    return candidate.parent.name
+
+
+def _is_under(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _skills_read(command: str, plugin_root: Path) -> list:
     found = []
-
-    def walk(node) -> None:
-        if isinstance(node, list):
-            for item in node:
-                walk(item)
-            return
-        if not isinstance(node, dict):
-            return
-        typ = node.get("type")
-        tool = node.get("tool") if isinstance(node.get("tool"), str) else ""
-        name = node.get("name") if isinstance(node.get("name"), str) else ""
-        skill_call = tool == "Skill" or name == "Skill" or typ in ("skill_invocation", "SkillInvocation")
-        if typ in _TOOL_TYPES or skill_call:
-            raw = node.get("arguments", node.get("input", node.get("args")))
-            if isinstance(raw, str):
-                found.append(raw)
-            elif isinstance(raw, (dict, list)):
-                found.append(json.dumps(raw))
-            if skill_call or node.get("skill_name") or node.get("skillName"):
-                _add_skill(
-                    found,
-                    node.get("skill_name") or node.get("skillName") or name,
-                    node.get("plugin_id") or node.get("pluginId"),
-                )
-        command = node.get("command")
-        if isinstance(command, str):
-            for match in _SKILL_PATH.finditer(command):
-                _add_skill(found, match.group(1), None)
-        for value in node.values():
-            walk(value)
-
-    walk(event)
+    for script in _inner_scripts(command):
+        for part in _split_shell(script):
+            try:
+                argv = shlex.split(part)
+            except ValueError:
+                continue
+            if not argv or Path(argv[0]).name not in _READERS:
+                continue
+            index = 1
+            while index < len(argv):
+                arg = argv[index]
+                if arg == "<" and index + 1 < len(argv):
+                    skill = _skill_name(argv[index + 1], plugin_root)
+                    index += 2
+                elif arg.startswith("-"):
+                    index += 1
+                    continue
+                else:
+                    skill = _skill_name(arg, plugin_root)
+                    index += 1
+                if skill:
+                    found.append(skill)
     return found
 
 
-def skill_fired(meta: dict, transcript: str) -> bool:
-    if meta.get("type") != "tool_used" or meta.get("tool") != "Skill":
-        raise ValueError("skill-fired grader is not a Skill tool check")
-    pattern = meta.get("input_match")
-    regex = re.compile(pattern) if pattern else None
-    minimum = int(meta.get("min", "1"))
-    count = 0
+def _completed_commands(transcript: str) -> list:
+    commands = []
     for line in transcript.splitlines():
         if not line.strip():
             continue
@@ -129,7 +177,38 @@ def skill_fired(meta: dict, transcript: str) -> bool:
             event = json.loads(line)
         except json.JSONDecodeError:
             continue
-        for blob in skill_inputs(event):
+        if not isinstance(event, dict) or event.get("type") != "item.completed":
+            continue
+        item = event.get("item")
+        if not isinstance(item, dict) or item.get("type") != "command_execution":
+            continue
+        if item.get("status") != "completed" or item.get("exit_code") != 0:
+            continue
+        command = item.get("command")
+        if isinstance(command, str):
+            commands.append(command)
+    return commands
+
+
+def skill_fired(meta: dict, transcript: str, plugin_root: Path | None) -> bool:
+    """True when a finished command reads an installed `<skill>-rules/SKILL.md`.
+
+    `codex exec --json` reports that read as `item.completed` /
+    `command_execution`. Message text, `ls`, and a path that is only mentioned
+    do not count. `skill_invocation` is not an exec JSON event.
+    """
+    if meta.get("type") != "tool_used" or meta.get("tool") != "Skill":
+        raise ValueError("skill-fired grader is not a Skill tool check")
+    if plugin_root is None:
+        return False
+    pattern = meta.get("input_match")
+    regex = re.compile(pattern) if pattern else None
+    minimum = int(meta.get("min", "1"))
+    count = 0
+    root = Path(plugin_root)
+    for command in _completed_commands(transcript):
+        for skill in _skills_read(command, root):
+            blob = json.dumps({"skill": skill})
             if regex is None or regex.search(blob):
                 count += 1
     return count >= minimum
@@ -178,19 +257,33 @@ def passed_from_judge_output(raw: str) -> bool:
     return json.loads(match.group(0))["passed"]
 
 
-def grade_run(case_dir: Path, transcript: str, last_message: str, judge) -> dict:
+def grade_run(
+    case_dir: Path,
+    transcript: str,
+    last_message: str,
+    judge,
+    plugin_root: Path | None,
+) -> dict:
     graders = []
     for path in sorted((case_dir / "graders").glob("*.md")):
         meta, body = parse_frontmatter(path.read_text())
         if meta.get("type") == "tool_used":
-            passed = skill_fired(meta, transcript)
+            passed = skill_fired(meta, transcript, plugin_root)
+            row = {"name": path.stem, "passed": passed, "evidence": last_message}
         elif meta.get("type") == "llm":
             if meta.get("focus", "last_message") != "last_message":
                 raise ValueError(f"{path.name} focus is not last_message")
-            passed = bool(judge(judge_prompt(body, last_message)))
+            try:
+                passed = bool(judge(judge_prompt(body, last_message)))
+            except Exception as exc:
+                row = {"name": path.stem, "error": str(exc), "evidence": last_message}
+                if "weight" in meta:
+                    row["weight"] = float(meta["weight"])
+                graders.append(row)
+                continue
+            row = {"name": path.stem, "passed": passed, "evidence": last_message}
         else:
             raise ValueError(f"unsupported grader {path.name}")
-        row = {"name": path.stem, "passed": passed, "evidence": last_message}
         if "weight" in meta:
             row["weight"] = float(meta["weight"])
         graders.append(row)

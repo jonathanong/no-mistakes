@@ -91,10 +91,13 @@ def _write_marketplace(root: Path, plugin_src: Path) -> Path:
     return market
 
 
-def _install_cache(codex_home: Path, plugin_src: Path) -> None:
+def installed_plugin_root(codex_home: Path, plugin_src: Path = PLUGIN_SRC) -> Path:
     version = _plugin_version(plugin_src)
-    cache = codex_home / "plugins" / "cache" / MARKETPLACE / PLUGIN / version
-    _copy_tree(plugin_src, cache)
+    return codex_home / "plugins" / "cache" / MARKETPLACE / PLUGIN / version
+
+
+def _install_cache(codex_home: Path, plugin_src: Path) -> None:
+    _copy_tree(plugin_src, installed_plugin_root(codex_home, plugin_src))
 
 
 def copy_workspace(src: Path | None, dest: Path) -> None:
@@ -256,6 +259,9 @@ def exec_argv(codex_bin: str, workspace: Path, last_message: Path, prompt: str) 
 
 def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "codex") -> dict:
     last_message = built["root"] / "last-message.txt"
+    plugin_root = None
+    if built["arm"] == "with":
+        plugin_root = str(installed_plugin_root(Path(built["codex_home"])))
     return {
         "arm": built["arm"],
         "argv": exec_argv(codex_bin, built["workspace"], last_message, prompt),
@@ -270,4 +276,5 @@ def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "
         "last_message": str(last_message),
         "workspace": str(built["workspace"]),
         "codex_home": str(built["codex_home"]),
+        "plugin_root": plugin_root,
     }

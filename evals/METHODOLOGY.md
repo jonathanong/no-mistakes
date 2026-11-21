@@ -391,14 +391,41 @@ which is the harness config the plugin enablement lives in. The workspace is
 empty for these cases. A fixture copy drops `AGENTS.md`, `CLAUDE.md`, and any
 file whose name or contents mention the rules. The exec flags
 (`--ephemeral`, `--ignore-rules`, sandbox, model, timeout, prompt) are the
-same on both arms.
+same on both arms. `--ephemeral` still skips Codex's own rollout store. The
+runner copies stdout itself.
 
-`skill-fired` matches the grader's `input_match` against Skill tool arguments,
-a `skill_invocation` item's `skill_name`, or a command that reads
-`<skill>/SKILL.md`. Message text does not count. Those are the shapes the
-checker accepts. A live Codex transcript has not been graded, so the first
-pilot has to confirm the transcript uses one of them before a trigger rate is
+Before the first paid attempt, the runner builds one throwaway home per arm
+and runs `codex plugin list --json` in each. The with arm must list only
+`no-mistakes-rules`, installed and enabled. The without arm must list no
+plugins. Any other answer aborts with no exec. `--runs` below 1 is refused;
+`0` is not a synonym for the case default.
+
+Each attempt is `attempts/<case>/<arm>/<n>/` under `--output`. When `codex
+exec` returns, including a timeout, the runner writes `transcript.jsonl` and
+`exec.json` before it grades. A Ctrl-C during exec leaves
+`transcript.jsonl.partial` (kept on the next try as
+`transcript.interrupted-<n>.jsonl`) and does not mark the attempt complete.
+`aggregate-result.json` is rewritten after every attempt with `partial: true`
+until the selected attempts have `result.json`. Run the same command again to
+resume. A finished `result.json` is skipped. A saved `exec.json` plus
+transcript is graded and not exec'd again.
+
+`skill-fired` counts a `command_execution` only when `item.completed` says
+`status: completed` and `exit_code: 0`, and the command reads
+`<skill>-rules/SKILL.md` under that attempt's installed plugin cache. The
+readers are `cat`, `sed`, `head`, `tail`, `less`, and `more`, including the
+`bash -lc` form Codex puts around a shell command. `ls`, `echo`, a path that
+only appears in message text or `aggregated_output`, and an `item.started`
+event do not count. `skill_invocation` is not an exec JSON event and is not
+accepted. The matched skill name is checked with the case's existing
+`input_match`. A live transcript has not been graded, so the first pilot
+should confirm this shape against the saved JSONL before a trigger rate is
 quoted.
+
+A judge failure sets `error` on that LLM grader and does not set a run-level
+`error`, so the `skill-fired` result remains. `summarize.py` still treats a
+grader without `passed` as a content miss. An exec failure is a run-level
+`error` and is not retried once `result.json` exists.
 
 The report is `aggregate-result.json` with `suite.ablation` set to
 `codex-with-without` and arm keys `with` and `without`. `costUsd` is 0.

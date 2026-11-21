@@ -455,9 +455,16 @@ CODEX_AUTH_FILE=/path/to/spare-auth.json \
 
 `--output` is a directory. The runner writes `aggregate-result.json` there, in
 the shape `summarize.py` and `power.py` already read (`arms.with` and
-`arms.without`). `skill-fired` on each arm is the primary measure. The pass
-rate is a regression check: `summarize.py` exits 1 when the with-arm score is
-below the without-arm score.
+`arms.without`). It also writes `attempts/<case>/<arm>/<n>/transcript.jsonl`
+as soon as that attempt ends, then updates the aggregate. Run the same command
+again to resume; an attempt with `result.json` is skipped. `--runs` must be 1
+or greater. Before any paid attempt, `codex plugin list --json` must show
+`no-mistakes-rules` installed and enabled on the with arm and no plugins on
+the without arm. `skill-fired` on each arm is the primary measure: a finished
+command that reads an installed `<skill>-rules/SKILL.md`. The pass rate is a
+regression check: `summarize.py` exits 1 when the with-arm score is below the
+without-arm score. A judge failure is recorded on that grader and leaves
+`skill-fired` in place.
 
 Authenticate as the ChatGPT Codex account that has spare budget, not a shared
 or capped login. Pass `CODEX_AUTH_FILE` (a copy of that account's `auth.json`
