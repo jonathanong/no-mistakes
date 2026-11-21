@@ -224,6 +224,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "literal-output.yml",
         "split-ampersand.yml",
         "numeric-redirect.yml",
+        "suffix-output.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -265,6 +266,8 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "stderr-merge.yml",
         "both-redirect.yml",
         "tight-redirect.yml",
+        "adjacent-redirect.yml",
+        "wide-redirect.yml",
         "composite-digest.yml",
         "composite-yaml.yml",
         "lock-digest/action.yml",
@@ -279,7 +282,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 40, "{findings:?}");
+    assert_eq!(findings.len(), 41, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {
@@ -398,6 +401,42 @@ fn duplicate_paths_and_undotted_fragments_are_rejected() {
     };
     let error = options::validate(&fragment).unwrap_err().to_string();
     assert!(error.contains("dotted context fragments"), "{error}");
+}
+
+#[test]
+fn redirect_words_keep_suffixes_escapes_and_the_next_operator() {
+    let targets = shell_cmd::redirect_targets;
+    assert_eq!(
+        targets("echo é >'x'>$GITHUB_OUTPUT"),
+        vec!["x".to_string(), "$GITHUB_OUTPUT".to_string()]
+    );
+    assert_eq!(
+        targets("echo x > \"$OUT\".bak"),
+        vec!["$OUT.bak".to_string()]
+    );
+    assert_eq!(
+        targets("echo x >/tmp/orders>$GITHUB_OUTPUT"),
+        vec!["/tmp/orders".to_string(), "$GITHUB_OUTPUT".to_string()]
+    );
+    assert_eq!(
+        targets("echo x >/tmp/orders\\>name"),
+        vec!["/tmp/orders>name".to_string()]
+    );
+    let prove = |run: &str| output::proven_output_names(run, "widgets.lock");
+    assert!(prove(
+        "digest=$(sha256sum widgets.lock)\n\
+         OUT=$GITHUB_OUTPUT\n\
+         echo \"digest=$digest\" > \"$OUT\".bak\n"
+    )
+    .is_empty());
+    assert_eq!(
+        prove(
+            "digest=$(sha256sum widgets.lock)\n\
+             echo \"digest=$digest\" >/tmp/orders>\"$GITHUB_OUTPUT\"\n\
+             echo \"digest=$digest\" é >'x'>\"$GITHUB_OUTPUT\"\n"
+        ),
+        vec!["digest".to_string()]
+    );
 }
 
 fn spec(path: &str, lockfile: &str, parts: &[&str]) -> options::CacheSpec {

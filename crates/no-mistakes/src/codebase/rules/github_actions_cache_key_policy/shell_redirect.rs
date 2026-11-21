@@ -85,21 +85,62 @@ fn filename_redirect(chars: &[(usize, char)], line: &str, index: &mut usize) -> 
         *index = at;
         return None;
     }
-    let Some((start, ch)) = chars.get(at).copied() else {
+    let Some((start, _)) = chars.get(at).copied() else {
         *index = at;
         return None;
     };
-    let (target, next_at) = if ch == '"' || ch == '\'' {
-        quoted_target(line, start, ch)
-    } else {
-        bare_target(line, start)
-    };
-    *index = next_at;
+    let (target, next_at) = redirect_word(line, chars, at);
+    *index = char_index(chars, next_at);
     (!target.is_empty()).then_some(Hit {
         target,
         start,
         end: next_at,
     })
+}
+
+fn char_index(chars: &[(usize, char)], byte: usize) -> usize {
+    chars
+        .iter()
+        .position(|(at, _)| *at >= byte)
+        .unwrap_or(chars.len())
+}
+
+fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usize) {
+    let Some((start, ch)) = chars.get(at).copied() else {
+        return (String::new(), line.len());
+    };
+    let (mut word, mut next_at, mut single_var) = fragment(line, start, ch);
+    while let Some((byte, next)) = chars.get(char_index(chars, next_at)).copied() {
+        if next.is_whitespace() || is_meta(next) {
+            break;
+        }
+        let (piece, further, _) = fragment(line, byte, next);
+        if further == next_at {
+            break;
+        }
+        word.push_str(&piece);
+        next_at = further;
+        single_var = false;
+    }
+    if single_var {
+        word.clear();
+    }
+    (word, next_at)
+}
+
+fn fragment(line: &str, start: usize, ch: char) -> (String, usize, bool) {
+    if ch == '"' || ch == '\'' {
+        let body_at = start + ch.len_utf8();
+        let body = &line[body_at..];
+        let Some(end) = body.find(ch) else {
+            return (String::new(), line.len(), false);
+        };
+        let single_var = ch == '\'' && whole_var(&body[..end]);
+        let text = body[..end].to_string();
+        return (text, body_at + end + ch.len_utf8(), single_var);
+    }
+    let (text, next_at) = bare_word(line, start);
+    (text, next_at, false)
 }
 
 fn bare_fd(line: &str, chars: &[(usize, char)], at: usize) -> bool {
@@ -109,27 +150,8 @@ fn bare_fd(line: &str, chars: &[(usize, char)], at: usize) -> bool {
     if ch == '"' || ch == '\'' {
         return false;
     }
-    let rest = &line[start..];
-    let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
-    let token = rest[..end].trim_end_matches([';', '&']);
+    let (token, _) = bare_word(line, start);
     !token.is_empty() && token.bytes().all(|byte| byte.is_ascii_digit())
-}
-
-fn quoted_target(line: &str, start: usize, quote: char) -> (String, usize) {
-    let body_at = start + quote.len_utf8();
-    let body = &line[body_at..];
-    match body.find(quote) {
-        Some(end) => {
-            let text = &body[..end];
-            let kept = if quote == '\'' && whole_var(text) {
-                ""
-            } else {
-                text
-            };
-            (kept.to_string(), body_at + end + quote.len_utf8())
-        }
-        None => (String::new(), line.len()),
-    }
 }
 
 fn whole_var(text: &str) -> bool {
@@ -148,9 +170,31 @@ fn shell_name(name: &str) -> bool {
         && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
 
-fn bare_target(line: &str, start: usize) -> (String, usize) {
+fn bare_word(line: &str, start: usize) -> (String, usize) {
     let rest = &line[start..];
-    let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
-    let token = rest[..end].trim_end_matches([';', '&']);
-    (token.to_string(), start + end)
+    let mut end = 0;
+    let mut token = String::new();
+    while end < rest.len() {
+        let ch = rest[end..].chars().next().unwrap();
+        if ch == '\\' {
+            let after = end + ch.len_utf8();
+            let Some(escaped) = rest[after..].chars().next() else {
+                end = rest.len();
+                break;
+            };
+            token.push(escaped);
+            end = after + escaped.len_utf8();
+            continue;
+        }
+        if ch.is_whitespace() || is_meta(ch) {
+            break;
+        }
+        token.push(ch);
+        end += ch.len_utf8();
+    }
+    (token, start + end)
+}
+
+fn is_meta(ch: char) -> bool {
+    matches!(ch, '>' | '<' | '|' | '&' | ';' | '(' | ')')
 }
