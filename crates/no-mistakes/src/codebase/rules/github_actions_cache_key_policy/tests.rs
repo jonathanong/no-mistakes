@@ -221,6 +221,9 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "expand-mixed.yml",
         "mention-output.yml",
         "ampersand-hash.yml",
+        "literal-output.yml",
+        "split-ampersand.yml",
+        "numeric-redirect.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -258,6 +261,10 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "here-string.yml",
         "shift-output.yml",
         "indirect-output.yml",
+        "quoted-output.yml",
+        "stderr-merge.yml",
+        "both-redirect.yml",
+        "tight-redirect.yml",
         "composite-digest.yml",
         "composite-yaml.yml",
         "lock-digest/action.yml",
@@ -272,7 +279,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 37, "{findings:?}");
+    assert_eq!(findings.len(), 40, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {

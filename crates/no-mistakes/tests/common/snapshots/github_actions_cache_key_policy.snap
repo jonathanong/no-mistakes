@@ -144,6 +144,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "key: widgets-${{ 'runner.os' }}-${{ runner.arch }}-${{ hashFiles('widgets.lock') }}"
         },
         {
+          "file": ".github/workflows/literal-output.yml",
+          "line": 16,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that writes a hash of `widgets.lock` to the GITHUB_OUTPUT name referenced by the key.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
+        },
+        {
           "file": ".github/workflows/loose-hash.yml",
           "line": 14,
           "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that writes a hash of `widgets.lock` to the GITHUB_OUTPUT name referenced by the key.",
@@ -194,6 +201,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": ".github/workflows/no-mention.yml",
+          "line": 14,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that writes a hash of `widgets.lock` to the GITHUB_OUTPUT name referenced by the key.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
+        },
+        {
+          "file": ".github/workflows/numeric-redirect.yml",
           "line": 14,
           "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that writes a hash of `widgets.lock` to the GITHUB_OUTPUT name referenced by the key.",
           "rule": "github-actions-cache-key-policy",
@@ -268,6 +282,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Cache for `.cache/widgets` sets restore-keys. Remove restore-keys so a partial prefix cannot restore another platform or lockfile, or set rejectRestoreKeys to false.",
           "rule": "github-actions-cache-key-policy",
           "sourceLine": "restore-keys: widgets-"
+        },
+        {
+          "file": ".github/workflows/split-ampersand.yml",
+          "line": 14,
+          "message": "Cache key for `.cache/widgets` does not prove a digest of `widgets.lock`. Use hashFiles('widgets.lock') when allowHashFiles is true, or a preceding run step that writes a hash of `widgets.lock` to the GITHUB_OUTPUT name referenced by the key.",
+          "rule": "github-actions-cache-key-policy",
+          "sourceLine": "key: widgets-${{ runner.os }}-${{ runner.arch }}-${{ steps.lock.outputs.digest }}"
         },
         {
           "file": ".github/workflows/stale-assign.yml",

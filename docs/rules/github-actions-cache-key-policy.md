@@ -40,13 +40,18 @@ The key must also prove a digest of the configured lockfile, in either of these 
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not
-  writes. A `<<<` redirect is not a heredoc, and `<<` inside `$(( ))` is not a heredoc, so later
+  writes. Single quotes do not expand, so `> '$OUT'` and `> '${OUT}'` are not writes; an unquoted
+  or double-quoted `$OUT` or `${OUT}` is. `>&` before a non-numeric target, including
+  `>& "$OUT"` and `>&"$OUT"`, is a file redirect. `>&2` and `>& 2` are not. A `<<<` redirect is
+  not a heredoc, and `<<` inside `$(( ))` is not a heredoc, so later
   lines are still read. A variable assigned from `sha256sum widgets.lock` (or another checksum
   command that names the lockfile in that same simple command) and then written to that output
   counts. `sha256sum widgets.lock | awk '{print $1}'` counts because the checksum command names
   the lockfile. `sha256sum orders.lock | grep widgets.lock`, `cat widgets.lock | sha256sum`, and
   `sha256sum orders.lock & cat widgets.lock` do not. `sha256sum widgets.lock & echo done` still
-  counts. `&` inside `$(( ))` does not split the command. Reassigning the variable to a
+  counts. `sha256sum 2>&1 widgets.lock` counts. An `&` that belongs to a redirection (`2>&1`,
+  `>&2`, `&>`, `&>>`, `<&`) does not split the command. A standalone `&` does, and `&` inside
+  `$(( ))` does not. Reassigning the variable to a
   constant, `cat`, or a hash of a different file drops the proof; an earlier copy into a
   different variable keeps it.
   Reassigning it to a parameter expansion of itself keeps the proof: `"$digest"`, `${digest}`,

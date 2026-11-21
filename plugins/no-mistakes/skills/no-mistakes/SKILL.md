@@ -360,9 +360,11 @@ For `github-actions-cache-key-policy`, list each portable cache path with its lo
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
-must name that lockfile in the same simple command. A single `&` splits commands. Reassignment
+must name that lockfile in the same simple command. A standalone `&` splits commands; an `&` in
+`2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. Reassignment
 drops the proof unless the whole new value is a parameter expansion of that same variable.
-Mixing that expansion with other text drops the proof. A `>` or `>>` redirect is required. A local
+Mixing that expansion with other text drops the proof. A `>`, `>>`, or non-numeric `>&` redirect
+is required. Single quotes do not expand. A local
 composite `uses: ./...` counts when its declared output reads that proof. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
