@@ -40,7 +40,8 @@ impl ImportCollector {
                         module_export_name_name(&specifier.exported),
                     ) {
                         self.note_exported_registry(local.as_ref());
-                        self.closed_registry_reads.insert(specifier.local.span().start);
+                        self.closed_registry_reads
+                            .insert(specifier.local.span().start);
                         self.note_export_name_offset(local.as_ref(), export.span.start);
                         self.record_local_export_binding(local, exported);
                     }
@@ -83,7 +84,6 @@ impl ImportCollector {
                         module_export_name_name(&specifier.local),
                         module_export_name_name(&specifier.exported),
                     ) {
-                        self.note_export_name_offset(local.as_ref(), export.span.start);
                         self.call_export_bindings.push(ExportedBinding {
                             specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
                             local: local.to_string(),

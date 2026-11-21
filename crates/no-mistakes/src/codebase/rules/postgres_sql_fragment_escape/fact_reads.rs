@@ -97,12 +97,41 @@ pub(super) fn window_loads_module(window: &str) -> bool {
 }
 
 pub(super) fn direct_module_load(text: &str) -> bool {
-    let text = text.trim_start();
+    let text = text.trim();
     let text = text
         .strip_prefix("await")
         .map(str::trim_start)
         .unwrap_or(text);
-    callee_at_start(text, "import") || callee_at_start(text, "require")
+    let Some(rest) = text
+        .strip_prefix("import")
+        .or_else(|| text.strip_prefix("require"))
+    else {
+        return false;
+    };
+    if rest.starts_with(|ch: char| ch == '_' || ch.is_ascii_alphanumeric()) {
+        return false;
+    }
+    let Some(rest) = rest.trim_start().strip_prefix('(') else {
+        return false;
+    };
+    close_call(rest).is_some_and(|after| after.trim().is_empty())
+}
+
+fn close_call(text: &str) -> Option<&str> {
+    let mut depth = 1i32;
+    for (index, ch) in text.char_indices() {
+        match ch {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return text.get(index + 1..);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 fn callee_at_start(text: &str, callee: &str) -> bool {
