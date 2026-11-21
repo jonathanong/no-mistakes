@@ -53,6 +53,11 @@ fn checksum_and_lockfile_must_share_one_command() {
         "echo widgets.lock ; sha256sum orders.lock",
         "widgets.lock"
     ));
+    assert!(!text::command_hashes_lockfile("&&", "widgets.lock"));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock &&",
+        "widgets.lock"
+    ));
 }
 
 #[test]
@@ -179,4 +184,63 @@ runs:
         judge::judge("ci.yml", &jobs, &options, &|_| Some(unnamed.clone())).len(),
         1
     );
+}
+
+#[test]
+fn composite_edges_without_a_named_run_are_not_proof() {
+    let step = scan::Step {
+        line: 1,
+        id: Some("lock".into()),
+        uses: Some("./.github/actions/lock-digest".into()),
+        run: None,
+        path: None,
+        key: None,
+        restore_keys: None,
+    };
+    let key = "widgets-${{ steps.lock.outputs.digest }}";
+    let prove = |source: &str| {
+        local_action::proves(&step, key, "widgets.lock", &|_| Some(source.to_string()))
+    };
+    let numbered = "\
+name: Lock digest
+outputs:
+  ? 7
+  :
+    value: ${{ steps.lock.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - id: lock
+      run: echo \"digest=constant\" >> \"$GITHUB_OUTPUT\"
+";
+    let parsed = serde_yaml::from_str::<serde_yaml::Value>(numbered).unwrap();
+    let output_key = parsed["outputs"]
+        .as_mapping()
+        .unwrap()
+        .keys()
+        .next()
+        .unwrap();
+    assert!(output_key.as_str().is_none(), "{output_key:?}");
+    assert!(!prove(numbered));
+    assert!(!prove(
+        "name: Lock digest\n\
+         outputs:\n\
+           digest:\n\
+             value: ${{ steps.lock.outputs.digest }}\n\
+         runs:\n\
+           using: composite\n\
+           steps:\n\
+             - run: echo \"digest=constant\" >> \"$GITHUB_OUTPUT\"\n"
+    ));
+    assert!(!prove(
+        "name: Lock digest\n\
+         outputs:\n\
+           digest:\n\
+             value: ${{ steps.lock.outputs.digest }}\n\
+         runs:\n\
+           using: composite\n\
+           steps:\n\
+             - id: lock\n\
+               uses: ./widgets\n"
+    ));
 }
