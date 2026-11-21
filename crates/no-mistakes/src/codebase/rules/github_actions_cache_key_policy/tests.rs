@@ -218,6 +218,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
     for file in [
         "stale-assign.yml",
         "loose-hash.yml",
+        "expand-mixed.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -259,11 +260,17 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "composite-yaml.yml",
         "lock-digest/action.yml",
         "yaml-digest/action.yaml",
+        "trim-suffix.yml",
+        "expand-quoted.yml",
+        "expand-braced.yml",
+        "trim-space-class.yml",
+        "expand-slice.yml",
+        "trim-prefix.yml",
     ] {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 34, "{findings:?}");
+    assert_eq!(findings.len(), 35, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {

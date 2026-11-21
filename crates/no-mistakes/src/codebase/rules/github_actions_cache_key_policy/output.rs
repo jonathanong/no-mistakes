@@ -22,7 +22,9 @@ pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
     for event in events(run) {
         match event {
             Event::Assign(name, rhs) => {
-                if rhs_hashes(&rhs, &vars, lockfile) {
+                let keep = rhs_hashes(&rhs, &vars, lockfile)
+                    || (vars.contains(&name) && super::expand::same_name_expansion(&rhs, &name));
+                if keep {
                     vars.insert(name);
                 } else {
                     vars.remove(&name);

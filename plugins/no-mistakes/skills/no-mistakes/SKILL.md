@@ -360,8 +360,10 @@ For `github-actions-cache-key-policy`, list each portable cache path with its lo
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
-must name that lockfile in the same simple command, and reassignment drops the proof. A local
-composite `uses: ./...` counts when its declared output reads that proof. See the
+must name that lockfile in the same simple command. Reassignment drops the proof unless the whole
+new value is a parameter expansion of that same variable. Mixing that expansion with other text
+drops the proof. A local composite `uses: ./...` counts when its declared output reads that proof.
+See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths

@@ -81,6 +81,129 @@ fn here_strings_and_arithmetic_shifts_do_not_swallow_output_writes() {
 }
 
 #[test]
+fn a_self_expansion_keeps_the_proven_digest() {
+    for rhs in [
+        "\"$digest\"",
+        "${digest}",
+        "\"${digest%% *}\"",
+        "\"${digest%%[[:space:]]*}\"",
+        "\"${digest:0:16}\"",
+        "\"${digest#*}\"",
+        "${digest%%tail}",
+        "${digest##tail}",
+        "${digest%tail}",
+        "${digest:0}",
+        "\"${digest#*}\";",
+    ] {
+        let run = format!(
+            "digest=$(sha256sum widgets.lock)\ndigest={rhs}\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"
+        );
+        assert_eq!(names(&run), vec!["digest".to_string()], "{rhs}");
+    }
+    assert!(names(
+        "digest=$(sha256sum widgets.lock)\n\
+         digest=\"${digest%% *} extra\"\n\
+         kept=$digest\n\
+         echo \"digest=$kept\" >> \"$GITHUB_OUTPUT\"\n"
+    )
+    .is_empty());
+    assert_eq!(
+        names(
+            "digest=$(sha256sum widgets.lock)\n\
+             other=\"${digest%% *}\"\n\
+             echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n"
+        ),
+        vec!["digest".to_string()]
+    );
+    assert!(names(
+        "digest=$(sha256sum widgets.lock)\n\
+         other=\"${digest%% *}\"\n\
+         echo \"digest=$other\" >> \"$GITHUB_OUTPUT\"\n"
+    )
+    .is_empty());
+    for rhs in [
+        "constant",
+        "$(cat widgets.lock)",
+        "$(sha256sum orders.lock)",
+        "\"${other%% *}\"",
+        "\"prefix${digest}\"",
+        "\"${digest%%}\"",
+        "\"${digest:x}\"",
+    ] {
+        let run = format!(
+            "digest=$(sha256sum widgets.lock)\ndigest={rhs}\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"
+        );
+        assert!(names(&run).is_empty(), "{rhs}");
+    }
+    assert!(names(
+        "digest=\"${digest%% *}\"\n\
+         echo \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"
+    )
+    .is_empty());
+}
+
+#[test]
+fn same_name_expansions_match_only_the_whole_value() {
+    let keep = [
+        "$digest",
+        "\"$digest\"",
+        "${digest}",
+        "\"${digest}\"",
+        "${digest%% *}",
+        "${digest%%[[:space:]]*}",
+        "${digest##*}",
+        "${digest%tail}",
+        "${digest#*}",
+        "${digest:0}",
+        "${digest:0:16}",
+        "\"${digest#*}\";",
+    ];
+    for value in keep {
+        assert!(expand::same_name_expansion(value, "digest"), "{value}");
+    }
+    let drop = [
+        "$other",
+        "$digest extra",
+        "${other}",
+        "${digest_extra}",
+        "${digest%%}",
+        "${digest#}",
+        "${digest%%$other}",
+        "${digest/old/new}",
+        "${digest:-fallback}",
+        "${digest:}",
+        "${digest:0:}",
+        "${digest:0:16x}",
+        "${digest:x}",
+        "prefix${digest}",
+        "${digest%% *} extra",
+        "constant",
+        "",
+    ];
+    for value in drop {
+        assert!(!expand::same_name_expansion(value, "digest"), "{value}");
+    }
+}
+
+#[test]
+fn checksum_pipes_and_redirects_still_name_the_lockfile() {
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock | cut -c1-64",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "shasum -a 256 widgets.lock | awk '{print $1}'",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum < widgets.lock | cut -c1-64",
+        "widgets.lock"
+    ));
+    assert!(output_syntax::heredoc_start("cat <<< \"note\"").is_none());
+    assert!(output_syntax::heredoc_start("size=$(( 1 << 2 ))").is_none());
+}
+
+#[test]
 fn an_output_path_variable_redirects_a_heredoc() {
     assert_eq!(
         names(

@@ -45,6 +45,9 @@ The key must also prove a digest of the configured lockfile, in either of these 
   counts because the checksum command names the lockfile. `sha256sum orders.lock | grep widgets.lock`
   and `cat widgets.lock | sha256sum` do not. Reassigning the variable to a constant, `cat`, or a
   hash of a different file drops the proof; an earlier copy into a different variable keeps it.
+  Reassigning it to a parameter expansion of itself keeps the proof: `"$digest"`, `${digest}`,
+  `${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, and `${digest#*}`. Mixing that
+  expansion with other text, or expanding a different variable, drops the proof.
   A later step, another job, or a different output name does not count. The rule does not run
   the script. A full-line `#` comment and a trailing ` #` comment are ignored. `-` is part of a
   path token, so `not-widgets.lock` does not match `widgets.lock`. `/` is a boundary, so

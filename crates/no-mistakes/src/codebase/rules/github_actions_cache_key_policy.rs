@@ -6,6 +6,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+mod expand;
 mod judge;
 mod local_action;
 mod options;
