@@ -20,6 +20,8 @@ pub(crate) enum Kind {
     Array(Vec<Value>),
     OneOf(Vec<Value>),
     Unknown,
+    // An exclude path that inherits the enclosing literal, or stays omitted.
+    Omitted,
 }
 
 impl Value {

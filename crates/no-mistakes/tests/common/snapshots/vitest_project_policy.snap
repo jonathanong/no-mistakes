@@ -645,6 +645,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-computed-both": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-computed-or-empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-computed-or-empty.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-computed-then-partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-computed-then-partial.ts",
+          "line": 9,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag ? { exclude: ['**/node_modules/**', '**/.git/**'] } : {}),"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "exclude-conditional-exclude": {
     "exitCode": 1,
     "report": {
@@ -1042,6 +1094,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Vitest project <root>: add **/.git/** to test.exclude",
           "rule": "vitest-project-policy",
           "sourceLine": "export default { test: { exclude: ['**/node_modules/**', '**/widgets/**'] } };"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-nested-omitted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-nested-omitted.ts",
+          "line": 9,
+          "message": "Vitest project <root>: add **/node_modules/**, **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "? { ...(inner ? { exclude: ['**/node_modules/**', '**/.git/**'] } : {}) }"
         }
       ],
       "warnings": []

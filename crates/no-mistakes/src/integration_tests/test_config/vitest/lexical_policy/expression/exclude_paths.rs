@@ -1,10 +1,62 @@
 use super::{Kind, Value};
+use std::path::{Path, PathBuf};
 
-// A path that omits exclude keeps the earlier literal, or stays omitted.
-pub(super) fn partial_exclude(mut paths: Vec<Value>, previous: Option<&Value>) -> Value {
-    if let Some(previous) = previous {
-        paths.push(previous.clone());
+pub(super) fn unknown_value(file: &Path, line: usize) -> Value {
+    Value {
+        kind: Kind::Unknown,
+        file: file.to_path_buf(),
+        line,
     }
+}
+
+pub(super) fn merged_exclude(
+    present: Vec<Value>,
+    object_count: usize,
+    absent: bool,
+    previous: Option<&Value>,
+    incoming_opaque: bool,
+) -> Value {
+    let present: Vec<Value> = present
+        .into_iter()
+        .map(|value| bind_omitted(&value, previous))
+        .collect();
+    let first = &present[0];
+    let omitted = absent || present.len() != object_count;
+    if incoming_opaque && previous.is_none() && omitted {
+        return unknown_value(&first.file, first.line);
+    }
+    let mut paths = present;
+    if omitted {
+        paths.push(match previous {
+            Some(previous) => previous.clone(),
+            None => omitted_marker(),
+        });
+    }
+    collapse(paths)
+}
+
+fn bind_omitted(value: &Value, previous: Option<&Value>) -> Value {
+    match &value.kind {
+        Kind::Omitted => previous.cloned().unwrap_or_else(|| value.clone()),
+        Kind::OneOf(options) => collapse(
+            options
+                .iter()
+                .map(|option| bind_omitted(option, previous))
+                .collect(),
+        ),
+        _ => value.clone(),
+    }
+}
+
+fn omitted_marker() -> Value {
+    Value {
+        kind: Kind::Omitted,
+        file: PathBuf::new(),
+        line: 1,
+    }
+}
+
+fn collapse(paths: Vec<Value>) -> Value {
     let first = paths[0].clone();
     if paths
         .iter()

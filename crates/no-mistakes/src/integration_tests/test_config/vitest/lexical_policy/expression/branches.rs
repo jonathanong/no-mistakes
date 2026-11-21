@@ -4,7 +4,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, LogicalOperator};
 use oxc_span::GetSpan;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Clone)]
 enum Branch {
@@ -19,6 +19,7 @@ impl Evaluator<'_, '_> {
         &mut self,
         expression: &Expression<'_>,
         existing: &BTreeMap<String, Value>,
+        incoming_opaque: bool,
     ) -> Option<Value> {
         if !is_branch(expression) {
             return None;
@@ -27,6 +28,7 @@ impl Evaluator<'_, '_> {
         Some(self.merge_branches(
             branches,
             existing.get("exclude"),
+            incoming_opaque,
             self.line(expression.span().start),
         ))
     }
@@ -61,6 +63,7 @@ impl Evaluator<'_, '_> {
         &self,
         branches: Vec<Branch>,
         previous_exclude: Option<&Value>,
+        incoming_opaque: bool,
         line: usize,
     ) -> Value {
         let mut absent = false;
@@ -80,7 +83,14 @@ impl Evaluator<'_, '_> {
                 keys.extend(fields.keys().cloned());
             }
             for key in keys {
-                let value = merged_value(&objects, &key, absent, opaque, previous_exclude);
+                let value = merged_value(
+                    &objects,
+                    &key,
+                    absent,
+                    opaque,
+                    previous_exclude,
+                    incoming_opaque,
+                );
                 properties.insert(key, value);
             }
         }
@@ -149,12 +159,22 @@ fn merged_value(
     absent: bool,
     opaque: bool,
     previous_exclude: Option<&Value>,
+    incoming_opaque: bool,
 ) -> Value {
     let present = objects
         .iter()
         .filter_map(|(fields, _, _)| fields.get(key))
         .collect::<Vec<_>>();
     let first = present[0];
+    if key == "exclude" && !opaque {
+        return super::exclude_paths::merged_exclude(
+            present.into_iter().cloned().collect(),
+            objects.len(),
+            absent,
+            previous_exclude,
+            incoming_opaque,
+        );
+    }
     let same = present
         .iter()
         .all(|value| super::exclude_paths::same_kind(&value.kind, &first.kind));
@@ -171,21 +191,5 @@ fn merged_value(
             line,
         };
     }
-    // An empty object or the false side of `&&` omits the key. Other keys stay
-    // unknown; exclude falls back to the earlier literal or the omitted default.
-    if key == "exclude" && !opaque {
-        return super::exclude_paths::partial_exclude(
-            present.into_iter().cloned().collect(),
-            previous_exclude,
-        );
-    }
-    unknown_value(&first.file, first.line)
-}
-
-fn unknown_value(file: &Path, line: usize) -> Value {
-    Value {
-        kind: Kind::Unknown,
-        file: file.to_path_buf(),
-        line,
-    }
+    super::exclude_paths::unknown_value(&first.file, first.line)
 }

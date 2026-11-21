@@ -48,6 +48,7 @@ fn configured_globs_match_literal_exclude_arrays_only() {
         "exclude-ternary-complete-or-empty",
         "exclude-ternary-complete-or-complete",
         "exclude-and-complete",
+        "exclude-computed-both",
         "exclude-logical-spread",
         "exclude-logical-and-exclude",
         "exclude-project-present",
@@ -190,6 +191,7 @@ fn folded_exclude_paths_name_each_missing_glob() {
         "exclude-and-partial",
         "exclude-ternary-partial-or-call",
         "exclude-earlier-then-partial",
+        "exclude-computed-then-partial",
     ] {
         let report = output(case);
         assert!(
@@ -217,6 +219,7 @@ fn non_literal_spreads_leave_only_exclude_incomplete() {
     for case in [
         "exclude-call-make-extra",
         "exclude-ternary-complete-or-call",
+        "exclude-computed-or-empty",
     ] {
         let report = output(case);
         assert!(report.findings.is_empty(), "{case}: {:?}", report.findings);
@@ -232,6 +235,20 @@ fn non_literal_spreads_leave_only_exclude_incomplete() {
             "{case}"
         );
     }
+}
+
+#[test]
+fn nested_omitted_exclude_uses_the_enclosing_array() {
+    let report = output("exclude-nested-omitted");
+    assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);
+    assert_eq!(report.findings.len(), 1, "{:?}", report.findings);
+    assert!(
+        report.findings[0]
+            .message
+            .contains("add **/node_modules/**, **/.git/** to test.exclude"),
+        "{}",
+        report.findings[0].message
+    );
 }
 
 #[test]

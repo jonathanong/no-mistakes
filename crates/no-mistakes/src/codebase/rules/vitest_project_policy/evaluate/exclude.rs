@@ -25,6 +25,9 @@ pub(super) fn check(
 }
 
 fn missing_globs(exclude: &Value, required: &[String]) -> Option<Vec<String>> {
+    if matches!(exclude.kind, Kind::Omitted) {
+        return Some(Vec::new());
+    }
     if let Kind::OneOf(options) = &exclude.kind {
         let mut lacked = BTreeSet::new();
         let mut unknown = false;
