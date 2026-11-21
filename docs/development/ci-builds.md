@@ -553,6 +553,8 @@ without its `cfg(test)` modules peaked at 8659 MiB, under the 10240 MiB
 ceiling, so the unit-test modules are the remaining cost. The same machine,
 with `CARGO_BUILD_JOBS=8` and `rustc` pinned to those 4 CPUs, compiled the
 three shards below that ceiling. The heaviest shard peaked at 10164 MiB.
+Run `44884243196` recorded the hosted compiler at 9160 MiB
+(`top_rss=9160MiB:rustc`) with `oom_kills=0`.
 
 Those modules are split into three compile shards. Each `mod tests` and
 `mod *_tests` is included for `nm_shard_all` or for one of `nm_shard_0`,

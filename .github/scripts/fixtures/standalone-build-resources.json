@@ -5,6 +5,11 @@
     "peakRssMib": 13086,
     "compiler": "rustc"
   },
+  "after": {
+    "runId": "44884243196",
+    "peakRssMib": 9160,
+    "compiler": "rustc"
+  },
   "noSwapFailure": {
     "runId": "44868635492",
     "peakRssMib": 14147,

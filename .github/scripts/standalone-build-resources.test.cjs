@@ -12,6 +12,8 @@ const docs = readFileSync(join(root, "docs/development/ci-builds.md"), "utf8");
 
 test("standalone library compilation stays inside the 16 GB runner", () => {
   assert.ok(evidence.before.peakRssMib > evidence.ceilingRssMib);
+  assert.ok(evidence.after.peakRssMib < evidence.ceilingRssMib);
+  assert.ok(evidence.after.peakRssMib < evidence.before.peakRssMib);
   assert.ok(evidence.noSwapFailure.peakRssMib > evidence.ceilingRssMib);
   assert.equal(evidence.noSwapFailure.oomKills, 1);
   const settings = producer.split("    steps:\n")[0];
@@ -61,6 +63,8 @@ test("standalone library compilation stays inside the 16 GB runner", () => {
   );
   assert.match(docs, new RegExp(evidence.before.runId));
   assert.match(docs, new RegExp(String(evidence.before.peakRssMib)));
+  assert.match(docs, new RegExp(evidence.after.runId));
+  assert.match(docs, new RegExp(String(evidence.after.peakRssMib)));
   assert.match(docs, new RegExp(evidence.noSwapFailure.runId));
   assert.match(docs, new RegExp(String(evidence.ceilingRssMib)));
   for (const value of Object.values(evidence.settings)) assert.match(docs, new RegExp(value));
