@@ -48,8 +48,9 @@ is not reported on line 1. A re-export whose namespace facts omit the local
 export offset is listed on `incomplete` and is not placed by scanning source
 text. The message names the file and the local export, and says to restore
 the namespace export fact. A static `import()` or `require()` whose literal
-specifier was not recorded is not recovered from source text, so that load
-does not become a finding. One such file does not drop findings from files
+specifier was not recorded is listed on `incomplete` and is not placed by
+scanning source text. The message names the file and says to restore the
+literal import fact, and that load does not become a finding. One such file does not drop findings from files
 whose facts are complete. This rule does not change the shared canonical
 graph. When value flow is incomplete, the canonical-graph prerequisite stays
 failed, and every other graph rule keeps the same readiness and output as a

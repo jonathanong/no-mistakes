@@ -267,35 +267,40 @@ fn recorded_export_offset_reports_the_reexport() {
 
 #[test]
 fn missing_static_import_span_is_not_recovered_from_text() {
-    let root = fact_miss_root();
-    let source =
-        std::fs::read_to_string(root.join("static-import.ts")).expect("saved static-import.ts");
-    let mut consumer = crate::codebase::ts_source::facts::TsFileFacts {
-        source: Some(Arc::<str>::from(source.as_str())),
-        ..Default::default()
-    };
-    consumer
-        .value_flow
-        .bindings
-        .push(super::support::bind("parts", 0, ValueExpression::Unknown));
-    let append = span(&source, "parts.append(extra)");
-    consumer.value_flow.calls.push(call(
-        append.0,
-        append.1,
-        ValueExpression::Member(Arc::new(named("parts")), "append".to_string()),
-        vec![ValueExpression::Unknown],
-    ));
-    let report = scan_fact_miss("static-import.ts", consumer);
-    assert!(
-        report.findings.is_empty(),
-        "a missing import specifier is not recovered from source: {:?}",
-        report.findings
-    );
-    assert!(
-        report.gaps.is_empty(),
-        "a missing import span is not a line-1 finding or a text scan: {:?}",
-        report.gaps
-    );
+    for file_name in ["static-import.ts", "static-require.ts"] {
+        let root = fact_miss_root();
+        let source = std::fs::read_to_string(root.join(file_name)).expect(file_name);
+        let mut consumer = crate::codebase::ts_source::facts::TsFileFacts {
+            source: Some(Arc::<str>::from(source.as_str())),
+            ..Default::default()
+        };
+        consumer.value_flow.bindings.push(super::support::bind(
+            "parts",
+            0,
+            ValueExpression::Unknown,
+        ));
+        let append = span(&source, "parts.append(extra)");
+        consumer.value_flow.calls.push(call(
+            append.0,
+            append.1,
+            ValueExpression::Member(Arc::new(named("parts")), "append".to_string()),
+            vec![ValueExpression::Unknown],
+        ));
+        let report = scan_fact_miss(file_name, consumer);
+        assert!(
+            report.findings.is_empty(),
+            "{file_name}: a missing import specifier is not recovered from source: {:?}",
+            report.findings
+        );
+        assert!(
+            report.gaps.iter().any(|gap| {
+                gap.message.contains(&format!("`{file_name}`"))
+                    && gap.message.contains("no recorded specifier")
+            }),
+            "{file_name}: {:?}",
+            report.gaps
+        );
+    }
 }
 
 #[test]

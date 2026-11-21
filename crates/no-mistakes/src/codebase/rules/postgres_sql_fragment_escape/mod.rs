@@ -3,6 +3,7 @@ mod alias;
 mod dynamic;
 mod fact_reads;
 mod fragments;
+mod load_gap;
 mod modules;
 mod mutate;
 mod names;
