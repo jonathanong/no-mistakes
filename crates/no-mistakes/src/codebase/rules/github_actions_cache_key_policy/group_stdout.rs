@@ -1,6 +1,7 @@
 use super::super::writes_output;
 use crate::fx::{fx_set, FxHashSet};
 
+#[derive(Clone, Copy)]
 pub(super) enum Stdout {
     Inherit,
     Prove,

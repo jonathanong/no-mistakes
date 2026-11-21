@@ -370,8 +370,8 @@ while `}` must be its own command. A later pipe discards
 the group unless standard output is redirected to a file first. A pipe inside `$(...)` or
 backticks stays in that substitution, and a standard-error redirect does not write the digest.
 The last standard-output redirect is the destination. A digit run is a descriptor only as its
-own word. `>=` sends standard output to a file named `=`. An unquoted heredoc inside the group
-counts when that command, or the group, redirects standard output to the output file.
+own word. `>=` sends standard output to a file named `=`. An unquoted heredoc counts only when
+the command's last standard-output redirect, or the group's, is the output file.
 A standalone `&` splits commands; an `&` in
 `2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. A digit prefix and a quoted suffix are one word,
 so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or `>`

@@ -51,9 +51,8 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `$(...)` or backticks stays in that substitution. Redirecting only standard error does not
   write the digest, and the last standard-output redirect is the group's destination. A digit
   run is a descriptor only when it is its own word, so `ignored2>/tmp/orders` redirects
-  standard output. `>=` sends standard output to a file named `=`. An unquoted heredoc inside
-  the group counts when that command, or the group, redirects standard output to the output
-  file.
+  standard output. `>=` sends standard output to a file named `=`. An unquoted heredoc counts
+  only when the command's last standard-output redirect, or the group's, is the output file.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not

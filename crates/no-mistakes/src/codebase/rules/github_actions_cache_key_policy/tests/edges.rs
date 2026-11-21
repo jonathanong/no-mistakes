@@ -251,6 +251,8 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{ echo \"digest=$digest\"; } 2>> /tmp/orders >> \"$GITHUB_OUTPUT\"",
         "{\n  cat <<EOF >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
         "{\n  cat <<EOF\ndigest=$digest\nEOF\n} >> \"$GITHUB_OUTPUT\"",
+        "{\n  cat <<EOF > /tmp/orders >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
+        "{\n  cat <<EOF 2>> /tmp/orders\ndigest=$digest\nEOF\n} >> \"$GITHUB_OUTPUT\"",
     ] {
         assert_eq!(proven(script), digest, "{script}");
     }
@@ -265,7 +267,17 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{ echo \"digest=$digest\" ignored2>/tmp/orders; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >= /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
         "{\n  cat <<'EOF' >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
+        "{\n  cat <<EOF > \"$GITHUB_OUTPUT\" > /tmp/orders\ndigest=$digest\nEOF\n}",
+        "{\n  cat <<EOF 2>> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
     ] {
         assert!(proven(script).is_empty(), "{script}");
     }
+    assert_eq!(
+        names("{\n  cat <<EOF > /tmp/orders >> \"$GITHUB_OUTPUT\"\ndigest=$(sha256sum widgets.lock)\nEOF\n}"),
+        digest
+    );
+    assert!(names(
+        "{\n  cat <<EOF >> \"$GITHUB_OUTPUT\" > /tmp/orders\ndigest=$(sha256sum widgets.lock)\nEOF\n}"
+    )
+    .is_empty());
 }
