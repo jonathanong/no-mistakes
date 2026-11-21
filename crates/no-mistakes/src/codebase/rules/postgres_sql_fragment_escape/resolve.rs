@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy)]
 pub(super) struct FileCtx<'a> {
-    pub graph: &'a DepGraph,
+    pub graph: Option<&'a DepGraph>,
     pub facts: &'a CheckFactMap,
     pub catalog: &'a Catalog<'a>,
     pub tags: &'a [TrustedSqlTag],

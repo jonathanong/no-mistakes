@@ -43,7 +43,7 @@ fn incomplete_consumer_still_reports_a_known_append() {
     insert(&mut facts, columns, producer);
     insert(&mut facts, mutator, consumer);
     let graph = from_raw_maps(partial.clone(), HashMap::new(), HashMap::new());
-    let report = scan::scan(&partial, &[sql_tag()], &graph, &facts, None);
+    let report = scan::scan(&partial, &[sql_tag()], Some(&graph), &facts, None);
     let findings = &report.findings;
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, "mut.ts");
@@ -102,7 +102,7 @@ fn fatal_parse_error_gaps_without_dropping_a_known_append() {
     insert(&mut facts, columns, producer);
     insert(&mut facts, mutator, consumer);
     let graph = from_raw_maps(partial.clone(), HashMap::new(), HashMap::new());
-    let report = scan::scan(&partial, &[sql_tag()], &graph, &facts, None);
+    let report = scan::scan(&partial, &[sql_tag()], Some(&graph), &facts, None);
     assert_eq!(report.findings.len(), 1, "{:?}", report.findings);
     assert_eq!(report.findings[0].file, "mut.ts");
     assert_eq!(report.findings[0].target.as_deref(), Some("COLS"));
@@ -145,7 +145,7 @@ fn unreadable_consumer_still_reports_a_recorded_append() {
     insert(&mut facts, columns, producer);
     insert(&mut facts, unread, consumer);
     let graph = from_raw_maps(partial.clone(), HashMap::new(), HashMap::new());
-    let report = scan::scan(&partial, &[sql_tag()], &graph, &facts, None);
+    let report = scan::scan(&partial, &[sql_tag()], Some(&graph), &facts, None);
     assert_eq!(report.findings.len(), 1, "{:?}", report.findings);
     assert_eq!(report.findings[0].file, "unread.ts");
     assert_eq!(report.findings[0].line, 1);

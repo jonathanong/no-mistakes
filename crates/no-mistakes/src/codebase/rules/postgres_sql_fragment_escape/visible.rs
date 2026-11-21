@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn visible(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     name: &str,
@@ -32,7 +32,7 @@ pub(super) fn visible(
 
 pub(super) fn visible_all(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     stack: &mut Vec<PathBuf>,
@@ -67,7 +67,7 @@ pub(super) fn visible_all(
 
 fn follow(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     name: &str,
@@ -105,7 +105,7 @@ fn follow(
 
 fn relay_all(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,
@@ -139,7 +139,7 @@ fn relay_all(
 
 fn relay_one(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,

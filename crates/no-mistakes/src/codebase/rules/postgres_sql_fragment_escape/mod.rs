@@ -56,7 +56,6 @@ pub(crate) fn check_with_graph(
             gaps: Vec::new(),
         });
     }
-    let graph = graph.expect("postgres-sql-fragment-escape requires canonical graph");
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
     let mut gaps = Vec::new();

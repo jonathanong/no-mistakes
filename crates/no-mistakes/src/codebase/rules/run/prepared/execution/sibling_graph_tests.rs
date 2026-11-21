@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 #[test]
-fn incomplete_value_flow_keeps_fragment_escape_and_sibling_call_facts() {
+fn incomplete_value_flow_keeps_fragment_escape_without_sibling_findings() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/sibling-graph"),
@@ -93,17 +93,13 @@ fn incomplete_value_flow_keeps_fragment_escape_and_sibling_call_facts() {
         "{findings:?}"
     );
     assert!(
-        findings.iter().any(|finding| {
-            finding.rule == "forbidden-calls" && finding.file == "place-order.ts"
-        }),
+        findings
+            .iter()
+            .all(|finding| finding.rule == "postgres-sql-fragment-escape"),
         "{findings:?}"
     );
-    assert!(
-        findings.iter().any(|finding| {
-            finding.rule == "unconstructed-error-class" && finding.file == "orphan-error.ts"
-        }),
-        "{findings:?}"
-    );
+    assert!(!session.check_consumer_ready("unconstructed-error-class"));
+    assert!(!session.check_consumer_ready("forbidden-calls"));
     assert!(
         findings
             .iter()

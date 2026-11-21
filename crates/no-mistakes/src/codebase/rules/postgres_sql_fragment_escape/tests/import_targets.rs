@@ -33,15 +33,26 @@ fn recorded_import_targets_replace_neighbor_stems() {
     );
     let catalog = catalog(&world);
     assert_eq!(
-        modules::module_file(&world.graph, &world.facts, &catalog, &escape, "widgets.mts"),
+        modules::module_file(
+            Some(&world.graph),
+            &world.facts,
+            &catalog,
+            &escape,
+            "widgets.mts"
+        ),
         Some(columns),
     );
-    assert!(
-        modules::module_file(&world.graph, &world.facts, &catalog, &escape, "pkg/sql").is_none()
-    );
+    assert!(modules::module_file(
+        Some(&world.graph),
+        &world.facts,
+        &catalog,
+        &escape,
+        "pkg/sql"
+    )
+    .is_none());
     let open = alias::hop(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &escape,
         "pkg/sql",
