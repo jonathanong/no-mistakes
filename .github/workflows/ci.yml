@@ -899,7 +899,7 @@ jobs:
         timeout-minutes: 2
         run: pnpm run build:js
       - name: Download Linux runtime
-        timeout-minutes: 3
+        timeout-minutes: 6
         env:
           GH_TOKEN: ${{ github.token }}
           NATIVE_RUNTIME_RUN_ID: ${{ needs.linux-runtime.outputs.artifact-run-id }}
@@ -2110,7 +2110,7 @@ jobs:
           install: false
 
       - name: Download native-runtime
-        timeout-minutes: 5
+        timeout-minutes: 6
         env:
           GH_TOKEN: ${{ github.token }}
           NATIVE_RUNTIME_RUN_ID: ${{ needs.native-build.outputs.artifact-run-id }}
@@ -2244,7 +2244,7 @@ jobs:
           install: false
 
       - name: Download native-runtime
-        timeout-minutes: 5
+        timeout-minutes: 6
         env:
           GH_TOKEN: ${{ github.token }}
           NATIVE_RUNTIME_RUN_ID: ${{ needs.native-build-macos.outputs.artifact-run-id }}
@@ -2952,7 +2952,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download Linux runtime
-        timeout-minutes: 3
+        timeout-minutes: 6
         env:
           NATIVE_RUNTIME_RUN_ID: ${{ needs.linux-runtime.outputs.artifact-run-id }}
           GH_TOKEN: ${{ github.token }}

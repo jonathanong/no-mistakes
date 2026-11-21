@@ -61,7 +61,7 @@ test("JavaScript aggregate fails when the Linux N-API matrix fails or skips", ()
 
 test("Linux shards use one bounded verified download for both runtime components", () => {
   const download = linuxApi.steps.find((step) => step.name === "Download Linux runtime");
-  assert.equal(download["timeout-minutes"], 3);
+  assert.equal(download["timeout-minutes"], 6);
   assert.equal(
     download.env.NATIVE_RUNTIME_RUN_ID,
     "${{ needs.linux-runtime.outputs.artifact-run-id }}",
@@ -95,7 +95,7 @@ test("AST analysis downloads only the verified CLI through the bounded helper", 
   const downloads = ast.steps.filter((step) => step.name === "Download Linux runtime");
   assert.equal(downloads.length, 1);
   const download = downloads[0];
-  assert.equal(download["timeout-minutes"], 3);
+  assert.equal(download["timeout-minutes"], 6);
   assert.equal(
     download.env.NATIVE_RUNTIME_RUN_ID,
     "${{ needs.linux-runtime.outputs.artifact-run-id }}",
