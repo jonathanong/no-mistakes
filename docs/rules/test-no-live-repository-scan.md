@@ -985,9 +985,13 @@ live scan, so `cd /repo && widget-audit check` still reports when `cwd` is a
 fixture path. When that `cd` replaces an owned `cwd`, the finding names the
 `cd`. `spawn` and `spawnSync` use that split when `shell` is the
 boolean `true` and the command is not an argument array. A non-literal command
-stays unmatched. A `"` or `'` leaves the whole command unmatched, so
-`ITEM="placeholder widget-audit check extra"` does not match. A semicolon, a
-pipe, or a `cd` that is not followed by a directory and `&&` is left in place,
+stays unmatched. A quoted argument is one token, so
+`widget-audit check --label 'nightly'` matches. A quoted executable stays
+unmatched, and an analyzer name inside a quoted assignment value does not
+match, so `"widget-audit" check` and
+`ITEM="placeholder widget-audit check extra"` do not match. An unclosed quote,
+a backslash, or `$` or a backtick inside quotes leaves the command unmatched.
+A semicolon, a pipe, or a `cd` that is not followed by a directory and `&&` is left in place,
 so `cd widgets; widget-audit check` does not match. An argument array still
 matches when `shell` is `true`, so
 `spawn("pnpm", ["exec", "widget-audit", "check"], { shell: true })` is the
