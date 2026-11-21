@@ -111,6 +111,33 @@ fn postgres_sql_fragment_escape_absence_gap_matches_siblings() {
     }
 }
 
+#[test]
+fn postgres_sql_fragment_escape_fact_miss_reexport_snapshot() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/fact-miss"),
+    );
+    // reexport.ts re-exports widgetColumns. The finding's sourceLine is that
+    // saved export line.
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_fact_miss",
+        &[("fact_miss", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let rules = reports["fact_miss"]["report"]["rules"]
+        .as_array()
+        .expect("rules");
+    assert!(
+        rules.iter().any(|finding| {
+            finding["rule"] == "postgres-sql-fragment-escape"
+                && finding["file"] == "reexport.ts"
+                && finding["sourceLine"].is_string()
+        }),
+        "{rules:?}"
+    );
+}
+
 fn sibling_report(report: &serde_json::Value) -> serde_json::Value {
     let mut copy = report.clone();
     if let Some(rules) = copy["rules"].as_array_mut() {

@@ -1,5 +1,6 @@
 use super::fact_reads::export_site;
 use super::fragments::Fragment;
+use super::load_gap::missing_static_load_gap;
 use super::resolve::{binding_fragments, call_fragments, name_fragments, FileCtx};
 use super::scan::ScanReport;
 use super::source_text::file_text;
@@ -131,6 +132,9 @@ pub(super) fn one(
             offset,
             &name_fragments(&ctx, &export.local),
         );
+    }
+    if let Some(message) = missing_static_load_gap(ts, source, &relative) {
+        gaps.push(gap(file, message));
     }
     Some(ScanReport { findings, gaps })
 }

@@ -47,6 +47,29 @@ pub(super) fn depth_zero_module_specifier(
         .flatten()
 }
 
+pub(super) fn unrecorded_static_specifier(
+    ts: &TsFileFacts,
+    window: &str,
+    window_start: u32,
+) -> bool {
+    let Some((index, rest)) = depth_zero_callee(window) else {
+        return false;
+    };
+    let Ok(index) = u32::try_from(index) else {
+        return false;
+    };
+    let Some(offset) = window_start.checked_add(index) else {
+        return false;
+    };
+    if specifier_at_offset(ts, offset).is_some() {
+        return false;
+    }
+    rest.strip_prefix("import")
+        .or_else(|| rest.strip_prefix("require"))
+        .and_then(|after| after.trim_start().strip_prefix('('))
+        .is_some_and(|after| super::text::whole_quoted(after).is_some())
+}
+
 fn depth_zero_callee(window: &str) -> Option<(usize, &str)> {
     let mut depth = 0i32;
     for (index, ch) in window.char_indices() {
