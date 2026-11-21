@@ -411,6 +411,32 @@ fn a_direct_require_still_resolves_the_namespace() {
     );
 }
 
+#[test]
+fn a_source_import_alias_follows_the_namespace_without_an_alias_fact() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/alias.ts");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(
+            "import * as columns from \"./columns\";\nimport Widgets = columns;\n",
+        )),
+        ..TsFileFacts::default()
+    };
+    ts.imported_bindings.push(import(
+        "./columns",
+        "columns",
+        "*",
+        ImportedBindingKind::Namespace,
+    ));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert_from(
+        &resolve::name_fragments(&ctx, "Widgets"),
+        &world.columns,
+        &["orderColumns", "widgetColumns"],
+    );
+}
+
 fn parameter(owner: CallableId, name: &str) -> ValueParameter {
     ValueParameter {
         owner,

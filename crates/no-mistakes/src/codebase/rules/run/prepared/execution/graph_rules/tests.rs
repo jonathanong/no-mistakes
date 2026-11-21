@@ -93,6 +93,33 @@ fn sql_fragment_escape_runs_without_canonical_graph() {
     );
 }
 
+#[test]
+fn sql_fragment_escape_without_a_session_keeps_an_empty_report() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "postgres-sql-fragment-escape".to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("{}").unwrap(),
+        ..Default::default()
+    });
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let output = graph_rule_findings(GraphRuleRequest {
+        root: Path::new("/repo"),
+        config: &config,
+        config_path: None,
+        shared: &shared,
+        prepared_graph: None,
+        dependency_graph: None,
+        inferred_roots: None,
+        sources: None,
+        tsconfig_catalog: None,
+        prepared_vitest_projects: None,
+        prepared_playwright_projects: None,
+    })
+    .expect("an empty tag list still runs without a session");
+    assert!(output.findings.is_empty());
+}
+
 fn error_without_graph(rule: &str) -> anyhow::Error {
     let config = invalid_filter_config(rule, "importSpecifier: \"@example/db\"");
     let shared = crate::codebase::check_facts::CheckFactMap::default();
