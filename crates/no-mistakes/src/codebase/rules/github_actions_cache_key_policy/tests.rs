@@ -228,6 +228,8 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "glued-suffix.yml",
         "escaped-output.yml",
         "empty-literal.yml",
+        "joined-output.yml",
+        "quoted-name.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -274,6 +276,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "named-alias.yml",
         "bare-output.yml",
         "empty-expand.yml",
+        "quoted-arg.yml",
         "composite-digest.yml",
         "composite-yaml.yml",
         "lock-digest/action.yml",
@@ -288,7 +291,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 44, "{findings:?}");
+    assert_eq!(findings.len(), 46, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {
@@ -432,6 +435,15 @@ fn redirect_words_keep_suffixes_escapes_and_the_next_operator() {
         targets("echo x >/tmp/orders\\"),
         vec!["/tmp/orders".to_string()]
     );
+    assert!(targets("echo x >\"$\"GITHUB_OUTPUT").is_empty());
+    assert_eq!(
+        targets("echo x >out\" widgets.lock\""),
+        vec!["out widgets.lock".to_string()]
+    );
+    assert!(!super::text::command_hashes_lockfile(
+        "sha256sum orders.lock >out\" widgets.lock\"",
+        "widgets.lock"
+    ));
     assert_eq!(
         targets("echo x > \"$OUT\"bak"),
         vec!["$OUT.bak".to_string()]

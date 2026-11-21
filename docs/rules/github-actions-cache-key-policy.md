@@ -45,7 +45,9 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `>& "$OUT"` and `>&"$OUT"`, is a file redirect. `>&2` and `>& 2` are not. A suffix on the
   redirect word, such as `"$OUT".bak` or `"$OUT"bak`, is part of the filename and is not
   another variable. An escaped `\$` is literal, so `>\$GITHUB_OUTPUT` is not a write. Empty
-  quotes do not make a single-quoted `$OUT` expand, so `> '$OUT'""` is not a write. The next
+  quotes do not make a single-quoted `$OUT` expand, so `> '$OUT'""` is not a write. Joining
+  `"$"` to a name, as in `>"$"GITHUB_OUTPUT`, is not an expansion. A quoted piece of a
+  redirect name, as in `>out" widgets.lock"`, is part of that filename. The next
   `>` starts another redirect, so `>/tmp/orders>$OUT` still writes `$OUT`. A `<<<` redirect is
   not a heredoc, and `<<` inside `$(( ))` is not a heredoc, so later
   lines are still read. A variable assigned from `sha256sum widgets.lock` (or another checksum

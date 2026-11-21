@@ -107,6 +107,7 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
     let (start, ch) = chars[at];
     let (mut word, mut next_at, quoted) = fragment(line, start, ch);
     let mut literal = quoted && !word.is_empty();
+    let mut pieces = usize::from(!word.is_empty());
     while let Some((byte, next)) = chars.get(char_index(chars, next_at)).copied() {
         if next.is_whitespace() || is_meta(next) {
             break;
@@ -115,11 +116,14 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
         if extends_name(&word, &piece) {
             word.push('.');
         }
+        if !piece.is_empty() {
+            pieces += 1;
+        }
         literal |= piece_quoted && !piece.is_empty();
         word.push_str(&piece);
         next_at = further;
     }
-    if literal && super::super::output_syntax::var_ref(&word).is_some() {
+    if (literal || pieces != 1) && super::super::output_syntax::var_ref(&word).is_some() {
         word.clear();
     }
     (word, next_at)
@@ -174,7 +178,7 @@ fn bare_word(line: &str, start: usize) -> (String, usize) {
             end = after + escaped.len_utf8();
             continue;
         }
-        if ch.is_whitespace() || is_meta(ch) {
+        if ch.is_whitespace() || is_meta(ch) || ch == '"' || ch == '\'' {
             break;
         }
         token.push(ch);
