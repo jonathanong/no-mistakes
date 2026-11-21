@@ -248,6 +248,15 @@ fn escape_facts(source: &str) -> TsFileFacts {
         ValueExpression::Member(Arc::new(named("columns")), "then".to_string()),
         vec![ValueExpression::Unknown],
     ));
+    let direct = span(source, "x.import(\"./no\"); import(\"./columns\")");
+    let keyword = source[direct.0 as usize..]
+        .find(" import(")
+        .expect("keyword")
+        + 1;
+    ts.namespaces.literal_import_spans.push((
+        direct.0 + u32::try_from(keyword).expect("offset"),
+        "./columns".to_string(),
+    ));
     let imported = span(source, "import(\"./columns\").then(load)");
     ts.value_flow.calls.push(call(
         imported.0,

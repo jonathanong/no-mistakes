@@ -103,69 +103,6 @@ fn is_simple(text: &str) -> bool {
     }
 }
 
-pub(super) fn export_offset(source: &str, local: &str) -> Option<u32> {
-    let mut rest = source;
-    let mut base = 0u32;
-    while let Some(index) = rest.find("export") {
-        let boundary = rest[..index]
-            .chars()
-            .next_back()
-            .is_none_or(|ch| ch != '_' && !ch.is_ascii_alphanumeric());
-        let advance = index + "export".len();
-        if boundary {
-            let decl = export_declaration(&rest[index..]);
-            if !decl.contains("import ") && export_mentions_local(decl, local) {
-                return Some(base + u32::try_from(index).ok()?);
-            }
-        }
-        base = base.checked_add(u32::try_from(advance).ok()?)?;
-        rest = rest.get(advance..)?;
-    }
-    None
-}
-
-fn export_declaration(text: &str) -> &str {
-    let mut depth = 0i32;
-    for (index, ch) in text.char_indices() {
-        match ch {
-            '{' => depth += 1,
-            '}' if depth > 0 => {
-                depth -= 1;
-                if depth == 0 {
-                    let tail = &text[index + 1..];
-                    if let Some(semi) = tail.find(';') {
-                        if !tail[..semi].contains('\n') {
-                            return &text[..=index + 1 + semi];
-                        }
-                    }
-                    return &text[..=index];
-                }
-            }
-            '\n' | ';' if depth == 0 => return &text[..=index],
-            _ => {}
-        }
-    }
-    text
-}
-
-fn export_mentions_local(line: &str, local: &str) -> bool {
-    let body = line
-        .trim()
-        .trim_start_matches("export")
-        .trim()
-        .trim_start_matches('{')
-        .trim_end_matches(';')
-        .trim_end_matches('}');
-    body.split(',').any(|part| {
-        let part = part.trim().trim_end_matches(';').trim();
-        let name = part
-            .split_once(" as ")
-            .map(|(name, _)| name.trim())
-            .unwrap_or(part);
-        name == local
-    })
-}
-
 pub(super) fn import_call_specifier(text: &str) -> Option<&str> {
     let head = text
         .split_once(".then")
