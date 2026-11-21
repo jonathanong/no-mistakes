@@ -335,6 +335,57 @@ fn a_member_require_is_not_the_whole_module() {
 }
 
 #[test]
+fn a_comment_paren_does_not_make_a_member_require_the_whole_module() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/version.ts");
+    let source = "const version = require(\"./columns\" /* ( */).version ?? Number(\")\");\n";
+    let require_at = u32::try_from(source.find("require(").expect("require")).expect("offset");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.namespaces
+        .literal_import_spans
+        .push((require_at, "./columns".to_string()));
+    ts.value_flow
+        .bindings
+        .push(bind("version", 0, ValueExpression::Unknown));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert!(
+        resolve::name_fragments(&ctx, "version").is_empty(),
+        "parentheses in a comment or string do not end the require call"
+    );
+}
+
+#[test]
+fn a_require_with_a_comment_paren_still_resolves_the_namespace() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/noted.ts");
+    let source = "const parts = require(/* ( */ \"./columns\");\n";
+    let require_at = u32::try_from(source.find("require(").expect("require")).expect("offset");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.namespaces
+        .literal_import_spans
+        .push((require_at, "./columns".to_string()));
+    ts.value_flow
+        .bindings
+        .push(bind("parts", 0, ValueExpression::Unknown));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert_from(
+        &resolve::name_fragments(&ctx, "parts"),
+        &world.columns,
+        &["orderColumns", "widgetColumns"],
+    );
+}
+
+#[test]
 fn a_direct_require_still_resolves_the_namespace() {
     let mut world = world();
     let file = PathBuf::from("/repo/orders/loaded.ts");
