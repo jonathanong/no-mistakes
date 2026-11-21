@@ -65,9 +65,16 @@ pub struct NamespaceFacts {
     pub import_equals_aliases: Vec<(String, String)>,
     /// `import Local = require("specifier")` as `(local, specifier)`.
     pub import_equals_requires: Vec<(String, String)>,
-    /// `(local, byte offset)` of an `export` statement that names `local`.
+    /// `(local, byte offset)` of a local `export` statement that names `local`.
+    /// A sourced `export { name } from` keeps its offset in
+    /// [`Self::sourced_export_offsets`] so it does not collide with a local
+    /// binding of the same name.
     pub export_name_offsets: Vec<(String, u32)>,
-    /// Literal `import()` or `require()` specifiers keyed by the call start.
+    /// `(specifier, local, exported, byte offset)` of `export { local as exported } from specifier`
+    /// and `export * as exported from specifier` (`local` is `*`).
+    pub sourced_export_offsets: Vec<(String, String, String, u32)>,
+    /// Literal `import()`, `require()`, or type-position `import("...")`
+    /// specifiers keyed by the `import` or `require` keyword.
     pub literal_import_spans: Vec<(u32, String)>,
     /// Classes in an ambient declaration or in a module block that is not a
     /// tracked namespace: `declare class`, `declare module`, `declare global`.
