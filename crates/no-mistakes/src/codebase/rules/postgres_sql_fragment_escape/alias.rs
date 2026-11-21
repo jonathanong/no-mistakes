@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn hop(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     spec: &str,
@@ -27,7 +27,7 @@ pub(super) fn hop(
 
 pub(super) fn source_alias(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,
@@ -55,7 +55,7 @@ pub(super) fn source_alias(
 
 fn alias_from_facts(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,
@@ -88,7 +88,7 @@ fn alias_from_facts(
 
 fn reexported_namespace(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     spec: &str,
@@ -113,7 +113,7 @@ fn star_import(source: &str, local: &str) -> bool {
 
 pub(super) fn star_fragments(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     blocked: &[String],

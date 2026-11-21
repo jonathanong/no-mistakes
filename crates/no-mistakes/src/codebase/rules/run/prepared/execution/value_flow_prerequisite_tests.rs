@@ -42,7 +42,7 @@ fn exhausted_value_flow_preserves_previous_graph_prerequisite_failures() {
 }
 
 #[test]
-fn fragment_escape_stays_ready_when_another_graph_rule_is_incomplete() {
+fn fragment_escape_keeps_the_failed_graph_prerequisite() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/foreign-receiver-work-budget/fixture"),
@@ -72,6 +72,10 @@ fn fragment_escape_stays_ready_when_another_graph_rule_is_incomplete() {
     );
     let session = AnalysisSession::disabled();
     register_value_flow_failures(&config, &shared, &session);
-    assert!(session.check_consumer_ready("postgres-sql-fragment-escape"));
+    assert!(!session.check_consumer_ready("postgres-sql-fragment-escape"));
     assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
+    assert!(matches!(
+        session.check_prerequisite("codebase.canonical-graph"),
+        Some(Prerequisite::Failed(_))
+    ));
 }

@@ -17,7 +17,7 @@ use std::path::Path;
 pub(super) fn one(
     root: &Path,
     tags: &[TrustedSqlTag],
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
     catalog: &super::fragments::Catalog<'_>,
