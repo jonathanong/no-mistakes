@@ -1,4 +1,5 @@
-use super::scan::{Field, Step};
+use super::scalar;
+use super::Step;
 use serde_yaml::{Mapping, Value};
 
 pub(super) fn fill_flow(step: &mut Step, line: usize, body: &str) {
@@ -8,20 +9,16 @@ pub(super) fn fill_flow(step: &mut Step, line: usize, body: &str) {
     let Some(map) = value.as_mapping() else {
         return;
     };
-    if let Some(text) = map_text(map, "id") {
-        step.id = Some(text);
+    for key in ["id", "uses", "run"] {
+        if let Some(text) = map_text(map, key) {
+            scalar::upsert(step, key, line, line, text, false, false);
+        }
     }
-    if let Some(text) = map_text(map, "uses") {
-        step.uses = Some(text);
-    }
-    if let Some(text) = map_text(map, "run") {
-        step.run = Some(text);
-    }
-    if let Some(with) = map
-        .get(Value::String("with".into()))
-        .and_then(Value::as_mapping)
-    {
-        fill_with(step, line, with);
+    if let Some(with) = map.get(Value::String("with".into())) {
+        scalar::upsert(step, "with", line, line, String::new(), false, false);
+        if let Some(with) = with.as_mapping() {
+            fill_with(step, line, with);
+        }
     }
 }
 
@@ -36,14 +33,10 @@ pub(super) fn fill_with_text(step: &mut Step, line: usize, body: &str) {
 }
 
 fn fill_with(step: &mut Step, line: usize, map: &Mapping) {
-    set_field(&mut step.path, line, map, "path");
-    set_field(&mut step.key, line, map, "key");
-    set_field(&mut step.restore_keys, line, map, "restore-keys");
-}
-
-fn set_field(slot: &mut Option<Field>, line: usize, map: &Mapping, key: &str) {
-    if let Some(value) = scalar_text(map.get(Value::String(key.into()))) {
-        *slot = Some(Field { line, value });
+    for key in ["path", "key", "restore-keys"] {
+        if let Some(text) = scalar_text(map.get(Value::String(key.into()))) {
+            scalar::upsert(step, key, line, line, text, false, false);
+        }
     }
 }
 
@@ -70,11 +63,7 @@ fn scalar_text(value: Option<&Value>) -> Option<String> {
 
 pub(super) fn split_kv(text: &str) -> Option<(&str, &str)> {
     let (key, value) = text.split_once(':')?;
-    let plain = !key.is_empty()
-        && key
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
-    plain.then_some((key, value.trim()))
+    plain_key(key).then_some((key, value.trim()))
 }
 
 pub(super) fn list_item(raw: &str) -> Option<(usize, &str)> {
@@ -99,10 +88,20 @@ pub(super) fn mapping_key(raw: &str) -> Option<(usize, &str, &str)> {
     plain.then_some((indent, key, value.trim()))
 }
 
+fn plain_key(key: &str) -> bool {
+    !key.is_empty()
+        && key
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+}
+
 pub(super) fn comment_value(value: &str) -> &str {
     let text = value.trim();
     if text.starts_with(['"', '\'', '|', '>', '{', '[']) {
         return text;
+    }
+    if text.starts_with('#') {
+        return "";
     }
     text.split(" #").next().unwrap_or(text).trim()
 }
@@ -122,4 +121,29 @@ pub(super) fn block_header(value: &str) -> bool {
 
 pub(super) fn leading(raw: &str) -> usize {
     raw.chars().take_while(|c| *c == ' ').count()
+}
+
+pub(in super::super::super) fn yaml_plain(value: &str) -> String {
+    let text = value.trim();
+    if text.contains('\n') {
+        return text.to_string();
+    }
+    if let Some(inner) = quoted(text, '"') {
+        return inner.replace("\\\"", "\"");
+    }
+    if let Some(inner) = quoted(text, '\'') {
+        return inner.replace("''", "'");
+    }
+    text.split(" #").next().unwrap_or(text).trim().to_string()
+}
+
+fn quoted(value: &str, quote: char) -> Option<String> {
+    let rest = value.strip_prefix(quote)?;
+    let end = rest.find(quote)?;
+    let after = rest[end + 1..].trim();
+    if after.is_empty() || after.starts_with('#') {
+        Some(rest[..end].to_string())
+    } else {
+        None
+    }
 }

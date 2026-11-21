@@ -15,24 +15,6 @@ fn policy(parts: &[&str]) -> options::Options {
     }
 }
 
-fn bare_walker() -> walk::Walker {
-    walk::Walker {
-        action: false,
-        in_jobs: false,
-        job_open: false,
-        jobs_indent: 0,
-        job_indent: None,
-        in_steps: false,
-        steps_indent: 0,
-        step_dash: None,
-        in_with: false,
-        with_indent: 0,
-        jobs: Vec::new(),
-        scalar: None,
-        seq: None,
-    }
-}
-
 #[test]
 fn option_paths_lockfiles_and_fragments_must_be_usable() {
     let path = options::validate(&policy_with("/", "widgets.lock", &["runner.os"]))
@@ -116,6 +98,14 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
         "runner.os"
     ));
     assert!(text::has_fragment("${{ runner.os-extra }}", "runner.os"));
+    assert!(!text::has_fragment(
+        "${{ \"runner.os\\extra\" }}",
+        "runner.os"
+    ));
+    assert!(!text::has_fragment(
+        "${{ 'runner.os''extra' }}",
+        "runner.os"
+    ));
 
     assert!(text::hash_args("${{ hashFiles('widgets.lock'").is_empty());
     assert!(text::hash_args("${{ hashFiles widgets.lock }}").is_empty());
@@ -143,7 +133,7 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
     ));
     assert!(!text::mentions_path("echo widgets.lock", ""));
     assert_eq!(
-        text::output_names(
+        super::output_names(
             "echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
              echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
              echo 'other=${other}' >> $GITHUB_OUTPUT\n\
@@ -155,117 +145,43 @@ fn expression_helpers_skip_broken_calls_and_commented_shell() {
         vec![
             "digest".to_string(),
             "other".to_string(),
-            "_extra".to_string()
+            "_extra".to_string(),
+            "name".to_string()
         ]
     );
-}
-
-#[test]
-fn flow_scalars_accept_numbers_bools_sequences_and_reject_the_rest() {
-    let mut step = scan::Step::blank(4);
-    flow::fill_flow(
-        &mut step,
-        4,
-        "{ id: lock, uses: actions/cache, run: echo, with: { path: .cache/widgets, key: 7, restore-keys: [widgets-, orders-] } }",
-    );
-    assert_eq!(step.id.as_deref(), Some("lock"));
-    assert_eq!(step.uses.as_deref(), Some("actions/cache"));
-    assert_eq!(step.run.as_deref(), Some("echo"));
-    assert_eq!(step.path.as_ref().unwrap().value, ".cache/widgets");
-    assert_eq!(step.key.as_ref().unwrap().value, "7");
     assert_eq!(
-        step.restore_keys.as_ref().unwrap().value,
-        "widgets-\norders-"
+        output::proven_output_names(
+            "digest=$(sha256sum widgets.lock | awk '{print $1}')\n\
+             echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"other=$(cat widgets.lock)\" >> \"$GITHUB_OUTPUT\"\n",
+            "widgets.lock"
+        ),
+        vec!["digest".to_string()]
     );
-
-    let mut skipped = scan::Step::blank(1);
-    flow::fill_flow(&mut skipped, 1, "{");
-    flow::fill_flow(&mut skipped, 1, "[1, 2]");
-    flow::fill_flow(&mut skipped, 1, "{ uses: actions/cache, with: plain }");
-    assert!(skipped.path.is_none());
-    assert_eq!(skipped.uses.as_deref(), Some("actions/cache"));
-
-    let mut with = scan::Step::blank(2);
-    flow::fill_with_text(&mut with, 2, "{");
-    flow::fill_with_text(&mut with, 2, "[]");
-    flow::fill_with_text(
-        &mut with,
-        2,
-        "{ path: true, key: [], restore-keys: { nested: 1 } }",
-    );
-    assert_eq!(with.path.as_ref().unwrap().value, "true");
-    assert!(with.key.is_none());
-    assert!(with.restore_keys.is_none());
-    flow::fill_with_text(&mut with, 2, "{ key: [1, widgets], path: null }");
-    assert_eq!(with.key.as_ref().unwrap().value, "widgets");
-    assert_eq!(with.path.as_ref().unwrap().value, "true");
-}
-
-#[test]
-fn yaml_cursors_reject_keys_that_are_not_plain() {
+    assert!(output::proven_output_names(
+        "echo widgets.lock\n\
+         digest=$(sha256sum orders.lock)\n\
+         echo \"digest=${digest}\" >> $GITHUB_OUTPUT\n",
+        "widgets.lock"
+    )
+    .is_empty());
     assert_eq!(
-        flow::split_kv("uses: actions/cache"),
-        Some(("uses", "actions/cache"))
+        super::output_names(
+            "digest=$(sha256sum widgets.lock)\n\
+             printf 'digest=%s\\n' \"$digest\" >> \"$GITHUB_OUTPUT\"\n\
+             cat >> \"$GITHUB_OUTPUT\" <<EOF\n\
+             extra=${digest}\n\
+             EOF\n\
+             {\n\
+               echo \"brace=${digest}\"\n\
+             } >> \"$GITHUB_OUTPUT\"\n"
+        ),
+        vec![
+            "digest".to_string(),
+            "extra".to_string(),
+            "brace".to_string()
+        ]
     );
-    assert!(flow::split_kv("no-colon").is_none());
-    assert!(flow::split_kv(": empty").is_none());
-    assert!(flow::split_kv("bad key: x").is_none());
-
-    assert_eq!(
-        flow::list_item("  - uses: actions/cache"),
-        Some((2, "uses: actions/cache"))
-    );
-    assert!(flow::list_item("uses: actions/cache").is_none());
-    assert!(flow::list_item("-uses").is_none());
-
-    assert!(flow::mapping_key("  runs/using: composite").is_some());
-    assert!(flow::mapping_key("  - uses: actions/cache").is_none());
-    assert!(flow::mapping_key("  # comment").is_none());
-    assert!(flow::mapping_key("  not a key").is_none());
-    assert!(flow::mapping_key("  bad key: x").is_none());
-
-    assert_eq!(flow::comment_value(" widgets # note"), "widgets");
-    assert_eq!(
-        flow::comment_value(" \"widgets # not\" "),
-        "\"widgets # not\""
-    );
-    assert_eq!(flow::comment_value(" |"), "|");
-    assert_eq!(
-        flow::comment_value(" { path: .cache/widgets }"),
-        "{ path: .cache/widgets }"
-    );
-    assert_eq!(flow::comment_value(" [widgets]"), "[widgets]");
-
-    assert!(flow::block_header("|"));
-    assert!(flow::block_header(">+2"));
-    assert!(flow::block_header(">#"));
-    assert!(!flow::block_header(""));
-    assert!(!flow::block_header("|bad"));
-    assert!(!flow::block_header("plain"));
-    assert_eq!(flow::leading("   key"), 3);
-}
-
-#[test]
-fn edits_with_no_open_step_are_ignored() {
-    let mut walker = bare_walker();
-    assert!(!edit::consume_scalar(&mut walker, "  widgets"));
-    edit::finish_scalar(&mut walker);
-    edit::assign(&mut walker, edit::Slot::Run, 2, 0, "echo\nwidgets.lock");
-    edit::assign(&mut walker, edit::Slot::Key, 2, 0, "\"widgets\"");
-    edit::open_with(&mut walker, 2, 0, "inline");
-    edit::open_with(&mut walker, 2, 0, "{ path: .cache/widgets }");
-    assert!(!walker.in_with);
-    edit::open_with(&mut walker, 2, 0, "");
-    assert!(walker.in_with);
-
-    walker.seq = Some((edit::Seq::Path, 2));
-    assert!(edit::consume_seq(&mut walker, 3, "    - .cache/widgets"));
-    assert!(!edit::consume_seq(&mut walker, 4, "  - .cache/orders"));
-    assert!(walker.seq.is_none());
-    walker.seq = Some((edit::Seq::Restore, 2));
-    assert!(!edit::consume_seq(&mut walker, 5, "key: widgets"));
-    assert!(walker.seq.is_none());
-    assert!(walker.jobs.is_empty());
 }
 
 const EDGE_WORKFLOW: &str = r#"---
@@ -316,7 +232,7 @@ jobs:
 
 #[test]
 fn block_scalars_flow_with_and_blank_restore_keys_keep_their_text() {
-    let jobs = match scan::analyze(EDGE_WORKFLOW, false) {
+    let jobs = match scan::analyze(EDGE_WORKFLOW, false, &[]) {
         scan::Document::Jobs(jobs) => jobs,
         other => panic!("expected jobs, got {other:?}"),
     };
@@ -368,15 +284,159 @@ fn block_scalars_flow_with_and_blank_restore_keys_keep_their_text() {
 }
 
 #[test]
-fn odd_list_items_outside_a_step_do_not_open_a_step() {
-    let jobs = walk::walk_jobs(
+fn invalid_collection_reports_the_parser_line() {
+    match scan::analyze(
         "---\n\nsteps:\njobs:\n  build:\n    - not-a-step\n    steps:\n      name: early\n      - uses: actions/checkout@v4\n        - nested\n      key: sibling\n- stray\n...\n",
         false,
-    );
-    assert_eq!(jobs.len(), 1);
-    assert_eq!(jobs[0].steps.len(), 1);
+        &[],
+    ) {
+        scan::Document::Invalid { line, .. } => assert_eq!(line, 7),
+        other => panic!("expected invalid yaml, got {other:?}"),
+    }
+}
+
+#[test]
+fn copied_and_backtick_digests_prove_output_names() {
     assert_eq!(
-        jobs[0].steps[0].uses.as_deref(),
-        Some("actions/checkout@v4")
+        output::proven_output_names(
+            "proven=$(sha256sum widgets.lock)\n\
+             digest=$proven\n\
+             quoted=\"$proven\"\n\
+             tick=`sha256sum widgets.lock`\n\
+             other=plain\n\
+             echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"quoted=${quoted}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"tick=${tick}\" >> \"$GITHUB_OUTPUT\"\n\
+             echo \"other=${other}\" >> \"$GITHUB_OUTPUT\"\n",
+            "widgets.lock"
+        ),
+        vec![
+            "digest".to_string(),
+            "quoted".to_string(),
+            "tick".to_string()
+        ]
     );
+}
+
+#[test]
+fn heredoc_and_brace_shapes_record_only_real_writes() {
+    assert_eq!(
+        super::output_names(
+            "echoing=1 >> \"$GITHUB_OUTPUT\"\n\
+             printfX=1 >> \"$GITHUB_OUTPUT\"\n\
+             printf '1bad=%s' nope >> \"$GITHUB_OUTPUT\"\n\
+             cat <<\n\
+             cat >> \"$GITHUB_OUTPUT\" <<-EOF\n\
+             \tkept=from-tab\n\
+             \techo nested=1\n\
+             \techo   \n\
+             \tnote\n\
+             \tEOF\n\
+             cat >> \"$GITHUB_OUTPUT\" <<'END'\n\
+             literal=1\n\
+             END\n\
+             cat <<EOF\n\
+             ignored=1\n\
+             EOF\n\
+             cat >> \"$GITHUB_OUTPUT\" <<EOF\n\
+             open=1\n"
+        ),
+        vec![
+            "kept".to_string(),
+            "nested".to_string(),
+            "literal".to_string(),
+            "open".to_string()
+        ]
+    );
+    assert_eq!(
+        super::output_names(
+            "{\n\
+               inner=$(sha256sum widgets.lock)\n\
+               echo \"same=${inner}\" >> \"$GITHUB_OUTPUT\"\n\
+               echo \"pending=${inner}\"\n\
+               true\n\
+             } >> \"$GITHUB_OUTPUT\"\n\
+             {\n\
+               echo \"dropped=${inner}\"\n\
+             }\n\
+             {\n\
+               echo \"unclosed=${inner}\"\n"
+        ),
+        vec!["same".to_string(), "pending".to_string()]
+    );
+}
+
+#[test]
+fn misaligned_documents_expose_every_serde_path_shape() {
+    let shapes = "\
+name: Widgets
+jobs:
+  build:
+    steps:
+      - &cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: widgets
+      - *cache
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          key: widgets
+      - uses: actions/cache@v4
+        with:
+          path:
+            - .cache/widgets
+            - 4
+          key: widgets
+      - uses: actions/cache@v4
+        with:
+          path: { nested: 1 }
+          key: widgets
+  note:
+    steps: plain
+";
+    match scan::analyze(shapes, false, &[]) {
+        scan::Document::Jobs(jobs) => assert_eq!(cache_uses(&jobs), 4, "{jobs:?}"),
+        other => panic!("expected jobs when nothing is configured, got {other:?}"),
+    }
+    assert!(matches!(
+        scan::analyze(shapes, false, &["missing".to_string()]),
+        scan::Document::Jobs(_)
+    ));
+    assert!(matches!(
+        scan::analyze(shapes, false, &[".cache/widgets".to_string()]),
+        scan::Document::Unaligned
+    ));
+
+    let composite = "\
+name: Widgets
+runs:
+  using: composite
+  steps:
+    - &cache
+      uses: actions/cache@v4
+      with:
+        path: .cache/widgets
+    - *cache
+";
+    match scan::analyze(composite, true, &[]) {
+        scan::Document::Jobs(jobs) => assert_eq!(cache_uses(&jobs), 1, "{jobs:?}"),
+        other => panic!("expected composite jobs, got {other:?}"),
+    }
+    assert!(matches!(
+        scan::analyze(composite, true, &[".cache/widgets".to_string()]),
+        scan::Document::Unaligned
+    ));
+}
+
+fn cache_uses(jobs: &[scan::Job]) -> usize {
+    jobs.iter()
+        .flat_map(|job| &job.steps)
+        .filter(|step| {
+            step.uses
+                .as_deref()
+                .is_some_and(|uses| uses.contains("actions/cache"))
+        })
+        .count()
 }

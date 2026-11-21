@@ -1,0 +1,15 @@
+name: Widgets
+on: push
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - id: lock
+        run: |
+          digest=$(sha256sum widgets.lock | awk '{print $1}')
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: .cache/widgets
+          key: "widgets-${{ runner.os }}-
+            ${{ runner.arch }}-${{ steps.lock.outputs.digest }}"

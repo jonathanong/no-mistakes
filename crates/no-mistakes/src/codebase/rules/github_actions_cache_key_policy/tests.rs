@@ -18,8 +18,21 @@ fn source(root: &str, relative: &str) -> String {
     std::fs::read_to_string(fixture(root).join(relative)).unwrap()
 }
 
+fn output_names(run: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    for event in output::events(run) {
+        let output::Event::Write(write) = event else {
+            continue;
+        };
+        if !names.contains(&write.name) {
+            names.push(write.name);
+        }
+    }
+    names
+}
+
 fn expect_jobs(text: &str, action: bool) -> Vec<scan::Job> {
-    match scan::analyze(text, action) {
+    match scan::analyze(text, action, &[]) {
         scan::Document::Jobs(jobs) => jobs,
         scan::Document::Invalid { line, detail } => panic!("invalid {line}: {detail}"),
         scan::Document::Unaligned => panic!("unaligned"),
@@ -88,6 +101,12 @@ fn fragments_match_whole_expression_tokens() {
         "widgets-runner.os-${{ runner.arch }}",
         "runner.os"
     ));
+    assert!(!text::has_fragment("${{ 'runner.os' }}", "runner.os"));
+    assert!(!text::has_fragment("${{ \"runner.os\" }}", "runner.os"));
+    assert!(text::has_fragment(
+        "${{ 'runner.os' }}-${{ runner.os }}",
+        "runner.os"
+    ));
 }
 
 #[test]
@@ -107,7 +126,7 @@ fn hash_args_require_an_expression_and_keep_each_path() {
 fn output_names_read_the_same_line_as_github_output() {
     let run = "digest=$(sha256sum widgets.lock | awk '{print $1}')\n\
                echo \"digest=${digest}\" >> \"$GITHUB_OUTPUT\"\n";
-    assert_eq!(text::output_names(run), vec!["digest".to_string()]);
+    assert_eq!(output_names(run), vec!["digest".to_string()]);
     assert!(text::mentions_path(run, "widgets.lock"));
     assert!(text::mentions_path("cat dir/widgets.lock", "widgets.lock"));
     assert!(!text::mentions_path("echo orders.lock", "widgets.lock"));
@@ -115,7 +134,7 @@ fn output_names_read_the_same_line_as_github_output() {
         "echo not-widgets.lock",
         "widgets.lock"
     ));
-    assert!(text::output_names("echo \"digest=${digest}\"\n").is_empty());
+    assert!(output_names("echo \"digest=${digest}\"\n").is_empty());
 }
 
 #[test]
@@ -135,13 +154,18 @@ fn ordinary_block_steps_keep_key_and_restore_text() {
 
 #[test]
 fn anchors_fail_closed_and_non_composite_actions_are_ignored() {
-    match scan::analyze(&source("policy", ".github/workflows/alias.yml"), false) {
+    match scan::analyze(
+        &source("policy", ".github/workflows/alias.yml"),
+        false,
+        &[".cache/widgets".to_string()],
+    ) {
         scan::Document::Unaligned => {}
         other => panic!("expected alignment finding, got {other:?}"),
     }
     match scan::analyze(
         &source("policy", ".github/actions/node-action/action.yml"),
         true,
+        &[],
     ) {
         scan::Document::Ignored => {}
         other => panic!("expected ignored node action, got {other:?}"),
@@ -184,6 +208,12 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
     assert_needles(&findings, "sequence-restore.yml", &[restore]);
     assert_needles(&findings, "multiline-path.yml", &[platform, digest]);
     assert_needles(&findings, "alias.yml", &["could not be aligned"]);
+    assert_needles(
+        &findings,
+        "literal-fragment.yml",
+        &["missing platform fragments `runner.os`"],
+    );
+    assert_needles(&findings, "unrelated-output.yml", &[digest]);
     assert_needles(&findings, "workflows/invalid.yml", &["Invalid YAML"]);
     assert_needles(
         &findings,
@@ -205,10 +235,17 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "nested/skip.yml",
         "notes/cache.yml",
         "node-action/action.yml",
+        "printf-output.yml",
+        "heredoc-output.yml",
+        "brace-output.yml",
+        "multiline-key.yml",
+        "quoted-key.yml",
+        "alias-other.yml",
+        "hash-widgets/action.yml",
     ] {
         assert_silent(&findings, file);
     }
-    assert_eq!(findings.len(), 27, "{findings:?}");
+    assert_eq!(findings.len(), 29, "{findings:?}");
 }
 
 #[test]
