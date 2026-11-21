@@ -339,3 +339,71 @@ diff -r plugins/no-mistakes/skills/no-mistakes/references "evals/variants/$name/
 
 Both must be clean, and the two `description:` lines must actually differ —
 that is the check the assertion above enforces.
+
+## Codex rules runner
+
+Status: not yet run. Claude plugin eval remains the primary measure. This
+runner is a second consumer for the rules cases only. Do not compare its
+trigger counts with the Claude table: the agent is different, and a number
+from this runner does not exist yet. Do not add a results row to README or
+HISTORY until a run has actually finished.
+
+The cases, prompts, and grader markdown are the files `generate.py` already
+writes. The runner does not regenerate them. LLM graders go to
+`claude-opus-5-5`, the judge pinned in `scripts/run-evals.sh`, with each
+grader's markdown body and the attempt's final message. `skill-fired` stays a
+tool check. The primary measure is that trigger rate on each arm. The content
+score is a regression check through `summarize.py`.
+
+Preview, then a scoped paid run. The preview makes no model call. `--run`
+without `--tag`, `--case`, or `--all` is refused. So is a run with no
+spare-budget credential:
+
+```sh
+python3 evals/codex_rules.py
+CODEX_AUTH_FILE=/path/to/spare-auth.json \
+  python3 evals/codex_rules.py --run --case 'rules-testing-*' --runs 1 \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
+```
+
+Use the ChatGPT Codex account that has spare budget. Do not use a shared or
+capped login. `CODEX_AUTH_FILE` must be a copy of that account's `auth.json`
+that lives outside `~/.codex` and `~/.claude`. `CODEX_API_KEY` is the other
+accepted credential, and Codex only honors it for `codex exec`. The runner
+does not read `~/.codex`, `~/.claude`, or `~/AGENTS.md`.
+
+Each attempt is a new directory outside the repository and outside the user
+home. `HOME` and `CODEX_HOME` point inside that directory. The harness writes
+a config that pins the model, reasoning effort, sandbox, and approval policy
+from `codex_rules_env.py`. On Codex 0.169 the plugins feature defaults on and
+the hooks feature defaults on. Both arms set `features.plugins = true` and
+`features.hooks = false`, so a later default does not become an arm
+difference and neither arm loads hooks. `project_doc_max_bytes = 0` so
+instruction files are not loaded. Codex exec has no max-turns flag and no
+system-prompt flag, so both arms omit the case's `max_turns` and prepend its
+`append_system_prompt` to the user message. The with arm's config adds one
+marketplace, `rules-eval`, whose catalog lists `no-mistakes-rules` and nothing
+else, plus
+`plugins."no-mistakes-rules@rules-eval".enabled = true` and the plugin cache
+`codex plugin add` produces. The without arm has the shared config only.
+`--ignore-user-config` is not passed: that flag skips `CODEX_HOME/config.toml`,
+which is the harness config the plugin enablement lives in. The workspace is
+empty for these cases. A fixture copy drops `AGENTS.md`, `CLAUDE.md`, and any
+file whose name or contents mention the rules. The exec flags
+(`--ephemeral`, `--ignore-rules`, sandbox, model, timeout, prompt) are the
+same on both arms.
+
+`skill-fired` matches the grader's `input_match` against Skill tool arguments,
+a `skill_invocation` item's `skill_name`, or a command that reads
+`<skill>/SKILL.md`. Message text does not count. Those are the shapes the
+checker accepts. A live Codex transcript has not been graded, so the first
+pilot has to confirm the transcript uses one of them before a trigger rate is
+quoted.
+
+The report is `aggregate-result.json` with `suite.ablation` set to
+`codex-with-without` and arm keys `with` and `without`. `costUsd` is 0.
+That 0 means the dollar cost was not measured. Codex exec reports tokens, not
+a price, and this runner does not invent one. `python3 evals/summarize.py` on
+that file prints the with-arm trigger and the content delta. The runner's own
+summary prints the trigger rate for both arms. Write `--output` outside the
+worktree, as with the Claude reports.
