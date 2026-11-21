@@ -109,23 +109,24 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
     let Some((start, ch)) = chars.get(at).copied() else {
         return (String::new(), line.len());
     };
-    let (mut word, mut next_at, mut single_var) = fragment(line, start, ch);
+    let (mut word, mut next_at, quoted) = fragment(line, start, ch);
+    let mut literal = quoted && !word.is_empty();
     while let Some((byte, next)) = chars.get(char_index(chars, next_at)).copied() {
         if next.is_whitespace() || is_meta(next) {
             break;
         }
-        let (piece, further, _) = fragment(line, byte, next);
+        let (piece, further, piece_quoted) = fragment(line, byte, next);
         if further == next_at {
             break;
         }
         if extends_name(&word, &piece) {
             word.push('.');
         }
+        literal |= piece_quoted && !piece.is_empty();
         word.push_str(&piece);
         next_at = further;
-        single_var = false;
     }
-    if single_var {
+    if literal && super::super::output_syntax::var_ref(&word).is_some() {
         word.clear();
     }
     (word, next_at)
@@ -144,8 +145,7 @@ fn fragment(line: &str, start: usize, ch: char) -> (String, usize, bool) {
             return (String::new(), line.len(), false);
         };
         let body = &body[..end];
-        let single_var = ch == '\'' && super::super::output_syntax::var_ref(body).is_some();
-        return (body.to_string(), body_at + end + ch.len_utf8(), single_var);
+        return (body.to_string(), body_at + end + ch.len_utf8(), ch == '\'');
     }
     let (text, next_at) = bare_word(line, start);
     (text, next_at, false)

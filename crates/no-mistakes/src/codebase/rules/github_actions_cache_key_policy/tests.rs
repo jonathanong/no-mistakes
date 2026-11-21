@@ -227,6 +227,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "suffix-output.yml",
         "glued-suffix.yml",
         "escaped-output.yml",
+        "empty-literal.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -272,6 +273,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "wide-redirect.yml",
         "named-alias.yml",
         "bare-output.yml",
+        "empty-expand.yml",
         "composite-digest.yml",
         "composite-yaml.yml",
         "lock-digest/action.yml",
@@ -286,7 +288,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 43, "{findings:?}");
+    assert_eq!(findings.len(), 44, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {
@@ -434,6 +436,10 @@ fn redirect_words_keep_suffixes_escapes_and_the_next_operator() {
         targets("echo x >\\$GITHUB_OUTPUT"),
         vec!["\\$GITHUB_OUTPUT".to_string()]
     );
+    assert!(targets("echo x > '$OUT'\"\"").is_empty());
+    assert!(targets("echo x > \"\"'$OUT'").is_empty());
+    assert_eq!(targets("echo x > \"$OUT\"''"), vec!["$OUT".to_string()]);
+    assert_eq!(targets("echo x > ''\"$OUT\""), vec!["$OUT".to_string()]);
     let prove = |run: &str| output::proven_output_names(run, "widgets.lock");
     assert!(prove(
         "digest=$(sha256sum widgets.lock)\n\
@@ -441,15 +447,20 @@ fn redirect_words_keep_suffixes_escapes_and_the_next_operator() {
          OUTbak=$GITHUB_OUTPUT\n\
          echo \"digest=$digest\" > \"$OUT\".bak\n\
          echo \"digest=$digest\" > \"$OUT\"bak\n\
-         echo \"digest=$digest\" >\\$GITHUB_OUTPUT\n"
+         echo \"digest=$digest\" >\\$GITHUB_OUTPUT\n\
+         echo \"digest=$digest\" > '$OUT'\"\"\n\
+         echo \"digest=$digest\" > \"\"'$OUT'\n"
     )
     .is_empty());
     assert_eq!(
         prove(
             "digest=$(sha256sum widgets.lock)\n\
              OUTbak=$GITHUB_OUTPUT\n\
+             OUT=$GITHUB_OUTPUT\n\
              echo \"digest=$digest\" > \"$OUTbak\"\n\
-             echo \"digest=$digest\" >$GITHUB_OUTPUT\n"
+             echo \"digest=$digest\" >$GITHUB_OUTPUT\n\
+             echo \"digest=$digest\" > \"$OUT\"''\n\
+             echo \"digest=$digest\" > ''\"$OUT\"\n"
         ),
         vec!["digest".to_string()]
     );

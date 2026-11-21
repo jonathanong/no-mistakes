@@ -365,7 +365,8 @@ must name that lockfile in the same simple command. A standalone `&` splits comm
 drops the proof unless the whole new value is a parameter expansion of that same variable.
 Mixing that expansion with other text drops the proof. A `>`, `>>`, or non-numeric `>&` redirect
 is required. Single quotes do not expand. A suffix on the redirect word is part of the
-filename, and an escaped `$` is literal. A local
+filename, an escaped `$` is literal, and empty quotes do not make a single-quoted `$OUT`
+expand. A local
 composite `uses: ./...` counts when its declared output reads that proof. See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 

@@ -607,8 +607,8 @@ whole new value is a parameter expansion of that same variable (`"$digest"`, `${
 text drops the proof. A `<<<` redirect is not a heredoc, and `<<` inside `$(( ))` is not a heredoc.
 A variable assigned from `$GITHUB_OUTPUT` is a `>` or `>>` redirect target, and `>&` before a
 non-numeric target is too. `>&2` is not a write. Single quotes do not expand, so `> '$OUT'` is
-not a write. A suffix on the redirect word is part of the filename, and an escaped `$` is
-literal. Mentioning that
+not a write. A suffix on the redirect word is part of the filename, an escaped `$` is
+literal, and empty quotes do not make a single-quoted `$OUT` expand. Mentioning that
 variable is not a write. A local `uses: ./...` composite action
 counts when its declared output reads a proven `run` step in that action.
 
