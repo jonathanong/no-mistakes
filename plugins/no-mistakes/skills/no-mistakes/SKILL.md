@@ -363,6 +363,8 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 must name that lockfile in the same simple command. A redirect after the closing `}` or `)` of
 a brace group or parenthesized command applies to every command in the group that does not already redirect
 standard output. A group with no redirect, or a redirect to another file, does not count.
+The redirect is fixed before the body runs. Assignments inside a parenthesized command do not
+affect later commands. A command after `;` on the same line is separate.
 A standalone `&` splits commands; an `&` in
 `2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. A digit prefix and a quoted suffix are one word,
 so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or `>`

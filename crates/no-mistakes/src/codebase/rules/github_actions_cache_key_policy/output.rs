@@ -17,16 +17,31 @@ pub(super) struct Write {
 pub(super) enum Event {
     Assign(String, String),
     Write(Write),
+    BeginScope,
+    EndScope,
 }
 
 pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
-    let mut vars = fx_set();
+    let mut scopes = vec![fx_set()];
     let mut names = Vec::new();
     for event in events(run) {
         match event {
+            Event::BeginScope => {
+                let next = scopes[scopes.len() - 1].clone();
+                scopes.push(next);
+            }
+            Event::EndScope => {
+                let keep = scopes.len().saturating_sub(1).max(1);
+                scopes.truncate(keep);
+            }
             Event::Assign(name, rhs) => {
-                let keep = rhs_hashes(&rhs, &vars, lockfile)
-                    || (vars.contains(&name) && super::expand::same_name_expansion(&rhs, &name));
+                let keep = {
+                    let vars = &scopes[scopes.len() - 1];
+                    rhs_hashes(&rhs, vars, lockfile)
+                        || (vars.contains(&name) && super::expand::same_name_expansion(&rhs, &name))
+                };
+                let last = scopes.len() - 1;
+                let vars = &mut scopes[last];
                 if keep {
                     vars.insert(name);
                 } else {
@@ -34,8 +49,9 @@ pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
                 }
             }
             Event::Write(write) => {
+                let vars = &scopes[scopes.len() - 1];
                 if write.expand
-                    && expression_hashes(&write.value, &vars, lockfile)
+                    && expression_hashes(&write.value, vars, lockfile)
                     && !names.contains(&write.name)
                 {
                     names.push(write.name);

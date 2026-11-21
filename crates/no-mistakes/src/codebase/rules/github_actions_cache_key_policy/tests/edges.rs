@@ -151,4 +151,69 @@ fn group_redirect_fixtures_match_the_suffix() {
             &["does not prove a digest of `widgets.lock`"],
         );
     }
+    for file in ["group-pipeline.yml", "group-own-stdout.yml"] {
+        super::assert_needles(
+            &findings,
+            file,
+            &["does not prove a digest of `widgets.lock`"],
+        );
+    }
+}
+
+fn names(script: &str) -> Vec<String> {
+    output::proven_output_names(script, "widgets.lock")
+}
+
+#[test]
+fn group_redirect_is_bound_before_the_body_runs() {
+    let digest = vec!["digest".to_string()];
+    for script in [
+        "( echo \"digest=$digest\"\n) >> \"$GITHUB_OUTPUT\"",
+        "{\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; }; echo \"digest=$digest\" >> \"$GITHUB_OUTPUT\"",
+        "{ out=$GITHUB_OUTPUT; echo \"digest=$digest\" >> \"$out\"; }",
+        "{\n  {\n    echo \"digest=$digest\"\n  }\n} >> \"$GITHUB_OUTPUT\"",
+        "(\n  {\n    echo \"digest=$digest\"\n  }\n) >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\" || echo \"other=1\"",
+        "{ echo \"digest=$digest\" 2>> \"$GITHUB_OUTPUT\"; } >> /tmp/orders",
+        "(\n  echo \"skip=1\"\n); echo \"digest=$digest\" >> \"$GITHUB_OUTPUT\"",
+        "(\n  { echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"\n)",
+    ] {
+        assert_eq!(proven(script), digest, "{script}");
+    }
+    assert_eq!(
+        names("digest=$(sha256sum widgets.lock)\n( digest=plain )\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"),
+        digest
+    );
+    assert_eq!(
+        names("( digest=$(sha256sum widgets.lock); echo \"inner=$digest\" >> \"$GITHUB_OUTPUT\" )\necho \"outer=$digest\" >> \"$GITHUB_OUTPUT\"\n"),
+        vec!["inner".to_string()]
+    );
+    for script in [
+        "out=/tmp/orders\n{ out=$GITHUB_OUTPUT; echo \"digest=$digest\"; } >> \"$out\"",
+        "{ echo \"digest=$digest\"; }; echo \"other=1\" >> \"$GITHUB_OUTPUT\"",
+        "(\n  {\n    echo \"digest=$digest\"\n  } > /tmp/orders\n) >> \"$GITHUB_OUTPUT\"",
+        "(\n  echo \"digest=$digest\" | cat /tmp/orders\n) >> \"$GITHUB_OUTPUT\"",
+        "(\n  echo \"digest=$digest\" > /tmp/orders\n) >> \"$GITHUB_OUTPUT\"",
+        "{\n  >> \"$GITHUB_OUTPUT\"\n  echo \"digest=$digest\"\n}",
+        "{ echo \"digest=$digest\"; } | cat /tmp/orders",
+        "{ echo \"digest=$digest\"",
+        "( OUT=$GITHUB_OUTPUT )\necho \"digest=$digest\" >> \"$OUT\"",
+        "{ cat /tmp/orders >> \"$GITHUB_OUTPUT\"; }",
+        "{ echo \"digest=$digest\"; } >&2",
+    ] {
+        assert!(proven(script).is_empty(), "{script}");
+    }
+    assert!(names(
+        "digest=plain\n( digest=$(sha256sum widgets.lock) )\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"
+    )
+    .is_empty());
+    assert!(names(
+        "digest=plain\n(\n  echo \"digest=$digest\"\n  digest=$(sha256sum widgets.lock)\n) >> \"$GITHUB_OUTPUT\"\n"
+    )
+    .is_empty());
+    assert!(names(
+        "{\n  ( digest=$(sha256sum widgets.lock) )\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"\n"
+    )
+    .is_empty());
 }

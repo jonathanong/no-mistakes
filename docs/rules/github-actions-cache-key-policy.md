@@ -41,7 +41,10 @@ The key must also prove a digest of the configured lockfile, in either of these 
   that does not already redirect standard output, including
   `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` and
   `( echo "digest=$digest" ) >> "$GITHUB_OUTPUT"`. A group with no redirect, or a redirect
-  to another file, does not count.
+  to another file, does not count. The redirect is fixed before the group body runs, so an
+  assignment inside the group does not change that destination. Assignments inside a
+  parenthesized command do not affect later commands. A command after `;` on the same line
+  is a separate command.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not

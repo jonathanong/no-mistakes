@@ -6,6 +6,7 @@ pub(super) use redirect::{mask_output_redirects, redirect_targets};
 struct Piece<'a> {
     text: &'a str,
     piped: bool,
+    origin: usize,
 }
 
 pub(super) fn parts(cmd: &str) -> Vec<&str> {
@@ -17,6 +18,20 @@ pub(super) fn inherits_redirect(cmd: &str) -> Vec<(&str, bool)> {
         .into_iter()
         .map(|piece| (piece.text, !piece.piped))
         .collect()
+}
+
+pub(super) fn split_head(cmd: &str) -> (&str, &str) {
+    let parts = pieces(cmd);
+    let Some(first) = parts.first() else {
+        return ("", "");
+    };
+    if cmd[..first.origin].contains(|ch: char| matches!(ch, ';' | '&' | '|')) {
+        return ("", cmd[first.origin..].trim());
+    }
+    if let Some(next) = parts.get(1) {
+        return (first.text, cmd[next.origin..].trim());
+    }
+    (first.text, "")
 }
 
 fn pieces(cmd: &str) -> Vec<Piece<'_>> {
@@ -100,10 +115,17 @@ fn push_piece<'a>(
     end: usize,
     piped: bool,
 ) {
-    let text = cmd[start..end].trim();
-    if !text.is_empty() {
-        pieces.push(Piece { text, piped });
+    let raw = &cmd[start..end];
+    let text = raw.trim();
+    if text.is_empty() {
+        return;
     }
+    let leading = raw.len() - raw.trim_start().len();
+    pieces.push(Piece {
+        text,
+        piped,
+        origin: start + leading,
+    });
 }
 
 pub(super) fn heredoc_at(line: &str) -> Option<usize> {

@@ -34,8 +34,7 @@ pub(super) fn brace_open(line: &str) -> bool {
 }
 
 pub(super) fn brace_close(line: &str) -> bool {
-    let line = line.trim();
-    line == "}" || line.starts_with("} ") || line.starts_with("}>>") || line.starts_with("} >>")
+    line.trim().starts_with('}')
 }
 
 pub(super) fn command_assign(line: &str) -> Option<(String, String)> {

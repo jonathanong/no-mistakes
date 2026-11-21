@@ -606,7 +606,9 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
 or parenthesized command applies to every command in the group that does not already redirect standard
 output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` counts. A group with no redirect, or
-a redirect to another file, does not. The checksum command must name the lockfile in that same
+a redirect to another file, does not. The redirect is fixed before the body runs. Assignments
+inside a parenthesized command do not affect later commands, and a command after `;` on the
+same line is separate. The checksum command must name the lockfile in that same
 simple command. A standalone `&` splits commands. An `&` in `2>&1`, `>&2`, `&>`, `&>>`, or `<&`
 does not, and neither does `&` inside `$(( ))`. A digit prefix and a quoted suffix are one
 word, so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or
