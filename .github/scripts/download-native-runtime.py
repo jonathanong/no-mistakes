@@ -16,14 +16,23 @@ class DownloadError(RuntimeError):
     pass
 
 
+# 177 MB at about 1 MB/s is 177s. The extra time covers a stall abort and a resume.
+OVERALL_SECONDS = 300
+DOWNLOAD_ATTEMPTS = 3
+# Timeouts and connection drops. HTTP failures (22) and range rejection (33) are separate.
+TRANSIENT_CURL_EXITS = {6, 7, 18, 28, 35, 52, 55, 56}
+RANGE_UNSUPPORTED = 33
+
+
 class Deadline:
     def __init__(self):
-        self.end = time.monotonic() + 110
+        self.end = time.monotonic() + OVERALL_SECONDS
 
     def remaining(self):
         remaining = self.end - time.monotonic()
         if remaining <= 0:
-            raise TimeoutError("native runtime download exceeded 110 seconds")
+            raise TimeoutError(
+                f"native runtime download exceeded {OVERALL_SECONDS} seconds")
         return remaining
 
 
@@ -65,15 +74,42 @@ def resolve_artifact(repo, run_id, name, token, deadline):
     return artifact
 
 
+def download_command(url, archive, resume):
+    command = [
+        "curl", "--config", "-", "--fail", "--location", "--silent", "--show-error",
+        "--ssl-revoke-best-effort",
+        "--speed-limit", "1024", "--speed-time", "30",
+        "--connect-timeout", "10",
+    ]
+    # Each attempt is a new process so resume works before curl 8.17.
+    if resume:
+        command.extend(["--continue-at", "-"])
+    command.extend(["--output", str(archive), url])
+    return command
+
+
 def download(repo, artifact, token, archive, deadline):
     url = f"https://api.github.com/repos/{repo}/actions/artifacts/{artifact['id']}/zip"
     config = f"header = {json.dumps('Authorization: Bearer ' + token)}\n"
-    subprocess.run([
-        "curl", "--config", "-", "--fail", "--location", "--silent", "--show-error",
-        "--ssl-revoke-best-effort",
-        "--retry", "2", "--retry-max-time", "90",
-        "--connect-timeout", "10", "--max-time", "25", "--output", str(archive), url,
-    ], input=config, text=True, check=True, timeout=deadline.remaining())
+    try:
+        transfer(url, archive, config, deadline, resume=True)
+    except subprocess.CalledProcessError as error:
+        if error.returncode != RANGE_UNSUPPORTED or not archive.is_file() or archive.stat().st_size == 0:
+            raise
+        archive.unlink()
+        transfer(url, archive, config, deadline, resume=False)
+
+
+def transfer(url, archive, config, deadline, resume):
+    for attempt in range(DOWNLOAD_ATTEMPTS):
+        try:
+            subprocess.run(
+                download_command(url, archive, resume),
+                input=config, text=True, check=True, timeout=deadline.remaining())
+            return
+        except subprocess.CalledProcessError as error:
+            if error.returncode not in TRANSIENT_CURL_EXITS or attempt + 1 == DOWNLOAD_ATTEMPTS:
+                raise
 
 
 def verify(archive, expected, deadline):
@@ -165,7 +201,7 @@ def main(artifact_names=()):
         if isinstance(error, subprocess.CalledProcessError):
             detail = f"curl exit status {error.returncode}"
         if isinstance(error, subprocess.TimeoutExpired):
-            detail = "overall 110-second deadline exhausted"
+            detail = f"overall {OVERALL_SECONDS}-second deadline exhausted"
         print(f"native runtime download failed during {stage}: "
               f"{type(error).__name__}: {detail}", file=sys.stderr)
         return 1
