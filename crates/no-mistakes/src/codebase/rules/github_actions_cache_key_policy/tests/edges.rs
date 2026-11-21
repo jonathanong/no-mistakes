@@ -232,3 +232,31 @@ fn group_redirect_is_bound_before_the_body_runs() {
     )
     .is_empty());
 }
+
+#[test]
+fn group_parser_covers_quotes_nesting_and_descriptors() {
+    let digest = vec!["digest".to_string()];
+    for script in [
+        "{ echo \"a\\\\b\"; { echo \"digest=$digest\"; }; } >> \"$GITHUB_OUTPUT\"",
+        "( { echo \"a\\\\b\"; echo \"digest=$digest\"; } ) >> \"$GITHUB_OUTPUT\"",
+        "(\n  { echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"\n)",
+        "{\n  echo skip=1; { echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"\n}",
+        "{\n  echo \"digest=$digest\" & } >> \"$GITHUB_OUTPUT\"",
+        "{\n  echo skip && }\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"",
+        "{\n  echo }\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"",
+        "(\n  echo \"digest=$digest\" # )\n  echo \"say \\\"hi\\\"\" ) >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" $((1 + 2)) >> \"$GITHUB_OUTPUT\"; }",
+        "{ echo \"digest=$digest\" >= /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+    ] {
+        assert_eq!(proven(script), digest, "{script}");
+    }
+    for script in [
+        "{\n  echo \"digest=$digest\"\n} | cat /tmp/orders",
+        "{ echo \"digest=$digest\" >& 2; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >&orders; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >&1widgets.lock; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >&2 > /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+    ] {
+        assert!(proven(script).is_empty(), "{script}");
+    }
+}

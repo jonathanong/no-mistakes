@@ -103,7 +103,7 @@ fn bind_suffix<'a>(suffix: &'a str, entry: &FxHashSet<String>) -> (Fate, &'a str
 
 fn split_closer(line: &str, paren: bool) -> Option<(&str, &str)> {
     let line = line.trim();
-    if (!paren && brace_close(line)) || (paren && line.starts_with(')')) {
+    if paren && line.starts_with(')') {
         return Some(("", after_first(line)));
     }
     let chars: Vec<(usize, char)> = line.char_indices().collect();
@@ -133,7 +133,12 @@ fn split_closer(line: &str, paren: bool) -> Option<(&str, &str)> {
         match *ch {
             '{' => braces += 1,
             '}' if braces > 0 => braces -= 1,
-            '}' if !paren && braces == 0 && parens == 0 && brace_token(&chars, index) => {
+            '}' if !paren
+                && braces == 0
+                && parens == 0
+                && brace_close(&line[*at..])
+                && brace_token(&chars, index) =>
+            {
                 return Some((line[..*at].trim(), line[*at + ch.len_utf8()..].trim()));
             }
             '(' => parens += 1,

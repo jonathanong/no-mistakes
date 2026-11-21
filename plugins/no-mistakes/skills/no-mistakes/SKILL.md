@@ -364,8 +364,9 @@ must name that lockfile in the same simple command. A redirect after the closing
 a brace group or parenthesized command applies to every command in the group that does not already redirect
 standard output. A group with no redirect, or a redirect to another file, does not count.
 The redirect is fixed before the body runs. Assignments inside a parenthesized command do not
-affect later commands. A command after `;` on the same line is separate. The closing `)` may
-share a line with the last command, while `}` must be its own command. A later pipe discards
+affect later commands. A command after `;` on the same line is separate. A `;` inside a
+nested group stays in that group. The closing `)` may share a line with the last command,
+while `}` must be its own command. A later pipe discards
 the group unless standard output is redirected to a file first. A pipe inside `$(...)` or
 backticks stays in that substitution, and a standard-error redirect does not write the digest.
 A standalone `&` splits commands; an `&` in
