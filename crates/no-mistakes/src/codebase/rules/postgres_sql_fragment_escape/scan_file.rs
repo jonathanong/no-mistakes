@@ -1,6 +1,6 @@
 use super::fact_reads::export_site;
 use super::fragments::Fragment;
-use super::load_gap::missing_static_load_gap;
+use super::load_gap::{missing_sourced_export_gaps, missing_static_load_gap};
 use super::resolve::{binding_fragments, call_fragments, name_fragments, FileCtx};
 use super::scan::ScanReport;
 use super::source_text::file_text;
@@ -113,25 +113,18 @@ pub(super) fn one(
         if export.specifier.is_some() || exported_value(ts, &export.local) {
             continue;
         }
-        let Some(offset) = export_site(ts, &export.local) else {
-            if !name_fragments(&ctx, &export.local).is_empty() {
-                let local = &export.local;
-                gaps.push(gap(
-                    file,
-                    format!(
-                        "`{relative}` has no recorded export offset for `{local}`, so a re-export of an imported SQL fragment is not recovered from source text. Restore the namespace export fact and rerun the check."
-                    ),
-                ));
-            }
-            continue;
-        };
-        emit(
-            &mut findings,
-            root,
-            &ctx,
-            offset,
-            &name_fragments(&ctx, &export.local),
-        );
+        if let Some(offset) = export_site(ts, &export.local) {
+            emit(
+                &mut findings,
+                root,
+                &ctx,
+                offset,
+                &name_fragments(&ctx, &export.local),
+            );
+        }
+    }
+    for message in missing_sourced_export_gaps(&ctx, &relative) {
+        gaps.push(gap(file, message));
     }
     if let Some(message) = missing_static_load_gap(ts, source, &relative) {
         gaps.push(gap(file, message));

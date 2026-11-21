@@ -163,14 +163,14 @@ fn unreadable_consumer_still_reports_a_recorded_append() {
     );
 }
 
-fn fact_miss_root() -> PathBuf {
+pub(super) fn fact_miss_root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/fact-miss"),
     )
 }
 
-fn scan_fact_miss(
+pub(super) fn scan_fact_miss(
     file_name: &str,
     consumer: crate::codebase::ts_source::facts::TsFileFacts,
 ) -> scan::ScanReport {
@@ -199,21 +199,15 @@ fn missing_export_offset_is_a_gap() {
         source: Some(Arc::<str>::from(source.as_str())),
         ..Default::default()
     };
-    consumer.imported_bindings.push(import(
-        "./columns",
-        "widgetColumns",
-        "widgetColumns",
-        ImportedBindingKind::Named,
-    ));
     consumer.exported_bindings.push(ExportedBinding {
-        specifier: None,
+        specifier: Some("./columns".to_string()),
         local: "widgetColumns".to_string(),
         exported: "itemColumns".to_string(),
     });
     let report = scan_fact_miss("reexport.ts", consumer);
     assert!(
         report.findings.is_empty(),
-        "a missing export offset is not placed by scanning source: {:?}",
+        "a missing sourced export offset is not placed by scanning source: {:?}",
         report.findings
     );
     assert!(
