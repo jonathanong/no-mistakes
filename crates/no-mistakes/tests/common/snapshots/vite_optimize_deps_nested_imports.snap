@@ -144,6 +144,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "bundled_siblings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > labels",
+          "line": 3,
+          "message": "runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { tag } from \"labels\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 2,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { name } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "config_edges": {
     "exitCode": 1,
     "report": {
@@ -644,6 +675,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "partial_includes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "listed.ts",
+          "import": "widgets > missing",
+          "line": 1,
+          "message": "nested include \"widgets > missing\" is not a declared dependency of widgets; declare missing under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "const nested = [\"widgets > orders\", \"widgets > missing\"] as const;",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > labels",
+          "line": 3,
+          "message": "runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { tag } from \"labels\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reexport_binding": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "listed.ts",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: include source does not export const listed; export a static array of string literals from includeSources so this check can read nested includes",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "const nested = [\"widgets > items\", \"widgets > orders\"];",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "reported": {
     "exitCode": 1,
     "report": {
@@ -719,6 +802,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "import { shape } from \"lib/sub2\";",
           "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spread_after_include": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "line": 4,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "optimizeDeps: {",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spread_after_root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "line": 3,
+          "message": "cannot verify vite-optimize-deps-nested-imports: optimizeDeps is not a static object; export a static optimizeDeps.include array of string literals so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export default {",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

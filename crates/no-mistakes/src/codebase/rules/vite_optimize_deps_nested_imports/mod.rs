@@ -125,5 +125,9 @@ mod tests;
 mod coverage_tests;
 
 #[cfg(test)]
+#[path = "include_form_tests.rs"]
+mod include_form_tests;
+
+#[cfg(test)]
 #[path = "closure_follow_tests.rs"]
 mod closure_follow_tests;

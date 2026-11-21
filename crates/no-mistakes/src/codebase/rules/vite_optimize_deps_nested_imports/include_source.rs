@@ -1,11 +1,12 @@
 //! `export const name = ["parent > child", ...]` modules named by `includeSources`.
 
-use super::include_config::{includes_in_array, NestedInclude};
+#[path = "include_source_bindings.rs"]
+mod bindings;
+
+use super::include_config::NestedInclude;
 use super::{IncludeSource, RuleFinding, RULE_ID};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
+
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
-use oxc_ast::ast::{BindingPattern, Declaration, Expression, Statement, VariableDeclarationKind};
-use oxc_span::GetSpan;
 use std::path::Path;
 
 pub(super) enum SourceList {
@@ -69,7 +70,7 @@ fn gap(file: &str, line: usize, reason: &str) -> RuleFinding {
 
 pub(super) fn parse_include_source(path: &Path, source: &str, export_name: &str) -> SourceList {
     match crate::ast::with_program(path, source, |program, source| {
-        extract(program, source, export_name)
+        bindings::extract(program, source, export_name)
     }) {
         Ok(parsed) => parsed,
         Err(_) => SourceList::Unanalyzable {
@@ -79,56 +80,9 @@ pub(super) fn parse_include_source(path: &Path, source: &str, export_name: &str)
     }
 }
 
-fn extract(program: &oxc_ast::ast::Program<'_>, source: &str, export_name: &str) -> SourceList {
-    for statement in &program.body {
-        let Statement::ExportDeclaration(export) = statement else {
-            continue;
-        };
-        let Declaration::VariableDeclaration(declaration) = &export.declaration else {
-            continue;
-        };
-        if declaration.kind != VariableDeclarationKind::Const {
-            continue;
-        }
-        for declarator in &declaration.declarations {
-            let Some(name) = binding_name(&declarator.id) else {
-                continue;
-            };
-            if name != export_name {
-                continue;
-            }
-            let Some(init) = declarator.init.as_ref() else {
-                return missing(export_name);
-            };
-            let Expression::ArrayExpression(array) = unwrap_ts_wrappers(init) else {
-                return SourceList::Unanalyzable {
-                    line: line_of(source, init.span().start),
-                    reason: format!("export {export_name} is not a static array of strings"),
-                };
-            };
-            return match includes_in_array(source, array.as_ref()) {
-                Ok(entries) => SourceList::Includes(entries),
-                Err((line, reason)) => SourceList::Unanalyzable { line, reason },
-            };
-        }
-    }
-    missing(export_name)
-}
-
-fn missing(export_name: &str) -> SourceList {
+pub(super) fn missing(export_name: &str) -> SourceList {
     SourceList::Unanalyzable {
         line: 1,
         reason: format!("include source does not export const {export_name}"),
     }
-}
-
-fn binding_name<'a>(binding: &'a BindingPattern<'a>) -> Option<&'a str> {
-    match binding {
-        BindingPattern::BindingIdentifier(identifier) => Some(identifier.name.as_str()),
-        _ => None,
-    }
-}
-
-fn line_of(source: &str, start: u32) -> usize {
-    crate::codebase::ts_source::byte_offset_to_line(source, start as usize) as usize
 }

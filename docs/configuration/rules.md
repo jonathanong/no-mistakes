@@ -100,11 +100,14 @@ no default. `configFiles` lists the Vite configs whose `optimizeDeps.include`
 entries are checked. `packages` lists the package directories in scope. An
 explicit empty `packages` list selects nothing. An omitted option is reported
 on the loaded config file. Optional `options.includeSources` names modules
-whose `export const` string arrays are added to those include entries.
+whose static string arrays are added to those include entries, including
+`export const`, `as const`, `satisfies`, and `export { name }`.
 Optional `options.ignorePackages` skips uncovered imports of those package
 names. A `workspace:` dependency and a child package listed in `packages`
-without a non-workspace version specifier are skipped the same way. A
-versioned dependency such as `"items": "1.0.0"` is still checked.
+without a non-workspace version specifier are skipped the same way. A name
+listed only in `bundledDependencies` is skipped only when that child is also
+listed in `packages`. A versioned dependency such as `"items": "1.0.0"` is
+still checked.
 A subpath import matches that exact specifier. A Node built-in still matches
 by package name.
 `bundledDependencies: true` counts the dependency objects already declared,
