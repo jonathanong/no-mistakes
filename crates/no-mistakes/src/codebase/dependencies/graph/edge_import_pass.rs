@@ -66,10 +66,22 @@ fn specifier_is_project(
     classification: &crate::codebase::ts_resolver::ImportClassification,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
 ) -> bool {
-    specifier.starts_with(['.', '/', '#'])
+    specifier_is_local(specifier)
         || resolver.matches_paths_alias(specifier, importer)
         || classification.workspace_path().is_some()
         || workspace.recognizes_specifier_from(specifier, importer)
+}
+
+fn specifier_is_local(specifier: &str) -> bool {
+    specifier.starts_with(['.', '/', '#', '\\']) || specifier_has_drive(specifier)
+}
+
+fn specifier_has_drive(specifier: &str) -> bool {
+    let bytes = specifier.as_bytes();
+    bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && (bytes[2] == b'/' || bytes[2] == b'\\')
 }
 
 fn resolved_import_path<'a>(
