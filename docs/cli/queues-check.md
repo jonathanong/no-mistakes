@@ -98,9 +98,11 @@ priority greater than 0.
 
 ## Suppression
 
-`queues check` findings use the rule id `queues-check`. A file directive
-suppresses every finding in that file. A next-line directive suppresses the
-finding on the following line. The rule id is required. A bare
+`queues check` findings use the rule id `queues-check`. Directives apply on
+aggregate `no-mistakes check`. Standalone `queues check` prints the raw
+findings. A file directive suppresses every finding in that file. A next-line
+directive suppresses the finding on the following line. The rule id is
+required. A bare
 `no-mistakes-disable-file`, with no rule id, does not suppress these findings:
 
 ```ts

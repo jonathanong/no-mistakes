@@ -4,6 +4,10 @@ export function enqueueKnownShipment(id: string) {
   return shipments.add("packShipment", { id }, { priority: 4 });
 }
 
+export function enqueuePlainShipment(id: string) {
+  return shipments.add("storeShipment", { id });
+}
+
 export function enqueueChosenShipment(id: string, level: number) {
   return shipments.add("packShipment", { id }, { priority: level });
 }
