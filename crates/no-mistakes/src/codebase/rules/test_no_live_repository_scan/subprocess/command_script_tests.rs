@@ -1,5 +1,9 @@
-use super::{invocation, matched, AnalyzerCommand, ArgumentValue};
+use super::{launches, matched, AnalyzerCommand, ArgumentValue};
 use serde_json::Value;
+
+fn invocation(values: &[ArgumentValue], shell: bool) -> Option<super::Invocation> {
+    launches(values, shell).into_iter().next()
+}
 
 fn analyzer() -> AnalyzerCommand {
     AnalyzerCommand {

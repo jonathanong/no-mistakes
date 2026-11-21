@@ -65,11 +65,6 @@ pub(super) fn uses_shell(name: &str, values: &[ArgumentValue]) -> bool {
         || (matches!(name, "spawn" | "spawnSync") && shell::flag_true(values))
 }
 
-#[cfg(test)]
-pub(super) fn invocation(values: &[ArgumentValue], shell: bool) -> Option<Invocation> {
-    launches(values, shell).into_iter().next()
-}
-
 pub(super) fn launches(values: &[ArgumentValue], shell: bool) -> Vec<Invocation> {
     if shell {
         return shell::splits(values);
