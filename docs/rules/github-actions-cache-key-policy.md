@@ -38,13 +38,31 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `steps.<id>.outputs.<name>`, and that output's value is a hash of the lockfile. `echo`,
   `printf`, an unquoted heredoc, and a brace group redirected to `GITHUB_OUTPUT` all count.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
-  copy of that variable, makes `$OUT` the same redirect target. A `<<<` redirect is not a heredoc,
-  and `<<` inside `$(( ))` is not a heredoc, so later lines are still read. A variable assigned
-  from `sha256sum widgets.lock` (or another checksum command that names the lockfile in that same
-  simple command) and then written to that output counts. `sha256sum widgets.lock | awk '{print $1}'`
-  counts because the checksum command names the lockfile. `sha256sum orders.lock | grep widgets.lock`
-  and `cat widgets.lock | sha256sum` do not. Reassigning the variable to a constant, `cat`, or a
-  hash of a different file drops the proof; an earlier copy into a different variable keeps it.
+  copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
+  `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not
+  writes. Single quotes do not expand, so `> '$OUT'` and `> '${OUT}'` are not writes; an unquoted
+  or double-quoted `$OUT` or `${OUT}` is. `>&` before a non-numeric target, including
+  `>& "$OUT"` and `>&"$OUT"`, is a file redirect. `>&2` and `>& 2` are not. A suffix on the
+  redirect word, such as `"$OUT".bak` or `"$OUT"bak`, is part of the filename and is not
+  another variable. An escaped `\$` is literal, so `>\$GITHUB_OUTPUT` is not a write. Empty
+  quotes do not make a single-quoted `$OUT` expand, so `> '$OUT'""` is not a write. Joining
+  `"$"` to a name, as in `>"$"GITHUB_OUTPUT`, is not an expansion. A quoted piece of a
+  redirect name, as in `>out" widgets.lock"`, is part of that filename. The next
+  `>` starts another redirect, so `>/tmp/orders>$OUT` still writes `$OUT`. A `<<<` redirect is
+  not a heredoc, and `<<` inside `$(( ))` is not a heredoc, so later
+  lines are still read. A variable assigned from `sha256sum widgets.lock` (or another checksum
+  command that names the lockfile in that same simple command) and then written to that output
+  counts. `sha256sum widgets.lock | awk '{print $1}'` counts because the checksum command names
+  the lockfile. `sha256sum orders.lock | grep widgets.lock`, `cat widgets.lock | sha256sum`, and
+  `sha256sum orders.lock & cat widgets.lock` do not. `sha256sum widgets.lock & echo done` still
+  counts. `sha256sum 2>&1 widgets.lock` counts. An `&` that belongs to a redirection (`2>&1`,
+  `>&2`, `&>`, `&>>`, `<&`) does not split the command. A standalone `&` does, and `&` inside
+  `$(( ))` does not. A digit prefix and a quoted suffix are one word, so
+  `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`,
+  `>&`, `&>`, `2>&`, or `>` has no redirect target, so that ending does not hide the
+  lockfile. Reassigning the variable to a
+  constant, `cat`, or a hash of a different file drops the proof; an earlier copy into a
+  different variable keeps it.
   Reassigning it to a parameter expansion of itself keeps the proof: `"$digest"`, `${digest}`,
   `${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, and `${digest#*}`. Mixing that
   expansion with other text, or expanding a different variable, drops the proof.

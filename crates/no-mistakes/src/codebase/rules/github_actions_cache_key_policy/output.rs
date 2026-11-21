@@ -133,22 +133,9 @@ fn output_path(rhs: &str, outputs: &FxHashSet<String>) -> bool {
 }
 
 fn writes_output(line: &str, outputs: &FxHashSet<String>) -> bool {
-    line.contains("GITHUB_OUTPUT") || outputs.iter().any(|name| mentions_var(line, name))
-}
-
-fn mentions_var(line: &str, name: &str) -> bool {
-    let mut rest = line;
-    while let Some(at) = rest.find('$') {
-        rest = &rest[at + 1..];
-        let body = rest.strip_prefix('{').unwrap_or(rest);
-        let end = body
-            .find(|ch: char| !(ch.is_ascii_alphanumeric() || ch == '_'))
-            .unwrap_or(body.len());
-        if &body[..end] == name {
-            return true;
-        }
-    }
-    false
+    super::shell_cmd::redirect_targets(line)
+        .iter()
+        .any(|target| output_path(target, outputs))
 }
 
 fn brace_events(

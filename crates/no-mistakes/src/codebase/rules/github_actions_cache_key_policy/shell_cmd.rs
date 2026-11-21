@@ -1,8 +1,14 @@
+#[path = "shell_redirect.rs"]
+mod redirect;
+
+pub(super) use redirect::{mask_output_redirects, redirect_targets};
+
 pub(super) fn parts(cmd: &str) -> Vec<&str> {
     let chars: Vec<(usize, char)> = cmd.char_indices().collect();
     let mut parts = Vec::new();
     let mut start = 0;
     let mut quote = None;
+    let mut arith = 0i32;
     let mut index = 0;
     while index < chars.len() {
         let (at, ch) = chars[index];
@@ -15,6 +21,20 @@ pub(super) fn parts(cmd: &str) -> Vec<&str> {
         }
         if ch == '\'' || ch == '"' {
             quote = Some(ch);
+            index += 1;
+            continue;
+        }
+        if starts(&chars, index, &['$', '(', '(']) {
+            arith += 1;
+            index += 3;
+            continue;
+        }
+        if arith > 0 && starts(&chars, index, &[')', ')']) {
+            arith -= 1;
+            index += 2;
+            continue;
+        }
+        if arith > 0 && ch == '&' {
             index += 1;
             continue;
         }
@@ -35,10 +55,22 @@ fn operator_width(chars: &[(usize, char)], index: usize) -> usize {
     match chars.get(index).map(|(_, ch)| *ch) {
         Some(';') => 1,
         Some('&') if next_is(chars, index, '&') => 2,
+        Some('&') if redirect_mark(chars, index) => 0,
+        Some('&') => 1,
         Some('|') if next_is(chars, index, '|') => 2,
         Some('|') => 1,
         _ => 0,
     }
+}
+
+fn redirect_mark(chars: &[(usize, char)], index: usize) -> bool {
+    if next_is(chars, index, '>') {
+        return true;
+    }
+    let Some(prev) = index.checked_sub(1) else {
+        return false;
+    };
+    matches!(chars.get(prev).map(|(_, ch)| *ch), Some('>' | '<'))
 }
 
 fn next_is(chars: &[(usize, char)], index: usize, expected: char) -> bool {
