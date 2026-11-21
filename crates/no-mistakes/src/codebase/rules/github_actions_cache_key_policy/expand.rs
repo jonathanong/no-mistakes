@@ -1,7 +1,11 @@
 use super::output_syntax::unquote;
 
 pub(super) fn same_name_expansion(value: &str, name: &str) -> bool {
-    let value = unquote(value.trim().trim_end_matches(';').trim());
+    let trimmed = value.trim().trim_end_matches(';').trim();
+    if trimmed.len() >= 2 && trimmed.starts_with('\'') && trimmed.ends_with('\'') {
+        return false;
+    }
+    let value = unquote(trimmed);
     if let Some(bare) = bare_ref(value) {
         return bare == name;
     }

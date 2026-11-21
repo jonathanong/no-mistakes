@@ -129,6 +129,7 @@ fn a_self_expansion_keeps_the_proven_digest() {
         "\"prefix${digest}\"",
         "\"${digest%%}\"",
         "\"${digest:x}\"",
+        "'${digest:0:16}'",
     ] {
         let run = format!(
             "digest=$(sha256sum widgets.lock)\ndigest={rhs}\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"
@@ -179,6 +180,8 @@ fn same_name_expansions_match_only_the_whole_value() {
         "${digest%% *} extra",
         "constant",
         "",
+        "'${digest:0:16}'",
+        "'$digest'",
     ];
     for value in drop {
         assert!(!expand::same_name_expansion(value, "digest"), "{value}");
