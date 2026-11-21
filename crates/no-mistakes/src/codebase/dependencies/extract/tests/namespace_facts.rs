@@ -419,6 +419,13 @@ fn an_import_of_the_same_name_merges_with_the_namespace() {
 
 #[test]
 fn a_file_without_namespaces_or_imports_has_no_namespace_facts() {
-    let facts = namespaces("class A extends Error {}\nconst x = new A();\nexport { x };\n");
+    let source = "class A extends Error {}\nconst x = new A();\nexport { x };\n";
+    let mut facts = namespaces(source);
+    let export_at = u32::try_from(source.find("export").expect("export")).expect("offset");
+    assert_eq!(
+        facts.export_name_offsets,
+        vec![("x".to_string(), export_at)]
+    );
+    facts.export_name_offsets.clear();
     assert_eq!(facts, NamespaceFacts::default());
 }
