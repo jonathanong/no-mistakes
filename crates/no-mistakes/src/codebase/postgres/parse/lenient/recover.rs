@@ -136,6 +136,8 @@ fn parse_chunk(
             targets_valid = select_into::normalize(&mut parse_tokens);
         }
     }
+    crate::codebase::postgres::parse::named_arguments::accept_infix(&mut parse_tokens);
+    crate::codebase::postgres::source::conceal_body_keyword(&mut parse_tokens);
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(parse_tokens);
     match parser.parse_statement() {
         Ok(statement) if targets_valid && matches!(parser.peek_token().token, Token::EOF) => {

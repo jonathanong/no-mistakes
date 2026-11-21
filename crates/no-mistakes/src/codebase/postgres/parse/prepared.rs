@@ -58,9 +58,11 @@ impl<'a> PreparedSql<'a> {
         super::ddl_compat::normalize(&mut tokens);
         let recursive_views = super::recursive_view::prepare(&mut tokens);
         let fetch = super::fetch_expression::prepare(&mut tokens);
+        super::named_arguments::accept_infix(&mut tokens);
         let (mut statements, functions, arbiters) = if policy {
             super::super::source::parse_conflict_program(tokens)
         } else {
+            super::super::source::conceal_body_keyword(&mut tokens);
             Parser::new(&PostgreSqlDialect {})
                 .with_tokens_with_locations(tokens)
                 .parse_statements()

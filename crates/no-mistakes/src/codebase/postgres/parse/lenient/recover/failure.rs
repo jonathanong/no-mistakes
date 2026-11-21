@@ -3,6 +3,7 @@ use super::queries;
 mod ddl_foreign;
 mod ddl_metadata;
 pub(crate) mod keywords;
+mod owned;
 mod unsupported;
 #[cfg(test)]
 mod utility_tests;
@@ -23,7 +24,10 @@ pub(super) fn reject_incompatible(
     let rejected = produced
         .iter()
         .any(|item| recursive_views.validate(&item.statement).is_err());
-    produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
+    produced.retain(|item| {
+        recursive_views.validate(&item.statement).is_ok()
+            && !owned::reject(&item.statement, original)
+    });
     if rejected {
         produced.extend(original.and_then(|tokens| rejected_schema(tokens, procedural_body)));
     }

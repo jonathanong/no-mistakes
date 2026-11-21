@@ -112,7 +112,7 @@ fn valid_unsupported_sql_diagnostics_preserve_node_policy_guidance() {
     let root = category_fixture("rules", "postgres-ddl-unanalyzable").join("unsupported-valid");
     let report = recall_check_report(&root, "report.yml");
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 3, "{report:#?}");
+    assert_eq!(findings.len(), 1, "{report:#?}");
     for finding in findings {
         let message = finding["message"].as_str().unwrap();
         assert!(message.contains("no-mistakes-disable-next-line postgres-fk-index"));

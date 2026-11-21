@@ -35,6 +35,12 @@ impl Dialect for SourceDialect {
     fn supports_geometric_types(&self) -> bool {
         true
     }
+    fn supports_tilde_like_match_operator(&self) -> bool {
+        true
+    }
+    fn supports_non_decimal_integer_literals(&self) -> bool {
+        true
+    }
 }
 
 pub(super) fn prepare(tokens: &mut Vec<TokenWithSpan>) {

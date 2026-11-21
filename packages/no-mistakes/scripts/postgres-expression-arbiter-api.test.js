@@ -230,7 +230,7 @@ for (const [scenario, config, findings, advisories, subdirectory = ""] of [
   ["postgres-ddl-unanalyzable", "advise.yml", 0, 22],
   ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0],
   ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
-  ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
+  ["postgres-ddl-unanalyzable", "report.yml", 1, 0, "unsupported-valid"],
   ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
   ["postgres-ddl-unanalyzable", "report.yml", 64, 0, "procedural"],
   ["postgres-ddl-unanalyzable", "default.yml", 121, 33, "unsupported-policy"],

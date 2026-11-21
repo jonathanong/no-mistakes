@@ -97,10 +97,9 @@ fn source_dialect_matches_postgresql_except_on_conflict_alias() {
         source.supports_named_fn_args_with_expr_name(),
         postgres.supports_named_fn_args_with_expr_name()
     );
-    assert_eq!(
-        source.supports_empty_projections(),
-        postgres.supports_empty_projections()
-    );
+    // `SELECT` with no target list is not a statement on the source dialect.
+    assert!(!source.supports_empty_projections());
+    assert!(postgres.supports_empty_projections());
     assert_eq!(
         source.supports_nested_comments(),
         postgres.supports_nested_comments()

@@ -1,5 +1,6 @@
 use crate::codebase::postgres::parse_postgres_sql;
 use crate::codebase::rules::postgres_sql_cross_file::delimit_identifier_markers;
+use sqlparser::ast::{SetExpr, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 
@@ -35,6 +36,21 @@ pub(super) fn mask(sql: &str, bounded: &[bool]) -> Option<String> {
     (count == bounded.len()).then_some(out)
 }
 
+/// sqlparser 0.64 accepts `SELECT` with an empty target list. That prefix is
+/// still waiting for the hole that follows it.
+fn statement_is_closed(statements: &[Statement]) -> bool {
+    if statements.is_empty() {
+        return false;
+    }
+    let [Statement::Query(query)] = statements else {
+        return true;
+    };
+    let SetExpr::Select(select) = query.body.as_ref() else {
+        return true;
+    };
+    !(select.projection.is_empty() && select.from.is_empty() && query.with.is_none())
+}
+
 fn identifier_char(c: char) -> bool {
     c.is_alphanumeric() || c == '_' || c == '$'
 }
@@ -50,7 +66,7 @@ fn complete_prefix(sql: &str) -> bool {
     if matches!(tokens.last(), None | Some(Token::LParen | Token::Comma)) {
         return false;
     }
-    if parse_postgres_sql(sql).is_ok_and(|statements| !statements.is_empty()) {
+    if parse_postgres_sql(sql).is_ok_and(|statements| statement_is_closed(&statements)) {
         return true;
     }
     let mut openings = Vec::new();
@@ -76,7 +92,7 @@ fn complete_prefix(sql: &str) -> bool {
                 ')',
                 openings.iter().filter(|index| **index >= start).count(),
             ));
-            parse_postgres_sql(&candidate).is_ok_and(|statements| !statements.is_empty())
+            parse_postgres_sql(&candidate).is_ok_and(|statements| statement_is_closed(&statements))
         })
 }
 

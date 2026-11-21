@@ -8,6 +8,27 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
     let mut index = 0;
     while index < tokens.len() {
         let token = &tokens[index];
+        if radix_prefix(token) {
+            if let Some(next) = tokens.get(index + 1) {
+                if glued_word(token, next) {
+                    let out = out.get_or_insert_with(|| tokens[..index].to_vec());
+                    let mut broken = token.clone();
+                    broken.token = Token::Char('\0');
+                    broken.span.end = next.span.end;
+                    out.push(broken);
+                    index += 2;
+                    continue;
+                }
+            }
+            if let Some(value) = radix_integer(token) {
+                let out = out.get_or_insert_with(|| tokens[..index].to_vec());
+                let mut repaired = token.clone();
+                repaired.token = Token::Number(value, false);
+                out.push(repaired);
+                index += 1;
+                continue;
+            }
+        }
         if let Some(value) = numeric_hex(token) {
             let out = out.get_or_insert_with(|| tokens[..index].to_vec());
             let mut repaired = token.clone();
@@ -74,6 +95,33 @@ pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
         index += 1;
     }
     out
+}
+
+/// sqlparser 0.64 emits `0x` / `0o` / `0b` as one number token. Downstream caps
+/// still read a decimal spelling, so rewrite the value and keep the source span.
+fn radix_prefix(token: &TokenWithSpan) -> bool {
+    let Token::Number(text, _) = &token.token else {
+        return false;
+    };
+    matches!(
+        text.get(..2).map(str::as_bytes),
+        Some(b"0x" | b"0X" | b"0o" | b"0O" | b"0b" | b"0B")
+    )
+}
+
+fn glued_word(token: &TokenWithSpan, next: &TokenWithSpan) -> bool {
+    token.span.end == next.span.start
+        && matches!(&next.token, Token::Word(word) if word.quote_style.is_none())
+}
+
+fn radix_integer(token: &TokenWithSpan) -> Option<String> {
+    let Token::Number(text, _) = &token.token else {
+        return None;
+    };
+    match integer(text) {
+        Ok(value) => Some(value.to_string()),
+        Err(_) => None,
+    }
 }
 
 // sqlparser uses the same token variant for 0xFF and X'FF'. Their lexer spans retain

@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 108
 ---
 {
   "aggregates_inside_inline_and_named_windows_survive_false_where_window_aggregate": {
@@ -3428,7 +3429,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "copy_payload_quote_preserves_unquoted_permanent_namesake_copy_unquoted_table_ide": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [
         {
@@ -3644,16 +3645,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "sql/copy-unquoted-table-identity.sql",
-          "line": 6,
-          "message": "sql/copy-unquoted-table-identity.sql:6: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "SELECT NULL::uuid UNION ALL TABLE Accounts LIMIT 1;",
-          "target": "table:accounts"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -11102,14 +11094,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "sql/temporary-table-quoted-reconstructed.sql",
           "line": 1,
-          "message": "sql/temporary-table-quoted-reconstructed.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "-- Lenient concatenation recovers a query whose TABLE spelling is absent from outer tokens.",
-          "target": "table:accounts"
-        },
-        {
-          "file": "sql/temporary-table-quoted-reconstructed.sql",
-          "line": 1,
           "message": "sql/temporary-table-quoted-reconstructed.sql:1: SQL could not be analyzed for bounded statements",
           "rule": "postgres-bounded-statements",
           "sourceLine": "-- Lenient concatenation recovers a query whose TABLE spelling is absent from outer tokens.",
@@ -11337,14 +11321,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/temporary-table-quoted-do.sql",
-          "line": 1,
-          "message": "sql/temporary-table-quoted-do.sql:1: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "-- A recovered DO body must retain the quoted name of its temporary TABLE arm.",
-          "target": "table:accounts"
-        },
         {
           "file": "sql/temporary-table-quoted-do.sql",
           "line": 4,

@@ -4,6 +4,7 @@ mod adjacent_strings;
 mod alter;
 mod batch_pool;
 mod begin_atomic;
+pub(crate) use begin_atomic::conceal_body_keyword;
 mod body;
 mod columns;
 mod completeness;
@@ -13,8 +14,10 @@ pub(super) use conflict_calls::{
     parse_program as parse_conflict_program, recover as recover_conflict_calls,
 };
 mod conditional;
+mod conditional_partial;
 mod conditional_source;
 mod constraint_spans;
+mod copy_stdin;
 mod ddl;
 mod diagnostics;
 mod dialect;

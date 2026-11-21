@@ -3,12 +3,36 @@ use super::super::*;
 #[test]
 fn synthetic_copy_terminators_do_not_create_fabricated_source_positions() {
     let facts = facts("copy-source.sql");
-    assert_eq!(facts.diagnostics.len(), 1);
-    assert!(facts.diagnostics[0].message.contains("source boundary"));
-    assert_eq!(facts.statements.len(), 1);
-    assert_eq!(facts.statements[0].ordinal, 1);
-    assert_eq!(facts.statements[0].span.start.line, 4);
-    assert_eq!(facts.statements[0].sql, "CREATE TABLE after_copy (id int);");
+    let rendered: Vec<_> = facts
+        .statements
+        .iter()
+        .map(|statement| {
+            (
+                statement.ordinal,
+                statement.span.start.line,
+                statement.sql.as_str(),
+            )
+        })
+        .collect();
+    let messages: Vec<_> = facts
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("source boundary")),
+        "{messages:?}"
+    );
+    assert_eq!(
+        rendered,
+        vec![
+            (0, 1, "COPY accounts FROM STDIN;"),
+            (1, 4, "CREATE TABLE after_copy (id int);")
+        ]
+    );
+    assert!(messages.is_empty(), "{messages:?}");
 }
 
 #[test]

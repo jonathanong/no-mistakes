@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 108
 ---
 {
   "saved_fixtures": {
@@ -14,7 +15,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "invalid-mixed.MdX",
           "line": 4,
-          "message": "invalid Mermaid diagram (sequence) at diagram line 2, column 9: unexpected text; expected plus, minus, central, num, actor",
+          "message": "invalid Mermaid diagram (sequence) at diagram line 2, column 9: unexpected text; expected plus, minus, central, actor",
           "rule": "markdown-mermaid-validation",
           "sourceLine": "```mermaid"
         },

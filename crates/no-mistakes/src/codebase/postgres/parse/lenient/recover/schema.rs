@@ -167,6 +167,7 @@ pub(super) fn recover(
         |tokens| tokens[start..].to_vec(),
     );
     super::super::super::ddl_compat::normalize(&mut located);
+    crate::codebase::postgres::source::conceal_body_keyword(&mut located);
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(located);
     let statement = parser.parse_statement().ok()?;
     if super::partition_sound::has_pg_partition(&statement)

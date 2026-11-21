@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 108
 ---
 {
   "body_advise_constraint_validate": {
@@ -20409,27 +20410,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20478,27 +20463,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20547,27 +20516,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-generated-column-predicates",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20616,27 +20569,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20685,27 +20622,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20754,27 +20675,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20823,27 +20728,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20892,27 +20781,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -20961,27 +20834,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -21030,27 +20887,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-named-constraints",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -21099,27 +20940,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -21168,27 +20993,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21238,27 +21047,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21308,27 +21101,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-generated-column-predicates",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21378,27 +21155,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21448,27 +21209,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21518,27 +21263,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21588,27 +21317,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21658,27 +21371,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21728,27 +21425,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21798,27 +21479,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-named-constraints",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21868,27 +21533,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "codebase": [],
@@ -21955,27 +21604,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22024,27 +21657,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22093,27 +21710,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-generated-column-predicates",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22162,27 +21763,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22231,27 +21816,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22300,27 +21869,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22369,27 +21922,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22438,27 +21975,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22507,27 +22028,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22576,27 +22081,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-named-constraints",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22645,27 +22134,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22841,11 +22314,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 4,
-          "message": "migrations/001.sql:4: SQL statement `REFRESH MATERIALIZED VIEW account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW account_totals"
+          "line": 3,
+          "message": "directive for `postgres-fk-index` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "REFRESH MATERIALIZED VIEW account_totals; -- no-mistakes-disable-line postgres-fk-index: reviewed refresh",
+          "target": "postgres-fk-index"
         }
       ],
       "codebase": [],
@@ -22867,27 +22340,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -22936,27 +22393,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23005,27 +22446,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-generated-column-predicates",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23074,27 +22499,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23143,27 +22552,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23212,27 +22605,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23281,27 +22658,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23350,27 +22711,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23419,27 +22764,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23488,27 +22817,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-named-constraints",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23557,27 +22870,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23626,27 +22923,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23695,27 +22976,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23764,27 +23029,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-generated-column-predicates",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23833,27 +23082,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23902,27 +23135,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -23971,27 +23188,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24040,27 +23241,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24109,27 +23294,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24178,27 +23347,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24247,27 +23400,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-named-constraints",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24316,27 +23453,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24380,27 +23501,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-constraint-validate",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-constraint-validate (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-constraint-validate: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-constraint-validate",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24449,27 +23554,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24518,27 +23607,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-generated-column-predicates",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-generated-column-predicates (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-generated-column-predicates: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-generated-column-predicates",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24587,27 +23660,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-idempotent-insert",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-idempotent-insert",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24656,27 +23713,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-identifier-length",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-identifier-length (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-identifier-length: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-identifier-length",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24725,27 +23766,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-add-column",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-add-column (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-add-column: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-add-column",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24794,27 +23819,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-no-generated-column-writes",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-no-generated-column-writes (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-no-generated-column-writes: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-no-generated-column-writes",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24863,27 +23872,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-redundant-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-redundant-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-redundant-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-redundant-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -24932,27 +23925,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-fk-on-delete",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-fk-on-delete (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-fk-on-delete: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-fk-on-delete",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -25001,27 +23978,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-require-named-constraints",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-require-named-constraints (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-require-named-constraints: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-require-named-constraints",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -25070,27 +24031,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-sql-statement-policy",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         },
         {
           "file": "migrations/001.sql",
@@ -25276,27 +24221,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "migrations/001.sql",
-          "line": 1,
-          "message": "migrations/001.sql:1: SQL statement `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;",
-          "target": "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT"
-        },
-        {
-          "file": "migrations/001.sql",
           "line": 2,
           "message": "migrations/001.sql:2: SQL statement `CREATE PUBLICATION app_publication FOR ALL TABLES` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-fk-index",
           "sourceLine": "CREATE PUBLICATION app_publication FOR ALL TABLES;",
           "target": "CREATE PUBLICATION app_publication FOR ALL TABLES"
-        },
-        {
-          "file": "migrations/001.sql",
-          "line": 3,
-          "message": "migrations/001.sql:3: SQL statement `REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals` could not be analyzed for postgres-fk-index (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-fk-index: reason`, or set options.unanalyzable to advise or ignore",
-          "rule": "postgres-fk-index",
-          "sourceLine": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals;",
-          "target": "REFRESH MATERIALIZED VIEW CONCURRENTLY account_totals"
         }
       ],
       "warnings": []

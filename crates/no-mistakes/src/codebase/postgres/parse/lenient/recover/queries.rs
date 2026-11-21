@@ -1,5 +1,5 @@
 //! Recover SQL expression statements through narrow PL/pgSQL prefixes.
-use sqlparser::ast::Statement;
+use sqlparser::ast::{SetExpr, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
@@ -114,7 +114,22 @@ fn select(
     }
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(located);
     let statement = parser.parse_statement().ok()?;
-    matches!(parser.peek_token().token, Token::EOF).then_some(statement)
+    if !matches!(parser.peek_token().token, Token::EOF) || !recovered_query(&statement) {
+        return None;
+    }
+    Some(statement)
+}
+
+/// sqlparser 0.64 accepts `SELECT` with an empty target list. The words between
+/// `IF` and `THEN` are still not a statement.
+fn recovered_query(statement: &Statement) -> bool {
+    let Statement::Query(query) = statement else {
+        return false;
+    };
+    match query.body.as_ref() {
+        SetExpr::Select(select) => !select.projection.is_empty(),
+        _ => true,
+    }
 }
 
 fn next(tokens: &[Token], at: usize) -> usize {

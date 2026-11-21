@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 108
 ---
 {
   "a_bare_column_that_no_table_of_the_subquery_has_reads_the_row_checked_2": {
@@ -5762,22 +5763,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM orders;",
           "target": "table:orders"
-        },
-        {
-          "file": "copied/temporary-current-database-partitions.sql",
-          "line": 5,
-          "message": "copied/temporary-current-database-partitions.sql:5: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts DETACH PARTITION orders;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "copied/temporary-current-database-partitions.sql",
-          "line": 9,
-          "message": "copied/temporary-current-database-partitions.sql:9: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
         }
       ],
       "warnings": []
@@ -5834,27 +5819,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "copied/temporary-current-database-partitions.sql",
-          "line": 5,
-          "message": "copied/temporary-current-database-partitions.sql:5: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts DETACH PARTITION orders;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "copied/temporary-current-database-partitions.sql",
           "line": 7,
           "message": "copied/temporary-current-database-partitions.sql:7: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM orders;",
           "target": "table:orders"
-        },
-        {
-          "file": "copied/temporary-current-database-partitions.sql",
-          "line": 9,
-          "message": "copied/temporary-current-database-partitions.sql:9: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
         }
       ],
       "warnings": []
@@ -14006,7 +13975,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "partition_ddl_uses_catalog_evidence_for_the_parent_and_child_temporary_partition": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [
         {
@@ -14222,16 +14191,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [
-        {
-          "file": "sql/temporary-partition-conditional-rejected.sql",
-          "line": 7,
-          "message": "sql/temporary-partition-conditional-rejected.sql:7: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE public.accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
-        }
-      ],
+      "rules": [],
       "warnings": []
     }
   },
@@ -14463,27 +14423,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "sql/temporary-partition-conditional-empty.sql",
-          "line": 18,
-          "message": "sql/temporary-partition-conditional-empty.sql:18: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-empty.sql",
           "line": 21,
           "message": "sql/temporary-partition-conditional-empty.sql:21: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM orders;",
           "target": "table:orders"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-empty.sql",
-          "line": 7,
-          "message": "sql/temporary-partition-conditional-empty.sql:7: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts DETACH PARTITION orders;",
-          "target": "unanalyzable"
         }
       ],
       "warnings": []
@@ -14714,22 +14658,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM orders;",
           "target": "table:orders"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-physical.sql",
-          "line": 18,
-          "message": "sql/temporary-partition-conditional-physical.sql:18: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-physical.sql",
-          "line": 9,
-          "message": "sql/temporary-partition-conditional-physical.sql:9: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts DETACH PARTITION orders;",
-          "target": "unanalyzable"
         }
       ],
       "warnings": []
@@ -14955,35 +14883,11 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/temporary-partition-conditional-qualified.sql",
-          "line": 10,
-          "message": "sql/temporary-partition-conditional-qualified.sql:10: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE pg_temp.accounts DETACH PARTITION pg_temp.orders;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-qualified.sql",
           "line": 14,
           "message": "sql/temporary-partition-conditional-qualified.sql:14: SELECT can return every row of orders; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
           "sourceLine": "SELECT * FROM orders;",
           "target": "table:orders"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-qualified.sql",
-          "line": 20,
-          "message": "sql/temporary-partition-conditional-qualified.sql:20: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE pg_temp.accounts DETACH PARTITION pg_temp.orders;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "sql/temporary-partition-conditional-qualified.sql",
-          "line": 28,
-          "message": "sql/temporary-partition-conditional-qualified.sql:28: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE pg_temp.accounts ATTACH PARTITION pg_temp.orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
         },
         {
           "file": "sql/temporary-partition-conditional-qualified.sql",
@@ -26126,14 +26030,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "sql/temporary-table-quoted-skipped.sql",
-          "line": 1,
-          "message": "sql/temporary-table-quoted-skipped.sql:1: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "-- CREATE TABLE AS is not a bounded read, so its quoted arm must not supply",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "sql/temporary-table-quoted-skipped.sql",
           "line": 5,
           "message": "sql/temporary-table-quoted-skipped.sql:5: SELECT can return every row of accounts; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason",
           "rule": "postgres-bounded-statements",
@@ -27759,22 +27655,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
-        {
-          "file": "sql/temporary-partitions.sql",
-          "line": 11,
-          "message": "sql/temporary-partitions.sql:11: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts DETACH PARTITION orders;",
-          "target": "unanalyzable"
-        },
-        {
-          "file": "sql/temporary-partitions.sql",
-          "line": 17,
-          "message": "sql/temporary-partitions.sql:17: SQL could not be analyzed for bounded statements",
-          "rule": "postgres-bounded-statements",
-          "sourceLine": "ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);",
-          "target": "unanalyzable"
-        },
         {
           "file": "sql/temporary-partitions.sql",
           "line": 19,

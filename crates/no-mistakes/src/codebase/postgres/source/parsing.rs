@@ -50,8 +50,9 @@ pub(super) fn collect_program(
     .with_cte_predicates(&conflicts.cte_predicates);
     let mut ordinal = 0;
     while parser.peek_token().token != Token::EOF {
-        if parser.consume_token(&Token::SemiColon) {
-            continue;
+        super::copy_stdin::skip(&mut parser);
+        if parser.peek_token().token == Token::EOF {
+            break;
         }
         let start = parser.peek_token().span.start;
         let start_index = parser.index();
@@ -167,21 +168,13 @@ pub(super) fn collect_program(
             wrapper_context.source_end(start, end),
         );
         let Some(span) = locations.span(sqlparser::tokenizer::Span { start, end }) else {
-            // Parser compatibility rewrites can introduce synthetic token positions.
-            // Do not expose a fabricated source slice when their boundary is unmappable.
-            result.diagnostics.push(PostgresSqlDiagnostic {
-                message: "Statement source boundary is unavailable after parser compatibility normalization".into(),
-                span: locations.position(start).map(|position| locations.range(position.offset, position.offset)),
-            });
+            super::diagnostics::unavailable_boundary(&mut result.diagnostics, locations, start);
             ordinal += 1;
             continue;
         };
         if let Some(mut facts) = facts {
             super::wrappers::finalize(&mut facts, &span);
-            if matches!(&facts, PostgresSqlStatementKind::CreateView { view } if !view.dependencies_complete)
-            {
-                result.diagnostics.push(PostgresSqlDiagnostic { message: "View TABLE-arm dependencies have ambiguous source identity; dependencies are incomplete".into(), span: Some(span.clone()) });
-            }
+            super::diagnostics::ambiguous_view(&mut result.diagnostics, &facts, &span);
             result.statements.push(PostgresSqlStatement {
                 ordinal,
                 sql: source.sql[span.start.offset..span.end.offset].to_string(),

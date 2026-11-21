@@ -29,7 +29,7 @@ pub(super) fn is_keyword(token: &Token) -> bool {
             || (word.keyword == Keyword::NoKeyword && word.value.eq_ignore_ascii_case("atomic")))
 }
 
-fn conceal_body_keyword(tokens: &mut [TokenWithSpan]) {
+pub(crate) fn conceal_body_keyword(tokens: &mut [TokenWithSpan]) {
     let mut begin = false;
     for token in tokens {
         let Token::Word(word) = &mut token.token else {

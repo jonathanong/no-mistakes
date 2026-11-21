@@ -37,8 +37,17 @@ pub(super) fn recover_partition_change(
 ) -> Option<(Statement, bool)> {
     let dialect = GenericDialect {};
     let mut parser = match original {
-        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens.to_vec()),
-        None => Parser::new(&dialect).with_tokens(chunk.to_vec()),
+        Some(tokens) => {
+            let mut tokens = tokens.to_vec();
+            crate::codebase::postgres::source::conceal_body_keyword(&mut tokens);
+            Parser::new(&dialect).with_tokens_with_locations(tokens)
+        }
+        None => {
+            let mut tokens: Vec<TokenWithSpan> =
+                chunk.iter().cloned().map(TokenWithSpan::wrap).collect();
+            crate::codebase::postgres::source::conceal_body_keyword(&mut tokens);
+            Parser::new(&dialect).with_tokens_with_locations(tokens)
+        }
     };
     let statement = parser.parse_statement().ok()?;
     let Statement::AlterTable(table) = &statement else {

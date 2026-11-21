@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 108
 ---
 {
   "all_contexts_reported": {
@@ -493,6 +494,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: SQL statement `CREATE USER regress_alter_table_user1` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "CREATE USER regress_alter_table_user1;",
+          "target": "CREATE USER regress_alter_table_user1"
+        },
+        {
+          "file": "sql/001.sql",
           "line": 4,
           "message": "sql/001.sql:4: SQL statement `CREATE ACCESS METHOD bogus TYPE INDEX HANDLER heap_tableam_handler` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
@@ -807,7 +816,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "failures.test.ts:4: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "unanalyzable-sql"
         },
         {
@@ -815,7 +824,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "failures.test.ts:7: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "unanalyzable-sql"
         },
         {
@@ -823,7 +832,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "one-suppressed.test.ts:7: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "unanalyzable-sql"
         },
         {
@@ -831,7 +840,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "second-suppressed.test.ts:4: executed SQL is not statically recoverable for statement policy",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "unanalyzable-sql"
         }
       ],
@@ -1229,7 +1238,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "failures.sql:3: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         },
         {
@@ -1237,7 +1246,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "failures.sql:6: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         },
         {
@@ -1245,7 +1254,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "one-suppressed.sql:6: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $2;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         },
         {
@@ -1253,7 +1262,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "second-suppressed.sql:3: SQL statement `SELECT 1 FROM orders WHERE id::text` could not be analyzed for postgres-sql-statement-policy (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-sql-statement-policy: reason`, or set options.unanalyzable to advise or ignore",
           "rule": "postgres-sql-statement-policy",
-          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" = $1;",
+          "sourceLine": "SELECT 1 FROM orders WHERE id::text COLLATE \"C\" =;",
           "target": "SELECT 1 FROM orders WHERE id::text"
         }
       ],

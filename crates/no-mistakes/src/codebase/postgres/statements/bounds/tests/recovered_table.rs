@@ -6,7 +6,7 @@ fn recovered_table_arm_keeps_the_query_fact_and_quoted_identity() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-do.sql"
     ));
-    assert_eq!(shape(sql), ["select: () (\"Accounts\")"]);
+    assert_eq!(shape(sql), ["select: capped () (\"Accounts\")"]);
 }
 
 #[test]
@@ -15,7 +15,7 @@ fn reconstructed_table_arm_keeps_the_query_fact_and_temporary_identity() {
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/temporary-table-quoted-reconstructed.sql"
     ));
-    assert_eq!(shape(sql), ["select: () (opaque)"]);
+    assert_eq!(shape(sql), ["select: capped () (opaque)"]);
 }
 
 #[test]
