@@ -58,6 +58,26 @@ fn checksum_and_lockfile_must_share_one_command() {
         "sha256sum widgets.lock &&",
         "widgets.lock"
     ));
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum orders.lock & cat widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock & echo done",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock &> /tmp/orders",
+        "widgets.lock"
+    ));
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum orders.lock &> widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum $((1 & 2)) widgets.lock",
+        "widgets.lock"
+    ));
 }
 
 #[test]
@@ -227,6 +247,47 @@ fn an_output_path_variable_redirects_a_heredoc() {
          echo \"digest=$digest\" >> \"$OUT\"\n"
     )
     .is_empty());
+}
+
+#[test]
+fn an_output_variable_counts_only_as_a_redirect_target() {
+    assert!(names(
+        "digest=$(sha256sum widgets.lock)\n\
+         OUT=$GITHUB_OUTPUT\n\
+         echo \"$OUT\"\n\
+         test -f \"$OUT\"\n\
+         echo \"digest=$digest\" \"$OUT\"\n\
+         echo \"digest=$digest\" \"note > $OUT\"\n\
+         echo \"digest=$digest\" $((1>0))\n\
+         echo \"digest=$digest\" >& \"$OUT\"\n\
+         echo \"digest=$digest\" >= \"$OUT\"\n\
+         echo \"digest=$digest\" >\n\
+         echo \"digest=$digest\" > \"\"\n\
+         echo \"digest=$digest\" > \"$OUT\n\
+         echo \"digest=$digest\" >> /tmp/orders\n\
+         {\n\
+         echo \"digest=$digest\"\n\
+         } && test -f \"$OUT\"\n"
+    )
+    .is_empty());
+    assert_eq!(
+        names(
+            "digest=$(sha256sum widgets.lock)\n\
+             OUT=$GITHUB_OUTPUT\n\
+             echo \"digest=$digest\" >> \"$OUT\"\n\
+             echo \"digest=$digest\" > \"$OUT\"\n\
+             echo \"digest=$digest\" >>\"$GITHUB_OUTPUT\"\n\
+             echo \"digest=$digest\" > '$OUT'\n\
+             echo \"digest=$digest\" >> $OUT;\n\
+             {\n\
+             echo \"digest=$digest\"\n\
+             } >> \"$OUT\"\n\
+             cat <<EOF >> \"$OUT\"\n\
+             digest=$digest\n\
+             EOF\n"
+        ),
+        vec!["digest".to_string()]
+    );
 }
 
 #[test]

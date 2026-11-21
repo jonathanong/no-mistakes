@@ -219,6 +219,8 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "stale-assign.yml",
         "loose-hash.yml",
         "expand-mixed.yml",
+        "mention-output.yml",
+        "ampersand-hash.yml",
         "composite-plain.yml",
         "composite-missing.yml",
         "composite-unlisted.yml",
@@ -270,7 +272,7 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         assert_silent(&findings, file);
     }
     assert_scanned_fixtures(&findings);
-    assert_eq!(findings.len(), 35, "{findings:?}");
+    assert_eq!(findings.len(), 37, "{findings:?}");
 }
 
 fn assert_scanned_fixtures(findings: &[RuleFinding]) {

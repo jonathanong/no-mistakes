@@ -38,13 +38,17 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `steps.<id>.outputs.<name>`, and that output's value is a hash of the lockfile. `echo`,
   `printf`, an unquoted heredoc, and a brace group redirected to `GITHUB_OUTPUT` all count.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
-  copy of that variable, makes `$OUT` the same redirect target. A `<<<` redirect is not a heredoc,
-  and `<<` inside `$(( ))` is not a heredoc, so later lines are still read. A variable assigned
-  from `sha256sum widgets.lock` (or another checksum command that names the lockfile in that same
-  simple command) and then written to that output counts. `sha256sum widgets.lock | awk '{print $1}'`
-  counts because the checksum command names the lockfile. `sha256sum orders.lock | grep widgets.lock`
-  and `cat widgets.lock | sha256sum` do not. Reassigning the variable to a constant, `cat`, or a
-  hash of a different file drops the proof; an earlier copy into a different variable keeps it.
+  copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
+  `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not
+  writes. A `<<<` redirect is not a heredoc, and `<<` inside `$(( ))` is not a heredoc, so later
+  lines are still read. A variable assigned from `sha256sum widgets.lock` (or another checksum
+  command that names the lockfile in that same simple command) and then written to that output
+  counts. `sha256sum widgets.lock | awk '{print $1}'` counts because the checksum command names
+  the lockfile. `sha256sum orders.lock | grep widgets.lock`, `cat widgets.lock | sha256sum`, and
+  `sha256sum orders.lock & cat widgets.lock` do not. `sha256sum widgets.lock & echo done` still
+  counts. `&` inside `$(( ))` does not split the command. Reassigning the variable to a
+  constant, `cat`, or a hash of a different file drops the proof; an earlier copy into a
+  different variable keeps it.
   Reassigning it to a parameter expansion of itself keeps the proof: `"$digest"`, `${digest}`,
   `${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, and `${digest#*}`. Mixing that
   expansion with other text, or expanding a different variable, drops the proof.
