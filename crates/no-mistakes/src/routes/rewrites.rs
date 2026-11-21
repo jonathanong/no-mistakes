@@ -141,5 +141,5 @@ pub fn expand_rewrites_as_tuples(
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod integration_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

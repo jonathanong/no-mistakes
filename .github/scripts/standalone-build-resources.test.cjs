@@ -131,5 +131,27 @@ test("nested test modules inherit the parent shard", () => {
     report.droppedTests.map((item) => `${item.file}:${item.line}:${item.name}`),
     [],
   );
+  assert.deepEqual(report.incomplete, []);
+  assert.equal(report.testCount, report.plainTestCount);
   assert.ok(report.testCount > 10000, String(report.testCount));
+});
+
+test("a char literal before a sharded test module stays visible to the lock", () => {
+  const fixture = join(root, "test-cases/standalone-shards/char-literal");
+  const report = libraryShardCoverage(fixture, {
+    entry: join(fixture, "src/lib.rs"),
+    srcDir: join(fixture, "src"),
+  });
+  assert.deepEqual(report.incomplete, []);
+  assert.deepEqual(report.unresolved, []);
+  assert.deepEqual(
+    report.nested.map((item) => `${item.name}:${item.shard}:${item.parentShards.join(",")}`),
+    ["child:0:2"],
+  );
+  assert.deepEqual(
+    report.droppedTests.map((item) => item.name),
+    ["child_test"],
+  );
+  assert.equal(report.testCount, 1);
+  assert.equal(report.plainTestCount, 1);
 });
