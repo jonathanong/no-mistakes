@@ -98,6 +98,16 @@ test("release native builds emit CLI and N-API from one rustc without waiting fo
     const timings = native.split("- name: Upload Cargo timings\n")[1] ?? "";
     assert.match(timings, /^ {8}continue-on-error: true$/m);
     assert.match(timings, /if-no-files-found: error/);
+    const required =
+      native.split("- name: Require Cargo timings report\n")[1]?.split("\n      - name:")[0] ??
+      "";
+    assert.match(required, /timeout-minutes: 1/);
+    assert.doesNotMatch(required, /continue-on-error/);
+    assert.match(required, /target\/cargo-timings\/\*\.html/);
+    assert.ok(
+      native.indexOf("- name: Require Cargo timings report") <
+        native.indexOf("- name: Upload Cargo timings"),
+    );
     for (const artifact of ["Upload CLI artifact", "Upload N-API artifact"]) {
       const step = native.split(`- name: ${artifact}\n`)[1]?.split("\n      - name:")[0] ?? "";
       assert.doesNotMatch(step, /continue-on-error/);

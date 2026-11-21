@@ -687,6 +687,18 @@ jobs:
           path: no-mistakes-napi-*.node
           if-no-files-found: error
 
+      - name: Require Cargo timings report
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          reports=(target/cargo-timings/*.html)
+          if [ "${#reports[@]}" -eq 0 ]; then
+            echo "missing target/cargo-timings/*.html"
+            exit 1
+          fi
+
       - name: Upload Cargo timings
         timeout-minutes: 2
         continue-on-error: true
@@ -860,6 +872,18 @@ jobs:
           name: release-napi-${{ env.NM_TARGET }}
           path: no-mistakes-napi-*.node
           if-no-files-found: error
+
+      - name: Require Cargo timings report
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          reports=(target/cargo-timings/*.html)
+          if [ "${#reports[@]}" -eq 0 ]; then
+            echo "missing target/cargo-timings/*.html"
+            exit 1
+          fi
 
       - name: Upload Cargo timings
         timeout-minutes: 2
@@ -1036,6 +1060,18 @@ jobs:
           path: no-mistakes-napi-*.node
           if-no-files-found: error
 
+      - name: Require Cargo timings report
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          reports=(target/cargo-timings/*.html)
+          if [ "${#reports[@]}" -eq 0 ]; then
+            echo "missing target/cargo-timings/*.html"
+            exit 1
+          fi
+
       - name: Upload Cargo timings
         timeout-minutes: 2
         continue-on-error: true
@@ -1210,6 +1246,18 @@ jobs:
           name: release-napi-${{ env.NM_TARGET }}
           path: no-mistakes-napi-*.node
           if-no-files-found: error
+
+      - name: Require Cargo timings report
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          reports=(target/cargo-timings/*.html)
+          if [ "${#reports[@]}" -eq 0 ]; then
+            echo "missing target/cargo-timings/*.html"
+            exit 1
+          fi
 
       - name: Upload Cargo timings
         timeout-minutes: 2

@@ -110,6 +110,15 @@ fn test_no_live_repository_scan_analyzer_commands_check_json_snapshot() {
 }
 
 #[test]
+fn test_no_live_repository_scan_quoted_shell_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(RULE, "quoted-shell", "");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "test_no_live_repository_scan_quoted_shell",
+        &[("quoted", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}
+
+#[test]
 fn test_no_live_repository_scan_analyzer_suppression_check_json_snapshot() {
     let root = crate::check_json_snapshot::rules_path(RULE, "analyzer-suppress", "");
     let report = crate::check_json_snapshot::assert_saved_fixture_report(

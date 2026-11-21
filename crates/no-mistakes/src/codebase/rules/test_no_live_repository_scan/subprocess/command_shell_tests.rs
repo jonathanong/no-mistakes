@@ -119,6 +119,40 @@ fn shell_prefixes_are_removed_before_the_executable() {
 }
 
 #[test]
+fn quoted_arguments_match_and_quoted_commands_do_not() {
+    assert_eq!(
+        launch(vec![known("widget-audit check --label 'nightly'")], true),
+        "widget-audit check"
+    );
+    assert_eq!(
+        launch(vec![known("widget-audit check --label \"nightly\"")], true),
+        "widget-audit check"
+    );
+    let parsed = invocation(&[known("widget-audit check --label 'nightly'")], true).unwrap();
+    assert!(matches!(parsed.argv.last(), Some(Token::Known(text)) if text == "nightly"));
+    let quoted_dir = invocation(
+        &[known(
+            "cd \"widgets\" && widget-audit check --label 'nightly'",
+        )],
+        true,
+    )
+    .unwrap();
+    assert_eq!(
+        matched(&quoted_dir, &[analyzer()]).as_deref(),
+        Some("widget-audit check")
+    );
+    assert_eq!(quoted_dir.shell_dir.as_deref(), Some("widgets"));
+    assert!(launch(vec![known("widget-audit check --label 'nightly")], true).is_empty());
+    assert!(launch(vec![known("widget-audit check --label 'ni\\ghtly'")], true).is_empty());
+    assert!(launch(vec![known("widget-audit check --label '$nightly'")], true).is_empty());
+    assert!(launch(
+        vec![known("widget-audit check --label \"`nightly`\"")],
+        true
+    )
+    .is_empty());
+}
+
+#[test]
 fn shell_mode_follows_the_launcher() {
     let string = vec![known("pnpm exec widget-audit check")];
     assert!(uses_shell("exec", &string));
