@@ -10,15 +10,25 @@ use std::path::{Path, PathBuf};
 enum Branch {
     Object(BTreeMap<String, Value>, PathBuf, usize),
     Absent,
+    // `||` / `??` whose left side is not a known object. Keys stay unknown.
+    Opaque,
 }
 
 impl Evaluator<'_, '_> {
-    pub(super) fn folded_spread(&mut self, expression: &Expression<'_>) -> Option<Value> {
+    pub(super) fn folded_spread(
+        &mut self,
+        expression: &Expression<'_>,
+        existing: &BTreeMap<String, Value>,
+    ) -> Option<Value> {
         if !is_branch(expression) {
             return None;
         }
         let branches = self.branches(expression)?;
-        Some(self.merge_branches(branches, self.line(expression.span().start)))
+        Some(self.merge_branches(
+            branches,
+            existing.get("exclude"),
+            self.line(expression.span().start),
+        ))
     }
 
     fn branches(&mut self, expression: &Expression<'_>) -> Option<Vec<Branch>> {
@@ -47,12 +57,19 @@ impl Evaluator<'_, '_> {
         }
     }
 
-    fn merge_branches(&self, branches: Vec<Branch>, line: usize) -> Value {
+    fn merge_branches(
+        &self,
+        branches: Vec<Branch>,
+        previous_exclude: Option<&Value>,
+        line: usize,
+    ) -> Value {
         let mut absent = false;
+        let mut opaque = false;
         let mut objects = Vec::new();
         for branch in branches {
             match branch {
                 Branch::Absent => absent = true,
+                Branch::Opaque => opaque = true,
                 Branch::Object(fields, file, line) => objects.push((fields, file, line)),
             }
         }
@@ -63,7 +80,7 @@ impl Evaluator<'_, '_> {
                 keys.extend(fields.keys().cloned());
             }
             for key in keys {
-                let value = merged_value(&objects, &key, absent);
+                let value = merged_value(&objects, &key, absent, opaque, previous_exclude);
                 properties.insert(key, value);
             }
         }
@@ -88,8 +105,16 @@ fn combine(
     mut right: Vec<Branch>,
 ) -> Vec<Branch> {
     let Some(left) = left else {
-        right.push(Branch::Absent);
-        return right;
+        return match operator {
+            LogicalOperator::And => {
+                right.push(Branch::Absent);
+                right
+            }
+            LogicalOperator::Or | LogicalOperator::Coalesce => {
+                right.push(Branch::Opaque);
+                right
+            }
+        };
     };
     if left.iter().all(|branch| matches!(branch, Branch::Absent)) {
         return match operator {
@@ -102,12 +127,16 @@ fn combine(
         match (&operator, branch) {
             (LogicalOperator::And, Branch::Object(..)) => merged.extend(right.clone()),
             (LogicalOperator::And, Branch::Absent) => merged.push(Branch::Absent),
+            (LogicalOperator::And, Branch::Opaque) => merged.push(Branch::Opaque),
             (
                 LogicalOperator::Or | LogicalOperator::Coalesce,
                 Branch::Object(fields, file, line),
             ) => merged.push(Branch::Object(fields, file, line)),
             (LogicalOperator::Or | LogicalOperator::Coalesce, Branch::Absent) => {
                 merged.extend(right.clone());
+            }
+            (LogicalOperator::Or | LogicalOperator::Coalesce, Branch::Opaque) => {
+                merged.push(Branch::Opaque);
             }
         }
     }
@@ -118,6 +147,8 @@ fn merged_value(
     objects: &[(BTreeMap<String, Value>, PathBuf, usize)],
     key: &str,
     absent: bool,
+    opaque: bool,
+    previous_exclude: Option<&Value>,
 ) -> Value {
     let present = objects
         .iter()
@@ -126,11 +157,12 @@ fn merged_value(
     let first = present[0];
     let same = present
         .iter()
-        .all(|value| same_kind(&value.kind, &first.kind));
-    if !absent && present.len() == objects.len() && same {
+        .all(|value| super::exclude_paths::same_kind(&value.kind, &first.kind));
+    let blocked = absent || opaque;
+    if !blocked && present.len() == objects.len() && same {
         return first.clone();
     }
-    if !absent && present.len() == objects.len() {
+    if !blocked && present.len() == objects.len() {
         let file = first.file.clone();
         let line = first.line;
         return Value {
@@ -138,6 +170,14 @@ fn merged_value(
             file,
             line,
         };
+    }
+    // An empty object or the false side of `&&` omits the key. Other keys stay
+    // unknown; exclude falls back to the earlier literal or the omitted default.
+    if key == "exclude" && !opaque {
+        return super::exclude_paths::partial_exclude(
+            present.into_iter().cloned().collect(),
+            previous_exclude,
+        );
     }
     unknown_value(&first.file, first.line)
 }
@@ -147,36 +187,5 @@ fn unknown_value(file: &Path, line: usize) -> Value {
         kind: Kind::Unknown,
         file: file.to_path_buf(),
         line,
-    }
-}
-
-fn same_kind(left: &Kind, right: &Kind) -> bool {
-    match (left, right) {
-        (Kind::Literal(left), Kind::Literal(right)) => left == right,
-        (Kind::Unknown, Kind::Unknown) => true,
-        (Kind::Array(left), Kind::Array(right)) => {
-            left.len() == right.len()
-                && left
-                    .iter()
-                    .zip(right)
-                    .all(|(left, right)| same_kind(&left.kind, &right.kind))
-        }
-        (Kind::Object(left, left_opaque), Kind::Object(right, right_opaque)) => {
-            left_opaque == right_opaque
-                && left.len() == right.len()
-                && left.iter().zip(right).all(
-                    |((left_key, left_value), (right_key, right_value))| {
-                        left_key == right_key && same_kind(&left_value.kind, &right_value.kind)
-                    },
-                )
-        }
-        (Kind::OneOf(left), Kind::OneOf(right)) => {
-            left.len() == right.len()
-                && left
-                    .iter()
-                    .zip(right)
-                    .all(|(left, right)| same_kind(&left.kind, &right.kind))
-        }
-        _ => false,
     }
 }

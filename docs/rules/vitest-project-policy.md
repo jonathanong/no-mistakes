@@ -87,14 +87,19 @@ a finding.
 
 A spread whose argument is a conditional (`condition ? { ... } : { ... }`) or a
 logical expression (`condition && { ... }`, `condition || { ... }`,
-`condition ?? { ... }`) contributes the keys of its literal object operands when
-every object operand has statically known keys. If none of those operands
-defines `exclude`, the spread leaves `exclude` omitted and stays silent. If any
-operand defines `exclude`, the check stays incomplete unless every branch's
-array contains each configured string. A spread of an identifier or a call stays
-unknown. The same folding applies to other `test` properties: a key with the
-same literal on every branch stays known for required, forbidden, and parity
-checks, and a key that appears on only some branches stays incomplete.
+`condition ?? { ... }`) folds literal object operands. A branch that writes no
+`exclude` — the `: {}` alternative, or the false side of `&&` — leaves the
+property absent on that path. That path uses an earlier literal `exclude` on
+the same object, or the silent missing-`exclude` default. It is not treated as
+unknown. Each path is checked. If any path's array omits a configured string,
+the finding names that string. The spread is clean when every path that sets
+`exclude` contains each configured string, including both sides of
+`condition ? { exclude } : { exclude }` when those arrays agree. `||` and `??`
+whose left side is not a known object keep `exclude` unknown. A spread of an
+identifier or a call, such as `...makeExtra()`, stays unknown. Other `test`
+properties keep the earlier rule: a key with the same literal on every branch
+stays known for required, forbidden, and parity checks, and a key that appears
+on only some branches stays incomplete.
 
 Only the selected config's `test.exclude` is checked. A listed helper supplies
 the array when the config imports it into that property. An unrelated

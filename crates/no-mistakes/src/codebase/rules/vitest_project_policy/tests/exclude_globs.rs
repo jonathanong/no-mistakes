@@ -45,7 +45,11 @@ fn configured_globs_match_literal_exclude_arrays_only() {
         "exclude-proven-spread",
         "exclude-conditional-spread",
         "exclude-conditional-proven",
+        "exclude-ternary-complete-or-empty",
+        "exclude-ternary-complete-or-complete",
+        "exclude-and-complete",
         "exclude-logical-spread",
+        "exclude-logical-and-exclude",
         "exclude-project-present",
         "exclude-project-silent",
         "exclude-option-off",
@@ -108,9 +112,7 @@ fn non_literal_exclude_values_stay_incomplete() {
         "exclude-dynamic",
         "exclude-partial-spread",
         "exclude-dynamic-config",
-        "exclude-conditional-exclude",
         "exclude-conditional-unknown",
-        "exclude-logical-and-exclude",
         "exclude-logical-or-exclude",
         "exclude-logical-nullish-exclude",
         "exclude-identifier-spread",
@@ -177,6 +179,59 @@ fn a_forbidden_key_on_every_branch_stays_a_finding() {
     assert!(report.findings[0]
         .message
         .contains("test.poolOptions is forbidden"));
+}
+
+#[test]
+fn folded_exclude_paths_name_each_missing_glob() {
+    for case in [
+        "exclude-conditional-exclude",
+        "exclude-ternary-partial-or-empty",
+        "exclude-ternary-complete-or-partial",
+        "exclude-and-partial",
+        "exclude-ternary-partial-or-call",
+        "exclude-earlier-then-partial",
+    ] {
+        let report = output(case);
+        assert!(
+            report.incomplete.is_empty(),
+            "{case}: {:?}",
+            report.incomplete
+        );
+        assert_eq!(report.findings.len(), 1, "{case}: {:?}", report.findings);
+        assert!(
+            report.findings[0]
+                .message
+                .contains("add **/.git/** to test.exclude"),
+            "{case}: {}",
+            report.findings[0].message
+        );
+        assert!(
+            !report.findings[0].message.contains("**/node_modules/**"),
+            "{case}"
+        );
+    }
+}
+
+#[test]
+fn non_literal_spreads_leave_only_exclude_incomplete() {
+    for case in [
+        "exclude-call-make-extra",
+        "exclude-ternary-complete-or-call",
+    ] {
+        let report = output(case);
+        assert!(report.findings.is_empty(), "{case}: {:?}", report.findings);
+        assert_eq!(
+            report.incomplete.len(),
+            1,
+            "{case}: {:?}",
+            report.incomplete
+        );
+        assert_eq!(
+            report.incomplete[0].property.as_deref(),
+            Some("test.exclude"),
+            "{case}"
+        );
+    }
 }
 
 #[test]

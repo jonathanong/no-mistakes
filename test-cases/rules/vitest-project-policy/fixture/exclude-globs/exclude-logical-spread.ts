@@ -15,6 +15,9 @@ export default {
     ...((label && { name: 'widgets' }) && { retry: 1 }),
     ...((label && { note: 'orders' }) || { title: 'items' }),
     ...((label && { name: 'widgets' }) ?? { hookTimeout: 5 }),
+    ...((label || { note: 'orders' }) && { retry: 1 }),
+    ...((label || { note: 'orders' }) || { title: 'items' }),
+    ...((label || { note: 'orders' }) ?? { hookTimeout: 5 }),
     projects: [{ test: { name: 'items', isolate: true } }],
   },
 };

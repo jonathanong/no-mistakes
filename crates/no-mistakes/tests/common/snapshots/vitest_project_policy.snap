@@ -573,6 +573,58 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-and-complete": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-and-partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-and-partial.ts",
+          "line": 6,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag && { exclude: ['**/node_modules/**'] }),"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-call-make-extra": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-call-make-extra.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "exclude-call-spread": {
     "exitCode": 1,
     "report": {
@@ -598,18 +650,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [],
       "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "file": "exclude-conditional-exclude.ts",
-          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
-          "property": "test.exclude"
-        }
-      ],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "exclude-conditional-exclude.ts",
+          "line": 5,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "? { exclude: ['**/node_modules/**'] }"
+        }
+      ],
       "warnings": []
     }
   },
@@ -777,6 +829,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "exclude-earlier-then-partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-earlier-then-partial.ts",
+          "line": 7,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag ? { exclude: ['**/node_modules/**'] } : {}),"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "exclude-empty-array": {
     "exitCode": 1,
     "report": {
@@ -872,18 +944,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "exclude-logical-and-exclude": {
-    "exitCode": 1,
+    "exitCode": 0,
     "report": {
       "advisories": [],
       "codebase": [],
-      "incomplete": [
-        {
-          "consumer": "vitest-project-policy",
-          "file": "exclude-logical-and-exclude.ts",
-          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
-          "property": "test.exclude"
-        }
-      ],
       "integration": [],
       "queues": [],
       "react": [],
@@ -1209,6 +1273,110 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-ternary-complete-or-call": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "vitest-project-policy",
+          "file": "exclude-ternary-complete-or-call.ts",
+          "message": "Vitest project <root> is incomplete: test.exclude is not statically known; replace dynamic configuration with literal properties in the config or declared helpers",
+          "property": "test.exclude"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-ternary-complete-or-complete": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-ternary-complete-or-empty": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude-ternary-complete-or-partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-ternary-complete-or-partial.ts",
+          "line": 6,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag ? { exclude: ['**/node_modules/**', '**/.git/**'] } : { exclude: ['**/node_modules/**'] }),"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-ternary-partial-or-call": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-ternary-partial-or-call.ts",
+          "line": 6,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag ? { exclude: ['**/node_modules/**'] } : { exclude: makeExtra() }),"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "exclude-ternary-partial-or-empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "exclude-ternary-partial-or-empty.ts",
+          "line": 6,
+          "message": "Vitest project <root>: add **/.git/** to test.exclude",
+          "rule": "vitest-project-policy",
+          "sourceLine": "...(flag ? { exclude: ['**/node_modules/**'] } : {}),"
+        }
+      ],
       "warnings": []
     }
   },

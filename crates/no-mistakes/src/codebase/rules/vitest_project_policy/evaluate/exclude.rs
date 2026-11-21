@@ -26,11 +26,24 @@ pub(super) fn check(
 
 fn missing_globs(exclude: &Value, required: &[String]) -> Option<Vec<String>> {
     if let Kind::OneOf(options) = &exclude.kind {
-        return if options.iter().all(|option| proves(option, required)) {
-            Some(Vec::new())
-        } else {
-            None
-        };
+        let mut lacked = BTreeSet::new();
+        let mut unknown = false;
+        for option in options {
+            match missing_globs(option, required) {
+                Some(items) => lacked.extend(items),
+                None => unknown = true,
+            }
+        }
+        if unknown && lacked.is_empty() {
+            return None;
+        }
+        return Some(
+            required
+                .iter()
+                .filter(|glob| lacked.contains(*glob))
+                .cloned()
+                .collect(),
+        );
     }
     let Kind::Array(elements) = &exclude.kind else {
         return if matches!(exclude.kind, Kind::Unknown) {
@@ -55,19 +68,6 @@ fn missing_globs(exclude: &Value, required: &[String]) -> Option<Vec<String>> {
     } else {
         None
     }
-}
-
-fn proves(exclude: &Value, required: &[String]) -> bool {
-    let Kind::Array(elements) = &exclude.kind else {
-        return false;
-    };
-    let mut present = BTreeSet::new();
-    for element in elements {
-        if let Some(text) = element.literal().and_then(|value| value.as_str()) {
-            present.insert(text);
-        }
-    }
-    absent(required, &present).is_empty()
 }
 
 fn absent(required: &[String], present: &BTreeSet<&str>) -> Vec<String> {
