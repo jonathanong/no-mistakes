@@ -362,7 +362,7 @@ spare-budget credential:
 ```sh
 python3 evals/codex_rules.py
 CODEX_AUTH_FILE=/path/to/spare-auth.json \
-  python3 evals/codex_rules.py --run --case 'rules-testing-*' --runs 1 \
+  python3 evals/codex_rules.py --run --case rules-testing-write-error-text --runs 1 \
   --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
 python3 evals/codex_rules.py --regrade \
   --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"

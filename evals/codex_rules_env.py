@@ -193,8 +193,10 @@ def build_arm(
     codex_home.mkdir()
     copy_workspace(fixture, workspace)
     config = _shared_config()
+    installed = None
     if arm == "with":
         market = _write_marketplace(root, plugin_src)
+        installed = installed_plugin_root(codex_home, plugin_src)
         _install_cache(codex_home, plugin_src)
         config += (
             f"\n[marketplaces.{MARKETPLACE}]\n"
@@ -222,6 +224,7 @@ def build_arm(
         "workspace": workspace,
         "env": env,
         "config": config,
+        "plugin_root": installed,
     }
 
 
@@ -266,7 +269,7 @@ def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "
     plugin_root = None
     marketplace_root = None
     if built["arm"] == "with":
-        plugin_root = _canonical(installed_plugin_root(Path(built["codex_home"])))
+        plugin_root = _canonical(built["plugin_root"])
         marketplace_root = _canonical(built["root"] / "marketplace" / "plugins" / PLUGIN)
     return {
         "arm": built["arm"],

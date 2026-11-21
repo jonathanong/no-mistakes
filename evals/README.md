@@ -447,13 +447,18 @@ attempts. Pilot with one case before that:
 
 ```sh
 python3 evals/codex_rules.py
-python3 evals/codex_rules.py --case 'rules-testing-*' --runs 1
+python3 evals/codex_rules.py --case rules-testing-write-error-text --runs 1
+CODEX_AUTH_FILE=/path/to/spare-auth.json \
+  python3 evals/codex_rules.py --run --case rules-testing-write-error-text --runs 1 \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
 CODEX_AUTH_FILE=/path/to/spare-auth.json \
   python3 evals/codex_rules.py --run --tag rules --runs 3 \
   --output "$HOME/.cache/no-mistakes/evals/codex-rules"
 python3 evals/codex_rules.py --regrade \
   --output "$HOME/.cache/no-mistakes/evals/codex-rules"
 ```
+
+Read the pilot `transcript.jsonl` before starting the group run.
 
 `--output` is a directory. The runner writes `aggregate-result.json` there, in
 the shape `summarize.py` and `power.py` already read (`arms.with` and

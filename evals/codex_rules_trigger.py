@@ -222,19 +222,31 @@ def _reader_tokens(argv: list) -> list:
     return _file_tokens(argv)
 
 
+_OUTPUT_REDIR = {">", ">>", ">&", ">|", "&>", "&>>"}
+
+
+def _take_redirect(argv: list, index: int, tokens: list) -> int | None:
+    arg = argv[index]
+    if arg == "<" and index + 1 < len(argv):
+        tokens.append(argv[index + 1])
+        return index + 2
+    if arg in _OUTPUT_REDIR and index + 1 < len(argv):
+        return index + 2
+    return None
+
+
 def _file_tokens(argv: list) -> list:
     tokens = []
     index = 1
     while index < len(argv):
-        arg = argv[index]
-        if arg == "<" and index + 1 < len(argv):
-            tokens.append(argv[index + 1])
-            index += 2
+        taken = _take_redirect(argv, index, tokens)
+        if taken is not None:
+            index = taken
             continue
-        if arg.startswith("-"):
+        if argv[index].startswith("-"):
             index += 1
             continue
-        tokens.append(arg)
+        tokens.append(argv[index])
         index += 1
     return tokens
 
@@ -247,9 +259,17 @@ def _search_tokens(argv: list) -> list:
     index = 1
     while index < len(argv):
         arg = argv[index]
-        if arg == "<" and index + 1 < len(argv):
-            tokens.append(argv[index + 1])
-            index += 2
+        taken = _take_redirect(argv, index, tokens)
+        if taken is not None:
+            index = taken
+            continue
+        flag, sep, attached = arg.partition("=")
+        if sep and flag in _FLAG_ARG[name]:
+            if name == "grep" and flag in ("-f", "--file"):
+                tokens.append(attached)
+            if flag in ("-e", "--regexp", "-f", "--file"):
+                pattern_flag = True
+            index += 1
             continue
         if arg in _FLAG_ARG[name]:
             if index + 1 >= len(argv):
@@ -277,12 +297,12 @@ def _script_tokens(argv: list) -> list:
     index = 1
     while index < len(argv):
         arg = argv[index]
-        if arg == "<" and index + 1 < len(argv):
-            tokens.append(argv[index + 1])
-            index += 2
+        taken = _take_redirect(argv, index, tokens)
+        if taken is not None:
+            index = taken
             continue
         if arg in _SCRIPT_FLAGS and index + 1 < len(argv):
-            tokens.extend(_quoted(argv[index + 1]))
+            tokens.extend(_script_reads(argv[index + 1]))
             index += 2
             continue
         if arg.startswith("-"):
@@ -293,23 +313,11 @@ def _script_tokens(argv: list) -> list:
     return tokens
 
 
-def _quoted(text: str) -> list:
-    found = []
-    quote = None
-    buf = []
-    for char in text:
-        if quote:
-            if char == quote:
-                if buf:
-                    found.append("".join(buf))
-                buf = []
-                quote = None
-            else:
-                buf.append(char)
-            continue
-        if char in "'\"":
-            quote = char
-    return found
+_SCRIPT_READ = re.compile(r"""(?:\bopen|\breadFileSync|\breadFile)\(\s*(['"])(.*?)\1""")
+
+
+def _script_reads(text: str) -> list:
+    return [match.group(2) for match in _SCRIPT_READ.finditer(text)]
 
 
 def _subshell(text: str) -> str | None:
@@ -330,12 +338,15 @@ def _find_exec_tokens(argv: list) -> list:
     while index < len(argv):
         arg = argv[index]
         if arg in ("-exec", "-execdir") and index + 1 < len(argv):
-            if _reader_kind(Path(argv[index + 1]).name) is not None:
-                reader = True
+            command = Path(argv[index + 1]).name
             index += 2
+            operands = []
             while index < len(argv) and argv[index] not in ("+", ";"):
+                operands.append(argv[index])
                 index += 1
             index += 1
+            if _reader_kind(command) is not None and "{}" in operands:
+                reader = True
             continue
         if arg in _FIND_ARG and index + 1 < len(argv):
             if arg in ("-name", "-iname"):
@@ -349,13 +360,15 @@ def _find_exec_tokens(argv: list) -> list:
         index += 1
     if not reader:
         return []
-    tokens = list(paths)
-    if name_filter not in (None, "SKILL.md"):
-        return tokens
+    kept = []
     for path in paths:
-        if _SKILL_DIR.fullmatch(Path(path).name):
-            tokens.append(str(Path(path) / "SKILL.md"))
-    return tokens
+        name = Path(path).name
+        if name_filter not in (None, "SKILL.md") and name != name_filter:
+            continue
+        kept.append(path)
+        if name_filter in (None, "SKILL.md") and _SKILL_DIR.fullmatch(name):
+            kept.append(str(Path(path) / "SKILL.md"))
+    return kept
 
 
 def _cd_target(argv: list, cwd: Path | None) -> Path | None:

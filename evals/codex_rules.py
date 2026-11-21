@@ -110,13 +110,15 @@ def format_preview(cases: list, runs: int | None) -> str:
     )
 
 
-def _pump(stream, parts: list, handle) -> None:
+def _pump(stream, parts: list, handle, errors: list) -> None:
     try:
         for line in iter(stream.readline, ""):
             parts.append(line)
             if handle is not None:
                 handle.write(line)
                 handle.flush()
+    except Exception as exc:
+        errors.append(exc)
     finally:
         stream.close()
 
@@ -148,6 +150,7 @@ def exec_codex(plan: dict) -> dict:
 def _exec_capture(plan: dict, partial: Path | None, final: Path | None = None) -> dict:
     stdout_parts = []
     stderr_parts = []
+    errors = []
     handle = partial.open("w") if partial is not None else None
     proc = None
     out = None
@@ -162,8 +165,8 @@ def _exec_capture(plan: dict, partial: Path | None, final: Path | None = None) -
             stderr=subprocess.PIPE,
             text=True,
         )
-        out = threading.Thread(target=_pump, args=(proc.stdout, stdout_parts, handle))
-        err = threading.Thread(target=_pump, args=(proc.stderr, stderr_parts, None))
+        out = threading.Thread(target=_pump, args=(proc.stdout, stdout_parts, handle, errors))
+        err = threading.Thread(target=_pump, args=(proc.stderr, stderr_parts, None, errors))
         out.start()
         err.start()
         try:
@@ -189,6 +192,8 @@ def _exec_capture(plan: dict, partial: Path | None, final: Path | None = None) -
     finally:
         if handle is not None:
             handle.close()
+    if errors:
+        raise errors[0]
     if partial is not None and final is not None and partial.exists():
         partial.replace(final)
     last = Path(plan["last_message"])
@@ -475,7 +480,7 @@ def _still_partial(output: Path) -> bool:
     for path in attempts.rglob("*"):
         if not path.is_file():
             continue
-        if path.name == "transcript.jsonl.partial":
+        if path.name == "transcript.jsonl.partial" and not (path.parent / "result.json").is_file():
             return True
         if path.name == "transcript.jsonl" and not (path.parent / "result.json").is_file():
             return True

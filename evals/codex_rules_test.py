@@ -215,7 +215,13 @@ class ArmIsolationTest(unittest.TestCase):
         spare = self.base / "spare-auth.json"
         spare.write_text("{}\n")
         inside = REPO / "evals" / "codex-rules-output-should-not-exist"
-        self.addCleanup(lambda: inside.is_dir() and __import__("shutil").rmtree(inside))
+        existed = inside.exists()
+
+        def _remove_created_output():
+            if not existed and inside.is_dir():
+                __import__("shutil").rmtree(inside)
+
+        self.addCleanup(_remove_created_output)
         with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")):
             with self.assertRaises(SystemExit):
                 codex_rules.main(
@@ -460,7 +466,9 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertTrue(fired(f"rg SKILL.md {skill}"))
         self.assertTrue(fired(f"awk '/rule/' {skill}"))
         self.assertTrue(fired(f"grep -n rule {skill}"))
+        self.assertTrue(fired(f"grep --regexp=rule {skill}"))
         self.assertTrue(fired(f"bat {skill}"))
+        self.assertTrue(fired(f"cat < {skill}"))
         self.assertTrue(fired(f"cat {market_skill}"))
         self.assertTrue(fired("python -c \"open('" + str(skill) + "').read()\""))
         self.assertTrue(fired("node -e \"require('fs').readFileSync('" + str(skill) + "')\""))
@@ -470,7 +478,10 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertTrue(fired(f"find {skill.parent} -name SKILL.md -exec cat {{}} +"))
         self.assertTrue(fired(f"find {skill.parent} -name SKILL.md -execdir cat {{}} +"))
         self.assertTrue(fired(f"find {skill} -exec cat {{}} +"))
+        self.assertFalse(fired(f"find {skill} -name README.md -exec cat {{}} +"))
+        self.assertFalse(fired(f"find {skill} -exec cat /dev/null \\;"))
         self.assertFalse(fired(f"(cd {skill.parent} && true); cat SKILL.md"))
+        self.assertFalse(fired(f"cat /dev/null >> {skill}"))
         self.assertFalse(fired(f"ls -l {skill}"))
         self.assertFalse(fired(f"stat {skill}"))
         self.assertFalse(fired(f"find {plugin} -name SKILL.md"))
@@ -484,6 +495,7 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertFalse(fired("rg SKILL.md", cwd=skill.parent))
         self.assertFalse(fired(f"cd {skill.parent} | cat SKILL.md"))
         self.assertFalse(fired("python -c \"print('see SKILL.md for details')\""))
+        self.assertFalse(fired("python -c \"print('" + str(skill) + "')\""))
         home = codex_rules_grade.trigger.Path
         with mock.patch.object(home, "home", return_value=skill.parent):
             self.assertFalse(fired("cd && cat SKILL.md"))
@@ -537,6 +549,13 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertEqual(code, 0)
         report = json.loads((output / "aggregate-result.json").read_text())
         self.assertFalse(report["partial"])
+        (slot / "transcript.jsonl.partial").write_text("{}\n")
+        with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")), mock.patch.object(
+            codex_rules.subprocess, "Popen", side_effect=AssertionError("model")
+        ):
+            self.assertEqual(codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]]), 0)
+        self.assertFalse(json.loads((output / "aggregate-result.json").read_text())["partial"])
+        (slot / "transcript.jsonl.partial").unlink()
         row = report["cases"][0]["arms"]["with"][0]
         self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in row["graders"]))
         judged = next(item for item in row["graders"] if item["name"] == "asserts-error-code-not-text")
@@ -827,7 +846,7 @@ class PreviewAndGradeTest(unittest.TestCase):
         seen = []
 
         def list_fn(built):
-            seen.append(built["arm"])
+            seen.append(("list", built["arm"]))
             home = Path(built["env"]["CODEX_HOME"])
             self.assertEqual(home, built["codex_home"])
             self.assertFalse(str(home).startswith(str(Path("/codex-rules-user-home-unused"))))
@@ -841,7 +860,7 @@ class PreviewAndGradeTest(unittest.TestCase):
             return {"installed": [], "available": []}
 
         def run_exec(plan):
-            self.assertEqual(seen, ["with", "without"])
+            seen.append(("exec", plan["arm"]))
             root = plan.get("plugin_root")
             command = f"cat {Path(root) / 'skills' / 'testing-rules' / 'SKILL.md'}" if root else "echo no-plugin"
             return {
@@ -851,7 +870,7 @@ class PreviewAndGradeTest(unittest.TestCase):
                 "last_message": "code",
             }
 
-        codex_rules.run_suite(
+        report = codex_rules.run_suite(
             [case],
             1,
             output,
@@ -863,7 +882,12 @@ class PreviewAndGradeTest(unittest.TestCase):
             check_plugins=True,
             list_fn=list_fn,
         )
-        self.assertEqual(seen, ["with", "without"])
+        self.assertEqual(
+            seen,
+            [("list", "with"), ("list", "without"), ("exec", "with"), ("exec", "without")],
+        )
+        for arm in ("with", "without"):
+            self.assertNotIn("error", report["cases"][0]["arms"][arm][0])
 
     def test_exec_codex_writes_the_transcript_file(self):
         slot = Path(tempfile.mkdtemp(prefix="codex-rules-exec-"))
@@ -906,6 +930,40 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertEqual(result["returncode"], 124)
         self.assertIn("hello", (slot / "transcript.jsonl").read_text())
         self.assertFalse((slot / "transcript.jsonl.partial").exists())
+
+    def test_exec_decode_error_leaves_the_partial_transcript(self):
+        slot = Path(tempfile.mkdtemp(prefix="codex-rules-exec-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(slot, ignore_errors=True))
+        script = "import sys\nsys.stdout.buffer.write(b'\\xff\\n')\nsys.stdout.buffer.flush()\n"
+        plan = {
+            "argv": [sys.executable, "-c", script],
+            "env": os.environ.copy(),
+            "cwd": str(slot),
+            "timeout_seconds": 30,
+            "last_message": str(slot / "missing-last.txt"),
+            "transcript": str(slot / "transcript.jsonl"),
+        }
+        with self.assertRaises(UnicodeDecodeError):
+            codex_rules.exec_codex(plan)
+        self.assertFalse((slot / "transcript.jsonl").exists())
+        self.assertTrue((slot / "transcript.jsonl.partial").exists())
+
+    def test_judge_rejects_a_non_boolean_passed(self):
+        self.assertTrue(codex_rules_grade.passed_from_judge_output('{"passed": true}'))
+        self.assertFalse(codex_rules_grade.passed_from_judge_output('{"passed": false}'))
+        with self.assertRaises(ValueError):
+            codex_rules_grade.passed_from_judge_output('{"passed": "false"}')
+        case = REPO / "evals" / "rules-testing-write-error-text"
+        root = Path(tempfile.mkdtemp(prefix="codex-rules-plugin-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(root, ignore_errors=True))
+        skill = root / "skills" / "testing-rules" / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("skill body\n")
+        run = codex_rules_grade.grade_run(case, _read_event(f"cat {skill}"), "code", lambda _prompt: "false", root)
+        judged = [item for item in run["graders"] if item["name"] != "skill-fired"]
+        self.assertTrue(judged)
+        self.assertTrue(all(item.get("error") == "judge passed must be a boolean" and "passed" not in item for item in judged))
+        self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in run["graders"]))
 
 
 def _summarize_ok(report) -> bool:

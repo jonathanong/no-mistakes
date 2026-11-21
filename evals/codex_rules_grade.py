@@ -134,7 +134,10 @@ def passed_from_judge_output(raw: str) -> bool:
     if isinstance(data, dict) and isinstance(data.get("result"), str):
         text = data["result"]
     elif isinstance(data, dict) and "passed" in data:
-        return bool(data["passed"])
+        passed = data["passed"]
+        if not isinstance(passed, bool):
+            raise ValueError("judge passed must be a boolean")
+        return passed
     match = _PASSED.search(text)
     if not match:
         raise ValueError("judge did not return passed")
@@ -169,7 +172,9 @@ def grade_run(
             if meta.get("focus", "last_message") != "last_message":
                 raise ValueError(f"{path.name} focus is not last_message")
             try:
-                passed = bool(judge(judge_prompt(body, last_message)))
+                passed = judge(judge_prompt(body, last_message))
+                if not isinstance(passed, bool):
+                    raise ValueError("judge passed must be a boolean")
             except Exception as exc:
                 row = {"name": path.stem, "error": str(exc), "evidence": last_message}
                 if "weight" in meta:
