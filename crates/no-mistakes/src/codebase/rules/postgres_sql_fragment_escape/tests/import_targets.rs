@@ -310,6 +310,53 @@ fn several_ambient_modules_record_the_ambiguous_specifier() {
     assert_eq!(gaps.get(&escape).unwrap().value(), "orders-widget");
 }
 
+#[test]
+fn external_star_reexports_add_no_fragment() {
+    let mut world = world();
+    let barrel = std::path::PathBuf::from("/repo/widgets/barrel.ts");
+    insert(
+        &mut world.facts,
+        barrel.clone(),
+        TsFileFacts {
+            star_reexport_specifiers: vec!["node:fs".to_string()],
+            ..TsFileFacts::default()
+        },
+    );
+    merge_import_target(
+        &mut world.graph.import_targets,
+        &barrel,
+        "node:fs",
+        ImportTarget::External,
+    );
+    let catalog = catalog(&world);
+    assert!(visible::visible_all(
+        &catalog,
+        Some(&world.graph),
+        &world.facts,
+        &barrel,
+        &mut Vec::new()
+    )
+    .is_empty());
+    assert!(alias::star_fragments(
+        &catalog,
+        Some(&world.graph),
+        &world.facts,
+        &barrel,
+        &[],
+        &mut Vec::new(),
+    )
+    .is_empty());
+    assert!(visible::visible(
+        &catalog,
+        Some(&world.graph),
+        &world.facts,
+        &barrel,
+        "widgetItems",
+        &mut Vec::new(),
+    )
+    .is_empty());
+}
+
 fn ambient_module(specifier: &str) -> TsFileFacts {
     ambient_source(&format!("declare module \"{specifier}\" {{}}\n"))
 }
