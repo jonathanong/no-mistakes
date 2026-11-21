@@ -27,7 +27,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 ## Locks, transactions, connections
 
-- SHOULD NOT lock rows you neither write nor read to decide a write.
+- SHOULD NOT lock rows you neither write nor read to decide a write. When an invariant needs serialization, prefer a row lock on the parent or aggregate-root row over an advisory lock.
+- SHOULD NOT take an advisory lock when a row lock can express the same serialization.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
