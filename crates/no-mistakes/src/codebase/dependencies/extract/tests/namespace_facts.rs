@@ -426,7 +426,17 @@ fn a_sourced_reexport_does_not_set_the_local_export_offset() {
     );
     let facts = namespaces(source);
     let local = u32::try_from(source.rfind("export").expect("local export")).expect("offset");
+    let sourced = u32::try_from(source.find("export").expect("sourced export")).expect("offset");
     assert_eq!(facts.export_name_offsets, vec![("name".to_string(), local)]);
+    assert_eq!(
+        facts.sourced_export_offsets,
+        vec![(
+            "./producer".to_string(),
+            "name".to_string(),
+            "other".to_string(),
+            sourced
+        )]
+    );
 }
 
 #[test]
