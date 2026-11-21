@@ -208,9 +208,10 @@ Opt-in `postgres-sql-fragment-escape` reports cross-file writes, rebinds, and
 namespace escapes of exported trusted SQL const fragments. It reads prepared
 import and value-flow facts, and recorded import targets when the canonical
 graph was built. It does not change that graph or
-`postgres-no-mutable-sql-registry`. A file with an operational error, incomplete
-value flow, or unreadable source is listed on the check `incomplete` field and
-does not drop findings from complete files.
+`postgres-no-mutable-sql-registry`. When a trusted SQL tag is configured, a
+file with an operational error, incomplete value flow, or unreadable source is
+listed on the check `incomplete` field and does not drop findings from complete
+files. Include and exclude select those gaps.
 
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes

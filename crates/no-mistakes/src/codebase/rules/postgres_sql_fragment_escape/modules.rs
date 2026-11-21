@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 pub(super) enum ModuleHit {
     File(PathBuf),
     Open,
+    /// A bare specifier with no recorded import target. It is not an unresolved import.
+    Unproven,
 }
 
 pub(super) fn module_hit(
@@ -37,6 +39,8 @@ pub(super) fn module_hit(
     hits.dedup();
     if hits.len() == 1 {
         ModuleHit::File(hits.remove(0))
+    } else if hits.is_empty() && graph.is_none() && !specifier.starts_with('.') {
+        ModuleHit::Unproven
     } else {
         ModuleHit::Open
     }
@@ -51,7 +55,7 @@ pub(super) fn module_file(
 ) -> Option<PathBuf> {
     match module_hit(graph, facts, catalog, importer, specifier) {
         ModuleHit::File(path) => Some(path),
-        ModuleHit::Open => None,
+        ModuleHit::Open | ModuleHit::Unproven => None,
     }
 }
 
@@ -64,6 +68,7 @@ pub(super) fn import_hit_fragments(
 ) -> Vec<Fragment> {
     match module_hit(graph, facts, catalog, importer, &import.specifier) {
         ModuleHit::Open => vec![Fragment::open(&import.specifier)],
+        ModuleHit::Unproven => Vec::new(),
         ModuleHit::File(module) if import.kind == ImportedBindingKind::Namespace => {
             super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
         }

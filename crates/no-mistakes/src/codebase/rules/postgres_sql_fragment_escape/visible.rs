@@ -54,6 +54,7 @@ pub(super) fn visible_all(
                     catalog, graph, facts, &next, &blocked, stack,
                 )),
                 ModuleHit::Open => found.push(Fragment::open(spec)),
+                ModuleHit::Unproven => {}
             }
         }
         for binding in &ts.exported_bindings {
@@ -94,6 +95,7 @@ fn follow(
                     found.extend(visible(catalog, graph, facts, &next, name, stack));
                 }
                 ModuleHit::Open => found.push(Fragment::open(spec)),
+                ModuleHit::Unproven => {}
             }
         }
     }
