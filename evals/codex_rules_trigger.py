@@ -115,9 +115,19 @@ def _skills_in_script(script: str, roots: list, attempt_root: Path, cwd: Path | 
                 continue
             if not argv:
                 continue
+            inner = _subshell(text)
+            if inner is not None:
+                found.extend(_skills_in_script(inner, roots, attempt_root, stage_cwd))
+                continue
             name = Path(argv[0]).name
+            if name == "find":
+                for token in _find_exec_tokens(argv):
+                    skill = _skill_name(token, stage_cwd, roots, attempt_root)
+                    if skill:
+                        found.append(skill)
+                continue
             if name == "cd" and len(stages) == 1:
-                current = _cd_target(argv, stage_cwd, roots, attempt_root)
+                current = _cd_target(argv, stage_cwd)
                 continue
             if _reader_kind(name) is None:
                 continue
@@ -133,6 +143,7 @@ def _split_ops(script: str) -> list:
     parts = []
     buf = []
     quote = None
+    depth = 0
     index = 0
 
     def push(sep: str | None) -> None:
@@ -151,6 +162,20 @@ def _split_ops(script: str) -> list:
             continue
         if char in "'\"":
             quote = char
+            buf.append(char)
+            index += 1
+            continue
+        if char == "(":
+            depth += 1
+            buf.append(char)
+            index += 1
+            continue
+        if char == ")" and depth:
+            depth -= 1
+            buf.append(char)
+            index += 1
+            continue
+        if depth:
             buf.append(char)
             index += 1
             continue
@@ -287,7 +312,53 @@ def _quoted(text: str) -> list:
     return found
 
 
-def _cd_target(argv: list, cwd: Path | None, roots: list, attempt_root: Path) -> Path | None:
+def _subshell(text: str) -> str | None:
+    body = text.strip()
+    if len(body) >= 2 and body[0] == "(" and body[-1] == ")":
+        return body[1:-1].strip()
+    return None
+
+
+_FIND_ARG = {"-name", "-iname", "-path", "-regex", "-maxdepth", "-mindepth", "-type", "-size"}
+
+
+def _find_exec_tokens(argv: list) -> list:
+    reader = False
+    name_filter = None
+    paths = []
+    index = 1
+    while index < len(argv):
+        arg = argv[index]
+        if arg in ("-exec", "-execdir") and index + 1 < len(argv):
+            if _reader_kind(Path(argv[index + 1]).name) is not None:
+                reader = True
+            index += 2
+            while index < len(argv) and argv[index] not in ("+", ";"):
+                index += 1
+            index += 1
+            continue
+        if arg in _FIND_ARG and index + 1 < len(argv):
+            if arg in ("-name", "-iname"):
+                name_filter = argv[index + 1]
+            index += 2
+            continue
+        if arg.startswith("-"):
+            index += 1
+            continue
+        paths.append(arg)
+        index += 1
+    if not reader:
+        return []
+    tokens = list(paths)
+    if name_filter not in (None, "SKILL.md"):
+        return tokens
+    for path in paths:
+        if _SKILL_DIR.fullmatch(Path(path).name):
+            tokens.append(str(Path(path) / "SKILL.md"))
+    return tokens
+
+
+def _cd_target(argv: list, cwd: Path | None) -> Path | None:
     index = 1
     while index < len(argv):
         arg = argv[index]
@@ -296,23 +367,23 @@ def _cd_target(argv: list, cwd: Path | None, roots: list, attempt_root: Path) ->
         if arg.startswith("-"):
             index += 1
             continue
-        return _locate(arg, cwd, roots, attempt_root) or cwd
+        return _locate(arg, cwd) or cwd
     return cwd
 
 
 def _skill_name(token: str, cwd: Path | None, roots: list, attempt_root: Path) -> str | None:
-    candidate = _locate(token, cwd, roots, attempt_root)
-    if candidate is None or not _is_under(candidate, _anchor(attempt_root, roots, attempt_root)):
+    candidate = _locate(token, cwd)
+    if candidate is None or not _anchor(candidate, attempt_root):
         return None
     if candidate.name != "SKILL.md" or not _SKILL_DIR.fullmatch(candidate.parent.name):
         return None
     for root in roots:
-        if _is_under(candidate, _anchor(root, roots, attempt_root)):
+        if _anchor(candidate, root):
             return candidate.parent.name
     return None
 
 
-def _locate(token: str, cwd: Path | None, roots: list, attempt_root: Path) -> Path | None:
+def _locate(token: str, cwd: Path | None) -> Path | None:
     if not token or token.startswith("-"):
         return None
     path = Path(token)
@@ -320,17 +391,31 @@ def _locate(token: str, cwd: Path | None, roots: list, attempt_root: Path) -> Pa
         if cwd is None:
             return None
         path = Path(cwd) / path
-    return _anchor(path, roots, attempt_root)
-
-
-def _anchor(path: Path, roots: list, attempt_root: Path) -> Path:
-    live = any(item.exists() for item in [*roots, attempt_root])
-    if live:
-        try:
-            return path.resolve()
-        except OSError:
-            return Path(os.path.normpath(path))
     return Path(os.path.normpath(path))
+
+
+def _forms(path: Path) -> tuple:
+    saved = Path(os.path.normpath(path))
+    try:
+        canonical = Path(os.path.realpath(path))
+    except OSError:
+        return (saved,)
+    if canonical == saved:
+        return (saved,)
+    return (saved, canonical)
+
+
+def _anchor(path: Path, root: Path) -> bool:
+    """True when `path` is under `root` as saved or as canonicalized.
+
+    Codex records `/private/tmp` and `/private/var`. A plan may store `/tmp`
+    or `/var`. After the attempt directory is deleted, either form matches.
+    """
+    for candidate in _forms(path):
+        for base in _forms(root):
+            if _is_under(candidate, base):
+                return True
+    return False
 
 
 def _is_under(path: Path, root: Path) -> bool:

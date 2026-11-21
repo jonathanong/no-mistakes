@@ -417,13 +417,20 @@ transcript is graded and not exec'd again.
 `<skill>-rules/SKILL.md` under that attempt's installed plugin cache or the
 sibling `marketplace/plugins/no-mistakes-rules` copy. Paths resolve from the
 command's cwd and from any `cd` earlier in the same command (`cd` inside a
-pipeline does not stick). The readers are `cat`, `sed`, `head`, `tail`,
+pipeline does not stick). A parenthesized subshell such as
+`(cd ... && cat SKILL.md)` counts, and that `cd` does not apply after the
+closing parenthesis. The readers are `cat`, `sed`, `head`, `tail`,
 `less`, `more`, `nl`, `awk`, `rg`, `grep`, `bat`, and `python` or `node` when
 the command opens that file, including the `bash -lc` form Codex puts around
 a shell command. `rg` and `grep` count a file argument, not the search
-pattern and not a directory scan. `ls`, `stat`, `find`, `echo`, a path that
-only appears in message text or `aggregated_output`, a non-zero exit, and an
-`item.started` event do not count. A path outside the attempt does not count.
+pattern and not a directory scan. `find <skill-dir> -name SKILL.md -exec cat {} +`
+counts, and so does `-execdir`, when that command is a reader. `ls`, `stat`,
+`echo`, a `find` that does not run a reader, a path that only appears in
+message text or `aggregated_output`, a non-zero exit, and an `item.started`
+event do not count. The plan stores the attempt root, plugin root, marketplace
+root, and cwd in canonical form. Regrade matches a transcript path against the
+saved form or the canonical form, including after the attempt directory is
+deleted. A path outside the attempt does not count.
 `skill_invocation` is not an exec JSON event and is not accepted. The matched
 skill name is checked with the case's existing `input_match`. A live
 transcript has not been graded, so the first pilot should confirm this shape

@@ -466,9 +466,17 @@ class PreviewAndGradeTest(unittest.TestCase):
         self.assertTrue(fired("node -e \"require('fs').readFileSync('" + str(skill) + "')\""))
         wrapped = "bash -lc " + json.dumps(f"cd {skill.parent} && cat SKILL.md")
         self.assertTrue(fired(wrapped))
+        self.assertTrue(fired(f"(cd {skill.parent} && cat SKILL.md)"))
+        self.assertTrue(fired(f"find {skill.parent} -name SKILL.md -exec cat {{}} +"))
+        self.assertTrue(fired(f"find {skill.parent} -name SKILL.md -execdir cat {{}} +"))
+        self.assertTrue(fired(f"find {skill} -exec cat {{}} +"))
+        self.assertFalse(fired(f"(cd {skill.parent} && true); cat SKILL.md"))
         self.assertFalse(fired(f"ls -l {skill}"))
         self.assertFalse(fired(f"stat {skill}"))
         self.assertFalse(fired(f"find {plugin} -name SKILL.md"))
+        self.assertFalse(fired(f"find {plugin} -name SKILL.md -exec cat {{}} +"))
+        self.assertFalse(fired(f"find {skill.parent} -name README.md -exec cat {{}} +"))
+        self.assertFalse(fired(f"find {skill.parent} -exec ls {{}} +"))
         self.assertFalse(fired(f"echo {skill}"))
         self.assertFalse(fired(f"cat {skill}", exit_code=1))
         self.assertFalse(fired(f"cat {outside_skill}", root=outside, market_root=None))
@@ -545,6 +553,72 @@ class PreviewAndGradeTest(unittest.TestCase):
         again = json.loads((output / "aggregate-result.json").read_text())
         self.assertTrue(again["partial"])
         self.assertEqual(again["partialReason"], "codex rules run still in progress")
+
+    def test_regrade_keeps_a_canonical_read_after_the_attempt_is_deleted(self):
+        case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
+        output = Path(tempfile.mkdtemp(prefix="codex-rules-canon-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+        base = Path(tempfile.mkdtemp(prefix="codex-rules-canon-root-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(base, ignore_errors=True))
+        private = base / "private"
+        private.mkdir()
+        link = base / "var"
+        link.symlink_to(private, target_is_directory=True)
+        attempt = link / "attempt"
+        built = codex_rules_env.build_arm(
+            attempt,
+            "with",
+            user_home=Path("/codex-rules-user-home-unused"),
+            repo=REPO,
+        )
+        plan = codex_rules_env.exec_plan(built, case["prompt"], case["timeout_seconds"])
+        unresolved_plugin = str(codex_rules_env.installed_plugin_root(built["codex_home"]))
+        self.assertEqual(plan["attempt_root"], os.path.realpath(attempt))
+        self.assertEqual(plan["cwd"], os.path.realpath(built["workspace"]))
+        self.assertEqual(plan["plugin_root"], os.path.realpath(unresolved_plugin))
+        self.assertNotEqual(plan["attempt_root"], os.path.normpath(attempt))
+        self.assertNotEqual(plan["plugin_root"], unresolved_plugin)
+        skill = Path(plan["plugin_root"]) / "skills" / "testing-rules" / "SKILL.md"
+        self.assertTrue(skill.is_file())
+        self.assertFalse(str(skill).startswith(os.path.normpath(attempt)))
+        slot = store.slot(output, case["name"], "with", 1)
+        store.save_exec(
+            slot,
+            {
+                "returncode": 0,
+                "stdout": _read_event(f"cat {skill}") + "\n",
+                "stderr": "",
+                "last_message": "code",
+                "plugin_root": unresolved_plugin,
+                "marketplace_root": str(built["root"] / "marketplace" / "plugins" / "no-mistakes-rules"),
+                "attempt_root": str(built["root"]),
+                "cwd": str(built["workspace"]),
+            },
+        )
+        store.save_result(
+            slot,
+            {
+                "graders": [
+                    {"name": "skill-fired", "passed": False, "evidence": "code"},
+                    {"name": "asserts-error-code-not-text", "error": "judge down", "evidence": "code"},
+                ],
+                "transcript": store.transcript_rel(case["name"], "with", 1),
+            },
+        )
+        __import__("shutil").rmtree(plan["attempt_root"])
+        self.assertFalse(Path(plan["attempt_root"]).exists())
+        self.assertTrue(link.is_symlink())
+        with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")), mock.patch.object(
+            codex_rules.subprocess, "Popen", side_effect=AssertionError("model")
+        ):
+            code = codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]])
+        self.assertEqual(code, 0)
+        saved = json.loads((slot / "result.json").read_text())
+        fired = next(item for item in saved["graders"] if item["name"] == "skill-fired")
+        self.assertTrue(fired["passed"])
+        judged = next(item for item in saved["graders"] if item["name"] == "asserts-error-code-not-text")
+        self.assertEqual(judged["error"], "judge down")
+        self.assertNotIn("passed", judged)
 
     def test_judge_prompt_uses_grader_markdown_and_report_shape(self):
         case = REPO / "evals" / "rules-testing-write-error-text"

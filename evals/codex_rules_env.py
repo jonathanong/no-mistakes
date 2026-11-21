@@ -257,18 +257,22 @@ def exec_argv(codex_bin: str, workspace: Path, last_message: Path, prompt: str) 
     ]
 
 
+def _canonical(path: Path) -> str:
+    return os.path.realpath(path)
+
+
 def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "codex") -> dict:
     last_message = built["root"] / "last-message.txt"
     plugin_root = None
     marketplace_root = None
     if built["arm"] == "with":
-        plugin_root = str(installed_plugin_root(Path(built["codex_home"])))
-        marketplace_root = str(built["root"] / "marketplace" / "plugins" / PLUGIN)
+        plugin_root = _canonical(installed_plugin_root(Path(built["codex_home"])))
+        marketplace_root = _canonical(built["root"] / "marketplace" / "plugins" / PLUGIN)
     return {
         "arm": built["arm"],
         "argv": exec_argv(codex_bin, built["workspace"], last_message, prompt),
         "env": built["env"],
-        "cwd": str(built["workspace"]),
+        "cwd": _canonical(built["workspace"]),
         "timeout_seconds": timeout_seconds,
         "model": MODEL,
         "reasoning": REASONING,
@@ -280,5 +284,5 @@ def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "
         "codex_home": str(built["codex_home"]),
         "plugin_root": plugin_root,
         "marketplace_root": marketplace_root,
-        "attempt_root": str(built["root"]),
+        "attempt_root": _canonical(built["root"]),
     }

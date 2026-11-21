@@ -464,7 +464,8 @@ or greater. Before any paid attempt, `codex plugin list --json` must show
 `no-mistakes-rules` installed and enabled on the with arm and no plugins on
 the without arm. `skill-fired` on each arm is the primary measure: a finished
 command that reads `<skill>-rules/SKILL.md` from that attempt's installed
-plugin cache or its marketplace copy, including a relative path after `cd`.
+plugin cache or its marketplace copy, including a relative path after `cd`
+and a canonical path after the attempt directory is gone.
 `--regrade` recomputes that bit from the saved transcripts and does not call
 a model. The pass rate is a regression check: `summarize.py` exits 1 when the
 with-arm score is below the without-arm score. A judge failure is recorded on
