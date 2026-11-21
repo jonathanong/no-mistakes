@@ -10,6 +10,56 @@ use std::sync::Arc;
 
 #[test]
 fn incomplete_value_flow_keeps_fragment_escape_findings() {
+    let (findings, session) = run_gap(&fragment_config());
+    assert!(
+        findings.iter().any(|finding| {
+            finding.rule == "postgres-sql-fragment-escape"
+                && finding.file == "extend.ts"
+                && finding.target.as_deref() == Some("widgetColumns")
+        }),
+        "{findings:?}"
+    );
+    let gaps = session.check_failures();
+    assert!(
+        gaps.iter().any(|gap| {
+            gap.consumer == "postgres-sql-fragment-escape"
+                && gap.message.contains("wide.ts")
+                && gap.message.contains("incomplete (analysis budget)")
+        }),
+        "{gaps:?}"
+    );
+}
+
+#[test]
+fn incomplete_value_flow_keeps_fragment_escape_when_a_sibling_needs_calls() {
+    let mut config = fragment_config();
+    config.rules.push(RuleDef {
+        rule: "unconstructed-error-class".to_string(),
+        scope: Some(RuleScope::Repository),
+        ..RuleDef::default()
+    });
+    let (findings, session) = run_gap(&config);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.rule == "postgres-sql-fragment-escape"),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule != "unconstructed-error-class"),
+        "{findings:?}"
+    );
+    assert!(!session.check_consumer_ready("unconstructed-error-class"));
+}
+
+fn run_gap(
+    config: &NoMistakesConfig,
+) -> (
+    Vec<crate::codebase::rules::RuleFinding>,
+    Arc<AnalysisSession>,
+) {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/value-flow-gap"),
@@ -43,7 +93,6 @@ fn incomplete_value_flow_keeps_fragment_escape_findings() {
     };
     let catalog =
         crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig.clone(), None);
-    let config = fragment_config();
     let findings = run(
         PreparedRulesCheck {
             session: Arc::clone(&session),
@@ -52,7 +101,7 @@ fn incomplete_value_flow_keeps_fragment_escape_findings() {
             tsconfig_path: None,
             shared: &facts,
             prepared_playwright: None,
-            config: &config,
+            config,
             prepared_graph: None,
             prepared_tsconfig: &tsconfig,
             prepared_tsconfig_catalog: &catalog,
@@ -67,23 +116,7 @@ fn incomplete_value_flow_keeps_fragment_escape_findings() {
     )
     .expect("fragment escape runs when one file exhausts value flow")
     .findings;
-    assert!(
-        findings.iter().any(|finding| {
-            finding.rule == "postgres-sql-fragment-escape"
-                && finding.file == "extend.ts"
-                && finding.target.as_deref() == Some("widgetColumns")
-        }),
-        "{findings:?}"
-    );
-    let gaps = session.check_failures();
-    assert!(
-        gaps.iter().any(|gap| {
-            gap.consumer == "postgres-sql-fragment-escape"
-                && gap.message.contains("wide.ts")
-                && gap.message.contains("incomplete (analysis budget)")
-        }),
-        "{gaps:?}"
-    );
+    (findings, session)
 }
 
 fn fragment_config() -> NoMistakesConfig {
