@@ -1,8 +1,12 @@
 use super::output_syntax::unquote;
 
+pub(super) fn wholly_single_quoted(value: &str) -> bool {
+    value.len() >= 2 && value.starts_with('\'') && value.ends_with('\'')
+}
+
 pub(super) fn same_name_expansion(value: &str, name: &str) -> bool {
     let trimmed = value.trim().trim_end_matches(';').trim();
-    if trimmed.len() >= 2 && trimmed.starts_with('\'') && trimmed.ends_with('\'') {
+    if wholly_single_quoted(trimmed) {
         return false;
     }
     let value = unquote(trimmed);

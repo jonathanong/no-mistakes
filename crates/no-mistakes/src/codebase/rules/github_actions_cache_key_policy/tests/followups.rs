@@ -130,6 +130,7 @@ fn a_self_expansion_keeps_the_proven_digest() {
         "\"${digest%%}\"",
         "\"${digest:x}\"",
         "'${digest:0:16}'",
+        "'$digest'",
     ] {
         let run = format!(
             "digest=$(sha256sum widgets.lock)\ndigest={rhs}\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"

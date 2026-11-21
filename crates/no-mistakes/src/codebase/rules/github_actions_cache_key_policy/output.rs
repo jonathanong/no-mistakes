@@ -51,7 +51,11 @@ fn rhs_hashes(rhs: &str, vars: &FxHashSet<String>, lockfile: &str) -> bool {
 }
 
 fn expression_hashes(value: &str, vars: &FxHashSet<String>, lockfile: &str) -> bool {
-    let value = unquote(value.trim().strip_suffix("\\n").unwrap_or(value.trim()));
+    let trimmed = value.trim().strip_suffix("\\n").unwrap_or(value.trim());
+    if super::expand::wholly_single_quoted(trimmed) {
+        return false;
+    }
+    let value = unquote(trimmed);
     if let Some(name) = var_ref(value) {
         return vars.contains(name);
     }
