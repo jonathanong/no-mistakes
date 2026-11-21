@@ -45,8 +45,9 @@ pub(super) fn depth_zero_module_specifier(
             return Some(spec.to_string());
         }
         let after = rest
-            .strip_prefix("import(")
-            .or_else(|| rest.strip_prefix("require("))?;
+            .strip_prefix("import")
+            .or_else(|| rest.strip_prefix("require"))?;
+        let after = after.trim_start().strip_prefix('(')?;
         return super::text::whole_quoted(after).map(str::to_string);
     }
     window
@@ -82,14 +83,6 @@ fn depth_zero_callee(window: &str) -> Option<(usize, &str)> {
     None
 }
 
-pub(super) fn specifier_between(ts: &TsFileFacts, start: u32, end: u32) -> Option<&str> {
-    ts.namespaces
-        .literal_import_spans
-        .iter()
-        .find(|(offset, _)| *offset >= start && *offset < end)
-        .map(|(_, specifier)| specifier.as_str())
-}
-
 pub(super) fn specifier_at_offset(ts: &TsFileFacts, offset: u32) -> Option<&str> {
     ts.namespaces
         .literal_import_spans
@@ -114,5 +107,5 @@ pub(super) fn direct_module_load(text: &str) -> bool {
 
 fn callee_at_start(text: &str, callee: &str) -> bool {
     text.strip_prefix(callee)
-        .is_some_and(|rest| rest.starts_with('('))
+        .is_some_and(|rest| rest.trim_start().starts_with('('))
 }

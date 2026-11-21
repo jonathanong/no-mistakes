@@ -140,6 +140,79 @@ fn arrow_that_imports_is_not_the_module() {
 }
 
 #[test]
+fn spaced_import_initializer_still_resolves() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/spaced.ts");
+    let source = "const parts = import (\"./columns\");\n";
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.value_flow
+        .bindings
+        .push(bind("parts", 0, ValueExpression::Unknown));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert_from(
+        &resolve::name_fragments(&ctx, "parts"),
+        &world.columns,
+        &["orderColumns", "widgetColumns"],
+    );
+}
+
+#[test]
+fn computed_import_does_not_take_a_nested_literal() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/picked.ts");
+    let source = "const parts = await import(pick(import(\"./columns\")));\n";
+    let nested =
+        u32::try_from(source.find("import(\"./columns\")").expect("nested")).expect("offset");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.namespaces
+        .literal_import_spans
+        .push((nested, "./columns".to_string()));
+    ts.value_flow
+        .bindings
+        .push(bind("parts", 0, ValueExpression::Unknown));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert!(
+        resolve::name_fragments(&ctx, "parts").is_empty(),
+        "a nested literal import does not name the outer computed import"
+    );
+}
+
+#[test]
+fn namespace_reexport_keeps_every_export() {
+    let world = world();
+    let catalog = catalog(&world);
+    let source = "import * as columns from \"./columns\";\nexport { columns as orderColumns };\n";
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    let both = &["orderColumns", "widgetColumns"];
+    assert_from(&alias_of(&world, &catalog, &ts), &world.columns, both);
+    ts.imported_bindings.push(import(
+        "./columns",
+        "columns",
+        "*",
+        ImportedBindingKind::Namespace,
+    ));
+    ts.exported_bindings.push(ExportedBinding {
+        specifier: None,
+        local: "columns".to_string(),
+        exported: "orderColumns".to_string(),
+    });
+    assert_from(&alias_of(&world, &catalog, &ts), &world.columns, both);
+}
+
+#[test]
 fn direct_import_initializer_still_resolves() {
     let mut world = world();
     let file = PathBuf::from("/repo/orders/loaded.ts");
