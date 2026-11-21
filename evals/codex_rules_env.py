@@ -260,8 +260,10 @@ def exec_argv(codex_bin: str, workspace: Path, last_message: Path, prompt: str) 
 def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "codex") -> dict:
     last_message = built["root"] / "last-message.txt"
     plugin_root = None
+    marketplace_root = None
     if built["arm"] == "with":
         plugin_root = str(installed_plugin_root(Path(built["codex_home"])))
+        marketplace_root = str(built["root"] / "marketplace" / "plugins" / PLUGIN)
     return {
         "arm": built["arm"],
         "argv": exec_argv(codex_bin, built["workspace"], last_message, prompt),
@@ -277,4 +279,6 @@ def exec_plan(built: dict, prompt: str, timeout_seconds: int, codex_bin: str = "
         "workspace": str(built["workspace"]),
         "codex_home": str(built["codex_home"]),
         "plugin_root": plugin_root,
+        "marketplace_root": marketplace_root,
+        "attempt_root": str(built["root"]),
     }

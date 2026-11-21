@@ -54,6 +54,9 @@ def read_exec(path: Path) -> dict | None:
         "stderr": meta.get("stderr") or "",
         "last_message": last.read_text() if last.is_file() else "",
         "plugin_root": meta.get("plugin_root"),
+        "marketplace_root": meta.get("marketplace_root"),
+        "attempt_root": meta.get("attempt_root"),
+        "cwd": meta.get("cwd"),
     }
 
 
@@ -72,6 +75,9 @@ def save_exec(path: Path, result: dict) -> None:
             "returncode": result["returncode"],
             "stderr": (result.get("stderr") or "")[-2000:],
             "plugin_root": result.get("plugin_root"),
+            "marketplace_root": result.get("marketplace_root"),
+            "attempt_root": result.get("attempt_root"),
+            "cwd": result.get("cwd"),
         },
     )
 

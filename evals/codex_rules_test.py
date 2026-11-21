@@ -419,6 +419,133 @@ class PreviewAndGradeTest(unittest.TestCase):
             )
             self.assertFalse(codex_rules_grade.skill_fired(meta, ignored, root))
 
+    def test_skill_fired_counts_marketplace_and_relative_reads(self):
+        meta, _ = codex_rules_grade.parse_frontmatter(
+            (REPO / "evals" / "rules-testing-write-error-text" / "graders" / "skill-fired.md").read_text()
+        )
+        base = Path(tempfile.mkdtemp(prefix="codex-rules-reads-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(base, ignore_errors=True))
+        attempt = base / "attempt"
+        workspace = attempt / "workspace"
+        workspace.mkdir(parents=True)
+        plugin = attempt / "plugin"
+        skill = plugin / "skills" / "testing-rules" / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("skill body\n")
+        market = attempt / "marketplace" / "plugins" / "no-mistakes-rules"
+        market_skill = market / "skills" / "testing-rules" / "SKILL.md"
+        market_skill.parent.mkdir(parents=True)
+        market_skill.write_text("market body\n")
+        outside = base / "outside"
+        outside_skill = outside / "skills" / "testing-rules" / "SKILL.md"
+        outside_skill.parent.mkdir(parents=True)
+        outside_skill.write_text("outside\n")
+        decoy = workspace / "testing-rules" / "SKILL.md"
+        decoy.parent.mkdir(parents=True)
+        decoy.write_text("decoy\n")
+
+        def fired(command, *, root=plugin, market_root=market, cwd=workspace, exit_code=0):
+            return codex_rules_grade.skill_fired(
+                meta,
+                _read_event(command, exit_code=exit_code),
+                root,
+                marketplace_root=market_root,
+                attempt_root=attempt,
+                cwd=cwd,
+            )
+
+        self.assertTrue(fired(f"nl -ba {skill} | sed -n '1,20p'"))
+        self.assertTrue(fired(f"cd {skill.parent} && cat SKILL.md"))
+        self.assertTrue(fired(f"rg -n rule {skill}"))
+        self.assertTrue(fired(f"rg SKILL.md {skill}"))
+        self.assertTrue(fired(f"awk '/rule/' {skill}"))
+        self.assertTrue(fired(f"grep -n rule {skill}"))
+        self.assertTrue(fired(f"bat {skill}"))
+        self.assertTrue(fired(f"cat {market_skill}"))
+        self.assertTrue(fired("python -c \"open('" + str(skill) + "').read()\""))
+        self.assertTrue(fired("node -e \"require('fs').readFileSync('" + str(skill) + "')\""))
+        wrapped = "bash -lc " + json.dumps(f"cd {skill.parent} && cat SKILL.md")
+        self.assertTrue(fired(wrapped))
+        self.assertFalse(fired(f"ls -l {skill}"))
+        self.assertFalse(fired(f"stat {skill}"))
+        self.assertFalse(fired(f"find {plugin} -name SKILL.md"))
+        self.assertFalse(fired(f"echo {skill}"))
+        self.assertFalse(fired(f"cat {skill}", exit_code=1))
+        self.assertFalse(fired(f"cat {outside_skill}", root=outside, market_root=None))
+        self.assertFalse(fired(f"cat {decoy}"))
+        self.assertFalse(fired("rg SKILL.md", cwd=skill.parent))
+        self.assertFalse(fired(f"cd {skill.parent} | cat SKILL.md"))
+        self.assertFalse(fired("python -c \"print('see SKILL.md for details')\""))
+        home = codex_rules_grade.trigger.Path
+        with mock.patch.object(home, "home", return_value=skill.parent):
+            self.assertFalse(fired("cd && cat SKILL.md"))
+            self.assertFalse(fired("cd - && cat SKILL.md"))
+
+    def test_regrade_recomputes_skill_fired_without_a_model(self):
+        case = codex_rules_grade.case_prompt(REPO / "evals" / "rules-testing-write-error-text")
+        output = Path(tempfile.mkdtemp(prefix="codex-rules-regrade-"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(output, ignore_errors=True))
+        attempt = Path(tempfile.mkdtemp(prefix="codex-rules-regrade-attempt-"))
+        workspace = attempt / "workspace"
+        workspace.mkdir(parents=True)
+        plugin = attempt / "plugin"
+        skill = plugin / "skills" / "testing-rules" / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("skill body\n")
+        command = f"cd {skill.parent} && cat SKILL.md"
+        slot = store.slot(output, case["name"], "with", 1)
+        store.save_exec(
+            slot,
+            {
+                "returncode": 0,
+                "stdout": _read_event(command) + "\n",
+                "stderr": "",
+                "last_message": "code",
+                "plugin_root": str(plugin),
+                "marketplace_root": str(attempt / "marketplace" / "plugins" / "no-mistakes-rules"),
+                "attempt_root": str(attempt),
+                "cwd": str(workspace),
+            },
+        )
+        store.save_result(
+            slot,
+            {
+                "graders": [
+                    {"name": "skill-fired", "passed": False, "evidence": "code"},
+                    {"name": "asserts-error-code-not-text", "error": "judge down", "evidence": "code"},
+                ],
+                "transcript": store.transcript_rel(case["name"], "with", 1),
+            },
+        )
+        failed = store.slot(output, case["name"], "without", 1)
+        store.save_result(failed, {"error": "codex exec exited 1", "graders": []})
+        __import__("shutil").rmtree(attempt)
+        with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")), mock.patch.object(
+            codex_rules.subprocess, "Popen", side_effect=AssertionError("model")
+        ):
+            self.assertEqual(codex_rules.main(["--regrade", "--run", "--output", str(output)]), 2)
+            self.assertEqual(codex_rules.main(["--regrade"]), 2)
+            code = codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]])
+        self.assertEqual(code, 0)
+        report = json.loads((output / "aggregate-result.json").read_text())
+        self.assertFalse(report["partial"])
+        row = report["cases"][0]["arms"]["with"][0]
+        self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in row["graders"]))
+        judged = next(item for item in row["graders"] if item["name"] == "asserts-error-code-not-text")
+        self.assertEqual(judged["error"], "judge down")
+        self.assertNotIn("passed", judged)
+        self.assertEqual(report["cases"][0]["arms"]["without"][0]["error"], "codex exec exited 1")
+        saved = json.loads((slot / "result.json").read_text())
+        self.assertTrue(any(item["name"] == "skill-fired" and item["passed"] for item in saved["graders"]))
+        waiting = store.slot(output, case["name"], "with", 2)
+        waiting.mkdir(parents=True)
+        (waiting / "transcript.jsonl").write_text("{}\n")
+        with mock.patch.object(codex_rules.subprocess, "run", side_effect=AssertionError("model")):
+            self.assertEqual(codex_rules.main(["--regrade", "--output", str(output), "--case", case["name"]]), 0)
+        again = json.loads((output / "aggregate-result.json").read_text())
+        self.assertTrue(again["partial"])
+        self.assertEqual(again["partialReason"], "codex rules run still in progress")
+
     def test_judge_prompt_uses_grader_markdown_and_report_shape(self):
         case = REPO / "evals" / "rules-testing-write-error-text"
         rubric_meta, rubric = codex_rules_grade.parse_frontmatter(

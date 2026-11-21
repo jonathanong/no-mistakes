@@ -364,6 +364,8 @@ python3 evals/codex_rules.py
 CODEX_AUTH_FILE=/path/to/spare-auth.json \
   python3 evals/codex_rules.py --run --case 'rules-testing-*' --runs 1 \
   --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
+python3 evals/codex_rules.py --regrade \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
 ```
 
 Use the ChatGPT Codex account that has spare budget. Do not use a shared or
@@ -411,16 +413,28 @@ resume. A finished `result.json` is skipped. A saved `exec.json` plus
 transcript is graded and not exec'd again.
 
 `skill-fired` counts a `command_execution` only when `item.completed` says
-`status: completed` and `exit_code: 0`, and the command reads
-`<skill>-rules/SKILL.md` under that attempt's installed plugin cache. The
-readers are `cat`, `sed`, `head`, `tail`, `less`, and `more`, including the
-`bash -lc` form Codex puts around a shell command. `ls`, `echo`, a path that
-only appears in message text or `aggregated_output`, and an `item.started`
-event do not count. `skill_invocation` is not an exec JSON event and is not
-accepted. The matched skill name is checked with the case's existing
-`input_match`. A live transcript has not been graded, so the first pilot
-should confirm this shape against the saved JSONL before a trigger rate is
-quoted.
+`status: completed` and `exit_code: 0`, and a reader in that command opens
+`<skill>-rules/SKILL.md` under that attempt's installed plugin cache or the
+sibling `marketplace/plugins/no-mistakes-rules` copy. Paths resolve from the
+command's cwd and from any `cd` earlier in the same command (`cd` inside a
+pipeline does not stick). The readers are `cat`, `sed`, `head`, `tail`,
+`less`, `more`, `nl`, `awk`, `rg`, `grep`, `bat`, and `python` or `node` when
+the command opens that file, including the `bash -lc` form Codex puts around
+a shell command. `rg` and `grep` count a file argument, not the search
+pattern and not a directory scan. `ls`, `stat`, `find`, `echo`, a path that
+only appears in message text or `aggregated_output`, a non-zero exit, and an
+`item.started` event do not count. A path outside the attempt does not count.
+`skill_invocation` is not an exec JSON event and is not accepted. The matched
+skill name is checked with the case's existing `input_match`. A live
+transcript has not been graded, so the first pilot should confirm this shape
+against the saved JSONL before a trigger rate is quoted.
+
+`python3 evals/codex_rules.py --regrade --output <dir>` recomputes
+`skill-fired` from the saved transcripts and rewrites `result.json` and
+`aggregate-result.json`. It does not exec and it does not call the judge, so
+a detector fix does not need a new paid run. Other graders and run-level
+errors stay as they were. An attempt that has a transcript but no
+`result.json` is left unfinished, and the aggregate stays partial.
 
 A judge failure sets `error` on that LLM grader and does not set a run-level
 `error`, so the `skill-fired` result remains. `summarize.py` still treats a
