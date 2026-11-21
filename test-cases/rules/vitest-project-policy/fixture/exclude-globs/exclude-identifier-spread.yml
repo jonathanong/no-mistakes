@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: exclude-identifier-spread.ts
+      requiredExcludeGlobs:
+        - "**/node_modules/**"
+        - "**/.git/**"

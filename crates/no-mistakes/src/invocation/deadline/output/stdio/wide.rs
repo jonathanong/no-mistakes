@@ -25,6 +25,6 @@ pub(super) fn write_all(
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "wide/tests.rs"]
 mod tests;

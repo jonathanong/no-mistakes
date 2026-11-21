@@ -14,7 +14,7 @@ use serde::Deserialize;
 use std::path::Path;
 use workflow_paths::{workflow_path_filters, WorkflowPathFilters};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 #[derive(Clone, Deserialize, Default)]

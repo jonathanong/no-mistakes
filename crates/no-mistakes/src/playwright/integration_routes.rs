@@ -20,7 +20,7 @@ mod links;
 mod literals;
 mod prepare;
 mod receivers;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 pub(crate) use edges::edges;
 pub(crate) use links::{prepare_links, PreparedLinks};

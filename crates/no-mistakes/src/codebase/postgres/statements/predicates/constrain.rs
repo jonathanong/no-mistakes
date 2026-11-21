@@ -1,7 +1,7 @@
 mod refs;
 mod sets;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 use crate::codebase::postgres::idents::unwrap_expr;

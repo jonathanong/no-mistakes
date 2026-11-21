@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 #[cfg(test)]
 #[path = "standalone/tests/imported_helpers.rs"]
 mod imported_helpers;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "standalone/tests/legacy.rs"]
 pub(super) mod legacy;
 #[cfg(test)]

@@ -153,5 +153,5 @@ fn composed_prefix(call: &crate::codebase::postgres::EmbeddedSqlCall) -> Option<
         .flatten()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -32,5 +32,5 @@ pub fn yaml_string<T: Serialize + ?Sized>(value: &T) -> String {
     serde_yaml::to_string(value).expect("YAML serialization of Rust structs never fails")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

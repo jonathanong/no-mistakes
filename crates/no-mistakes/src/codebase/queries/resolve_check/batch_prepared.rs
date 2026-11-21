@@ -107,6 +107,6 @@ pub(crate) fn batch_report_from_prepared_facts(
     Ok(batch_report(results))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "batch_prepared/tests.rs"]
 mod tests;

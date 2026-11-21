@@ -71,6 +71,6 @@ fn collect_possible(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "possible_replacement_candidates_tests.rs"]
 mod tests;

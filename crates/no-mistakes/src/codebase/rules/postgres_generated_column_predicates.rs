@@ -174,9 +174,9 @@ fn allowed(root: &Path, path: &Path, include: &GlobMatcher, exclude: &GlobMatche
     included && (exclude.is_empty() || !exclude.is_match(&rel))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod history_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod options_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

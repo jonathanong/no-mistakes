@@ -82,5 +82,5 @@ fn word(tokens: &[&TokenWithSpan], at: usize, name: &str) -> bool {
         if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(name))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -151,6 +151,6 @@ fn fact_len(
         .sum()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "language_frontends/tests.rs"]
 mod tests;

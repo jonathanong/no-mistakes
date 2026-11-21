@@ -53,5 +53,5 @@ fn contains(outer: ModuleSpan, inner: ModuleSpan) -> bool {
     outer.start <= inner.start && inner.end <= outer.end
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

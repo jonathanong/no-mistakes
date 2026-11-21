@@ -10,7 +10,7 @@ mod configured;
 pub(crate) use configured::{queues_configured, rule_configured, unique_exports_configured};
 mod filesystem;
 mod react;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};

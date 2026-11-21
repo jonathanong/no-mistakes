@@ -6,7 +6,7 @@ mod declaration;
 mod maintenance;
 mod privileges;
 mod session;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "utility/tests.rs"]
 mod tests;
 mod transfer;

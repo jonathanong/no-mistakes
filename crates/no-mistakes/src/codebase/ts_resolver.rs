@@ -36,14 +36,14 @@ mod catalog_membership_work;
 #[cfg(test)]
 mod scoped_test_support;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "ts_resolver/tests/apply_own_errors.rs"]
 mod catalog_apply_own_errors;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod catalog_coverage_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod catalog_membership_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod catalog_reference_tests;
 #[cfg(test)]
 #[path = "ts_resolver/tests/import_classification.rs"]
@@ -52,26 +52,26 @@ mod import_classification_test_support;
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "ts_resolver/tests/parallel_catalog.rs"]
 mod parallel_catalog_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "ts_resolver/session_visible_tests.rs"]
 mod session_visible_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "ts_resolver/session_visible_projection_tests.rs"]
 mod session_visible_projection_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "ts_resolver/session_graph_cache_tests.rs"]
 mod session_graph_cache_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "ts_resolver/session_graph_cache_policy_tests.rs"]
 mod session_graph_cache_policy_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "ts_resolver/session_builder_tests.rs"]
 mod session_builder_tests;

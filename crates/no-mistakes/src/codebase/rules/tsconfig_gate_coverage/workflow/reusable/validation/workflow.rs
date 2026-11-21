@@ -161,5 +161,5 @@ pub(super) fn job_defaults_shape_valid(value: Option<&Value>) -> bool {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

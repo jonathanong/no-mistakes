@@ -169,7 +169,7 @@ mod execution_phases;
 #[path = "value_flow/parameter_repeat.rs"]
 mod parameter_repeat;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "value_flow/execution_layout_tests.rs"]
 mod execution_layout_tests;
 

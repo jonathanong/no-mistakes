@@ -102,6 +102,6 @@ pub(super) fn hops(graph: &DepGraph, gate_roots: &[PathBuf], target: &Path) -> u
     0
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "closure_path/tests.rs"]
 mod tests;

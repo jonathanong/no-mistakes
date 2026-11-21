@@ -130,34 +130,34 @@ fn finding(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "finite_set_consistency/tests/config_sets.rs"]
 mod config_set_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "finite_set_consistency/tests/locate.rs"]
 mod locate_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "finite_set_consistency/tests/min_size.rs"]
 mod min_size_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "finite_set_consistency/tests/object_comment.rs"]
 mod object_comment_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "finite_set_consistency/tests/object_property.rs"]
 mod object_property_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "finite_set_consistency/tests/object.rs"]
 mod object_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "finite_set_consistency/tests/path_regex.rs"]
 mod path_regex_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "finite_set_consistency/tests/ts_array.rs"]
 mod ts_array_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "finite_set_consistency/low/tests.rs"]
 mod low_tests;
 

@@ -71,6 +71,6 @@ fn primitive_result(expr: &Expr) -> bool {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "result/tests.rs"]
 mod tests;

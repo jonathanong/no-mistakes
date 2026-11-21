@@ -148,8 +148,8 @@ mod finalization;
 mod prefix_names;
 mod record_names;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod finalization_tests;

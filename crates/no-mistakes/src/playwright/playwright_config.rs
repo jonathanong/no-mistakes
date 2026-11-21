@@ -5,7 +5,7 @@ mod merge;
 mod parse;
 mod types;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(crate) use load::{load_configs_with_sources, load_many_with_sources, select_loaded};

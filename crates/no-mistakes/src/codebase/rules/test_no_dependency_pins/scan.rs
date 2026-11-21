@@ -187,5 +187,5 @@ pub(super) fn message(file: &str, line: usize, reason: &str, matched: &str) -> S
     format!("{file}:{line}: tests must not pin exact dependency versions ({reason}): `{matched}`")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

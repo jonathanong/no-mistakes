@@ -194,5 +194,5 @@ fn unanalyzable_sql(rel: &str, line: u32, message: &'static str) -> RuleFinding 
     analysis::finding(rel, line as usize, "unanalyzable-sql", message)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

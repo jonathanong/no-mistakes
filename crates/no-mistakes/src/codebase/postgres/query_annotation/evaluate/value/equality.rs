@@ -68,5 +68,5 @@ fn scalar(a: &Value, b: &Value) -> bool {
         _ => false,
     }
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

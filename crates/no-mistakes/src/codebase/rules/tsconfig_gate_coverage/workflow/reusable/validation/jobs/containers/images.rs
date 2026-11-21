@@ -142,5 +142,5 @@ fn valid_path_component(value: &str) -> bool {
     true
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

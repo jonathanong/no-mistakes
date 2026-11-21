@@ -75,6 +75,6 @@ fn unique_class_id(facts: &TsFileFacts, scope: &str) -> Option<CallableId> {
     matches.next().is_none().then_some(id)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "extends_tests.rs"]
 mod tests;

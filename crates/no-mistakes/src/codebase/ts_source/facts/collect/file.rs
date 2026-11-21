@@ -118,5 +118,5 @@ fn failure_facts(error: String) -> TsFileFacts {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -25,13 +25,13 @@ use impact_collect_file_usage::*;
 include!("impact_collect_local_names.rs");
 include!("impact_output.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "impact/tests/caller_helper_coverage.rs"]
 mod impact_caller_helper_coverage;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod impact_collect_targets_tests;
 #[cfg(test)]
 mod impact_test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "impact/tests/write_errors.rs"]
 mod impact_write_errors;

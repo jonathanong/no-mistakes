@@ -105,5 +105,5 @@ pub(super) fn expression(expr: &Expression<'_>, source: &str) -> Expr {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

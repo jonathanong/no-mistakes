@@ -85,5 +85,5 @@ pub(crate) fn collect_selector_source_files_from_visible(
     source_files.into_iter().collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

@@ -8,7 +8,7 @@ use errors::{fill_parse_errors, read_errors, recovered_error_facts};
 mod parse_modes;
 use parse_modes::{collect_legacy_variants, collect_standard_variants, VariantParseModes};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 pub(crate) struct CheckFactVariant<'a> {

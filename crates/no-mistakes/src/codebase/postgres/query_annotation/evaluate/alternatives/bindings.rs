@@ -111,12 +111,12 @@ pub(super) fn join_with_sql(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod fixture_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod identity_tests;
 #[cfg(test)]
 #[path = "bindings/tests/legacy.rs"]

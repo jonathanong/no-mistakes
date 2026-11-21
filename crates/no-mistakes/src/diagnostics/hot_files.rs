@@ -164,7 +164,7 @@ pub(crate) fn trace_current<T>(pass: FilePass, units: u64, operation: impl FnOnc
         None => operation(),
     }
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod fallback_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

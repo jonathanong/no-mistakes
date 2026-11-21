@@ -393,6 +393,6 @@ pub(crate) fn run_diff_command(command: &str, root: &Path) -> Result<String> {
 
 mod paths;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "diff_parser/tests.rs"]
 mod tests;

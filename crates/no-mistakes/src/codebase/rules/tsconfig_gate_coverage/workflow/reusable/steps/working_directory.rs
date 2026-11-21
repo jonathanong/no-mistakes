@@ -28,5 +28,5 @@ pub(super) fn working_directory_exists(directory: &str, visible_paths: &BTreeSet
         })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

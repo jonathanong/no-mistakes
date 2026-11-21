@@ -43,6 +43,6 @@ pub(super) fn proven(
         })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "aliased_guards_tests.rs"]
 mod aliased_guards_tests;

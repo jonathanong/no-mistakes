@@ -45,6 +45,6 @@ pub(super) fn target(sites: &[ResolvedCallSite]) -> ResolvedCallTarget {
     )))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "choice_targets_tests.rs"]
 mod tests;

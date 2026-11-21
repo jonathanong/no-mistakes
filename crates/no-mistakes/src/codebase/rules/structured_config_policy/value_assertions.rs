@@ -5,7 +5,7 @@ use serde_yaml::Value;
 
 mod kinds;
 pub(crate) mod selector;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 use kinds::kind_violation;
 use selector::{any_groups, values_at_selector};

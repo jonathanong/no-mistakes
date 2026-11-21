@@ -102,5 +102,5 @@ fn select_sites(body: &SetExpr, out: &mut Vec<(usize, usize)>) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod pruning_tests;

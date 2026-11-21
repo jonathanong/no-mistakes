@@ -8,7 +8,7 @@ use oxc_syntax::symbol::SymbolId;
 mod bindings;
 mod created;
 mod origins;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 #[derive(Debug, Clone)]

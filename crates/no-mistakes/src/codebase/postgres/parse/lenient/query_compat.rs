@@ -145,5 +145,5 @@ fn word(token: &Token, expected: &str) -> bool {
         && word.value.eq_ignore_ascii_case(expected))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

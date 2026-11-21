@@ -96,7 +96,7 @@ pub(crate) fn prepare(
     Ok(demand)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "tests/finite_set_plan.rs"]
 mod tests;
 

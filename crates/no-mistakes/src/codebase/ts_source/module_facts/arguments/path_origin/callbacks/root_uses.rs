@@ -61,6 +61,6 @@ impl<'a> Projector<'a, '_> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "root_uses_tests.rs"]
 mod tests;

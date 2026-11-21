@@ -91,5 +91,5 @@ pub(crate) fn check_with_files_sources_and_facts(
     Ok(findings)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

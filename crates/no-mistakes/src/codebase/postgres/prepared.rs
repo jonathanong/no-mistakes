@@ -126,7 +126,7 @@ fn entry<'a, T>(value: Option<&'a Entry<T>>, path: &Path) -> anyhow::Result<&'a 
         .map_err(|error| anyhow::anyhow!(error.message.to_string()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(crate) fn write_sql_paths(

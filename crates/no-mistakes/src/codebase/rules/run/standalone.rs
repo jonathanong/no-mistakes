@@ -180,7 +180,7 @@ pub(super) fn run_check(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> Result<CheckFactPlan> {

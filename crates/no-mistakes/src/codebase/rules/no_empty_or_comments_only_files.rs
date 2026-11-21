@@ -110,10 +110,10 @@ fn check_source(path: &Path, root: &Path, content: &str) -> Vec<RuleFinding> {
     }]
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_support;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod allow_tests;

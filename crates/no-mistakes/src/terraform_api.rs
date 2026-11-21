@@ -184,5 +184,5 @@ fn compile_test_globs(globs: &[String]) -> Result<Option<GlobSet>> {
     Ok(Some(builder.build()?))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

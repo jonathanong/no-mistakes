@@ -1,6 +1,6 @@
 pub(super) mod collect;
 pub(super) mod cross_file;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 mod visitor;
 

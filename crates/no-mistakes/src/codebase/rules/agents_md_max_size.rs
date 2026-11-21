@@ -194,5 +194,5 @@ fn roots_from_opts(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Vec
         .unwrap_or_else(|| target_roots.to_vec())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

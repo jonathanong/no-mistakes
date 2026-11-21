@@ -4,7 +4,7 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
 use std::path::Path;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(super) fn selected(root: &Path, path: &Path, plan: &CheckFactPlan) -> bool {

@@ -183,10 +183,10 @@ impl Proof<'_, '_> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "guard_aliases_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "composition_tests.rs"]
 mod composition_tests;

@@ -22,8 +22,12 @@ pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
     for event in events(run) {
         match event {
             Event::Assign(name, rhs) => {
-                if rhs_hashes(&rhs, &vars, lockfile) {
+                let keep = rhs_hashes(&rhs, &vars, lockfile)
+                    || (vars.contains(&name) && super::expand::same_name_expansion(&rhs, &name));
+                if keep {
                     vars.insert(name);
+                } else {
+                    vars.remove(&name);
                 }
             }
             Event::Write(write) => {
@@ -47,7 +51,11 @@ fn rhs_hashes(rhs: &str, vars: &FxHashSet<String>, lockfile: &str) -> bool {
 }
 
 fn expression_hashes(value: &str, vars: &FxHashSet<String>, lockfile: &str) -> bool {
-    let value = unquote(value.trim().strip_suffix("\\n").unwrap_or(value.trim()));
+    let trimmed = value.trim().strip_suffix("\\n").unwrap_or(value.trim());
+    if super::expand::wholly_single_quoted(trimmed) {
+        return false;
+    }
+    let value = unquote(trimmed);
     if let Some(name) = var_ref(value) {
         return vars.contains(name);
     }
@@ -57,11 +65,12 @@ fn expression_hashes(value: &str, vars: &FxHashSet<String>, lockfile: &str) -> b
 pub(super) fn events(run: &str) -> Vec<Event> {
     let lines: Vec<&str> = run.lines().map(shell_line).collect();
     let mut events = Vec::new();
+    let mut outputs = fx_set();
     let mut index = 0;
     while index < lines.len() {
         let line = lines[index].trim();
         if let Some((delim, strip, quoted)) = heredoc_start(line) {
-            let active = line.contains("GITHUB_OUTPUT");
+            let active = writes_output(line, &outputs);
             index += 1;
             while index < lines.len() && !heredoc_end(lines[index], &delim, strip) {
                 if active {
@@ -81,10 +90,12 @@ pub(super) fn events(run: &str) -> Vec<Event> {
             continue;
         }
         if brace_open(line) {
-            index = brace_events(&lines, index, &mut events);
+            index = brace_events(&lines, index, &mut events, &mut outputs);
             continue;
         }
-        if line.contains("GITHUB_OUTPUT") {
+        if let Some((name, rhs)) = shell_assignment(line) {
+            remember_assign(&mut events, &mut outputs, name, rhs);
+        } else if writes_output(line, &outputs) {
             if let Some((name, value)) = command_assign(line) {
                 events.push(Event::Write(Write {
                     name,
@@ -92,24 +103,69 @@ pub(super) fn events(run: &str) -> Vec<Event> {
                     expand: true,
                 }));
             }
-        } else if let Some((name, rhs)) = shell_assignment(line) {
-            events.push(Event::Assign(name, rhs));
         }
         index += 1;
     }
     events
 }
 
-fn brace_events(lines: &[&str], start: usize, events: &mut Vec<Event>) -> usize {
-    let mut armed = lines[start].contains("GITHUB_OUTPUT");
+fn remember_assign(
+    events: &mut Vec<Event>,
+    outputs: &mut FxHashSet<String>,
+    name: String,
+    rhs: String,
+) {
+    if output_path(&rhs, outputs) {
+        outputs.insert(name.clone());
+    } else {
+        outputs.remove(&name);
+    }
+    events.push(Event::Assign(name, rhs));
+}
+
+fn output_path(rhs: &str, outputs: &FxHashSet<String>) -> bool {
+    let rhs = unquote(rhs.trim().trim_end_matches(';').trim());
+    match var_ref(rhs) {
+        Some("GITHUB_OUTPUT") => true,
+        Some(name) => outputs.contains(name),
+        None => false,
+    }
+}
+
+fn writes_output(line: &str, outputs: &FxHashSet<String>) -> bool {
+    line.contains("GITHUB_OUTPUT") || outputs.iter().any(|name| mentions_var(line, name))
+}
+
+fn mentions_var(line: &str, name: &str) -> bool {
+    let mut rest = line;
+    while let Some(at) = rest.find('$') {
+        rest = &rest[at + 1..];
+        let body = rest.strip_prefix('{').unwrap_or(rest);
+        let end = body
+            .find(|ch: char| !(ch.is_ascii_alphanumeric() || ch == '_'))
+            .unwrap_or(body.len());
+        if &body[..end] == name {
+            return true;
+        }
+    }
+    false
+}
+
+fn brace_events(
+    lines: &[&str],
+    start: usize,
+    events: &mut Vec<Event>,
+    outputs: &mut FxHashSet<String>,
+) -> usize {
+    let mut armed = writes_output(lines[start], outputs);
     let mut pending = Vec::new();
     let mut index = start + 1;
     while index < lines.len() && !brace_close(lines[index]) {
         let line = lines[index].trim();
         if let Some((name, rhs)) = shell_assignment(line) {
-            events.push(Event::Assign(name, rhs));
+            remember_assign(events, outputs, name, rhs);
         } else if let Some((name, value)) = command_assign(line) {
-            if line.contains("GITHUB_OUTPUT") {
+            if writes_output(line, outputs) {
                 events.push(Event::Write(Write {
                     name,
                     value,
@@ -125,7 +181,7 @@ fn brace_events(lines: &[&str], start: usize, events: &mut Vec<Event>) -> usize 
         }
         index += 1;
     }
-    if index < lines.len() && lines[index].contains("GITHUB_OUTPUT") {
+    if index < lines.len() && writes_output(lines[index], outputs) {
         armed = true;
     }
     if armed {

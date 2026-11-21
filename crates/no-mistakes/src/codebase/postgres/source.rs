@@ -72,5 +72,5 @@ pub(crate) fn parse_postgres_sources_with_jobs(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

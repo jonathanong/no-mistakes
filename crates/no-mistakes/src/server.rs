@@ -199,5 +199,5 @@ fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()>
 include!("server_edge_paths.rs");
 include!("server_contracts_print.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

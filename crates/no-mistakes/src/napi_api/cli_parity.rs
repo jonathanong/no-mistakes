@@ -179,6 +179,6 @@ fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
     Ok(crate::cli::json_string(value))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "audit_document_tests.rs"]
 mod audit_document_tests;

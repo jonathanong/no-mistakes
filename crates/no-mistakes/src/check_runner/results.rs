@@ -16,7 +16,7 @@ pub(crate) use empty::empty_results;
 mod render;
 pub(crate) use render::json_value;
 pub(crate) mod suppression;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod suppression_tests;
 
 pub(crate) struct FinalizeInput<'a> {

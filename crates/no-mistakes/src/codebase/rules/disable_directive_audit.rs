@@ -183,11 +183,11 @@ fn project(directive: DisableDirective) -> SuppressionDirective {
 mod known_rules;
 use known_rules::known_rule;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod catalog_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod block_doc_tests;

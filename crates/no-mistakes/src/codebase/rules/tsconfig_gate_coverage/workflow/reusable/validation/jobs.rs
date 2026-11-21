@@ -20,5 +20,5 @@ pub(crate) use steps::{
 };
 pub(crate) use values::environment_configuration_valid_for_inputs;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

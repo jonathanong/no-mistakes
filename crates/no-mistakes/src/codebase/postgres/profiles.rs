@@ -172,7 +172,7 @@ pub(crate) fn load_schema_catalogs(
 }
 
 mod sql_include;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 use sql_include::sql_patterns;
 

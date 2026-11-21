@@ -134,9 +134,9 @@ fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCoun
     StaticMatrixJobCount::Known(count)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod combinations_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod root_expression_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

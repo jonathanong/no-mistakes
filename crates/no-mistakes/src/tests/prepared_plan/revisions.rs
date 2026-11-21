@@ -160,6 +160,6 @@ fn git_show_file(root: &Path, revision: &str, relative: &str) -> Option<String> 
         .then(|| String::from_utf8(output.stdout).ok())?
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "revisions/tests.rs"]
 mod tests;

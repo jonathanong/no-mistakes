@@ -311,6 +311,6 @@ pub(crate) use impact_graph::{
     ReverseQueryImpactRequest,
 };
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "mod_serde_tests.rs"]
 mod serde_tests;

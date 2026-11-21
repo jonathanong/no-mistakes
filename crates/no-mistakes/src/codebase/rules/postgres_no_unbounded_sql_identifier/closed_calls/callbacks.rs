@@ -79,5 +79,5 @@ pub(super) fn literal(flow: &ValueFlowFacts, call: &ValueCall) -> bool {
         .is_some_and(|summary| summary.reads.iter().all(Vec::is_empty))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

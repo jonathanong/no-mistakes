@@ -169,5 +169,5 @@ pub(super) fn yaml_key_to_string(value: &serde_yaml::Value) -> String {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

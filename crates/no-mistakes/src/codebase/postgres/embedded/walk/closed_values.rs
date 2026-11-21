@@ -11,35 +11,35 @@ use std::collections::{BTreeMap, HashMap};
 const HELPER_OBJECT_CHOICE: u64 = 1 << 61;
 
 mod assertions;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod controls_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod correlation_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod edge_tests;
 mod expression;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod extra_escape_tests;
 #[cfg(test)]
 mod fixture;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod followup_tests;
 mod frozen_return;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod member_ownership_tests;
 mod members;
 mod namespace_types;
 mod parameter_members;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod parent_fields_tests;
 mod predicate;
 mod state;
 use expression::expression;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod hasown_edge_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod hasown_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 mod type_names;
 mod types;

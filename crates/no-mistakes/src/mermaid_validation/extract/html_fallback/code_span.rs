@@ -80,6 +80,6 @@ fn is_escaped(source: &[u8], index: usize) -> bool {
         == 1
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "code_span/tests.rs"]
 mod tests;

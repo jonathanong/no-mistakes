@@ -70,5 +70,5 @@ pub(crate) fn merge_explicit_projects(
     projects
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

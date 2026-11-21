@@ -147,7 +147,7 @@ pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {
     (seconds != 0).then(|| Duration::from_secs(seconds))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "invocation/tests.rs"]
 mod tests;
 

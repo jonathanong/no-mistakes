@@ -121,6 +121,6 @@ fn mark_invalidated(previous: &mut Option<u32>, offset: u32) -> bool {
     true
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "mutation_invalidation_tests.rs"]
 mod tests;

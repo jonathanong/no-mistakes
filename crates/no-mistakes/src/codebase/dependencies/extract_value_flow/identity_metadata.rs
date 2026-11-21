@@ -139,6 +139,6 @@ pub(super) fn map_between<T>(events: &BTreeMap<u32, T>, left: u32, right: u32) -
             .is_some()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "identity_metadata_tests.rs"]
 mod tests;

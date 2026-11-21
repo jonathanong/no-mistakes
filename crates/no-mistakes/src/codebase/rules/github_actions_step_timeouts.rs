@@ -184,6 +184,6 @@ fn selector_file(key: &str) -> Option<&str> {
 
 mod scan;
 mod steps;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 mod yaml;

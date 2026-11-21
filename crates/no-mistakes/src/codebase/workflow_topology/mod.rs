@@ -55,7 +55,7 @@ pub mod value_primitives;
 pub mod workflow_run_graph;
 pub mod workflow_values;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 use crate::codebase::ci_graph::relative_slash;

@@ -6,7 +6,7 @@ mod cte_scope;
 mod expressions;
 mod residual;
 mod scope;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 use super::value::PlaceholderPositions;
 use super::{SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact};

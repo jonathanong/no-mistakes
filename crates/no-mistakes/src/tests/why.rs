@@ -225,6 +225,6 @@ fn relative_path_str(root: &Path, path: &Path) -> String {
     no_mistakes::codebase::ts_source::relative_slash_path(root, &absolute_normalized)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "why_tests.rs"]
 mod tests;

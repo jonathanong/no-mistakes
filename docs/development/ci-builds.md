@@ -533,6 +533,56 @@ function names; reproduce them with a local build that sets
 For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 `CARGO_PROFILE_TEST_DEBUG=2` when invoking Cargo to restore debugger symbols.
 
+## Standalone library compiler budget
+
+<!-- cspell:ignore nm_shard_all NM_TEST_SHARD codegen nextest CODEGEN dead_code unused_imports -->
+
+`Build standalone library tests` compiles the default-feature library test
+target on a 16 GB `ubuntu-latest` runner. Workspace dev and test profiles
+already set `debug = 0`, so this peak is not debugger metadata. Run
+`44867392510` recorded one `rustc` at 13,086 MiB (`top_rss=13086MiB`) while
+swap was present. Run `44868635492` had no swap, reached 14,147 MiB, and the
+kernel killed the compiler (`oom_kills=1`).
+
+A 4-CPU local compile of that same target (Rust 1.100, incremental compilation
+off, `-D warnings`) peaked at 14668 MiB. Raising test codegen units from
+Cargo's default 256 to 4096 lowered the single compiler to 12537 MiB. 16384
+units stayed at 12637 MiB. `CARGO_BUILD_JOBS=1` stops a second compiler from
+stacking on that process; it does not shrink the one `rustc`. The library
+without its `cfg(test)` modules peaked at 8659 MiB, under the 10240 MiB
+ceiling, so the unit-test modules are the remaining cost. The same machine,
+with `CARGO_BUILD_JOBS=8` and `rustc` pinned to those 4 CPUs, compiled the
+three shards below that ceiling. The heaviest shard peaked at 10164 MiB.
+Run `44884243196` recorded the hosted compiler at 9160 MiB
+(`top_rss=9160MiB:rustc`) with `oom_kills=0`.
+
+Those modules are split into three compile shards. Only a top-level test
+module root is included for `nm_shard_all` or for one of `nm_shard_0`,
+`nm_shard_1`, and `nm_shard_2`. That root is a `mod tests` or `mod *_tests`
+declared from a module every shard compiles. A module nested inside the root
+stays on plain `cfg(test)` and compiles with its parent's shard. A shard
+attribute on that child compiles it into no archive: the parent's shard skips
+the child, and the child's shard never loads the parent. Modules that
+production code or several shards call stay on plain `cfg(test)` and compile
+with every shard. A shard's
+`rustc` allows `dead_code` and `unused_imports` for the `no_mistakes` crate
+only, because an item used solely by another shard is not dead in the full
+suite. `cargo clippy --all-targets` leaves `NM_TEST_SHARD` unset and still
+denies both lints. `crates/no-mistakes/build.rs` sets
+`nm_shard_all` when `NM_TEST_SHARD` is unset, which is what local `cargo test`
+and clippy do. The standalone build sets `NM_TEST_SHARD` to `0`, `1`, and `2`
+on three sequential `cargo nextest archive` commands and writes
+`standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
+Each consumer runs one of those archives and does not hash-partition it. The
+job also sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
+`CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_PROFILE_TEST_DEBUG=0`,
+`CARGO_PROFILE_DEV_CODEGEN_UNITS=4096`, and
+`CARGO_PROFILE_TEST_CODEGEN_UNITS=4096`. The cache key includes the test
+profile's codegen units and debug level. The build step prints the active
+values, including `shards=3`, and samples `[resources]` on the same interval
+as release validation. The ceiling for the sampled `rustc` `top_rss` is 10240
+MiB.
+
 Release validation uses `.github/scripts/rust-validation.sh` for its build,
 test, and documentation-test commands. The current pull-request workflow uses
 that helper for documentation tests; instrumented Rust tests are built once,

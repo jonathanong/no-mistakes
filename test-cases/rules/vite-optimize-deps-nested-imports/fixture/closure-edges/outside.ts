@@ -1,1 +1,3 @@
-export const label = "outside";
+import { name } from "orders";
+
+export const label = name ?? "outside";

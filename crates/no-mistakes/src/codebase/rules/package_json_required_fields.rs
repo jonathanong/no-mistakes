@@ -89,5 +89,5 @@ fn pkg_rel(root: &Path, path: &Path) -> String {
     relative_slash_path(root, path)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

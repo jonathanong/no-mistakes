@@ -257,7 +257,12 @@ fn block_scalars_flow_with_and_blank_restore_keys_keep_their_text() {
     assert_eq!(steps[6].restore_keys.as_ref().unwrap().value, "widgets-");
     assert_eq!(steps[7].uses.as_deref(), Some("actions/checkout@v4"));
 
-    let findings = judge::judge("ci.yml", &jobs, &policy(&["runner.os", "runner.arch"]));
+    let findings = judge::judge(
+        "ci.yml",
+        &jobs,
+        &policy(&["runner.os", "runner.arch"]),
+        &|_| None,
+    );
     let messages: Vec<_> = findings
         .iter()
         .map(|finding| finding.message.as_str())

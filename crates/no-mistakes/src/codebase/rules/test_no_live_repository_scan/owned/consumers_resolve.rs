@@ -179,6 +179,6 @@ impl VisiblePathLookup for FilesOnDisk {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "consumers_resolve/tests.rs"]
 mod tests;

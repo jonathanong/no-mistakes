@@ -15,13 +15,13 @@ mod test_config;
 pub(crate) use test_config::vitest::lexical_policy as vitest_lexical_policy;
 #[cfg(test)]
 mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_errors;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests_resolution;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_review;
 pub(crate) mod types;
 pub(crate) use test_config::vitest::is_vitest_project_array_path;

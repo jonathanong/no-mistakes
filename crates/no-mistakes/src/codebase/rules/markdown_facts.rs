@@ -173,6 +173,6 @@ pub(crate) fn markdown_line_count(content: &str) -> usize {
     count + usize::from(!ends_with_line_ending)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "markdown_facts/tests.rs"]
 mod tests;

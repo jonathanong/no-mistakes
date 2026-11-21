@@ -96,10 +96,10 @@ impl<'a> Gate<'a> {
 #[path = "subprocess/gate_tests.rs"]
 mod gate_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "subprocess/place_support.rs"]
 mod place_support;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "subprocess/place_tests.rs"]
 mod place_tests;

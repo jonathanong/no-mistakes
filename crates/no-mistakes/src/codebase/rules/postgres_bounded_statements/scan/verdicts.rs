@@ -97,7 +97,7 @@ fn has_unknown_relation(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 fn kind_name(kind: SqlBoundKind) -> &'static str {

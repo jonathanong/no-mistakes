@@ -171,6 +171,6 @@ pub(super) fn lock_error(path: &Path, error: std::io::Error) -> anyhow::Error {
     anyhow::Error::new(error).context(format!("locking invocation file {}", path.display()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "lock/tests.rs"]
 mod tests;

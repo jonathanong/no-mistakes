@@ -62,5 +62,5 @@ pub(crate) fn normalize(text: &str) -> String {
         .to_string()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

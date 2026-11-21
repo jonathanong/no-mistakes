@@ -85,6 +85,6 @@ fn end_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"^end\b").expect("end"))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "ruby_http_tests.rs"]
 mod tests;

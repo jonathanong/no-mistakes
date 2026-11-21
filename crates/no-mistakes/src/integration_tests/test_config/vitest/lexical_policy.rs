@@ -18,7 +18,10 @@ pub(crate) enum Kind {
     Literal(serde_json::Value),
     Object(BTreeMap<String, Value>, bool),
     Array(Vec<Value>),
+    OneOf(Vec<Value>),
     Unknown,
+    // An exclude path that inherits the enclosing literal, or stays omitted.
+    Omitted,
 }
 
 impl Value {

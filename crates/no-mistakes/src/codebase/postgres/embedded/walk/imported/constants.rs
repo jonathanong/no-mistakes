@@ -192,6 +192,6 @@ fn known_binding_sql(kind: EmbeddedSqlKind, sql: Option<String>) -> Option<Strin
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "constants_tests.rs"]
 mod constants_tests;

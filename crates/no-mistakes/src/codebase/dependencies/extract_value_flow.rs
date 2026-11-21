@@ -71,7 +71,7 @@ mod module_provider_intervals;
 #[path = "extract_value_flow/mutation_history.rs"]
 mod mutation_history;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "extract_value_flow/from_expression_tests.rs"]
 mod from_expression_tests;
 #[path = "extract_value_flow/write_targets.rs"]
@@ -113,10 +113,10 @@ mod reference_identity;
 #[path = "extract_value_flow/capture_reads.rs"]
 mod capture_reads;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "extract_value_flow/post_capture_call_tests.rs"]
 mod post_capture_call_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "extract_value_flow/receiver_identity_tests.rs"]
 mod receiver_identity_tests;
 
@@ -126,7 +126,7 @@ mod active_reference_phases;
 #[path = "extract_value_flow/inert_receiver_rhs.rs"]
 pub(super) mod inert_receiver_rhs;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "extract_value_flow/suspension_tests.rs"]
 mod suspension_tests;
 
@@ -137,7 +137,7 @@ pub(super) mod forward_receiver_writes;
 #[path = "extract_value_flow/mutable_receivers.rs"]
 mod mutable_receivers;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "extract_value_flow/mutable_receiver_tests.rs"]
 mod mutable_receiver_tests;
 

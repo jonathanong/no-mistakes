@@ -3,7 +3,7 @@ mod grouping;
 mod line;
 use existence::existence;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 use crate::codebase::postgres::idents::unwrap_expr;

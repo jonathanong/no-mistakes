@@ -121,5 +121,5 @@ fn shift(source_line: usize, sql_line: usize) -> i64 {
     source_line as i64 - sql_line as i64
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

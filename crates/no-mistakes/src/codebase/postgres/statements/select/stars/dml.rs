@@ -145,5 +145,5 @@ fn target_factor(factor: &TableFactor) -> Option<BaseRel> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

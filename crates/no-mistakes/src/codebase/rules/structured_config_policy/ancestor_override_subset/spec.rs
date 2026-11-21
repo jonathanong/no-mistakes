@@ -42,5 +42,5 @@ fn is_portable_absolute(spec: &str) -> bool {
         || spec.as_bytes().get(1) == Some(&b':')
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

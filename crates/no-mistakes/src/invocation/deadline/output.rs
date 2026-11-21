@@ -40,6 +40,6 @@ fn emit_with_spawner(
     let _ = receiver.recv_timeout(Duration::from_millis(25));
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "output/tests.rs"]
 mod tests;

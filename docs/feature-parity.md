@@ -65,8 +65,10 @@ same owned `mkdtemp` or fixture-directory proof; a missing `cwd` is the live
 working directory. A `cd <dir> &&` prefix, a pnpm `-C` or `--dir`, or a yarn
 `--cwd` replaces that proof. `cd .` stays in the current directory, `cd /` is
 the filesystem root, and `cd ..` leaves an unowned directory. A quoted
-argument stays one token. A quoted executable, or an analyzer name inside a
-quoted assignment value, leaves the shell string unmatched.
+argument stays one token. `$` and a backtick stay literal inside single quotes.
+A quoted executable, an analyzer name inside a quoted assignment value, or `$`
+or a backtick inside double quotes, leaves the shell string unmatched. `cd`
+matches on its quote-stripped text. `&&` matches only as an unquoted token.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory
 and loader aliases do not grant a bounded-path proof.
@@ -1180,9 +1182,10 @@ keep PostgreSQL executor and resource bindings local to each body. Namespace
 TS/JS [`vitest-project-policy`](rules/vitest-project-policy.md) checks per-project
 literal properties through CLI `check`, asynchronous Node `check()`, and batched
 `analyzeProject()` checks. Optional `requiredExcludeGlobs` applies the same
-config selection to literal `test.exclude` arrays. It reads an explicit config
-and helper list, reuses Vitest config parsing, and reports unresolved
-effective values as incomplete.
+config selection to literal `test.exclude` arrays. Conditional and logical spreads of
+literal objects resolve known keys, so an `exclude` key that no operand defines
+stays omitted. It reads an explicit config and helper list, reuses
+Vitest config parsing, and reports unresolved effective values as incomplete.
 Helper globs select the prepared visible-file inventory. Optional
 `declared.forbiddenValues` and `declared.forbidLiteralKinds` check all object
 literals in config and helpers, including unimported helpers, without constant

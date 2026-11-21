@@ -83,5 +83,5 @@ fn incomplete_reason(facts: Option<&TsFileFacts>) -> Option<(&'static str, Strin
     None
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

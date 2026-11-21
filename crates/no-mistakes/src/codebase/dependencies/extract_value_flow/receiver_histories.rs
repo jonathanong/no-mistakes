@@ -165,6 +165,6 @@ impl ReceiverHistories {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "receiver_histories_tests.rs"]
 mod tests;

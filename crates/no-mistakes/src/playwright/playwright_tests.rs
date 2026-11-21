@@ -218,5 +218,5 @@ pub fn describe_name(call: &CallExpression<'_>) -> Option<String> {
     call.arguments.first().and_then(first_string_arg)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

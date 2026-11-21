@@ -117,13 +117,17 @@ fn required(opts: &Options) -> std::result::Result<RequiredScope, MissingOption>
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "coverage_tests.rs"]
 mod coverage_tests;
 
 #[cfg(test)]
+#[path = "include_form_tests.rs"]
+mod include_form_tests;
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "closure_follow_tests.rs"]
 mod closure_follow_tests;

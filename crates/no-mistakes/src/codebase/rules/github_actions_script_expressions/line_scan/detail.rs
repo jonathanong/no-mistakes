@@ -173,7 +173,7 @@ mod stored_runs {
     pub(super) fn note_stored_run_block() {}
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod collect_runs_tests;
 
 // serde counts every sequence entry. Values this parser skips still occupy a step.

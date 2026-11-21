@@ -27,5 +27,5 @@ pub(crate) struct Options {
     pub(crate) explicit_projects_only: bool,
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

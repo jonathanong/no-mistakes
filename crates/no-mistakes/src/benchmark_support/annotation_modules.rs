@@ -25,5 +25,5 @@ pub fn construct_annotation_module_indexes(facts: &[Arc<TsFileFacts>]) -> Annota
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

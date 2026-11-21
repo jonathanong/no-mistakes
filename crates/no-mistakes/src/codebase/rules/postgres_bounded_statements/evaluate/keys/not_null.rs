@@ -20,6 +20,6 @@ fn listed(columns: &[String], column: &str) -> bool {
     columns.iter().any(|name| name == column)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "not_null_tests.rs"]
 mod tests;

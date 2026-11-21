@@ -68,5 +68,5 @@ fn glued_word(token: &TokenWithSpan, next: &TokenWithSpan) -> bool {
         && matches!(&next.token, Token::Word(word) if word.quote_style.is_none())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

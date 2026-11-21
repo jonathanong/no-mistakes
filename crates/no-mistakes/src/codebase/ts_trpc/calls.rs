@@ -39,5 +39,5 @@ pub(crate) fn procedure_path_from_call(call: &CallExpression<'_>) -> Option<Stri
     Some(segments.join("."))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

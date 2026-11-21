@@ -12,7 +12,7 @@ pub(crate) mod scoped_defaults;
 mod shadowing;
 mod status_visitor;
 mod template;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 mod text_locator_calls;
 mod text_locators;

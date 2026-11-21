@@ -29,6 +29,6 @@ pub(super) fn same_member_root(left: &ValueExpression, right: &ValueExpression) 
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "replacement_member_key/tests.rs"]
 mod tests;

@@ -187,7 +187,7 @@ pub(super) fn prepare_with_settings(
 }
 
 mod add_settings;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 use add_settings::add_settings_facts;
 mod partial;

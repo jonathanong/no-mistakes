@@ -147,5 +147,5 @@ fn static_expression_value(text: &str, activation_inputs: &InputState) -> Option
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

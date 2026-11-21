@@ -105,6 +105,6 @@ fn shift(base: Instant, duration: Duration, forward: bool) -> Instant {
     shifted.unwrap_or(base)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "offset_tests.rs"]
 mod tests;

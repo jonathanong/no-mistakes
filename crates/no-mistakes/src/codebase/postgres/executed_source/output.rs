@@ -77,7 +77,7 @@ fn only_value_binds(text: Option<&str>, positions: &[(u32, u32)]) -> bool {
     false
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(super) fn statement(

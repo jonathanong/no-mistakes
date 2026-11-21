@@ -151,6 +151,6 @@ fn is_named(path: &Path, names: &BTreeSet<String>) -> bool {
         .is_some_and(|name| names.contains(name))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "markdown_reachability/tests.rs"]
 mod tests;

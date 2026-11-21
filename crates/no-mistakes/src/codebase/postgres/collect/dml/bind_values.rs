@@ -27,10 +27,10 @@ pub(super) fn collect(call: &EmbeddedSqlCall, file: &std::path::Path) -> BindVal
     Arc::new(values)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "bind_values_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "bind_values_scope_tests.rs"]
 mod scope_tests;

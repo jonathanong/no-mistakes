@@ -38,7 +38,7 @@ fn document_files_matching(files: &[PathBuf], predicate: impl Fn(&Path) -> bool)
     markdown
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "markdown_scope/tests.rs"]
 mod tests;
 

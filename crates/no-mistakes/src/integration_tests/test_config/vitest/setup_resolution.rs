@@ -179,6 +179,6 @@ pub(crate) fn is_runtime_module(path: &Path) -> bool {
         })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "setup_resolution/tests.rs"]
 mod tests;

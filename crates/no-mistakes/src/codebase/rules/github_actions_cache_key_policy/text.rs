@@ -34,6 +34,12 @@ pub(super) fn has_fragment(value: &str, fragment: &str) -> bool {
 }
 
 pub(super) fn command_hashes_lockfile(cmd: &str, lockfile: &str) -> bool {
+    super::shell_cmd::parts(cmd)
+        .iter()
+        .any(|part| part_hashes(part, lockfile))
+}
+
+fn part_hashes(part: &str, lockfile: &str) -> bool {
     const TOOLS: &[&str] = &[
         "sha256sum",
         "sha384sum",
@@ -46,9 +52,9 @@ pub(super) fn command_hashes_lockfile(cmd: &str, lockfile: &str) -> bool {
         "md5sum",
         "cksum",
     ];
-    let tool = TOOLS.iter().any(|tool| contains_token(cmd, tool, false))
-        || (contains_token(cmd, "openssl", false) && contains_token(cmd, "dgst", false));
-    tool && mentions_path(cmd, lockfile)
+    let tool = TOOLS.iter().any(|tool| contains_token(part, tool, false))
+        || (contains_token(part, "openssl", false) && contains_token(part, "dgst", false));
+    tool && mentions_path(part, lockfile)
 }
 
 pub(super) fn hash_args(value: &str) -> Vec<String> {

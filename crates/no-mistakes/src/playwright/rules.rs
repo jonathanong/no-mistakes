@@ -196,5 +196,5 @@ fn check_selection_with_facts(
         advisories: filter_rule_findings(root, config, report.advisories)?,
     })
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

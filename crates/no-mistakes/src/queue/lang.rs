@@ -163,6 +163,6 @@ fn cli_allows(root: &Path, path: &Path, filter: Option<&GlobSet>) -> bool {
     filter.is_none_or(|filter| filter.is_match(path.strip_prefix(root).unwrap_or(path)))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "lang_unit_tests.rs"]
 mod unit_tests;

@@ -61,6 +61,6 @@ fn http_attr_re() -> &'static Regex {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "csharp_http_tests.rs"]
 mod tests;

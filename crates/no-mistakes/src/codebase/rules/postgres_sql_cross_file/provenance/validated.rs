@@ -8,7 +8,7 @@ pub(crate) struct IdentifierReturns {
     used_sources: std::cell::RefCell<FxHashSet<usize>>,
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "validated_usage_tests.rs"]
 mod tests;
 

@@ -97,7 +97,7 @@ pub(super) fn diagnostics_with_parser(
     Ok(super::file_diagnostics::sorted(diagnostics))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 pub(crate) mod tests_support;

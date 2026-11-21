@@ -161,5 +161,5 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

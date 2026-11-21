@@ -13,7 +13,7 @@ use anyhow::Result;
 use merge::merge_explicit_project;
 use std::path::Path;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 #[derive(Debug)]

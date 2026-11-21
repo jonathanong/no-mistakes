@@ -29,6 +29,6 @@ fn record_import_inactive_branch(collector: &mut ImportCollector, statement: &ox
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "extract/import_execution_tests.rs"]
 mod import_execution_tests;

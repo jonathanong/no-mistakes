@@ -38,9 +38,9 @@ pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
         || regress_create::valid_native(&code)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "ddl_metadata/regress_create_tests.rs"]
 mod regress_create_tests;

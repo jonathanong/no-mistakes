@@ -19,7 +19,7 @@ mod domain_types;
 mod domain_walk;
 #[path = "effect_calls.rs"]
 mod effect_calls;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "effect_calls_tests.rs"]
 mod effect_calls_tests;
 pub use domain_types::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};

@@ -79,7 +79,7 @@ impl ChangedRoots {
 }
 const _: () =
     assert!(size_of::<Option<ChangedRoots>>() <= size_of::<Option<FxHashSet<String>>>() + 8);
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "phase_changed_roots_unit_tests.rs"]
 mod tests;
 

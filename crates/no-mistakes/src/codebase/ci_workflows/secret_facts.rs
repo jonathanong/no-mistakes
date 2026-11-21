@@ -3,7 +3,7 @@
 mod document;
 mod inventory_locations;
 mod references;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "secret_facts_tests.rs"]
 mod tests;
 mod workflow;

@@ -117,7 +117,7 @@ pub(super) fn reassigned(program: &Program<'_>) -> HashSet<String> {
     visitor::collect(program)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 /// Runtime declarations reserve lexical names without replacing trusted imports.

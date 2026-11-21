@@ -37,5 +37,5 @@ fn rel_path_under_skipped_dir(rel: &Path) -> bool {
 
 /// A regular file, or a symlink whose target resolves to a file — matching
 /// the file-type check a live `WalkDir` walk performs per entry.
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -57,6 +57,6 @@ pub(super) fn is_nested_key(line: &str) -> bool {
     after.is_empty() || after.starts_with([' ', '\t', '#'])
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "indent/tests.rs"]
 mod tests;

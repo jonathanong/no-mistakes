@@ -29,6 +29,6 @@ fn project_relative<'a>(relative: &'a str, project: &str) -> Option<&'a str> {
     relative.strip_prefix(project)?.strip_prefix('/')
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "globs_tests.rs"]
 mod tests;

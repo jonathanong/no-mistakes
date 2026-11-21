@@ -50,6 +50,6 @@ pub(crate) fn split_quoted_words(input: &str, whitespace: Whitespace) -> Option<
     Some(words)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "shell_words_tests.rs"]
 mod tests;

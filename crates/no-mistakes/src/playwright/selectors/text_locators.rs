@@ -20,7 +20,7 @@ impl<'ast, 'source> StatusAwareVisitor<'ast> for PlaywrightTextLocatorVisitor<'s
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(crate) fn extract_playwright_text_locator_occurrences_from_program(

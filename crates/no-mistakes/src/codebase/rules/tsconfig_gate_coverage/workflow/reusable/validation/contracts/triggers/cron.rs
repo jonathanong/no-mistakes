@@ -94,5 +94,5 @@ fn cron_number_in_range(number: &str, position: usize, atom: bool) -> bool {
     (minimum..=maximum).contains(&number)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

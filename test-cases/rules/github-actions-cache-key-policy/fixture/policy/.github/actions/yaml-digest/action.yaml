@@ -1,0 +1,14 @@
+name: Yaml digest
+description: Hash the widgets lockfile from an action.yaml file
+outputs:
+  digest:
+    description: Lockfile digest
+    value: ${{ steps.lock.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - id: lock
+      shell: bash
+      run: |
+        digest=$(sha256sum widgets.lock | awk '{print $1}')
+        echo "digest=${digest}" >> "$GITHUB_OUTPUT"

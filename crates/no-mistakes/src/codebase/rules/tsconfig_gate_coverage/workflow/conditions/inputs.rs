@@ -10,10 +10,10 @@ use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod bindings;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod default_value_tests;
 mod event;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod event_tests;
 mod needs;
 mod secrets;
@@ -184,9 +184,9 @@ fn inputs_from_contract(
     Some(inputs)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod defaults_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod matrix_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

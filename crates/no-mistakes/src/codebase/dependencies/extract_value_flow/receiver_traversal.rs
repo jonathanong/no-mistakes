@@ -122,11 +122,11 @@ mod tests;
 
 include!("receiver_successor_classification.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "receiver_traversal_inline_tests.rs"]
 mod inline_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "receiver_traversal_differential_tests.rs"]
 mod differential_tests;
 

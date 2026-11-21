@@ -13,7 +13,7 @@ mod hint_emit;
 use hint_emit::{
     append_queue_hint_candidates, append_removed_id_candidates, append_route_hint_candidates,
 };
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 /// `(binding, kind, name)` triple shared with the hint pipeline. Re-exported
 /// here so the public field types stay readable instead of expanding to the

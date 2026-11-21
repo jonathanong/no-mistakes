@@ -4,5 +4,5 @@ pub use crate::fetch::imports::{
 };
 pub use crate::fetch::resolve::{relative_string, resolve_import};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

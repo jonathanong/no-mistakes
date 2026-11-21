@@ -137,7 +137,7 @@ mod embedded;
 mod rebase;
 pub(crate) use rebase::rebase_embedded_lines;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(crate) fn embedded_call_facts_with_policy(
@@ -150,5 +150,5 @@ pub(crate) fn embedded_call_facts_with_policy(
     embedded::embedded_call_facts_with_policy(file, collect_bounds, variants_only, demand, policy)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod grouping_projection_tests;

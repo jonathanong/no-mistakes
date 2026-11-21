@@ -65,5 +65,5 @@ pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
 
 mod scan;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

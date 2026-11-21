@@ -359,7 +359,11 @@ Move oversized scripts into files and invoke them; see the
 For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
-`runner.os`. The output named by the key must be a hash of the lockfile. See the
+`runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
+must name that lockfile in the same simple command. Reassignment drops the proof unless the whole
+new value is a parameter expansion of that same variable. Mixing that expansion with other text
+drops the proof. A local composite `uses: ./...` counts when its declared output reads that proof.
+See the
 [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
@@ -371,7 +375,8 @@ reports nothing. Equal values and exact `exemptions` stay allowed. See the
 
 For `vite-optimize-deps-nested-imports`, set required `configFiles` and `packages`.
 Optional `includeSources` reads a static `parent > child` array from a named export,
-including an `as const` or `satisfies` wrapper. A subpath import matches that
+including an `as const` or `satisfies` wrapper and `export { name }` of a top-level
+const. A subpath import matches that
 exact specifier. A Node built-in still matches by package name.
 Optional `ignorePackages` skips uncovered imports of those package names. A chain
 `a > b > c` is checked one step at a time. See the

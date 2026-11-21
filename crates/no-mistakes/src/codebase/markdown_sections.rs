@@ -110,5 +110,5 @@ fn byte_offset_to_line(content: &str, byte_offset: usize) -> usize {
         + 1
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

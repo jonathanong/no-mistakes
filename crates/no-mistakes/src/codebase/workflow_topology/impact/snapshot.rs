@@ -84,6 +84,6 @@ fn is_workflow_tree(path: &str) -> bool {
     path == ".github" || path == ".github/workflows" || path.starts_with(".github/workflows/")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "snapshot_tests.rs"]
 mod tests;

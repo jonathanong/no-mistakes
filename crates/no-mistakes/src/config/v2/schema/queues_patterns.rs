@@ -63,6 +63,6 @@ impl QueueWaitPatterns {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "queues_patterns/tests.rs"]
 mod tests;

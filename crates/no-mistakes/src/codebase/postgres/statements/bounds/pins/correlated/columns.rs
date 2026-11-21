@@ -152,5 +152,5 @@ pub(super) fn output_names(query: &Query, positions: Option<&[(u32, u32)]>) -> V
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

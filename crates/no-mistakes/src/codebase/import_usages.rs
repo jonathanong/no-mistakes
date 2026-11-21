@@ -160,7 +160,7 @@ pub(crate) fn collect_from_facts(
     Ok(ImportUsagesReport { roots, files })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod coverage_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -53,6 +53,6 @@ fn rewrite_impl(
     out
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "origins_tests.rs"]
 mod origins_tests;

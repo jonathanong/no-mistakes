@@ -1,6 +1,6 @@
 use crate::playwright::selectors::{compile_selector_regexes_with_html_ids, SelectorRegexes};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "regex_cache_tests.rs"]
 mod tests;
 use std::collections::{BTreeMap, BTreeSet};

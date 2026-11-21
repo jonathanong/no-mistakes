@@ -126,6 +126,6 @@ fn includes(expected: &Literal, value: &ArgumentValue) -> Match {
 #[path = "argument_match_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "argument_confidence_tests.rs"]
 mod confidence_tests;

@@ -11,7 +11,7 @@ mod matching;
 use matching::{text_target_matches, TextMatch};
 mod route_scope;
 pub(crate) use route_scope::route_signal_matches_locator;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 struct LocatorTestScope<'a> {

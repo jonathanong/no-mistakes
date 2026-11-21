@@ -83,7 +83,7 @@ impl ValuePropagatedMutations {
         }
     }
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "propagated_mutation_tests.rs"]
 mod tests;
 // Preserve the logical fact dump: storage sharing must not alter debug reports.

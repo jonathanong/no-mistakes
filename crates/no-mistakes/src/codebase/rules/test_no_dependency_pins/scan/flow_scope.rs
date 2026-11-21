@@ -145,5 +145,5 @@ fn starts_scalar(bytes: &[u8], at: usize) -> bool {
     matches!(before.last(), Some(b'{' | b'[' | b',' | b':'))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

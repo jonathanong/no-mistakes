@@ -116,7 +116,7 @@ pub(super) fn collect(names: &Names, program: &Program<'_>, uses: &mut ArrayUses
 
 #[cfg(feature = "test-instrumentation")]
 thread_local! { static LAST_SUMMARIES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "array_callback_aliases_tests.rs"]
 pub(crate) mod tests;
 

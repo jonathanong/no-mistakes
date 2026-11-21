@@ -190,6 +190,6 @@ fn fill(prepared: &mut Keys, keys: &[Vec<Key>]) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "domain_apply_tests.rs"]
 mod tests;

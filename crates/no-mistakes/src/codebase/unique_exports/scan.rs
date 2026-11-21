@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 pub(super) mod test_support;
 
 pub(super) fn filter_source_files(files: &[PathBuf]) -> Vec<PathBuf> {

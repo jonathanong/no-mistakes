@@ -2,7 +2,7 @@ use super::{CheckFactPlan, PlaywrightFactPlan, TsFileFacts};
 use crate::codebase::ts_source::facts::{TsFactContext, TsFactPlan};
 use std::path::Path;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(in crate::codebase::check_facts) fn should_store_source(

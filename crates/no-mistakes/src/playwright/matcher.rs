@@ -94,5 +94,5 @@ fn segment_is_interpolation(segment: &str) -> bool {
     segment.contains("${")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

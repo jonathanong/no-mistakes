@@ -149,14 +149,14 @@ impl<'a> IntoIterator for &'a mut Scope {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod reference_tests;
 
 #[cfg(test)]
 mod reference_binding_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod precise_binding_tests;

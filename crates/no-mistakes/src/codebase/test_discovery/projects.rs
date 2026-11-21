@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use super::types::TestRunner;
 
 mod policies;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "projects/swift_prefix_plan_tests.rs"]
 mod swift_prefix_plan_tests;
 #[cfg(test)]

@@ -126,6 +126,6 @@ fn java_ref_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]*)\b").expect("ref"))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "java_tests.rs"]
 mod tests;

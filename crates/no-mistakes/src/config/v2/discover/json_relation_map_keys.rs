@@ -164,5 +164,5 @@ fn json_duplicate_input(source: &str, comments: bool, fragment: bool) -> Option<
     None
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

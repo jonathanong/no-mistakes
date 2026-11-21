@@ -59,5 +59,5 @@ pub(crate) fn matching_files(
     Ok(FileMatcher::new(root, target_roots, patterns.iter().map(String::as_str))?.select(files))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

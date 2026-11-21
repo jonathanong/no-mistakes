@@ -118,7 +118,7 @@ pub struct CheckFactPlan {
 mod merge;
 
 mod head_calls_only;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 mod lint_suppressions;

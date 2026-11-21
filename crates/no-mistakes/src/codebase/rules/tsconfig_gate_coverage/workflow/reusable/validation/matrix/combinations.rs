@@ -6,7 +6,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputS
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "combinations/internal_tests.rs"]
 mod internal_tests;
 

@@ -195,6 +195,6 @@ fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast
 
 pub(in crate::codebase::postgres::embedded::walk::variants) use literal::{observe_const, recover};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "clauses/tests.rs"]
 mod tests;

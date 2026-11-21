@@ -16,14 +16,14 @@ pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
 mod scope;
 pub use scope::SqlSourceRelation;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod consumer_recovery_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod prepared_tests;
 mod single_row;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod single_row_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

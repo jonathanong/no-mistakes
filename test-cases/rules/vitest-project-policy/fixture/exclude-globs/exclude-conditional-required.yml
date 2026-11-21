@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: vitest-project-policy
+    scope: repository
+    options:
+      config: exclude-conditional-required.ts
+      required:
+        isolate: true
+      requiredExcludeGlobs:
+        - "**/node_modules/**"
+        - "**/.git/**"

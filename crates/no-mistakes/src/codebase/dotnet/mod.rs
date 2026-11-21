@@ -157,5 +157,5 @@ pub(super) fn msbuild_path(raw: &str) -> PathBuf {
 
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

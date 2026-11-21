@@ -183,7 +183,7 @@ fn unknown_receiver_message(receiver_name: &str, configured_value_name: bool) ->
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 mod coverage;

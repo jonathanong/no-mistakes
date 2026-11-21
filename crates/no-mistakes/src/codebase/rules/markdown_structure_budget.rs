@@ -127,6 +127,6 @@ fn stale(file: &str, message: &str) -> RuleFinding {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "markdown_structure_budget/tests.rs"]
 mod tests;

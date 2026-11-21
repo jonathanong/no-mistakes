@@ -181,11 +181,11 @@ fn compact_collected(
 mod state;
 pub(super) use state::{compact_modules, prune_mutations, prune_state};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod identity_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod cached_tests;

@@ -100,11 +100,14 @@ no default. `configFiles` lists the Vite configs whose `optimizeDeps.include`
 entries are checked. `packages` lists the package directories in scope. An
 explicit empty `packages` list selects nothing. An omitted option is reported
 on the loaded config file. Optional `options.includeSources` names modules
-whose `export const` string arrays are added to those include entries.
+whose static string arrays are added to those include entries, including
+`export const`, `as const`, `satisfies`, and `export { name }`.
 Optional `options.ignorePackages` skips uncovered imports of those package
 names. A `workspace:` dependency and a child package listed in `packages`
-without a non-workspace version specifier are skipped the same way. A
-versioned dependency such as `"items": "1.0.0"` is still checked.
+without a non-workspace version specifier are skipped the same way. A name
+listed only in `bundledDependencies` is skipped only when that child is also
+listed in `packages`. A versioned dependency such as `"items": "1.0.0"` is
+still checked.
 A subpath import matches that exact specifier. A Node built-in still matches
 by package name.
 `bundledDependencies: true` counts the dependency objects already declared,
@@ -372,8 +375,10 @@ tests must not run against the live working directory. A matching `exec`,
 `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
 with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
 `execSync` match a static shell string, including a leading `cd <dir> &&` or
-`NAME=value` prefix. A quoted argument is one token. A quoted executable, or an
-analyzer name inside a quoted assignment value, leaves that string unmatched,
+`NAME=value` prefix. A quoted argument is one token. `$` and a backtick are literal inside single
+quotes and unmatched inside double quotes. A quoted executable, or an analyzer
+name inside a quoted assignment value, leaves that string unmatched. `cd`
+matches on its quote-stripped text. `&&` matches only as an unquoted token,
 and the `cd` directory replaces the `cwd` option. `spawn` and `spawnSync` match one when
 `shell` is boolean `true`. A `.js`, `.mjs`, or `.cjs` module path matches the configured command.
 `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, and
@@ -594,7 +599,14 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. A cache path outside
 `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
-`GITHUB_OUTPUT` name the key reads.
+`GITHUB_OUTPUT` name the key reads. The checksum command must name the lockfile in that same
+simple command. Reassigning the variable drops the proof unless the whole new value is a
+parameter expansion of that same variable (`"$digest"`, `${digest}`, `${digest%% *}`,
+`${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other text drops
+the proof. A `<<<` redirect is not a
+heredoc, and `<<` inside `$(( ))` is not a heredoc. A variable assigned from `$GITHUB_OUTPUT` is the same redirect
+target. A local `uses: ./...` composite action counts when its declared output reads a proven
+`run` step in that action.
 
 ```yaml
 rules:
@@ -618,7 +630,9 @@ rules:
 properties, `forbidden` names, and `parity` pairs. Optional
 `requiredExcludeGlobs` lists nonempty strings that every literal `test.exclude`
 array on that config must contain. The list defaults to empty, and a missing
-`exclude` stays silent because Vitest defaults still apply. Helper globs select
+`exclude` stays silent because Vitest defaults still apply. Conditional and
+logical spreads of literal objects contribute only keys those objects define, so
+a spread that never sets `exclude` stays silent too. Helper globs select
 only the prepared visible-file inventory. Optional `declared.forbiddenValues` maps
 property names to forbidden literal arrays; `declared.forbidLiteralKinds` maps
 names to arrays of `number`, `string`, or `boolean`. They check every object

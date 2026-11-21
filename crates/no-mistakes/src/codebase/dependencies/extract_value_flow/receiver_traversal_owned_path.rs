@@ -49,6 +49,6 @@ impl TraversalState {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "receiver_traversal_owned_path_tests.rs"]
 mod tests;

@@ -19,6 +19,6 @@ pub(crate) fn validate_mermaid_markdown_json_impl(
     Ok(crate::cli::json_string(&result))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "mermaid/tests.rs"]
 mod tests;

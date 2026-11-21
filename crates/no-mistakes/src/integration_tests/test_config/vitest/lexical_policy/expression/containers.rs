@@ -20,7 +20,14 @@ impl Evaluator<'_, '_> {
                     properties.insert(name.unwrap(), self.eval(&property.value));
                 }
                 ObjectPropertyKind::SpreadProperty(spread) => {
-                    match self.eval(&spread.argument).kind {
+                    let evaluated = if let Some(value) =
+                        self.folded_spread(&spread.argument, &properties, opaque)
+                    {
+                        value
+                    } else {
+                        self.eval(&spread.argument)
+                    };
+                    match evaluated.kind {
                         Kind::Object(fields, unknown) => {
                             if unknown {
                                 properties.clear();

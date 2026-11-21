@@ -70,5 +70,5 @@ fn destination_valid(value: &str) -> bool {
     value.starts_with('/') || value.starts_with(DYNAMIC_EXPRESSION)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

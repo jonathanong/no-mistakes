@@ -151,5 +151,5 @@ fn is_word(token: &Token, keyword: &str) -> bool {
         if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(keyword))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

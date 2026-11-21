@@ -161,6 +161,6 @@ impl Projector<'_, '_> {
 #[path = "context.rs"]
 mod context;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "alias_tests.rs"]
 mod tests;

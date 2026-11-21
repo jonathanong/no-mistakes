@@ -128,7 +128,7 @@ fn grouped(query: &SqlBoundQuery, bounded: &[bool]) -> bool {
         })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 fn view_offender(name: &str, line: usize, column: usize) -> Offender {

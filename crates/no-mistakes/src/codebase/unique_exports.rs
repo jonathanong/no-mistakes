@@ -98,5 +98,5 @@ fn analyze_unique_exports<R: ImportResolverFacade>(
     unique_export_findings(occurrences, options)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

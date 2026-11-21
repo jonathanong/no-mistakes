@@ -33,5 +33,5 @@ pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};
 pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod tests;

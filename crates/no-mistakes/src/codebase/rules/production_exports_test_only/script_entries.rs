@@ -99,6 +99,6 @@ fn resolve_entry(package_dir: &Path, root: &Path, raw: &str) -> Option<PathBuf> 
     (path.starts_with(root) && path.is_file()).then_some(path)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "script_entries_tests.rs"]
 mod tests;

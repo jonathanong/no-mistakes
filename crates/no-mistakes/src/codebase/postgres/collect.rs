@@ -180,8 +180,8 @@ pub(crate) fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> 
             .is_some_and(|name| globs.is_match(name))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod lossy_sql_tests;

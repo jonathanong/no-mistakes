@@ -1,12 +1,9 @@
-use super::closure::runtime_imports;
 use super::include_config::{parse_vite_config, ParsedConfig};
 use super::include_source::{load, parse_include_source, SourceList};
 use super::IncludeSource;
 use crate::codebase::rules::source_store_for_files;
-use crate::codebase::ts_resolver::{self, TsConfig};
 use oxc_ast::ast::{BindingPattern, Declaration, Statement, VariableDeclarationKind};
-use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 fn unanalyzable_reason(source: &str, export_name: &str) -> String {
     match parse_include_source(Path::new("nested-includes.ts"), source, export_name) {
@@ -134,61 +131,24 @@ export default { optimizeDeps: { include: [\"widgets > items/shape\"] as const }
 }
 
 #[test]
-fn an_imported_include_drops_a_non_static_array() {
+fn an_imported_include_keeps_literal_entries_beside_a_spread() {
     let source = "\
 const extra = [];
-export default { optimizeDeps: { include: [\"widgets > items\", ...extra] } };
+export default { optimizeDeps: { include: [\"widgets > items\", ...extra, \"widgets > orders\"] } };
 ";
     match parse_vite_config(Path::new("vite.config.ts"), source, true) {
-        ParsedConfig::Includes(entries) => assert!(entries.is_empty()),
+        ParsedConfig::Includes(entries) => {
+            let texts: Vec<_> = entries.iter().map(|entry| entry.text.as_str()).collect();
+            assert_eq!(texts, vec!["widgets > items", "widgets > orders"]);
+        }
         ParsedConfig::Unanalyzable { reason, .. } => panic!("{reason}"),
     }
-}
-
-#[test]
-fn closure_skips_dependency_directories_and_imports_outside_the_package() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/vite-optimize-deps-nested-imports/fixture/closure-edges");
-    let dir = root.join("packages/widgets");
-    assert!(root.join("outside.ts").is_file());
-    let sources = source_store_for_files(&[]);
-    let manifest = serde_json::json!({
-        "name": "widgets",
-        "exports": {
-            ".": "./index.ts",
-            "./*": "./*.ts"
+    match parse_vite_config(Path::new("vite.config.ts"), source, false) {
+        ParsedConfig::Unanalyzable { reason, .. } => {
+            assert!(reason.contains("not a static array"));
         }
-    });
-    let entry = dir.join("index.ts");
-    let resolved = ts_resolver::resolve_import("../../outside.ts", &entry, &TsConfig::default())
-        .expect("outside import resolves");
-    assert!(!ts_resolver::normalize_path(&resolved).starts_with(&dir));
-    let imports = runtime_imports(
-        &root,
-        &dir,
-        &manifest,
-        "widgets",
-        &sources,
-        &[
-            dir.join("node_modules/items/index.ts"),
-            PathBuf::from("packages/widgets/index.ts"),
-        ],
-        &BTreeSet::new(),
-    )
-    .unwrap();
-    assert!(imports.is_empty());
-    let skipped = runtime_imports(
-        &root,
-        &dir,
-        &serde_json::json!({
-            "name": "widgets",
-            "main": "node_modules/items/index.ts"
-        }),
-        "widgets",
-        &sources,
-        &[],
-        &BTreeSet::new(),
-    )
-    .unwrap();
-    assert!(skipped.is_empty());
+        ParsedConfig::Includes(_) => {
+            panic!("spread include stays unanalyzable without includeSources")
+        }
+    }
 }

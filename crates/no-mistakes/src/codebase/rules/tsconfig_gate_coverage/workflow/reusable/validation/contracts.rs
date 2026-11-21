@@ -109,5 +109,5 @@ fn bool_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
     mapping.get(field).is_none_or(Value::is_bool)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

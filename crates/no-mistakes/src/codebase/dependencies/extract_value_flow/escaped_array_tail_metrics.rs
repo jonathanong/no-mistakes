@@ -9,6 +9,6 @@ pub(super) fn record(index: usize) {
     });
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "escaped_array_tail_tests.rs"]
 mod tests;

@@ -101,10 +101,10 @@ fn invalid(line: u32, error: BoundCommentError) -> BoundComment {
     BoundComment::Invalid { line, error }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "bound_comments_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "bound_comments_host_tests.rs"]
 mod host_tests;

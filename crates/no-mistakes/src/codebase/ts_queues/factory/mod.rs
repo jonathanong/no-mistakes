@@ -10,5 +10,5 @@ include!("facts.rs");
 include!("create_queue.rs");
 include!("queue_name.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

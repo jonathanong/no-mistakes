@@ -130,6 +130,6 @@ fn invalid(line: usize, pattern: String, case_insensitive: bool) -> IgnoreEntry 
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "entries_tests.rs"]
 mod tests;
