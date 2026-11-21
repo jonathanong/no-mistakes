@@ -1,0 +1,10 @@
+{
+  "name": "widgets",
+  "version": "1.0.0",
+  "module": "./index.ts",
+  "dependencies": {
+    "events": "1.0.0",
+    "process": "1.0.0",
+    "items": "1.0.0"
+  }
+}

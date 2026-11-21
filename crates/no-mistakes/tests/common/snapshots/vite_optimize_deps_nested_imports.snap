@@ -2,6 +2,77 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "asset_imports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 3,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/src/deep/index.ts",
+          "import": "widgets > labels",
+          "line": 1,
+          "message": "runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { name } from \"labels\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/src/index.ts",
+          "import": "widgets > orders",
+          "line": 1,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { id } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "barrel_entries": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/badge.ts",
+          "import": "widgets > orders",
+          "line": 1,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { name } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/shape.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "builtins": {
     "exitCode": 1,
     "report": {
@@ -19,6 +90,55 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "import { tag } from \"labels\";",
           "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bundle_flags": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/labels/index.ts",
+          "import": "labels > items",
+          "line": 1,
+          "message": "runtime import \"items\" from labels is not covered by optimizeDeps.include; add \"labels > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 2,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { label } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "vite.config.ts",
+          "import": "widgets > extra",
+          "line": 3,
+          "message": "nested include \"widgets > extra\" is not a declared dependency of widgets; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "include: [\"widgets > extra\"],",
+          "target": "invalid-nested-child"
         }
       ],
       "warnings": []
@@ -85,6 +205,46 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "const_includes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "as-const.ts",
+          "import": "widgets > missing",
+          "line": 3,
+          "message": "nested include \"widgets > missing\" is not a declared dependency of widgets; declare missing under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "\"widgets > missing\",",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "both.ts",
+          "import": "widgets > extra",
+          "line": 1,
+          "message": "nested include \"widgets > extra\" is not a declared dependency of widgets; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const deps = [\"widgets > extra\"] as const satisfies readonly string[];",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "satisfies.ts",
+          "import": "widgets > other",
+          "line": 1,
+          "message": "nested include \"widgets > other\" is not a declared dependency of widgets; declare other under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const deps = [\"widgets > other\"] satisfies readonly string[];",
+          "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "covered": {
     "exitCode": 0,
     "report": {
@@ -94,6 +254,67 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "declared_builtins": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > events",
+          "line": 1,
+          "message": "runtime import \"events\" from widgets is not covered by optimizeDeps.include; add \"widgets > events\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { emitter } from \"events\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > process",
+          "line": 2,
+          "message": "runtime import \"process\" from widgets is not covered by optimizeDeps.include; add \"widgets > process\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import browser from \"process/browser\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_names": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets-copy/package.json",
+          "line": 1,
+          "message": "cannot verify vite-optimize-deps-nested-imports: package name \"widgets\" is configured more than once; keep one packages entry per name so this check can verify nested imports",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
       "warnings": []
     }
   },
@@ -128,6 +349,124 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "exported_styles": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignored_packages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 2,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_chains": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vite.config.ts",
+          "import": "labels > items",
+          "line": 3,
+          "message": "nested include \"labels > items\" is not a declared dependency of labels; declare items under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "include: [\"widgets > labels > items\"],",
+          "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_source_gap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "nested-includes.ts",
+          "line": 3,
+          "message": "cannot verify vite-optimize-deps-nested-imports: export nestedIncludes is not a static array of strings; export a static array of string literals from includeSources so this check can read nested includes",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const nestedIncludes = names;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_sources": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "nested-includes.ts",
+          "import": "widgets > extra",
+          "line": 1,
+          "message": "nested include \"widgets > extra\" is not a declared dependency of widgets; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "export const nestedIncludes = [\"widgets > items\", \"widgets > extra\"];",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 2,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { label } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
       "warnings": []
     }
   },
@@ -223,6 +562,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "nested_conditions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/src/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "omitted_both": {
     "exitCode": 1,
     "report": {
@@ -294,12 +655,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "packages/widgets/index.ts",
-          "import": "widgets > orders",
-          "line": 2,
-          "message": "nested deps runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "import": "widgets > items/theme",
+          "line": 4,
+          "message": "nested deps runtime import \"items/theme\" from widgets is not covered by optimizeDeps.include; add \"widgets > items/theme\"",
           "rule": "vite-optimize-deps-nested-imports",
-          "sourceLine": "import { label } from \"orders\";",
+          "sourceLine": "import \"items/theme\";",
           "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > labels",
+          "line": 2,
+          "message": "nested deps runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { tag } from \"labels\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "vite.config.ts",
+          "import": "items > extra",
+          "line": 12,
+          "message": "nested deps nested include \"items > extra\" is not a declared dependency of items; declare extra under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "\"widgets > items > extra\",",
+          "target": "invalid-nested-child"
         },
         {
           "file": "vite.config.ts",
@@ -309,6 +688,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "\"widgets > extra\",",
           "target": "invalid-nested-child"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "specifier_subpaths": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/parentA/index.ts",
+          "import": "parentA > lib/sub1",
+          "line": 1,
+          "message": "runtime import \"lib/sub1\" from parentA is not covered by optimizeDeps.include; add \"parentA > lib/sub1\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"lib/sub1\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/parentC/index.ts",
+          "import": "parentC > lib/sub2",
+          "line": 1,
+          "message": "runtime import \"lib/sub2\" from parentC is not covered by optimizeDeps.include; add \"parentC > lib/sub2\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"lib/sub2\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "top_level_conditions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 1,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
         }
       ],
       "warnings": []
@@ -362,6 +794,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "optimizeDeps: {",
           "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "workspace_children": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > items",
+          "line": 2,
+          "message": "runtime import \"items\" from widgets is not covered by optimizeDeps.include; add \"widgets > items\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { shape } from \"items\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 3,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { name } from \"orders\";",
+          "target": "uncovered-runtime-import"
         }
       ],
       "warnings": []

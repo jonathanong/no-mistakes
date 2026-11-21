@@ -1,6 +1,6 @@
 //! Runtime package imports in a published entry module.
 
-use super::specifier::{is_node_builtin, package_name};
+use super::specifier::{coverage_name, is_node_builtin, package_name};
 use crate::ast::{js_literal, template_quasi_text};
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::fetch::import_shape::{is_runtime_export, is_runtime_import};
@@ -9,49 +9,85 @@ use oxc_ast::ast::{
     ImportExpression, ImportOrExportKind,
 };
 use oxc_ast_visit::{walk, Visit};
+use std::collections::BTreeSet;
 
 pub(super) struct RuntimeImport {
     pub package: String,
+    /// Exact specifier, or the package name when the specifier is a Node built-in.
+    pub specifier: String,
     pub line: usize,
+    pub file: String,
+}
+
+pub(super) struct ModuleImports {
+    pub imports: Vec<RuntimeImport>,
+    pub relative: Vec<String>,
 }
 
 pub(super) fn collect(
     path: &std::path::Path,
     source: &str,
     own_package: &str,
-) -> anyhow::Result<Vec<RuntimeImport>> {
+    file: &str,
+    declared: &BTreeSet<String>,
+) -> anyhow::Result<ModuleImports> {
     crate::ast::with_program(path, source, |program, source| {
         let mut visitor = ImportVisitor {
             source,
             own_package,
+            file,
+            declared,
             imports: Vec::new(),
+            relative: Vec::new(),
         };
         visitor.visit_program(program);
-        visitor.imports
+        ModuleImports {
+            imports: visitor.imports,
+            relative: visitor.relative,
+        }
     })
 }
 
 struct ImportVisitor<'a> {
     source: &'a str,
     own_package: &'a str,
+    file: &'a str,
+    declared: &'a BTreeSet<String>,
     imports: Vec<RuntimeImport>,
+    relative: Vec<String>,
 }
 
 impl ImportVisitor<'_> {
     fn record(&mut self, specifier: &str, start: u32) {
         let specifier = specifier.trim();
-        if specifier.starts_with("node:") || is_node_builtin(specifier) {
+        if specifier == "."
+            || specifier == ".."
+            || specifier.starts_with("./")
+            || specifier.starts_with("../")
+        {
+            self.relative.push(specifier.to_string());
+            return;
+        }
+        if specifier.starts_with("node:") {
             return;
         }
         let Some(package) = package_name(specifier) else {
             return;
         };
+        if is_node_builtin(specifier) && !self.declared.contains(&package) {
+            return;
+        }
         if package == self.own_package {
             return;
         }
+        let Some(specifier_key) = coverage_name(specifier) else {
+            return;
+        };
         self.imports.push(RuntimeImport {
             package,
+            specifier: specifier_key,
             line: byte_offset_to_line(self.source, start as usize) as usize,
+            file: self.file.to_string(),
         });
     }
 }

@@ -27,6 +27,21 @@ fn vite_optimize_deps_nested_imports_json_matches_snapshot() {
         case("omitted_packages", "omitted-packages"),
         case("config_edges", "config-edges"),
         case("manifest_edges", "manifest-edges"),
+        case("barrel_entries", "barrel-entries"),
+        case("include_sources", "include-sources"),
+        case("include_source_gap", "include-source-gap"),
+        case("workspace_children", "workspace-children"),
+        case("ignored_packages", "ignored-packages"),
+        case("bundle_flags", "bundle-flags"),
+        case("declared_builtins", "declared-builtins"),
+        case("asset_imports", "asset-imports"),
+        case("nested_conditions", "nested-conditions"),
+        case("duplicate_names", "duplicate-names"),
+        case("include_chains", "include-chains"),
+        case("top_level_conditions", "top-level-conditions"),
+        case("exported_styles", "exported-styles"),
+        case("const_includes", "const-includes"),
+        case("specifier_subpaths", "specifier-subpaths"),
     ];
     assert_saved_fixture("vite_optimize_deps_nested_imports", &cases);
 }

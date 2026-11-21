@@ -1,9 +1,10 @@
 //! Static `optimizeDeps.include` entries from a Vite config module.
 
 use super::config_object::default_object;
-use super::specifier::{nested_pair, package_name};
+use super::specifier::{coverage_name, nested_pairs, package_name};
 use crate::ast::{js_literal, property_key_name, template_quasi_text};
 use crate::codebase::ts_source::byte_offset_to_line;
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 use std::path::Path;
@@ -20,8 +21,14 @@ pub(super) enum ParsedConfig {
     Unanalyzable { line: usize, reason: String },
 }
 
-pub(super) fn parse_vite_config(path: &Path, source: &str) -> ParsedConfig {
-    match crate::ast::with_program(path, source, extract) {
+pub(super) fn parse_vite_config(
+    path: &Path,
+    source: &str,
+    allow_imported_include: bool,
+) -> ParsedConfig {
+    match crate::ast::with_program(path, source, |program, source| {
+        extract(program, source, allow_imported_include)
+    }) {
         Ok(parsed) => parsed,
         Err(_) => ParsedConfig::Unanalyzable {
             line: 1,
@@ -30,7 +37,11 @@ pub(super) fn parse_vite_config(path: &Path, source: &str) -> ParsedConfig {
     }
 }
 
-fn extract(program: &oxc_ast::ast::Program<'_>, source: &str) -> ParsedConfig {
+fn extract(
+    program: &oxc_ast::ast::Program<'_>,
+    source: &str,
+    allow_imported_include: bool,
+) -> ParsedConfig {
     let Some(object) = default_object(program) else {
         return unanalyzable(1, "Vite config has no static default export object");
     };
@@ -56,11 +67,36 @@ fn extract(program: &oxc_ast::ast::Program<'_>, source: &str) -> ParsedConfig {
             line_of(source, optimize.span.start),
             "optimizeDeps is not a static object",
         ),
-        Prop::Found(Expression::ArrayExpression(array)) => string_entries(source, array.as_ref()),
-        Prop::Found(value) => unanalyzable(
-            line_of(source, value.span().start),
-            "optimizeDeps.include is not a static array of strings",
-        ),
+        Prop::Found(value) => match unwrap_ts_wrappers(value) {
+            Expression::ArrayExpression(array) => {
+                let parsed = string_entries(source, array.as_ref());
+                if allow_imported_include && matches!(parsed, ParsedConfig::Unanalyzable { .. }) {
+                    ParsedConfig::Includes(Vec::new())
+                } else {
+                    parsed
+                }
+            }
+            value => {
+                if allow_imported_include {
+                    ParsedConfig::Includes(Vec::new())
+                } else {
+                    unanalyzable(
+                        line_of(source, value.span().start),
+                        "optimizeDeps.include is not a static array of strings",
+                    )
+                }
+            }
+        },
+    }
+}
+
+pub(super) fn includes_in_array(
+    source: &str,
+    include: &oxc_ast::ast::ArrayExpression<'_>,
+) -> Result<Vec<NestedInclude>, (usize, String)> {
+    match string_entries(source, include) {
+        ParsedConfig::Includes(entries) => Ok(entries),
+        ParsedConfig::Unanalyzable { line, reason } => Err((line, reason)),
     }
 }
 
@@ -73,19 +109,19 @@ fn string_entries(source: &str, include: &oxc_ast::ast::ArrayExpression<'_>) -> 
                 "optimizeDeps.include is not a static array of strings",
             );
         };
-        let Some((parent_raw, child_raw)) = nested_pair(&text) else {
-            continue;
-        };
-        let (Some(parent), Some(child)) = (package_name(&parent_raw), package_name(&child_raw))
-        else {
-            continue;
-        };
-        entries.push(NestedInclude {
-            parent,
-            child,
-            line: line_of(source, start),
-            text: format!("{parent_raw} > {child_raw}"),
-        });
+        for (parent_raw, child_raw) in nested_pairs(&text) {
+            let (Some(parent), Some(child)) =
+                (package_name(&parent_raw), coverage_name(&child_raw))
+            else {
+                continue;
+            };
+            entries.push(NestedInclude {
+                parent,
+                child,
+                line: line_of(source, start),
+                text: format!("{parent_raw} > {child_raw}"),
+            });
+        }
     }
     ParsedConfig::Includes(entries)
 }

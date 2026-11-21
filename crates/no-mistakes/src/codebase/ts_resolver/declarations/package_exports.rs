@@ -172,6 +172,10 @@ fn selected_export<'a>(exports: &'a Value, subpath: &str) -> Result<pattern::Sel
     pattern::pattern_export(map, &key).ok_or(())
 }
 
+pub(super) fn star_subpath(pattern_key: &str, template: &str, file: &str) -> Option<String> {
+    pattern::subpath_for_file(pattern_key, template, file)
+}
+
 pub(super) fn source_targets(
     exports: &Value,
     subpath: &str,
