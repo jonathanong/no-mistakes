@@ -70,6 +70,36 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "return later.add(\"openLater\", { id });"
         },
         {
+          "file": "loops.ts",
+          "job": "fromIndex",
+          "kind": "mixed-priority",
+          "line": 22,
+          "message": "queue \"indexes\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: loops.ts:25 (storeIndex)",
+          "queueFile": "queues.ts",
+          "queueName": "indexes",
+          "sourceLine": "for (const LEVEL of [indexes.add(\"fromIndex\", { id }, { priority: LEVEL }), ...levels]) {"
+        },
+        {
+          "file": "loops.ts",
+          "job": "storeIndex",
+          "kind": "mixed-priority",
+          "line": 25,
+          "message": "queue \"indexes\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: loops.ts:22 (fromIndex, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "indexes",
+          "sourceLine": "indexes.add(\"storeIndex\", { id });"
+        },
+        {
+          "file": "loops.ts",
+          "job": "storeRank",
+          "kind": "mixed-priority",
+          "line": 34,
+          "message": "queue \"ranks\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: loops.ts:30 (countRank, priority 9), loops.ts:33 (outerRank, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "ranks",
+          "sourceLine": "ranks.add(\"storeRank\", { id });"
+        },
+        {
           "file": "mixed.ts",
           "job": "packWidget",
           "kind": "mixed-priority",

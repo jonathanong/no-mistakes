@@ -19,3 +19,7 @@ export const later = new Queue("later");
 export const shadows = new Queue("shadows");
 export const spreads = new Queue("spreads");
 export const opaque = new Queue("opaque");
+export const loops = new Queue("loops");
+export const slots = new Queue("slots");
+export const ranks = new Queue("ranks");
+export const indexes = new Queue("indexes");

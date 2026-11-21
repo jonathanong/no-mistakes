@@ -30,7 +30,7 @@ fn mixed_literal_priorities_report_the_minority_form() {
         report.check
     );
     let findings = mixed(&report);
-    assert_eq!(findings.len(), 13, "{findings:?}");
+    assert_eq!(findings.len(), 16, "{findings:?}");
 
     let widgets = queue(&findings, "widgets");
     assert_eq!(widgets.len(), 1);
@@ -58,6 +58,8 @@ fn mixed_literal_priorities_report_the_minority_form() {
         "extras",
         "drafts",
         "tags",
+        "loops",
+        "slots",
     ] {
         assert!(queue(&findings, name).is_empty(), "{name} should abstain");
     }
@@ -107,6 +109,26 @@ fn mixed_literal_priorities_report_the_minority_form() {
     for name in ["shadows", "spreads", "opaque"] {
         assert!(queue(&findings, name).is_empty(), "{name} should abstain");
     }
+
+    let ranks = queue(&findings, "ranks");
+    assert_eq!(ranks.len(), 1);
+    assert_eq!(ranks[0].file, "loops.ts");
+    assert_eq!(ranks[0].job.as_deref(), Some("storeRank"));
+    assert!(ranks[0].message.contains("countRank, priority 9"));
+    assert!(ranks[0].message.contains("outerRank, priority 5"));
+
+    let indexes = queue(&findings, "indexes");
+    assert_eq!(indexes.len(), 2);
+    assert!(indexes.iter().any(|finding| {
+        finding.job.as_deref() == Some("fromIndex")
+            && finding.message.contains("sets priority 5")
+            && finding.message.contains("storeIndex")
+    }));
+    assert!(indexes.iter().any(|finding| {
+        finding.job.as_deref() == Some("storeIndex")
+            && finding.message.contains("enqueues with priority 0")
+            && finding.message.contains("fromIndex, priority 5")
+    }));
 }
 
 #[test]

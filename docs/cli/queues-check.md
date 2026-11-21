@@ -83,8 +83,11 @@ job's `opts`, and the `options` argument of a configured enqueue factory. A
 missing priority, a literal `0`, and a same-file `const` whose value is `0`
 are priority 0. A finite integer greater than 0, including a same-file `const`
 and unary `+`, is the other form. Parentheses and `as const` on that integer
-stay static. A `const` later in the same scope still counts. A parameter,
-`let`, `var`, or other binding with the same name hides the outer `const`.
+stay static. A `const` later in the same scope still counts, including
+`for (const level = 9;;)`. A parameter, `let`, `var`, `for` header, or other
+binding with the same name hides the outer `const` for the scope that binding
+owns. The right-hand side of `for...of` and `for...in` still sees the outer
+`const`.
 
 The check abstains for the whole queue when any producer priority is not one
 of those two forms. That includes a trailing spread, a spread before the

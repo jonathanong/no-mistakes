@@ -1,6 +1,9 @@
 use crate::queue::extract_visitor::QueueVisitor;
-use oxc_ast::ast::{BlockStatement, CatchClause, Class, FunctionBody, Statement};
-use oxc_ast_visit::walk;
+use oxc_ast::ast::{
+    BlockStatement, CatchClause, Class, Expression, ForInStatement, ForOfStatement, ForStatement,
+    ForStatementInit, ForStatementLeft, FunctionBody, Statement, VariableDeclaration,
+};
+use oxc_ast_visit::{walk, Visit};
 
 pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockStatement<'a>) {
     let numbers = visitor.facts.const_numbers.clone();
@@ -28,6 +31,46 @@ pub(crate) fn visit_catch<'a>(visitor: &mut QueueVisitor<'a>, catch: &CatchClaus
     walk::walk_catch_clause(visitor, catch);
     visitor.job_frames = frames;
     visitor.facts.const_numbers = numbers;
+}
+
+pub(crate) fn visit_for<'a>(visitor: &mut QueueVisitor<'a>, stmt: &ForStatement<'a>) {
+    let numbers = visitor.facts.const_numbers.clone();
+    if let Some(ForStatementInit::VariableDeclaration(decl)) = &stmt.init {
+        hide_declaration(visitor, decl);
+    }
+    walk::walk_for_statement(visitor, stmt);
+    visitor.facts.const_numbers = numbers;
+}
+
+pub(crate) fn visit_for_in<'a>(visitor: &mut QueueVisitor<'a>, stmt: &ForInStatement<'a>) {
+    visit_for_each(visitor, &stmt.left, &stmt.right, &stmt.body);
+}
+
+pub(crate) fn visit_for_of<'a>(visitor: &mut QueueVisitor<'a>, stmt: &ForOfStatement<'a>) {
+    visit_for_each(visitor, &stmt.left, &stmt.right, &stmt.body);
+}
+
+fn visit_for_each<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    left: &ForStatementLeft<'a>,
+    right: &Expression<'a>,
+    body: &Statement<'a>,
+) {
+    let numbers = visitor.facts.const_numbers.clone();
+    // The right-hand side is still the outer scope.
+    visitor.visit_expression(right);
+    if let ForStatementLeft::VariableDeclaration(decl) = left {
+        hide_declaration(visitor, decl);
+    }
+    walk::walk_for_statement_left(visitor, left);
+    visitor.visit_statement(body);
+    visitor.facts.const_numbers = numbers;
+}
+
+fn hide_declaration(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclaration<'_>) {
+    for declarator in &decl.declarations {
+        crate::queue::number_scope::hide_pattern(visitor, &declarator.id);
+    }
 }
 
 pub(crate) fn visit_class<'a>(visitor: &mut QueueVisitor<'a>, class: &Class<'a>) {

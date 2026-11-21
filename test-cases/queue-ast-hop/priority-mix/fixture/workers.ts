@@ -20,3 +20,7 @@ export const laterWorker = new Worker("later", async () => {});
 export const shadowsWorker = new Worker("shadows", async () => {});
 export const spreadsWorker = new Worker("spreads", async () => {});
 export const opaqueWorker = new Worker("opaque", async () => {});
+export const loopsWorker = new Worker("loops", async () => {});
+export const slotsWorker = new Worker("slots", async () => {});
+export const ranksWorker = new Worker("ranks", async () => {});
+export const indexesWorker = new Worker("indexes", async () => {});
