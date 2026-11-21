@@ -22,6 +22,7 @@ pub(super) fn hop(
     match module_hit(graph, facts, catalog, module, spec) {
         ModuleHit::File(next) => visible(catalog, graph, facts, &next, name, stack),
         ModuleHit::Open => vec![Fragment::open(spec)],
+        ModuleHit::Unproven => Vec::new(),
     }
 }
 
@@ -96,6 +97,7 @@ fn reexported_namespace(
     match module_hit(graph, facts, catalog, module, spec) {
         ModuleHit::File(next) => visible_all(catalog, graph, facts, &next, &mut Vec::new()),
         ModuleHit::Open => vec![Fragment::open(spec)],
+        ModuleHit::Unproven => Vec::new(),
     }
 }
 
@@ -157,6 +159,7 @@ pub(super) fn star_fragments(
                 stack,
             )),
             ModuleHit::Open => found.push(Fragment::open(spec)),
+            ModuleHit::Unproven => {}
         }
     }
     stack.pop();

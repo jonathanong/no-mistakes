@@ -66,6 +66,22 @@ fn recorded_import_targets_replace_neighbor_stems() {
 }
 
 #[test]
+fn a_bare_specifier_without_a_graph_is_not_an_unresolved_warning() {
+    let world = world();
+    let catalog = catalog(&world);
+    let open = alias::hop(
+        &catalog,
+        None,
+        &world.facts,
+        &world.escape,
+        "pkg/sql",
+        "orderColumns",
+        &mut Vec::new(),
+    );
+    assert!(open.is_empty(), "{open:?}");
+}
+
+#[test]
 fn resolved_tag_import_keeps_a_fragment_exported_under_that_name() {
     let mut world = world();
     let producer = world.columns.clone();
