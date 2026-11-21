@@ -122,32 +122,32 @@ pub(crate) fn argument_safe_diagnostic(diagnostic: &ModuleDiagnostic) -> bool {
         )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 #[cfg(test)]
 mod selector_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod argument_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod argument_matrix_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod created_require_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod path_provenance_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod mock_boundary_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod precision_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod static_dynamic_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod provenance_behavior_boundary_tests;

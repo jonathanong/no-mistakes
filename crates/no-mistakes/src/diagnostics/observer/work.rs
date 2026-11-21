@@ -124,6 +124,6 @@ const NAMES: &[&str] = &[
     "postgres.annotation.module_initializations",
 ];
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "work_tests.rs"]
 mod tests;

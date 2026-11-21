@@ -76,7 +76,7 @@ fn rel(root: &Path, path: &Path) -> String {
 
 #[cfg(test)]
 mod scan_edges;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_include;

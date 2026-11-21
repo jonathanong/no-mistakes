@@ -16,7 +16,7 @@ pub(crate) mod test_file_occurrences;
 pub(crate) mod test_patterns;
 #[cfg(test)]
 pub(crate) mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 pub(crate) mod url;
 

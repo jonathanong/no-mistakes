@@ -92,7 +92,7 @@ fn lockfile_seed_roots(
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "lockfile_seeds_dotnet_semantic_seed_tests.rs"]
 mod dotnet_semantic_seed_tests;
 
@@ -148,7 +148,7 @@ fn nearest_central_props(root: &Path, dir: &Path, visible_paths: &[PathBuf]) -> 
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 pub(super) struct LockfileSeedResult {

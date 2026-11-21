@@ -22,62 +22,62 @@ use types::{
     AnalyzeProjectOptions, AnalyzeProjectResult, AnalyzeReportRequest, AnalyzeReportResult,
 };
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/tests/architecture_override_seed.rs"]
 mod architecture_override_seed_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/tests/architecture_override.rs"]
 mod architecture_override_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "analyze_project/tests/bounded_import_closure_seed.rs"]
 mod bounded_import_closure_seed_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "analyze_project/tests/bounded_import_closure.rs"]
 mod bounded_import_closure_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "analyze_project/tests/cli_parity_framework.rs"]
 mod cli_parity_framework_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/cli_parity_tests.rs"]
 mod cli_parity_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/command_report_tests.rs"]
 mod command_report_tests;
 #[cfg(test)]
 #[path = "analyze_project/domain_parity_tests.rs"]
 mod domain_parity_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/flow_server_tests.rs"]
 mod flow_server_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "analyze_project/tests/import_only_provenance.rs"]
 mod import_only_provenance_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/tests/import_only_shared_parse.rs"]
 mod import_only_shared_parse_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "analyze_project/import_usages_scope_tests.rs"]
 mod import_usages_scope_tests;
 #[cfg(test)]
 mod legacy_test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/tests/option_merge_shapes.rs"]
 mod option_merge_shapes_tests;
 #[cfg(test)]
 mod options_test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod options_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "analyze_project/tests/playwright_prewarm.rs"]
 mod playwright_prewarm_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests_dispatch;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "analyze_project/tracked_banned_paths_tests.rs"]
 mod tracked_banned_paths_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "analyze_project/tests/unknown_option_fields.rs"]
 mod unknown_option_fields_tests;
 

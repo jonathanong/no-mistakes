@@ -68,5 +68,5 @@ pub(super) fn accept(
     Ok(failures.is_empty())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use super::super::schema::SwiftConfig;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 pub(super) fn validate(swift: &SwiftConfig) -> Result<()> {

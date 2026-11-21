@@ -159,6 +159,6 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) fn bind_this(
     locals.insert("this".into(), receiver.cloned().unwrap_or(Value::Unknown));
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "scopes/tests.rs"]
 mod tests;

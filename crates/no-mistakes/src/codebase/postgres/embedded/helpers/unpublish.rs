@@ -121,10 +121,10 @@ fn advance_to(rest: &str, line: &mut u32, column: &mut u32, target: (u32, u32)) 
     ((*line, *column) == target).then_some(rest.len())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "unpublish_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "unpublish_bind_tests.rs"]
 mod bind_tests;

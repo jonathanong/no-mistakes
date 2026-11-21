@@ -5,5 +5,5 @@ pub fn evaluate_postgres_bounds(facts: &SqlStatementFileFacts, catalog: &SchemaC
     crate::codebase::rules::postgres_bounded_statements::benchmark_offenders(facts, catalog)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

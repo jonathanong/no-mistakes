@@ -103,6 +103,6 @@ impl ImportCollector {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "foreign_projection_budget_tests.rs"]
 mod tests;

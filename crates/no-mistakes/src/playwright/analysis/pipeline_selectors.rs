@@ -6,7 +6,7 @@ use crate::playwright::playwright_tests;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod test_support;
 
 #[cfg_attr(

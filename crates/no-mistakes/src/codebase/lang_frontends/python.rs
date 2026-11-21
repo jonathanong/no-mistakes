@@ -6,7 +6,7 @@ use imports::{extract_python_imports, python_module};
 #[path = "python_http.rs"]
 mod http;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "python_imports_tests.rs"]
 mod tests;
 use crate::codebase::ts_source::SourceStore;

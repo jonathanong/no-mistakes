@@ -142,9 +142,9 @@ fn statement_kinds(configured: Option<&[String]>) -> Result<Vec<SqlBoundKind>> {
     Ok(kinds)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod options_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 /// Unstable adapter for the prepared evaluator's Criterion harness.

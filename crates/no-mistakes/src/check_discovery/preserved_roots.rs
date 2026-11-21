@@ -133,5 +133,5 @@ fn push_include_preserved_roots_from_files(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

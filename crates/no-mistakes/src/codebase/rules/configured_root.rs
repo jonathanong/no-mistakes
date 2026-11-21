@@ -130,5 +130,5 @@ pub(crate) fn run_with_origin<O: serde::de::DeserializeOwned + Default>(
     Ok(findings)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

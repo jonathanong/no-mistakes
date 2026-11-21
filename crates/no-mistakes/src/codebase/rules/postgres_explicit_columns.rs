@@ -127,10 +127,10 @@ fn unique_names(values: &[String], option: &str, noun: &str) -> Result<Vec<Strin
     Ok(names)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod options_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod deferred_tests;

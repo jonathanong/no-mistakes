@@ -17,7 +17,7 @@ mod shared;
 pub(crate) use arguments::for_call as call_argument_values;
 pub(crate) use shared::{expand_roots, SharedRoots};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 /// Compatibility probe for callers that only need to know whether any
@@ -80,7 +80,7 @@ pub fn prepare_root_catalogs(
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod argument_rule_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod catalog_root_tests;

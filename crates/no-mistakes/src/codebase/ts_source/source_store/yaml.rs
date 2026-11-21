@@ -196,5 +196,5 @@ fn extra_document_error() -> Arc<serde_yaml::Error> {
     }))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -127,5 +127,5 @@ fn descriptor_relatives(path: &str) -> Vec<String> {
     vec![format!("{path}/action.yml"), format!("{path}/action.yaml")]
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

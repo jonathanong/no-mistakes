@@ -169,5 +169,5 @@ pub use embedded::undeclared::summarize_unresolved_executor_receivers;
 
 pub(crate) use catalog::{canonical_bound_expr, BoundedUniqueIndex};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod collect_fixture_errors_tests;

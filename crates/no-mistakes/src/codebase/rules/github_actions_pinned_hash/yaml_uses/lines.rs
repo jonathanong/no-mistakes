@@ -148,5 +148,5 @@ fn inside_block(line: &str, min_indent: usize) -> bool {
     line.trim().is_empty() || indent_of(line) > min_indent
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

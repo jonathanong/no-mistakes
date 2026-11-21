@@ -120,7 +120,7 @@ pub(crate) fn check_with_files_sources_and_facts(
 
 #[cfg(test)]
 mod embedded_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod options_tests;
 #[cfg(test)]
 mod tests;

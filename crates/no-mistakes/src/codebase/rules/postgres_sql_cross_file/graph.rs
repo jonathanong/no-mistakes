@@ -61,27 +61,27 @@ fn needs_module_validators(config: &NoMistakesConfig) -> bool {
         })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "graph/resolve_fixture_tests.rs"]
 mod resolve_fixture_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "graph/value_import_demand_tests.rs"]
 mod value_import_demand_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "graph/coverage_harness.rs"]
 mod coverage_harness;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "graph/coverage_resolve_tests.rs"]
 mod coverage_resolve_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "graph/coverage_routes_tests.rs"]
 mod coverage_routes_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "graph/coverage_targets_tests.rs"]
 mod coverage_targets_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "graph/routes_fixture_tests.rs"]
 mod routes_fixture_tests;

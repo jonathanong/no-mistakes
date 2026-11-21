@@ -46,6 +46,6 @@ fn unresolved(
         .any(|import| import.computed || resolve(&import.specifier, from).is_none())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "cov_p2_import_gate_tests.rs"]
 mod cov_p2_tests;

@@ -125,5 +125,5 @@ fn event_column(column: &ColumnDef) -> crate::codebase::postgres::SqlColumnMetad
     metadata
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

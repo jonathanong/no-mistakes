@@ -135,6 +135,6 @@ fn lookup(runs: &[Run], index: usize) -> Option<u32> {
     found
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "byte_origins_tests.rs"]
 pub(crate) mod tests;

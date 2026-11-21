@@ -130,9 +130,9 @@ impl<'a, 'b> CatalogProof<'a, 'b> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod coverage_tests;
 #[cfg(test)]
 mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -10,7 +10,7 @@ pub(crate) struct TextOrigin {
     pub(crate) fields: FxHashMap<String, TextOrigin>,
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "text_origin_facts_tests.rs"]
 mod tests;
 

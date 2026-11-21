@@ -95,21 +95,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "callbacks/tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "callbacks/dependencies_tests.rs"]
 mod dependencies_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "callbacks/profile_tests.rs"]
 mod profile_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "callbacks/imported_tests.rs"]
 mod imported_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "callbacks/memo_tests.rs"]
 mod memo_tests;

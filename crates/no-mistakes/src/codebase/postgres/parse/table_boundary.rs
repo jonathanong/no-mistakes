@@ -47,5 +47,5 @@ fn delimiter_after(tokens: &[TokenWithSpan], at: usize) -> Option<usize> {
         .then_some(at + delimiter + 1)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

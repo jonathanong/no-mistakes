@@ -3,7 +3,7 @@ use crate::codebase::check_facts::CheckFileFacts;
 use std::path::Path;
 use std::sync::Arc;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 #[derive(Clone, Copy)]

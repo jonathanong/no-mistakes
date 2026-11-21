@@ -7,9 +7,9 @@ mod effects;
 mod inherit;
 mod narrow;
 mod scope;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests_effects;
 mod validate;
 mod yaml;

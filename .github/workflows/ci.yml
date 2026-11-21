@@ -2333,8 +2333,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
+      CARGO_BUILD_JOBS: "1"
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_CODEGEN_UNITS: "4096"
+      CARGO_PROFILE_TEST_CODEGEN_UNITS: "4096"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
     outputs:
       artifact-run-id: ${{ steps.build-artifact-source.outputs.run_id }}
     steps:
@@ -2373,10 +2378,10 @@ jobs:
         timeout-minutes: 3
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-
           path: |
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
@@ -2394,6 +2399,9 @@ jobs:
         run: |
           set -euo pipefail
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
+          printf 'standalone library build: cargo_jobs=%s dev_units=%s test_units=%s dev_debug=%s test_debug=%s incremental=%s shards=%s\n' \
+            "$CARGO_BUILD_JOBS" "$CARGO_PROFILE_DEV_CODEGEN_UNITS" "$CARGO_PROFILE_TEST_CODEGEN_UNITS" \
+            "$CARGO_PROFILE_DEV_DEBUG" "$CARGO_PROFILE_TEST_DEBUG" "$CARGO_INCREMENTAL" 3
           bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle
           node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
       - name: Save verified workspace artifacts
@@ -2418,7 +2426,7 @@ jobs:
           retention-days: 1
 
   standalone-shards:
-    name: Standalone library shard (${{ matrix.shard }}/4)
+    name: Standalone library shard (${{ matrix.shard }}/3)
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
       CARGO_INCREMENTAL: "0"
@@ -2428,7 +2436,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -2462,7 +2470,7 @@ jobs:
         uses: ./.github/actions/start-test-postgres
       - name: Test standalone Rust library without a CLI build
         timeout-minutes: 6
-        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 4
+        run: node .github/scripts/standalone-shards.cjs run target/standalone-bundle ${{ matrix.shard }} 3
   tests-standalone-lib:
     name: Standalone library tests
     needs: [changes, standalone-build, standalone-shards]

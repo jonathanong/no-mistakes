@@ -147,11 +147,11 @@ fn last_arg_selects_test_file(last: &str, test_file: &str) -> bool {
     false
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "plan_finish/tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "plan_finish/dotnet_incomplete_tests.rs"]
 mod dotnet_incomplete_tests;
 

@@ -40,5 +40,5 @@ pub(crate) fn check_with_files_and_sources(
     scan::check_with_files_and_sources(root, config, all_files, sources)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

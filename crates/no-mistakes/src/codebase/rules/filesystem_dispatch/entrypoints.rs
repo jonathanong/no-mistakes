@@ -190,6 +190,6 @@ pub fn run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "entrypoints_tests.rs"]
 mod tests;

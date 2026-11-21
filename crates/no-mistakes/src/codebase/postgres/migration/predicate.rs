@@ -74,5 +74,5 @@ fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8) -> usize {
     index
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

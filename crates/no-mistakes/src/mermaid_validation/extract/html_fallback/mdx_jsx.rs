@@ -124,6 +124,6 @@ pub(super) fn has_unquoted_jsx_expression_brace(opening: &str) -> bool {
     false
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "mdx_jsx/tests.rs"]
 mod tests;

@@ -86,6 +86,6 @@ fn binding_slots(module: &TypeScriptModuleFacts) -> FxHashMap<(u32, u32), usize>
     slots
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "iterator_tests.rs"]
 mod tests;

@@ -4,7 +4,7 @@ mod conjuncts;
 use bind_identity::Int4Bindings;
 mod page;
 mod probes;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 use super::limit::{is_empty_page, limit_site_at, next_table_fetch, Tokens};

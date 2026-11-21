@@ -80,9 +80,9 @@ pub(crate) fn has_shell_shebang(content: &str) -> bool {
         || l.starts_with("#!/usr/bin/env bash")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod prefix_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod runner_tests;
 #[cfg(test)]
 mod tests;

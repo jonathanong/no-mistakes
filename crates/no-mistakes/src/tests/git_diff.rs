@@ -209,6 +209,6 @@ fn is_shallow_repository(root: &Path) -> std::io::Result<bool> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "git_diff/tests.rs"]
 mod tests;

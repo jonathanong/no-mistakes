@@ -73,5 +73,5 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_continu
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

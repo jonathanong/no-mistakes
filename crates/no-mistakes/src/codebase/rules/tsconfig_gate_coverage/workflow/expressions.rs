@@ -102,5 +102,5 @@ pub(super) fn condition_has_status_function(value: &str) -> bool {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

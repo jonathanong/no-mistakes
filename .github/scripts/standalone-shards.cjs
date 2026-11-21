@@ -2,38 +2,42 @@ const { spawnSync } = require("node:child_process");
 const { existsSync, mkdirSync, readFileSync, writeFileSync } = require("node:fs");
 const path = require("node:path");
 
+const SHARDS = 3;
+
+function archiveName(shard) {
+  return `standalone-${shard}.tar.zst`;
+}
+
 function commands(mode, bundle, index, total, workspace = process.cwd()) {
-  const archive = path.resolve(bundle, "standalone.tar.zst");
-  if (mode === "build")
-    return [
-      [
-        "nextest",
-        "archive",
-        "--locked",
-        "-p",
-        "no-mistakes",
-        "--lib",
-        "--archive-file",
-        archive,
-        "--zstd-level",
-        "6",
-        "--zstd-long",
-      ],
-    ];
+  if (mode === "build") {
+    return Array.from({ length: SHARDS }, (_, shard) => [
+      "nextest",
+      "archive",
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--lib",
+      "--archive-file",
+      path.resolve(bundle, archiveName(shard)),
+      "--zstd-level",
+      "6",
+      "--zstd-long",
+    ]);
+  }
   if (!Number.isInteger(index) || !Number.isInteger(total) || index < 1 || index > total)
     throw new Error("expected a one-based standalone shard within its total");
+  if (total !== SHARDS)
+    throw new Error("standalone shard total must match the compiled archives");
   return [
     [
       "nextest",
       "run",
       "--archive-file",
-      archive,
+      path.resolve(bundle, archiveName(index - 1)),
       "--workspace-remap",
       workspace,
       "--extract-to",
       path.resolve("target/standalone-lib"),
-      "--partition",
-      `hash:${index}/${total}`,
       "--no-fail-fast",
       "--retries",
       "0",
@@ -55,9 +59,25 @@ function run(mode, bundle, index, total, env = process.env) {
       throw new Error("standalone archive source or workspace differs");
     mkdirSync(path.resolve("target/standalone-lib"), { recursive: true });
     childEnv.CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER = `bash ${path.join(__dirname, "libtest-argv-runner.sh")}`;
+    delete childEnv.NM_TEST_SHARD;
   }
-  for (const args of commands(mode, directory, Number(index), Number(total))) {
-    const child = spawnSync("cargo", args, { env: childEnv, stdio: "inherit" });
+  for (const [shard, args] of commands(
+    mode,
+    directory,
+    Number(index),
+    Number(total),
+  ).entries()) {
+    const shardEnv = { ...childEnv };
+    if (mode === "build") {
+      if (shardEnv.NM_TEST_SHARD) throw new Error("standalone compile shard is already selected");
+      shardEnv.NM_TEST_SHARD = String(shard);
+      const wrapper = path.join(__dirname, "standalone-shard-rustc.sh");
+      if (shardEnv.RUSTC_WRAPPER && shardEnv.RUSTC_WRAPPER !== wrapper) {
+        shardEnv.NM_INNER_RUSTC_WRAPPER = shardEnv.RUSTC_WRAPPER;
+      }
+      shardEnv.RUSTC_WRAPPER = wrapper;
+    }
+    const child = spawnSync("cargo", args, { env: shardEnv, stdio: "inherit" });
     if (child.error) throw child.error;
     if (child.status !== 0) return child.status ?? 1;
   }
@@ -87,4 +107,4 @@ if (require.main === module) {
     process.exitCode = 1;
   }
 }
-module.exports = { commands, run };
+module.exports = { commands, run, SHARDS };

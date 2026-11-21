@@ -108,5 +108,5 @@ pub(super) fn static_item_regex(element: &str, attribute: &str) -> &'static Rege
     &items[index]
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

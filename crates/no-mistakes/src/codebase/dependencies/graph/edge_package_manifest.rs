@@ -42,5 +42,5 @@ fn collect_workspace_manifest_edges(
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod edge_package_manifest_tests;

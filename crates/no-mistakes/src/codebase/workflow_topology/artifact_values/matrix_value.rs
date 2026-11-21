@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
 mod axes;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 use axes::{matrix_axis_values, matrix_combination_count, simple_matrix_axes};
 

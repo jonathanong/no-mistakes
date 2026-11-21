@@ -30,7 +30,7 @@ mod native_fallback_lang;
 mod native_semantic_fallback;
 pub(crate) mod native_semantic_seeds;
 mod targeted_triggers;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 pub(super) mod vitest_setup_fallback;
 mod vitest_setup_groups;

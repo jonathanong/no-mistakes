@@ -21,5 +21,5 @@ pub use frontend_apps::{
 pub use schema::{DisableDirectivePolicy, NoMistakesConfig};
 pub use view::ConfigView;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

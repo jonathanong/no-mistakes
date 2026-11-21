@@ -42,5 +42,5 @@ pub fn extract_http_calls_from_program<'a>(
 
 pub(crate) use walk::{export_default_allows_http, record_http_call};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

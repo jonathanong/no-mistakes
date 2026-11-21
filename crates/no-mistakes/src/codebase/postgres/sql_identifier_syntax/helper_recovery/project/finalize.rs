@@ -97,5 +97,5 @@ pub(super) fn finite_template_candidate(input: &Input) -> bool {
     first.is_some_and(|first| !text[..first].contains(';'))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

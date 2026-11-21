@@ -123,7 +123,7 @@ pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(options: Value) 
 
 include!("options_test_json.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "options_test_json_tests.rs"]
 mod options_test_json_tests;
 

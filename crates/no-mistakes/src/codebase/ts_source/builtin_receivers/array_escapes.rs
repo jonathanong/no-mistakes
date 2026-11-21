@@ -109,6 +109,6 @@ pub(super) fn source_array<'e>(expression: &'e Expression<'_>) -> Option<&'e str
 
 include!("array_uses.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "array_escapes_tests.rs"]
 pub(crate) mod tests;

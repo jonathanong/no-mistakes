@@ -188,6 +188,6 @@ pub(super) fn settings_from_loaded_v2(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "loaded_v2/tests.rs"]
 mod tests;

@@ -5,7 +5,7 @@ mod project_setups;
 mod rule_targets;
 mod runner_catalog;
 mod runner_demand;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 pub(super) mod standalone;
 mod vitest_setups;
 
@@ -187,7 +187,7 @@ fn resolve_setup_file(base: &Path, setup: &str) -> PathBuf {
     crate::config::resolve(base, Path::new(setup))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod prepared_tests;
 #[cfg(test)]
 mod tests;

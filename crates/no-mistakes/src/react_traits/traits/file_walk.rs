@@ -131,5 +131,5 @@ pub(crate) fn collect_file_trait_hits(
 
 mod declaration;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

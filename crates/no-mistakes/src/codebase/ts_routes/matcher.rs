@@ -90,5 +90,5 @@ fn is_dynamic_definition_segment(segment: &str) -> bool {
     segment.starts_with(':') || segment == "*" || segment == "**"
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -155,6 +155,6 @@ pub(super) fn function(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "append_proof_walk_tests.rs"]
 mod tests;

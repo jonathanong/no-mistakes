@@ -11,7 +11,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
 use serde_yaml::{Mapping, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "execution_tests.rs"]
 mod tests;
 

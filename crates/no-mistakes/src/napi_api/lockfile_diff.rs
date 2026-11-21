@@ -163,7 +163,7 @@ fn manager_name(m: PackageManager) -> &'static str {
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests2;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests3;

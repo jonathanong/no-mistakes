@@ -47,6 +47,6 @@ pub(crate) fn dependencies(root: &Path, policy: &TestProjectPolicy) -> Vec<Vites
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "policy_setups_tests.rs"]
 mod tests;

@@ -158,5 +158,5 @@ fn line_span(source: &str, line: usize) -> (u32, u32) {
     (start as u32, source.len() as u32)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -1,0 +1,28 @@
+{
+  "ceilingRssMib": 10240,
+  "before": {
+    "runId": "44867392510",
+    "peakRssMib": 13086,
+    "compiler": "rustc"
+  },
+  "noSwapFailure": {
+    "runId": "44868635492",
+    "peakRssMib": 14147,
+    "oomKills": 1
+  },
+  "localFourCpu": {
+    "baselineRssMib": 14668,
+    "codegenUnits4096RssMib": 12537,
+    "codegenUnits16384RssMib": 12637,
+    "libraryWithoutTestModulesRssMib": 8659,
+    "shardPeakRssMib": 10164
+  },
+  "settings": {
+    "CARGO_BUILD_JOBS": "1",
+    "CARGO_INCREMENTAL": "0",
+    "CARGO_PROFILE_DEV_CODEGEN_UNITS": "4096",
+    "CARGO_PROFILE_TEST_CODEGEN_UNITS": "4096",
+    "CARGO_PROFILE_DEV_DEBUG": "0",
+    "CARGO_PROFILE_TEST_DEBUG": "0"
+  }
+}

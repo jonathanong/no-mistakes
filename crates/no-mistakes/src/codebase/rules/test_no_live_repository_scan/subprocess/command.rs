@@ -179,22 +179,22 @@ fn strip_suffix(name: &str) -> &str {
         .unwrap_or(name)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "command_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "tests/command_shell_tests.rs"]
 mod shell_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "command_wrapper_tests.rs"]
 mod wrapper_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "command_reporter_tests.rs"]
 mod reporter_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "command_script_tests.rs"]
 mod script_tests;

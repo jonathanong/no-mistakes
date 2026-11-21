@@ -4,7 +4,7 @@
 )]
 mod render;
 mod snapshot;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 #[cfg(all(test, unix))]
 mod timeout_tests;

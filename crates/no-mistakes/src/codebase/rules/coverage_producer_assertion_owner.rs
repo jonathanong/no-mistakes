@@ -157,7 +157,7 @@ pub(super) fn generator(node: &NodeId, facts: &dyn TsFactLookup) -> bool {
     matches!(node, NodeId::Symbol { file, callable_id: Some(id), .. }
         if facts.get_ts_facts(file).is_some_and(|file| file.value_flow.generator_callables.contains(id)))
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 fn declaration_line(node: &NodeId, sources: &crate::codebase::ts_source::SourceStore) -> usize {

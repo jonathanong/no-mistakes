@@ -232,5 +232,5 @@ fn template_for_entry(entry: &RegistryEntry) -> String {
 include!("registry_extension_query/detect.rs");
 include!("registry_extension_query/detect_resolve.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

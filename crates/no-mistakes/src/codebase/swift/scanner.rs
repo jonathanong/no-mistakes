@@ -131,5 +131,5 @@ fn is_identifier_char(ch: char) -> bool {
     ch == '_' || ch.is_ascii_alphanumeric()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

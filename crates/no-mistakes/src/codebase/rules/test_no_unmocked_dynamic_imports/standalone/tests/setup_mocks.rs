@@ -84,6 +84,6 @@ pub(super) fn setup_mocks(request: SetupMockRequest<'_>) -> Result<HashSet<PathB
     Ok(mocks)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "setup_mocks/tests.rs"]
 mod tests;

@@ -157,5 +157,5 @@ type ParsedImports<'a> = Vec<(
     HashSet<crate::codebase::dependencies::extract::CallableId>,
 )>;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod interned_identity_tests;

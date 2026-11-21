@@ -187,5 +187,5 @@ fn static_pipeline_failure(segment: &str) -> Option<bool> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

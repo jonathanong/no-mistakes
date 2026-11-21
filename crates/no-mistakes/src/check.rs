@@ -186,8 +186,8 @@ fn has_failures(results: &check_runner::CheckResults) -> bool {
         || results.warnings.len() > results.analysis_warning_count
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod analysis_policy_tests;

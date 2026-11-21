@@ -181,7 +181,7 @@ fn collect_statement_writes(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 fn catalog_key(value: &str) -> String {

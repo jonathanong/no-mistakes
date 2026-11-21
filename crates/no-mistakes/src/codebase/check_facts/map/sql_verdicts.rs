@@ -2,7 +2,7 @@ use super::CheckFactMap;
 use crate::codebase::postgres::SqlObligationVerdict;
 use std::sync::{Arc, Mutex};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "sql_verdicts/tests.rs"]
 mod tests;
 

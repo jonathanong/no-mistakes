@@ -192,6 +192,6 @@ mod active_phase_stats;
 #[path = "active_phase_cursor.rs"]
 mod cursor;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "active_reference_phase_tests.rs"]
 mod tests;

@@ -14,10 +14,10 @@ mod configuration;
 mod local_action;
 mod model;
 mod run;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "steps/tests/run_coverage.rs"]
 mod run_coverage;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 mod working_directory;
 pub(super) use model::StepScan;

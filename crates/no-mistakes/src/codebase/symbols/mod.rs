@@ -59,5 +59,5 @@ pub(crate) fn signature_impact_json_with_prepared(
     String::from_utf8(output).context("signature-impact JSON output must be UTF-8")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

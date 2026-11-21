@@ -117,5 +117,5 @@ pub fn path_to_route_pattern(relative: &Path) -> String {
 
 pub mod rewrites;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

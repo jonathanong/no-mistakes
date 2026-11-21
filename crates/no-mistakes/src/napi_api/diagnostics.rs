@@ -22,5 +22,5 @@ pub(crate) fn diagnostics_snapshot_impl(options: serde_json::Value) -> napi::Res
         .map_err(super::async_task::to_napi_error)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

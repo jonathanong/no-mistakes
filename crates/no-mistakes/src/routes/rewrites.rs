@@ -139,7 +139,7 @@ pub fn expand_rewrites_as_tuples(
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod integration_tests;
 #[cfg(test)]
 mod tests;

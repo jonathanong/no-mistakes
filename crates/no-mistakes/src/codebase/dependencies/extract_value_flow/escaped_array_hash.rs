@@ -56,6 +56,6 @@ fn properties(fields: &FxHashMap<String, ValueExpression>, hash: &mut impl Hashe
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "escaped_array_hash_tests.rs"]
 mod tests;

@@ -105,6 +105,6 @@ pub(super) fn site_suffixes<'a>(
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "postgres_findings_tests.rs"]
 mod tests;

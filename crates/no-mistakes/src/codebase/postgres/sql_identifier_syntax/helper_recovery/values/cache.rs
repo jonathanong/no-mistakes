@@ -2,7 +2,7 @@ use super::super::budget::Cost;
 use super::{Execution, Key, Value};
 use crate::fx::FxHashMap;
 use std::{cell::RefCell, collections::BTreeSet, path::PathBuf, rc::Rc};
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "cache_tests.rs"]
 mod cache_tests;
 

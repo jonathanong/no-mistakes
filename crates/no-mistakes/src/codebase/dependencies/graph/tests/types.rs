@@ -1,4 +1,4 @@
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests_types {
     use crate::codebase::analysis_session::PathInterner;
     use crate::codebase::dependencies::graph::{

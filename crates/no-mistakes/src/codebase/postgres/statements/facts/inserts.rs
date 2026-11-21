@@ -1,7 +1,7 @@
 use super::super::value::PlaceholderPositions;
 use super::{insert, SqlInsertFact};
 use sqlparser::ast::{Query, SetExpr, Statement};
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(super) fn collect_query_inserts(

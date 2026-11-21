@@ -159,5 +159,5 @@ pub(crate) fn graph_only_files(files: &[PathBuf], graph_files: &[PathBuf]) -> Ve
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

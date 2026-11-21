@@ -28,5 +28,5 @@ pub fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bo
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

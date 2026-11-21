@@ -154,5 +154,5 @@ pub fn executor_config_warnings(root: &Path, facts: &CheckFactMap) -> Vec<String
     warnings
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

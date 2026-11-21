@@ -91,5 +91,5 @@ pub(crate) fn has_configured_html_id_selector(settings: &Settings) -> bool {
             .any(|attribute| attribute == HTML_ID_ATTRIBUTE)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

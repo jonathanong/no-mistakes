@@ -143,5 +143,5 @@ pub(super) fn supplies(pin: &SqlBoundPin, domains: &Domains) -> bool {
         .is_some_and(|columns| columns.contains(column))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

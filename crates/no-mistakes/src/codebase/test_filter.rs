@@ -190,5 +190,5 @@ fn compile_optional_globset(patterns: &[String]) -> Option<GlobSet> {
     has_valid.then(|| builder.build().ok()).flatten()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

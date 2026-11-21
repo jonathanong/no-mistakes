@@ -351,7 +351,7 @@ fn launchers_quotes_and_name_filters_follow_the_command() {
     );
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod recall_tests;
 
 fn described(script: &str, pairs: &[(&str, NameFilters)]) -> Vec<String> {

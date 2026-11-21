@@ -178,5 +178,5 @@ fn is_tsconfig_path(path: &str) -> bool {
 mod diagnostics;
 use diagnostics::config_file;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

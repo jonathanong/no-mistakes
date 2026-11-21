@@ -97,6 +97,6 @@ pub(super) fn line_end_with_ending(source: &str, line_end: usize) -> usize {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "fence_syntax/tests.rs"]
 mod tests;

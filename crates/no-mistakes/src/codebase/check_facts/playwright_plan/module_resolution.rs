@@ -10,7 +10,7 @@ use catalog::CatalogModuleResolver;
 mod path_match;
 use path_match::{identities_match, identity_from_resolver, ModuleIdentity};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "module_resolution_test_support.rs"]
 mod tests;
 

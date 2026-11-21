@@ -7,7 +7,7 @@ use std::borrow::Cow;
 mod head_map;
 pub(super) mod opaque;
 pub(super) use head_map::HeadSourceMap;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 use opaque::{skip_comment, skip_opaque};

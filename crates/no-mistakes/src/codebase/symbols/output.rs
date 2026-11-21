@@ -9,5 +9,5 @@ include!("output/types.rs");
 include!("output/structured.rs");
 include!("output/text.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

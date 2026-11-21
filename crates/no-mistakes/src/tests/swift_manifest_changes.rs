@@ -93,6 +93,6 @@ fn warning(analysis: &mut SwiftManifestAnalysis, r#type: &str, message: String, 
     analysis.fallback_triggered = true;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "swift_manifest_changes_tests.rs"]
 mod tests;

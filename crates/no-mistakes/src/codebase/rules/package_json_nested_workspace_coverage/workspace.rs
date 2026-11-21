@@ -92,5 +92,5 @@ pub(super) fn line(path: &Path, sources: &SourceStore) -> usize {
         .unwrap_or(1)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod invalid_utf8_tests;

@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod alias_templates;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod alias_templates_tests;
 pub(crate) use alias_templates::DetachedTemplateBinds;
 mod binding_tag;
@@ -76,7 +76,7 @@ pub(crate) fn is_process_env(expr: &ValueExpression) -> bool {
 mod helpers;
 use helpers::{contains, named_provenance, value_call_at};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "provenance/coverage_boundary_tests.rs"]
 mod coverage_boundary_tests;
 #[cfg(test)]

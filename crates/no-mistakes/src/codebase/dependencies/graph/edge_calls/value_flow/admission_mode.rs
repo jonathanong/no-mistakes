@@ -33,6 +33,6 @@ pub(super) fn capture_edges(snapshot: &mut ReplacementProbeSnapshot, edges: &[Ed
     snapshot.admission_raw_edges = edges.iter().map(|edge| format!("{edge:?}")).collect();
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "admission_mode_tests.rs"]
 mod tests;

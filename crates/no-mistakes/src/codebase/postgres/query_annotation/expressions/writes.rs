@@ -142,5 +142,5 @@ fn static_slot<'a, 's>(target: &'s AssignmentTarget<'a>) -> Option<(&'s Expressi
     static_index(unwrap_ts_wrappers(&member.expression)).map(|index| (&member.object, index))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

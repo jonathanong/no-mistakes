@@ -6,5 +6,5 @@ pub(crate) fn parse_symbols_mode(value: Option<&str>) -> AnyhowResult<SymbolsMod
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod options_symbols_tests;

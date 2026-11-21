@@ -117,7 +117,7 @@ pub fn include_scopes(plan: &mut super::CheckFactPlan, other: &super::CheckFactP
     plan.server_route_client_boundary |= other.server_route_client_boundary;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod identity;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

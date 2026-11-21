@@ -144,6 +144,6 @@ fn phoenix_route_re() -> &'static Regex {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "elixir_http_tests.rs"]
 mod tests;

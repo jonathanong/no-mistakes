@@ -171,5 +171,5 @@ pub(super) fn load_config_projects_inner(
     })?
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

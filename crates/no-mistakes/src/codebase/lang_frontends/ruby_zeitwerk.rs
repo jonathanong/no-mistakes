@@ -79,6 +79,6 @@ fn underscore(name: &str) -> String {
     out
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "ruby_zeitwerk_tests.rs"]
 mod tests;

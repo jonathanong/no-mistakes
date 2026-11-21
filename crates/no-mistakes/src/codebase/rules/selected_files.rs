@@ -6,11 +6,11 @@ use rayon::prelude::*;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod entrypoint_parity_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod source_error_boundary_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod sql_entrypoint_parity_tests;
 
 mod scope;

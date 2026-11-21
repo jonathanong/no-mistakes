@@ -139,10 +139,10 @@ pub fn run_json_batch(args: ResolveCheckArgs) -> Result<String> {
     to_json(&batch_report(compute_many(&args)?))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod computed_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod workspace_tests;

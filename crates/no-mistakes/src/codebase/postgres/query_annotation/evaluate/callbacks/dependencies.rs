@@ -104,6 +104,6 @@ fn expression(expr: &Expr, names: &mut Reads) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "dependency_borrow_tests.rs"]
 mod dependency_borrow_tests;

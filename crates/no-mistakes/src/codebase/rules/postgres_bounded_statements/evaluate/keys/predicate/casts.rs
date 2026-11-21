@@ -52,6 +52,6 @@ fn enum_label(name: &ObjectName, lit: &Lit, catalog: &SchemaCatalog) -> bool {
         .is_some_and(|enum_type| enum_type.values.iter().any(|label| label == text))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "casts_tests.rs"]
 mod casts_tests;

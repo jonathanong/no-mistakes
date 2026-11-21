@@ -4,7 +4,7 @@ mod ddl_foreign;
 mod ddl_metadata;
 pub(crate) mod keywords;
 mod unsupported;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod utility_tests;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;
 use sqlparser::ast::{visit_statements, DiscardObject, Statement};
@@ -183,5 +183,5 @@ pub(super) fn partial_chunk(tokens: Option<&[TokenWithSpan]>, produced: &mut [Lo
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

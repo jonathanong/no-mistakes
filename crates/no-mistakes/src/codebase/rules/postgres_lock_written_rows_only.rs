@@ -125,5 +125,5 @@ fn compile(options: &Options) -> Result<CompiledOptions> {
         write_sets: options.write_sets.clone(),
     })
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

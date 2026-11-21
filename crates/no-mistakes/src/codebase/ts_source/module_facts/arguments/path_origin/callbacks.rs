@@ -158,7 +158,7 @@ fn synchronous_statement(statement: &Statement<'_>, depth: usize) -> bool {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "callbacks/completion_tests.rs"]
 mod completion_tests;
 

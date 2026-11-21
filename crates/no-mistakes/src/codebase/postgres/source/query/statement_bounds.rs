@@ -159,5 +159,5 @@ fn reject(facts: &mut PostgresSqlQuery, index: usize, scope: usize) {
     facts.complete = false;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

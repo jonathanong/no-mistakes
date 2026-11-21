@@ -241,6 +241,6 @@ fn edge_label(via: &str, detail: Option<&ImpactEdgeDetail>) -> String {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "graph_tests.rs"]
 mod tests;

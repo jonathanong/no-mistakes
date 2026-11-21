@@ -509,6 +509,6 @@ pub(crate) fn javascript_dependency_framework(framework: Option<TestFramework>) 
 #[path = "prepared_plan_discovery.rs"]
 mod prepared_plan_discovery;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "prepared_plan/tests.rs"]
 mod tests;

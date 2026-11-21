@@ -91,5 +91,5 @@ pub(super) fn template_parts(source: &str) -> Vec<String> {
     parts
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

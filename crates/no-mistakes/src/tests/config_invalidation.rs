@@ -147,6 +147,6 @@ fn same_path(left: &Path, right: &Path) -> bool {
         == no_mistakes::codebase::ts_resolver::normalize_path(right)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "config_invalidation/tests.rs"]
 mod tests;

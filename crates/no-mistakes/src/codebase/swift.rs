@@ -191,5 +191,5 @@ fn target_index(
 
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -135,5 +135,5 @@ pub(crate) fn export_kind_str(kind: &ExportKind) -> &'static str {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

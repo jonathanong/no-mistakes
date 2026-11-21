@@ -109,5 +109,5 @@ fn duplicate_stderr() -> io::Result<impl Write> {
     Ok(std::io::stderr())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

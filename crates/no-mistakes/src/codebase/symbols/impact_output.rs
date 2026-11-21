@@ -176,7 +176,7 @@ fn merge_via(target: &mut Vec<&'static str>, source: &[&'static str]) {
     target.dedup();
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod impact_output_tests;
 
 include!("impact_text.rs");

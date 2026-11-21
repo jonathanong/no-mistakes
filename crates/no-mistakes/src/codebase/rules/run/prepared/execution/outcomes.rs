@@ -138,6 +138,6 @@ fn register_value_flow_failures(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "value_flow_prerequisite_tests.rs"]
 mod budget_tests;

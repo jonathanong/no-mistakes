@@ -3,7 +3,7 @@ mod sql;
 pub(super) use sql::merge_sql;
 mod severity;
 pub(super) use severity::demote;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(super) fn collect(

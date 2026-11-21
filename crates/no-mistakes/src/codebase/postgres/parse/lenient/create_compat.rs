@@ -8,7 +8,7 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 mod clauses;
 #[path = "create_compat/original.rs"]
 mod original;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "create_compat/tests.rs"]
 mod tests;
 use clauses::*;

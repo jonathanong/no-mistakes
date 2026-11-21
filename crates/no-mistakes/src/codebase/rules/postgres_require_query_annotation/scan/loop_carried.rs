@@ -41,6 +41,6 @@ pub(super) fn verdict(
     ))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "loop_carried_tests.rs"]
 mod tests;

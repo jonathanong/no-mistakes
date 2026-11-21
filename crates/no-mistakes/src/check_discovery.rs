@@ -131,5 +131,5 @@ fn project_root(
     Some(root.to_path_buf())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

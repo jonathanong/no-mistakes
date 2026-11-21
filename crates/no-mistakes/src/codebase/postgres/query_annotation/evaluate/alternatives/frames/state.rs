@@ -112,13 +112,13 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     indices
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "state/summary_tests.rs"]
 mod summary_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "state/tests/origin_roots.rs"]
 mod origin_roots;

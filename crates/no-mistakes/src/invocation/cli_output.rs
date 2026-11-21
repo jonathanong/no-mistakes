@@ -91,6 +91,6 @@ impl CliErrorOutput {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "cli_output/tests.rs"]
 mod tests;

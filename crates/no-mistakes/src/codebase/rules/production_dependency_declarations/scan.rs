@@ -164,5 +164,5 @@ fn build_globset(patterns: &[String]) -> Result<GlobSet, globset::Error> {
     builder.build()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

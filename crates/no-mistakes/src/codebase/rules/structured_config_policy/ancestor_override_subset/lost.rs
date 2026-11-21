@@ -189,5 +189,5 @@ fn rules_are_subset(expected: &[(&Value, &Value)], nested_rules: Option<&Mapping
         .all(|(key, value)| nested_rules.get(*key) == Some(*value))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

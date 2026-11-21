@@ -2,7 +2,7 @@ mod constrain;
 mod projection;
 pub(crate) use projection::{Identity, Projection};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod coverage_tests;
 #[cfg(test)]
 mod tests;

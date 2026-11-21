@@ -75,6 +75,6 @@ fn normalize(path: PathBuf) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(&path)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "native_frontends/tests.rs"]
 mod tests;

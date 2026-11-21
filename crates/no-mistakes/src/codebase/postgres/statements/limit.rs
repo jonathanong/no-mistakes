@@ -150,7 +150,7 @@ fn is_null(expr: &Expr) -> bool {
         _ => false,
     }
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod fetch_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

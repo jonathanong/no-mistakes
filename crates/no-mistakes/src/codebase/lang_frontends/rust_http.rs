@@ -92,6 +92,6 @@ fn attr_route_re() -> &'static Regex {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "rust_http_tests.rs"]
 mod tests;

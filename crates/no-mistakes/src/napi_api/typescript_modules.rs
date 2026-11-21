@@ -19,5 +19,5 @@ json_binding!(
     analyze_typescript_modules_json_impl
 );
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

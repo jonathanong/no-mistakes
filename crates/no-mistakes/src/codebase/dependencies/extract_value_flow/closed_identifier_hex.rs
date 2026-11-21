@@ -103,6 +103,6 @@ fn identifier_suffix(text: &str) -> bool {
         .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "closed_identifier_hex_tests.rs"]
 mod tests;

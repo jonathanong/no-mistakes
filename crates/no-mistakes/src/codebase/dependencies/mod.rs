@@ -49,24 +49,24 @@ include!("output_args.rs");
 include!("collect_standalone.rs");
 include!("run.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod shared_traversal_collect_cache_tests;
 #[cfg(test)]
 mod shared_traversal_collect_diagnostics_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod shared_traversal_facts_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod shared_traversal_lazy_graph_tests;
 #[cfg(test)]
 mod shared_traversal_test_api;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod traversal;
 
 #[cfg(test)]
 mod root_dependency_test_helpers;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod traversal_entrypoint_test_helpers;
 
 pub(crate) struct TraversalResult {

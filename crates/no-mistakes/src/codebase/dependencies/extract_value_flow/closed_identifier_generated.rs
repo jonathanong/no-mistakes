@@ -39,6 +39,6 @@ impl super::super::super::ImportCollector {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "closed_identifier_generated_tests.rs"]
 mod tests;

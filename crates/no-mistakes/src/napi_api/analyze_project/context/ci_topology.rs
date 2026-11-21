@@ -57,10 +57,10 @@ impl PreparedScope {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "ci_topology_tests.rs"]
 mod ci_topology_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "ci_topology_demand_tests.rs"]
 mod ci_topology_demand_tests;

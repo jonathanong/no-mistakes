@@ -22,5 +22,5 @@ pub use model::{PreparedProjectReport, ProjectReport};
 pub use related::related;
 pub use types::{Diagnostic, Edge, EdgeKind, Framework, ServerRoute, Severity, Summary};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod tests;

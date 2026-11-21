@@ -176,10 +176,10 @@ fn reaches(graph: &DepGraph, file: &Path, producer: &Path) -> bool {
     false
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "collection_imports_tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "collection_imports/real_source_fixture_tests.rs"]
 mod real_source_fixture_tests;

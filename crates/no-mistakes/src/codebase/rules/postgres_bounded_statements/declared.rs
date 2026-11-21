@@ -162,6 +162,6 @@ pub(super) fn stale_message(rows: u64) -> String {
     format!("declared bound rows<={rows} is stale because this statement is already provably bounded; remove the declaration")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "declared_tests.rs"]
 mod tests;

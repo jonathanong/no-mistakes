@@ -58,6 +58,6 @@ pub(super) fn decode_line(line: &[u8]) -> std::borrow::Cow<'_, str> {
     String::from_utf8_lossy(line)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "reading/tests.rs"]
 mod tests;

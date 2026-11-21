@@ -15,9 +15,9 @@ pub(crate) use prepared::PreparedRelationshipIndex;
 
 #[cfg(test)]
 mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_extend;
 
 /// One canonical, typed relationship in a request-scoped edge index.

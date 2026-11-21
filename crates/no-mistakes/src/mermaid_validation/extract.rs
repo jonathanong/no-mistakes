@@ -216,6 +216,6 @@ fn is_mermaid_info(info: &str) -> bool {
         .is_some_and(|token| token.eq_ignore_ascii_case("mermaid"))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "extract/tests.rs"]
 mod tests;

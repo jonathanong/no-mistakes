@@ -190,5 +190,5 @@ fn item_at<'a>(query: &'a mut SqlBoundQuery, path: &[usize]) -> Option<&'a mut S
 
 mod null_arm;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

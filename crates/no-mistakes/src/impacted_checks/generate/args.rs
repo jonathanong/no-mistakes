@@ -74,6 +74,6 @@ pub(crate) fn plan_args_for(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "args/tests.rs"]
 mod tests;

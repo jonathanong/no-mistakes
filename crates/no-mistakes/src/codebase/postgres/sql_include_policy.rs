@@ -33,5 +33,5 @@ fn keeps_empty_sql_include(rule_id: &str) -> bool {
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

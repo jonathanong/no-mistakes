@@ -20,6 +20,6 @@ fn workflow_topology_for_graph<'a>(
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "builder_workflow_topology_tests.rs"]
 mod prepared_workflow_topology_tests;

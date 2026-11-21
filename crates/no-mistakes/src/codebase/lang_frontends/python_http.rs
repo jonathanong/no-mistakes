@@ -54,6 +54,6 @@ fn flask_fastapi_route_re() -> &'static Regex {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "python_http_tests.rs"]
 mod tests;

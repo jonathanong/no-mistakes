@@ -131,15 +131,15 @@ fn diagnose(
     analysis.fallback_triggered = true;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "package_manifest_changes/workspace_scope_tests.rs"]
 mod workspace_scope_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "package_manifest_changes/pnpm_installation_sections_tests.rs"]
 mod pnpm_installation_sections_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "package_manifest_changes/pnpm_traceability_tests.rs"]
 mod pnpm_traceability_tests;
 
@@ -147,14 +147,14 @@ mod pnpm_traceability_tests;
 #[path = "package_manifest_changes/dependency_baseline_incomplete_tests.rs"]
 mod dependency_baseline_incomplete_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "package_manifest_changes/dependency_baseline_dotnet_tests.rs"]
 mod dependency_baseline_dotnet_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "package_manifest_changes/dependency_baseline_swift_tests.rs"]
 mod dependency_baseline_swift_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "package_manifest_changes_tests.rs"]
 mod tests;

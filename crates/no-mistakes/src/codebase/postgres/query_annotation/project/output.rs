@@ -71,7 +71,7 @@ fn could_be_transaction(prefix: &str) -> bool {
         .any(|statement| statement.starts_with(&prefix))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 pub(super) fn incomplete_reason(value: &Value) -> &'static str {

@@ -74,5 +74,5 @@ fn compile_globs(value: &Value) -> Option<GlobSet> {
     builder.build().ok()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

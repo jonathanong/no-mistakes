@@ -12,7 +12,7 @@ mod declared;
 mod evaluate;
 mod options;
 use options::Options;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub const RULE_ID: &str = "vitest-project-policy";

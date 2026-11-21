@@ -162,10 +162,10 @@ impl<'a, 'm, 'b> Visit<'a> for Caller<'a, 'm, 'b> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "caller/tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "caller/coverage_tests.rs"]
 mod coverage_tests;

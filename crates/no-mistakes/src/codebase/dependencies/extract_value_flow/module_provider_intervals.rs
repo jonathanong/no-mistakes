@@ -29,6 +29,6 @@ impl ModuleProviderTarget {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "module_provider_intervals_tests.rs"]
 mod tests;

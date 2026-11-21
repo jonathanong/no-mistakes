@@ -124,7 +124,7 @@ fn check_expr(definition: &str) -> Option<Expr> {
         .then_some(*check.expr)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod qualified_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

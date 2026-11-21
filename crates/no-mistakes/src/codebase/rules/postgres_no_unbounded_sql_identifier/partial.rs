@@ -133,6 +133,6 @@ fn holes<'a>(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "partial_tests.rs"]
 mod tests;

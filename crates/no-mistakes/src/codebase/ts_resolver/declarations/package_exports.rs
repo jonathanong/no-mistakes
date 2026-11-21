@@ -191,6 +191,6 @@ pub(super) fn source_targets(
     Ok(targets)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "package_exports_pattern_tests.rs"]
 mod pattern_tests;

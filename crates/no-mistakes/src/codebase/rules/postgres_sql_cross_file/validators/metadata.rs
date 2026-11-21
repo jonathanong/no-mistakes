@@ -116,6 +116,6 @@ fn mutated(flow: &ValueFlowFacts, name: &str, scope: usize) -> bool {
         .any(|mutation| mutation.name == name && mutation.scope == scope)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "metadata_tests.rs"]
 mod tests;

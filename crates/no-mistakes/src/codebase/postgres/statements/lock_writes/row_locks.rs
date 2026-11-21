@@ -7,7 +7,7 @@ use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::{BinaryOperator, Expr, ObjectNamePart, Query, Select, SetExpr, TableFactor};
 use std::collections::BTreeMap;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(super) fn collect_advanced(

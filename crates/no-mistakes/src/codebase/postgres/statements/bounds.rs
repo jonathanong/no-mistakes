@@ -28,7 +28,7 @@ mod temporary;
 pub(in crate::codebase::postgres) use table::TableTokenCursor;
 pub(in crate::codebase::postgres) use table::TableTokenIndex;
 pub(super) use temporary::TemporaryRelations;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 mod using;
 

@@ -35,5 +35,5 @@ pub(super) fn factory(name: &str, specifier: &str) -> bool {
     node_fs(specifier) && named(name, matches!(specifier, "fs" | "node:fs")).is_some()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

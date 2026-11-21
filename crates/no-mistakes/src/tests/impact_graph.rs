@@ -402,6 +402,6 @@ fn build_test_impact_graph_for_request(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "impact_graph_tests.rs"]
 mod tests;

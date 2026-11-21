@@ -137,10 +137,10 @@ fn named_site(
     (path, line, name.to_string())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "route_cause_tests.rs"]
 mod route_cause_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "route_cause/tests.rs"]
 mod tests;

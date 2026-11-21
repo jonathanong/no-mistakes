@@ -82,6 +82,6 @@ fn choose(keys: Vec<Arm>, entries: &[FrozenEntry]) -> Option<Vec<Chosen<'_>>> {
     Some(chosen)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "frozen_return_tests.rs"]
 mod tests;

@@ -2,7 +2,7 @@ use super::{workflow_finding, RuleFinding};
 use serde_yaml::Value;
 use std::path::Path;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 pub(super) fn parse_filters_value_with_sources(

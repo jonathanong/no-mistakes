@@ -187,6 +187,6 @@ fn partition_bound(c: &mut Cursor<'_>) -> bool {
         && c.integer()
         && c.token(Token::RParen)
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "regress_alter_tests.rs"]
 mod tests;

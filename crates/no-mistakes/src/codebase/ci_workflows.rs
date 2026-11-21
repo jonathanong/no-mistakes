@@ -79,5 +79,5 @@ pub fn extract_invocations_value(value: &serde_yaml::Value) -> Vec<Invocation> {
     results
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

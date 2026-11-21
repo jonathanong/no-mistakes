@@ -19,7 +19,7 @@ pub mod parse;
 pub mod permissions;
 pub mod triggers;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};

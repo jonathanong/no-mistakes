@@ -41,16 +41,16 @@ fn json_raw_bytes(bytes: Vec<u8>) -> Result<Box<RawValue>> {
 
 #[cfg(test)]
 mod api_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod scope_boundary_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod scope_derived_resolve_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod scope_helpers_tests;
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod deadline_evidence_tests;
 
 use super::report_adapter::{json_raw_report, json_raw_text};

@@ -71,5 +71,5 @@ pub(in crate::integration_tests::runner_config) fn read_request_source_with_sess
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -209,5 +209,5 @@ fn is_const_or_placeholder_at(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

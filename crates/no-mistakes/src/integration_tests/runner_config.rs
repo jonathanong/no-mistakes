@@ -7,7 +7,7 @@ use std::path::PathBuf;
 mod cache;
 pub(crate) mod deadline_evidence;
 mod prepared;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 #[cfg(test)]
 mod tests_access;

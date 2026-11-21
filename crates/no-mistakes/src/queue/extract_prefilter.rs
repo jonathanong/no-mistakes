@@ -57,5 +57,5 @@ pub(crate) fn source_may_have_queue_facts(
             .any(|name| contains_bytes(haystack, name.as_bytes()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

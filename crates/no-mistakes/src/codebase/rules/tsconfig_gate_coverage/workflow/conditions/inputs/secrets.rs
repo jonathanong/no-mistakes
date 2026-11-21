@@ -148,5 +148,5 @@ fn scalar_secret_value(value: &Value) -> Option<StaticValue> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

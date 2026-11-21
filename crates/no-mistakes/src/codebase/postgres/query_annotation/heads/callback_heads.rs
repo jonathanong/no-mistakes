@@ -2,7 +2,7 @@
 mod caller;
 pub(in crate::codebase::postgres::query_annotation) mod producer;
 pub(in crate::codebase::postgres::query_annotation) mod uses;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "callback_heads/uses_tests.rs"]
 mod uses_tests;
 

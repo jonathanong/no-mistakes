@@ -197,5 +197,5 @@ fn valid_job_id(job_id: &str) -> bool {
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
