@@ -339,3 +339,119 @@ diff -r plugins/no-mistakes/skills/no-mistakes/references "evals/variants/$name/
 
 Both must be clean, and the two `description:` lines must actually differ —
 that is the check the assertion above enforces.
+
+## Codex rules runner
+
+Status: not yet run. Claude plugin eval remains the primary measure. This
+runner is a second consumer for the rules cases only. Do not compare its
+trigger counts with the Claude table: the agent is different, and a number
+from this runner does not exist yet. Do not add a results row to README or
+HISTORY until a run has actually finished.
+
+The cases, prompts, and grader markdown are the files `generate.py` already
+writes. The runner does not regenerate them. LLM graders go to
+`claude-opus-5-5`, the judge pinned in `scripts/run-evals.sh`, with each
+grader's markdown body and the attempt's final message. `skill-fired` stays a
+tool check. The primary measure is that trigger rate on each arm. The content
+score is a regression check through `summarize.py`.
+
+Preview, then a scoped paid run. The preview makes no model call. `--run`
+without `--tag`, `--case`, or `--all` is refused. So is a run with no
+spare-budget credential:
+
+```sh
+python3 evals/codex_rules.py --case rules-testing-write-error-text --runs 1
+CODEX_AUTH_FILE=/path/to/spare-auth.json \
+  python3 evals/codex_rules.py --run --case rules-testing-write-error-text --runs 1 \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
+python3 evals/codex_rules.py --regrade \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
+```
+
+Use the ChatGPT Codex account that has spare budget. Do not use a shared or
+capped login. `CODEX_AUTH_FILE` must be a copy of that account's `auth.json`
+that lives outside `~/.codex` and `~/.claude`. `CODEX_API_KEY` is the other
+accepted credential, and Codex only honors it for `codex exec`. The runner
+does not read `~/.codex`, `~/.claude`, or `~/AGENTS.md`.
+
+Each attempt is a new directory outside the repository and outside the user
+home. `HOME` and `CODEX_HOME` point inside that directory. The harness writes
+a config that pins the model, reasoning effort, sandbox, and approval policy
+from `codex_rules_env.py`. On Codex 0.169 the plugins feature defaults on and
+the hooks feature defaults on. Both arms set `features.plugins = true` and
+`features.hooks = false`, so a later default does not become an arm
+difference and neither arm loads hooks. `project_doc_max_bytes = 0` so
+instruction files are not loaded. Codex exec has no max-turns flag and no
+system-prompt flag, so both arms omit the case's `max_turns` and prepend its
+`append_system_prompt` to the user message. The with arm's config adds one
+marketplace, `rules-eval`, whose catalog lists `no-mistakes-rules` and nothing
+else, plus
+`plugins."no-mistakes-rules@rules-eval".enabled = true` and the plugin cache
+`codex plugin add` produces. The without arm has the shared config only.
+`--ignore-user-config` is not passed: that flag skips `CODEX_HOME/config.toml`,
+which is the harness config the plugin enablement lives in. The workspace is
+empty for these cases. A fixture copy drops `AGENTS.md`, `CLAUDE.md`, and any
+file whose name or contents mention the rules. The exec flags
+(`--ephemeral`, `--ignore-rules`, sandbox, model, timeout, prompt) are the
+same on both arms. `--ephemeral` still skips Codex's own rollout store. The
+runner copies stdout itself.
+
+Before the first paid attempt, the runner builds one throwaway home per arm
+and runs `codex plugin list --json` in each. The with arm must list only
+`no-mistakes-rules`, installed and enabled. The without arm must list no
+plugins. Any other answer aborts with no exec. `--runs` below 1 is refused;
+`0` is not a synonym for the case default.
+
+Each attempt is `attempts/<case>/<arm>/<n>/` under `--output`. When `codex
+exec` returns, including a timeout, the runner writes `transcript.jsonl` and
+`exec.json` before it grades. A Ctrl-C during exec leaves
+`transcript.jsonl.partial` (kept on the next try as
+`transcript.interrupted-<n>.jsonl`) and does not mark the attempt complete.
+`aggregate-result.json` is rewritten after every attempt with `partial: true`
+until the selected attempts have `result.json`. Run the same command again to
+resume. A finished `result.json` is skipped. A saved `exec.json` plus
+transcript is graded and not exec'd again.
+
+`skill-fired` counts a `command_execution` only when `item.completed` says
+`status: completed` and `exit_code: 0`, and a reader in that command opens
+`<skill>-rules/SKILL.md` under that attempt's installed plugin cache or the
+sibling `marketplace/plugins/no-mistakes-rules` copy. Paths resolve from the
+command's cwd and from any `cd` earlier in the same command (`cd` inside a
+pipeline does not stick). A parenthesized subshell such as
+`(cd ... && cat SKILL.md)` counts, and that `cd` does not apply after the
+closing parenthesis. The readers are `cat`, `sed`, `head`, `tail`,
+`less`, `more`, `nl`, `awk`, `rg`, `grep`, `bat`, and `python` or `node` when
+the command opens that file, including the `bash -lc` form Codex puts around
+a shell command. `rg` and `grep` count a file argument, not the search
+pattern and not a directory scan. `find <skill-dir> -name SKILL.md -exec cat {} +`
+counts, and so does `-execdir`, when that command is a reader. `ls`, `stat`,
+`echo`, a `find` that does not run a reader, a path that only appears in
+message text or `aggregated_output`, a non-zero exit, and an `item.started`
+event do not count. The plan stores the attempt root, plugin root, marketplace
+root, and cwd in canonical form. Regrade matches a transcript path against the
+saved form or the canonical form, including after the attempt directory is
+deleted. A path outside the attempt does not count.
+`skill_invocation` is not an exec JSON event and is not accepted. The matched
+skill name is checked with the case's existing `input_match`. A live
+transcript has not been graded, so the first pilot should confirm this shape
+against the saved JSONL before a trigger rate is quoted.
+
+`python3 evals/codex_rules.py --regrade --output <dir>` recomputes
+`skill-fired` from the saved transcripts and rewrites `result.json` and
+`aggregate-result.json`. It does not exec and it does not call the judge, so
+a detector fix does not need a new paid run. Other graders and run-level
+errors stay as they were. An attempt that has a transcript but no
+`result.json` is left unfinished, and the aggregate stays partial.
+
+A judge failure sets `error` on that LLM grader and does not set a run-level
+`error`, so the `skill-fired` result remains. `summarize.py` still treats a
+grader without `passed` as a content miss. An exec failure is a run-level
+`error` and is not retried once `result.json` exists.
+
+The report is `aggregate-result.json` with `suite.ablation` set to
+`codex-with-without` and arm keys `with` and `without`. `costUsd` is 0.
+That 0 means the dollar cost was not measured. Codex exec reports tokens, not
+a price, and this runner does not invent one. `python3 evals/summarize.py` on
+that file prints the with-arm trigger and the content delta. The runner's own
+summary prints the trigger rate for both arms. Write `--output` outside the
+worktree, as with the Claude reports.

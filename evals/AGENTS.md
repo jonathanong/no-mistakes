@@ -8,6 +8,12 @@
 - Use Claude Sonnet agents and Opus judges via `scripts/run-evals.sh`, with an
   explicit `--case` or `--tag`. Pilot one case with `--runs 1`; measure groups
   with `--runs 3`. Keep live publishing, deployments, and payments out of cases.
+- The Codex rules runner is `python3 evals/codex_rules.py`. With no `--run`
+  flag it prints the attempt count and exits. `--runs` below 1 is refused.
+  A paid run writes each transcript under `--output` and resumes completed
+  attempts. `--regrade` recomputes `skill-fired` from those transcripts and
+  does not exec or judge. Do not record a Codex score until `--run` has been
+  executed. See README.md.
 - Compare trigger descriptions with `--rules-variant control` and `describe`,
   single-arm `--ablation none`, matching cases, models, and attempts. Change
   only descriptions; retain content graders and off-topic guards.

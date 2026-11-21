@@ -433,6 +433,62 @@ text, not from mined traffic. `summarize.py --mentions` and
 `power.py --fabrication` do not apply, since there are no graph command forms
 to fabricate.
 
+## Codex rules runner
+
+Status: not yet run. No Codex score is recorded in this file or in
+[HISTORY.md](HISTORY.md). The Claude results above stay the primary measure.
+Codex trigger counts use a different agent, so they are not comparable with
+the Claude table.
+
+`python3 evals/codex_rules.py` prints `cases x arms x runs` and exits. It does
+not call a model. Dollars are unknown until a paid run; the preview says so.
+A full rules pass at the case default is 18 cases x 2 arms x 3 runs = 108
+attempts. Pilot with one case before that:
+
+```sh
+python3 evals/codex_rules.py
+python3 evals/codex_rules.py --case rules-testing-write-error-text --runs 1
+CODEX_AUTH_FILE=/path/to/spare-auth.json \
+  python3 evals/codex_rules.py --run --case rules-testing-write-error-text --runs 1 \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules-pilot"
+CODEX_AUTH_FILE=/path/to/spare-auth.json \
+  python3 evals/codex_rules.py --run --tag rules --runs 3 \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules"
+python3 evals/codex_rules.py --regrade \
+  --output "$HOME/.cache/no-mistakes/evals/codex-rules"
+```
+
+Read the pilot `transcript.jsonl` before starting the group run.
+
+`--output` is a directory. The runner writes `aggregate-result.json` there, in
+the shape `summarize.py` and `power.py` already read (`arms.with` and
+`arms.without`). It also writes `attempts/<case>/<arm>/<n>/transcript.jsonl`
+as soon as that attempt ends, then updates the aggregate. Run the same command
+again to resume; an attempt with `result.json` is skipped. `--runs` must be 1
+or greater. Before any paid attempt, `codex plugin list --json` must show
+`no-mistakes-rules` installed and enabled on the with arm and no plugins on
+the without arm. `skill-fired` on each arm is the primary measure: a finished
+command that reads `<skill>-rules/SKILL.md` from that attempt's installed
+plugin cache or its marketplace copy, including a relative path after `cd`
+and a canonical path after the attempt directory is gone.
+`--regrade` recomputes that bit from the saved transcripts and does not call
+a model. The pass rate is a regression check: `summarize.py` exits 1 when the
+with-arm score is below the without-arm score. A judge failure is recorded on
+that grader and leaves `skill-fired` in place.
+
+Authenticate as the ChatGPT Codex account that has spare budget, not a shared
+or capped login. Pass `CODEX_AUTH_FILE` (a copy of that account's `auth.json`
+stored outside `~/.codex`) or `CODEX_API_KEY`. The runner refuses both
+`~/.codex` and `~/.claude`, and it refuses an `--output` directory inside the
+repository. Each attempt gets a fresh `CODEX_HOME` and `HOME`.
+The with arm installs `plugins/no-mistakes-rules` and no other plugin. The
+without arm installs nothing. Model, reasoning effort, sandbox, prompt,
+workspace, and timeout are the pins in `codex_rules_env.py`, shared by both
+arms. `costUsd` is 0 because the runner does not invent a dollar figure.
+
+Details and the transcript shapes the trigger check accepts are in
+[METHODOLOGY.md](METHODOLOGY.md#codex-rules-runner).
+
 ## Conventions
 
 - `plugins: [../../plugins/no-mistakes/skills/no-mistakes]` in each case — the skill is not at the
