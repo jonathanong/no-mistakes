@@ -78,26 +78,6 @@ fn text_readers_keep_static_module_and_export_names() {
     );
 
     assert_eq!(
-        text::export_offset("export widgetColumns", "widgetColumns"),
-        Some(0)
-    );
-    assert_eq!(
-        text::export_offset("reexport widgetColumns", "widgetColumns"),
-        None
-    );
-    assert_eq!(
-        text::export_offset("export { widgetColumns as orderColumns }", "widgetColumns"),
-        Some(0)
-    );
-    assert_eq!(
-        text::export_offset("export {\n  widgetColumns\n};", "widgetColumns"),
-        Some(0)
-    );
-    assert_eq!(
-        text::export_offset("export import { widgetColumns }", "widgetColumns"),
-        None
-    );
-    assert_eq!(
         text::import_call_specifier("import(\"./columns\").then(ns)"),
         Some("./columns")
     );

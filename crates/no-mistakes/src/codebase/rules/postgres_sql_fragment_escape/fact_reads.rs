@@ -1,13 +1,11 @@
-use super::text::export_offset;
 use crate::codebase::ts_source::facts::TsFileFacts;
 
-pub(super) fn export_site(ts: &TsFileFacts, source: &str, local: &str) -> Option<u32> {
+pub(super) fn export_site(ts: &TsFileFacts, local: &str) -> Option<u32> {
     ts.namespaces
         .export_name_offsets
         .iter()
         .find(|(name, _)| name == local)
         .map(|(_, offset)| *offset)
-        .or_else(|| export_offset(source, local))
 }
 
 pub(super) fn equals_member(ts: &TsFileFacts, name: &str) -> Option<(String, String)> {
@@ -39,16 +37,9 @@ pub(super) fn depth_zero_module_specifier(
     window: &str,
     window_start: u32,
 ) -> Option<String> {
-    if let Some((index, rest)) = depth_zero_callee(window) {
+    if let Some((index, _)) = depth_zero_callee(window) {
         let offset = window_start.checked_add(u32::try_from(index).ok()?)?;
-        if let Some(spec) = specifier_at_offset(ts, offset) {
-            return Some(spec.to_string());
-        }
-        let after = rest
-            .strip_prefix("import")
-            .or_else(|| rest.strip_prefix("require"))?;
-        let after = after.trim_start().strip_prefix('(')?;
-        return super::text::whole_quoted(after).map(str::to_string);
+        return specifier_at_offset(ts, offset).map(str::to_string);
     }
     window
         .is_empty()

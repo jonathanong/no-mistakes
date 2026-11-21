@@ -144,10 +144,14 @@ fn spaced_import_initializer_still_resolves() {
     let mut world = world();
     let file = PathBuf::from("/repo/orders/spaced.ts");
     let source = "const parts = import (\"./columns\");\n";
+    let import_at = u32::try_from(source.find("import").expect("import")).expect("offset");
     let mut ts = TsFileFacts {
         source: Some(Arc::<str>::from(source)),
         ..TsFileFacts::default()
     };
+    ts.namespaces
+        .literal_import_spans
+        .push((import_at, "./columns".to_string()));
     ts.value_flow
         .bindings
         .push(bind("parts", 0, ValueExpression::Unknown));
