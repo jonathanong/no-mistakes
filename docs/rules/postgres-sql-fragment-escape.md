@@ -40,17 +40,50 @@ rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
 shared across files. A file whose prepared facts include an operational error,
-a fatal parse error, an incomplete value-flow, or unreadable source is still
-checked from those facts. A fragment binding or a write that those facts still
-record is reported. The same file is listed on the check result's `incomplete`
-field. The message names the file and says a write, rebind, or escape that
-lived only in the missing text may be absent. One such file does not drop
-findings from files whose facts are complete. This rule does not change the
-shared canonical graph. When value flow is incomplete, the canonical-graph
-prerequisite stays failed, and every other graph rule keeps the same readiness
-and output as a run that does not configure this rule. An ESLint-only run does
-not report these cross-file escapes. Set `trustedSqlTags` here, or this rule
-reports nothing.
+a fatal parse error, or an incomplete value-flow is still checked. A fragment
+binding or a write that those facts still record is reported, and the same
+file is listed on the check result's `incomplete` field. An unreadable file
+is not scanned. Its `incomplete` entry names the file, and a recorded write
+is not reported on line 1. A re-export whose namespace facts omit the local
+export offset is listed on `incomplete` and is not placed by scanning source
+text. The message names the file and the local export, and says to restore
+the namespace export fact. A static `import()` or `require()` whose literal
+specifier was not recorded is not recovered from source text, so that load
+does not become a finding. One such file does not drop findings from files
+whose facts are complete. This rule does not change the shared canonical
+graph. When value flow is incomplete, the canonical-graph prerequisite stays
+failed, and every other graph rule keeps the same readiness and output as a
+run that does not configure this rule. An ESLint-only run does not report
+these cross-file escapes. Set `trustedSqlTags` here, or this rule reports
+nothing.
+
+## Wall time
+
+Measured on 2026-11-20 on one machine. This is a point-in-time comparison,
+not a performance budget. The tree is 301 TypeScript files: one tag module
+and 300 modules that default-import it, export an interpolation-free tagged
+template, and call `.append` on that export. The check config sets
+`trustedSqlTags` to that module's default export. Each runner discards one
+warmup and keeps the median of the next three wall-clock samples. Times below
+are seconds, rounded to the nearest millisecond.
+
+Typed ESLint is ESLint 10.14.0, `@typescript-eslint/parser` 8.72.2, and
+TypeScript 6.0.3, with the parser project service enabled. A local rule reads
+the program's source-file list once (364 files, including the TypeScript
+library) and requests semantic diagnostics for every file, so the run builds
+a typed program. The command is `eslint --config eslint.config.mjs src`.
+
+The Rust sample is a release build of
+`no-mistakes check --root <tree> --config <tree>/.no-mistakes.yml --format json`
+on the same tree after the ESLint config is removed, so the inventory is the
+TypeScript sources. That run reports 300 findings and no `incomplete` entries.
+
+| Runner | Warmup | Samples | Median |
+| --- | --- | --- | --- |
+| Typed ESLint | 0.639 | 0.627, 0.625, 0.644 | 0.627 |
+| Rust `check` | 0.028 | 0.027, 0.025, 0.026 | 0.026 |
+
+The Rust median is lower on this tree.
 
 ## What it catches
 

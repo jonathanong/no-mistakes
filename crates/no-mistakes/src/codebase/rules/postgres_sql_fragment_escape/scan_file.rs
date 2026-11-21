@@ -51,15 +51,18 @@ pub(super) fn one(
         ));
     }
     let owned = file_text(ts, sources, file);
-    if owned.is_none() {
+    let Some(source) = owned.as_deref() else {
         gaps.push(gap(
             file,
             format!(
                 "`{relative}` could not be read, so a write, rebind, or escape of an exported SQL fragment in this file may be missing. Restore a readable source file and rerun the check."
             ),
         ));
-    }
-    let source = owned.as_deref().unwrap_or("");
+        return Some(ScanReport {
+            findings: Vec::new(),
+            gaps,
+        });
+    };
     let mut findings = Vec::new();
     let empty = fx_map();
     let probe = FileCtx {
@@ -109,7 +112,16 @@ pub(super) fn one(
         if export.specifier.is_some() || exported_value(ts, &export.local) {
             continue;
         }
-        let Some(offset) = export_site(ts, source, &export.local) else {
+        let Some(offset) = export_site(ts, &export.local) else {
+            if !name_fragments(&ctx, &export.local).is_empty() {
+                let local = &export.local;
+                gaps.push(gap(
+                    file,
+                    format!(
+                        "`{relative}` has no recorded export offset for `{local}`, so a re-export of an imported SQL fragment is not recovered from source text. Restore the namespace export fact and rerun the check."
+                    ),
+                ));
+            }
             continue;
         };
         emit(
