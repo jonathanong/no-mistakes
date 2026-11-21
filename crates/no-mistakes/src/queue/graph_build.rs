@@ -71,7 +71,7 @@ fn build_report_and_relationships(
         &producer_index,
         &producers,
     ));
-    check.extend(checks::local_checks(root, facts));
+    check.extend(crate::queue::job_options::local_checks(root, facts));
     check.extend(crate::queue::cycles::queue_cycles(
         root, &producers, &workers,
     ));

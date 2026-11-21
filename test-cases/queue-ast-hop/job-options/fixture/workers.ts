@@ -1,0 +1,19 @@
+import { Worker } from "bullmq";
+
+new Worker("widgets", async () => {});
+new Worker("items", async () => {});
+new Worker("orders", async () => {});
+new Worker("drafts", async () => {});
+new Worker("beforeComputed", async () => {});
+new Worker("computedKey", async () => {});
+new Worker("nested", async () => {});
+new Worker("hollow", async () => {});
+new Worker("shadow", async () => {});
+new Worker("packedViaConst", async () => {});
+new Worker("hostQueue", async () => {});
+new Worker("foreign", async () => {});
+new Worker("generated", async () => {});
+new Worker("spreadQueue", async () => {});
+new Worker("labeled", async () => {});
+new Worker("memory", async () => {});
+new Worker("packed", async () => {});

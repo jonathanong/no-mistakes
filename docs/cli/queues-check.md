@@ -25,6 +25,7 @@ connected. `check` is empty when the graph is consistent. Findings use these
 | `empty-glob` | A configured `enqueues` or `workers` glob matches no file. Fix the glob or remove it. An empty list still disables that side and is not a finding. |
 | `queue-cycle` | A worker queue enqueues another queue that eventually enqueues it back. Only an enqueue inside that worker's processor counts. Two workers in one file do not share each other's enqueues. Review the loop before shipping; this check has no terminator allowlist. |
 | `mixed-priority` | Producers on one queue enqueue both priority 0 and a priority greater than 0. See [Mixed priority](#mixed-priority). |
+| `missing-job-option` | A producer omits one or more keys from [`queues.requiredJobOptions`](../configuration/queues.md#required-job-options). One finding lists every missing key in configuration order. `message` is `job options missing {keys}`. |
 
 The wait check recognizes member calls such as `this.queue.addAndWait(...)`
 and literal computed members such as `queue["addAndWait"](...)`. It also
@@ -107,6 +108,28 @@ definition file. Multiple definition files for that name make the check
 abstain. Flow `children` are outside this check. An unresolved queue is not
 grouped with a resolved one. Give every producer on the queue priority 0, or give every producer a
 priority greater than 0.
+
+## Required job options
+
+`queues.requiredJobOptions` lists option keys every producer must set.
+The default is `[]`, and an empty list leaves this command's output unchanged.
+`queues.requiredJobOptionsByQueue` replaces that list for one queue name,
+including `[]` to exempt the queue. The check reads `queue.add` options,
+each `queue.addBulk` element's `opts`, the `opts` field of an
+`upsertJobScheduler` template, `opts` on a flow root and its children, and
+the configured enqueue-factory `options` argument. Keys present on the
+queue's `defaultJobOptions` count as set. A later explicit
+`defaultJobOptions` wins over an earlier unknown spread; a later unknown
+spread or computed key can overwrite the explicit member.
+
+An unknown spread, call, or computed key abstains. Abstentions are not
+findings. `queues check` still prints only the findings array. The warning is
+a queue-report diagnostic: `job options were not judged because the options
+object is not statically known`, or the same sentence for `defaultJobOptions`
+or an unresolved queue name. The queue-name warning is emitted only when a
+per-queue override is configured, because that override might exempt the
+queue. A call that already sets every required key is not abstained when
+`defaultJobOptions` itself is open.
 
 ## Suppression
 

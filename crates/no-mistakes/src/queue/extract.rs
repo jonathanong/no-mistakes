@@ -113,6 +113,7 @@ fn extract_queue_facts<'a>(
     super::extract_job_id::finish(&mut visitor);
     super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);
+    super::job_options::finish(&mut visitor.facts);
     visitor
 }
 

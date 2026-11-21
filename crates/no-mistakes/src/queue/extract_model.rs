@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -80,6 +80,73 @@ pub(crate) struct RateLimitSite {
     pub worker_index: usize,
 }
 
+/// Keys present on a job-options object, plus spreads resolved at the end of the file.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct JobOptionEvidence {
+    pub keys: BTreeSet<String>,
+    pub open: bool,
+    pub spreads: Vec<String>,
+    /// When set, finish replaces this evidence with that member of `spreads[0]`.
+    pub member: Option<String>,
+}
+
+impl JobOptionEvidence {
+    pub(crate) fn open() -> Self {
+        Self {
+            open: true,
+            ..Self::default()
+        }
+    }
+
+    pub(crate) fn absorb(&mut self, other: &Self) {
+        self.keys.extend(other.keys.iter().cloned());
+        self.spreads.extend(other.spreads.iter().cloned());
+        self.open |= other.open;
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct JobOptionSite {
+    pub line: usize,
+    pub binding: Option<String>,
+    pub queue_name: Option<String>,
+    pub queue_file: Option<PathBuf>,
+    pub job: Option<String>,
+    pub evidence: JobOptionEvidence,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct QueueDefaultOptions {
+    pub binding: Option<String>,
+    pub queue_name: Option<String>,
+    /// Const name whose object is the whole queue-options argument.
+    pub container: Option<String>,
+    pub evidence: JobOptionEvidence,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct JobOptionFinding {
+    pub line: usize,
+    pub queue_file: Option<PathBuf>,
+    pub queue_name: Option<String>,
+    pub job: Option<String>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct RequiredJobOptions {
+    pub global: Vec<String>,
+    pub by_queue: BTreeMap<String, Vec<String>>,
+}
+
+impl RequiredJobOptions {
+    pub(crate) fn for_queue(&self, name: Option<&str>) -> &[String] {
+        name.and_then(|name| self.by_queue.get(name))
+            .map(Vec::as_slice)
+            .unwrap_or(&self.global)
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub(crate) struct FileFacts {
     pub imports: Vec<ImportBinding>,
@@ -116,4 +183,11 @@ pub(crate) struct FileFacts {
     pub opaque_priority_bindings: HashSet<ProducerBinding>,
     /// Resolved `(queue file, queue name)` pairs filled after binding resolution.
     pub opaque_priority_queues: Vec<(PathBuf, String)>,
+    pub const_objects: HashMap<String, JobOptionEvidence>,
+    pub const_queue_defaults: HashMap<String, JobOptionEvidence>,
+    pub const_opts: HashMap<String, JobOptionEvidence>,
+    pub job_option_sites: Vec<JobOptionSite>,
+    pub queue_defaults: Vec<QueueDefaultOptions>,
+    pub job_option_findings: Vec<JobOptionFinding>,
+    pub required_job_options: Option<RequiredJobOptions>,
 }

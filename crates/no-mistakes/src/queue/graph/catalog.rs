@@ -78,7 +78,7 @@ pub(super) fn analyze_with<T>(
         queue_inputs.unwrap_or_default(),
         parse_failures,
     )?;
-    let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
+    let mut facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         tsconfig_catalog,
@@ -87,6 +87,7 @@ pub(super) fn analyze_with<T>(
     )
     .with_queue_compatibility(root);
     let (lang_producers, lang_workers) = if let Ok(config) = session.dataset(root).config(None) {
+        crate::queue::job_options::stamp(&mut facts, &config.queues);
         crate::queue::lang::language_queue_sites(root, session, config.as_ref(), filter.as_ref())?
     } else {
         (Vec::new(), Vec::new())

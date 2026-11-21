@@ -11,6 +11,9 @@ impl<'a> QueueVisitor<'a> {
         let previous = self.binding_is_const;
         self.binding_is_const = decl.kind == oxc_ast::ast::VariableDeclarationKind::Const;
         self.note_wait_aliases(decl);
+        if decl.kind.is_const() {
+            super::super::job_options::note_consts(self, decl);
+        }
         super::super::extract_factory::visit_variable_declaration(self, decl);
         self.binding_is_const = previous;
     }
@@ -47,6 +50,7 @@ impl<'a> QueueVisitor<'a> {
                         extract_job_id::note_queue_binding(self, &decl.id);
                     }
                 }
+                super::super::job_options::note_constructed_defaults(self, &name, new_expr);
             } else if self.is_flow_constructor(&new_expr.callee) {
                 self.flow_bindings.insert(declaration);
                 if extract_job_id::is_imported_callee(self, &new_expr.callee) {

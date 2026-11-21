@@ -106,16 +106,9 @@ pub struct ReactTraitsConfig {
     pub assert_no_fetch: Option<bool>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct QueuesTopLevelConfig {
-    #[serde(
-        default,
-        deserialize_with = "queues::deserialize_factories",
-        serialize_with = "queues::serialize_factories"
-    )]
-    pub factories: QueueFactoryRoles,
-}
+#[path = "schema/queues_top.rs"]
+mod queues_top;
+pub use queues_top::QueuesTopLevelConfig;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]

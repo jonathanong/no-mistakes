@@ -18,6 +18,7 @@ mod graph_entities;
 mod graph_model;
 mod graph_related;
 mod graph_resolution;
+mod job_options;
 mod lang;
 mod number_scope;
 mod outcomes;

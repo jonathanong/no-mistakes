@@ -134,7 +134,7 @@ fn resolved_binding<R: ImportResolverFacade>(
     })
 }
 
-fn local_queues<R: ImportResolverFacade>(
+pub(super) fn local_queues<R: ImportResolverFacade>(
     path: &Path,
     facts: &FileFacts,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,

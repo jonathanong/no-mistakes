@@ -70,6 +70,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        super::job_options::note_call(self, call);
         self.note_wait_call(call);
         super::extract_job_id::note_call(self, call);
         self.note_enqueue_call(call);

@@ -116,6 +116,28 @@ Language test/graph frontends likewise
 require explicit `tests.<language>` package or module roots; no repository-wide
 queue scan is enabled by default.
 
+## Required job options
+
+`queues.requiredJobOptions` is a list of job-option keys. It defaults to
+`[]`. An empty list does not add findings or diagnostics. Set it when every
+producer should pass the same keys, such as `attempts`, `backoff`,
+`removeOnComplete`, or `removeOnFail`. `queues.requiredJobOptionsByQueue`
+replaces the global list for that queue name. A present key of `[]` exempts
+the queue. Producers are `add`, each `addBulk` element, `upsertJobScheduler`
+templates, flow roots and children, and a configured enqueue factory's
+`options` argument. `defaultJobOptions` on the queue factory counts. Known
+object spreads are included. An unknown spread abstains instead of reporting
+a missing key, and only when the effective list for that queue is non-empty.
+See [`queues check`](../cli/queues-check.md#required-job-options).
+
+```yaml
+queues:
+  requiredJobOptions: [attempts, removeOnComplete, backoff]
+  requiredJobOptionsByQueue:
+    items: [priority]
+    orders: []
+```
+
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.
 Use [`queues edges`](../cli/queues-edges.md), [`queues related`](../cli/queues-related.md),
