@@ -311,10 +311,74 @@ fn several_ambient_modules_record_the_ambiguous_specifier() {
 }
 
 fn ambient_module(specifier: &str) -> TsFileFacts {
+    ambient_source(&format!("declare module \"{specifier}\" {{}}\n"))
+}
+
+fn ambient_source(source: &str) -> TsFileFacts {
     TsFileFacts {
-        source: Some(Arc::<str>::from(format!(
-            "declare module \"{specifier}\" {{}}\n"
-        ))),
+        source: Some(Arc::<str>::from(source)),
         ..TsFileFacts::default()
     }
+}
+
+#[test]
+fn spaced_ambient_declaration_names_the_external_specifier() {
+    let mut world = world();
+    let escape = world.escape.clone();
+    let declared = std::path::PathBuf::from("/repo/declared.ts");
+    let single = std::path::PathBuf::from("/repo/single.ts");
+    insert(
+        &mut world.facts,
+        declared.clone(),
+        ambient_source(
+            "declare  module \"orders-widget\" {}\nnotdeclare module \"glued-widget\" {}\n",
+        ),
+    );
+    insert(
+        &mut world.facts,
+        single.clone(),
+        ambient_source("declare\nmodule\n'single-widget' {}\n"),
+    );
+    for (path, source) in [
+        ("/repo/tight.ts", "declaremodule \"tight-widget\" {}\n"),
+        (
+            "/repo/extra.ts",
+            "declare moduleExtra \"extra-widget\" {}\n",
+        ),
+        ("/repo/nospace.ts", "declare module\"nospace-widget\" {}\n"),
+        ("/repo/fn.ts", "declare function \"fn-widget\" {}\n"),
+    ] {
+        insert(
+            &mut world.facts,
+            std::path::PathBuf::from(path),
+            ambient_source(source),
+        );
+    }
+    for specifier in [
+        "orders-widget",
+        "glued-widget",
+        "single-widget",
+        "tight-widget",
+        "extra-widget",
+        "nospace-widget",
+        "fn-widget",
+    ] {
+        merge_import_target(
+            &mut world.graph.import_targets,
+            &escape,
+            specifier,
+            ImportTarget::External,
+        );
+    }
+    let catalog = catalog(&world);
+    let hit = |specifier: &str| {
+        modules::module_file(Some(&world.graph), &world.facts, &catalog, &escape, specifier)
+    };
+    assert_eq!(hit("orders-widget"), Some(declared));
+    assert_eq!(hit("single-widget"), Some(single));
+    assert_eq!(hit("glued-widget"), None);
+    assert_eq!(hit("tight-widget"), None);
+    assert_eq!(hit("extra-widget"), None);
+    assert_eq!(hit("nospace-widget"), None);
+    assert_eq!(hit("fn-widget"), None);
 }
