@@ -5,6 +5,7 @@ mod constraint_spans;
 mod ddl;
 mod dialect;
 mod do_constraints;
+mod expression_in_target;
 mod expression_predicates;
 mod expression_roots;
 mod expression_spans;

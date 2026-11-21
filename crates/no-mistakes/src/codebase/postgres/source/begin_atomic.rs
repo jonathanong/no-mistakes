@@ -50,3 +50,7 @@ pub(crate) fn conceal_body_keyword(tokens: &mut [TokenWithSpan]) {
         begin = word.keyword == Keyword::BEGIN;
     }
 }
+
+#[cfg(test)]
+#[path = "begin_atomic_tests.rs"]
+mod tests;

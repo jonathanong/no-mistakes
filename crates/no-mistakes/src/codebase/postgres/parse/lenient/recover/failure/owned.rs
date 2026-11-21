@@ -103,3 +103,7 @@ fn ident_reserved(ident: &Ident) -> bool {
 fn word(token: &Token, expected: &str) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected))
 }
+
+#[cfg(test)]
+#[path = "owned_tests.rs"]
+mod tests;

@@ -50,3 +50,7 @@ pub(super) fn ambiguous_view(
         });
     }
 }
+
+#[cfg(test)]
+#[path = "diagnostics_tests.rs"]
+mod tests;

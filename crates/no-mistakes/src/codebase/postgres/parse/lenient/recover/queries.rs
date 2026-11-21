@@ -181,3 +181,7 @@ mod loop_matrix_tests;
 #[cfg(test)]
 #[path = "queries/nested_merge_tests.rs"]
 mod nested_merge_tests;
+
+#[cfg(test)]
+#[path = "queries_recovered_tests.rs"]
+mod recovered_tests;

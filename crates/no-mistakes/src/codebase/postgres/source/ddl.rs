@@ -180,3 +180,7 @@ fn body_sql(body: &CreateFunctionBody) -> String {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "ddl_body_tests.rs"]
+mod body_tests;
