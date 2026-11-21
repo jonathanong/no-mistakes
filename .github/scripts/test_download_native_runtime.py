@@ -17,6 +17,35 @@ SPEC = importlib.util.spec_from_file_location(
 download = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(download)
 FIXTURES = Path(__file__).parent / "fixtures/native-runtime-download"
+WORKFLOW = Path(__file__).parents[1] / "workflows/ci.yml"
+# One minute past the script deadline so startup and the failure JSON fit.
+STEP_MARGIN_SECONDS = 60
+
+
+def download_step_timeouts(source):
+    steps = []
+    name = None
+    timeout = None
+    for line in source.splitlines():
+        if line.startswith("  ") and not line.startswith("   ") and line.rstrip().endswith(":"):
+            name = None
+            timeout = None
+            continue
+        stripped = line.strip()
+        if stripped.startswith("- name:"):
+            name = stripped.split(":", 1)[1].strip()
+            timeout = None
+            continue
+        if name is None:
+            continue
+        if stripped.startswith("timeout-minutes:"):
+            value = stripped.split(":", 1)[1].strip()
+            timeout = int(value) if value.isdigit() else None
+            continue
+        if "download-native-runtime.py" in stripped and stripped.startswith("run:"):
+            steps.append((name, timeout))
+            name = None
+    return steps
 
 
 class NativeRuntimeDownloadTests(unittest.TestCase):
@@ -326,6 +355,22 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertTrue(Path("target/debug/no-mistakes").is_file())
         self.assertFalse(Path("target/debug/no-mistakes.node").exists())
         self.assertIn(f"{download.OVERALL_SECONDS} seconds", errors)
+
+    def test_workflow_steps_outlive_the_script_deadline(self):
+        steps = download_step_timeouts(WORKFLOW.read_text())
+        self.assertEqual(
+            [name for name, _timeout in steps],
+            [
+                "Download Linux runtime",
+                "Download native-runtime",
+                "Download native-runtime",
+                "Download Linux runtime",
+            ],
+        )
+        floor = download.OVERALL_SECONDS + STEP_MARGIN_SECONDS
+        for name, minutes in steps:
+            self.assertIsNotNone(minutes, name)
+            self.assertGreaterEqual(minutes * 60, floor, name)
 
 
 if __name__ == "__main__":
