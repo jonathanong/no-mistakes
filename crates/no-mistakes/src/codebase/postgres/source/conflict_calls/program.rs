@@ -14,6 +14,8 @@ pub(in crate::codebase::postgres) fn parse(
 ) -> Result<ParsedPolicyProgram, ParserError> {
     let prepared = parsing::prepare(&mut tokens, false);
     let markers = prepared.markers;
+    // Markers already saw `BEGIN ATOMIC`. sqlparser must not nest the body.
+    super::super::begin_atomic::conceal_body_keyword(&mut tokens);
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
     if markers.is_empty() {

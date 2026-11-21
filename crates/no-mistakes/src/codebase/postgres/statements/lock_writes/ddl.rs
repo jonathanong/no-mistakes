@@ -41,6 +41,12 @@ pub(super) fn collect(
                                 out.ddl_events.push(DdlEvent::Change(partition));
                             }
                         }
+                        AlterTableOperation::AttachPartitionOf { partition, .. }
+                        | AlterTableOperation::DetachPartitionOf { partition, .. } => {
+                            if let Some(partition) = identity(partition) {
+                                out.ddl_events.push(DdlEvent::Change(partition));
+                            }
+                        }
                         _ => {}
                     }
                 }

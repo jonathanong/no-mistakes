@@ -41,6 +41,11 @@ pub(super) fn project(
         for (ordinal, statement) in statements.iter_mut().enumerate() {
             let range = super::conditional_source::statement_range(statement, tokens, cursor)?;
             let owned = &tokens[range];
+            if super::conditional_partial::partial_conflict(owned) {
+                return Err(
+                    "Partial conflict targets inside conditional statements are unsupported".into(),
+                );
+            }
             let span = locations
                 .span(Span {
                     start: owned[0].span.start,

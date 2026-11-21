@@ -9,7 +9,18 @@ use sqlparser::ast::{
     BinaryOperator, Expr, FunctionArg, FunctionArgExpr, FunctionArgOperator, FunctionArguments,
     Ident, TableFactor, Value, VisitMut, VisitorMut,
 };
+use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::ops::ControlFlow;
+
+/// sqlparser 0.64 will not parse `:=` as an infix operator. A custom operator
+/// keeps that precedence, and [`rewrite`] restores `BinaryOperator::Assignment`.
+pub(super) fn accept_infix(tokens: &mut [TokenWithSpan]) {
+    for token in tokens {
+        if token.token == Token::Assignment {
+            token.token = Token::CustomBinaryOperator(":=".into());
+        }
+    }
+}
 
 pub(super) fn rewrite(tree: &mut impl VisitMut) {
     let _ = tree.visit(&mut Rewrite);
@@ -40,6 +51,11 @@ impl VisitorMut for Rewrite {
     }
 
     fn post_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
+        if let Expr::BinaryOp { op, .. } = expr {
+            if matches!(op, BinaryOperator::Custom(name) if name == ":=") {
+                *op = BinaryOperator::Assignment;
+            }
+        }
         if let Expr::Function(function) = expr {
             rewrite_arguments(&mut function.parameters);
             rewrite_arguments(&mut function.args);
@@ -82,17 +98,21 @@ fn named_call_argument(expr: &mut Expr) -> Option<FunctionArg> {
     }
 }
 
+fn assignment_operator(op: &BinaryOperator) -> bool {
+    match op {
+        BinaryOperator::Assignment => true,
+        BinaryOperator::Custom(name) => name == ":=",
+        _ => false,
+    }
+}
+
 fn named_assignment(expr: Expr) -> Result<(Ident, Expr), Box<Expr>> {
     match expr {
         Expr::Nested(inner) => match named_assignment(*inner) {
             Ok(named) => Ok(named),
             Err(inner) => Err(Box::new(Expr::Nested(inner))),
         },
-        Expr::BinaryOp {
-            left,
-            op: BinaryOperator::Assignment,
-            right,
-        } => match *left {
+        Expr::BinaryOp { left, op, right } if assignment_operator(&op) => match *left {
             Expr::Identifier(name) => Ok((name, *right)),
             left => Err(Box::new(Expr::BinaryOp {
                 left: Box::new(left),

@@ -1,6 +1,42 @@
 use super::*;
-use sqlparser::ast::{Function, FunctionArg, FunctionArgExpr, FunctionArguments, WindowType};
+use sqlparser::ast::{
+    Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, InTarget, WindowType,
+};
 impl Collector<'_, '_> {
+    pub(super) fn in_expression(
+        &mut self,
+        expr: &Expr,
+        target: &InTarget,
+        scope: usize,
+        clause: PostgresSqlQueryClause,
+        context: PostgresSqlPredicateContext,
+        env: &CteEnvironment,
+    ) -> bool {
+        let child = super::opaque_context(context);
+        match target {
+            InTarget::Subquery(subquery) => {
+                self.expr(expr, scope, clause, None, child, env);
+                self.query(
+                    subquery,
+                    Some(scope),
+                    Some(scope),
+                    clause,
+                    env,
+                    self.facts.scopes[scope].cte_definition_id,
+                );
+                true
+            }
+            InTarget::List(list) => {
+                self.expr(expr, scope, clause, None, child.clone(), env);
+                for item in list {
+                    self.expr(item, scope, clause, None, child.clone(), env);
+                }
+                true
+            }
+            InTarget::Unnest(_) | InTarget::Table { .. } => false,
+        }
+    }
+
     pub(in super::super) fn function_expressions(
         &mut self,
         function: &Function,

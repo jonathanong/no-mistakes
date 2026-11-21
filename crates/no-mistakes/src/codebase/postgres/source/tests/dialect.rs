@@ -2,6 +2,7 @@ use super::super::dialect::PostgresSourceDialect;
 use sqlparser::dialect::{Dialect, PostgreSqlDialect, Precedence};
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
+use sqlparser::tokenizer::Token;
 
 #[test]
 fn source_dialect_matches_postgresql_except_on_conflict_alias() {
@@ -97,10 +98,9 @@ fn source_dialect_matches_postgresql_except_on_conflict_alias() {
         source.supports_named_fn_args_with_expr_name(),
         postgres.supports_named_fn_args_with_expr_name()
     );
-    assert_eq!(
-        source.supports_empty_projections(),
-        postgres.supports_empty_projections()
-    );
+    // `SELECT` with no target list is not a statement on the source dialect.
+    assert!(!source.supports_empty_projections());
+    assert!(postgres.supports_empty_projections());
     assert_eq!(
         source.supports_nested_comments(),
         postgres.supports_nested_comments()
@@ -192,4 +192,14 @@ fn source_dialect_matches_postgresql_except_on_conflict_alias() {
         source.is_select_item_alias(true, &Keyword::ON, &mut explicit),
         postgres.is_select_item_alias(true, &Keyword::ON, &mut explicit_postgres)
     );
+}
+
+#[test]
+fn assignment_keeps_parenthesized_infix_precedence() {
+    let source = PostgresSourceDialect;
+    let mut parser = Parser::new(&source).try_with_sql("a := 1").unwrap();
+    parser.next_token();
+    assert_eq!(parser.peek_token_ref().token, Token::Assignment);
+    let precedence = source.get_next_precedence(&parser).unwrap().unwrap();
+    assert_eq!(precedence, source.prec_value(Precedence::PgOther));
 }

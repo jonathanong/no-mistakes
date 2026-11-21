@@ -125,12 +125,12 @@ fn parse_inner(
                 if columns.len() == expressions.len() {
                     expressions.clear();
                 }
-                Some(ConflictTarget::Columns(columns))
+                Some(arbiter::column_target(columns))
             } else {
                 None
             };
             if parser.parse_keyword(Keyword::WHERE) {
-                if !matches!(conflict_target, Some(ConflictTarget::Columns(_))) {
+                if !matches!(conflict_target, Some(ConflictTarget::Columns { .. })) {
                     return Err(ParserError::ParserError(
                         "Conflict predicates require a column target".into(),
                     ));

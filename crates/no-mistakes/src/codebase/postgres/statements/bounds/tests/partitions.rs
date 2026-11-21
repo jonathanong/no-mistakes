@@ -7,7 +7,6 @@ fn temporary_partitions_cascade_detach_and_reattach() {
             .join("sql/temporary-partitions.sql"),
     )
     .unwrap();
-    assert!(crate::codebase::postgres::parse_postgres_sql(&sql).is_err());
     assert_eq!(
         crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql).len(),
         16
@@ -33,7 +32,6 @@ fn temporary_partition_owner_drop_and_concurrent_detach() {
             .join("sql/temporary-partition-review.sql"),
     )
     .unwrap();
-    assert!(crate::codebase::postgres::parse_postgres_sql(&sql).is_err());
     assert_eq!(
         crate::codebase::postgres::parse::parse_postgres_sql_lenient(&sql).len(),
         21

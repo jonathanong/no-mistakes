@@ -5,7 +5,7 @@ mod sets;
 mod tests;
 
 use crate::codebase::postgres::idents::unwrap_expr;
-use sqlparser::ast::{BinaryOperator, Expr};
+use sqlparser::ast::{BinaryOperator, Expr, InTarget};
 use std::collections::BTreeSet;
 
 pub(super) struct Instance<'a> {
@@ -96,15 +96,17 @@ fn columns_from_expr(predicate: &Expr, ctx: &Ctx<'_, impl super::Projection>) ->
         } if !refs::references(low, ctx) && !refs::references(high, ctx) => {
             from_hit(predicate, None, column_hit(expr, ctx), ctx)
         }
-        Expr::InList {
+        Expr::In {
             expr,
+            target: InTarget::List(list),
             negated: false,
-            list,
+            ..
         } if !list.iter().any(|item| refs::references(item, ctx)) => {
             from_hit(predicate, None, column_hit(expr, ctx), ctx)
         }
-        Expr::InSubquery {
+        Expr::In {
             expr,
+            target: InTarget::Subquery(_),
             negated: false,
             ..
         } => from_hit(predicate, None, column_hit(expr, ctx), ctx),

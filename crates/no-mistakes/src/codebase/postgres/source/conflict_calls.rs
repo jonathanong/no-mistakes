@@ -25,6 +25,7 @@ pub(in crate::codebase::postgres) fn recover(
     if markers.is_empty() {
         return None;
     }
+    super::begin_atomic::conceal_body_keyword(&mut tokens);
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(tokens);
     let (statement, functions, arbiter) =

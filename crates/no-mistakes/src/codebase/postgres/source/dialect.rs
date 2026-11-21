@@ -6,10 +6,21 @@
 use sqlparser::dialect::{Dialect, PostgreSqlDialect, Precedence};
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::{Parser, ParserError};
+use sqlparser::tokenizer::Token;
 use std::any::TypeId;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub(super) struct PostgresSourceDialect;
+
+macro_rules! pg_bool {
+    ($($name:ident),* $(,)?) => {
+        $(
+            fn $name(&self) -> bool {
+                PostgreSqlDialect {}.$name()
+            }
+        )*
+    };
+}
 
 impl Dialect for PostgresSourceDialect {
     fn dialect(&self) -> TypeId {
@@ -40,10 +51,6 @@ impl Dialect for PostgresSourceDialect {
         PostgreSqlDialect {}.is_identifier_part(ch)
     }
 
-    fn supports_unicode_string_literal(&self) -> bool {
-        PostgreSqlDialect {}.supports_unicode_string_literal()
-    }
-
     fn is_reserved_for_identifier(&self, kw: Keyword) -> bool {
         PostgreSqlDialect {}.is_reserved_for_identifier(kw)
     }
@@ -57,19 +64,12 @@ impl Dialect for PostgresSourceDialect {
     }
 
     fn get_next_precedence(&self, parser: &Parser) -> Option<Result<u8, ParserError>> {
+        // sqlparser 0.64 assigns `:=` unknown precedence so it is not an infix
+        // operator. Parenthesized assignments still need that infix form.
+        if parser.peek_token_ref().token == Token::Assignment {
+            return Some(Ok(self.prec_value(Precedence::PgOther)));
+        }
         PostgreSqlDialect {}.get_next_precedence(parser)
-    }
-
-    fn supports_filter_during_aggregation(&self) -> bool {
-        PostgreSqlDialect {}.supports_filter_during_aggregation()
-    }
-
-    fn supports_group_by_expr(&self) -> bool {
-        PostgreSqlDialect {}.supports_group_by_expr()
-    }
-
-    fn supports_alter_user_as_alter_role(&self) -> bool {
-        PostgreSqlDialect {}.supports_alter_user_as_alter_role()
     }
 
     fn prec_value(&self, prec: Precedence) -> u8 {
@@ -84,119 +84,46 @@ impl Dialect for PostgresSourceDialect {
         PostgreSqlDialect {}.allow_extract_single_quotes()
     }
 
-    fn supports_create_index_with_clause(&self) -> bool {
-        PostgreSqlDialect {}.supports_create_index_with_clause()
-    }
-
-    fn supports_explain_with_utility_options(&self) -> bool {
-        PostgreSqlDialect {}.supports_explain_with_utility_options()
-    }
-
-    fn supports_listen_notify(&self) -> bool {
-        PostgreSqlDialect {}.supports_listen_notify()
-    }
-
-    fn supports_exclude_constraint(&self) -> bool {
-        PostgreSqlDialect {}.supports_exclude_constraint()
-    }
-
-    fn supports_factorial_operator(&self) -> bool {
-        PostgreSqlDialect {}.supports_factorial_operator()
-    }
-
-    fn supports_bitwise_shift_operators(&self) -> bool {
-        PostgreSqlDialect {}.supports_bitwise_shift_operators()
-    }
-
-    fn supports_comment_on(&self) -> bool {
-        PostgreSqlDialect {}.supports_comment_on()
-    }
-
-    fn supports_load_extension(&self) -> bool {
-        PostgreSqlDialect {}.supports_load_extension()
-    }
-
-    fn supports_named_fn_args_with_colon_operator(&self) -> bool {
-        PostgreSqlDialect {}.supports_named_fn_args_with_colon_operator()
-    }
-
-    fn supports_named_fn_args_with_expr_name(&self) -> bool {
-        PostgreSqlDialect {}.supports_named_fn_args_with_expr_name()
-    }
-
-    fn supports_empty_projections(&self) -> bool {
-        PostgreSqlDialect {}.supports_empty_projections()
-    }
-
-    fn supports_nested_comments(&self) -> bool {
-        PostgreSqlDialect {}.supports_nested_comments()
-    }
-
-    fn supports_string_escape_constant(&self) -> bool {
-        PostgreSqlDialect {}.supports_string_escape_constant()
-    }
-
-    fn supports_numeric_literal_underscores(&self) -> bool {
-        PostgreSqlDialect {}.supports_numeric_literal_underscores()
-    }
-
-    fn supports_array_typedef_with_brackets(&self) -> bool {
-        PostgreSqlDialect {}.supports_array_typedef_with_brackets()
-    }
-
-    fn supports_geometric_types(&self) -> bool {
-        PostgreSqlDialect {}.supports_geometric_types()
-    }
-
-    fn supports_order_by_using_operator(&self) -> bool {
-        PostgreSqlDialect {}.supports_order_by_using_operator()
-    }
-
-    fn supports_set_names(&self) -> bool {
-        PostgreSqlDialect {}.supports_set_names()
-    }
-
-    fn supports_alter_column_type_using(&self) -> bool {
-        PostgreSqlDialect {}.supports_alter_column_type_using()
-    }
-
-    fn supports_left_associative_joins_without_parens(&self) -> bool {
-        PostgreSqlDialect {}.supports_left_associative_joins_without_parens()
-    }
-
-    fn supports_notnull_operator(&self) -> bool {
-        PostgreSqlDialect {}.supports_notnull_operator()
-    }
-
-    fn supports_interval_options(&self) -> bool {
-        PostgreSqlDialect {}.supports_interval_options()
-    }
-
-    fn supports_insert_table_alias(&self) -> bool {
-        PostgreSqlDialect {}.supports_insert_table_alias()
-    }
-
-    fn supports_create_table_like_parenthesized(&self) -> bool {
-        PostgreSqlDialect {}.supports_create_table_like_parenthesized()
-    }
-
-    fn supports_select_wildcard_with_alias(&self) -> bool {
-        PostgreSqlDialect {}.supports_select_wildcard_with_alias()
-    }
-
-    fn supports_comma_separated_trim(&self) -> bool {
-        PostgreSqlDialect {}.supports_comma_separated_trim()
-    }
-
-    fn supports_xml_expressions(&self) -> bool {
-        PostgreSqlDialect {}.supports_xml_expressions()
-    }
-
-    fn supports_aliased_function_args(&self) -> bool {
-        PostgreSqlDialect {}.supports_aliased_function_args()
-    }
-
-    fn supports_comment_optimizer_hint(&self) -> bool {
-        PostgreSqlDialect {}.supports_comment_optimizer_hint()
-    }
+    pg_bool!(
+        supports_array_typedef_with_brackets,
+        supports_aliased_function_args,
+        supports_alter_column_type_using,
+        supports_alter_user_as_alter_role,
+        supports_bitwise_shift_operators,
+        supports_comma_separated_trim,
+        supports_comment_on,
+        supports_comment_optimizer_hint,
+        supports_comparison_in_between_low_bound,
+        supports_create_group,
+        supports_create_index_with_clause,
+        supports_create_table_like_parenthesized,
+        supports_cte_materialization,
+        supports_drop_group,
+        supports_exclude_constraint,
+        supports_explain_with_utility_options,
+        supports_factorial_operator,
+        supports_filter_during_aggregation,
+        supports_geometric_types,
+        supports_group_by_expr,
+        supports_insert_table_alias,
+        supports_interval_options,
+        supports_left_associative_joins_without_parens,
+        supports_listen_notify,
+        supports_load_extension,
+        supports_named_fn_args_with_assignment_operator,
+        supports_named_fn_args_with_colon_operator,
+        supports_named_fn_args_with_expr_name,
+        supports_nested_comments,
+        supports_non_decimal_integer_literals,
+        supports_notnull_operator,
+        supports_numeric_literal_underscores,
+        supports_order_by_using_operator,
+        supports_select_wildcard_with_alias,
+        supports_set_names,
+        supports_sql_option_without_value,
+        supports_string_escape_constant,
+        supports_tilde_like_match_operator,
+        supports_unicode_string_literal,
+        supports_xml_expressions,
+    );
 }

@@ -1,4 +1,6 @@
-use crate::codebase::postgres::source::types::PostgresSqlProceduralOccurrence;
+use crate::codebase::postgres::source::types::{
+    PostgresSqlProceduralOccurrence, PostgresSqlProceduralOccurrenceKind,
+};
 use sqlparser::{
     dialect::PostgreSqlDialect,
     parser::Parser,
@@ -39,6 +41,11 @@ fn statement_parses(
     tokens: &[TokenWithSpan],
     occurrence: &PostgresSqlProceduralOccurrence,
 ) -> bool {
+    // sqlparser 0.64 parses PL/pgSQL `RAISE` as a statement. A procedural
+    // sibling is not SQL, so it must not promote the rest of the command.
+    if occurrence.kind == PostgresSqlProceduralOccurrenceKind::ControlFlow {
+        return false;
+    }
     let start = occurrence.span.start.offset;
     let end = occurrence.span.end.offset;
     if start > end || end >= tokens.len() {

@@ -11,8 +11,12 @@ const INVALID: &str = include_str!(concat!(
 fn documented_metadata_remains_explicitly_unsupported_without_schema_false_alarms() {
     for sql in VALID.lines().filter(|sql| !sql.starts_with("--")) {
         let facts = extract_migration_facts(sql);
-        assert_eq!(facts.unanalyzable_statements.len(), 1, "{sql}");
-        assert!(facts.unanalyzable_statements[0].valid_unsupported, "{sql}");
+        if facts.unanalyzable_statements.is_empty() {
+            assert!(schema_unchanged(&facts), "{sql}");
+        } else {
+            assert_eq!(facts.unanalyzable_statements.len(), 1, "{sql}");
+            assert!(facts.unanalyzable_statements[0].valid_unsupported, "{sql}");
+        }
     }
 }
 #[test]
@@ -84,14 +88,17 @@ fn postgres_identifier_classes_and_aggregate_signatures_remain_distinct() {
     ));
     for sql in valid.lines() {
         let facts = extract_migration_facts(sql);
-        assert!(!facts.unanalyzable_statements.is_empty(), "{sql}");
-        assert!(
-            facts
-                .unanalyzable_statements
-                .iter()
-                .all(|f| f.valid_unsupported),
-            "{sql}"
-        );
+        if facts.unanalyzable_statements.is_empty() {
+            assert!(schema_unchanged(&facts), "{sql}");
+        } else {
+            assert!(
+                facts
+                    .unanalyzable_statements
+                    .iter()
+                    .all(|f| f.valid_unsupported),
+                "{sql}"
+            );
+        }
     }
     let invalid = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -222,4 +229,14 @@ fn regress_alter_accepts_saved_option_and_partition_forms() {
             "{sql}: {failures:?}"
         );
     }
+}
+
+fn schema_unchanged(facts: &crate::codebase::postgres::types::SqlSchemaFileFacts) -> bool {
+    facts.tables.is_empty()
+        && facts.table_events.is_empty()
+        && facts.indexes.is_empty()
+        && facts.dropped_indexes.is_empty()
+        && facts.dropped_tables.is_empty()
+        && facts.foreign_keys.is_empty()
+        && facts.add_columns.is_empty()
 }

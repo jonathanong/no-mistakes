@@ -67,28 +67,32 @@ pub(in crate::codebase::postgres::statements) fn next_table_fetch(
     let SetExpr::Table(table) = body else {
         return None;
     };
-    let table_name = table.table_name.as_deref()?;
+    let table_name = table
+        .table_name
+        .as_ref()
+        .map(|ident| ident.value.as_str())?;
     let all = tokens.all();
     let (_, relation_end) = (*cursor..all.len()).find_map(|table_index| {
         if !keyword_at(all, table_index, Keyword::TABLE) {
             return None;
         }
         let name_index = next_token(all, table_index + 1).unwrap_or(all.len());
-        let (relation_end, matches_name) = if let Some(schema) = table.schema_name.as_deref() {
-            let period_index = next_token(all, name_index + 1).unwrap_or(all.len());
-            let table_name_index = next_token(all, period_index + 1).unwrap_or(all.len());
-            (
-                table_name_index,
-                word_at(all, name_index, schema)
-                    && matches!(
-                        all.get(period_index).map(|token| &token.token),
-                        Some(Token::Period)
-                    )
-                    && word_at(all, table_name_index, table_name),
-            )
-        } else {
-            (name_index, word_at(all, name_index, table_name))
-        };
+        let (relation_end, matches_name) =
+            if let Some(schema) = table.schema_name.as_ref().map(|ident| ident.value.as_str()) {
+                let period_index = next_token(all, name_index + 1).unwrap_or(all.len());
+                let table_name_index = next_token(all, period_index + 1).unwrap_or(all.len());
+                (
+                    table_name_index,
+                    word_at(all, name_index, schema)
+                        && matches!(
+                            all.get(period_index).map(|token| &token.token),
+                            Some(Token::Period)
+                        )
+                        && word_at(all, table_name_index, table_name),
+                )
+            } else {
+                (name_index, word_at(all, name_index, table_name))
+            };
         matches_name.then_some((table_index, relation_end))
     })?;
     if query.fetch.is_none() {

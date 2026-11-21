@@ -8,7 +8,7 @@ mod tests;
 
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::SqlCountExistenceFact;
-use sqlparser::ast::{Expr, Select, SelectItem, UnaryOperator};
+use sqlparser::ast::{Expr, InTarget, Select, SelectItem, UnaryOperator};
 
 pub(super) struct ShapeLines {
     pub not_in_subqueries: Vec<usize>,
@@ -69,7 +69,10 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
             op: UnaryOperator::Not,
             ..
         }
-        | Expr::InSubquery { .. } => {
+        | Expr::In {
+            target: InTarget::Subquery(_),
+            ..
+        } => {
             let mut inner = expr;
             let mut negated = false;
             while let Expr::UnaryOp {
@@ -80,9 +83,10 @@ fn walk(expr: &Expr, place: Place, bare: bool, out: &mut ShapeLines) {
                 negated = !negated;
                 inner = expr;
             }
-            if let Expr::InSubquery {
+            if let Expr::In {
                 negated: membership_negated,
                 expr: left,
+                target: InTarget::Subquery(_),
                 ..
             } = unwrap_expr(inner)
             {

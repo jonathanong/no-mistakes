@@ -21,7 +21,7 @@ pub(super) fn data_type(value: &DataType, locations: &Locations<'_>) -> Postgres
         }
         DataType::Custom(custom, modifiers) => {
             result.name = Some(name(custom));
-            result.modifiers = modifiers.clone();
+            result.modifiers = modifiers.iter().map(ToString::to_string).collect();
         }
         DataType::Table(Some(fields)) => {
             result.fields = fields

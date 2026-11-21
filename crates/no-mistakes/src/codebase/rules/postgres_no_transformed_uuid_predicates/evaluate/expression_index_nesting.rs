@@ -1,6 +1,6 @@
 use sqlparser::ast::{
     CaseWhen, CastKind, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, Ident,
-    UnaryOperator,
+    InTarget, UnaryOperator,
 };
 
 const OTHER: u8 = 7;
@@ -73,7 +73,11 @@ fn walk(expression: &mut Expr) {
             tighten(low, OTHER);
             tighten(high, OTHER);
         }
-        Expr::InList { expr, list, .. } => {
+        Expr::In {
+            expr,
+            target: InTarget::List(list),
+            ..
+        } => {
             tighten(expr, OTHER);
             list.iter_mut().for_each(delimit);
         }

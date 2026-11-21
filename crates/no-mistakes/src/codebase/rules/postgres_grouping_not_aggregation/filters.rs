@@ -99,7 +99,11 @@ pub(super) fn select_filters(
 pub(super) fn membership(expr: &Expr, emit: &mut impl FnMut(&Query)) {
     let _: ControlFlow<()> = visit_expressions(expr, |expr| {
         match bare(expr) {
-            Expr::InSubquery { subquery, .. } | Expr::Exists { subquery, .. } => emit(subquery),
+            Expr::In {
+                target: InTarget::Subquery(subquery),
+                ..
+            }
+            | Expr::Exists { subquery, .. } => emit(subquery),
             Expr::AnyOp { right, .. } | Expr::AllOp { right, .. } => match bare(right) {
                 Expr::Subquery(query) => emit(query),
                 Expr::Function(function)

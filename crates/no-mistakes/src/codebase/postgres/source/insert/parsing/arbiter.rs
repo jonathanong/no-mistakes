@@ -1,6 +1,6 @@
 use super::expressions::{self, Located};
 use sqlparser::{
-    ast::{Ident, ObjectName},
+    ast::{ConflictTarget, Ident, ObjectName},
     parser::{Parser, ParserError},
     tokenizer::{Span, Token},
 };
@@ -10,6 +10,13 @@ type OperatorClass = (ObjectName, Span, Vec<(Ident, Located)>);
 pub(in crate::codebase::postgres::source) struct Arbiter {
     pub expression: Located,
     pub operator_class: Option<OperatorClass>,
+}
+
+pub(super) fn column_target(columns: Vec<Ident>) -> ConflictTarget {
+    ConflictTarget::Columns {
+        columns,
+        predicate: None,
+    }
 }
 
 pub(super) fn parse(parser: &mut Parser<'_>) -> Result<Vec<Arbiter>, ParserError> {

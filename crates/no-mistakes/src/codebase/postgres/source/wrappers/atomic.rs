@@ -11,7 +11,7 @@ pub(super) fn collect(
 ) {
     let start = parser.index();
     parser.next_token();
-    let atomic = parser.parse_keyword(Keyword::ATOMIC);
+    let atomic = super::super::begin_atomic::accept(parser);
     let end = end(parser, start);
     let supported = atomic && depth < 16 && sql_language;
     let mut wrapper = empty(

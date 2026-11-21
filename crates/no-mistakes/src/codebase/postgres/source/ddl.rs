@@ -165,5 +165,22 @@ fn body_sql(body: &CreateFunctionBody) -> String {
         CreateFunctionBody::Return(body) => format!("RETURN {body}"),
         CreateFunctionBody::AsReturnExpr(body) => format!("AS RETURN {body}"),
         CreateFunctionBody::AsReturnSelect(body) => format!("AS RETURN {body}"),
+        CreateFunctionBody::BeginAtomic(body) => {
+            let statements = body
+                .statements
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join("; ");
+            if statements.is_empty() {
+                "BEGIN ATOMIC END".to_string()
+            } else {
+                format!("BEGIN ATOMIC {statements}; END")
+            }
+        }
     }
 }
+
+#[cfg(test)]
+#[path = "ddl_body_tests.rs"]
+mod body_tests;

@@ -155,17 +155,11 @@ impl Collector<'_, '_> {
                     self.facts.scopes[scope].cte_definition_id,
                 );
             }
-            Expr::InSubquery { expr, subquery, .. } => {
-                let child = opaque_context(context);
-                self.expr(expr, scope, clause, None, child, env);
-                self.query(
-                    subquery,
-                    Some(scope),
-                    Some(scope),
-                    clause,
-                    env,
-                    self.facts.scopes[scope].cte_definition_id,
-                );
+            in_expr @ Expr::In { expr, target, .. } => {
+                let span = in_expr.span();
+                if !self.in_expression(expr, target, scope, clause, context, env) {
+                    self.unsupported(scope, clause, "expression form", span);
+                }
             }
             Expr::Function(function) => {
                 self.function_expressions(function, scope, clause, join, context, env)
@@ -173,13 +167,6 @@ impl Collector<'_, '_> {
             Expr::Tuple(exprs) | Expr::Array(sqlparser::ast::Array { elem: exprs, .. }) => {
                 let child = opaque_context(context);
                 for expr in exprs {
-                    self.expr(expr, scope, clause, None, child.clone(), env);
-                }
-            }
-            Expr::InList { expr, list, .. } => {
-                let child = opaque_context(context);
-                self.expr(expr, scope, clause, None, child.clone(), env);
-                for expr in list {
                     self.expr(expr, scope, clause, None, child.clone(), env);
                 }
             }

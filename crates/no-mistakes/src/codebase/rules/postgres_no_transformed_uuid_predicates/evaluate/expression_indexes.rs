@@ -1,6 +1,6 @@
 use super::Columns;
 use crate::codebase::postgres::statements::SqlTransformedColumnUseFact;
-use sqlparser::ast::{Expr, VisitMut, VisitorMut};
+use sqlparser::ast::{Expr, InTarget, VisitMut, VisitorMut};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 use std::ops::ControlFlow;
@@ -87,7 +87,12 @@ impl VisitorMut for Unqualify {
             Expr::CompoundIdentifier(parts) => {
                 *expr = Expr::Identifier(parts.last().expect("compound identifier").clone());
             }
-            Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. } => {
+            Expr::Subquery(_)
+            | Expr::Exists { .. }
+            | Expr::In {
+                target: InTarget::Subquery(_),
+                ..
+            } => {
                 return ControlFlow::Break(());
             }
             _ => {}

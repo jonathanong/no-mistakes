@@ -19,7 +19,7 @@ use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundPin, SqlPinSource};
 use resolver::Sourced;
 use source_merge::merge;
-use sqlparser::ast::{BinaryOperator, Expr, Query};
+use sqlparser::ast::{BinaryOperator, Expr, InTarget, Query};
 use std::cell::Cell;
 
 pub(super) use correlated::{projection_columns, Reads};
@@ -109,10 +109,11 @@ fn extract_conjunct(
             }),
             true,
         ),
-        Expr::InList {
+        Expr::In {
             expr,
-            list,
+            target: InTarget::List(list),
             negated: false,
+            ..
         } => {
             if let Some((item, _)) = resolver.column(expr) {
                 let sources: Option<Vec<Sourced>> = list
@@ -128,10 +129,11 @@ fn extract_conjunct(
                     .map(merge)
             });
         }
-        Expr::InSubquery {
+        Expr::In {
             expr,
-            subquery,
+            target: InTarget::Subquery(subquery),
             negated: false,
+            ..
         } => {
             let source = subquery_source(subquery, resolver, scope, positions);
             if let Expr::Tuple(columns) = unwrap_expr(expr) {

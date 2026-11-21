@@ -1,7 +1,7 @@
 use super::super::super::value::PlaceholderPositions;
 use super::super::{pins, query, Scope};
 use crate::codebase::postgres::statements::SqlBoundItem;
-use sqlparser::ast::{Expr, Query, TableFactor, Visit, Visitor};
+use sqlparser::ast::{Expr, InTarget, Query, TableFactor, Visit, Visitor};
 use std::{cell::OnceCell, ops::ControlFlow};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -54,9 +54,10 @@ impl Visitor for Expressions<'_> {
                     Context::Scalar
                 }
             }
-            Expr::InSubquery { subquery, .. } => {
-                Context::Pool(subquery.as_ref() as *const Query as usize)
-            }
+            Expr::In {
+                target: InTarget::Subquery(subquery),
+                ..
+            } => Context::Pool(subquery.as_ref() as *const Query as usize),
             Expr::AnyOp { right, .. } | Expr::AllOp { right, .. } => {
                 match crate::codebase::postgres::idents::unwrap_expr(right) {
                     Expr::Subquery(query) => Context::Pool(query.as_ref() as *const Query as usize),

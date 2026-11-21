@@ -4,7 +4,7 @@ use super::super::items;
 use super::{state, TemporaryRelations};
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::SchemaCatalog;
-pub(super) use alter_table::partition_name;
+pub(super) use alter_table::partition_relation;
 use sqlparser::ast::{ContextModifier, ObjectType, Reset, Set, Statement};
 
 impl TemporaryRelations {

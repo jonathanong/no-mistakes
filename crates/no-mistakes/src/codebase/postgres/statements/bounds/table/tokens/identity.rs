@@ -39,8 +39,10 @@ impl TableTokenIndex {
             .iter()
             .flat_map(|segment| &segment.names)
             .filter(|source| {
-                source.schema.as_deref() == table.schema_name.as_deref()
-                    && Some(source.table.as_str()) == table.table_name.as_deref()
+                source.schema.as_deref()
+                    == table.schema_name.as_ref().map(|ident| ident.value.as_str())
+                    && Some(source.table.as_str())
+                        == table.table_name.as_ref().map(|ident| ident.value.as_str())
             });
         let first = matches.next()?;
         matches.all(|source| source.parts == first.parts).then(|| {

@@ -12,7 +12,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{SchemaCatalog, SqlViewReads};
-use sqlparser::ast::{AlterTableOperation, Expr, ObjectName, ObjectNamePart, Statement};
+use sqlparser::ast::{Expr, ObjectName, ObjectNamePart, Statement};
 use state::{Dependency, State};
 use std::collections::BTreeSet;
 
@@ -37,12 +37,7 @@ impl TemporaryRelations {
                     .possible_temporary(&sql_name(&table.name))
                     .is_some()
                     || table.operations.iter().any(|operation| {
-                        let partition = match operation {
-                            AlterTableOperation::AttachPartition { partition }
-                            | AlterTableOperation::DetachPartition { partition } => partition,
-                            _ => return false,
-                        };
-                        lifecycle::partition_name(partition)
+                        lifecycle::partition_relation(operation)
                             .is_some_and(|name| self.state.possible_temporary(&name).is_some())
                     })
             }

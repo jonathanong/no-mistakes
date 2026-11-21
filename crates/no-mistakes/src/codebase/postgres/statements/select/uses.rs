@@ -127,7 +127,7 @@ fn walk(
             record(right, clause, rels, line, out, positions);
         }
         Expr::Between { expr, .. } => record(expr, clause, rels, line, out, positions),
-        Expr::InList { expr, .. } | Expr::InSubquery { expr, .. } => {
+        Expr::In { expr, target, .. } if super::super::value_form::is_list_or_subquery(target) => {
             record(expr, clause, rels, line, out, positions);
         }
         Expr::UnaryOp {

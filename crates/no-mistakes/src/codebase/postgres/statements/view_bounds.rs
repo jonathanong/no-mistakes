@@ -94,12 +94,13 @@ impl Projection for Bounds<'_> {
                 with_ordinality: false,
                 with_hints,
                 partitions,
-                index_hints,
+                index_directives,
+                inheritance: None,
                 alias,
             } => {
                 with_hints.is_empty()
                     && partitions.is_empty()
-                    && index_hints.is_empty()
+                    && index_directives.is_empty()
                     && alias.as_ref().is_none_or(|alias| alias.columns.is_empty())
             }
             TableFactor::Derived {

@@ -1,10 +1,10 @@
 use super::LocatedStatement;
 mod bodies;
-mod copy;
 pub(crate) mod failure;
 pub(super) use failure::failed_source;
 mod locations;
 mod partition;
+mod partition_sound;
 mod procedural;
 mod queries;
 mod query_locks;
@@ -30,16 +30,9 @@ pub(super) fn parse_chunks_with_function_calls(
     let mut located = super::chunks::located_chunks(original);
     let mut statements = Vec::new();
     let mut transaction_open = false;
-    let mut copy_data_pending = false;
-    let mut ordinal = 0;
-    for chunk in chunks {
+    for (chunk_ordinal, chunk) in chunks.into_iter().enumerate() {
+        // sqlparser 0.64 consumes a COPY `\.` terminator before these chunks exist.
         let original = located.next();
-        if copy_data_pending && original.is_some_and(copy::is_terminator) {
-            copy_data_pending = false;
-            continue;
-        }
-        let chunk_ordinal = ordinal;
-        ordinal += 1;
         let aligned = original.map(|source| locations::align(&chunk, source));
         // Keep each chunk's tokens with its own failure marker.
         let tokens = original.map(Arc::<[TokenWithSpan]>::from);
@@ -55,7 +48,6 @@ pub(super) fn parse_chunks_with_function_calls(
         if handled_procedural.is_none() {
             failure::partial_chunk(original, &mut produced);
         }
-        copy_data_pending = original.is_some_and(copy::owns_terminator);
         if produced.is_empty() || handled_procedural == Some(false) {
             if handled_procedural == Some(true) {
                 continue;
@@ -136,12 +128,12 @@ fn parse_chunk(
             targets_valid = select_into::normalize(&mut parse_tokens);
         }
     }
+    crate::codebase::postgres::parse::named_arguments::accept_infix(&mut parse_tokens);
+    crate::codebase::postgres::source::conceal_body_keyword(&mut parse_tokens);
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(parse_tokens);
     match parser.parse_statement() {
         Ok(statement) if targets_valid && matches!(parser.peek_token().token, Token::EOF) => {
-            let mut located = LocatedStatement::plain(statement);
-            located.complete = true;
-            vec![located]
+            partition::parsed(statement, allow_concurrent_detach)
         }
         _ if !create_valid => Vec::new(),
         _ => {

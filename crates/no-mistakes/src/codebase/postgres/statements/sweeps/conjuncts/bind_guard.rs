@@ -1,5 +1,5 @@
 use super::placeholders::is_recovered_placeholder;
-use sqlparser::ast::{AccessExpr, Expr, Value, Visit, Visitor};
+use sqlparser::ast::{AccessExpr, Expr, InTarget, Value, Visit, Visitor};
 use std::ops::ControlFlow;
 
 /// A guard can enable a walk, but cannot select individual rows.
@@ -36,7 +36,10 @@ pub(super) fn is_bind_guard(expr: &Expr, recovered_placeholder_positions: &[(u32
                 | Expr::Function(_)
                 | Expr::Subquery(_)
                 | Expr::Exists { .. }
-                | Expr::InSubquery { .. } => self.row_dependent = true,
+                | Expr::In {
+                    target: InTarget::Subquery(_),
+                    ..
+                } => self.row_dependent = true,
                 _ => {}
             }
             ControlFlow::Continue(())

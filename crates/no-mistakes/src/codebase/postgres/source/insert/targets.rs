@@ -105,7 +105,7 @@ pub(super) fn conflict(
     } else {
         match target {
             None => PostgresSqlConflictTarget::Omitted,
-            Some(ConflictTarget::Columns(columns)) => PostgresSqlConflictTarget::Columns {
+            Some(ConflictTarget::Columns { columns, .. }) => PostgresSqlConflictTarget::Columns {
                 columns: columns.iter().map(identifier).collect(),
             },
             Some(ConflictTarget::OnConstraint(constraint)) => {

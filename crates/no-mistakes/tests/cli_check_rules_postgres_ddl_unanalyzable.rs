@@ -48,12 +48,26 @@ fn malformed_ddl_survey_reports_each_configured_schema_rule() {
         report["advisories"].as_array().unwrap().is_empty(),
         "{report}"
     );
-    let count = include_str!(concat!(
+    let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey/malformed/001.sql"
-    ))
-    .lines()
-    .count();
+    ));
+    // sqlparser 0.64 accepts these foreign-table lines, so they are no longer unanalyzable.
+    let parsed_lines = source
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| {
+            matches!(
+                *line,
+                "CREATE FOREIGN TABLE integer_typmod (v int(3)) SERVER server_name;"
+                    | "CREATE FOREIGN TABLE float_scale (v float(3, 2)) SERVER server_name;"
+                    | "CREATE FOREIGN TABLE bare_between (v BETWEEN) SERVER server_name;"
+                    | "CREATE FOREIGN TABLE bare_precision (v PRECISION) SERVER server_name;"
+            )
+        })
+        .map(|(index, _)| u64::try_from(index + 1).unwrap())
+        .collect::<std::collections::BTreeSet<_>>();
+    let count = source.lines().count() - parsed_lines.len();
     let mut by_line = std::collections::BTreeMap::<u64, Vec<&str>>::new();
     for finding in report["rules"].as_array().unwrap() {
         assert!(finding["message"]
@@ -66,6 +80,7 @@ fn malformed_ddl_survey_reports_each_configured_schema_rule() {
             .push(finding["rule"].as_str().unwrap());
     }
     assert_eq!(by_line.len(), count, "{report}");
+    assert!(parsed_lines.iter().all(|line| !by_line.contains_key(line)));
     for rules in by_line.values_mut() {
         rules.sort_unstable();
         rules.dedup();

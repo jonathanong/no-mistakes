@@ -34,7 +34,7 @@ pub(super) fn expression_arbiter(
 
 pub(super) fn arbiter(target: &Option<ConflictTarget>) -> SqlConflictArbiter {
     match target {
-        Some(ConflictTarget::Columns(columns)) => {
+        Some(ConflictTarget::Columns { columns, .. }) => {
             SqlConflictArbiter::Columns(columns.iter().map(|ident| ident.value.clone()).collect())
         }
         Some(ConflictTarget::OnConstraint(name)) => {

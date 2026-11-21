@@ -9,9 +9,16 @@ fn complete_statement_prefixes_retain_the_enclosing_query_context() {
         "SELECT (SELECT id FROM items WHERE (expires_at < $1",
         "SELECT coalesce(1",
         "SELECT coalesce(1) FROM items WHERE (expires_at < $1",
+        "CREATE TABLE orders (id int)",
+        "VALUES (1)",
     ] {
         assert!(complete_prefix(sql), "{sql}");
     }
+}
+
+#[test]
+fn an_empty_parse_is_not_a_closed_statement() {
+    assert!(!statement_is_closed(&[]));
 }
 
 #[test]
