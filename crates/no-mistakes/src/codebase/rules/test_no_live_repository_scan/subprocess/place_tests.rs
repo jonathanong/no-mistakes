@@ -126,3 +126,15 @@ fn later_simple_commands_and_quote_free_expansions() {
     assert!(literal.findings.is_empty());
     assert_eq!(literal.advisories.len(), 1);
 }
+
+#[test]
+fn an_unresolved_directory_does_not_hide_a_later_live_scan() {
+    let chained = shell(
+        "cd ../widgets && widget-audit check && cd /repo && widget-audit check",
+        None,
+    );
+    assert_eq!(chained.advisories.len(), 1);
+    assert!(chained.advisories[0].message.contains("unresolved root"));
+    assert_eq!(chained.findings.len(), 1);
+    assert!(chained.findings[0].message.contains("live repository scan"));
+}

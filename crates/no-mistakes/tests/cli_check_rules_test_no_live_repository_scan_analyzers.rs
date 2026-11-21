@@ -150,3 +150,47 @@ fn test_no_live_repository_scan_analyzer_suppression_check_json_snapshot() {
     assert_eq!(lines, ["execSync(\"pnpm exec widget-audit check\");"]);
     assert!(configured["advisories"].as_array().unwrap().is_empty());
 }
+
+#[test]
+fn test_no_live_repository_scan_analyzer_unresolved_live_check_json_snapshot() {
+    let root = crate::check_json_snapshot::rules_path(RULE, "analyzer-unresolved-live", "");
+    let line =
+        "execSync(\"cd ../widgets && widget-audit check && cd /repo && widget-audit check\");";
+    let report = crate::check_json_snapshot::assert_saved_fixture_report(
+        "test_no_live_repository_scan_analyzer_unresolved_live",
+        &[
+            ("advise", root.clone(), root.join("advise.yml")),
+            ("report", root.clone(), root.join("report.yml")),
+        ],
+        &[],
+        &[],
+    );
+    let source_lines = |value: &serde_json::Value, target: &str| -> Vec<String> {
+        value
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|finding| finding["target"] == target)
+            .map(|finding| {
+                assert_eq!(finding["rule"], RULE);
+                finding["sourceLine"].as_str().unwrap().to_string()
+            })
+            .collect()
+    };
+    let advise = &report["advise"]["report"];
+    assert_eq!(
+        source_lines(&advise["rules"], "analyzer subprocess"),
+        [line]
+    );
+    assert_eq!(
+        source_lines(&advise["advisories"], "unresolved root"),
+        [line]
+    );
+    let strict = &report["report"]["report"];
+    assert_eq!(
+        source_lines(&strict["rules"], "analyzer subprocess"),
+        [line]
+    );
+    assert_eq!(source_lines(&strict["rules"], "unresolved root"), [line]);
+    assert!(strict["advisories"].as_array().unwrap().is_empty());
+}

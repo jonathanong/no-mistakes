@@ -973,8 +973,12 @@ unmodified basename, including `node_modules/.bin`. One trailing `.cmd`,
 `exec` and `execSync` take a static shell string. Unquoted `&&`, `;`, and `||`
 separate simple commands, including when the operator is glued to a word
 (`true&&widget-audit check`). A single `&` or `|` is not that separator, and a
-quoted operator stays text. Each simple command is matched. The first whose
-directory is not an owned fixture path is the finding, so
+quoted operator stays text. Each simple command is matched. An owned
+fixture directory is skipped. An unresolved directory is reported, and later
+commands are still matched, so
+`cd ../widgets && widget-audit check && cd /repo && widget-audit check`
+reports that unresolved root and the live `/repo` scan. The first live scan
+is the finding, so
 `cd fixtures && widget-audit check && cd /repo && widget-audit check` reports
 the `/repo` scan. Leading `NAME=value` assignments are removed from each
 command and may repeat. A `cd <dir>` command followed by `&&` or `;` is not

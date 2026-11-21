@@ -375,7 +375,8 @@ tests must not run against the live working directory. A matching `exec`,
 `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
 with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
 `execSync` match a static shell string. Unquoted `&&`, `;`, and `||` separate
-simple commands, and each one is considered. A leading `NAME=value` prefix is
+simple commands, and each one is matched. An unresolved directory does not
+hide a later live scan. A leading `NAME=value` prefix is
 removed. A `cd <dir>` before unquoted `&&` or `;` replaces the `cwd` option;
 `||` does not. A quoted argument is one token. The executable matches on
 quote-stripped text, so `"widget-audit" check` matches. `$` and a backtick are

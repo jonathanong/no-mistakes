@@ -88,7 +88,6 @@ impl<'a> Gate<'a> {
                             "unresolved root",
                         ),
                     );
-                    return;
                 }
             }
         }

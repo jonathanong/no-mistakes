@@ -64,9 +64,10 @@ command matches a direct executable, a `node_modules/.bin` basename, a
 same owned `mkdtemp` or fixture-directory proof; a missing `cwd` is the live
 working directory. A `cd <dir>` before unquoted `&&` or `;`, a pnpm `-C` or
 `--dir`, or a yarn `--cwd` replaces that proof. `||` does not apply the `cd`.
-Unquoted `&&`, `;`, and `||` separate simple commands. `cd .` stays in the
-current directory, `cd /` is the filesystem root, and `cd ..` leaves an unowned
-directory. A quoted argument stays one token. The executable matches on
+Unquoted `&&`, `;`, and `||` separate simple commands. Each simple command is
+matched, and an unresolved directory does not hide a later live scan. `cd .`
+stays in the current directory, `cd /` is the filesystem root, and `cd ..`
+leaves an unowned directory. A quoted argument stays one token. The executable matches on
 quote-stripped text. `$` and a backtick stay literal inside single quotes. An
 analyzer name inside a quoted assignment value, or `$` or a backtick in
 unquoted text or double quotes, leaves the shell string unmatched. `cd` matches
