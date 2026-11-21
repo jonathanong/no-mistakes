@@ -40,6 +40,23 @@ fn incomplete_redirects_leave_the_lockfile_visible() {
     for command in ["&", ">&", "&>", "2>&", ">"] {
         assert!(shell_cmd::redirect_targets(command).is_empty(), "{command}");
     }
+    assert_eq!(
+        shell_cmd::redirect_targets("echo >&1\"widgets.lock\""),
+        vec!["1widgets.lock".to_string()]
+    );
+    assert!(shell_cmd::redirect_targets("echo >&1\"2\"").is_empty());
+    assert!(!text::command_hashes_lockfile(
+        "sha256sum orders.lock >&1\"widgets.lock\"",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum 2>&1 widgets.lock",
+        "widgets.lock"
+    ));
+    assert!(text::command_hashes_lockfile(
+        "sha256sum widgets.lock 2>out\" orders.lock\"",
+        "widgets.lock"
+    ));
 }
 
 #[test]
@@ -57,4 +74,11 @@ fn incomplete_redirect_fixtures_still_prove_the_lockfile() {
         assert!(source.contains(needle), "{file}");
         super::assert_silent(&findings, file);
     }
+    let source = super::source("policy", ".github/workflows/digit-suffix.yml");
+    assert!(source.contains(">&1\"widgets.lock\""));
+    super::assert_needles(
+        &findings,
+        "digit-suffix.yml",
+        &["does not prove a digest of `widgets.lock`"],
+    );
 }

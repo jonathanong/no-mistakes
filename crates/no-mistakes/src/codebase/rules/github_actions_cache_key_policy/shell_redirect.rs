@@ -156,14 +156,14 @@ fn fragment(line: &str, start: usize, ch: char) -> (String, usize, bool) {
 }
 
 fn bare_fd(line: &str, chars: &[(usize, char)], at: usize) -> bool {
-    let Some((start, ch)) = chars.get(at).copied() else {
+    let Some((_, ch)) = chars.get(at).copied() else {
         return false;
     };
     if ch == '"' || ch == '\'' {
         return false;
     }
-    let (token, _) = bare_word(line, start);
-    !token.is_empty() && token.bytes().all(|byte| byte.is_ascii_digit())
+    let (word, _) = redirect_word(line, chars, at);
+    !word.is_empty() && word.bytes().all(|byte| byte.is_ascii_digit())
 }
 
 fn bare_word(line: &str, start: usize) -> (String, usize) {

@@ -601,7 +601,8 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. The checksum command must name the lockfile in that same
 simple command. A standalone `&` splits commands. An `&` in `2>&1`, `>&2`, `&>`, `&>>`, or `<&`
-does not, and neither does `&` inside `$(( ))`. A command ending in `&`, `>&`, `&>`, `2>&`, or
+does not, and neither does `&` inside `$(( ))`. A digit prefix and a quoted suffix are one
+word, so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or
 `>` has no redirect target, so that ending does not hide the lockfile. Reassigning the variable drops the proof unless the
 whole new value is a parameter expansion of that same variable (`"$digest"`, `${digest}`,
 `${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other
