@@ -1,5 +1,6 @@
 pub(super) fn heredoc_start(line: &str) -> Option<(String, bool, bool)> {
-    let rest = line.split("<<").nth(1)?.trim_start();
+    let at = super::shell_cmd::heredoc_at(line)?;
+    let rest = line[at + 2..].trim_start();
     let (rest, strip) = rest
         .strip_prefix('-')
         .map(|rest| (rest.trim_start(), true))

@@ -1,6 +1,7 @@
 use super::*;
 
 mod coverage;
+mod followups;
 
 fn fixture(name: &str) -> PathBuf {
     crate::test_support::rule_fixture_root(RULE_ID).join(name)
@@ -214,6 +215,15 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         &["missing platform fragments `runner.os`"],
     );
     assert_needles(&findings, "unrelated-output.yml", &[digest]);
+    for file in [
+        "stale-assign.yml",
+        "loose-hash.yml",
+        "composite-plain.yml",
+        "composite-missing.yml",
+        "composite-unlisted.yml",
+    ] {
+        assert_needles(&findings, file, &[digest]);
+    }
     assert_needles(&findings, "workflows/invalid.yml", &["Invalid YAML"]);
     assert_needles(
         &findings,
@@ -242,10 +252,91 @@ fn policy_fixture_reports_only_the_configured_cache_gaps() {
         "quoted-key.yml",
         "alias-other.yml",
         "hash-widgets/action.yml",
+        "here-string.yml",
+        "shift-output.yml",
+        "indirect-output.yml",
+        "composite-digest.yml",
+        "composite-yaml.yml",
+        "lock-digest/action.yml",
+        "yaml-digest/action.yaml",
     ] {
         assert_silent(&findings, file);
     }
-    assert_eq!(findings.len(), 29, "{findings:?}");
+    assert_scanned_fixtures(&findings);
+    assert_eq!(findings.len(), 34, "{findings:?}");
+}
+
+fn assert_scanned_fixtures(findings: &[RuleFinding]) {
+    for (suffix, relative) in [
+        ("printf-output.yml", ".github/workflows/printf-output.yml"),
+        ("heredoc-output.yml", ".github/workflows/heredoc-output.yml"),
+        ("brace-output.yml", ".github/workflows/brace-output.yml"),
+        ("multiline-key.yml", ".github/workflows/multiline-key.yml"),
+        ("quoted-key.yml", ".github/workflows/quoted-key.yml"),
+        ("alias-other.yml", ".github/workflows/alias-other.yml"),
+        (
+            "hash-widgets/action.yml",
+            ".github/actions/hash-widgets/action.yml",
+        ),
+        ("here-string.yml", ".github/workflows/here-string.yml"),
+        ("shift-output.yml", ".github/workflows/shift-output.yml"),
+        (
+            "indirect-output.yml",
+            ".github/workflows/indirect-output.yml",
+        ),
+        (
+            "composite-digest.yml",
+            ".github/workflows/composite-digest.yml",
+        ),
+        ("composite-yaml.yml", ".github/workflows/composite-yaml.yml"),
+        (
+            "lock-digest/action.yml",
+            ".github/actions/lock-digest/action.yml",
+        ),
+        (
+            "yaml-digest/action.yaml",
+            ".github/actions/yaml-digest/action.yaml",
+        ),
+    ] {
+        assert_silent(findings, suffix);
+        assert!(gha_kind(relative).is_some(), "{relative}");
+        let jobs = expect_jobs(
+            &source("policy", relative),
+            gha_kind(relative) == Some(true),
+        );
+        assert!(
+            jobs.iter()
+                .flat_map(|job| &job.steps)
+                .any(|step| step.run.is_some() || step.uses.is_some()),
+            "{relative} was not scanned"
+        );
+        if matches!(
+            suffix,
+            "printf-output.yml"
+                | "heredoc-output.yml"
+                | "brace-output.yml"
+                | "multiline-key.yml"
+                | "quoted-key.yml"
+                | "here-string.yml"
+                | "shift-output.yml"
+                | "indirect-output.yml"
+        ) {
+            let proved = judge::judge(relative, &jobs, &widget_options(), &|_| None);
+            assert!(proved.is_empty(), "{relative}: {proved:?}");
+        }
+    }
+}
+
+fn widget_options() -> options::Options {
+    options::Options {
+        reject_restore_keys: true,
+        allow_hash_files: true,
+        caches: vec![options::CacheSpec {
+            path: ".cache/widgets".into(),
+            lockfile: "widgets.lock".into(),
+            key_parts: vec!["runner.os".into(), "runner.arch".into()],
+        }],
+    }
 }
 
 #[test]

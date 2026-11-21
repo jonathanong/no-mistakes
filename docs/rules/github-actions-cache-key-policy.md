@@ -36,13 +36,25 @@ The key must also prove a digest of the configured lockfile, in either of these 
 - An earlier step in the same job, including an earlier step in the same composite action, has an
   `id`. Its `run` script writes the `GITHUB_OUTPUT` name that the key reads as
   `steps.<id>.outputs.<name>`, and that output's value is a hash of the lockfile. `echo`,
-  `printf`, an unquoted heredoc, and a brace group redirected to `GITHUB_OUTPUT` all count. A
-  variable assigned from `sha256sum widgets.lock` (or another checksum command that names the
-  lockfile) and then written to that output counts. `cat`, a constant, a hash of a different
-  file, a later step, another job, or a different output name does not. The rule does not run
+  `printf`, an unquoted heredoc, and a brace group redirected to `GITHUB_OUTPUT` all count.
+  Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
+  copy of that variable, makes `$OUT` the same redirect target. A `<<<` redirect is not a heredoc,
+  and `<<` inside `$(( ))` is not a heredoc, so later lines are still read. A variable assigned
+  from `sha256sum widgets.lock` (or another checksum command that names the lockfile in that same
+  simple command) and then written to that output counts. `sha256sum widgets.lock | awk '{print $1}'`
+  counts because the checksum command names the lockfile. `sha256sum orders.lock | grep widgets.lock`
+  and `cat widgets.lock | sha256sum` do not. Reassigning the variable to a constant, `cat`, or a
+  hash of a different file drops the proof; an earlier copy into a different variable keeps it.
+  A later step, another job, or a different output name does not count. The rule does not run
   the script. A full-line `#` comment and a trailing ` #` comment are ignored. `-` is part of a
   path token, so `not-widgets.lock` does not match `widgets.lock`. `/` is a boundary, so
   `dir/widgets.lock` matches.
+- A workflow step `uses: ./some/action` can supply the digest when that directory's `action.yml`
+  or `action.yaml` is a composite action. The action must declare `outputs.<name>.value` as an
+  expression that reads a `run` step output proven in that same action, and the cache key must
+  read `steps.<step id>.outputs.<name>` for the workflow step's `id` and that declared output.
+  A missing file, a non-composite action, an output with no `value`, a constant, or a nested
+  `uses` inside the action is not proof. `..` path segments are ignored.
 
 `rejectRestoreKeys` defaults to true. Any non-empty `restore-keys` value, including a YAML
 sequence, is a finding. An empty or missing value is allowed. Set `rejectRestoreKeys` to false to
