@@ -1,6 +1,5 @@
 use super::LocatedStatement;
 mod bodies;
-mod copy;
 pub(crate) mod failure;
 pub(super) use failure::failed_source;
 mod locations;
@@ -31,15 +30,9 @@ pub(super) fn parse_chunks_with_function_calls(
     let mut located = super::chunks::located_chunks(original);
     let mut statements = Vec::new();
     let mut transaction_open = false;
-    let mut copy_data_pending = false;
-    let mut ordinal = 0;
-    for chunk in chunks {
-        let mut original = located.next();
-        let Some(chunk) = copy::pending_body(&mut copy_data_pending, &mut original, chunk) else {
-            continue;
-        };
-        let chunk_ordinal = ordinal;
-        ordinal += 1;
+    for (chunk_ordinal, chunk) in chunks.into_iter().enumerate() {
+        // sqlparser 0.64 consumes a COPY `\.` terminator before these chunks exist.
+        let original = located.next();
         let aligned = original.map(|source| locations::align(&chunk, source));
         // Keep each chunk's tokens with its own failure marker.
         let tokens = original.map(Arc::<[TokenWithSpan]>::from);
@@ -55,7 +48,6 @@ pub(super) fn parse_chunks_with_function_calls(
         if handled_procedural.is_none() {
             failure::partial_chunk(original, &mut produced);
         }
-        copy_data_pending = original.is_some_and(copy::owns_terminator);
         if produced.is_empty() || handled_procedural == Some(false) {
             if handled_procedural == Some(true) {
                 continue;

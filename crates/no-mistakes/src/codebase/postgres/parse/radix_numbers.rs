@@ -25,13 +25,14 @@ fn rewrite_radix(
     token: &TokenWithSpan,
     next: Option<&TokenWithSpan>,
 ) -> Option<(usize, TokenWithSpan)> {
-    if !radix_prefix(token) {
-        return None;
-    }
+    let text = radix_text(token)?;
     if let Some(broken) = invalid_suffix(token, next) {
         return Some(broken);
     }
-    decimal_value(token)
+    let value = integer(text).ok()?;
+    let mut repaired = token.clone();
+    repaired.token = Token::Number(value.to_string(), false);
+    Some((1, repaired))
 }
 
 fn invalid_suffix(
@@ -49,38 +50,22 @@ fn invalid_suffix(
     Some((2, broken))
 }
 
-fn decimal_value(token: &TokenWithSpan) -> Option<(usize, TokenWithSpan)> {
-    let value = radix_integer(token)?;
-    let mut repaired = token.clone();
-    repaired.token = Token::Number(value, false);
-    Some((1, repaired))
-}
-
 /// sqlparser 0.64 emits `0x` / `0o` / `0b` as one number token. Downstream caps
 /// still read a decimal spelling, so rewrite the value and keep the source span.
-fn radix_prefix(token: &TokenWithSpan) -> bool {
+fn radix_text(token: &TokenWithSpan) -> Option<&str> {
     let Token::Number(text, _) = &token.token else {
-        return false;
+        return None;
     };
     matches!(
         text.get(..2).map(str::as_bytes),
         Some(b"0x" | b"0X" | b"0o" | b"0O" | b"0b" | b"0B")
     )
+    .then_some(text.as_str())
 }
 
 fn glued_word(token: &TokenWithSpan, next: &TokenWithSpan) -> bool {
     token.span.end == next.span.start
         && matches!(&next.token, Token::Word(word) if word.quote_style.is_none())
-}
-
-fn radix_integer(token: &TokenWithSpan) -> Option<String> {
-    let Token::Number(text, _) = &token.token else {
-        return None;
-    };
-    match integer(text) {
-        Ok(value) => Some(value.to_string()),
-        Err(_) => None,
-    }
 }
 
 #[cfg(test)]
