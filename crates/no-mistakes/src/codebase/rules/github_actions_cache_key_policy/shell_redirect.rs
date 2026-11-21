@@ -8,9 +8,7 @@ pub fn redirect_targets(line: &str) -> Vec<String> {
 pub fn mask_output_redirects(line: &str) -> String {
     let mut masked = line.to_string();
     for hit in output_redirects(line) {
-        if hit.end <= masked.len() {
-            masked.replace_range(hit.start..hit.end, &" ".repeat(hit.end - hit.start));
-        }
+        masked.replace_range(hit.start..hit.end, &" ".repeat(hit.end - hit.start));
     }
     masked
 }
@@ -106,9 +104,7 @@ fn char_index(chars: &[(usize, char)], byte: usize) -> usize {
 }
 
 fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usize) {
-    let Some((start, ch)) = chars.get(at).copied() else {
-        return (String::new(), line.len());
-    };
+    let (start, ch) = chars[at];
     let (mut word, mut next_at, quoted) = fragment(line, start, ch);
     let mut literal = quoted && !word.is_empty();
     while let Some((byte, next)) = chars.get(char_index(chars, next_at)).copied() {
@@ -116,9 +112,6 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
             break;
         }
         let (piece, further, piece_quoted) = fragment(line, byte, next);
-        if further == next_at {
-            break;
-        }
         if extends_name(&word, &piece) {
             word.push('.');
         }

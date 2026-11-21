@@ -429,6 +429,10 @@ fn redirect_words_keep_suffixes_escapes_and_the_next_operator() {
         vec!["/tmp/orders>name".to_string()]
     );
     assert_eq!(
+        targets("echo x >/tmp/orders\\"),
+        vec!["/tmp/orders".to_string()]
+    );
+    assert_eq!(
         targets("echo x > \"$OUT\"bak"),
         vec!["$OUT.bak".to_string()]
     );
