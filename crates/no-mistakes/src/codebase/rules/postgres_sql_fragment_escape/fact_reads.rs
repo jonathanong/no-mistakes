@@ -55,12 +55,7 @@ pub(super) fn unrecorded_static_specifier(
     let Some((index, rest)) = depth_zero_callee(window) else {
         return false;
     };
-    let Ok(index) = u32::try_from(index) else {
-        return false;
-    };
-    let Some(offset) = window_start.checked_add(index) else {
-        return false;
-    };
+    let offset = window_start.saturating_add(u32::try_from(index).unwrap_or(0));
     if specifier_at_offset(ts, offset).is_some() {
         return false;
     }

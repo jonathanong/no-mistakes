@@ -36,9 +36,7 @@ fn binding_misses_static_load(ts: &TsFileFacts, source: &str, binding: &ValueBin
             window_loads_module(window) && unrecorded_static_specifier(ts, window, *start)
         }
         _ => {
-            let Some(rest) = source.get(binding.declared_at as usize..) else {
-                return false;
-            };
+            let rest = source.get(binding.declared_at as usize..).unwrap_or("");
             let window = declarator_text(rest);
             window_loads_module(window)
                 && unrecorded_static_specifier(ts, window, binding.declared_at)
