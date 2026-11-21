@@ -119,13 +119,35 @@ pub(super) fn direct_module_load(text: &str) -> bool {
 
 fn close_call(text: &str) -> Option<&str> {
     let mut depth = 1i32;
-    for (index, ch) in text.char_indices() {
+    let mut chars = text.char_indices().peekable();
+    while let Some((index, ch)) = chars.next() {
         match ch {
+            '/' if chars.next_if(|(_, next)| *next == '/').is_some() => {
+                while chars.next_if(|(_, next)| *next != '\n').is_some() {}
+            }
+            '/' if chars.next_if(|(_, next)| *next == '*').is_some() => loop {
+                match chars.next() {
+                    Some((_, '*')) if chars.next_if(|(_, next)| *next == '/').is_some() => break,
+                    Some(_) => {}
+                    None => return None,
+                }
+            },
+            '"' | '\'' | '`' => {
+                while let Some((_, inner)) = chars.next() {
+                    if inner == '\\' {
+                        chars.next();
+                        continue;
+                    }
+                    if inner == ch {
+                        break;
+                    }
+                }
+            }
             '(' => depth += 1,
             ')' => {
                 depth -= 1;
                 if depth == 0 {
-                    return text.get(index + 1..);
+                    return text.get(index + ch.len_utf8()..);
                 }
             }
             _ => {}
