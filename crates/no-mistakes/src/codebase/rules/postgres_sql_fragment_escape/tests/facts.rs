@@ -1,7 +1,9 @@
 use super::super::resolve::{self, FileCtx};
 use super::super::{alias, fragments::Catalog};
-use super::support::{assert_from, catalog, import, insert, world};
-use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBindingKind};
+use super::support::{assert_from, bind, catalog, import, insert, world};
+use crate::codebase::dependencies::extract::{
+    CallableId, ExportedBinding, ImportedBindingKind, ValueExpression, ValueParameter,
+};
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::PathBuf;
@@ -108,6 +110,140 @@ fn literal_import_span_ignores_a_comment_decoy() {
         &world.columns,
         &["orderColumns", "widgetColumns"],
     );
+}
+
+#[test]
+fn arrow_that_imports_is_not_the_module() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/delayed.ts");
+    let source = "const delayed = () => import(\"./columns\");\n";
+    let import_at = u32::try_from(source.find("import(").expect("import")).expect("offset");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.namespaces
+        .literal_import_spans
+        .push((import_at, "./columns".to_string()));
+    ts.value_flow.bindings.push(bind(
+        "delayed",
+        0,
+        ValueExpression::Callable(CallableId(import_at)),
+    ));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert!(
+        resolve::name_fragments(&ctx, "delayed").is_empty(),
+        "a function that imports a module is not that module"
+    );
+}
+
+#[test]
+fn direct_import_initializer_still_resolves() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/loaded.ts");
+    let source = "const parts = import(\"./columns\");\n";
+    let import_at = u32::try_from(source.find("import(").expect("import")).expect("offset");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.namespaces
+        .literal_import_spans
+        .push((import_at, "./columns".to_string()));
+    ts.value_flow
+        .bindings
+        .push(bind("parts", 0, ValueExpression::Unknown));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert_from(
+        &resolve::name_fragments(&ctx, "parts"),
+        &world.columns,
+        &["orderColumns", "widgetColumns"],
+    );
+}
+
+#[test]
+fn outer_call_does_not_take_a_nested_import() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/wrapped.ts");
+    let source = "const wrapped = makePlainObject(import(\"./columns\"));\n";
+    let call = "makePlainObject(import(\"./columns\"))";
+    let start = u32::try_from(source.find(call).expect("call")).expect("offset");
+    let end = start + u32::try_from(call.len()).expect("end");
+    let import_at = u32::try_from(source.find("import(").expect("import")).expect("offset");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(source)),
+        ..TsFileFacts::default()
+    };
+    ts.namespaces
+        .literal_import_spans
+        .push((import_at, "./columns".to_string()));
+    ts.value_flow
+        .bindings
+        .push(bind("wrapped", 0, ValueExpression::Call(start, end)));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let ctx = file_ctx(&world, &catalog, &file);
+    assert!(
+        resolve::name_fragments(&ctx, "wrapped").is_empty(),
+        "an outer call is not the module loaded by a nested import"
+    );
+}
+
+#[test]
+fn parameter_does_not_follow_a_shadowed_import_alias() {
+    let mut world = world();
+    let file = PathBuf::from("/repo/orders/shadow.ts");
+    let mut ts = TsFileFacts {
+        source: Some(Arc::<str>::from(
+            "import * as columns from \"./columns\";\nimport Widgets = columns;\n",
+        )),
+        ..TsFileFacts::default()
+    };
+    ts.imported_bindings.push(import(
+        "./columns",
+        "columns",
+        "*",
+        ImportedBindingKind::Namespace,
+    ));
+    ts.namespaces
+        .import_equals_aliases
+        .push(("Widgets".to_string(), "columns".to_string()));
+    let owner = CallableId(4);
+    ts.value_flow.parameters.push(parameter(owner, "Widgets"));
+    insert(&mut world.facts, file.clone(), ts);
+    let catalog = catalog(&world);
+    let mut ctx = file_ctx(&world, &catalog, &file);
+    assert_from(
+        &resolve::name_fragments(&ctx, "Widgets"),
+        &world.columns,
+        &["orderColumns", "widgetColumns"],
+    );
+    ctx.context = Some(owner);
+    assert!(
+        resolve::name_fragments(&ctx, "Widgets").is_empty(),
+        "a parameter shadows the file-level import alias"
+    );
+}
+
+fn parameter(owner: CallableId, name: &str) -> ValueParameter {
+    ValueParameter {
+        owner,
+        index: 0,
+        name: name.to_string(),
+        scope: 0,
+        default: ValueExpression::Unknown,
+        projection: Vec::new(),
+        initialization_order: 0,
+        default_order: 0,
+        default_mutations: None,
+        invalidated_at: None,
+        mutation_contexts: crate::fx::fx_set(),
+        type_reference: None,
+    }
 }
 
 fn file_ctx<'a>(

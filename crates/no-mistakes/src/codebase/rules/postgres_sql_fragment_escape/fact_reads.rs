@@ -34,21 +34,50 @@ pub(super) fn require_specifier<'a>(ts: &'a TsFileFacts, name: &str) -> Option<&
         .map(|(_, specifier)| specifier.as_str())
 }
 
-pub(super) fn specifier_at(source: &str, start: u32, end: u32) -> Option<&str> {
-    let text = source.get(start as usize..end as usize)?;
-    callee_specifier(text, "import").or_else(|| callee_specifier(text, "require"))
+pub(super) fn depth_zero_module_specifier(
+    ts: &TsFileFacts,
+    window: &str,
+    window_start: u32,
+) -> Option<String> {
+    if let Some((index, rest)) = depth_zero_callee(window) {
+        let offset = window_start.checked_add(u32::try_from(index).ok()?)?;
+        if let Some(spec) = specifier_at_offset(ts, offset) {
+            return Some(spec.to_string());
+        }
+        let after = rest
+            .strip_prefix("import(")
+            .or_else(|| rest.strip_prefix("require("))?;
+        return super::text::whole_quoted(after).map(str::to_string);
+    }
+    window
+        .is_empty()
+        .then(|| specifier_at_offset(ts, window_start).map(str::to_string))
+        .flatten()
 }
 
-fn callee_specifier<'a>(text: &'a str, callee: &str) -> Option<&'a str> {
-    let mut rest = text;
-    while let Some(index) = rest.find(callee) {
-        let after = &rest[index + callee.len()..];
-        let prev = rest[..index].chars().next_back();
-        let boundary = prev.is_none_or(|ch| ch != '.' && ch != '_' && !ch.is_ascii_alphanumeric());
-        if boundary && after.starts_with('(') {
-            return super::text::whole_quoted(&after[1..]);
+fn depth_zero_callee(window: &str) -> Option<(usize, &str)> {
+    let mut depth = 0i32;
+    for (index, ch) in window.char_indices() {
+        if ch == '(' {
+            depth += 1;
+            continue;
         }
-        rest = &rest[index + callee.len()..];
+        if ch == ')' && depth > 0 {
+            depth -= 1;
+            continue;
+        }
+        if depth != 0 {
+            continue;
+        }
+        let rest = &window[index..];
+        if !callee_at_start(rest, "import") && !callee_at_start(rest, "require") {
+            continue;
+        }
+        let prev = window[..index].chars().next_back();
+        if prev.is_some_and(|prev| prev == '.' || prev == '_' || prev.is_ascii_alphanumeric()) {
+            continue;
+        }
+        return Some((index, rest));
     }
     None
 }
@@ -59,4 +88,31 @@ pub(super) fn specifier_between(ts: &TsFileFacts, start: u32, end: u32) -> Optio
         .iter()
         .find(|(offset, _)| *offset >= start && *offset < end)
         .map(|(_, specifier)| specifier.as_str())
+}
+
+pub(super) fn specifier_at_offset(ts: &TsFileFacts, offset: u32) -> Option<&str> {
+    ts.namespaces
+        .literal_import_spans
+        .iter()
+        .find(|(start, _)| *start == offset)
+        .map(|(_, specifier)| specifier.as_str())
+}
+
+pub(super) fn window_loads_module(window: &str) -> bool {
+    let rhs = window.split_once('=').map(|(_, rhs)| rhs).unwrap_or(window);
+    direct_module_load(rhs.trim().trim_end_matches(';'))
+}
+
+pub(super) fn direct_module_load(text: &str) -> bool {
+    let text = text.trim_start();
+    let text = text
+        .strip_prefix("await")
+        .map(str::trim_start)
+        .unwrap_or(text);
+    callee_at_start(text, "import") || callee_at_start(text, "require")
+}
+
+fn callee_at_start(text: &str, callee: &str) -> bool {
+    text.strip_prefix(callee)
+        .is_some_and(|rest| rest.starts_with('('))
 }
