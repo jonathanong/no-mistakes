@@ -44,14 +44,22 @@ fn span_events(
     let paren = opener.starts_with('(');
     let entry = outputs.clone();
     let mut pending = Vec::new();
-    let opener_body = after_first(opener);
-    if !opener_body.is_empty() {
-        emit::record_text(&mut pending, outputs, opener_body, true);
-    }
-    let mut index = start + 1;
+    let mut index = if let Some(next) = super::heredoc::take(lines, start, &mut pending, outputs) {
+        next
+    } else {
+        let opener_body = after_first(opener);
+        if !opener_body.is_empty() {
+            emit::record_text(&mut pending, outputs, opener_body, true);
+        }
+        start + 1
+    };
     let mut fate = Fate::Escape;
     let mut rest = "";
     while index < lines.len() {
+        if let Some(next) = super::heredoc::take(lines, index, &mut pending, outputs) {
+            index = next;
+            continue;
+        }
         let line = lines[index].trim();
         if let Some((before, after)) = split_closer(line, paren) {
             if !before.is_empty() {

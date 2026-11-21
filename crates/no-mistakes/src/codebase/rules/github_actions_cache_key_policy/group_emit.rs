@@ -166,13 +166,10 @@ pub(super) fn fate_of(redirect: &str, entry: &FxHashSet<String>) -> Fate {
     if redirect.is_empty() {
         return Fate::Escape;
     }
-    if writes_output(redirect, entry) {
-        return Fate::Prove;
-    }
-    if stdout::stdout_leaves(redirect) {
-        Fate::Discard
-    } else {
-        Fate::Escape
+    match stdout::stdout_binding(redirect, entry) {
+        stdout::Stdout::Prove => Fate::Prove,
+        stdout::Stdout::Leave => Fate::Discard,
+        stdout::Stdout::Inherit => Fate::Escape,
     }
 }
 

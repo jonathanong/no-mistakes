@@ -1,6 +1,6 @@
 use super::output_syntax::{
-    command_assign, heredoc_end, heredoc_start, inline_assign, shell_assignment, strip_subst,
-    unquote, var_ref,
+    brace_open, command_assign, heredoc_end, heredoc_start, inline_assign, shell_assignment,
+    strip_subst, unquote, var_ref,
 };
 use super::text::{command_hashes_lockfile, shell_line};
 use crate::fx::{fx_set, FxHashSet};
@@ -88,25 +88,27 @@ pub(super) fn events(run: &str) -> Vec<Event> {
     let mut index = 0;
     while index < lines.len() {
         let line = lines[index].trim();
-        if let Some((delim, strip, quoted)) = heredoc_start(line) {
-            let active = writes_output(line, &outputs);
-            index += 1;
-            while index < lines.len() && !heredoc_end(lines[index], &delim, strip) {
-                if active {
-                    if let Some((name, value)) = inline_assign(lines[index]) {
-                        events.push(Event::Write(Write {
-                            name,
-                            value,
-                            expand: !quoted,
-                        }));
+        if !starts_group(line) {
+            if let Some((delim, strip, quoted)) = heredoc_start(line) {
+                let active = writes_output(line, &outputs);
+                index += 1;
+                while index < lines.len() && !heredoc_end(lines[index], &delim, strip) {
+                    if active {
+                        if let Some((name, value)) = inline_assign(lines[index]) {
+                            events.push(Event::Write(Write {
+                                name,
+                                value,
+                                expand: !quoted,
+                            }));
+                        }
                     }
+                    index += 1;
                 }
-                index += 1;
+                if index < lines.len() {
+                    index += 1;
+                }
+                continue;
             }
-            if index < lines.len() {
-                index += 1;
-            }
-            continue;
         }
         if let Some(next) = group::consume(&lines, index, &mut events, &mut outputs) {
             index = next;
@@ -126,6 +128,10 @@ pub(super) fn events(run: &str) -> Vec<Event> {
         index += 1;
     }
     events
+}
+
+fn starts_group(line: &str) -> bool {
+    brace_open(line) || line.starts_with('(')
 }
 
 fn remember_assign(

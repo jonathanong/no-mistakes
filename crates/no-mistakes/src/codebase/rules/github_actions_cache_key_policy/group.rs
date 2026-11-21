@@ -5,6 +5,8 @@ use crate::fx::FxHashSet;
 mod body;
 #[path = "group_emit.rs"]
 mod emit;
+#[path = "group_heredoc.rs"]
+mod heredoc;
 #[path = "group_span.rs"]
 mod span;
 #[path = "group_stdout.rs"]

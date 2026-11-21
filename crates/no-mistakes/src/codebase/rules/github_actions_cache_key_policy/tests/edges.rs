@@ -246,7 +246,11 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{\n  echo }\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"",
         "(\n  echo \"digest=$digest\" # )\n  echo \"say \\\"hi\\\"\" ) >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" $((1 + 2)) >> \"$GITHUB_OUTPUT\"; }",
-        "{ echo \"digest=$digest\" >= /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 1>> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } > /tmp/orders >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 2>> /tmp/orders >> \"$GITHUB_OUTPUT\"",
+        "{\n  cat <<EOF >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
+        "{\n  cat <<EOF\ndigest=$digest\nEOF\n} >> \"$GITHUB_OUTPUT\"",
     ] {
         assert_eq!(proven(script), digest, "{script}");
     }
@@ -256,6 +260,11 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{ echo \"digest=$digest\" >&orders; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >&1widgets.lock; } >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\" >&2 > /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } 2>> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\" > /tmp/orders",
+        "{ echo \"digest=$digest\" ignored2>/tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\" >= /tmp/orders; } >> \"$GITHUB_OUTPUT\"",
+        "{\n  cat <<'EOF' >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
     ] {
         assert!(proven(script).is_empty(), "{script}");
     }
