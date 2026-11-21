@@ -361,7 +361,7 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
 must name that lockfile in the same simple command. A redirect after the closing `}` or `)` of
-a brace group or subshell applies to every command in the group that does not already redirect
+a brace group or parenthesized command applies to every command in the group that does not already redirect
 standard output. A group with no redirect, or a redirect to another file, does not count.
 A standalone `&` splits commands; an `&` in
 `2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. A digit prefix and a quoted suffix are one word,

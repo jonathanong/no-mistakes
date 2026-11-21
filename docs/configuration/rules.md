@@ -604,7 +604,7 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
-or subshell applies to every command in the group that does not already redirect standard
+or parenthesized command applies to every command in the group that does not already redirect standard
 output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` counts. A group with no redirect, or
 a redirect to another file, does not. The checksum command must name the lockfile in that same
 simple command. A standalone `&` splits commands. An `&` in `2>&1`, `>&2`, `&>`, `&>>`, or `<&`
