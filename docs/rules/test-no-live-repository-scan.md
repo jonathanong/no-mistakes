@@ -996,9 +996,10 @@ An unclosed quote or a backslash leaves the command unmatched. `$` and a
 backtick are literal inside single quotes, so
 `widget-audit check --label '$item'` matches. They leave the command unmatched
 inside double quotes, or in unquoted text next to a quote, so
-`widget-audit check --label "$item"` does not match. `cd` and `&&` match only
-when those tokens are unquoted, so `cd widgets "&&" widget-audit check` does
-not match. A semicolon, a pipe, or a `cd` that is not followed by a directory
+`widget-audit check --label "$item"` does not match. `cd` matches on its
+quote-stripped text, so `"cd" widgets && widget-audit check` and
+`c''d widgets && widget-audit check` match. `&&` matches only as an unquoted
+token, so `cd widgets "&&" widget-audit check` does not match. A semicolon, a pipe, or a `cd` that is not followed by a directory
 and `&&` is left in place, so `cd widgets; widget-audit check` does not match. An argument array still
 matches when `shell` is `true`, so
 `spawn("pnpm", ["exec", "widget-audit", "check"], { shell: true })` is the

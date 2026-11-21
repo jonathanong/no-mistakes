@@ -159,6 +159,19 @@ fn quoted_arguments_match_and_quoted_commands_do_not() {
         Some("widget-audit check")
     );
     assert_eq!(quoted_operator.shell_dir.as_deref(), Some("&&"));
+    let quoted_cd = invocation(&[known("\"cd\" widgets && widget-audit check")], true).unwrap();
+    assert_eq!(
+        matched(&quoted_cd, &[analyzer()]).as_deref(),
+        Some("widget-audit check")
+    );
+    assert_eq!(quoted_cd.shell_dir.as_deref(), Some("widgets"));
+    let partial_cd = invocation(&[known("c''d widgets && widget-audit check")], true).unwrap();
+    assert_eq!(
+        matched(&partial_cd, &[analyzer()]).as_deref(),
+        Some("widget-audit check")
+    );
+    assert_eq!(partial_cd.shell_dir.as_deref(), Some("widgets"));
+    assert!(matched_text("\"cd\" widgets \"&&\" widget-audit check").is_empty());
     assert!(matched_text("widget-audit check --label 'nightly").is_empty());
     assert!(matched_text("widget-audit check --label 'ni\\ghtly'").is_empty());
     assert!(matched_text("widget-audit check --label \"$item\"").is_empty());

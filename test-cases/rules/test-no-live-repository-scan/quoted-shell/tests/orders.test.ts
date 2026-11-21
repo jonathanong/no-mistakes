@@ -13,3 +13,5 @@ execSync('widget-audit check --label "`item`"');
 execSync('cd widgets "&&" widget-audit check');
 execSync('cd "widgets" && widget-audit check');
 execSync('cd "&&" && widget-audit check');
+execSync('"cd" widgets && widget-audit check');
+execSync("c''d widgets && widget-audit check");

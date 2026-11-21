@@ -161,9 +161,8 @@ fn cd_and(words: &[Word]) -> bool {
     let (Some(cd), Some(dir), Some(and)) = (words.first(), words.get(1), words.get(2)) else {
         return false;
     };
-    // `cd` and `&&` are operators only when they are unquoted tokens.
-    !cd.quoted
-        && !and.quoted
+    // `&&` is an operator only when that token is unquoted. `cd` matches on its text.
+    !and.quoted
         && cd.text == "cd"
         && and.text == "&&"
         && (dir.quoted || dir.text != "&&")

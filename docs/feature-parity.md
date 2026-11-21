@@ -67,8 +67,8 @@ working directory. A `cd <dir> &&` prefix, a pnpm `-C` or `--dir`, or a yarn
 the filesystem root, and `cd ..` leaves an unowned directory. A quoted
 argument stays one token. `$` and a backtick stay literal inside single quotes.
 A quoted executable, an analyzer name inside a quoted assignment value, or `$`
-or a backtick inside double quotes, leaves the shell string unmatched. `cd` and
-`&&` match only as unquoted tokens.
+or a backtick inside double quotes, leaves the shell string unmatched. `cd`
+matches on its quote-stripped text. `&&` matches only as an unquoted token.
 Potential Node-origin `module.require` and imported `createRequire` loads retain
 unresolved-root findings through the same CLI and async Node checks; factory
 and loader aliases do not grant a bounded-path proof.
