@@ -26,7 +26,9 @@ empty list reports nothing. Each entry needs a non-empty `module` and `name`.
 `name: default` matches a default import of that module, including
 `import sql from "@example/sql"`. A bare name matches a named import. `module`
 matches that specifier or a subpath under it. `include` and `exclude` are the
-shared path filters and are not options of this rule. A project `postgres`
+shared path filters and are not options of this rule. They select both findings
+and gaps. A gap for a file outside that filter is omitted, including when an
+included file imports the excluded file. A project `postgres`
 block can supply `trustedSqlTags`; do not restate them on the rule when it
 does.
 
