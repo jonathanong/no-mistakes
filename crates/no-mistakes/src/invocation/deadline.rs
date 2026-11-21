@@ -156,10 +156,10 @@ pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
     publish::remaining_from_snapshots(applicable_deadline)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "deadline/tests.rs"]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "deadline/large_timeout_tests.rs"]
 mod large_timeout;

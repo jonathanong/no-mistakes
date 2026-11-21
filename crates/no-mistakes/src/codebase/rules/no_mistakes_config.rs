@@ -59,10 +59,10 @@ pub(crate) fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
         .unwrap_or_else(|| ".no-mistakes.yml".to_string())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod location_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod selector_tests;

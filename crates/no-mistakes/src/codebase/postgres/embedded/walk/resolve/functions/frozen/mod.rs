@@ -11,7 +11,7 @@ use std::sync::Arc;
 mod guard;
 mod records;
 mod refs;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 use records::Values;
 

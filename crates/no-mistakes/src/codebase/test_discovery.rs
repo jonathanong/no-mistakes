@@ -11,7 +11,7 @@ mod swift_projects;
 mod targets;
 mod types;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 use crate::config::v2::schema::NoMistakesConfig;

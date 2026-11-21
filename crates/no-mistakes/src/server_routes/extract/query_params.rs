@@ -168,10 +168,10 @@ include!("query_params_statements.rs");
 include!("query_params_expressions.rs");
 include!("query_params_objects.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "query_params_tests.rs"]
 mod query_params_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "query_params_object_tests.rs"]
 mod query_params_object_tests;

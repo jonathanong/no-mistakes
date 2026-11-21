@@ -183,6 +183,6 @@ fn is_boundary(byte: u8) -> bool {
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "lines_tests.rs"]
 mod tests;

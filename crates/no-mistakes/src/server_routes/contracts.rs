@@ -146,10 +146,10 @@ include!("contracts_helpers.rs");
 
 include!("contracts_scope.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "contracts_test_support.rs"]
 mod test_support;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "contracts_tests.rs"]
 mod contracts_tests;

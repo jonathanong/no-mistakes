@@ -16,7 +16,7 @@ pub(super) use header::child_start as prepared_child_start;
 mod options;
 mod restoration;
 mod semantics;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 use super::completeness::statement as complete;
 pub(super) use options::prepare;

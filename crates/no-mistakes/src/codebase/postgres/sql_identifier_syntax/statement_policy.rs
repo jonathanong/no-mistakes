@@ -6,7 +6,7 @@ use std::{collections::BTreeMap, path::Path};
 mod calls;
 pub(crate) mod direct;
 mod project;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 pub(crate) struct Projection {

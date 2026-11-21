@@ -14,7 +14,7 @@ mod text;
 mod visible;
 mod writes;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "tests/mod.rs"]
 mod coverage_tests;
 

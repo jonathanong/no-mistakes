@@ -112,8 +112,8 @@ fn collect_application(
     coverage::collect(request, session, findings, advisories)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod prerequisite_tests;

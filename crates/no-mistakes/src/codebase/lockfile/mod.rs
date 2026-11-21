@@ -6,7 +6,7 @@ pub mod yarn;
 
 pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

@@ -83,5 +83,5 @@ fn byte_offset(sql: &str, positions: &[SourceLine], target: Location) -> Option<
     Some(checkpoint + relative)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

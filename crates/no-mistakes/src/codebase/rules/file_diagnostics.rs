@@ -119,7 +119,7 @@ pub fn diagnostics_with_files_and_sources(
     Ok(sorted(diagnostics))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 mod applications;

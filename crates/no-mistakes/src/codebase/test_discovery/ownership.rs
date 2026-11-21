@@ -1,6 +1,6 @@
 use crate::integration_tests::types::ConfigProject;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 /// Drop config-derived projects whose ownership region (`scope`) is a strict

@@ -139,5 +139,5 @@ fn route_key(root: &Path, file: &Path) -> Arc<String> {
     Arc::new(crate::playwright::fsutil::relative_string(root, file))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

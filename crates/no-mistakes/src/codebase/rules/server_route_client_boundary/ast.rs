@@ -12,5 +12,5 @@ pub(super) fn has_server_like_route_call_from_program(
     crate::server_routes::has_server_route_shape_from_program(path, source, program)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 pub(super) mod test_support;

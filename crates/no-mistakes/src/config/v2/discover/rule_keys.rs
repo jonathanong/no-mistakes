@@ -88,5 +88,5 @@ fn validate_advisory_rule(entry: &serde_yaml::Mapping, path: &Path, index: usize
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

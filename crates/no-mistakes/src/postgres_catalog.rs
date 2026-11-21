@@ -99,8 +99,8 @@ pub fn generate(options: &PostgresCatalogOptions) -> Result<serde_json::Value> {
     Ok(catalog)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod materialized_index_tests;

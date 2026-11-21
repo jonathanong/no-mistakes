@@ -185,6 +185,6 @@ fn hole_text(outcome: Outcome, builder: Option<usize>, value_used: bool) -> Opti
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "program_tests.rs"]
 mod program_tests;

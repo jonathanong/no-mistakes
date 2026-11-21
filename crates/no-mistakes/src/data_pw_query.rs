@@ -226,5 +226,5 @@ pub(crate) fn run_with_session(
 
 include!("data_pw_query/scan.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

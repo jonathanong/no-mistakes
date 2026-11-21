@@ -22,5 +22,5 @@ pub(crate) fn run(args: FetchesArgs) -> Result<ExitCode> {
 
 const _: fn(FetchesArgs) -> Result<ExitCode> = run;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

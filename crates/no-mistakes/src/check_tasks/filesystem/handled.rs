@@ -9,6 +9,6 @@ pub(super) fn mark(config: &mut NoMistakesConfig, handles: impl Fn(&str) -> bool
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "handled_tests.rs"]
 mod tests;

@@ -13,5 +13,5 @@ include!("ts_symbols/imports.rs");
 include!("ts_symbols/export_named.rs");
 include!("ts_symbols/export_other.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

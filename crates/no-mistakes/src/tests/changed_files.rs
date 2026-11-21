@@ -454,6 +454,6 @@ fn parse_git_name_status_z(output: &[u8]) -> Result<GitChangedFiles> {
     Ok(GitChangedFiles { files, deleted })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "changed_files_tests.rs"]
 mod tests;

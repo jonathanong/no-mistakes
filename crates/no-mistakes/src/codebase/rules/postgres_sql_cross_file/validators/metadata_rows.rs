@@ -78,6 +78,6 @@ pub(crate) fn projection(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "metadata_rows_tests.rs"]
 mod tests;

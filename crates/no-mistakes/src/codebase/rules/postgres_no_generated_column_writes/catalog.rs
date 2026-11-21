@@ -125,7 +125,7 @@ pub(super) fn stale_extra_findings_from_tables(
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 fn empty_catalog_for_tables(tables: &LiveTables<'_>) -> GeneratedTableColumns {

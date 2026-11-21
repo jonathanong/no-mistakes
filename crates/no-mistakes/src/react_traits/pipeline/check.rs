@@ -176,5 +176,5 @@ fn prepare_file_config(file_config: FileConfig, assert_no_fetch: bool) -> Prepar
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

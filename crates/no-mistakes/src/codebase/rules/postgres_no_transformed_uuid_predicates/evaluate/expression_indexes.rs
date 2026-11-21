@@ -4,7 +4,7 @@ use sqlparser::ast::{Expr, VisitMut, VisitorMut};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 use std::ops::ControlFlow;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "expression_index_casts_tests.rs"]
 mod cast_tests;
 #[path = "expression_index_casts.rs"]
@@ -185,6 +185,6 @@ fn normalize_rows(tokens: &mut Vec<Token>) {
     });
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "expression_index_fallback_tests.rs"]
 mod expression_index_fallback_tests;

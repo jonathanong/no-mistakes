@@ -66,7 +66,7 @@ pub(super) fn binding_matches_type(
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {

@@ -10,5 +10,5 @@ include!("types.rs");
 include!("statements.rs");
 include!("expressions.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

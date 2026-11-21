@@ -189,5 +189,5 @@ pub(crate) fn read_symbols(
         .context(format!("extracting symbols from {}", abs_file.display()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

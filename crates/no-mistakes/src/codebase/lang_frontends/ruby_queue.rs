@@ -130,6 +130,6 @@ fn sidekiq_include_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\binclude Sidekiq::(?:Worker|Job)\b").expect("sidekiq"))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "ruby_queue_tests.rs"]
 mod tests;

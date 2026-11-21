@@ -194,5 +194,5 @@ fn is_typescript_declaration_file(rel: &str) -> bool {
     rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

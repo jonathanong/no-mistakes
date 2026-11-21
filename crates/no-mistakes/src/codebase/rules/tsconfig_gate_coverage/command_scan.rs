@@ -162,5 +162,5 @@ fn join_relative(base: &str, raw: &str) -> Option<String> {
     normalize_repo_relative(&joined)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

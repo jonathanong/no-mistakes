@@ -74,7 +74,7 @@ fn bind_alias(bindings: &Bindings<'_>, file: &Path, scope: usize, name: &str, at
         })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod harness;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

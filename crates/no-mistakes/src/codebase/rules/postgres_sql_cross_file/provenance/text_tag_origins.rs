@@ -18,7 +18,7 @@ pub(super) fn caller_argument(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "text_tag_origins_tests.rs"]
 mod tests;
 

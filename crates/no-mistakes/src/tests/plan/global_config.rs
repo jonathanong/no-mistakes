@@ -106,6 +106,6 @@ pub(super) fn discover_all_tests_from_prepared(
     .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "global_config_tests.rs"]
 mod tests;

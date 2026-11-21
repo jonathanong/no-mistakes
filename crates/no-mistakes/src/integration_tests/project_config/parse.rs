@@ -45,5 +45,5 @@ pub(in crate::integration_tests) fn load_config_projects_from_program(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

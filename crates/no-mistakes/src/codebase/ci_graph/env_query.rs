@@ -128,5 +128,5 @@ pub fn analyze_env_from_parsed(parsed: &ParsedWorkflowSet, var: &str) -> CiEnvRe
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

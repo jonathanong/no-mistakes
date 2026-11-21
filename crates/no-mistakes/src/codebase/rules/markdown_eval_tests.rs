@@ -93,5 +93,5 @@ fn is_eval_test(source: &str, opts: &CompiledOptions) -> bool {
     opts.markdown.is_match(source) && opts.shell.is_match(source) && opts.evals.is_match(source)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

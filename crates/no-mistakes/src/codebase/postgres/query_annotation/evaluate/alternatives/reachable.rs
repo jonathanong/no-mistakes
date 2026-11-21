@@ -93,10 +93,10 @@ pub(super) use prefix::Prefix;
 mod cached;
 pub(super) use cached::collect_cached;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "reachable/cached_tests.rs"]
 mod cached_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "reachable/cached_guards_tests.rs"]
 mod cached_guards_tests;

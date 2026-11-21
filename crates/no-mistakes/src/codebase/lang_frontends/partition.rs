@@ -52,5 +52,5 @@ pub(crate) fn partition_files_by_extension(all_files: &[PathBuf]) -> LangFilesBy
     parts
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

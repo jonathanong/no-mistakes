@@ -53,10 +53,10 @@ impl<'a, 'facts> Proofs<'a, 'facts> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "fragment_builders_tests.rs"]
 mod builder_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "fragment_import_tests.rs"]
 mod import_tests;

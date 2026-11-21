@@ -31,7 +31,7 @@ pub(in super::super::super) fn refine_value_calls(
     );
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "replacement_edges_tests.rs"]
 mod tests;
 

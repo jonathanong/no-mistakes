@@ -136,6 +136,6 @@ impl OriginNode {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "origin_tree_join_tests.rs"]
 mod tests;

@@ -67,5 +67,5 @@ pub(super) fn move_line(finding: &mut RuleFinding, file: Option<String>, line: u
     finding.line = line;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod invalid_utf8_tests;

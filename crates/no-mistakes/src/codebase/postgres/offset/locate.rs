@@ -180,5 +180,5 @@ fn is_word_char(ch: char) -> bool {
     ch == '_' || ch == '$' || ch.is_alphanumeric()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

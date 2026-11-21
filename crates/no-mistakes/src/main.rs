@@ -25,7 +25,7 @@ mod registry_extension;
 mod rsc_callers;
 mod server;
 mod swift;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "main/test_support.rs"]
 mod test_support;
 
@@ -134,10 +134,10 @@ fn main() -> ExitCode {
 mod dispatch;
 use dispatch::run_command;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "main/diagnostics_args_tests.rs"]
 mod diagnostics_args_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "main/help_text_tests.rs"]
 mod help_text_tests;

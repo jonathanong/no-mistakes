@@ -13,17 +13,17 @@ pub(crate) use verdicts::judge_subcheck;
 
 #[cfg(test)]
 mod coverage_more_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod coverage_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod expression_arbiter_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod installed_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod trigger_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod where_noop_gap_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod where_noop_tests;
 
 use crate::codebase::postgres::statement_facts::{
@@ -183,5 +183,5 @@ pub fn form_is_self(form: &SqlValueForm, column: &str) -> bool {
     matches!(form, SqlValueForm::SelfRef { column: name } if name.eq_ignore_ascii_case(column))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

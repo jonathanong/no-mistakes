@@ -180,10 +180,10 @@ pub(crate) fn check_prepared(
     Ok(dispatch::finish_findings(diagnostics))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod reexport_tests;
 /// Configured Next.js project roots admitted to the ordinary project catalog.
 #[doc(hidden)]

@@ -10,9 +10,9 @@ pub(crate) use program::{
     collect_file_facts_from_program, collect_file_facts_from_program_with_semantic,
 };
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod parse_cache_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod test_support;
 
 pub fn collect_ts_facts(files: &[PathBuf], plan: TsFactPlan) -> TsFactMap {

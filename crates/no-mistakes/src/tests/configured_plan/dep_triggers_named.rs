@@ -54,6 +54,6 @@ pub(super) fn apply_named_triggers(
     Ok(legacy_match)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "dep_triggers_named_tests.rs"]
 mod tests;

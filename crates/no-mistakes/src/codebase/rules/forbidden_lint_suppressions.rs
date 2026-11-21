@@ -126,5 +126,5 @@ fn normalized_inputs(root: &Path, files: &[PathBuf]) -> (PathBuf, Vec<PathBuf>) 
     (root, files)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

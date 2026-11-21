@@ -20,7 +20,7 @@ mod pipeline_selectors_core;
 pub(crate) mod pipeline_setup;
 pub(crate) mod pipeline_test_analysis;
 pub(crate) mod pipeline_text_setup;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod pipeline_text_test_support;
 pub(crate) mod route_reachability;
 pub(crate) mod routes_index;

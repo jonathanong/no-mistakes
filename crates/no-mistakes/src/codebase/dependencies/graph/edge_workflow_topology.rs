@@ -186,6 +186,6 @@ fn add_workflow_run_edges(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "edge_workflow_topology/tests.rs"]
 mod edge_workflow_topology_tests;

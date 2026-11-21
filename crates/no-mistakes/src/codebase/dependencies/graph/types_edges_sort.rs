@@ -162,6 +162,6 @@ const fn workflow(kind: EdgeKind) -> (u8, u8) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "types_edges_sort/tests.rs"]
 mod tests;

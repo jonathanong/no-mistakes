@@ -120,5 +120,5 @@ fn starts_with_clause(text: &str, located: bool) -> bool {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

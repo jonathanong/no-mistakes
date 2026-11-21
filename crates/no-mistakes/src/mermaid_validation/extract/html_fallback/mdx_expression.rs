@@ -208,6 +208,6 @@ fn next_mdx_region_start(line: &[u8], mut index: usize) -> Option<usize> {
     None
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "mdx_expression/tests.rs"]
 mod tests;

@@ -93,5 +93,5 @@ fn word(token: &Token, name: &str) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(name))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

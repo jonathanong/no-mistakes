@@ -165,5 +165,5 @@ fn check_file_with_sources(
     check_source(&rel, &content, opts)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

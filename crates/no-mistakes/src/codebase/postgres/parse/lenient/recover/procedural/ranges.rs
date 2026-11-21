@@ -55,5 +55,5 @@ pub(super) fn normalize(tokens: &[TokenWithSpan]) -> Vec<Token> {
     out
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

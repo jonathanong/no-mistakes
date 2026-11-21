@@ -7,19 +7,19 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod access_path_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod coverage_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod effort_tests;
 mod evaluate;
 mod groups;
 mod low;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod policy_tests;
 mod scan;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 pub const RULE_ID: &str = "postgres-no-transformed-uuid-predicates";
@@ -129,10 +129,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod cache_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod joined_view_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod low_contract_tests;

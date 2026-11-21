@@ -140,6 +140,6 @@ fn builtin_type_name(raw: &str) -> Option<String> {
     (!name.is_empty()).then(|| name.to_string())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "implied_tests.rs"]
 mod tests;

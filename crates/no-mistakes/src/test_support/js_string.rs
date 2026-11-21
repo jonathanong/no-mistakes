@@ -29,5 +29,5 @@ pub(crate) fn materialize_quote_containing_fixture(source: &std::path::Path) -> 
     super::gitignore_fixture::materialize_saved_fixture_into(source, quote_containing_tempdir())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

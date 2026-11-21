@@ -346,10 +346,10 @@ fn is_runtime_registration_edge(kind: &EdgeKind) -> bool {
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "impact_registry_edge_tests.rs"]
 mod registry_edge_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "impact_tests.rs"]
 mod tests;

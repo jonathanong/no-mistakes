@@ -81,5 +81,5 @@ fn is_swift_file(path: &Path) -> bool {
     path.extension().and_then(|ext| ext.to_str()) == Some("swift")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

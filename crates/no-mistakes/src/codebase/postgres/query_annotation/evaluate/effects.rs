@@ -1,11 +1,11 @@
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod borrowed_tests;
 #[cfg(test)]
 mod builder_free_tests;
 mod builder_ids;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod captured_write_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod direct_write_tests;
 #[cfg(not(test))]
 mod hooks;

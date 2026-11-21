@@ -103,19 +103,19 @@ include!("extract_binding_helpers.rs");
 include!("extract_commonjs_bindings.rs");
 include!("extract_syntax_helpers.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "extract/tests/binding_and_hoist_coverage.rs"]
 mod binding_and_hoist_coverage;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "extract/tests/collector_scope_coverage.rs"]
 mod collector_scope_coverage;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod coverage_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod extra_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod import_metadata_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 #[cfg(all(test, feature = "test-instrumentation"))]

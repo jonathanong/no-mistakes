@@ -4,7 +4,7 @@ use super::*;
 mod receiver_output;
 pub(super) use receiver_output::ReceiverOutput;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "nested_output_tests.rs"]
 mod output_tests;
 

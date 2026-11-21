@@ -152,7 +152,7 @@ fn merge_events(target: &mut BTreeMap<u32, bool>, source: BTreeMap<u32, bool>) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "reference_replacements_tests.rs"]
 mod tests;
 

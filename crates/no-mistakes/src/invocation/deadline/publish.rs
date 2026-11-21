@@ -21,7 +21,7 @@ pub(super) fn published_deadline() -> Option<snapshot::Observed> {
     snapshot::load()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "expiry_reference_tests.rs"]
 pub(super) mod expiry_reference;
 

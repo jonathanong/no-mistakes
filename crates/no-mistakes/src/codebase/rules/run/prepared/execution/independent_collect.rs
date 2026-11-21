@@ -156,7 +156,7 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "independent_collect_tests.rs"]
 mod tests;
 

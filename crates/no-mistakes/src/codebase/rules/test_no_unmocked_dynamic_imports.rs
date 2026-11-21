@@ -31,5 +31,5 @@ pub fn check(
     with_facts::check_standalone(root, config, tsconfig_path)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

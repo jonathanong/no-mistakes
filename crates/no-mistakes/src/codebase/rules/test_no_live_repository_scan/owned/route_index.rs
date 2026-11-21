@@ -194,6 +194,6 @@ pub(super) fn is_import(kind: RouteKind) -> bool {
 mod hit;
 use hit::push;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "route_index/tests.rs"]
 mod tests;

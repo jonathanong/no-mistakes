@@ -131,6 +131,6 @@ fn collect_strings(value: &Value, out: &mut Vec<String>) {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "package_source_match_tests.rs"]
 mod match_tests;

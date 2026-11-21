@@ -12,7 +12,7 @@ mod variants;
 pub(in crate::codebase::postgres::embedded) use variants::piece;
 mod defaults;
 mod escapes;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 /// A recovered SQL position whose physical source-line offset changes.
@@ -195,5 +195,5 @@ impl Positions {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod binds_tests;

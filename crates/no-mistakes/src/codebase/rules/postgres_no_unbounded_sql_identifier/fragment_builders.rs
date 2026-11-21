@@ -180,10 +180,10 @@ impl<'a, 'facts> Proof<'a, 'facts> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "fragment_builder_boundary_tests.rs"]
 mod boundary_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "fragment_builder_origin_tests.rs"]
 mod origin_tests;

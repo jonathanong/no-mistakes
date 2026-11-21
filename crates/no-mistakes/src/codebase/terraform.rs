@@ -220,5 +220,5 @@ fn build_fact_map(file_facts: Vec<TerraformFileFacts>) -> TerraformFactMap {
     facts
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

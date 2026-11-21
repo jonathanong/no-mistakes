@@ -180,21 +180,21 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         placeholder_positions,
     )
 }
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod index_probe_demand_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod json_write_demand_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod location_demand_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod mapped_demand_tests;
 mod policy;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod policy_projection_tests;
 pub(crate) use policy::extract_sql_statement_facts_with_policy;
 mod bind_values;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod grouping_demand_tests;
 pub(crate) use bind_values::extract_with_bound_values;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod grouping_recovery_tests;

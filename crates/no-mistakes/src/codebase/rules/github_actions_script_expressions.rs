@@ -91,5 +91,5 @@ pub(crate) fn default_constant_contexts() -> Vec<String> {
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

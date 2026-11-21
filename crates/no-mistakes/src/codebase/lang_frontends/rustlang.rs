@@ -7,12 +7,12 @@ use super::strip::strip_comments_keep_strings;
 mod http;
 #[path = "rust_path.rs"]
 mod rust_path;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "rust_path_tests.rs"]
 mod rust_path_tests;
 #[path = "rust_use.rs"]
 mod rust_use;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "rust_use_tests.rs"]
 mod rust_use_tests;
 use crate::codebase::ts_source::SourceStore;

@@ -46,5 +46,5 @@ pub(super) fn run<'a>(
     Ok((Cow::Owned(remaining), diagnostics))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

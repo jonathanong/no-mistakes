@@ -140,6 +140,6 @@ fn dart_includes() -> &'static [String] {
     GLOBS.get_or_init(|| crate::codebase::dependencies::test_globs("dart"))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "lang_projects/tests.rs"]
 mod tests;

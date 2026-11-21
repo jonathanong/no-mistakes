@@ -219,5 +219,5 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
     Ok(config)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

@@ -107,12 +107,12 @@ fn text_tag(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "text_tag_callers_tests.rs"]
 mod caller_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "text_tag_opaque_callers_tests.rs"]
 mod opaque_caller_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "text_tag_tests.rs"]
 mod tests;

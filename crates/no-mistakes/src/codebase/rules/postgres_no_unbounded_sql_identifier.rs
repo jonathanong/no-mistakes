@@ -133,7 +133,7 @@ fn scan(
 
 mod application;
 mod findings;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 pub(super) use findings::diagnostic_message;
 use findings::{identifier_finding, message};
@@ -146,7 +146,7 @@ use local_sources::{
 };
 
 mod fragments;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod fragments_tests;
 
 mod partial;

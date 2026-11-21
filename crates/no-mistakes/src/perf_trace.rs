@@ -63,5 +63,5 @@ pub fn filesystem_rule<T>(id: &str, f: impl FnOnce() -> T) -> T {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

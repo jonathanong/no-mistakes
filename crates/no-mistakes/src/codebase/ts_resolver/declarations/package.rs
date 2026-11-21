@@ -187,7 +187,7 @@ fn required(path: &Path, sources: &SourceStore) -> Result<Option<PathBuf>, ()> {
     paths::declaration(path, sources)?.map(Some).ok_or(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "package_tests.rs"]
 mod tests;
 

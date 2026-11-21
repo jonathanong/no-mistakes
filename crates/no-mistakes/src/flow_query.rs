@@ -162,14 +162,14 @@ fn resolve_target_in(
 
 include!("flow_query_traverse.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "flow_query_tests.rs"]
 mod flow_query_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "flow_query_resource_tests.rs"]
 mod flow_query_resource_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "flow_query_timeout_tests.rs"]
 mod flow_query_timeout_tests;

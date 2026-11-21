@@ -118,5 +118,5 @@ fn collect_v1_deps(deps: &serde_json::Map<String, serde_json::Value>) -> Vec<Res
     result
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

@@ -156,5 +156,5 @@ fn analyze_project_roots_with_facts(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

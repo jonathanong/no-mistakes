@@ -196,5 +196,5 @@ fn builtin_scalar(name: &str) -> bool {
     BUILTIN_SCALARS.contains(&bare.as_str())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

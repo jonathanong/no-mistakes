@@ -48,7 +48,7 @@ pub(crate) struct ParsedProgramCache {
     entries: Rc<RefCell<CachedPrograms>>,
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 pub(super) mod tests;
 
 mod intern;

@@ -16,7 +16,7 @@ mod recursive_order;
 mod set;
 mod with_scope;
 pub(super) use with_scope::{with_scope, with_scope_visiting_writes};
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 use blocking::BlockingStatuses;
 

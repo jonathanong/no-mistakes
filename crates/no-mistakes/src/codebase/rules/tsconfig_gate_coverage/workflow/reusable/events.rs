@@ -187,5 +187,5 @@ fn pull_request_activity_types<'a>(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -43,5 +43,5 @@ pub(crate) fn dedup_occurrences_by_identity<T: Ord + PartialEq>(
     occurrences.dedup_by(|left, right| left.same_identity(right));
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

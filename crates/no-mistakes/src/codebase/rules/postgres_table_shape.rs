@@ -100,5 +100,5 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

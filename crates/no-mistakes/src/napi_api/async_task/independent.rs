@@ -97,8 +97,8 @@ mod promise {
 #[cfg(not(coverage))]
 pub(crate) use promise::json;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod json_tests;

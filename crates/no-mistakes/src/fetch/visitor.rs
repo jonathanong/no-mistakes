@@ -193,5 +193,5 @@ fn is_promise_all_call(expr: &CallExpression<'_>) -> bool {
     false
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

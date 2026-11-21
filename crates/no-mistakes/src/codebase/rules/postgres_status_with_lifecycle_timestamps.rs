@@ -94,5 +94,5 @@ fn compile_words(option: &str, words: &[String], required: bool) -> Result<Vec<S
     Ok(compiled)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

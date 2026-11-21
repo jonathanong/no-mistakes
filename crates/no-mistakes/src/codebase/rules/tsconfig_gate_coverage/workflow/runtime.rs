@@ -6,7 +6,7 @@ pub(super) use runner_labels::{
     runs_on_can_default_to_windows, runs_on_has_statically_invalid_value, ContainerRunnerSupport,
 };
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 fn default_shell(value: &Value) -> Option<&str> {

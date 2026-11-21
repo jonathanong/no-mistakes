@@ -41,5 +41,5 @@ fn codepoint(chars: &mut impl Iterator<Item = char>, digits: usize) -> Option<u3
         .flatten()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

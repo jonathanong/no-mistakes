@@ -189,6 +189,6 @@ impl ValueMutationHistory {
 #[path = "mutation_recording_metrics.rs"]
 pub(super) mod metrics;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "mutation_recording_tests.rs"]
 mod tests;

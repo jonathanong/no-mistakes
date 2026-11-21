@@ -15,40 +15,43 @@ const { test } = require("node:test");
 const { commands } = require("./standalone-shards.cjs");
 
 test("standalone build retains the default-feature library-only scope", () => {
-  const [command] = commands("build", "target/bundle");
-  assert.deepEqual(command.slice(0, 7), [
-    "nextest",
-    "archive",
-    "--locked",
-    "-p",
-    "no-mistakes",
-    "--lib",
-    "--archive-file",
-  ]);
-  assert.equal(command[7], path.resolve("target/bundle/standalone.tar.zst"));
-  assert.deepEqual(command.slice(8), ["--zstd-level", "6", "--zstd-long"]);
-  assert.ok(!command.includes("--all-features"));
-  assert.ok(!command.includes("--bins"));
+  const built = commands("build", "target/bundle");
+  assert.equal(built.length, 3);
+  built.forEach((command, shard) => {
+    assert.deepEqual(command.slice(0, 7), [
+      "nextest",
+      "archive",
+      "--locked",
+      "-p",
+      "no-mistakes",
+      "--lib",
+      "--archive-file",
+    ]);
+    assert.equal(command[7], path.resolve(`target/bundle/standalone-${shard}.tar.zst`));
+    assert.deepEqual(command.slice(8), ["--zstd-level", "6", "--zstd-long"]);
+    assert.ok(!command.includes("--all-features"));
+    assert.ok(!command.includes("--bins"));
+    assert.ok(!command.includes("--partition"));
+  });
 });
 
-test("every standalone partition replays its archive without building", () => {
-  for (let index = 1; index <= 4; index += 1) {
-    const [command] = commands("run", "target/bundle", index, 4, "/workspace");
+test("every standalone shard replays its own archive without building", () => {
+  for (let index = 1; index <= 3; index += 1) {
+    const [command] = commands("run", "target/bundle", index, 3, "/workspace");
     assert.deepEqual(command, [
       "nextest",
       "run",
       "--archive-file",
-      path.resolve("target/bundle/standalone.tar.zst"),
+      path.resolve(`target/bundle/standalone-${index - 1}.tar.zst`),
       "--workspace-remap",
       "/workspace",
       "--extract-to",
       path.resolve("target/standalone-lib"),
-      "--partition",
-      `hash:${index}/4`,
       "--no-fail-fast",
       "--retries",
       "0",
     ]);
+    assert.ok(!command.includes("--partition"));
   }
 });
 
@@ -61,6 +64,7 @@ test("invalid standalone partitions fail before invoking a compiler", () => {
     [1, NaN],
   ])
     assert.throws(() => commands("run", "bundle", index, total), /one-based/);
+  assert.throws(() => commands("run", "bundle", 1, 4), /compiled archives/);
 });
 
 const fixture = path.resolve(__dirname, "../../test-cases/standalone-shards");
@@ -103,7 +107,7 @@ test("fresh consumers prepare extraction and argv wrapper while clearing CLI env
     build();
     const extraction = path.join(workspace, "target/standalone-lib");
     assert.equal(existsSync(extraction), false);
-    const result = invoke(["run", bundle, "1", "4"]);
+    const result = invoke(["run", bundle, "1", "3"]);
     assert.equal(result.status, 0, result.stderr);
     assert.ok(result.stdout.includes(`extraction-ready=${extraction}`));
     assert.equal(existsSync(extraction), true);
@@ -112,14 +116,14 @@ test("fresh consumers prepare extraction and argv wrapper while clearing CLI env
 test("manifest SHA and workspace mismatches reject consumers before creating extraction directories", () =>
   scenario(({ workspace, bundle, invoke, build }) => {
     build();
-    const sha = invoke(["run", bundle, "1", "4"], { GITHUB_SHA: "wrong-source" });
+    const sha = invoke(["run", bundle, "1", "3"], { GITHUB_SHA: "wrong-source" });
     assert.equal(sha.status, 1);
     assert.match(sha.stderr, /source or workspace differs/);
     const other = path.join(workspace, "other-bundle");
     renameSync(bundle, other);
     const otherWorkspace = path.join(workspace, "other-workspace");
     mkdirSync(otherWorkspace);
-    const result = spawnSync(process.execPath, [script, "run", other, "1", "4"], {
+    const result = spawnSync(process.execPath, [script, "run", other, "1", "3"], {
       cwd: otherWorkspace,
       encoding: "utf8",
       env: { ...process.env, GITHUB_SHA: "fixture-source" },
@@ -136,7 +140,7 @@ test("standalone child failures propagate and unsuccessful builds publish no man
     assert.equal(failedBuild.status, 17, failedBuild.stderr);
     assert.equal(existsSync(path.join(bundle, "build.json")), false);
     build();
-    const result = invoke(["run", bundle, "2", "4"], { STANDALONE_FIXTURE_STATUS: "23" });
+    const result = invoke(["run", bundle, "2", "3"], { STANDALONE_FIXTURE_STATUS: "23" });
     assert.equal(result.status, 23, result.stderr);
   }));
 
@@ -145,7 +149,30 @@ test("standalone validation rejects any CLI artifact in the isolated target", ()
     build();
     mkdirSync(path.join(target, "debug"), { recursive: true });
     copyFileSync(path.join(fixture, "archive.fixture"), path.join(target, "debug/no-mistakes"));
-    const result = invoke(["run", bundle, "1", "4"]);
+    const result = invoke(["run", bundle, "1", "3"]);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /must not build the CLI/);
+  }));
+
+test("each archive build selects one compile shard", () =>
+  scenario(({ bundle, build }) => {
+    build();
+    for (const shard of [0, 1, 2]) {
+      assert.equal(
+        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.shard`), "utf8").trim(),
+        String(shard),
+      );
+      assert.match(
+        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.rustc-wrapper`), "utf8"),
+        /standalone-shard-rustc\.sh/,
+      );
+    }
+  }));
+
+test("a preselected compile shard is rejected", () =>
+  scenario(({ bundle, invoke }) => {
+    const result = invoke(["build", bundle], { NM_TEST_SHARD: "1" });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /already selected/);
+    assert.equal(existsSync(path.join(bundle, "build.json")), false);
   }));

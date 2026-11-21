@@ -162,5 +162,5 @@ fn qualified(parts: &[Ident]) -> Option<(String, String)> {
         .map(|(qualifier, column)| (ident_key(qualifier), ident_key(column)))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

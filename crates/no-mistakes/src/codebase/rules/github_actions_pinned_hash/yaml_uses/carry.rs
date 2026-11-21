@@ -199,6 +199,6 @@ pub(super) fn is_block_header(scalar: &str) -> bool {
 #[path = "carry_chars.rs"]
 mod chars;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "carry/tests.rs"]
 mod tests;

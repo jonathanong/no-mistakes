@@ -177,7 +177,7 @@ fn normalize_copy(sql: &str, retain_terminator: bool) -> std::borrow::Cow<'_, st
 
 mod dollar;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
 /// First-code columns are projected from the same split, in one forward character pass.

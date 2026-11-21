@@ -38,5 +38,5 @@ fn resolve(project_root: &Path, setup_path: &Path, path: ResourcePath) -> PathBu
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

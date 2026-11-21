@@ -84,7 +84,7 @@ pub use diagnostics::run as diagnostics_with_files_and_sources;
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "github_actions_checkout_credentials/tests/policy.rs"]
 mod policy_tests;
 
@@ -96,7 +96,7 @@ mod permission_bounds_tests;
 #[path = "github_actions_checkout_credentials/tests/ref_safety.rs"]
 mod ref_safety_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "github_actions_checkout_credentials/uses_fixture_tests.rs"]
 mod uses_fixture_tests;
 

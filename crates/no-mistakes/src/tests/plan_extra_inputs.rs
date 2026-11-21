@@ -292,6 +292,6 @@ fn next_project_root(path: &Path) -> bool {
         || path.join("src/pages").is_dir()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "plan_extra_inputs_tests.rs"]
 mod tests;

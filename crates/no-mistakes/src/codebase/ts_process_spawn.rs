@@ -12,5 +12,5 @@ include!("ts_process_spawn/web_server.rs");
 include!("ts_process_spawn/literals.rs");
 include!("ts_process_spawn/resolve.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

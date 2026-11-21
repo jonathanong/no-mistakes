@@ -172,8 +172,8 @@ fn package_scope(root: &Path, directory: &Path) -> String {
 
 #[cfg(test)]
 mod coverage_edges;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod external_tests;

@@ -206,6 +206,6 @@ fn normalize_root(value: &str) -> String {
     path.trim_end_matches('/').to_string()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "native_fallback_lang/tests.rs"]
 mod tests;

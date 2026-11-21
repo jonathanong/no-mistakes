@@ -127,6 +127,6 @@ fn push_warning(analysis: &mut SwiftResolvedAnalysis, r#type: &str, message: Str
     analysis.fallback_triggered = true;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "swift_resolved_changes_tests.rs"]
 mod tests;

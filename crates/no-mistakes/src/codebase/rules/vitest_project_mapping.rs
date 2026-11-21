@@ -192,5 +192,5 @@ fn relative_paths_for_matching(root: &Path, file: &Path, target_roots: &[PathBuf
     paths
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

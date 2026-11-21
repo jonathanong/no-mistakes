@@ -124,6 +124,6 @@ fn command_name(args: impl IntoIterator<Item = OsString>) -> String {
         .unwrap_or_default()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "holder/tests.rs"]
 mod tests;

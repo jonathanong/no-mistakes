@@ -69,7 +69,7 @@ pub use diagnostics::diagnostics_snapshot_json;
 mod filesystem;
 pub(crate) mod infra_swift;
 mod lock_status;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod lock_status_tests;
 mod lockfile_diff;
 #[cfg(feature = "mermaid-validation")]
@@ -119,11 +119,11 @@ pub(crate) use project::{
     server_route_list_json_impl, server_route_related_json_impl, server_routes_json_impl,
 };
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests_check_timing;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_queue_waits;
 
 include!("napi_api/primitive_bindings.rs");

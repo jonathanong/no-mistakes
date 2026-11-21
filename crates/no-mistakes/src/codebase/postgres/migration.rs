@@ -179,5 +179,5 @@ pub(super) fn leading_index_column(column: &sqlparser::ast::IndexColumn) -> Opti
     index_column_name(column)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

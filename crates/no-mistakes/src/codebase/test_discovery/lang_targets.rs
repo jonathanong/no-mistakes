@@ -152,6 +152,6 @@ fn slash(path: &str) -> String {
     path.replace('\\', "/")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "lang_targets/tests.rs"]
 mod tests;

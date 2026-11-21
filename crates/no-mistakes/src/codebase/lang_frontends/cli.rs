@@ -121,6 +121,6 @@ fn prefixed_globs(root: Option<&str>, globs: &[String]) -> Vec<String> {
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "cli_tests.rs"]
 mod tests;

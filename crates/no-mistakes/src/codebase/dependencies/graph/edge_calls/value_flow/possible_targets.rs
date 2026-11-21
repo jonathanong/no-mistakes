@@ -45,6 +45,6 @@ pub(super) fn widen(site: &mut ResolvedCallSite) {
     site.target_node = None;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "possible_targets_tests.rs"]
 mod tests;

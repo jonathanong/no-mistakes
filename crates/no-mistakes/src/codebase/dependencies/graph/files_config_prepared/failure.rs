@@ -65,6 +65,6 @@ impl PlaywrightPreparationFailure {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "failure_tests.rs"]
 mod playwright_failure_tests;

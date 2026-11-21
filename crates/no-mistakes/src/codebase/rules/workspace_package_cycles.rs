@@ -172,5 +172,5 @@ fn workspace_graph_with_sources(
     graph
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

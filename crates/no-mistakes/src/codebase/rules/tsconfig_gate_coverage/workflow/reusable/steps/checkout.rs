@@ -6,7 +6,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::{
 };
 use serde_yaml::Value;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 #[derive(Default)]

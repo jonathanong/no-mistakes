@@ -131,14 +131,14 @@ pub use relative_scope::unproven_member_query_warning;
 pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, RunnerConfigFacts};
 pub use stats::CheckFactStats;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod parse_cache_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod path_membership_tests;
 #[cfg(test)]
 pub(crate) mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod head_calls_only_tests;
 
 pub(crate) use family_scope::applies as discovery_applies;

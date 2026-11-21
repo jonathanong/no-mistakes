@@ -196,5 +196,5 @@ pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> R
 }
 #[cfg(test)]
 mod order_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

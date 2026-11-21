@@ -66,7 +66,7 @@ pub(crate) use line_counter::count_code_lines;
 
 mod line_counter;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests_support;

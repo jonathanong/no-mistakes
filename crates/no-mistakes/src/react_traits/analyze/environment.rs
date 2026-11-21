@@ -7,7 +7,7 @@ pub(crate) enum FileEnvironment {
     Unknown,
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
 
 pub(crate) fn detect_file_environment(program: &Program<'_>) -> FileEnvironment {

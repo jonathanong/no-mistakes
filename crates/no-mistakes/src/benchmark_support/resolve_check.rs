@@ -88,5 +88,5 @@ pub fn run_prepared_resolve_check(fixture: &PreparedResolveCheckFixture) -> usiz
         .expect("batch report must contain a results array")
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

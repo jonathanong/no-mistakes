@@ -11,6 +11,6 @@ pub(super) fn trace_rule<T>(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "timing/tests.rs"]
 mod tests;

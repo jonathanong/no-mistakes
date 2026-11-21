@@ -19,7 +19,7 @@ use serde_yaml::Value;
 use std::collections::HashMap;
 
 mod char_scan;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod char_scan_tests;
 mod context_references;
 mod reference_scan;

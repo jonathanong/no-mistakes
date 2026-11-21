@@ -6,7 +6,7 @@ mod types;
 use types::{SourceDepth, SourceOperator};
 pub(in crate::codebase::postgres) use types::{SourceTable, TableTokenCursor};
 mod scan;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 /// Query-arm spellings grouped by their original top-level SQL statement. A skipped DDL

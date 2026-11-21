@@ -157,5 +157,5 @@ pub(crate) fn decode_unicode_string(value: &str, escape: char) -> Option<String>
     super::unicode_decode::decode(value, escape)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

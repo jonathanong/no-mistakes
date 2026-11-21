@@ -130,7 +130,7 @@ impl<'a> Bindings<'a> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "bindings/reassigned_identifier_tests.rs"]
 mod reassigned_identifier_tests;
 
@@ -138,14 +138,14 @@ mod reassigned_identifier_tests;
 #[path = "bindings/assignment_scalar_tests.rs"]
 mod assignment_scalar_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "bindings/assignment_initializers_tests.rs"]
 mod assignment_initializers_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "bindings/assignment_boundary_fixture_tests.rs"]
 mod assignment_boundary_fixture_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "bindings/coverage_boundary_tests.rs"]
 mod coverage_boundary_tests;

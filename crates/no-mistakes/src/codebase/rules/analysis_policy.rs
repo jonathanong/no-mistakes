@@ -158,8 +158,8 @@ fn patterns(rule: &RuleDef, name: &str) -> Result<Option<Vec<String>>> {
         .transpose()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "analysis_policy/tag_warning_tests.rs"]
 mod tag_warning_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

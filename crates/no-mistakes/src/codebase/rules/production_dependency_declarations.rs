@@ -154,5 +154,5 @@ fn workspace_roots(root: &Path, opts: &Options) -> Result<Vec<PathBuf>, String> 
         .collect())
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

@@ -157,10 +157,10 @@ fn package_entry(dir: &Path, sources: &SourceStore) -> PackageEntry {
     PackageEntry::Missing
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "type_entries_tests.rs"]
 mod type_entries_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "type_entries_encoding_tests.rs"]
 mod type_entries_encoding_tests;

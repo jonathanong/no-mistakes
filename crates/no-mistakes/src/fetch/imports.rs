@@ -155,5 +155,5 @@ pub fn is_import_used(
 
 include!("imports/program.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

@@ -131,6 +131,6 @@ fn is_chr_ident(token: &Token) -> bool {
     matches!(token, Token::Word(word) if word.value.eq_ignore_ascii_case("chr"))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "rewrite/tests.rs"]
 mod tests;

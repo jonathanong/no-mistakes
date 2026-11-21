@@ -112,5 +112,5 @@ fn is_checkout(step: &Mapping) -> bool {
         .is_some_and(location::is_checkout_reference)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

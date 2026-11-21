@@ -151,6 +151,6 @@ fn scan_files(
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "github_actions_test_timeout_literals/dispatch_fixture_tests.rs"]
 mod dispatch_fixture_tests;

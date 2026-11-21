@@ -8,7 +8,7 @@ mod extract;
 mod no_mistakes;
 mod oxlint;
 mod pnpm;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 mod types;
 

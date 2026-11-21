@@ -97,7 +97,7 @@ fn scan(
 
 #[cfg(all(test, feature = "test-instrumentation"))]
 mod index_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 fn registry_finding(

@@ -151,8 +151,8 @@ fn compile_patterns(option: &str, patterns: &[String]) -> Result<Vec<Regex>> {
         .collect()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod pattern_tests;

@@ -146,5 +146,5 @@ pub(crate) fn analyze_file_from_visible_with_facts(
 
 include!("file_analysis/legacy.rs");
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -144,5 +144,5 @@ mod body_end;
 mod insert_source;
 mod set_branches;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

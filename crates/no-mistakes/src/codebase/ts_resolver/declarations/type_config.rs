@@ -115,6 +115,6 @@ fn extends_list(value: &Value) -> Vec<String> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "type_config_tests.rs"]
 mod type_config_tests;

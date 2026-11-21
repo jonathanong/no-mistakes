@@ -174,5 +174,5 @@ fn arguments(
 mod rendered;
 use rendered::source_matches_rendered;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

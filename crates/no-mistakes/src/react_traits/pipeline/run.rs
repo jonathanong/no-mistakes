@@ -123,9 +123,9 @@ pub(crate) fn run_analyze_inner_from_visible(
     Ok(all_results)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
 fn aggregate_children_inner(

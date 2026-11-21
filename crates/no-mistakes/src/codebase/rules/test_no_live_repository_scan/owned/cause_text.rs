@@ -127,6 +127,6 @@ fn route(place: &str, specifier: &str, form: &str) -> String {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "cause_text/tests.rs"]
 mod tests;

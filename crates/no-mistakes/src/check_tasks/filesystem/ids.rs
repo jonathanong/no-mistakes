@@ -117,6 +117,6 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::WORKSPACE_PACKAGE_CYCLES,
 ];
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "configured_tests.rs"]
 mod configured_tests;

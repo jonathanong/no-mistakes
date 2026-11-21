@@ -43,5 +43,5 @@ fn excluded_by_filter(path: &Path, filter: Option<&globset::GlobSet>, root: &Pat
     filter.is_some_and(|filter| !filter.is_match(path.strip_prefix(root).unwrap_or(path)))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

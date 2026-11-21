@@ -159,5 +159,5 @@ fn is_css_identifier_char(ch: char) -> bool {
     ch == '-' || ch == '_' || ch.is_ascii_alphanumeric() || !ch.is_ascii()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

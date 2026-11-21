@@ -142,5 +142,5 @@ fn option<T: serde::de::DeserializeOwned>(rule: &RuleDef, key: &str) -> Result<O
         .transpose()
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

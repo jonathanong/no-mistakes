@@ -74,6 +74,6 @@ impl ImportCollector {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "phase_finish_tests.rs"]
 mod tests;

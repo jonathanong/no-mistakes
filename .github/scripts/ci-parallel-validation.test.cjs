@@ -252,7 +252,7 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   assert.equal(jobBudgetSeconds(shards), 480);
   assert.equal(jobBudgetSeconds(gate), 180);
   assert.match(gate, /needs: \[changes, standalone-build, standalone-shards\]/);
-  assert.match(shards, /shard: \[1, 2, 3, 4\]/);
+  assert.match(shards, /shard: \[1, 2, 3\]/);
   assert.match(shards, /fail-fast: false/);
   assert.match(shards, /standalone-shards\.cjs run/);
 });

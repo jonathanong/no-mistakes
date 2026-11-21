@@ -74,5 +74,5 @@ pub(super) fn has_indexable_graph_only(
         .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

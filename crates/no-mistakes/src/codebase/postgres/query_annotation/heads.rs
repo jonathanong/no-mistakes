@@ -38,7 +38,7 @@ mod tag_constants;
 mod tests;
 mod text;
 mod trusted_append;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod trusted_append_tests;
 pub(super) type Span = (u32, u32);
 /// Provisional executor calls supply helper heads but never safe builder uses.
@@ -81,8 +81,8 @@ pub(crate) use collect::collect_prepared;
 
 pub(crate) use import_projection::project;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod literal_helper_tests;
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod builtin_literal_helper_tests;

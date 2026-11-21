@@ -165,8 +165,8 @@ fn generate_plan_with_prepared_inner(
 }
 
 include!("plan_bfs.rs");
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 include!("plan_resources_tests.rs");
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 include!("plan_resource_aggregate_tests.rs");
 include!("plan_resource_details.rs");

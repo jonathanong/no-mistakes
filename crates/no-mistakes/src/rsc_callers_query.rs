@@ -180,7 +180,7 @@ pub(crate) fn run_with_prepared(
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod test_support;
 
 fn caller_kind(path: &Path) -> CallerKind {
@@ -195,5 +195,5 @@ fn caller_kind(path: &Path) -> CallerKind {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -10,9 +10,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 
 mod activation;
 mod events;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod matrix_property_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod memo_tests;
 pub(crate) mod model;
 mod steps;
@@ -114,15 +114,15 @@ pub(super) fn collect_ci_projects_with_local_actions(
     (projects, computations)
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod activity_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod input_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod review_tests;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod secret_tests;
 #[cfg(test)]
 mod test_support;
-#[cfg(test)]
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
