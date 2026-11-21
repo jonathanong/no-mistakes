@@ -27,9 +27,7 @@
         let fallback_facts = match facts {
             Some(primary) => {
                 let covers_plan = primary.covers_ts_fact_plan(fact_plan);
-                let universe_mismatch = primary
-                    .graph_files()
-                    .is_some_and(|files| !same_graph_universe(files, graph_files));
+                let universe_mismatch = supplied_universe_mismatch(primary, graph_files);
                 let missing = if fact_plan.is_empty() {
                     Vec::new()
                 } else {

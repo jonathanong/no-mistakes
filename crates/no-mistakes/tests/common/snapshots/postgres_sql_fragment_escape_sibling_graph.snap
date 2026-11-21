@@ -1,0 +1,61 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "sibling_graph": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-calls",
+          "file": "wide.ts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "wide.ts",
+          "message": "`wide.ts` value flow is incomplete (value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations), so a write, rebind, or escape of an exported SQL fragment may be missing. Simplify the file so value flow finishes, then rerun the check."
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "wide.ts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "extend.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "orphan-error.ts",
+          "line": 1,
+          "message": "exported error class `OrphanError` is never constructed or subclassed in non-test source",
+          "rule": "unconstructed-error-class",
+          "sourceLine": "export class OrphanError extends Error {}",
+          "target": "OrphanError"
+        },
+        {
+          "file": "place-order.ts",
+          "import": "setTimeout",
+          "line": 2,
+          "message": "forbidden call (application #1): global `setTimeout`",
+          "rule": "forbidden-calls",
+          "sourceLine": "setTimeout(() => delay, delay);",
+          "target": "global `setTimeout`"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
