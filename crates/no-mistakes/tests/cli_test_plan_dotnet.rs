@@ -44,8 +44,6 @@ fn git_init(root: &Path) {
 
 fn semantic_plan(root: &Path, changed: &str, global_fallback: bool) -> serde_json::Value {
     let output = run(&[
-        "--timeout",
-        "120",
         "test",
         "plan",
         "dotnet",
