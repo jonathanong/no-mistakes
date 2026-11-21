@@ -9,7 +9,8 @@
       "@app/order-list": ["./widgets/items.ts"],
       "@app/orders/columns": ["./orders/columns.ts"],
       "@app/users/columns": ["./users/columns.ts"],
-      "@example/sql": ["./sql.ts"]
+      "@example/sql": ["./sql.ts"],
+      "@widgets/*": ["./widgets/*"]
     }
   },
   "include": ["**/*.ts"]

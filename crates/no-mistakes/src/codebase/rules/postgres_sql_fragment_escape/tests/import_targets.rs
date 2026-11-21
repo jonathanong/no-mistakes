@@ -197,3 +197,124 @@ fn declare_module_skips_an_empty_name_and_an_unclosed_quote() {
     );
     assert_eq!(specs, vec!["kept".to_string()]);
 }
+
+#[test]
+fn external_targets_are_silent_and_project_gaps_are_recorded() {
+    let mut world = world();
+    let escape = world.escape.clone();
+    for specifier in ["node:fs", "orders-widget"] {
+        merge_import_target(
+            &mut world.graph.import_targets,
+            &escape,
+            specifier,
+            ImportTarget::External,
+        );
+    }
+    merge_import_target(
+        &mut world.graph.import_targets,
+        &escape,
+        "./missing-widget",
+        ImportTarget::Unresolved,
+    );
+    let mut catalog = catalog(&world);
+    for specifier in ["node:fs", "orders-widget"] {
+        let found = alias::hop(
+            &catalog,
+            Some(&world.graph),
+            &world.facts,
+            &escape,
+            specifier,
+            "widgetColumns",
+            &mut Vec::new(),
+        );
+        assert!(found.is_empty(), "{specifier}");
+    }
+    assert!(catalog.take_unresolved().is_empty());
+    let open = alias::hop(
+        &catalog,
+        Some(&world.graph),
+        &world.facts,
+        &escape,
+        "./missing-widget",
+        "widgetColumns",
+        &mut Vec::new(),
+    );
+    assert!(open.is_empty());
+    let gaps = catalog.take_unresolved();
+    assert_eq!(gaps.len(), 1);
+    assert_eq!(gaps.get(&escape).unwrap().value(), "./missing-widget");
+}
+
+#[test]
+fn one_ambient_module_names_an_external_specifier() {
+    let mut world = world();
+    let escape = world.escape.clone();
+    let declared = std::path::PathBuf::from("/repo/declared.ts");
+    insert(
+        &mut world.facts,
+        declared.clone(),
+        ambient_module("ambient-cols"),
+    );
+    merge_import_target(
+        &mut world.graph.import_targets,
+        &escape,
+        "ambient-cols",
+        ImportTarget::External,
+    );
+    let catalog = catalog(&world);
+    assert_eq!(
+        modules::module_file(
+            Some(&world.graph),
+            &world.facts,
+            &catalog,
+            &escape,
+            "ambient-cols"
+        ),
+        Some(declared)
+    );
+}
+
+#[test]
+fn several_ambient_modules_record_the_ambiguous_specifier() {
+    let mut world = world();
+    let escape = world.escape.clone();
+    insert(
+        &mut world.facts,
+        std::path::PathBuf::from("/repo/declared-a.ts"),
+        ambient_module("orders-widget"),
+    );
+    insert(
+        &mut world.facts,
+        std::path::PathBuf::from("/repo/declared-b.ts"),
+        ambient_module("orders-widget"),
+    );
+    merge_import_target(
+        &mut world.graph.import_targets,
+        &escape,
+        "orders-widget",
+        ImportTarget::External,
+    );
+    let mut catalog = catalog(&world);
+    let open = alias::hop(
+        &catalog,
+        Some(&world.graph),
+        &world.facts,
+        &escape,
+        "orders-widget",
+        "widgetColumns",
+        &mut Vec::new(),
+    );
+    assert!(open.is_empty());
+    let gaps = catalog.take_unresolved();
+    assert_eq!(gaps.len(), 1);
+    assert_eq!(gaps.get(&escape).unwrap().value(), "orders-widget");
+}
+
+fn ambient_module(specifier: &str) -> TsFileFacts {
+    TsFileFacts {
+        source: Some(Arc::<str>::from(format!(
+            "declare module \"{specifier}\" {{}}\n"
+        ))),
+        ..TsFileFacts::default()
+    }
+}

@@ -137,9 +137,11 @@ The same-file adapter finding and this rule can both report when one file both
 calls the executor and escapes the fragment.
 
 The rule uses the request's prepared import targets and TypeScript resolver
-scope. This also covers path aliases and workspace packages when the
-canonical graph is unavailable. A unique ambient declaration can identify a
-module.
+scope. Recorded project-file targets are followed exactly, including path
+aliases and workspace packages whose filenames differ from their specifiers.
+This also covers path aliases and workspace packages when the canonical graph
+is unavailable. A unique ambient declaration can identify a module. The rule
+does not match an import to a neighboring file by file stem.
 
 A failed or ambiguous local code import can add one `incomplete` entry per
 file when the file otherwise reaches a proven exported SQL fragment. The
@@ -147,9 +149,11 @@ entry identifies the unresolved specifier. Built-in Node modules, external
 packages (including external trusted-tag modules and their subpaths), and
 resolved non-code files are outside this search. Relative JSON and asset
 specifiers with extensions recognized by the TypeScript resolver also stay
-outside the search. A module in the project can supply a fragment through a
-path alias or workspace mapping. `check` exits 1 when the report contains an incomplete entry, even
-if the report has zero findings.
+outside the search. Missing relative imports and path aliases whose target
+files are absent remain unresolved. A use of the configured trusted tag itself
+is not a fragment; other bindings from the same project specifier still follow
+the ordinary fragment checks. `check` exits 1 when the report contains an
+incomplete entry, even if the report has zero findings.
 
 ## Valid example
 

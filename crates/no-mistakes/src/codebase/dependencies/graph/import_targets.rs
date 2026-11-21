@@ -1,6 +1,8 @@
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum ImportTarget {
     File(PathBuf),
+    /// A node builtin or external package. It cannot import a project module.
+    External,
     Unresolved,
     Ambiguous,
 }

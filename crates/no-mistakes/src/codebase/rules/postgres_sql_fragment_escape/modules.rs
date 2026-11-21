@@ -41,19 +41,24 @@ pub(super) fn module_lookup(
             && super::tags::module_matches(specifier, &tag.module)
     });
     let ambient = catalog.ambient_files(specifier);
-    let resolution = catalog.resolution.and_then(|resolution| {
-        resolution.resolve(specifier, importer, relative || (trusted && record_gap))
-    });
+    let external = recorded == Some(&ImportTarget::External);
+    let resolution = catalog
+        .resolution
+        .filter(|_| !external)
+        .and_then(|resolution| {
+            resolution.resolve(specifier, importer, relative || (trusted && record_gap))
+        });
+    let ambiguous = recorded == Some(&ImportTarget::Ambiguous);
     if let Some(Some(path)) = &resolution {
         if !is_indexable(path) {
             return None;
         }
-        if recorded != Some(&ImportTarget::Ambiguous) {
+        if !ambiguous {
             return Some(path.clone());
         }
     }
-    if recorded != Some(&ImportTarget::Ambiguous) {
-        if relative && catalog.resolution.is_none() {
+    if !ambiguous {
+        if !external && relative && catalog.resolution.is_none() {
             let hits = relative_hits(catalog, importer, specifier);
             if hits.len() == 1 {
                 return hits.into_iter().next();
@@ -63,7 +68,14 @@ pub(super) fn module_lookup(
             return ambient.into_iter().next();
         }
     }
-    if record_gap && (relative || !ambient.is_empty() || resolution.is_some()) {
+    let unresolved = recorded == Some(&ImportTarget::Unresolved);
+    if record_gap
+        && (ambiguous
+            || unresolved
+            || !ambient.is_empty()
+            || (!external && relative)
+            || resolution.is_some())
+    {
         catalog.record_unresolved(importer, specifier);
     }
     None

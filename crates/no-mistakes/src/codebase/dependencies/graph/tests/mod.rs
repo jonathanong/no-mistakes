@@ -213,4 +213,5 @@ mod for_of_ownership;
 
 mod resolution_alias_boundaries;
 
+mod import_target_recording;
 mod namespace_import_boundaries;
