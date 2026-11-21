@@ -44,7 +44,7 @@ fn alias_of<'a>(
 ) -> Vec<super::super::fragments::Fragment> {
     alias::source_alias(
         catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.escape,
         ts,
@@ -435,7 +435,7 @@ fn file_ctx<'a>(
 ) -> FileCtx<'a> {
     let ts = world.facts.get_ts_facts(file).expect("facts");
     FileCtx {
-        graph: &world.graph,
+        graph: Some(&world.graph),
         facts: &world.facts,
         catalog,
         tags: &world.tags,

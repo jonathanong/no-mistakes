@@ -10,13 +10,13 @@ pub(super) enum ModuleHit {
 }
 
 pub(super) fn module_hit(
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     _facts: &CheckFactMap,
     catalog: &Catalog<'_>,
     importer: &Path,
     specifier: &str,
 ) -> ModuleHit {
-    if let Some(recorded) = graph.import_target(importer, specifier) {
+    if let Some(recorded) = graph.and_then(|graph| graph.import_target(importer, specifier)) {
         match recorded {
             ImportTarget::File(path) => return ModuleHit::File(path.clone()),
             ImportTarget::Ambiguous => return ModuleHit::Open,
@@ -43,7 +43,7 @@ pub(super) fn module_hit(
 }
 
 pub(super) fn module_file(
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     catalog: &Catalog<'_>,
     importer: &Path,
@@ -57,7 +57,7 @@ pub(super) fn module_file(
 
 pub(super) fn import_hit_fragments(
     catalog: &Catalog<'_>,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     importer: &Path,
     import: &ImportedBinding,

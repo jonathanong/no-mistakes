@@ -16,7 +16,7 @@ pub(super) struct ScanReport {
 pub(super) fn scan(
     root: &Path,
     tags: &[TrustedSqlTag],
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> ScanReport {

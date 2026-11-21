@@ -84,6 +84,7 @@ pub(super) fn collect(
         let consumer = "postgres-sql-fragment-escape";
         if dependency_graph.is_some()
             || session.is_none_or(|session| session.check_consumer_ready(consumer))
+            || session.is_some_and(|session| session.partial_checks_enabled())
         {
             let result = (|| -> Result<()> {
                 let report =

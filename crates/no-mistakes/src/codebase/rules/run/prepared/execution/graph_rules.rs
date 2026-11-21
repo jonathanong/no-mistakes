@@ -23,14 +23,11 @@ pub(super) fn graph_rule_findings_with_session(
         })
         .map(|session| {
             let mut config = request.config.clone();
-            let calls = matches!(
-                session.check_prerequisite(super::fragment_plan::CALL_GRAPH),
-                Some(crate::codebase::check_outcome::Prerequisite::Ready(()))
-            );
             for application in &mut config.rules {
-                let call_rule =
-                    calls && super::outcomes::GRAPH_CONSUMERS.contains(&application.rule.as_str());
-                application.enabled &= session.check_consumer_ready(&application.rule) || call_rule;
+                if application.rule == crate::codebase::rules::POSTGRES_SQL_FRAGMENT_ESCAPE {
+                    continue;
+                }
+                application.enabled &= session.check_consumer_ready(&application.rule);
             }
             config
         });

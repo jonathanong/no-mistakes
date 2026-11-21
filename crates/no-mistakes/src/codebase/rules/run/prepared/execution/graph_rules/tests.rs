@@ -85,9 +85,32 @@ fn unbounded_identifier_requires_canonical_graph() {
 }
 
 #[test]
-#[should_panic(expected = "postgres-sql-fragment-escape requires canonical graph")]
-fn sql_fragment_escape_requires_canonical_graph() {
-    panic_without_graph("postgres-sql-fragment-escape");
+fn sql_fragment_escape_runs_without_canonical_graph() {
+    let error = error_without_graph("postgres-sql-fragment-escape");
+    assert!(
+        error.to_string().contains("include contains invalid glob"),
+        "{error:#}"
+    );
+}
+
+fn error_without_graph(rule: &str) -> anyhow::Error {
+    let config = invalid_filter_config(rule, "importSpecifier: \"@example/db\"");
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    graph_rule_findings(GraphRuleRequest {
+        root: Path::new("/repo"),
+        config: &config,
+        config_path: None,
+        shared: &shared,
+        prepared_graph: None,
+        dependency_graph: None,
+        inferred_roots: None,
+        sources: None,
+        tsconfig_catalog: None,
+        prepared_vitest_projects: None,
+        prepared_playwright_projects: None,
+    })
+    .err()
+    .expect("invalid filter still fails without a graph")
 }
 
 #[test]
