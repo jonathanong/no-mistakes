@@ -1,0 +1,15 @@
+id: widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores:
+  - src/missing.ts
+---
+ignores: [
+---
+id: orders
+language: TypeScript
+rule:
+  pattern: listOrders()
+ignores:
+  - src/also-missing.ts

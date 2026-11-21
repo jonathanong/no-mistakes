@@ -12,8 +12,12 @@ pub(super) fn take_pattern_line(
 ) -> usize {
     let want = seen.get(pattern).copied().unwrap_or(0);
     let mut passed = 0usize;
+    let mut block = None;
     for (index, line) in source.lines().enumerate() {
-        let count = pattern_occurrences(line, pattern);
+        let Some(span) = ignore_span(line, &mut block) else {
+            continue;
+        };
+        let count = pattern_occurrences(span, pattern);
         if count == 0 {
             continue;
         }
@@ -42,6 +46,86 @@ fn take_unused(source: &str, used: &mut BTreeSet<usize>, matches: impl Fn(&str) 
             })
         })
         .unwrap_or(1)
+}
+
+/// `(indent, flow)`. `flow` stays open until an unquoted `]`.
+fn ignore_span<'a>(line: &'a str, block: &mut Option<(usize, bool)>) -> Option<&'a str> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || trimmed.starts_with('#') {
+        return None;
+    }
+    if trimmed == "---" || trimmed.starts_with("--- ") {
+        *block = None;
+        return None;
+    }
+    let indent = line.len() - line.trim_start().len();
+    if let Some((key_indent, flow)) = *block {
+        if flow {
+            let span = yaml_code(line);
+            if unquoted_byte(span, b']') {
+                *block = None;
+            }
+            return Some(span);
+        }
+        if indent > key_indent || (indent == key_indent && sequence_item(trimmed)) {
+            return Some(yaml_code(line));
+        }
+        *block = None;
+    }
+    let rest = trimmed.strip_prefix("ignores:")?;
+    let body = yaml_code(rest);
+    if unquoted_byte(body, b'[') {
+        if !unquoted_byte(body, b']') {
+            *block = Some((indent, true));
+        }
+        return Some(body);
+    }
+    if body.is_empty() {
+        *block = Some((indent, false));
+    }
+    None
+}
+
+fn sequence_item(trimmed: &str) -> bool {
+    let Some(rest) = trimmed.strip_prefix('-') else {
+        return false;
+    };
+    rest.is_empty() || rest.starts_with([' ', '\t'])
+}
+
+fn yaml_code(text: &str) -> &str {
+    let bytes = text.as_bytes();
+    let mut single = false;
+    let mut double = false;
+    for (index, byte) in bytes.iter().copied().enumerate() {
+        let comment = byte == b'#'
+            && !single
+            && !double
+            && (index == 0 || bytes[index - 1].is_ascii_whitespace());
+        if comment {
+            return text[..index].trim();
+        }
+        match byte {
+            b'\'' if !double => single = !single,
+            b'"' if !single => double = !double,
+            _ => {}
+        }
+    }
+    text.trim()
+}
+
+fn unquoted_byte(text: &str, needle: u8) -> bool {
+    let mut single = false;
+    let mut double = false;
+    for byte in text.bytes() {
+        match byte {
+            b'\'' if !double => single = !single,
+            b'"' if !single => double = !double,
+            found if found == needle && !single && !double => return true,
+            _ => {}
+        }
+    }
+    false
 }
 
 fn pattern_occurrences(line: &str, pattern: &str) -> usize {

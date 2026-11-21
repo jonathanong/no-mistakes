@@ -1,0 +1,6 @@
+id: widgets
+language: TypeScript
+rule:
+  pattern: listWidgets()
+ignores: # generated
+  - src/missing.ts
