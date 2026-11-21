@@ -25,7 +25,7 @@ pub(super) fn split_head(cmd: &str) -> (&str, &str) {
     let Some(first) = parts.first() else {
         return ("", "");
     };
-    if cmd[..first.origin].contains(|ch: char| matches!(ch, ';' | '&' | '|')) {
+    if cmd[..first.origin].contains([';', '&', '|']) {
         return ("", cmd[first.origin..].trim());
     }
     if let Some(next) = parts.get(1) {
