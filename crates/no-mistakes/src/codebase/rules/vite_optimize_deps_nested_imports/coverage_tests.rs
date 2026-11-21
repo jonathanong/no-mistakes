@@ -134,14 +134,25 @@ export default { optimizeDeps: { include: [\"widgets > items/shape\"] as const }
 }
 
 #[test]
-fn an_imported_include_drops_a_non_static_array() {
+fn an_imported_include_keeps_literal_entries_beside_a_spread() {
     let source = "\
 const extra = [];
-export default { optimizeDeps: { include: [\"widgets > items\", ...extra] } };
+export default { optimizeDeps: { include: [\"widgets > items\", ...extra, \"widgets > orders\"] } };
 ";
     match parse_vite_config(Path::new("vite.config.ts"), source, true) {
-        ParsedConfig::Includes(entries) => assert!(entries.is_empty()),
+        ParsedConfig::Includes(entries) => {
+            let texts: Vec<_> = entries.iter().map(|entry| entry.text.as_str()).collect();
+            assert_eq!(texts, vec!["widgets > items", "widgets > orders"]);
+        }
         ParsedConfig::Unanalyzable { reason, .. } => panic!("{reason}"),
+    }
+    match parse_vite_config(Path::new("vite.config.ts"), source, false) {
+        ParsedConfig::Unanalyzable { reason, .. } => {
+            assert!(reason.contains("not a static array"));
+        }
+        ParsedConfig::Includes(_) => {
+            panic!("spread include stays unanalyzable without includeSources")
+        }
     }
 }
 
@@ -176,6 +187,10 @@ fn closure_skips_dependency_directories_and_imports_outside_the_package() {
         &BTreeSet::new(),
     )
     .unwrap();
+    assert!(
+        imports.iter().all(|import| import.specifier != "orders"),
+        "a relative import that resolves outside the package is not followed"
+    );
     assert!(imports.is_empty());
     let skipped = runtime_imports(
         &root,

@@ -43,50 +43,55 @@ fn extract(
     allow_imported_include: bool,
 ) -> ParsedConfig {
     let Some(object) = default_object(program) else {
-        return unanalyzable(1, "Vite config has no static default export object");
+        return imported_or_gap(
+            allow_imported_include,
+            1,
+            "Vite config has no static default export object",
+        );
     };
-    let optimize = match property(object, "optimizeDeps") {
+    let optimize = match property(object, "optimizeDeps", allow_imported_include) {
         Prop::Missing => return ParsedConfig::Includes(Vec::new()),
         Prop::Dynamic => {
-            return unanalyzable(
+            return imported_or_gap(
+                allow_imported_include,
                 line_of(source, object.span.start),
                 "optimizeDeps is not a static object",
             );
         }
         Prop::Found(Expression::ObjectExpression(object)) => object.as_ref(),
         Prop::Found(value) => {
-            return unanalyzable(
+            return imported_or_gap(
+                allow_imported_include,
                 line_of(source, value.span().start),
                 "optimizeDeps is not a static object",
             );
         }
     };
-    match property(optimize, "include") {
+    match property(optimize, "include", allow_imported_include) {
         Prop::Missing => ParsedConfig::Includes(Vec::new()),
-        Prop::Dynamic => unanalyzable(
+        Prop::Dynamic => imported_or_gap(
+            allow_imported_include,
             line_of(source, optimize.span.start),
             "optimizeDeps is not a static object",
         ),
         Prop::Found(value) => match unwrap_ts_wrappers(value) {
             Expression::ArrayExpression(array) => {
-                let parsed = string_entries(source, array.as_ref());
-                if allow_imported_include && matches!(parsed, ParsedConfig::Unanalyzable { .. }) {
-                    ParsedConfig::Includes(Vec::new())
-                } else {
-                    parsed
-                }
+                string_entries(source, array.as_ref(), allow_imported_include)
             }
-            value => {
-                if allow_imported_include {
-                    ParsedConfig::Includes(Vec::new())
-                } else {
-                    unanalyzable(
-                        line_of(source, value.span().start),
-                        "optimizeDeps.include is not a static array of strings",
-                    )
-                }
-            }
+            value => imported_or_gap(
+                allow_imported_include,
+                line_of(source, value.span().start),
+                "optimizeDeps.include is not a static array of strings",
+            ),
         },
+    }
+}
+
+fn imported_or_gap(allow_imported_include: bool, line: usize, reason: &str) -> ParsedConfig {
+    if allow_imported_include {
+        ParsedConfig::Includes(Vec::new())
+    } else {
+        unanalyzable(line, reason)
     }
 }
 
@@ -94,16 +99,23 @@ pub(super) fn includes_in_array(
     source: &str,
     include: &oxc_ast::ast::ArrayExpression<'_>,
 ) -> Result<Vec<NestedInclude>, (usize, String)> {
-    match string_entries(source, include) {
+    match string_entries(source, include, false) {
         ParsedConfig::Includes(entries) => Ok(entries),
         ParsedConfig::Unanalyzable { line, reason } => Err((line, reason)),
     }
 }
 
-fn string_entries(source: &str, include: &oxc_ast::ast::ArrayExpression<'_>) -> ParsedConfig {
+fn string_entries(
+    source: &str,
+    include: &oxc_ast::ast::ArrayExpression<'_>,
+    partial: bool,
+) -> ParsedConfig {
     let mut entries = Vec::new();
     for element in &include.elements {
         let Some((text, start)) = array_string(element) else {
+            if partial {
+                continue;
+            }
             return unanalyzable(
                 line_of(source, include.span.start),
                 "optimizeDeps.include is not a static array of strings",
@@ -139,11 +151,12 @@ enum Prop<'a> {
     Dynamic,
 }
 
-fn property<'a>(object: &'a ObjectExpression<'a>, name: &str) -> Prop<'a> {
+fn property<'a>(object: &'a ObjectExpression<'a>, name: &str, tolerate_spread: bool) -> Prop<'a> {
     let mut found = None;
     for prop in &object.properties {
         match prop {
-            ObjectPropertyKind::SpreadProperty(_) => return Prop::Dynamic,
+            ObjectPropertyKind::SpreadProperty(_) if !tolerate_spread => return Prop::Dynamic,
+            ObjectPropertyKind::SpreadProperty(_) => {}
             ObjectPropertyKind::ObjectProperty(prop) => {
                 if property_key_name(&prop.key).as_deref() == Some(name) {
                     found = Some(&prop.value);

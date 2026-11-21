@@ -144,6 +144,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "bundled_siblings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > labels",
+          "line": 3,
+          "message": "runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { tag } from \"labels\";",
+          "target": "uncovered-runtime-import"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > orders",
+          "line": 2,
+          "message": "runtime import \"orders\" from widgets is not covered by optimizeDeps.include; add \"widgets > orders\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { name } from \"orders\";",
+          "target": "uncovered-runtime-import"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "config_edges": {
     "exitCode": 1,
     "report": {
@@ -639,6 +670,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "vite-optimize-deps-nested-imports: packages is required and has no default; list the package directories in scope",
           "rule": "vite-optimize-deps-nested-imports",
           "sourceLine": "- rule: vite-optimize-deps-nested-imports"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partial_includes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "listed.ts",
+          "import": "widgets > missing",
+          "line": 1,
+          "message": "nested include \"widgets > missing\" is not a declared dependency of widgets; declare missing under dependencies, optionalDependencies, peerDependencies, or bundledDependencies, or remove the include entry",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "const nested = [\"widgets > orders\", \"widgets > missing\"] as const;",
+          "target": "invalid-nested-child"
+        },
+        {
+          "file": "packages/widgets/index.ts",
+          "import": "widgets > labels",
+          "line": 3,
+          "message": "runtime import \"labels\" from widgets is not covered by optimizeDeps.include; add \"widgets > labels\"",
+          "rule": "vite-optimize-deps-nested-imports",
+          "sourceLine": "import { tag } from \"labels\";",
+          "target": "uncovered-runtime-import"
         }
       ],
       "warnings": []

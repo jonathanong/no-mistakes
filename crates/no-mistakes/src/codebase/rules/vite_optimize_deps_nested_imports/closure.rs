@@ -3,7 +3,7 @@
 use super::entry_imports::{self, RuntimeImport};
 use super::manifest::{self, entry_path, published_entry};
 use super::RuleFinding;
-use crate::codebase::ts_resolver::{self, TsConfig};
+use crate::codebase::ts_resolver::{self, ImportResolver, TsConfig};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_json::Value;
 use std::collections::{BTreeSet, VecDeque};
@@ -46,6 +46,7 @@ pub(super) fn runtime_imports(
         }
     }
     let tsconfig = TsConfig::default();
+    let resolver = ImportResolver::new(&tsconfig);
     let mut pending: VecDeque<PathBuf> = seeds.into_iter().collect();
     let mut seen = BTreeSet::new();
     let mut imports = Vec::new();
@@ -78,7 +79,7 @@ pub(super) fn runtime_imports(
             })?;
         for specifier in collected.relative {
             let specifier = script_relative_specifier(&specifier);
-            let Some(resolved) = ts_resolver::resolve_import(specifier, &path, &tsconfig) else {
+            let Some(resolved) = resolver.resolve(specifier, &path) else {
                 continue;
             };
             let resolved = ts_resolver::normalize_path(&resolved);

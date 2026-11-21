@@ -43,8 +43,10 @@ and wildcard keys such as `"./*": "./*.ts"` are entries even when the dot
 entry does not import them. Wildcard targets use the shared package export
 resolver under the `import` condition. From each of those files the check
 follows relative runtime `import`, `export … from`, `export * from`, static
-`import()`, and `require()` edges with the shared import resolver, staying
-inside the package directory. `.` and `..` are relative specifiers. A resolved
+`import()`, and `require()` edges with one cached shared import resolver for
+the whole closure, staying inside the package directory. A relative import
+that resolves outside that directory is not followed. The closure does not
+leave the package. `.` and `..` are relative specifiers. A resolved
 target is followed only when its extension is `.js`, `.mjs`, `.cjs`, `.jsx`,
 `.ts`, `.mts`, `.cts`, or `.tsx`. Other resolved files, including `.json`,
 `.css`, `.svg`, and `.wasm`, stay out of the closure. A published export
@@ -87,23 +89,31 @@ no runtime imports.
 A child is not an uncovered import when the parent declares it with a
 `workspace:` specifier, when its name is `ignorePackages`, or when its name
 is another package loaded from `packages` and the parent does not declare
-it with a non-workspace version specifier. A normal version such as
-`"items": "1.0.0"` still needs a nested include, including when that package
-is also listed in `packages`. An include of a child the parent does not
-declare is still invalid.
+it with a non-workspace version specifier. A name listed only in
+`bundledDependencies` or `bundleDependencies` has no version specifier, so
+that configured-package skip applies to it. The same bundled name still
+needs a nested include when it is not one of the packages in scope. A
+normal version such as `"items": "1.0.0"` still needs a nested include,
+including when that package is also listed in `packages`. An include of a
+child the parent does not declare is still invalid.
 
-If any configured config cannot be read, has no static default-exported
-object, or spreads `optimizeDeps`, the check reports that config and does
-not report uncovered imports. The same is true when an `includeSources`
-module cannot be read or its named export is not a static string array.
-Invalid mappings from configs and include sources that did parse are still
-reported. `export default { … }`, `defineConfig({ … })`, and a top-level
-const or let object referenced by the default export are static. A spread
-in the config object or in `include` is not. `module.exports` is not treated
-as a static config. When `includeSources` is set, an `optimizeDeps.include`
-value that is an identifier or another non-literal array contributes no
-entries and does not by itself make the config unanalyzable. Omitting
-`includeSources` keeps that config unanalyzable.
+If `includeSources` is omitted and any configured config cannot be read, has
+no static default-exported object, or spreads `optimizeDeps` without a
+static `include` property, the check reports that config and does not report
+uncovered imports. The same is true when an `includeSources` module cannot
+be read or its named export is not a static string array. Invalid mappings
+from configs and include sources that did parse are still reported.
+`export default { … }`, `defineConfig({ … })`, and a top-level const or let
+object referenced by the default export are static. A spread in the config
+object or in `include` is not, unless `includeSources` is set.
+`module.exports` is not treated as a static config. When `includeSources` is
+set, string literals inside `optimizeDeps.include` are kept when another
+element is a spread or a non-literal, and a static `include` key next to a
+spread of `optimizeDeps` is kept. An include value that is only an identifier
+contributes no entries. A config with no static default-exported object,
+including a plugin `export default function` that returns `configResolved`,
+contributes no entries from that file. Those forms do not by themselves make
+the config unanalyzable. Omitting `includeSources` keeps them unanalyzable.
 
 A missing manifest, a manifest that is not JSON, a missing `name`, a
 dependency field that is not an object, or a `bundledDependencies` value
@@ -123,10 +133,14 @@ list contributes no include entries, so every runtime import of an in-scope
 package is uncovered.
 
 `includeSources` is optional. Each entry names a `module` path relative to
-the check root and an `export` that is `export const name = ["parent > child", …]`.
-`[…] as const`, `[…] satisfies readonly string[]`, and
-`[…] as const satisfies readonly string[]` are still that static array.
-Comments inside the array do not change the entries.
+the check root and an `export` that is a static array of `"parent > child"`
+strings. `export const name = […]`, `[…] as const`,
+`[…] satisfies readonly string[]`, `[…] as const satisfies readonly string[]`,
+and a top-level `const name = […]` followed by `export { name }` or
+`export { name as exportName }` are that array. Comments inside the array
+do not change the entries. `export { name } from "./other"` is not followed;
+the named module has to hold the array. A spread or other non-literal inside
+that array is not static.
 Those pairs are added to the static `optimizeDeps.include` entries. An
 unreadable module or a non-static export is unanalyzable, and uncovered
 imports are not reported. `ignorePackages` is an optional list of package
@@ -206,8 +220,8 @@ the package's own name, a `workspace:` dependency, and a name in
 `ignorePackages` are not nested dependencies, so do not add an include entry
 for them. A declared package whose name matches a built-in still needs
 `"widgets > events"`. Export the Vite
-config as a static object, or point `includeSources` at `export const name = […]`,
-so the include array can be read.
+config as a static object, or point `includeSources` at `export const name = […]`
+or `export { name }` of that array, so the include array can be read.
 
 ## Suppression
 
