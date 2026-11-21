@@ -32,6 +32,13 @@ pub(super) fn note_dedup_argument(
     job: Option<String>,
     recorded: usize,
 ) {
+    super::super::extract_job_id::note_options_job_id(
+        visitor.source,
+        &visitor.const_strings,
+        &mut visitor.facts,
+        job.clone(),
+        expr,
+    );
     if debounce_with_ttl(expr) {
         visitor.facts.checks.push(LocalCheck {
             line: line_number(visitor.source, call.span.start),

@@ -1,12 +1,12 @@
 use crate::queue::extract_helpers::JobFrame;
 use crate::queue::extract_model::FileFacts;
-use crate::queue::extract_record::{record_enqueue, record_flow};
-use oxc_ast::ast::{CallExpression, Expression};
+use oxc_ast::ast::CallExpression;
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 mod bindings;
+mod enqueue_calls;
 mod helpers;
 mod rate_limit;
 mod wait_wrappers;
@@ -65,50 +65,13 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.note_wait_call(call);
-        if let Expression::StaticMemberExpression(member) = &call.callee {
-            let method = member.property.name.as_str();
-            if let Expression::Identifier(object) = &member.object {
-                if method == "add" && self.flow_bindings.contains(object.name.as_str()) {
-                    let recorded = self.facts.producers.len();
-                    record_flow(
-                        self.path,
-                        self.source,
-                        &self.const_strings,
-                        &mut self.facts,
-                        call,
-                    );
-                    self.stamp_worker(recorded);
-                } else if method == "add" || method == "addBulk" {
-                    let recorded = self.facts.producers.len();
-                    record_enqueue(
-                        object.name.as_str(),
-                        method,
-                        self.path,
-                        self.source,
-                        &self.const_strings,
-                        &mut self.facts,
-                        call,
-                    );
-                    self.stamp_worker(recorded);
-                    super::extract_factory::note_self_dedup(self, call, recorded);
-                }
-            } else if method == "add" || method == "addBulk" {
-                if let Some(binding) = self.imported_member_binding(&member.object) {
-                    let recorded = self.facts.producers.len();
-                    record_enqueue(
-                        &binding,
-                        method,
-                        self.path,
-                        self.source,
-                        &self.const_strings,
-                        &mut self.facts,
-                        call,
-                    );
-                    self.stamp_worker(recorded);
-                    super::extract_factory::note_self_dedup(self, call, recorded);
-                }
-            }
-        }
+        super::extract_job_id::note_scheduler(
+            self.source,
+            &self.const_strings,
+            &mut self.facts,
+            call,
+        );
+        self.note_enqueue_call(call);
         super::extract_factory::note_factory_call(self, call);
         walk::walk_call_expression(self, call);
     }

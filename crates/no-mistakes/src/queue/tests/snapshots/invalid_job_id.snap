@@ -1,0 +1,125 @@
+---
+source: crates/no-mistakes/src/queue/tests/job_id.rs
+expression: pretty
+---
+[
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 21,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"user:1\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 22,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: `order-${id}:retry` }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 23,
+    "message": "custom jobId contains '{' or '}'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"a{b}\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 24,
+    "message": "custom jobId contains '{' or '}'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"a}b\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 28,
+    "message": "custom jobId contains a control character; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"user\\u0001\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 29,
+    "message": "custom jobId contains ':' and '{' or '}'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"a:{b}\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 30,
+    "message": "custom jobId contains ':', '{' or '}', and a control character; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"a:{\\u0001\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 31,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: widgetId }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 32,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { ...base, jobId: \"spread:1\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 36,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"skip:me\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "place",
+    "line": 38,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "widgets.add(\"place\", {}, { jobId: \"bare:id\" }),"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "pack",
+    "line": 40,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "{ name: \"pack\", data: {}, opts: { jobId: \"item:1\" } },"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "sweep",
+    "line": 47,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "{ name: \"sweep\", data: {}, opts: { jobId: \"order:nightly\" } },"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "assemble",
+    "line": 54,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "opts: { jobId: \"order:root\" },"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "assemble",
+    "line": 61,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "opts: { jobId: \"order:root\" },"
+  },
+  {
+    "file": "enqueue.ts",
+    "job": "pack",
+    "line": 68,
+    "message": "custom jobId contains '{' or '}'; use '-' or '_' as the separator",
+    "sourceLine": "opts: { jobId: \"item{child}\" },"
+  },
+  {
+    "file": "suppressed.ts",
+    "job": "place",
+    "line": 5,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "return widgets.add(\"place\", {}, { jobId: \"user:1\" });"
+  }
+]

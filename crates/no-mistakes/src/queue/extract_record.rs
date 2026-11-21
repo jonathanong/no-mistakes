@@ -51,6 +51,9 @@ pub(super) fn record_flow(
     facts: &mut FileFacts,
     call: &CallExpression<'_>,
 ) {
+    if let Some(expr) = call.arguments.first().and_then(Argument::as_expression) {
+        super::extract_job_id::note_flow_node(source, consts, facts, expr);
+    }
     let Some(Argument::ObjectExpression(object)) = call.arguments.first() else {
         return;
     };
@@ -98,6 +101,7 @@ fn record_bulk_items(
     call: &CallExpression<'_>,
     object: &oxc_ast::ast::ObjectExpression<'_>,
 ) {
+    super::extract_job_id::note_bulk_item(source, consts, facts, object);
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
             if crate::ast::property_key_name(&property.key).as_deref() == Some("name") {

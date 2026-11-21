@@ -4,6 +4,7 @@ mod factory_detectors;
 mod factory_false_positives;
 mod factory_reexports;
 mod factory_roles;
+mod job_id;
 mod lang;
 mod prepared;
 mod processor_identifiers;
