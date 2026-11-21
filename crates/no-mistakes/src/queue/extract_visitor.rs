@@ -30,6 +30,8 @@ pub(super) struct QueueVisitor<'a> {
     pub queue_name_index: HashMap<String, usize>,
     pub enqueue_factories: HashMap<String, (usize, usize, Option<usize>)>,
     pub worker_factories: HashMap<String, (usize, usize)>,
+    pub scheduler_factories: HashMap<String, usize>,
+    pub object_bindings: Vec<super::extract_factory::ObjectBinding<'a>>,
     pub job_frames: Vec<JobFrame>,
     pub record_waits: bool,
     pub scoping: Option<&'a oxc_semantic::Scoping>,

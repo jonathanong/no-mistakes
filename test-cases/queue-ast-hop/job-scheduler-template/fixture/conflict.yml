@@ -1,0 +1,10 @@
+version: 2
+projects:
+  orders:
+    type: server
+    root: .
+queues:
+  factories:
+    jobScheduler:
+      - { callee: scheduleOrders, template: 0 }
+      - { callee: scheduleOrders, template: 1 }

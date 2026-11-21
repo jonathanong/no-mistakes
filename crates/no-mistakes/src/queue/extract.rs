@@ -50,6 +50,8 @@ pub(crate) fn extract_program_with_scoping(
         queue_name_index: HashMap::new(),
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
+        scheduler_factories: HashMap::new(),
+        object_bindings: super::extract_factory::collect_object_bindings(program),
         job_frames: Vec::new(),
         record_waits,
         scoping,

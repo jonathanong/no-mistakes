@@ -24,6 +24,7 @@ where
     if roles.enqueue.is_empty()
         && roles.worker.is_empty()
         && roles.enqueue_and_wait.is_empty()
+        && roles.job_scheduler.is_empty()
         && roles.enqueue_and_wait_patterns.is_empty()
         && !roles.forbid_enqueue_and_wait_declarations
         && roles.queue.iter().all(|factory| factory.name == 0)
@@ -65,6 +66,11 @@ where
                 processor: factory.processor,
             })
             .collect(),
+        job_scheduler: roles
+            .job_scheduler
+            .iter()
+            .map(super::scheduler::JobSchedulerInput::from)
+            .collect(),
         enqueue_and_wait: roles.enqueue_and_wait.clone(),
         enqueue_and_wait_patterns: roles.enqueue_and_wait_patterns.patterns().to_vec(),
         forbid_enqueue_and_wait_declarations: roles.forbid_enqueue_and_wait_declarations,
@@ -85,6 +91,8 @@ struct RolesBody {
     queue: Vec<QueueEntry>,
     enqueue: Vec<EnqueueInput>,
     worker: Vec<WorkerInput>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    job_scheduler: Vec<super::scheduler::JobSchedulerInput>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     enqueue_and_wait: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -166,6 +174,11 @@ impl FactoriesInput {
                         name: spec.name,
                         processor: spec.processor,
                     })
+                    .collect(),
+                job_scheduler: body
+                    .job_scheduler
+                    .into_iter()
+                    .map(super::JobSchedulerFactory::from)
                     .collect(),
                 enqueue_and_wait: body.enqueue_and_wait,
                 enqueue_and_wait_patterns: QueueWaitPatterns::new(body.enqueue_and_wait_patterns)?,

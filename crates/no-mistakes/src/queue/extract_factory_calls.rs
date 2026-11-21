@@ -5,8 +5,13 @@ use oxc_ast::ast::{CallExpression, Expression};
 
 #[path = "extract_factory_enqueue.rs"]
 mod enqueue;
+#[path = "extract_factory_scheduler.rs"]
+mod scheduler;
+
+pub use scheduler::{collect_object_bindings, ObjectBinding};
 
 pub(crate) fn note_factory_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
+    scheduler::note_scheduler(visitor, call);
     let Expression::Identifier(id) = &call.callee else {
         return;
     };
@@ -17,6 +22,10 @@ pub(crate) fn note_factory_call(visitor: &mut QueueVisitor<'_>, call: &CallExpre
     if let Some(&(name_index, processor_index)) = visitor.worker_factories.get(local) {
         enqueue::note_worker(visitor, call, name_index, processor_index);
     }
+}
+
+pub(super) fn note_scheduler_import(visitor: &mut QueueVisitor<'_>, imported: &str, local: &str) {
+    scheduler::note_import(visitor, imported, local);
 }
 
 pub(crate) fn note_wait(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {

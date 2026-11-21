@@ -455,7 +455,10 @@ Both wait finding kinds use the same project `waitScopes`.
 Import the exported `QueueWaitFindingKind` type for the wait-specific values
 `"enqueue-and-wait" | "enqueue-and-wait-declaration"`.
 `QueueCheckFinding.kind` remains `string` to preserve compatibility with
-other finding kinds. Declaration findings carry fix guidance in `message`;
+other finding kinds. `queueCheck()` also reports
+[`scheduler-template-option`](cli/queues-check.md) when a job-scheduler
+template sets `delay`, `deduplication`, `parent`, or `jobId`.
+Declaration findings carry fix guidance in `message`;
 no separate JSON field is added.
 
 ## Runtime exports
