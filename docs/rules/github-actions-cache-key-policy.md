@@ -57,7 +57,8 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `sha256sum orders.lock & cat widgets.lock` do not. `sha256sum widgets.lock & echo done` still
   counts. `sha256sum 2>&1 widgets.lock` counts. An `&` that belongs to a redirection (`2>&1`,
   `>&2`, `&>`, `&>>`, `<&`) does not split the command. A standalone `&` does, and `&` inside
-  `$(( ))` does not. Reassigning the variable to a
+  `$(( ))` does not. A command ending in `&`, `>&`, `&>`, `2>&`, or `>` has no redirect
+  target, so that ending does not hide the lockfile. Reassigning the variable to a
   constant, `cat`, or a hash of a different file drops the proof; an earlier copy into a
   different variable keeps it.
   Reassigning it to a parameter expansion of itself keeps the proof: `"$digest"`, `${digest}`,

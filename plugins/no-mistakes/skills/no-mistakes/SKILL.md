@@ -361,7 +361,8 @@ required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
 must name that lockfile in the same simple command. A standalone `&` splits commands; an `&` in
-`2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. Reassignment
+`2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. A command ending in `&`, `>&`, `&>`, `2>&`, or `>`
+has no redirect target, so that ending does not hide the lockfile. Reassignment
 drops the proof unless the whole new value is a parameter expansion of that same variable.
 Mixing that expansion with other text drops the proof. A `>`, `>>`, or non-numeric `>&` redirect
 is required. Single quotes do not expand. A suffix on the redirect word is part of the

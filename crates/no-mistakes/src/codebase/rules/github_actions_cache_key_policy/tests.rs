@@ -1,6 +1,7 @@
 use super::*;
 
 mod coverage;
+mod edges;
 mod followups;
 
 fn fixture(name: &str) -> PathBuf {

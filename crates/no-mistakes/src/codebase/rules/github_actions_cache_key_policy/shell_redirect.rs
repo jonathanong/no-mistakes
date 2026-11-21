@@ -58,8 +58,12 @@ fn output_redirects(line: &str) -> Vec<Hit> {
             continue;
         }
         if ch == '>' {
+            let origin = index;
             if let Some(hit) = filename_redirect(&chars, line, &mut index) {
                 hits.push(hit);
+            }
+            if index <= origin {
+                index = origin + 1;
             }
             continue;
         }
@@ -113,6 +117,9 @@ fn redirect_word(line: &str, chars: &[(usize, char)], at: usize) -> (String, usi
             break;
         }
         let (piece, further, piece_quoted) = fragment(line, byte, next);
+        if further <= next_at {
+            break;
+        }
         if extends_name(&word, &piece) {
             word.push('.');
         }
