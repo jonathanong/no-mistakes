@@ -1,43 +1,52 @@
 use super::Prerequisite;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::graph::GraphBuildPlan;
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::config::v2::NoMistakesConfig;
+use std::path::{Path, PathBuf};
 
-pub(super) fn without_value_flow_when_partial(
+pub(super) const CALL_GRAPH: &str = "codebase.canonical-graph-calls";
+
+pub(super) fn note_call_graph<'a>(
+    session: &AnalysisSession,
+    calls: bool,
+    graph: &'a DepGraph,
+) -> Option<&'a DepGraph> {
+    if calls {
+        session.set_check_prerequisite(CALL_GRAPH, Prerequisite::Ready(()));
+    }
+    Some(graph)
+}
+
+/// Files for the shared graph. An incomplete value-flow file is omitted so the
+/// full call plan can still build. The fragment rule gaps that file itself.
+pub(super) fn shared_graph_files(
     config: &NoMistakesConfig,
     session: &AnalysisSession,
     shared: &CheckFactMap,
-    graph_plan: Prerequisite<Option<GraphBuildPlan>>,
-) -> Prerequisite<Option<GraphBuildPlan>> {
-    let Prerequisite::Ready(Some(mut plan)) = graph_plan else {
-        return graph_plan;
+    graph_plan: &Prerequisite<Option<GraphBuildPlan>>,
+) -> Vec<PathBuf> {
+    let files = shared.graph_file_universe().to_vec();
+    let Prerequisite::Ready(Some(plan)) = graph_plan else {
+        return files;
     };
-    if !plan.ts_fact_plan().needs_value_flow() {
-        return Prerequisite::Ready(Some(plan));
-    }
     let fragment = crate::codebase::rules::POSTGRES_SQL_FRAGMENT_ESCAPE;
-    if !session.partial_checks_enabled()
+    if !plan.ts_fact_plan().needs_value_flow()
+        || !session.partial_checks_enabled()
         || !session.check_consumer_ready(fragment)
         || !config.rule_configured(fragment)
-        || !value_flow_is_incomplete(shared)
     {
-        return Prerequisite::Ready(Some(plan));
+        return files;
     }
-    plan.calls = false;
-    plan.identifier_provenance = false;
-    Prerequisite::Ready(Some(plan))
+    files
+        .into_iter()
+        .filter(|file| value_flow_complete(shared, file))
+        .collect()
 }
 
-fn value_flow_is_incomplete(shared: &CheckFactMap) -> bool {
+fn value_flow_complete(shared: &CheckFactMap, file: &Path) -> bool {
     shared
-        .files()
-        .iter()
-        .chain(shared.graph_file_universe())
-        .any(|file| {
-            shared
-                .ts
-                .get(file)
-                .is_some_and(|facts| facts.ts.value_flow.incomplete_reason.is_some())
-        })
+        .ts
+        .get(file)
+        .is_none_or(|facts| facts.ts.value_flow.incomplete_reason.is_none())
 }

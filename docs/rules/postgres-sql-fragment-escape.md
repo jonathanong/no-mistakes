@@ -45,7 +45,10 @@ binding or a write that those facts still record is reported. The same file is
 listed on the check result's `incomplete` field. The message names the file
 and says a write, rebind, or escape that lived only in the missing text may be
 absent. One such file does not drop findings from files whose facts are
-complete. An ESLint-only run does not report these cross-file escapes. Set
+complete. Call edges and identifier provenance recorded for those complete
+files stay on the shared graph, so a sibling rule still sees a `new`
+expression or a forbidden call there. An ESLint-only run does not report
+these cross-file escapes. Set
 `trustedSqlTags` here, or this rule reports nothing.
 
 ## What it catches
