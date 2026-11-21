@@ -535,9 +535,23 @@ summary does not lower is not inspected for a later call or builder use, so it
 is not a result read and the callback proof is dropped. An array or object
 literal after the call is not a result read either, including when it calls
 into the builder. A plain destructure of the callback result binds each name to
-an inert placeholder and may return that name. That destructured lowering is
-only an input to this proof: the function stays unsupported on every other
-path, and any other function with a destructured call stays unsupported.
+an inert placeholder and may return that name. The summary lowers that
+placeholder to a primitive result, not to an unresolved expression. The
+primitive-result proof accepts the placeholder and rejects an unresolved
+expression. Await suspension treats the placeholder and an unresolved
+expression as inert. Only this proof accepts a later read of the bound name.
+That destructured lowering is only an input to this proof: the function stays
+unsupported on every other path, and any other function with a destructured
+call stays unsupported.
+An append of the same parameter after the callback call is not a result read.
+The proof stays off, so that later append is not executed SQL; the annotated
+argument already passed to the callback can still resolve. A const alias of the
+builder is not an in-place append of the parameter, so the proof stays off, and
+a later read of that alias can still resolve an annotated head. Reassigning the
+builder leaves the call unanalyzable. A property default on the destructure
+drops the proof, and the same initializer call still resolves. A ternary or a
+spread after the call is not a result read, so the proof stays off; the
+annotated argument passed before that expression still resolves.
 A direct imported immutable string constant has the same fixed-head proof when
 its source file is prepared and the import/export identity is exact. Re-exports,
 mutable values, and missing source files remain unresolved.

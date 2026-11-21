@@ -73,4 +73,9 @@ fn nested_await_in_sql_builder_mutations_is_a_suspension() {
         Step::Var("query".into()),
         Step::Return(Expr::Text("SELECT 1".into()))
     ]));
+    assert!(!has_suspension(&[Step::Bind(
+        "rows".into(),
+        Expr::Primitive
+    )]));
+    assert!(!has_suspension(&[Step::Bind("rows".into(), Expr::Unknown)]));
 }

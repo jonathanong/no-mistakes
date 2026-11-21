@@ -99,6 +99,15 @@ fn event<'a>(values: &'a [(String, Value)], marker: &str) -> &'a Value {
         .1
 }
 
+#[test]
+fn placeholder_is_a_primitive_result_and_unknown_is_not() {
+    use super::primitive_result;
+    use crate::codebase::postgres::query_annotation::Expr;
+
+    assert!(primitive_result(&Expr::Primitive));
+    assert!(!primitive_result(&Expr::Unknown));
+}
+
 #[path = "tests/evaluator_behavior.rs"]
 mod evaluator_behavior;
 
