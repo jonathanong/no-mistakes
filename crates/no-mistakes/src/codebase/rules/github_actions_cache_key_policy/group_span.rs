@@ -49,8 +49,17 @@ fn span_events(
         emit::record_text(&mut pending, outputs, opener_body, true);
     }
     let mut index = start + 1;
-    while index < lines.len() && !span_close(lines[index], paren) {
+    let mut fate = Fate::Escape;
+    let mut rest = "";
+    while index < lines.len() {
         let line = lines[index].trim();
+        if let Some((before, after)) = split_closer(line, paren) {
+            if !before.is_empty() {
+                emit::record_text(&mut pending, outputs, before, true);
+            }
+            (fate, rest) = bind_suffix(after, &entry);
+            break;
+        }
         if body::closed_group(line).is_some() {
             emit::record_closed(&mut pending, outputs, line, true);
         } else if opens(line) {
@@ -61,11 +70,6 @@ fn span_events(
         }
         index += 1;
     }
-    let (fate, rest) = if index < lines.len() {
-        closer_binding(lines[index], &entry)
-    } else {
-        (Fate::Escape, "")
-    };
     emit::emit(
         sink,
         pending,
@@ -87,15 +91,78 @@ fn span_events(
     }
 }
 
-fn closer_binding<'a>(line: &'a str, entry: &FxHashSet<String>) -> (Fate, &'a str) {
-    let rest = after_first(line);
-    let (redirect, after) = split_head(rest);
-    let fate = if emit::piped_away(rest) {
+fn bind_suffix<'a>(suffix: &'a str, entry: &FxHashSet<String>) -> (Fate, &'a str) {
+    let (redirect, after) = split_head(suffix);
+    let fate = if emit::piped_away(suffix) {
         Fate::Discard
     } else {
         emit::fate_of(redirect, entry)
     };
     (fate, after)
+}
+
+fn split_closer(line: &str, paren: bool) -> Option<(&str, &str)> {
+    let line = line.trim();
+    if (!paren && brace_close(line)) || (paren && line.starts_with(')')) {
+        return Some(("", after_first(line)));
+    }
+    let chars: Vec<(usize, char)> = line.char_indices().collect();
+    let mut quote = None;
+    let mut escape = false;
+    let mut parens = 0i32;
+    let mut braces = 0i32;
+    for (index, (at, ch)) in chars.iter().enumerate() {
+        if let Some(open) = quote {
+            if escape {
+                escape = false;
+            } else if *ch == '\\' && open == '"' {
+                escape = true;
+            } else if *ch == open {
+                quote = None;
+            }
+            continue;
+        }
+        if *ch == '"' || *ch == '\'' {
+            quote = Some(*ch);
+            escape = false;
+            continue;
+        }
+        if *ch == '#' && (index == 0 || chars[index - 1].1.is_whitespace()) {
+            break;
+        }
+        match *ch {
+            '{' => braces += 1,
+            '}' if braces > 0 => braces -= 1,
+            '}' if !paren && braces == 0 && parens == 0 && brace_token(&chars, index) => {
+                return Some((line[..*at].trim(), line[*at + ch.len_utf8()..].trim()));
+            }
+            '(' => parens += 1,
+            ')' if parens > 0 => parens -= 1,
+            ')' if paren && parens == 0 && braces == 0 => {
+                return Some((line[..*at].trim(), line[*at + ch.len_utf8()..].trim()));
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn brace_token(chars: &[(usize, char)], index: usize) -> bool {
+    let mut cursor = index;
+    while cursor > 0 && chars[cursor - 1].1.is_whitespace() {
+        cursor -= 1;
+    }
+    if cursor == 0 {
+        return true;
+    }
+    match chars[cursor - 1].1 {
+        ';' => true,
+        '&' => !matches!(
+            cursor.checked_sub(2).map(|prev| chars[prev].1),
+            Some('&' | '>' | '<' | '|')
+        ),
+        _ => false,
+    }
 }
 
 pub(super) fn after_first(line: &str) -> &str {
@@ -108,14 +175,6 @@ pub(super) fn after_first(line: &str) -> &str {
 
 fn opens(line: &str) -> bool {
     brace_open(line) || line.starts_with('(')
-}
-
-fn span_close(line: &str, paren: bool) -> bool {
-    if paren {
-        line.trim().starts_with(')')
-    } else {
-        brace_close(line)
-    }
 }
 
 #[cfg(test)]

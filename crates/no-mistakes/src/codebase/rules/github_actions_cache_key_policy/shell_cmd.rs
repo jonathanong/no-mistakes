@@ -34,12 +34,19 @@ pub(super) fn split_head(cmd: &str) -> (&str, &str) {
     (first.text, "")
 }
 
+pub(super) fn piped_head(cmd: &str) -> Option<&str> {
+    let piece = pieces(cmd).into_iter().next()?;
+    piece.piped.then_some(piece.text)
+}
+
 fn pieces(cmd: &str) -> Vec<Piece<'_>> {
     let chars: Vec<(usize, char)> = cmd.char_indices().collect();
     let mut pieces = Vec::new();
     let mut start = 0;
     let mut quote = None;
     let mut arith = 0i32;
+    let mut subst = 0i32;
+    let mut tick = false;
     let mut index = 0;
     while index < chars.len() {
         let (at, ch) = chars[index];
@@ -55,6 +62,15 @@ fn pieces(cmd: &str) -> Vec<Piece<'_>> {
             index += 1;
             continue;
         }
+        if ch == '`' {
+            tick = !tick;
+            index += 1;
+            continue;
+        }
+        if tick {
+            index += 1;
+            continue;
+        }
         if starts(&chars, index, &['$', '(', '(']) {
             arith += 1;
             index += 3;
@@ -65,7 +81,19 @@ fn pieces(cmd: &str) -> Vec<Piece<'_>> {
             index += 2;
             continue;
         }
-        if arith > 0 && ch == '&' {
+        if arith > 0 {
+            index += 1;
+            continue;
+        }
+        if starts(&chars, index, &['$', '(']) {
+            subst += 1;
+            index += 2;
+            continue;
+        }
+        if subst > 0 {
+            if ch == ')' {
+                subst -= 1;
+            }
             index += 1;
             continue;
         }

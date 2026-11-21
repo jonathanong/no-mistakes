@@ -44,7 +44,11 @@ The key must also prove a digest of the configured lockfile, in either of these 
   to another file, does not count. The redirect is fixed before the group body runs, so an
   assignment inside the group does not change that destination. Assignments inside a
   parenthesized command do not affect later commands. A command after `;` on the same line
-  is a separate command.
+  is a separate command. The closing `)` may share a line with the last command. The closing
+  `}` must be its own command, including after `;` or a background `&`. A later pipe discards
+  the group unless standard output is redirected to a file before that pipe, and a pipe inside
+  `$(...)` or backticks stays in that substitution. Redirecting only standard error does not
+  write the digest.
   Assigning another variable from `$GITHUB_OUTPUT`, including `OUT="$GITHUB_OUTPUT"` and a later
   copy of that variable, makes a `>` or `>>` redirect to `$OUT` the same as a redirect to
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not

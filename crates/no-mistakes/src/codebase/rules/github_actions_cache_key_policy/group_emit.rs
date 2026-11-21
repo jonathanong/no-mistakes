@@ -1,5 +1,5 @@
 use super::super::super::output_syntax::{command_assign, shell_assignment};
-use super::super::super::shell_cmd::split_head;
+use super::super::super::shell_cmd::{piped_head, split_head};
 use super::super::{remember_assign, writes_output, Event, Write};
 use super::{body, stdout};
 use crate::fx::FxHashSet;
@@ -95,10 +95,6 @@ fn record_command(
         push_definite(pending, outputs, command);
         return;
     }
-    if writes_output(command, outputs) {
-        push_definite(pending, outputs, command);
-        return;
-    }
     if let Some((name, value)) = command_assign(command) {
         pending.push(Pending::Pass(Write {
             name,
@@ -182,5 +178,8 @@ pub(super) fn fate_of(redirect: &str, entry: &FxHashSet<String>) -> Fate {
 
 pub(super) fn piped_away(suffix: &str) -> bool {
     let suffix = suffix.trim();
-    suffix.starts_with('|') && !suffix.starts_with("||")
+    if suffix.starts_with('|') && !suffix.starts_with("||") {
+        return true;
+    }
+    piped_head(suffix).is_some_and(|head| !stdout::stdout_leaves(head))
 }

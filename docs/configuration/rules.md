@@ -608,7 +608,10 @@ or parenthesized command applies to every command in the group that does not alr
 output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` counts. A group with no redirect, or
 a redirect to another file, does not. The redirect is fixed before the body runs. Assignments
 inside a parenthesized command do not affect later commands, and a command after `;` on the
-same line is separate. The checksum command must name the lockfile in that same
+same line is separate. The closing `)` may share a line with the last command, while `}` must
+be its own command. A later pipe discards the group unless standard output is redirected to a
+file first. A pipe inside `$(...)` or backticks stays in that substitution, and a standard-error
+redirect does not write the digest. The checksum command must name the lockfile in that same
 simple command. A standalone `&` splits commands. An `&` in `2>&1`, `>&2`, `&>`, `&>>`, or `<&`
 does not, and neither does `&` inside `$(( ))`. A digit prefix and a quoted suffix are one
 word, so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or
