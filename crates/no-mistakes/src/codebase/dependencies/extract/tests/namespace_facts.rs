@@ -418,6 +418,18 @@ fn an_import_of_the_same_name_merges_with_the_namespace() {
 }
 
 #[test]
+fn a_sourced_reexport_does_not_set_the_local_export_offset() {
+    let source = concat!(
+        "export { name as other } from './producer';\n",
+        "const name = 1;\n",
+        "export { name };\n",
+    );
+    let facts = namespaces(source);
+    let local = u32::try_from(source.rfind("export").expect("local export")).expect("offset");
+    assert_eq!(facts.export_name_offsets, vec![("name".to_string(), local)]);
+}
+
+#[test]
 fn a_file_without_namespaces_or_imports_has_no_namespace_facts() {
     let source = "class A extends Error {}\nconst x = new A();\nexport { x };\n";
     let mut facts = namespaces(source);
