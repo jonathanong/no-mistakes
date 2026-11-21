@@ -43,6 +43,14 @@ fn configured_globs_match_literal_exclude_arrays_only() {
         "exclude-local-binding",
         "exclude-helper",
         "exclude-proven-spread",
+        "exclude-conditional-spread",
+        "exclude-conditional-proven",
+        "exclude-ternary-complete-or-empty",
+        "exclude-ternary-complete-or-complete",
+        "exclude-and-complete",
+        "exclude-computed-both",
+        "exclude-logical-spread",
+        "exclude-logical-and-exclude",
         "exclude-project-present",
         "exclude-project-silent",
         "exclude-option-off",
@@ -105,6 +113,11 @@ fn non_literal_exclude_values_stay_incomplete() {
         "exclude-dynamic",
         "exclude-partial-spread",
         "exclude-dynamic-config",
+        "exclude-conditional-unknown",
+        "exclude-logical-or-exclude",
+        "exclude-logical-nullish-exclude",
+        "exclude-identifier-spread",
+        "exclude-call-spread",
     ] {
         let report = output(case);
         assert!(report.findings.is_empty(), "{case}: {:?}", report.findings);
@@ -129,6 +142,125 @@ fn non_literal_exclude_values_stay_incomplete() {
         .incomplete
         .iter()
         .any(|failure| failure.property.as_deref() == Some("test")));
+}
+
+#[test]
+fn conditional_required_properties_stay_incomplete_when_a_branch_omits_them() {
+    let report = output("exclude-conditional-required");
+    assert!(report.findings.is_empty(), "{:?}", report.findings);
+    assert!(report
+        .incomplete
+        .iter()
+        .any(|failure| failure.property.as_deref() == Some("isolate")));
+    assert!(report
+        .incomplete
+        .iter()
+        .all(|failure| failure.property.as_deref() != Some("test.exclude")));
+}
+
+#[test]
+fn a_forbidden_key_on_only_some_branches_stays_incomplete() {
+    let report = output("exclude-conditional-forbidden");
+    assert!(report.findings.is_empty(), "{:?}", report.findings);
+    assert!(report.incomplete.iter().any(|failure| {
+        failure.property.as_deref() == Some("poolOptions")
+            && failure.message.contains("not statically known")
+    }));
+    assert!(report
+        .incomplete
+        .iter()
+        .all(|failure| failure.property.as_deref() != Some("test.exclude")));
+}
+
+#[test]
+fn a_forbidden_key_on_every_branch_stays_a_finding() {
+    let report = output("exclude-conditional-forbidden-known");
+    assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);
+    assert_eq!(report.findings.len(), 1);
+    assert!(report.findings[0]
+        .message
+        .contains("test.poolOptions is forbidden"));
+}
+
+#[test]
+fn folded_exclude_paths_name_each_missing_glob() {
+    for case in [
+        "exclude-conditional-exclude",
+        "exclude-ternary-partial-or-empty",
+        "exclude-ternary-complete-or-partial",
+        "exclude-and-partial",
+        "exclude-ternary-partial-or-call",
+        "exclude-earlier-then-partial",
+        "exclude-computed-then-partial",
+        "exclude-computed-nested-partial",
+        "exclude-computed-partial-or-empty",
+    ] {
+        let report = output(case);
+        assert!(
+            report.incomplete.is_empty(),
+            "{case}: {:?}",
+            report.incomplete
+        );
+        assert_eq!(report.findings.len(), 1, "{case}: {:?}", report.findings);
+        assert!(
+            report.findings[0]
+                .message
+                .contains("add **/.git/** to test.exclude"),
+            "{case}: {}",
+            report.findings[0].message
+        );
+        assert!(
+            !report.findings[0].message.contains("**/node_modules/**"),
+            "{case}"
+        );
+    }
+}
+
+#[test]
+fn non_literal_spreads_leave_only_exclude_incomplete() {
+    for case in [
+        "exclude-call-make-extra",
+        "exclude-ternary-complete-or-call",
+        "exclude-computed-or-empty",
+        "exclude-computed-nested-omitted",
+    ] {
+        let report = output(case);
+        assert!(report.findings.is_empty(), "{case}: {:?}", report.findings);
+        assert_eq!(
+            report.incomplete.len(),
+            1,
+            "{case}: {:?}",
+            report.incomplete
+        );
+        assert_eq!(
+            report.incomplete[0].property.as_deref(),
+            Some("test.exclude"),
+            "{case}"
+        );
+    }
+}
+
+#[test]
+fn nested_omitted_exclude_uses_the_enclosing_array() {
+    let report = output("exclude-nested-omitted");
+    assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);
+    assert_eq!(report.findings.len(), 1, "{:?}", report.findings);
+    assert!(
+        report.findings[0]
+            .message
+            .contains("add **/node_modules/**, **/.git/** to test.exclude"),
+        "{}",
+        report.findings[0].message
+    );
+}
+
+#[test]
+fn truthy_object_and_keeps_a_definite_exclude_array() {
+    let report = output("exclude-logical-and-known");
+    assert!(report.incomplete.is_empty(), "{:?}", report.incomplete);
+    assert_eq!(report.findings.len(), 1);
+    assert!(report.findings[0].message.contains("**/.git/**"));
+    assert!(!report.findings[0].message.contains("**/node_modules/**"));
 }
 
 #[test]

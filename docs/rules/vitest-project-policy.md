@@ -85,6 +85,28 @@ string still passes when another element is unknown. If a configured string is
 not yet present and an element is unknown, the array is incomplete rather than
 a finding.
 
+A spread whose argument is a conditional (`condition ? { ... } : { ... }`) or a
+logical expression (`condition && { ... }`, `condition || { ... }`,
+`condition ?? { ... }`) folds literal object operands. A branch that writes no
+`exclude` — the `: {}` alternative, or the false side of `&&` — leaves the
+property absent on that path. That path uses an earlier literal `exclude` on
+the same object, or the silent missing-`exclude` default. It is not treated as
+unknown. Each path is checked. If any path's array omits a configured string,
+the finding names that string. The spread is clean when every path that sets
+`exclude` contains each configured string, including both sides of
+`condition ? { exclude } : { exclude }` when those arrays agree. `||` and `??`
+whose left side is not a known object keep `exclude` unknown. A spread of an
+identifier or a call, such as `...makeExtra()`, stays unknown. A nested
+object spread keeps an omitted `exclude` until the enclosing object applies
+its earlier literal. A computed key before the spread makes an omitted path
+unknown unless a later literal `exclude` is written, because that key may
+itself be `exclude`. An omit nested inside another object spread follows
+that same rule. A sibling path that lacks a configured string is still a
+finding. Other `test`
+properties keep the earlier rule: a key with the same literal on every branch
+stays known for required, forbidden, and parity checks, and a key that appears
+on only some branches stays incomplete.
+
 Only the selected config's `test.exclude` is checked. A listed helper supplies
 the array when the config imports it into that property. An unrelated
 `exclude` on another object, including an object in a module that is not the

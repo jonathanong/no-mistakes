@@ -25,6 +25,29 @@ pub(super) fn check(
 }
 
 fn missing_globs(exclude: &Value, required: &[String]) -> Option<Vec<String>> {
+    if matches!(exclude.kind, Kind::Omitted) {
+        return Some(Vec::new());
+    }
+    if let Kind::OneOf(options) = &exclude.kind {
+        let mut lacked = BTreeSet::new();
+        let mut unknown = false;
+        for option in options {
+            match missing_globs(option, required) {
+                Some(items) => lacked.extend(items),
+                None => unknown = true,
+            }
+        }
+        if unknown && lacked.is_empty() {
+            return None;
+        }
+        return Some(
+            required
+                .iter()
+                .filter(|glob| lacked.contains(*glob))
+                .cloned()
+                .collect(),
+        );
+    }
     let Kind::Array(elements) = &exclude.kind else {
         return if matches!(exclude.kind, Kind::Unknown) {
             None

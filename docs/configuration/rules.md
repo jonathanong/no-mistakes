@@ -618,7 +618,9 @@ rules:
 properties, `forbidden` names, and `parity` pairs. Optional
 `requiredExcludeGlobs` lists nonempty strings that every literal `test.exclude`
 array on that config must contain. The list defaults to empty, and a missing
-`exclude` stays silent because Vitest defaults still apply. Helper globs select
+`exclude` stays silent because Vitest defaults still apply. Conditional and
+logical spreads of literal objects contribute only keys those objects define, so
+a spread that never sets `exclude` stays silent too. Helper globs select
 only the prepared visible-file inventory. Optional `declared.forbiddenValues` maps
 property names to forbidden literal arrays; `declared.forbidLiteralKinds` maps
 names to arrays of `number`, `string`, or `boolean`. They check every object
