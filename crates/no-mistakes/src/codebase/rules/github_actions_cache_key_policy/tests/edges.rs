@@ -178,7 +178,6 @@ fn group_redirect_is_bound_before_the_body_runs() {
         "{ echo \"digest=$digest\" 2>> \"$GITHUB_OUTPUT\"; } >> \"$GITHUB_OUTPUT\"",
         "(\n  echo \"digest=$digest\"\n  true ) >> \"$GITHUB_OUTPUT\"",
         "{\n  echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\"",
-        "{\n  digest=$(sha256sum widgets.lock | cut -d ' ' -f1)\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"",
         "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\" | cat /tmp/orders",
         "(\n  echo \"keep ) text\"\n  echo \"digest=$digest\" ) >> \"$GITHUB_OUTPUT\"",
         "(\n  echo \"skip=1\"\n); echo \"digest=$digest\" >> \"$GITHUB_OUTPUT\"",
@@ -188,6 +187,14 @@ fn group_redirect_is_bound_before_the_body_runs() {
     }
     assert_eq!(
         names("digest=$(sha256sum widgets.lock)\n( digest=plain )\necho \"digest=$digest\" >> \"$GITHUB_OUTPUT\"\n"),
+        digest
+    );
+    assert_eq!(
+        names("{\n  digest=$(sha256sum widgets.lock | cut -d ' ' -f1)\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"\n"),
+        digest
+    );
+    assert_eq!(
+        names("{\n  digest=`sha256sum widgets.lock | cut -d ' ' -f1`\n  echo \"digest=$digest\"\n} >> \"$GITHUB_OUTPUT\"\n"),
         digest
     );
     assert_eq!(
