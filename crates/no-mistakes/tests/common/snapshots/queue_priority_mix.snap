@@ -50,6 +50,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "return labels.add(\"rushLabel\", { id }, { priority: 4 });"
         },
         {
+          "file": "later.ts",
+          "job": "holdLater",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"later\" mixes priority 0 and priority > 0; this producer sets priority 4 while other producers enqueue with priority 0: later.ts:10 (openLater)",
+          "queueFile": "queues.ts",
+          "queueName": "later",
+          "sourceLine": "return later.add(\"holdLater\", { id }, { priority: RUSH });"
+        },
+        {
+          "file": "later.ts",
+          "job": "openLater",
+          "kind": "mixed-priority",
+          "line": 10,
+          "message": "queue \"later\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: later.ts:4 (holdLater, priority 4)",
+          "queueFile": "queues.ts",
+          "queueName": "later",
+          "sourceLine": "return later.add(\"openLater\", { id });"
+        },
+        {
           "file": "mixed.ts",
           "job": "packWidget",
           "kind": "mixed-priority",

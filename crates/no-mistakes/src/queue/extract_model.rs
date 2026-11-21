@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -97,4 +97,6 @@ pub(crate) struct FileFacts {
     pub job_id_sites: Vec<(JobIdQueue, LocalCheck)>,
     /// Same-file `const` integers seen while extracting this file.
     pub const_numbers: HashMap<String, u32>,
+    /// Bindings whose bulk enqueue list was not a closed list of object literals.
+    pub opaque_priority_bindings: HashSet<String>,
 }

@@ -35,8 +35,9 @@ pub(super) fn note_enqueue(
     }
     let recorded = visitor.facts.producers.len();
     let priority = match options {
-        Some(index) => crate::queue::extract_priority::from_optional_argument(
-            call.arguments.get(index),
+        Some(index) => crate::queue::extract_priority::from_call_argument(
+            &call.arguments,
+            index,
             &visitor.facts.const_numbers,
         ),
         None => EnqueuePriority::Unprioritized,

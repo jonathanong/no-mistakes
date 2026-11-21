@@ -16,3 +16,7 @@ export const routesWorker = new Worker("routes", async () => {});
 export const labelsWorker = new Worker("labels", async () => {});
 export const notesWorker = new Worker("notes", async () => {});
 export const catalogWorker = new Worker("catalog", async () => {});
+export const laterWorker = new Worker("later", async () => {});
+export const shadowsWorker = new Worker("shadows", async () => {});
+export const spreadsWorker = new Worker("spreads", async () => {});
+export const opaqueWorker = new Worker("opaque", async () => {});

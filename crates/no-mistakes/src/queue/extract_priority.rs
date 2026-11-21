@@ -17,6 +17,21 @@ pub(crate) fn const_u32(expr: &Expression<'_>, numbers: &HashMap<String, u32>) -
     }
 }
 
+pub(crate) fn from_call_argument(
+    arguments: &[Argument<'_>],
+    index: usize,
+    numbers: &HashMap<String, u32>,
+) -> EnqueuePriority {
+    if arguments
+        .iter()
+        .take(index)
+        .any(|argument| matches!(argument, Argument::SpreadElement(_)))
+    {
+        return EnqueuePriority::Dynamic;
+    }
+    from_optional_argument(arguments.get(index), numbers)
+}
+
 pub(crate) fn from_optional_argument(
     argument: Option<&Argument<'_>>,
     numbers: &HashMap<String, u32>,

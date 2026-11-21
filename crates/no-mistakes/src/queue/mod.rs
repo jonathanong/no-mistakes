@@ -19,6 +19,7 @@ mod graph_model;
 mod graph_related;
 mod graph_resolution;
 mod lang;
+mod number_scope;
 mod outcomes;
 mod priority_mix;
 mod rate_limit;

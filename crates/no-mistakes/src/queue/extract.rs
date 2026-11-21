@@ -110,8 +110,10 @@ fn extract_queue_facts<'a>(
         top_level_callables: 0,
         worker_stack: Vec::new(),
     };
+    super::number_scope::seed_program(&mut visitor, program);
     visitor.visit_program(program);
     super::extract_job_id::finish(&mut visitor);
+    super::number_scope::finish_opaque(&mut visitor.facts);
     super::extract_processor::finish(&mut visitor);
     visitor
 }

@@ -15,3 +15,7 @@ export const parcels = new Queue("parcels");
 export const labels = new Queue("labels");
 export const notes = new Queue("notes");
 export const catalog = new Queue("catalog");
+export const later = new Queue("later");
+export const shadows = new Queue("shadows");
+export const spreads = new Queue("spreads");
+export const opaque = new Queue("opaque");

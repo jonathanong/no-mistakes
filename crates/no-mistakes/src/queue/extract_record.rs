@@ -23,8 +23,9 @@ pub(super) fn record_enqueue(
             .and_then(Argument::as_expression)
             .map(|expr| literal_or_import(expr, consts, &facts.string_imports))
             .unwrap_or((None, None));
-        let priority = crate::queue::extract_priority::from_optional_argument(
-            call.arguments.get(2),
+        let priority = crate::queue::extract_priority::from_call_argument(
+            &call.arguments,
+            2,
             &facts.const_numbers,
         );
         facts.producers.push(ProducerSite {
@@ -40,12 +41,34 @@ pub(super) fn record_enqueue(
         });
         return;
     }
-    if let Some(Argument::ArrayExpression(array)) = call.arguments.first() {
-        for element in &array.elements {
-            if let oxc_ast::ast::ArrayExpressionElement::ObjectExpression(object) = element {
-                record_bulk_items(binding, path, source, consts, facts, call, object);
-            }
+    record_bulk(binding, path, source, consts, facts, call);
+}
+
+fn record_bulk(
+    binding: &str,
+    path: &Path,
+    source: &str,
+    consts: &HashMap<String, String>,
+    facts: &mut FileFacts,
+    call: &CallExpression<'_>,
+) {
+    let Some(argument) = call.arguments.first() else {
+        return;
+    };
+    let Argument::ArrayExpression(array) = argument else {
+        facts.opaque_priority_bindings.insert(binding.to_string());
+        return;
+    };
+    let mut opaque = false;
+    for element in &array.elements {
+        if let oxc_ast::ast::ArrayExpressionElement::ObjectExpression(object) = element {
+            record_bulk_items(binding, path, source, consts, facts, call, object);
+        } else {
+            opaque = true;
         }
+    }
+    if opaque {
+        facts.opaque_priority_bindings.insert(binding.to_string());
     }
 }
 

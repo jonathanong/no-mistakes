@@ -70,8 +70,9 @@ callbacks. It groups those declarations by name on the first template lookup.
 ## Mixed priority
 
 BullMQ and glide-mq keep jobs with a priority and jobs with no priority in
-separate structures. Mixing them on one queue makes the processing order
-surprising, and jobs with no priority can be starved or overtaken.
+separate structures. BullMQ processes priority 0 before any priority greater
+than 0, so prioritized jobs can wait behind priority 0. Mixing the two forms
+makes that order apply across producers.
 
 The check reports each producer of the smaller form and names the producers of
 the other form. When the two forms have the same count, it reports both forms.
@@ -82,14 +83,18 @@ job's `opts`, and the `options` argument of a configured enqueue factory. A
 missing priority, a literal `0`, and a same-file `const` whose value is `0`
 are priority 0. A finite integer greater than 0, including a same-file `const`
 and unary `+`, is the other form. Parentheses and `as const` on that integer
-stay static.
+stay static. A `const` later in the same scope still counts. A parameter,
+`let`, `var`, or other binding with the same name hides the outer `const`.
 
 The check abstains for the whole queue when any producer priority is not one
-of those two forms. That includes a trailing spread, a computed key that may
-overwrite `priority` or `opts`, a non-integer, a negative number, a `let` or
-`var` binding, an imported number, and any other dynamic expression. An
-unresolved queue is not grouped with a resolved one. Give every producer on
-the queue priority 0, or give every producer a priority greater than 0.
+of those two forms. That includes a trailing spread, a spread before the
+options argument, an `addBulk` argument that is not an array of object
+literals, a computed key that may overwrite `priority` or `opts`, a
+non-integer, a negative number, a `let` or `var` binding, an imported number,
+and any other dynamic expression. Flow `children` are not producers, so this
+check does not read them. An unresolved queue is not grouped with a resolved
+one. Give every producer on the queue priority 0, or give every producer a
+priority greater than 0.
 
 ## Suppression
 

@@ -17,15 +17,21 @@ pub(crate) fn visit_function<'a>(
         visitor.top_level_callables += 1;
     }
     visitor.function_stack.push(func.span.start);
+    let numbers = visitor.facts.const_numbers.clone();
     let frames = visitor.job_frames.clone();
     if let Some(id) = &func.id {
         super::scope::mask_name(visitor, id.name.as_str());
     }
     super::dedup::mask_parameters(visitor, &func.params);
+    crate::queue::number_scope::hide_params(visitor, &func.params);
+    if let Some(body) = &func.body {
+        crate::queue::number_scope::hide_function_vars(visitor, &body.statements);
+    }
     let worker = enter_worker(visitor, func.span);
     enter_job(visitor, &func.params, func.span);
     walk::walk_function(visitor, func, flags);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
     if worker {
         visitor.worker_stack.pop();
     }
@@ -37,12 +43,18 @@ pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunct
         visitor.top_level_callables += 1;
     }
     visitor.function_stack.push(arrow.span.start);
+    let numbers = visitor.facts.const_numbers.clone();
     let frames = visitor.job_frames.clone();
     super::dedup::mask_parameters(visitor, &arrow.params);
+    crate::queue::number_scope::hide_params(visitor, &arrow.params);
+    if let oxc_ast::ast::ArrowFunctionBody::FunctionBody(body) = &arrow.body {
+        crate::queue::number_scope::hide_function_vars(visitor, &body.statements);
+    }
     let worker = enter_worker(visitor, arrow.span);
     enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
     if worker {
         visitor.worker_stack.pop();
     }

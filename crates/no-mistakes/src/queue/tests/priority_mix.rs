@@ -30,7 +30,7 @@ fn mixed_literal_priorities_report_the_minority_form() {
         report.check
     );
     let findings = mixed(&report);
-    assert_eq!(findings.len(), 11, "{findings:?}");
+    assert_eq!(findings.len(), 13, "{findings:?}");
 
     let widgets = queue(&findings, "widgets");
     assert_eq!(widgets.len(), 1);
@@ -98,6 +98,15 @@ fn mixed_literal_priorities_report_the_minority_form() {
 
     assert_eq!(queue(&findings, "labels").len(), 2);
     assert_eq!(queue(&findings, "notes").len(), 2);
+
+    let later = queue(&findings, "later");
+    assert_eq!(later.len(), 2);
+    assert!(later.iter().any(|finding| {
+        finding.job.as_deref() == Some("holdLater") && finding.message.contains("sets priority 4")
+    }));
+    for name in ["shadows", "spreads", "opaque"] {
+        assert!(queue(&findings, name).is_empty(), "{name} should abstain");
+    }
 }
 
 #[test]

@@ -3,24 +3,31 @@ use oxc_ast::ast::{BlockStatement, CatchClause, Class, FunctionBody, Statement};
 use oxc_ast_visit::walk;
 
 pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockStatement<'a>) {
+    let numbers = visitor.facts.const_numbers.clone();
+    crate::queue::number_scope::prepare_statements(visitor, &block.body);
     let frames = visitor.job_frames.clone();
     mask_statements(visitor, &block.body);
     walk::walk_block_statement(visitor, block);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
 }
 
 pub(crate) fn visit_body<'a>(visitor: &mut QueueVisitor<'a>, body: &FunctionBody<'a>) {
+    crate::queue::number_scope::prepare_statements(visitor, &body.statements);
     mask_statements(visitor, &body.statements);
     walk::walk_function_body(visitor, body);
 }
 
 pub(crate) fn visit_catch<'a>(visitor: &mut QueueVisitor<'a>, catch: &CatchClause<'a>) {
+    let numbers = visitor.facts.const_numbers.clone();
     let frames = visitor.job_frames.clone();
     if let Some(param) = &catch.param {
         super::dedup::mask_pattern(visitor, &param.pattern);
+        crate::queue::number_scope::hide_pattern(visitor, &param.pattern);
     }
     walk::walk_catch_clause(visitor, catch);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
 }
 
 pub(crate) fn visit_class<'a>(visitor: &mut QueueVisitor<'a>, class: &Class<'a>) {
