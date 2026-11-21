@@ -374,12 +374,16 @@ makes them blocking unless the rule sets `severity: advisory`.
 tests must not run against the live working directory. A matching `exec`,
 `execFile`, `execFileSync`, `execSync`, `fork`, `spawn`, or `spawnSync` call
 with no owned `cwd` is a finding with target `analyzer subprocess`. `exec` and
-`execSync` match a static shell string, including a leading `cd <dir> &&` or
-`NAME=value` prefix. A quoted argument is one token. `$` and a backtick are literal inside single
-quotes and unmatched inside double quotes. A quoted executable, or an analyzer
-name inside a quoted assignment value, leaves that string unmatched. `cd`
-matches on its quote-stripped text. `&&` matches only as an unquoted token,
-and the `cd` directory replaces the `cwd` option. `spawn` and `spawnSync` match one when
+`execSync` match a static shell string. Unquoted `&&`, `;`, and `||` separate
+simple commands, and each one is matched. An unresolved directory does not
+hide a later live scan. A leading `NAME=value` prefix is
+removed. A `cd <dir>` before unquoted `&&` or `;` replaces the `cwd` option;
+`||` does not. A quoted argument is one token. The executable matches on
+quote-stripped text, so `"widget-audit" check` matches. `$` and a backtick are
+literal inside single quotes and unmatched in unquoted text or double quotes.
+An analyzer name inside a quoted assignment value leaves that string unmatched.
+`cd` matches on its quote-stripped text. A quoted `"&&"` is not a separator.
+`spawn` and `spawnSync` match one when
 `shell` is boolean `true`. A `.js`, `.mjs`, or `.cjs` module path matches the configured command.
 `pnpm exec`, `pnpm dlx`, `npm exec`, `npx`, `bunx`, `yarn`, `yarn run`, and
 `yarn dlx` unwrap, including a wrapper around another wrapper, a long value

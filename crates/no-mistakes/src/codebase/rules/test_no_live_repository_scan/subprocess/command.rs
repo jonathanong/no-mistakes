@@ -36,7 +36,7 @@ pub(super) struct Invocation {
     pub(super) executable: Token,
     pub(super) argv: Vec<Token>,
     pub(super) options: OptionsSlot,
-    /// Last `cd <dir> &&` directory. It replaces the `cwd` option.
+    /// Directory from `cd <dir>` before `&&` or `;`. It replaces the `cwd` option.
     pub(super) shell_dir: Option<String>,
 }
 
@@ -65,11 +65,13 @@ pub(super) fn uses_shell(name: &str, values: &[ArgumentValue]) -> bool {
         || (matches!(name, "spawn" | "spawnSync") && shell::flag_true(values))
 }
 
-pub(super) fn invocation(values: &[ArgumentValue], shell: bool) -> Option<Invocation> {
+pub(super) fn launches(values: &[ArgumentValue], shell: bool) -> Vec<Invocation> {
     if shell {
-        return Some(shell::split(values));
+        return shell::splits(values);
     }
-    let executable = token(values.first()?);
+    let Some(first) = values.first() else {
+        return Vec::new();
+    };
     let (argv, options) = match values.get(1) {
         None => (Vec::new(), OptionsSlot::Absent),
         Some(ArgumentValue::Array(items)) => {
@@ -78,12 +80,12 @@ pub(super) fn invocation(values: &[ArgumentValue], shell: bool) -> Option<Invoca
         Some(ArgumentValue::Object(_)) => (Vec::new(), OptionsSlot::Object(1)),
         Some(_) => (vec![Token::Unknown], OptionsSlot::Unknown),
     };
-    Some(Invocation {
-        executable,
+    vec![Invocation {
+        executable: token(first),
         argv,
         options,
         shell_dir: None,
-    })
+    }]
 }
 
 fn options_at(values: &[ArgumentValue], index: usize) -> OptionsSlot {
@@ -160,23 +162,8 @@ fn prefix(line: &[Token], command: &str, args: &[String]) -> bool {
 }
 
 fn same_program(token: &str, command: &str) -> bool {
-    let base = basename(token);
-    base == command || strip_suffix(base) == command
-}
-
-fn program_name(token: &str) -> &str {
-    strip_suffix(basename(token))
-}
-
-fn basename(token: &str) -> &str {
-    token.rsplit(['/', '\\']).next().unwrap_or(token)
-}
-
-fn strip_suffix(name: &str) -> &str {
-    [".cmd", ".exe", ".js", ".mjs", ".cjs"]
-        .into_iter()
-        .find_map(|suffix| name.strip_suffix(suffix))
-        .unwrap_or(name)
+    let base = wrappers::basename(token);
+    base == command || wrappers::strip_suffix(base) == command
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
