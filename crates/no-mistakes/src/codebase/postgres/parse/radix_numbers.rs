@@ -1,100 +1,59 @@
-//! Recover radix numbers split into adjacent number/word tokens by sqlparser.
+//! Rewrite PostgreSQL radix literals into the decimal spelling callers read.
 use super::super::numeric_literal::integer;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
-use std::num::IntErrorKind;
 
 pub(super) fn repair(tokens: &[TokenWithSpan]) -> Option<Vec<TokenWithSpan>> {
     let mut out: Option<Vec<TokenWithSpan>> = None;
     let mut index = 0;
     while index < tokens.len() {
-        let token = &tokens[index];
-        if radix_prefix(token) {
-            if let Some(next) = tokens.get(index + 1) {
-                if glued_word(token, next) {
-                    let out = out.get_or_insert_with(|| tokens[..index].to_vec());
-                    let mut broken = token.clone();
-                    broken.token = Token::Char('\0');
-                    broken.span.end = next.span.end;
-                    out.push(broken);
-                    index += 2;
-                    continue;
-                }
-            }
-            if let Some(value) = radix_integer(token) {
-                let out = out.get_or_insert_with(|| tokens[..index].to_vec());
-                let mut repaired = token.clone();
-                repaired.token = Token::Number(value, false);
-                out.push(repaired);
-                index += 1;
-                continue;
-            }
-        }
-        if let Some(value) = numeric_hex(token) {
+        let next = tokens.get(index + 1);
+        if let Some((step, token)) = rewrite_radix(&tokens[index], next) {
             let out = out.get_or_insert_with(|| tokens[..index].to_vec());
-            let mut repaired = token.clone();
-            repaired.token = Token::Number(value, false);
-            out.push(repaired);
-            index += 1;
+            out.push(token);
+            index += step;
             continue;
         }
-        if matches!(&token.token, Token::Number(number, _) if number == "0") {
-            if let Some(next) = tokens.get(index + 1) {
-                if let Token::Word(word) = &next.token {
-                    if word.quote_style.is_none()
-                        && token.span.end == next.span.start
-                        && matches!(
-                            word.value.as_bytes().first(),
-                            Some(b'o' | b'O' | b'b' | b'B' | b'x' | b'X')
-                        )
-                    {
-                        let raw = format!("0{}", word.value);
-                        let hex = matches!(raw.as_bytes()[1], b'x' | b'X');
-                        let value = match integer(&raw) {
-                            Ok(value) => Some(value.to_string()),
-                            Err(error)
-                                if *error.kind() == IntErrorKind::PosOverflow
-                                    && raw[2..].chars().filter(|c| *c != '_').all(|c| {
-                                        c.is_digit(match raw.as_bytes()[1].to_ascii_lowercase() {
-                                            b'b' => 2,
-                                            b'o' => 8,
-                                            _ => 16,
-                                        })
-                                    }) =>
-                            {
-                                Some(raw)
-                            }
-                            Err(_) => None,
-                        };
-                        let repaired =
-                            value.map(|value| Token::Number(value, false)).or_else(|| {
-                                // Keep malformed contiguous hex lexically invalid in every position.
-                                // Leaving the pair untouched would parse as a projection alias.
-                                hex.then_some(Token::Char('\0'))
-                            });
-                        if let Some(repaired) = repaired {
-                            let mut combined = token.clone();
-                            combined.token = repaired;
-                            combined.span.end = next.span.end;
-                            // Ordinary SQL keeps its original token vector without cloning.
-                            let out = out.get_or_insert_with(|| {
-                                let mut repaired = Vec::with_capacity(tokens.len());
-                                repaired.extend_from_slice(&tokens[..index]);
-                                repaired
-                            });
-                            out.push(combined);
-                            index += 2;
-                            continue;
-                        }
-                    }
-                }
-            }
-        }
         if let Some(out) = &mut out {
-            out.push(token.clone());
+            out.push(tokens[index].clone());
         }
         index += 1;
     }
     out
+}
+
+fn rewrite_radix(
+    token: &TokenWithSpan,
+    next: Option<&TokenWithSpan>,
+) -> Option<(usize, TokenWithSpan)> {
+    if !radix_prefix(token) {
+        return None;
+    }
+    if let Some(broken) = invalid_suffix(token, next) {
+        return Some(broken);
+    }
+    decimal_value(token)
+}
+
+fn invalid_suffix(
+    token: &TokenWithSpan,
+    next: Option<&TokenWithSpan>,
+) -> Option<(usize, TokenWithSpan)> {
+    let next = next?;
+    if !glued_word(token, next) {
+        return None;
+    }
+    // A trailing identifier would parse as a projection alias.
+    let mut broken = token.clone();
+    broken.token = Token::Char('\0');
+    broken.span.end = next.span.end;
+    Some((2, broken))
+}
+
+fn decimal_value(token: &TokenWithSpan) -> Option<(usize, TokenWithSpan)> {
+    let value = radix_integer(token)?;
+    let mut repaired = token.clone();
+    repaired.token = Token::Number(value, false);
+    Some((1, repaired))
 }
 
 /// sqlparser 0.64 emits `0x` / `0o` / `0b` as one number token. Downstream caps
@@ -120,32 +79,6 @@ fn radix_integer(token: &TokenWithSpan) -> Option<String> {
     };
     match integer(text) {
         Ok(value) => Some(value.to_string()),
-        Err(_) => None,
-    }
-}
-
-// sqlparser uses the same token variant for 0xFF and X'FF'. Their lexer spans retain
-// the distinction: numeric spelling has two prefix characters; quoted spelling has
-// a prefix and two quote characters. Normalize while that lexical identity survives,
-// before migration recovery reconstructs source text and changes its byte provenance.
-fn numeric_hex(token: &TokenWithSpan) -> Option<String> {
-    let Token::HexStringLiteral(value) = &token.token else {
-        return None;
-    };
-    let span = token.span;
-    if span.start.line != span.end.line
-        || span.end.column
-            != span
-                .start
-                .column
-                .saturating_add(value.chars().count() as u64 + 2)
-    {
-        return None;
-    }
-    let raw = format!("0x{value}");
-    match integer(&raw) {
-        Ok(value) => Some(value.to_string()),
-        Err(error) if *error.kind() == IntErrorKind::PosOverflow => Some(raw),
         Err(_) => None,
     }
 }
