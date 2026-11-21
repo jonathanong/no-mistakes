@@ -123,8 +123,10 @@ fn sourced_reexport_without_fragments_is_not_a_gap() {
         exported: "name".to_string(),
     });
     consumer.source = Some(Arc::<str>::from("export { name } from \"./plain\";\n"));
-    let mut plain = TsFileFacts::default();
-    plain.source = Some(Arc::<str>::from("export const name = 1;\n"));
+    let plain = TsFileFacts {
+        source: Some(Arc::<str>::from("export const name = 1;\n")),
+        ..TsFileFacts::default()
+    };
     let mut facts = CheckFactMap {
         graph_files_complete: true,
         ..CheckFactMap::default()
