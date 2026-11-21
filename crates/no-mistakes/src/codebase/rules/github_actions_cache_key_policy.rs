@@ -6,11 +6,14 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+mod expand;
 mod judge;
+mod local_action;
 mod options;
 mod output;
 mod output_syntax;
 mod scan;
+mod shell_cmd;
 mod text;
 
 pub const RULE_ID: &str = "github-actions-cache-key-policy";
@@ -57,7 +60,7 @@ fn check_path(
         return Vec::new();
     };
     match sources.read_path(path) {
-        Ok(source) => evaluate(&rel, &source, action, options),
+        Ok(source) => evaluate(&rel, &source, action, options, root, sources),
         Err(error) => super::github_actions_workflow_files::unreadable_finding(
             &error,
             defer_suppression,
@@ -76,7 +79,14 @@ fn check_path(
     }
 }
 
-fn evaluate(rel: &str, source: &str, action: bool, options: &options::Options) -> Vec<RuleFinding> {
+fn evaluate(
+    rel: &str,
+    source: &str,
+    action: bool,
+    options: &options::Options,
+    root: &Path,
+    sources: &SourceStore,
+) -> Vec<RuleFinding> {
     let configured: Vec<String> = options
         .caches
         .iter()
@@ -94,8 +104,23 @@ fn evaluate(rel: &str, source: &str, action: bool, options: &options::Options) -
             1,
             "Cache steps could not be aligned to block-style source locations. Rewrite anchors, aliases, and unusual flow as ordinary block-style steps so cache keys can be checked.".into(),
         )],
-        scan::Document::Jobs(jobs) => judge::judge(rel, &jobs, options),
+        scan::Document::Jobs(jobs) => {
+            judge::judge(rel, &jobs, options, &|uses| {
+                read_local_action(root, sources, uses)
+            })
+        }
     }
+}
+
+fn read_local_action(root: &Path, sources: &SourceStore, uses: &str) -> Option<String> {
+    let rel = local_action::local_action_dir(uses)?;
+    for name in ["action.yml", "action.yaml"] {
+        let path = root.join(rel).join(name);
+        if let Ok(text) = sources.read_path(&path) {
+            return Some(text.to_string());
+        }
+    }
+    None
 }
 
 fn hit(file: &str, line: usize, message: String) -> RuleFinding {

@@ -5,7 +5,13 @@ use super::text::{has_fragment, hash_args, norm_path, path_entries};
 use super::RuleFinding;
 use super::RULE_ID;
 
-pub(super) fn judge(rel: &str, jobs: &[Job], options: &Options) -> Vec<RuleFinding> {
+pub(super) fn judge(
+    rel: &str,
+    jobs: &[Job],
+    options: &Options,
+    actions: &dyn Fn(&str) -> Option<String>,
+) -> Vec<RuleFinding> {
+    let view = View { options, actions };
     let mut findings = Vec::new();
     for job in jobs {
         for (index, step) in job.steps.iter().enumerate() {
@@ -32,7 +38,7 @@ pub(super) fn judge(rel: &str, jobs: &[Job], options: &Options) -> Vec<RuleFindi
                     &job.steps[..index],
                     cache,
                     &path,
-                    options,
+                    &view,
                     &mut findings,
                 );
             }
@@ -41,13 +47,18 @@ pub(super) fn judge(rel: &str, jobs: &[Job], options: &Options) -> Vec<RuleFindi
     findings
 }
 
+struct View<'a> {
+    options: &'a Options,
+    actions: &'a dyn Fn(&str) -> Option<String>,
+}
+
 fn judge_step(
     rel: &str,
     step: &Step,
     earlier: &[Step],
     cache: &CacheSpec,
     path: &str,
-    options: &Options,
+    view: &View<'_>,
     findings: &mut Vec<RuleFinding>,
 ) {
     match step.key.as_ref() {
@@ -66,21 +77,16 @@ fn judge_step(
             if !missing.is_empty() {
                 findings.push(hit(rel, key.line, platform_message(path, &missing)));
             }
-            if !digest_proven(
-                &key.value,
-                &cache.lockfile,
-                earlier,
-                options.allow_hash_files,
-            ) {
+            if !digest_proven(&key.value, &cache.lockfile, earlier, view) {
                 findings.push(hit(
                     rel,
                     key.line,
-                    digest_message(path, &norm_path(&cache.lockfile), &key.value, options),
+                    digest_message(path, &norm_path(&cache.lockfile), &key.value, view.options),
                 ));
             }
         }
     }
-    if options.reject_restore_keys && restore_present(step.restore_keys.as_ref()) {
+    if view.options.reject_restore_keys && restore_present(step.restore_keys.as_ref()) {
         let line = step
             .restore_keys
             .as_ref()
@@ -90,15 +96,18 @@ fn judge_step(
     }
 }
 
-fn digest_proven(key: &str, lockfile: &str, earlier: &[Step], allow_hash: bool) -> bool {
-    if allow_hash
+fn digest_proven(key: &str, lockfile: &str, earlier: &[Step], view: &View<'_>) -> bool {
+    if view.options.allow_hash_files
         && hash_args(key)
             .iter()
             .any(|arg| norm_path(arg) == norm_path(lockfile))
     {
         return true;
     }
-    earlier.iter().any(|step| shell_proves(step, key, lockfile))
+    earlier.iter().any(|step| {
+        shell_proves(step, key, lockfile)
+            || super::local_action::proves(step, key, lockfile, view.actions)
+    })
 }
 
 fn shell_proves(step: &Step, key: &str, lockfile: &str) -> bool {

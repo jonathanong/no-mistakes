@@ -1,0 +1,12 @@
+name: Plain digest
+description: Write a constant output
+outputs:
+  digest:
+    description: Constant text
+    value: ${{ steps.lock.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - id: lock
+      shell: bash
+      run: echo "digest=constant" >> "$GITHUB_OUTPUT"

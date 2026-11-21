@@ -597,7 +597,14 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. A cache path outside
 `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
-`GITHUB_OUTPUT` name the key reads.
+`GITHUB_OUTPUT` name the key reads. The checksum command must name the lockfile in that same
+simple command. Reassigning the variable drops the proof unless the whole new value is a
+parameter expansion of that same variable (`"$digest"`, `${digest}`, `${digest%% *}`,
+`${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other text drops
+the proof. A `<<<` redirect is not a
+heredoc, and `<<` inside `$(( ))` is not a heredoc. A variable assigned from `$GITHUB_OUTPUT` is the same redirect
+target. A local `uses: ./...` composite action counts when its declared output reads a proven
+`run` step in that action.
 
 ```yaml
 rules:
