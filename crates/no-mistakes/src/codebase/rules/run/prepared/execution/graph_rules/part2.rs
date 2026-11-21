@@ -167,7 +167,19 @@ fn collect_single_enqueue_in_loop(
             let result = (|| -> Result<()> {
                 findings.extend(crate::perf_trace::rule(
                     "analysis.rules.no-single-enqueue-in-loop",
-                    || no_single_enqueue_in_loop::check(root, config, dependency_graph, shared),
+                    || {
+                        no_single_enqueue_in_loop::check_with_catalog(
+                            root,
+                            config,
+                            dependency_graph,
+                            shared,
+                            no_single_enqueue_in_loop::module_catalog(
+                                request.tsconfig_catalog,
+                                request.sources,
+                                session,
+                            ),
+                        )
+                    },
                 )?);
                 Ok(())
             })();

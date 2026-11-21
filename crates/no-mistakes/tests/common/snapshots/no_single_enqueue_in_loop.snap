@@ -14,6 +14,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/publish.ts",
           "import": "enqueueItem",
+          "line": 101,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside map callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "for (const item of items.map(enqueueItem)) { // report:map callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
           "line": 13,
           "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
           "rule": "no-single-enqueue-in-loop",
@@ -121,6 +130,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 85,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 87,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside forEach callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "items.forEach(enqueueItem); // report:forEach callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
+          "import": "enqueueItem",
+          "line": 90,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside map callback; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:map callback",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/publish.ts",
           "import": "queueWidget",
           "line": 38,
           "message": "single enqueue `queueWidget` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
@@ -150,6 +186,90 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "same-export": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/direct.ts",
+          "import": "enqueueItem",
+          "line": 5,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sibling-scopes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/b-alias.ts",
+          "import": "enqueueItem",
+          "line": 5,
+          "message": "single enqueue `enqueueItem` (`@widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of target:@widgets#enqueueItem",
+          "target": "@widgets#enqueueItem"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spellings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/aliased.ts",
+          "import": "enqueueItem",
+          "line": 5,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        },
+        {
+          "file": "src/packaged.ts",
+          "import": "enqueueItem",
+          "line": 5,
+          "message": "single enqueue `enqueueItem` (`widget-queue#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of target:widget-queue#enqueueItem",
+          "target": "widget-queue#enqueueItem"
+        },
+        {
+          "file": "src/sub/publish.ts",
+          "import": "enqueueItem",
+          "line": 8,
+          "message": "single enqueue `enqueueItem` (`./widgets#enqueueItem`) inside for-of; call the configured bulk API once with the collection",
+          "rule": "no-single-enqueue-in-loop",
+          "sourceLine": "enqueueItem(item); // report:for-of",
+          "target": "./widgets#enqueueItem"
+        }
+      ],
       "warnings": []
     }
   }

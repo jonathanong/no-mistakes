@@ -1,0 +1,5 @@
+{
+  "name": "widget-fixtures",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

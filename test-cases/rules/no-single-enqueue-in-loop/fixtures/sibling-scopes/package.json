@@ -1,0 +1,5 @@
+{
+  "name": "sibling-scopes",
+  "private": true,
+  "workspaces": ["src"]
+}
