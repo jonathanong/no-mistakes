@@ -77,10 +77,9 @@ fn named_export_local<'a>(program: &'a Program<'a>, export_name: &str) -> Option
                 continue;
             }
             // oxc rewrites a local export name to an identifier reference.
-            let ModuleExportName::IdentifierReference(identifier) = &specifier.local else {
-                continue;
-            };
-            return Some(identifier.name.as_str());
+            if let ModuleExportName::IdentifierReference(identifier) = &specifier.local {
+                return Some(identifier.name.as_str());
+            }
         }
     }
     None

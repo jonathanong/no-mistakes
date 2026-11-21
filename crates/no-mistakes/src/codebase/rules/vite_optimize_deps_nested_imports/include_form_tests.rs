@@ -60,6 +60,17 @@ export { type hidden, extra as otherName, listed };
 }
 
 #[test]
+fn export_braces_skip_other_exports_before_the_listed_const() {
+    let source = "\
+export function shape() { return 1; }
+export const other = ['widgets > orders'];
+const listed = ['widgets > items'];
+export { listed };
+";
+    assert_eq!(include_texts(source, "listed"), vec!["widgets > items"]);
+}
+
+#[test]
 fn export_braces_reject_indirect_and_non_const_bindings() {
     assert!(
         unanalyzable("export { listed } from './other';\n", "listed")
