@@ -1,4 +1,4 @@
-use super::super::{alias, modules, resolve};
+use super::super::{alias, modules, resolve, visible};
 use super::support::{catalog, ctx, fragment_facts, insert, world};
 use crate::codebase::dependencies::graph::{merge_import_target, ImportTarget};
 use crate::codebase::ts_source::facts::TsFileFacts;
@@ -199,6 +199,53 @@ fn several_ambient_modules_keep_the_specifier_open() {
         (open.len(), open[0].open_specifier.as_deref()),
         (1, Some("orders-widget"))
     );
+}
+
+#[test]
+fn external_star_reexports_add_no_fragment() {
+    let mut world = world();
+    let barrel = std::path::PathBuf::from("/repo/widgets/barrel.ts");
+    insert(
+        &mut world.facts,
+        barrel.clone(),
+        TsFileFacts {
+            star_reexport_specifiers: vec!["node:fs".to_string()],
+            ..TsFileFacts::default()
+        },
+    );
+    merge_import_target(
+        &mut world.graph.import_targets,
+        &barrel,
+        "node:fs",
+        ImportTarget::External,
+    );
+    let catalog = catalog(&world);
+    assert!(visible::visible_all(
+        &catalog,
+        &world.graph,
+        &world.facts,
+        &barrel,
+        &mut Vec::new()
+    )
+    .is_empty());
+    assert!(alias::star_fragments(
+        &catalog,
+        &world.graph,
+        &world.facts,
+        &barrel,
+        &[],
+        &mut Vec::new(),
+    )
+    .is_empty());
+    assert!(visible::visible(
+        &catalog,
+        &world.graph,
+        &world.facts,
+        &barrel,
+        "widgetItems",
+        &mut Vec::new(),
+    )
+    .is_empty());
 }
 
 fn ambient_module(specifier: &str) -> TsFileFacts {
