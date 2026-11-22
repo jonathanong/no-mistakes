@@ -1,0 +1,1139 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "scalar_opaque_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "root.mts",
+          "line": 32,
+          "message": "root.mts:32: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(\"SELECT id FROM widgets\")",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scalar_opaque_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "root.mts",
+          "line": 32,
+          "message": "root.mts:32: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(\"SELECT id FROM widgets\")",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scalar_refresh_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "root.mts",
+          "line": 23,
+          "message": "root.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(\"SELECT id FROM widgets\", input20)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scalar_refresh_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "root.mts",
+          "line": 23,
+          "message": "root.mts:23: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "read(\"SELECT id FROM widgets\", input20)",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shared_callback_payload_low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry-00.mts",
+          "line": 7,
+          "message": "src/entry-00.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 0\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-01.mts",
+          "line": 7,
+          "message": "src/entry-01.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 1\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-02.mts",
+          "line": 7,
+          "message": "src/entry-02.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 2\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-03.mts",
+          "line": 7,
+          "message": "src/entry-03.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 3\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-04.mts",
+          "line": 7,
+          "message": "src/entry-04.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 4\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-05.mts",
+          "line": 7,
+          "message": "src/entry-05.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 5\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-06.mts",
+          "line": 7,
+          "message": "src/entry-06.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 6\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-07.mts",
+          "line": 7,
+          "message": "src/entry-07.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 7\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-08.mts",
+          "line": 7,
+          "message": "src/entry-08.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 8\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-09.mts",
+          "line": 7,
+          "message": "src/entry-09.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 9\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-10.mts",
+          "line": 7,
+          "message": "src/entry-10.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 10\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-11.mts",
+          "line": 7,
+          "message": "src/entry-11.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 11\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-12.mts",
+          "line": 7,
+          "message": "src/entry-12.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 12\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-13.mts",
+          "line": 7,
+          "message": "src/entry-13.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 13\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-14.mts",
+          "line": 7,
+          "message": "src/entry-14.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 14\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-15.mts",
+          "line": 7,
+          "message": "src/entry-15.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 15\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-16.mts",
+          "line": 7,
+          "message": "src/entry-16.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 16\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-17.mts",
+          "line": 7,
+          "message": "src/entry-17.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 17\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-18.mts",
+          "line": 7,
+          "message": "src/entry-18.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 18\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-19.mts",
+          "line": 7,
+          "message": "src/entry-19.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 19\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-20.mts",
+          "line": 7,
+          "message": "src/entry-20.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 20\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-21.mts",
+          "line": 7,
+          "message": "src/entry-21.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 21\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-22.mts",
+          "line": 7,
+          "message": "src/entry-22.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 22\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-23.mts",
+          "line": 7,
+          "message": "src/entry-23.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 23\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-24.mts",
+          "line": 7,
+          "message": "src/entry-24.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 24\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-25.mts",
+          "line": 7,
+          "message": "src/entry-25.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 25\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-26.mts",
+          "line": 7,
+          "message": "src/entry-26.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 26\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-27.mts",
+          "line": 7,
+          "message": "src/entry-27.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 27\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-28.mts",
+          "line": 7,
+          "message": "src/entry-28.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 28\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-29.mts",
+          "line": 7,
+          "message": "src/entry-29.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 29\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-30.mts",
+          "line": 7,
+          "message": "src/entry-30.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 30\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-31.mts",
+          "line": 7,
+          "message": "src/entry-31.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 31\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-32.mts",
+          "line": 7,
+          "message": "src/entry-32.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 32\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-33.mts",
+          "line": 7,
+          "message": "src/entry-33.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 33\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-34.mts",
+          "line": 7,
+          "message": "src/entry-34.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 34\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-35.mts",
+          "line": 7,
+          "message": "src/entry-35.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 35\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-36.mts",
+          "line": 7,
+          "message": "src/entry-36.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 36\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-37.mts",
+          "line": 7,
+          "message": "src/entry-37.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 37\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-38.mts",
+          "line": 7,
+          "message": "src/entry-38.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 38\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-39.mts",
+          "line": 7,
+          "message": "src/entry-39.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 39\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-40.mts",
+          "line": 7,
+          "message": "src/entry-40.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 40\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-41.mts",
+          "line": 7,
+          "message": "src/entry-41.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 41\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-42.mts",
+          "line": 7,
+          "message": "src/entry-42.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 42\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-43.mts",
+          "line": 7,
+          "message": "src/entry-43.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 43\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-44.mts",
+          "line": 7,
+          "message": "src/entry-44.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 44\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-45.mts",
+          "line": 7,
+          "message": "src/entry-45.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 45\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-46.mts",
+          "line": 7,
+          "message": "src/entry-46.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 46\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-47.mts",
+          "line": 7,
+          "message": "src/entry-47.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 47\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-48.mts",
+          "line": 7,
+          "message": "src/entry-48.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 48\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-49.mts",
+          "line": 7,
+          "message": "src/entry-49.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 49\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-50.mts",
+          "line": 7,
+          "message": "src/entry-50.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 50\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-51.mts",
+          "line": 7,
+          "message": "src/entry-51.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 51\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-52.mts",
+          "line": 7,
+          "message": "src/entry-52.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 52\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-53.mts",
+          "line": 7,
+          "message": "src/entry-53.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 53\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-54.mts",
+          "line": 7,
+          "message": "src/entry-54.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 54\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-55.mts",
+          "line": 7,
+          "message": "src/entry-55.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 55\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-56.mts",
+          "line": 7,
+          "message": "src/entry-56.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 56\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-57.mts",
+          "line": 7,
+          "message": "src/entry-57.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 57\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-58.mts",
+          "line": 7,
+          "message": "src/entry-58.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 58\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-59.mts",
+          "line": 7,
+          "message": "src/entry-59.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 59\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-60.mts",
+          "line": 7,
+          "message": "src/entry-60.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 60\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-61.mts",
+          "line": 7,
+          "message": "src/entry-61.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 61\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-62.mts",
+          "line": 7,
+          "message": "src/entry-62.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 62\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-63.mts",
+          "line": 7,
+          "message": "src/entry-63.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 63\"); // expected-finding",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shared_callback_payload_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/entry-00.mts",
+          "line": 7,
+          "message": "src/entry-00.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 0\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-01.mts",
+          "line": 7,
+          "message": "src/entry-01.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 1\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-02.mts",
+          "line": 7,
+          "message": "src/entry-02.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 2\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-03.mts",
+          "line": 7,
+          "message": "src/entry-03.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 3\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-04.mts",
+          "line": 7,
+          "message": "src/entry-04.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 4\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-05.mts",
+          "line": 7,
+          "message": "src/entry-05.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 5\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-06.mts",
+          "line": 7,
+          "message": "src/entry-06.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 6\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-07.mts",
+          "line": 7,
+          "message": "src/entry-07.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 7\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-08.mts",
+          "line": 7,
+          "message": "src/entry-08.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 8\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-09.mts",
+          "line": 7,
+          "message": "src/entry-09.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 9\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-10.mts",
+          "line": 7,
+          "message": "src/entry-10.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 10\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-11.mts",
+          "line": 7,
+          "message": "src/entry-11.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 11\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-12.mts",
+          "line": 7,
+          "message": "src/entry-12.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 12\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-13.mts",
+          "line": 7,
+          "message": "src/entry-13.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 13\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-14.mts",
+          "line": 7,
+          "message": "src/entry-14.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 14\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-15.mts",
+          "line": 7,
+          "message": "src/entry-15.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 15\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-16.mts",
+          "line": 7,
+          "message": "src/entry-16.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 16\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-17.mts",
+          "line": 7,
+          "message": "src/entry-17.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 17\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-18.mts",
+          "line": 7,
+          "message": "src/entry-18.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 18\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-19.mts",
+          "line": 7,
+          "message": "src/entry-19.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 19\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-20.mts",
+          "line": 7,
+          "message": "src/entry-20.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 20\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-21.mts",
+          "line": 7,
+          "message": "src/entry-21.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 21\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-22.mts",
+          "line": 7,
+          "message": "src/entry-22.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 22\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-23.mts",
+          "line": 7,
+          "message": "src/entry-23.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 23\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-24.mts",
+          "line": 7,
+          "message": "src/entry-24.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 24\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-25.mts",
+          "line": 7,
+          "message": "src/entry-25.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 25\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-26.mts",
+          "line": 7,
+          "message": "src/entry-26.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 26\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-27.mts",
+          "line": 7,
+          "message": "src/entry-27.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 27\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-28.mts",
+          "line": 7,
+          "message": "src/entry-28.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 28\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-29.mts",
+          "line": 7,
+          "message": "src/entry-29.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 29\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-30.mts",
+          "line": 7,
+          "message": "src/entry-30.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 30\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-31.mts",
+          "line": 7,
+          "message": "src/entry-31.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 31\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-32.mts",
+          "line": 7,
+          "message": "src/entry-32.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 32\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-33.mts",
+          "line": 7,
+          "message": "src/entry-33.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 33\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-34.mts",
+          "line": 7,
+          "message": "src/entry-34.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 34\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-35.mts",
+          "line": 7,
+          "message": "src/entry-35.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 35\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-36.mts",
+          "line": 7,
+          "message": "src/entry-36.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 36\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-37.mts",
+          "line": 7,
+          "message": "src/entry-37.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 37\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-38.mts",
+          "line": 7,
+          "message": "src/entry-38.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 38\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-39.mts",
+          "line": 7,
+          "message": "src/entry-39.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 39\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-40.mts",
+          "line": 7,
+          "message": "src/entry-40.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 40\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-41.mts",
+          "line": 7,
+          "message": "src/entry-41.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 41\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-42.mts",
+          "line": 7,
+          "message": "src/entry-42.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 42\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-43.mts",
+          "line": 7,
+          "message": "src/entry-43.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 43\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-44.mts",
+          "line": 7,
+          "message": "src/entry-44.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 44\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-45.mts",
+          "line": 7,
+          "message": "src/entry-45.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 45\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-46.mts",
+          "line": 7,
+          "message": "src/entry-46.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 46\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-47.mts",
+          "line": 7,
+          "message": "src/entry-47.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 47\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-48.mts",
+          "line": 7,
+          "message": "src/entry-48.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 48\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-49.mts",
+          "line": 7,
+          "message": "src/entry-49.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 49\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-50.mts",
+          "line": 7,
+          "message": "src/entry-50.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 50\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-51.mts",
+          "line": 7,
+          "message": "src/entry-51.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 51\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-52.mts",
+          "line": 7,
+          "message": "src/entry-52.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 52\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-53.mts",
+          "line": 7,
+          "message": "src/entry-53.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 53\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-54.mts",
+          "line": 7,
+          "message": "src/entry-54.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 54\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-55.mts",
+          "line": 7,
+          "message": "src/entry-55.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 55\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-56.mts",
+          "line": 7,
+          "message": "src/entry-56.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 56\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-57.mts",
+          "line": 7,
+          "message": "src/entry-57.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 57\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-58.mts",
+          "line": 7,
+          "message": "src/entry-58.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 58\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-59.mts",
+          "line": 7,
+          "message": "src/entry-59.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 59\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-60.mts",
+          "line": 7,
+          "message": "src/entry-60.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 60\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-61.mts",
+          "line": 7,
+          "message": "src/entry-61.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 61\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-62.mts",
+          "line": 7,
+          "message": "src/entry-62.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 62\"); // expected-finding",
+          "target": "annotation"
+        },
+        {
+          "file": "src/entry-63.mts",
+          "line": 7,
+          "message": "src/entry-63.mts:7: query execution must start with a /* name */ annotation",
+          "rule": "postgres-require-query-annotation",
+          "sourceLine": "return query(\"SELECT id FROM items WHERE id = 63\"); // expected-finding",
+          "target": "annotation"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

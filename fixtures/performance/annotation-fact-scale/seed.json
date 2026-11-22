@@ -1,0 +1,6 @@
+{
+  "roots": 64,
+  "callbackDepth": 4,
+  "payloadDepth": 16,
+  "excludedUnrelatedModules": 4
+}

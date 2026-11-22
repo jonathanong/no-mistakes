@@ -1,14 +1,15 @@
-use super::super::{Evaluator, File, Value};
+use super::super::{temporaries::TransientRoot, Environment, Evaluator, File, Value};
 use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{
     extract_embedded_sql_from_program, query_annotation, EmbeddedSqlOptions,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-#[test]
-fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
+type Resolve = fn(&str, &Path) -> Option<PathBuf>;
+
+fn with_callback_boundary(test: impl FnOnce(&mut Evaluator<'_, Resolve>, Environment)) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-returned-callbacks/src/boundary.mts",
     );
@@ -30,9 +31,9 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
-    let mut evaluator = Evaluator {
+    let mut evaluator: Evaluator<'_, Resolve> = Evaluator {
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: |_, _| None,
         events: Default::default(),
         event_log: Default::default(),
         scopes: Vec::new(),
@@ -61,22 +62,50 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
         mapped_arguments: Default::default(),
     };
     let env = evaluator.module_environment(&path);
-    let callback = evaluator.scopes[env]["callback"].clone();
-    let Some(Value::Prefix(_, _, Some(id))) = evaluator.scopes[env].get("statement") else {
-        panic!("fixture builder");
-    };
-    let id = *id;
-    let frame_count = evaluator.scopes.len();
-    assert!(evaluator.events.is_empty());
-    evaluator.opaque_callbacks(&[callback], 0);
-    assert!(matches!(
-        evaluator.scopes[env].get("statement"),
-        Some(Value::Unknown)
-    ));
-    assert!(evaluator.invalidated_builders.contains(&id));
-    assert_eq!(evaluator.scopes.len(), frame_count);
-    assert!(evaluator.events.is_empty());
-    assert!(evaluator.active_callback_functions.is_none());
+    test(&mut evaluator, env);
+}
+
+#[test]
+fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
+    with_callback_boundary(|evaluator, env| {
+        let callback = evaluator.scopes[env]["callback"].clone();
+        let Some(Value::Prefix(_, _, Some(id))) = evaluator.scopes[env].get("statement") else {
+            panic!("fixture builder");
+        };
+        let id = *id;
+        let frame_count = evaluator.scopes.len();
+        assert!(evaluator.events.is_empty());
+        let nested = Value::Aggregate(vec![callback].into());
+        evaluator.opaque_callbacks(&[nested], 0);
+        assert!(matches!(
+            evaluator.scopes[env].get("statement"),
+            Some(Value::Unknown)
+        ));
+        assert!(evaluator.invalidated_builders.contains(&id));
+        assert_eq!(evaluator.scopes.len(), frame_count);
+        assert!(evaluator.events.is_empty());
+        assert!(evaluator.active_callback_functions.is_none());
+    });
+}
+
+#[test]
+fn builder_only_aggregate_retains_the_transient_builder() {
+    with_callback_boundary(|evaluator, env| {
+        let statement = evaluator.scopes[env]
+            .remove("statement")
+            .expect("saved builder");
+        let Value::Prefix(_, _, Some(id)) = &statement else {
+            panic!("saved builder identity");
+        };
+        let id = *id;
+        let aggregate = Value::Aggregate(vec![statement].into());
+        assert!(evaluator.transient_roots.is_empty());
+        evaluator.callback_values(&[aggregate], 8, &mut super::CallbackState::default());
+        assert!(evaluator
+            .transient_roots
+            .iter()
+            .any(|root| matches!(root, TransientRoot::Builder(root_id) if *root_id == id)));
+    });
 }
 
 #[path = "array_tests.rs"]

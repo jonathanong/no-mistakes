@@ -29,6 +29,8 @@ mod cli_postgres_detached_executors;
 mod cli_postgres_executor_obligations;
 #[path = "cli_postgres_non_call_references.rs"]
 mod cli_postgres_non_call_references;
+#[path = "cli_postgres_snapshot_annotation_call_values.rs"]
+mod cli_postgres_snapshot_annotation_call_values;
 #[path = "cli_postgres_snapshot_appended_fragment.rs"]
 mod cli_postgres_snapshot_appended_fragment;
 #[path = "cli_postgres_snapshot_array_columns.rs"]
