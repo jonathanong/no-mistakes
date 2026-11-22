@@ -148,6 +148,7 @@ fn visit_variable_declaration_with_values<'a>(
     collector.record_callable_declaration_bindings(declaration);
     collector.record_const_callable_aliases(declaration);
     collector.record_static_commonjs_bindings(declaration, false);
+    record_created_require_declaration(collector, declaration);
     collector.record_value_declaration(declaration);
     walk::walk_variable_declaration(collector, declaration);
 }

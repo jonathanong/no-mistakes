@@ -6,14 +6,17 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
         predeclare_program_statement_binding(collector, statement);
     }
     predeclare_hoisted_var_bindings(collector, &program.body);
+    note_created_require_factories(collector, program);
     for statement in &program.body {
         match statement {
             Statement::VariableDeclaration(declaration) => {
                 collector.record_static_commonjs_bindings(declaration, true);
+                record_created_require_declaration(collector, declaration);
             }
             Statement::ExportDeclaration(export) => {
                 if let Declaration::VariableDeclaration(declaration) = &export.declaration {
                     collector.record_static_commonjs_bindings(declaration, true);
+                    record_created_require_declaration(collector, declaration);
                 }
             }
             _ => {}

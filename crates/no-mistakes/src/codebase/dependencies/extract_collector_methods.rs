@@ -1,72 +1,48 @@
 fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &CallExpression<'_>) {
     collector.mark_call_namespace_head(&call.callee);
-    let require_callee = is_require_resolve_callee(&call.callee)
-        .then_some("require.resolve")
-        .or_else(|| is_require_callee(&call.callee).then_some("require"));
-    let global_require = require_callee.is_some() && collector.global_require_available();
-    if let Some(callee) = require_callee.filter(|_| global_require) {
-        if collector.should_record_call(callee) {
-            collector.function_calls.push(FunctionCall {
-                caller: collector.current_function(),
-                caller_id: collector.current_function_id(),
-                syntactic_caller: collector.current_syntactic_caller(),
-                callee: callee.to_string(),
-                line: import_line_at(&collector.line_starts, call.span.start as usize),
-                offset: call.span.start,
-                is_callback: false,
-                invocation: InvocationKind::Call,
-                target_identity: collector.call_target_identity(callee),
-                callee_binding_scope: collector.callee_binding_scope(callee),
-                static_arg: call.arguments.first().and_then(static_path_argument),
-                static_cwd: None,
-            });
-        }
-    }
-    if is_require_resolve_callee(&call.callee) && global_require {
-        record_runtime_require_import(collector, call, ImportKind::RequireResolve);
-    } else if is_require_callee(&call.callee) && global_require {
-        record_runtime_require_import(collector, call, ImportKind::Require);
-    } else if let Some(callee) = recorded_call_callee(collector, call) {
-        if collector.should_record_call(&callee) {
-            if is_static_getter(collector, &callee) || is_object_getter(collector, &callee) {
-                collector.record_unknown_call(
-                    import_line_at(&collector.line_starts, call.span.start as usize),
-                    call.span.start,
-                    InvocationKind::Call,
-                );
-                record_callable_argument_transitions(collector, &call.arguments);
-                return;
+    if !record_require_import(collector, call) {
+        if let Some(callee) = recorded_call_callee(collector, call) {
+            if collector.should_record_call(&callee) {
+                if is_static_getter(collector, &callee) || is_object_getter(collector, &callee) {
+                    collector.record_unknown_call(
+                        import_line_at(&collector.line_starts, call.span.start as usize),
+                        call.span.start,
+                        InvocationKind::Call,
+                    );
+                    record_callable_argument_transitions(collector, &call.arguments);
+                    return;
+                }
+                let target_identity = collector.call_target_identity(&callee);
+                let callee_binding_scope = collector.callee_binding_scope(&callee);
+                collector.function_calls.push(FunctionCall {
+                    caller: collector.current_function(),
+                    caller_id: collector.current_function_id(),
+                    syntactic_caller: collector.current_syntactic_caller(),
+                    static_cwd: static_process_cwd_arg(&callee, &call.arguments),
+                    callee,
+                    line: import_line_at(&collector.line_starts, call.span.start as usize),
+                    offset: call.span.start,
+                    is_callback: false,
+                    invocation: InvocationKind::Call,
+                    target_identity,
+                    callee_binding_scope,
+                    static_arg: call.arguments.first().and_then(static_path_argument),
+                });
+                if has_dynamic_static_member_receiver(&call.callee) {
+                    collector.record_unknown_call(
+                        import_line_at(&collector.line_starts, call.span.start as usize),
+                        call.span.start,
+                        InvocationKind::Call,
+                    );
+                }
             }
-            let target_identity = collector.call_target_identity(&callee);
-            let callee_binding_scope = collector.callee_binding_scope(&callee);
-            collector.function_calls.push(FunctionCall {
-                caller: collector.current_function(),
-                caller_id: collector.current_function_id(),
-                syntactic_caller: collector.current_syntactic_caller(),
-                static_cwd: static_process_cwd_arg(&callee, &call.arguments),
-                callee,
-                line: import_line_at(&collector.line_starts, call.span.start as usize),
-                offset: call.span.start,
-                is_callback: false,
-                invocation: InvocationKind::Call,
-                target_identity,
-                callee_binding_scope,
-                static_arg: call.arguments.first().and_then(static_path_argument),
-            });
-            if has_dynamic_static_member_receiver(&call.callee) {
-                collector.record_unknown_call(
-                    import_line_at(&collector.line_starts, call.span.start as usize),
-                    call.span.start,
-                    InvocationKind::Call,
-                );
-            }
+        } else {
+            collector.record_unknown_call(
+                import_line_at(&collector.line_starts, call.span.start as usize),
+                call.span.start,
+                InvocationKind::Call,
+            );
         }
-    } else {
-        collector.record_unknown_call(
-            import_line_at(&collector.line_starts, call.span.start as usize),
-            call.span.start,
-            InvocationKind::Call,
-        );
     }
     record_callable_argument_transitions(collector, &call.arguments);
 }
