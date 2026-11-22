@@ -52,3 +52,15 @@ fn scan_walks_exclude_cooldown_edges() {
     // a skipped non-manifest file. Findings are not the assertion.
     let _ = scan_fixture("exclude-cooldown-edges", &files);
 }
+
+#[test]
+fn missing_dependabot_source_reports_an_io_error() {
+    let root = fixture("unreadable-lockfile");
+    let missing = root.join(".github/dependabot.yml");
+    let sources = source_store_for_files(std::slice::from_ref(&missing));
+    let error = super::inputs::cooldown(&sources, &missing)
+        .err()
+        .expect("the fixture has no Dependabot file");
+    assert!(!error.contains("failed to parse YAML"), "{error}");
+    assert_eq!(sources.yaml_parse_count(), 1);
+}

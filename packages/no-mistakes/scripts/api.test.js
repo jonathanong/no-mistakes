@@ -133,13 +133,30 @@ test("forbidden lint suppression options expose exact directive choices", () => 
   );
 });
 
-test("lint suppression and Vitest property configuration compile from the package root", () => {
+test("Dependabot cooldown policy has exported option types", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "dependabot-cooldown-policy-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declaration, /export interface DependabotCooldownPolicyOptions/);
+  assert.match(declaration, /minimumDays: number;/);
+  assert.match(declaration, /requireOpenPullRequestsLimit\?: boolean;/);
+  assert.match(declaration, /allowedCooldownExcludes\?: string\[\];/);
+  assert.match(declaration, /exemptEcosystems\?: string\[\];/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/dependabot-cooldown-policy-types";/,
+  );
+});
+
+test("check rule options compile from the package root", () => {
   const { createRequire } = require("node:module");
   const dependencyRequire = createRequire(require.resolve("@storybook/react"));
   const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
   const program = ts.createProgram(
     [
+      join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),

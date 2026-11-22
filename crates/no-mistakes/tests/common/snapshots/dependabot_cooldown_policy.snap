@@ -1,0 +1,97 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "compliant": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "dependabot-cooldown-policy",
+          "file": ".github/dependabot.yml",
+          "message": "Cannot verify Dependabot cooldowns: could not read or parse YAML: did not find expected ',' or ']' at line 6 column 34, while parsing a flow sequence at line 6 column 31: did not find expected ',' or ']' at line 6 column 34, while parsing a flow sequence at line 6 column 31. Repair .github/dependabot.yml and run the check again."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "violations": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/dependabot.yml",
+          "line": 11,
+          "message": "Dependabot update #1 (npm): set cooldown.semver-patch-days to an integer of at least 7.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "semver-patch-days: 0",
+          "target": "cooldown.semver-patch-days"
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "line": 14,
+          "message": "Dependabot update #1 (npm): remove `external-package` from cooldown.exclude or match it with options.allowedCooldownExcludes.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "- external-package",
+          "target": "cooldown.exclude"
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "line": 15,
+          "message": "Dependabot update #2 (cargo): set cooldown.default-days to an integer of at least 7.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "- package-ecosystem: cargo",
+          "target": "cooldown.default-days"
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "line": 15,
+          "message": "Dependabot update #2 (cargo): set open-pull-requests-limit to a nonnegative integer.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "- package-ecosystem: cargo",
+          "target": "open-pull-requests-limit"
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "line": 8,
+          "message": "Dependabot update #1 (npm): set cooldown.default-days to an integer of at least 7.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "default-days: 3",
+          "target": "cooldown.default-days"
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "line": 9,
+          "message": "Dependabot update #1 (npm): set cooldown.semver-major-days to an integer of at least 7.",
+          "rule": "dependabot-cooldown-policy",
+          "sourceLine": "semver-major-days: 6",
+          "target": "cooldown.semver-major-days"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

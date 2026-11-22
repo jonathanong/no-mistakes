@@ -64,6 +64,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`csharp-max-lines-per-file`](csharp-max-lines-per-file.md)                   | Cap C# source/test file length by physical lines.                               |
 | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md)           | Ban async lambdas passed to void Action APIs such as Command.                   |
 | [`declared-payload-compatibility`](declared-payload-compatibility.md) | Check explicitly declared producer/consumer JSON payload schemas. |
+| [`dependabot-cooldown-policy`](dependabot-cooldown-policy.md)                   | Require a minimum cooldown on Dependabot update entries.                       |
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, banned text, and per-path regex bans.      |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets from source, paths, and YAML selectors.              |

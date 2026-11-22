@@ -1,0 +1,4 @@
+version: 2
+metadata: !custom value
+updates:
+  - package-ecosystem: npm

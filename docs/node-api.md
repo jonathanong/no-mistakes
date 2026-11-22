@@ -415,7 +415,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
+| `check`                                    | `check(options)` (including configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -478,7 +478,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
+| `check` | `check(options)`; configured `dependabot-cooldown-policy`, `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -925,6 +925,13 @@ paths with the same configuration and ordered per-job checkout analysis as CLI
 rule, `file`/`line` locate the local action's `uses:` line, and `target` identifies
 the `job#step` (one-based step position). No new runtime
 export, option type, or report field is needed.
+
+The opt-in [`dependabot-cooldown-policy`](rules/dependabot-cooldown-policy.md)
+runs through async `check()` and `analyzeProject()` check reports with the
+same outcome as CLI `check`. Configure it in the YAML selected by `config`.
+`DependabotCooldownPolicyOptions` is exported for typed configuration.
+Policy violations use `RuleFinding`, and unreadable or malformed input uses
+`CheckReport.incomplete` (`CheckFailure[]`).
 
 The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
 rule runs through async `check()` using the existing `checkJson` binding and

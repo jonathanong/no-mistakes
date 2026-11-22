@@ -16,9 +16,13 @@ pub(super) fn cooldown(
     sources: &SourceStore,
     path: &Path,
 ) -> Result<Option<Vec<CooldownEntry>>, String> {
-    let source = sources.read_path(path).map_err(|error| error.to_string())?;
-    let yaml: Yaml =
-        serde_yaml::from_str(&source).map_err(|error| format!("failed to parse YAML: {error}"))?;
+    let yaml = sources.parse_yaml_path(path).map_err(|error| {
+        if error.is_io() {
+            error.to_string()
+        } else {
+            format!("failed to parse YAML: {error}")
+        }
+    })?;
     let Some(updates) = yaml.get("updates").and_then(Yaml::as_sequence) else {
         return Ok(None);
     };

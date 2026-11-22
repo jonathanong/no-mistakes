@@ -325,6 +325,12 @@ repository. An unconditional foreign root checkout invalidates all paths' readin
 Findings point to the local `uses:` line; see [the rule](../rules/github-actions-local-action-checkout.md)
 for sparse checkout coverage and suppression.
 
+Enable [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md)
+with `options.minimumDays` to require a cooldown on every applicable entry in
+`.github/dependabot.yml`.
+Configure PR limits, exclusion globs, and ecosystem exemptions as needed.
+Unreadable or malformed input appears in the JSON `incomplete` list.
+
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
 literal `test.exclude` arrays that drop Vitest's discovery exclusions in the
 selected config or its inline projects. Set `options.config` to select the file

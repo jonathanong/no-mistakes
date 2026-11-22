@@ -5,6 +5,7 @@ const platformFiles = [
   "postgres-procedural-occurrence-api",
   "postgres-procedural-loop-coverage-api",
   "guarded-array-receiver-api",
+  "dependabot-cooldown-policy-api",
   "forbidden-dependencies-globs-api",
 ].map((name) => `packages/no-mistakes/scripts/${name}.test.js`);
 
@@ -32,6 +33,7 @@ const linuxFiles = [
   "packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js",
   "packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js",
   "packages/no-mistakes/scripts/doc-consistency-api.test.js",
+  "packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js",
   "packages/no-mistakes/scripts/local-action-checkout-api.test.js",
 ];
 
