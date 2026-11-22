@@ -26,6 +26,9 @@ judge to a Sonnet agent (`claude-sonnet-5-5`) / Opus judge (`claude-opus-5-5`)
 ([why the old numbers do not carry](METHODOLOGY.md#changing-the-agent-or-judge-model)).
 No description, grader or case changed in this entry.
 
+Trigger counts cover should-fire cases only (negative cases excluded), so they
+are not out of the 318 attempts.
+
 **What ran.** `d44efa910e`, Claude CLI 2.1.330, one invocation per flow:
 `bash scripts/run-evals.sh --tag <flow> --ablation with-without --runs 3 -j 4
 --no-publish --max-cost-usd 15 --json <out>`, all eleven routine flows,
@@ -74,12 +77,13 @@ everything else.
 | `safety` | −0.33 | +0.00 | −0.33 |
 | `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
 
-On `before-edit` and `after-edit` the regex is the whole uplift. The content
-gains are three cases where the skill fired: `before-edit-03`
-`produces-reduced-test-set` 1/3 vs 0/3, `lang-graph-02`
-`covers-both-language-graphs` 2/3 vs 0/3, `usage-04`
-`paths-is-not-the-parseable-contract` 3/3 vs 0/3. `napi-02` (3/3 vs 2/3) has no
-firing run. Every other content grader passed at the same rate in both arms,
+On `after-edit` the regex is the whole uplift and on `before-edit` nearly all
+of it. Content gains with the skill fired in all three with-arm runs are two:
+`before-edit-03` `produces-reduced-test-set` 1/3 vs 0/3 and `usage-04`
+`paths-is-not-the-parseable-contract` 3/3 vs 0/3. `lang-graph-02`
+`covers-both-language-graphs` gained 2/3 vs 0/3 with the skill firing in only 1
+of 3 runs (passes in with-arm runs 0 and 2, fired in run 2 only), so it is not
+attributable to the skill. `napi-02` (3/3 vs 2/3) has no firing run. Every other content grader passed at the same rate in both arms,
 mostly 3/3 each.
 
 **`neg-hard`.** 0/12 fired. Of the 12 non-firing plans, 0 invented a
@@ -116,7 +120,7 @@ grader behind the drop is read from the saved judge votes.
   with-arm run whose plan (git diff, barrel read, `jscpd`, a ts-morph
   script) matches the passing runs. A without-arm run passed on a 2-1 vote.
   p = 0.5.
-- **`before-edit-01`.** The other three graders pass in every run, and the
+- **`before-edit-01`.** The other two content graders pass in every run, and the
   `names-graph-command` regex passes only in the one fired run.
   `exhaustive-by-construction`
   failed unanimously in two with-arm runs that told the reader to "use the

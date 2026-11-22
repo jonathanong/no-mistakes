@@ -38,6 +38,9 @@ for the next candidate.
 | `napi` | **0/12** | +0.06 | +0.00 |
 | `neg-hard` — over-trigger guard, lower is better | **0/12** | n/a | +0.00 |
 
+Trigger rates count should-fire cases only (negative cases excluded), so
+7/18 and the like are not out of the 318 attempts.
+
 Δ is the mean weighted grader score per run, with-skill minus without-skill,
 `skill-fired` excluded. On `neg-hard` the skill never fired and none of the 12
 non-firing plans invented a `no-mistakes` command (`summarize.py --mentions`:
@@ -69,10 +72,12 @@ from `SKILL.md`, so it mostly records that the skill was used:
 | `safety` | −0.33 | +0.00 | −0.33 |
 | `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
 
-Content-grader gains with the skill fired are `before-edit-03-full-suite`
-`produces-reduced-test-set` (1/3 vs 0/3), `lang-graph-02-cross-lang`
-`covers-both-language-graphs` (2/3 vs 0/3) and `usage-04-paths-in-ci`
-`paths-is-not-the-parseable-contract` (3/3 vs 0/3, fired 3/3). The `napi` gain
+Content-grader gains with the skill fired in every with-arm run are
+`before-edit-03-full-suite` `produces-reduced-test-set` (1/3 vs 0/3) and
+`usage-04-paths-in-ci` `paths-is-not-the-parseable-contract` (3/3 vs 0/3).
+`lang-graph-02-cross-lang` `covers-both-language-graphs` gained 2/3 vs 0/3 with
+the skill firing in only 1 of 3 runs (one pass came from a run that never
+loaded it), so that gain is not attributable to the skill. The `napi` gain
 is one run on `napi-02-repeated-calls` with the skill never fired, so it is
 noise. `before-edit-05-where-used` fired 3/3 and scored 3/3 on both content
 graders in both arms: its +0.20 is the regex alone. The four `REGRESSION` rows
@@ -153,8 +158,8 @@ failure.
 
 The headline number is **Δ** — the with-plugin score minus the without-plugin
 score. A high absolute score with Δ ≈ 0 means the model would have done just as
-well without the skill. Opus wrote a *good* impact-scoping plan either way —
-it reasons about barrels and re-export chains unprompted — so where the arms
+well without the skill. The agent wrote a *good* impact-scoping plan either way
+(the without-arm content graders mostly pass), so where the arms
 genuinely differ is whether the plan is exhaustive **by construction** or only
 **if executed carefully**. The `exhaustive-by-construction` grader on the
 recall-critical cases (01, 02, 05) targets that difference; a text-search plan
