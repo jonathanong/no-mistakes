@@ -165,3 +165,48 @@ export async function shareBeforeHelperWrite(id: number) {
   await tx.query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
   await writeAccount(tx.query, id);
 }
+
+export async function qualifyOnlyWrite(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  await query(`UPDATE public.accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function qualifyOnlyLock(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);
+  await query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function differentExplicitSchemas(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);
+  await query(`UPDATE archive.accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function matchingExplicitSchemas(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM "schema.with.dot".accounts WHERE id = $1 FOR SHARE`, [id]);
+  await query(`UPDATE "schema.with.dot".accounts SET touched = true WHERE id = $1`, [id]);
+}
+
+export async function uncertainWriteOnlyIsQualified(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  const pending = query(`UPDATE "schema.with.dot".accounts SET touched = true WHERE id = $1`, [id]);
+  await pending;
+}
+
+export async function uncertainLockOnlyIsQualified(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);
+  const pending = query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+  await pending;
+}
+
+export async function exactLaterWriteWins(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);
+  await query(`UPDATE public.accounts SET touched = true WHERE id = $1`, [id]);
+  await query(`UPDATE accounts SET touched = true WHERE id = $1`, [id]);
+}

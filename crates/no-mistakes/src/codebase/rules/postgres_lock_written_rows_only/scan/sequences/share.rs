@@ -9,7 +9,7 @@ pub(super) fn scan(
     unresolved: &BTreeSet<u32>,
 ) {
     let mut ordered = Vec::new();
-    let mut uncertain_writes = BTreeMap::<_, BTreeSet<_>>::new();
+    let mut uncertain_writes = BTreeMap::<_, relations::Writes<'_>>::new();
     let candidates = complete_calls(calls, grouped)
         .filter(|(_, facts)| !facts.lock_writes.share_statements.is_empty());
     for (call, facts) in candidates {
@@ -43,7 +43,7 @@ pub(super) fn scan(
     }
     ordered.sort_unstable_by_key(|(transaction, call, _)| (*transaction, call.execution_range.1));
     let mut current = None;
-    let mut written = BTreeSet::new();
+    let mut written = relations::Writes::default();
     for (transaction, call, facts) in ordered.into_iter().rev() {
         if current != Some(transaction) {
             current = Some(transaction);
@@ -55,28 +55,41 @@ pub(super) fn scan(
         for statement in access.share_statements.iter().rev() {
             let site = Site { file, source, call };
             for relation in &statement.locks {
-                match relation.as_deref() {
-                        Some(relation) if written.contains(relation) && reported.insert(Some(relation)) => {
-                            output.emit(
-                                &site,
-                                super::super::super::SHARE_LOCK_THEN_WRITE,
-                                Some(relation),
-                                None,
-                                "share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
-                            );
-                        }
-                        Some(relation) if uncertain.is_some_and(|writes| writes.contains(relation)) && reported.insert(Some(relation)) => {
-                            output.unresolved(
-                                &site,
-                                "cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
-                            );
-                        }
-                        None if reported.insert(None) => output.unresolved(
+                let relation = relation.as_deref();
+                if reported.contains(&relation) {
+                    continue;
+                }
+                if let Some(relation) = relation {
+                    if written.contains(relation) {
+                        output.emit(
                             &site,
-                            "cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
-                        ),
-                        _ => {}
+                            super::super::super::SHARE_LOCK_THEN_WRITE,
+                            Some(relation),
+                            None,
+                            "share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+                        );
+                    } else if uncertain.is_some_and(|writes| writes.contains(relation)) {
+                        output.unresolved(
+                            &site,
+                            "cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+                        );
+                    } else if written.ambiguous(relation)
+                        || uncertain.is_some_and(|writes| writes.ambiguous(relation))
+                    {
+                        output.unresolved(
+                            &site,
+                            "cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+                        );
+                    } else {
+                        continue;
                     }
+                } else {
+                    output.unresolved(
+                        &site,
+                        "cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+                    );
+                }
+                reported.insert(relation);
             }
             written.extend(
                 access.writes[statement.writes.clone()]

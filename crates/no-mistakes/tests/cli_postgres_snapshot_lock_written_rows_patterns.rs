@@ -65,12 +65,12 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
     for (case, category) in [("advise", "advisories"), ("fail", "rules")] {
         assert_eq!(
             lines(&reports[case]["report"], category, "share-lock-then-write"),
-            [6, 12, 18, 75, 92, 98, 103]
+            [6, 12, 18, 75, 92, 98, 103, 189, 209]
         );
     }
     assert_eq!(
         lines(&reports["advise"]["report"], "advisories", "unanalyzable"),
-        [56, 63, 69, 86, 114, 134, 141, 149, 165]
+        [56, 63, 69, 86, 114, 134, 141, 149, 165, 171, 177, 195, 202]
     );
     assert!(lines(
         &reports["disabled"]["report"],
@@ -100,11 +100,11 @@ fn postgres_lock_written_rows_redundant_prelocks_check_json_snapshot() {
             "advisories",
             "redundant-prelock"
         ),
-        [5, 11, 74]
+        [5, 11, 74, 118]
     );
     assert_eq!(
         lines(&reports["advise"]["report"], "advisories", "unanalyzable"),
-        [48, 68, 81]
+        [48, 68, 81, 100, 106, 124]
     );
     assert!(
         reports["invalid_fail"]["report"]["incomplete"][0]["message"]

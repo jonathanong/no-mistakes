@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::postgres::{EmbeddedSqlOptions, SqlStatementFileFacts};
 
+mod relations;
 mod share;
 
 type Transaction = (u32, u32);
@@ -61,22 +62,31 @@ fn redundant_prelocks(
         }
         let Some(lock) = &facts.lock_writes.prelock else {
             if facts.lock_writes.locks.iter().any(|lock| {
-                lock.relation.is_none() || keys.iter().any(|write| write.relation == lock.relation)
+                keys.iter().any(|write| {
+                    relations::same(lock.relation.as_deref(), write.relation.as_deref())
+                        != Some(false)
+                })
             }) {
                 output.unresolved(&site, "cannot prove the discarded lock reads only a static key and has no other effects");
             }
             continue;
         };
-        let (mut matches, mut unknown) = (false, false);
-        for write in keys.iter().filter(|write| write.relation == lock.relation) {
+        let (mut matches, mut unknown_key, mut unknown_relation) = (false, false, false);
+        for write in *keys {
+            let same_relation =
+                relations::same(lock.relation.as_deref(), write.relation.as_deref());
+            if same_relation == Some(false) {
+                continue;
+            }
             if lock.key.as_ref().map(|(column, _)| column)
                 != write.key.as_ref().map(|(column, _)| column)
             {
                 continue;
             }
             let same = rows::compare_keys(lock, call, write, write_call);
-            matches |= same == Some(true);
-            unknown |= same.is_none();
+            matches |= same_relation == Some(true) && same == Some(true);
+            unknown_key |= same_relation == Some(true) && same.is_none();
+            unknown_relation |= same_relation.is_none() && same != Some(false);
         }
         if matches
             && lock_tx.is_some()
@@ -91,10 +101,15 @@ fn redundant_prelocks(
                 lock.key.as_ref().map(|(_, value)| value.as_str()),
                 "the following conditional write decides whether to change the locked row; remove the unused pre-lock",
             );
-        } else if matches || unknown {
+        } else if matches || unknown_key {
             output.unresolved(
                 &site,
                 "cannot prove the pre-lock and conditional write share a transaction and immutable row key",
+            );
+        } else if unknown_relation {
+            output.unresolved(
+                &site,
+                "cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
             );
         }
     }

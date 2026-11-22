@@ -486,8 +486,11 @@ on every continuing transaction path, or remove the lock.
 
 The rule does not establish advisory-key provenance from unwritten relations,
 unbounded recursive read sets, duplication of unique-index guarantees, or
-lock ordering across transactions. Key equality is checked only when provable;
-unresolved inputs follow the selected policy rather than guessed equivalence.
+lock ordering across transactions. Both sequence checks require consistent relation
+qualification. If one statement uses a schema-qualified name and the other uses
+the same unqualified name, the pair follows the configured unresolved SQL policy.
+Key equality is checked only when provable; unresolved inputs follow the selected
+policy rather than guessed equivalence.
 
 ## Suppression
 

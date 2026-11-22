@@ -8,11 +8,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "src/query.ts",
+          "line": 100,
+          "message": "src/query.ts:100: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 106,
+          "message": "src/query.ts:106: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
           "line": 11,
           "message": "src/query.ts:11: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
           "rule": "postgres-lock-written-rows-only",
           "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "redundant-prelock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 118,
+          "message": "src/query.ts:118: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM \"schema.with.dot\".accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 124,
+          "message": "src/query.ts:124: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts JOIN account_events ON accounts.id = account_events.account_id WHERE accounts.id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
         },
         {
           "file": "src/query.ts",

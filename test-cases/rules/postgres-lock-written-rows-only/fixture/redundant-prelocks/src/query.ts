@@ -94,3 +94,33 @@ export async function suppressedPrelock(id: number) {
   await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);
   await query(`UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
 }
+
+export async function qualifyOnlyWrite(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`UPDATE public.accounts SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
+}
+
+export async function qualifyOnlyLock(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`UPDATE accounts SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
+}
+
+export async function differentExplicitSchemas(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`UPDATE archive.accounts SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
+}
+
+export async function matchingExplicitSchemas(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM "schema.with.dot".accounts WHERE id = $1 FOR UPDATE`, [id]);
+  await query(`UPDATE "schema.with.dot".accounts SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
+}
+
+export async function unresolvedJoinedLockRelation(id: number) {
+  await using query = await beginTransaction();
+  await query(`SELECT 1 FROM accounts JOIN account_events ON accounts.id = account_events.account_id WHERE accounts.id = $1 FOR UPDATE`, [id]);
+  await query(`UPDATE public.accounts SET state = 'done' WHERE id = $1 AND state = 'running'`, [id]);
+}
