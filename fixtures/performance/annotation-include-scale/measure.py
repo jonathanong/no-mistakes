@@ -36,7 +36,7 @@ def run(name, case, label, timings=False):
     prefix = args.output / f"{case}-{name}-{label}"
     command = [str(binaries[name]), "check", "--root", str(root), "--config",
                str(root / "configs" / f"{case}.yml"),
-               "--format", "json", "--lock-timeout", "0"]
+               "--format", "json", "--timeout", "0", "--lock-timeout", "0"]
     if args.jobs:
         command.extend(["--jobs", str(args.jobs)])
     if timings:

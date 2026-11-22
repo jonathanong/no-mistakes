@@ -4,17 +4,21 @@ This saved workload contains 3,072 small TypeScript modules that import the same
 
 All includes resolve from this same fixture root. `tsconfig.json` resolves `@bench/db` to `src/db.mts`. The full and small configs explicitly set Max or Low effort. `small-max.yml` contains two same-profile Max entries whose disjoint includes together select the same 32 modules as `small-low.yml`; `half-a-16-max.yml` and `half-b-16-max.yml` provide disjoint-half controls.
 
+The module selection constants are deliberate to keep query reports stable. Both AST arms are lowered, so this measures parsing and lowering rather than runtime execution coverage.
+
 From the repository root, run the same commands on baseline and candidate revisions, then compare normalized JSON reports including findings, warnings, advisories, and exit status:
 
 ```sh
 cd fixtures/performance/annotation-include-scale
-no-mistakes check --root "$PWD" --config configs/full-max.yml --format json
-no-mistakes check --root "$PWD" --config configs/small-max.yml --format json
-no-mistakes check --root "$PWD" --config configs/full-low.yml --format json
-no-mistakes check --root "$PWD" --config configs/small-low.yml --format json
-no-mistakes check --root "$PWD" --config configs/half-a-16-max.yml --format json
-no-mistakes check --root "$PWD" --config configs/half-b-16-max.yml --format json
+no-mistakes check --root "$PWD" --config configs/full-max.yml --jobs 8 --timeout 0 --format json
+no-mistakes check --root "$PWD" --config configs/small-max.yml --jobs 8 --timeout 0 --format json
+no-mistakes check --root "$PWD" --config configs/full-low.yml --jobs 8 --timeout 0 --format json
+no-mistakes check --root "$PWD" --config configs/small-low.yml --jobs 8 --timeout 0 --format json
+no-mistakes check --root "$PWD" --config configs/half-a-16-max.yml --jobs 8 --timeout 0 --format json
+no-mistakes check --root "$PWD" --config configs/half-b-16-max.yml --jobs 8 --timeout 0 --format json
 ```
+
+`--timeout 0` disables the command deadline; `--lock-timeout 0` disables the invocation-lock wait deadline. `measure.py` passes both flags.
 
 `measure.py BASELINE CANDIDATE OUTPUT` runs balanced baseline/candidate/candidate/baseline release comparisons. Each invocation starts with fresh in-memory analysis state. It checks exact report bytes and status, and records wall time, user plus system CPU, and peak RSS. Acceptance runs have no observer flags. Separate `--timings` runs attribute the parse phase; those instrumented runs do not supply the acceptance wall/CPU measurements.
 
