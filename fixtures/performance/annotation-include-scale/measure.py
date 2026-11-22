@@ -18,7 +18,7 @@ parser.add_argument("--jobs", type=int, default=8)
 args = parser.parse_args()
 root = Path(__file__).resolve().parent
 args.output.mkdir(parents=True, exist_ok=True)
-environment = dict(os.environ, XDG_RUNTIME_DIR=str(args.output / "invocation"))
+environment = dict(os.environ, XDG_RUNTIME_DIR=str((args.output / "invocation").resolve()))
 environment.pop("RAYON_NUM_THREADS", None)
 runtime_dir = Path(environment["XDG_RUNTIME_DIR"])
 runtime_dir.mkdir(mode=0o700, exist_ok=True)
