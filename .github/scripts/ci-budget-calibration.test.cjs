@@ -145,7 +145,7 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
   assert.doesNotMatch(consumer, /build-native\.cjs|cargo build/);
   const gate = job("javascript-tests");
   assert.match(gate, /needs: \[javascript-coverage, linux-api-tests\]/);
-  assert.match(gate, /if: \$\{\{ always\(\) \}\}/);
+  assert.match(gate, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
   assert.equal(jobBudget(gate), 180);
   assert.ok(
     historicalSerialRequired > jobBudget(gate),

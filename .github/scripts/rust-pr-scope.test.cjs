@@ -85,6 +85,9 @@ test("scope metadata is PR-only, fail-closed, and artifact merges skip with thei
   for (const name of ["quality-rust", "standalone-build", "rust-coverage-build", "docs-tests"])
     assert.match(job(name), /if: \$\{\{ needs.changes.outputs.rust == 'true' \}\}/);
   for (const name of ["tests", "tests-standalone-lib"])
-    assert.match(job(name), /if: \$\{\{ always\(\) && needs.changes.outputs.rust == 'true' \}\}/);
+    assert.match(
+      job(name),
+      /^    if: \$\{\{ !cancelled\(\) && needs.changes.outputs.rust == 'true' \}\}$/m,
+    );
   assert.match(workflow, /node --test[^\n]*rust-pr-scope.test.cjs/);
 });

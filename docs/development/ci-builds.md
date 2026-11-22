@@ -19,6 +19,9 @@ The current validation graph is organized as follows:
   [upstream allocator issue](https://github.com/oxc-project/oxc/issues/20331).
   Lightweight policy, report, and aggregate jobs use the slim image where their
   tooling supports it.
+- Superseded pull-request runs stop the validation gates and the JavaScript
+  and Rust coverage merges when GitHub cancels the workflow. Active runs
+  still evaluate dependency results and reject failures.
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
   Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
   a merge job combines the blob reports and coverage before enforcing the

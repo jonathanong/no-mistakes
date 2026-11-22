@@ -37,7 +37,7 @@ test("each Linux N-API shard enforces the slow-test gate and uploads a unique re
 test("JavaScript aggregate fails when the Linux N-API matrix fails or skips", () => {
   const aggregate = workflow.jobs["javascript-tests"];
   assert.ok(aggregate.needs.includes("linux-api-tests"));
-  assert.equal(aggregate.if, "${{ always() }}");
+  assert.equal(aggregate.if, "${{ !cancelled() }}");
   const script = aggregate.steps.find((step) => step.name === "Require all component jobs").run;
   for (const result of ["success", "failure", "cancelled", "skipped"]) {
     const child = spawnSync("bash", ["-eu", "-c", script], {
