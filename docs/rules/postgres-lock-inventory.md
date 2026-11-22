@@ -78,6 +78,12 @@ rules:
       baselineFile: .no-mistakes/postgres-locks.json
 ```
 
+```ts
+import { query } from "@example/db";
+
+void query("SELECT id FROM jobs WHERE id = $1", [1]);
+```
+
 The canonical option is `baselineFile`; `baseline` names the same setting.
 Both the inventory and its counts include suppressed physical sites, so adding
 a suppression cannot make a new site disappear from baseline comparison.
@@ -88,8 +94,10 @@ Suppose the tracked baseline contains a statement locking `jobs`, and the
 configured code adds a distinct lock on `accounts`:
 
 ```ts
-await tx.query("SELECT id FROM jobs WHERE id = $1 FOR UPDATE", [jobId]);
-await tx.query("SELECT id FROM accounts WHERE id = $1 FOR SHARE", [accountId]);
+import { query } from "@example/db";
+
+void query("SELECT id FROM jobs WHERE id = $1 FOR UPDATE", [1]);
+void query("SELECT id FROM accounts WHERE id = $1 FOR SHARE", [2]);
 ```
 
 The `accounts` site is reported as added. A nearby line suppression does not
