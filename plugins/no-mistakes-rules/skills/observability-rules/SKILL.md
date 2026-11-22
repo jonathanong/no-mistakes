@@ -9,7 +9,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 - MUST NOT tag a metric with unbounded values (ids, emails, URLs); use a closed set, and apply the personal-data rule below when logging high-cardinality values.
 - MUST NOT rename or retype a log field or metric that a monitor or dashboard reads without updating it in the same change.
-- MUST NOT assume context bound inside a transaction is cleared when the transaction rolls back.
+- MUST NOT let transaction-specific log context leak into unrelated work after rollback. Clear or scope the context when the logger retains it across rollback.
 - MUST NOT create or first use a metrics client before a process forks; create it per process after the fork.
 - SHOULD NOT log personal data such as emails, names, postal addresses, or phone numbers in messages, structured fields, bound context, or payloads; omit or redact it, or use a stable pseudonymous identifier when needed for correlation. Pseudonymous identifiers remain linkable. Exceptions for necessary audit or security records need a documented purpose, minimal fields, restricted access, and a defined retention period.
 - SHOULD NOT alert only on errors for scheduled or queued work; also alert when expected work stops.

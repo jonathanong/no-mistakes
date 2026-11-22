@@ -11,10 +11,10 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 - MUST NOT log, print, return, or commit credentials or tokens.
 - MUST NOT store bearer, OAuth, OTP, or TOTP secrets raw; hash or encrypt them.
-- MUST NOT make API keys recoverable after creation; show them once.
+- SHOULD NOT make API keys your service issues recoverable after creation. Show them once unless the product explicitly supports retrieval with separate authorization.
 - MUST NOT accept a partial session or skip revocation checks; fail closed on missing or malformed credentials.
 - MUST NOT substitute an admin credential for a missing client credential.
-- MUST NOT let edge-verified claims grant access; the backend decides.
+- SHOULD NOT trust forwarded authentication claims unless the backend authenticates the verifying gateway and rejects requests that can bypass it.
 - MUST NOT rotate a signing secret without migrating what it signs.
 
 ## Injection and outbound requests
@@ -22,14 +22,14 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT pass untrusted input to SQL, shell, file paths, templates, or regexes unescaped.
 - MUST NOT fetch user-supplied URLs with a plain client; validate public addresses and revalidate redirects (SSRF).
 - MUST NOT ship open redirects or unsafe deserialization.
-- MUST NOT accept form-encoded or multipart bodies on mutating JSON routes (CSRF).
+- MUST NOT accept form-encoded or multipart bodies on cookie-authenticated JSON mutation routes that rely on JSON-only requests for CSRF protection.
 - MUST NOT add third-party browser origins without updating CSP.
-- MUST NOT feed external content to an LLM without sanitizing it, or put user data in system prompts.
+- SHOULD treat external content as untrusted data and keep it separate from system instructions.
 
 ## API shape
 
 - MUST NOT return fields a lower-privilege caller must not see; check each field against roles.
-- MUST NOT skip suspension, block, or quota guards on mutating routes.
-- MUST NOT gate backend behavior on frontend feature flags.
+- MUST NOT skip applicable suspension, block, or quota guards on mutating routes.
+- MUST NOT let client-evaluated feature flags authorize backend behavior.
 - MUST NOT expose unbounded lists; clamp page sizes.
 - MUST NOT let a schema drift from its handler, or widen it to hide drift.

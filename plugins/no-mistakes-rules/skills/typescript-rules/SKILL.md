@@ -10,10 +10,10 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Async
 
 - MUST NOT leave a floating promise from an async boundary; `await` it, or `void` it with a rejection handler.
-- MUST NOT swallow rejections with `.catch(() => {})`; log, report, transform, or rethrow.
+- SHOULD NOT swallow rejections with `.catch(() => {})` unless the operation is explicitly best-effort and its failure needs no follow-up.
 - MUST NOT `return promise` inside `try` when the `catch` should handle it; without `await` the rejection escapes the `catch`. Use `return await`.
 - MUST NOT `await` a synchronous array method.
-- MUST NOT fan out with unbounded `Promise.all` over input-sized lists; bound concurrency or batch.
+- SHOULD NOT fan out with unbounded `Promise.all` over input-sized lists; bound concurrency or batch.
 - MUST NOT call network, DNS, or model clients without an explicit timeout or abort signal.
 - MUST NOT display stale async results; abort superseded requests or compare tokens.
 - SHOULD NOT issue consecutive independent awaited reads; batch the key set into one call.
@@ -21,27 +21,28 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Values and errors
 
 - MUST NOT collapse an explicit `null` into a default with `??` or `||` when null has meaning; test `=== undefined`.
-- MUST NOT mutate imports, module bindings, or parameters; build and return a new value.
+- MUST NOT reassign imported bindings.
+- SHOULD NOT mutate shared module state or parameters unless the mutation is part of their contract.
 - MUST NOT drop `cause` when wrapping an error.
 - MUST NOT catch every error and return `null`; return null only for expected statuses.
 - MUST NOT compare, hash, lock, or cache identities in non-normalized form.
 - MUST NOT reuse one variable, key, or flag across concurrent calls so a later call overwrites an earlier one.
-- MUST NOT add an option without forwarding it through every caller and helper.
+- SHOULD NOT expose an option that has no effect on a supported call path unless it is a documented compatibility option.
 
 ## Static analysis and dead code
 
-- MUST NOT hide calls behind computed keys, runtime registries, or forwarding lambdas; static analysis cannot trace them. Call the target by name.
+- SHOULD NOT export an error class that nothing constructs or subclasses unless it is public library API or a runtime loader constructs it. Otherwise, specific error handlers can never match it.
 
 ## Process and IO
 
-- MUST NOT call `process.exit()` or `process.kill()` in runtime code; register graceful shutdown.
-- MUST NOT register lifecycle callbacks conditionally or lazily in owner modules; register at top level.
+- SHOULD NOT call `process.exit()` or `process.kill()` in library or long-running service code when it interrupts pending work or bypasses cleanup.
 - MUST NOT detect the entry module by comparing `process.argv[1]`; use the runtime's main-module check.
 - MUST NOT buffer large bodies or files in memory; stream them.
 - MUST NOT do blocking or CPU-heavy work on the event loop; use worker threads or async native calls.
 - MUST NOT read disk, spawn processes, or reparse inside a hot loop; hoist and reuse.
 - SHOULD NOT walk a repository without `.gitignore` awareness.
-- MUST NOT add a second logger or error reporter; use the existing ones, and do not report expected 4xx as errors.
+- SHOULD NOT add a second logger or error reporter unless it serves a separate purpose.
+- SHOULD NOT report expected 4xx responses as application errors unless they indicate a failure the service must handle.
 
 ## Redis and Valkey
 
@@ -52,7 +53,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Packages and boundaries
 
-- MUST NOT import a package the owning `package.json` does not declare.
 - MUST NOT use relative imports that escape a package root.
 - MUST NOT use Node-only APIs in code that other runtimes (Workers, browsers) load.
-- MUST NOT leave tracked TS files outside every `tsconfig`, or create workspace dependency cycles.
+- SHOULD NOT leave tracked TypeScript files that need type checking outside every `tsconfig`.
+- SHOULD NOT create workspace dependency cycles.
