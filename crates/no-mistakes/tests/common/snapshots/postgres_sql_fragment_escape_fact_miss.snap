@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fact_miss": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "reexport.ts",
+          "import": "columns.ts",
+          "line": 3,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "export {",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "static-import.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.append(extra);",
+          "target": "widgetColumns"
+        },
+        {
+          "file": "static-require.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "parts.append(extra);",
+          "target": "widgetColumns"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

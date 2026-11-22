@@ -104,8 +104,7 @@ impl PhaseWalk<'_> {
         }
         if let AssignmentTarget::AssignmentTargetIdentifier(identifier) = target {
             #[cfg(all(test, feature = "test-instrumentation"))]
-            let legacy = mutable_receiver_tests::deferred_frames::LEGACY_IDENTIFIER
-                .with(std::cell::Cell::get);
+            let legacy = root_target_metrics::tests::LEGACY_IDENTIFIER.with(std::cell::Cell::get);
             #[cfg(not(all(test, feature = "test-instrumentation")))]
             let legacy = false;
             if !legacy {

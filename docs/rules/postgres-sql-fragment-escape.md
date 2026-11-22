@@ -52,6 +52,55 @@ canonical graph prerequisite and their own diagnostics. An ESLint-only setup
 omits this cross-file check. An empty `trustedSqlTags` list produces no
 findings and adds no graph or catalog demand.
 
+A sourced `export { name } from` or `export * as name from` with a missing
+recorded offset produces an `incomplete` entry when the target exports a
+fragment. A direct `import()` or `require()` with a computed argument or
+missing literal specifier fact produces one specifier gap when a binding or
+call in the loading file reaches a proven exported SQL fragment. Dependency
+coverage gaps also recognize configured tagged queries. A readable source
+is required to attach a finding to its line. Use a literal specifier to make
+the target analyzable.
+
+Literal loads through a `const` initialized by `createRequire(...)` from
+`node:module` or `module` use the recorded call offset. For example,
+`load("./columns.js")` can identify the module even when the loader is named
+`load`. The rule also uses these facts for type-position imports and imports in
+function bodies and call arguments.
+
+## Wall time
+
+Measured on 2026-11-20 on one machine. This is a point-in-time comparison,
+not a performance budget. The tree is 301 TypeScript files: one tag module
+and 300 modules that default-import it, export an interpolation-free tagged
+template, and call `.append` on that export. The check config sets
+`trustedSqlTags` to that module's default export. Each runner discards one
+warmup and keeps the median of the next three wall-clock samples. Times below
+are seconds, rounded to the nearest millisecond.
+
+Typed ESLint is ESLint 10.14.0, `@typescript-eslint/parser` 8.72.2, and
+TypeScript 6.0.3, with the parser project service enabled. A local rule reads
+the program's source-file list once (364 files, including the TypeScript
+library) and requests semantic diagnostics for every file, so the run builds
+a typed program. The command is `eslint --config eslint.config.mjs src`.
+
+The Rust sample is a release build of
+`no-mistakes check --root <tree> --config <tree>/.no-mistakes.yml --format json`
+on the same tree after the ESLint config is removed, so the inventory is the
+TypeScript sources. That run reports 300 findings and no `incomplete` entries.
+
+| Runner | Warmup | Samples | Median |
+| --- | --- | --- | --- |
+| Typed ESLint | 0.639 | 0.627, 0.625, 0.644 | 0.627 |
+| Rust `check` | 0.028 | 0.027, 0.025, 0.026 | 0.026 |
+
+The Rust median is lower on this tree.
+
+Literal `require.resolve()` calls return paths and do not seed a module namespace.
+The extractor records their kind at the call offset, including named loaders.
+Comment and quoted-text lookalikes do not create module-load gaps. A missing
+static specifier fact includes a no-substitution template literal, matching
+the extractor's literal forms.
+
 ## What it catches
 
 One finding names the exported fragment and the file that declares it. The

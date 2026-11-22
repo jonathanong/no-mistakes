@@ -1326,3 +1326,29 @@ checksum 0.060 seconds, and extraction 1.435 seconds (20.622 seconds measured
 inside the helper). Both downloaded components passed CLI and async API smoke
 checks. This is one local observation with the host and network limits stated
 above, not a hosted tail estimate.
+
+The PostgreSQL source-identity quality check filters tests at runtime, so that
+filter alone does not bound Rust test compilation. It now compiles and runs all
+three existing unit-test slices with the same no-default-feature and
+`test-instrumentation` settings. Each slice uses the standalone library's
+4096 codegen units and zero debug info, and the job retains its 30-minute step
+and 40-minute job bounds. Run 45000861345 exhausted the job bound while the
+original quality command was still active; its runner did not upload the
+step log. The existing standalone memory measurements explain why compiling
+the entire test harness is unsafe on the hosted runner. Resource samples now
+wrap this command too. No tests are dropped and failures are never retried.
+Local validation used eight build jobs under a 12 GiB scope with a warm
+dependency cache: the three crate compilations took 91, 86, and 87 seconds
+and ran 9, 17, and 314 source tests respectively (340 total). This is local
+validation, not a hosted-runner time guarantee. Shared instrumentation helpers
+are available independently of the selected test slice.
+
+The JavaScript coverage merge keeps its required local coverage and shard
+checks separate from its best-effort upload. In run 45014849129, the required
+work took 263 seconds, the upload consumed 236 seconds before the eight-minute
+job was cancelled, and cleanup took another 67 seconds. The upload now has a
+two-minute step bound: the observed required work, that bound, and observed
+cleanup total 450 seconds within the unchanged 480-second job limit. Explicit
+`coverage/lcov.info` upload also disables unrelated coverage-file searches.
+The saved workflow contract retains fatal local coverage and shard checks;
+the shorter upload bound leaves 30 seconds of measured job headroom.

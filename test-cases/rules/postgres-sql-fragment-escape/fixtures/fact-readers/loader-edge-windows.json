@@ -1,0 +1,66 @@
+[
+  [
+    "require(// leading comment\n'./columns')",
+    true
+  ],
+  [
+    "require(// unfinished argument",
+    false
+  ],
+  [
+    "require(/* unfinished comment",
+    false
+  ],
+  [
+    "require(/pattern/)",
+    false
+  ],
+  [
+    "require('./co\\'lumns')",
+    true
+  ],
+  [
+    "require('./columns)",
+    false
+  ],
+  [
+    "require('./columns' /* unfinished comment",
+    false
+  ],
+  [
+    "require(   ",
+    false
+  ],
+  [
+    "noop // require('./columns')\n()",
+    false
+  ],
+  [
+    "noop /* require('./columns')",
+    false
+  ],
+  [
+    "left / right",
+    false
+  ],
+  [
+    "'unfinished string",
+    false
+  ],
+  [
+    "require('./columns' + name)",
+    false
+  ],
+  [
+    "require('./columns'",
+    true
+  ],
+  [
+    "import(`./columns)",
+    false
+  ],
+  [
+    "require(/* empty */)",
+    false
+  ]
+]

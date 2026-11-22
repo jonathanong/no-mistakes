@@ -20,6 +20,6 @@ pub(super) fn capture(items: &[(usize, ValueExpression)]) {
     }
 }
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[cfg(test)]
 #[path = "escaped_array_capture_tests.rs"]
 pub(super) mod tests;

@@ -1,0 +1,43 @@
+{
+  "timeoutRun": 45000861345,
+  "job": 137142535867,
+  "jobMinutes": 40,
+  "stepMinutes": 30,
+  "shards": [
+    "0",
+    "1",
+    "2"
+  ],
+  "args": [
+    "nextest",
+    "run",
+    "--locked",
+    "-p",
+    "no-mistakes",
+    "--lib",
+    "--no-default-features",
+    "--features",
+    "test-instrumentation",
+    "--no-fail-fast",
+    "--retries",
+    "0",
+    "--build-jobs",
+    "1",
+    "codebase::postgres::source::"
+  ],
+  "localValidation": {
+    "buildJobs": 8,
+    "memoryCapGiB": 12,
+    "dependencyCache": "warm",
+    "compileSeconds": [
+      91,
+      86,
+      87
+    ],
+    "sourceTests": [
+      9,
+      17,
+      314
+    ]
+  }
+}

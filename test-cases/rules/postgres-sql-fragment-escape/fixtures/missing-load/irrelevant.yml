@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-sql-fragment-escape
+    scope: repository
+    exclude: [relevant.ts]
+    options:
+      trustedSqlTags:
+        - module: "@example/sql"
+          name: default

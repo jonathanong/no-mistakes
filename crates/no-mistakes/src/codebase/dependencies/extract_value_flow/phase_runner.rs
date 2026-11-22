@@ -2,11 +2,10 @@ use super::*;
 use phase_catalog::PhaseCatalog;
 use phase_walk::{PhaseWalk, PhaseWrite};
 use std::sync::Arc;
-#[path = "root_phase_segments.rs"]
-mod root_segments;
-
 #[path = "phase_finish.rs"]
 mod finish;
+#[path = "root_phase_segments.rs"]
+mod root_segments;
 pub(in super::super) struct PreparedPhases {
     catalog: Arc<PhaseCatalog>,
     previous_deferred: Option<Box<mutable_deferred::DeferredMutations>>,
@@ -173,14 +172,13 @@ impl ImportCollector {
         let previous = self
             .destructuring_phase_owner
             .replace(self.current_function_id());
-        // Nested RHS patterns already append into the outer frame. Only its
-        // owner may replay after the complete root phase capture is committed.
+        // Only the outer phase owner may replay writes from nested RHS patterns.
         let defer_mutable =
             self.receiver_only_bindings.is_some() && self.deferred_mutable_writes.is_none();
         #[cfg(all(test, feature = "test-instrumentation"))]
         let defer_mutable = defer_mutable
             || (self.receiver_only_bindings.is_some()
-                && mutable_receiver_tests::deferred_frames::LEGACY.with(std::cell::Cell::get));
+                && root_target_metrics::tests::LEGACY.with(std::cell::Cell::get));
         let previous_deferred = defer_mutable
             .then(|| self.begin_deferred_mutable_writes())
             .flatten();

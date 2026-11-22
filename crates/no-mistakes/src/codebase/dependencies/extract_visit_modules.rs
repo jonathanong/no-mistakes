@@ -96,6 +96,9 @@ fn record_runtime_require_import(
             .facts
             .literal_import_spans
             .push((call.span.start, specifier.clone()));
+        if kind == ImportKind::RequireResolve {
+            collector.namespace.facts.literal_require_resolve_offsets.push(call.span.start);
+        }
         // A created-require binding keeps the call site, so loader rules still
         // name that callee. The literal span is the specifier fact.
         if shared_edge {

@@ -173,6 +173,8 @@ fn finish_namespace_facts(state: NamespaceState) -> NamespaceFacts {
     facts.sourced_export_offsets.dedup();
     facts.literal_import_spans.sort();
     facts.literal_import_spans.dedup();
+    facts.literal_require_resolve_offsets.sort_unstable();
+    facts.literal_require_resolve_offsets.dedup();
     facts.unreported_class_ids.sort();
     facts
 }

@@ -1,7 +1,7 @@
 import { createRequire } from "module";
 
-const require = createRequire(import.meta.url);
+const load = createRequire(import.meta.url);
 
-export function load(specifier: string) {
-  return require(specifier);
+export function loadModule(specifier: string) {
+  return load(specifier);
 }

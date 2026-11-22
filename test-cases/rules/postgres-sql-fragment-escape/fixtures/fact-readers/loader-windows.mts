@@ -1,0 +1,14 @@
+noop /* require("./columns") */ ();
+noop /* import("./columns") */ ();
+"require('./columns')".slice();
+import(`./columns`);
+require(`./columns`);
+import(`./${name}`);
+require("./columns");
+$require("./columns");
+$import("./columns");
+require(/* comment */ "./columns");
+import(/* comment */ `./columns`);
+require(/* comment */ name);
+require("./columns" /* trailing comment */);
+require(/* first */ /* second */ "./columns");

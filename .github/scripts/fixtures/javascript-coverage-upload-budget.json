@@ -1,0 +1,8 @@
+{
+  "run": 45014849129,
+  "job": 137185380179,
+  "jobLimitSeconds": 480,
+  "requiredSeconds": 263,
+  "cancelledUploadSeconds": 236,
+  "cleanupSeconds": 67
+}
