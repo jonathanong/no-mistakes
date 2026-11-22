@@ -277,3 +277,32 @@ export async function plainKeysOnBothLockTargets(tx: Tx, item: number, child: nu
   await tx.query("UPDATE items SET value = 1 WHERE id = $1", [item]);
   await tx.query("UPDATE child SET value = 1 WHERE id = $1", [child]);
 }
+
+export async function fullUpdateWithLockedSubquery(query: PoolQuery) {
+  await query("UPDATE items SET value = (SELECT id FROM items ORDER BY id LIMIT 1 FOR UPDATE)");
+}
+
+export async function aliasedCteProjection(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT i.id AS selected_id FROM items i FOR UPDATE OF i)
+    DELETE FROM items d USING pending p WHERE d.id = p.selected_id`);
+}
+
+export async function constantCteProjection(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT 1 FROM items FOR UPDATE)
+    DELETE FROM items d USING pending p WHERE d.id = p."?column?"`);
+}
+
+export async function cteRangeJoin(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)
+    DELETE FROM items d USING pending p WHERE d.id > p.id`);
+}
+
+export async function cteFilteredBySubquery(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)
+    DELETE FROM items d USING (SELECT id FROM pending WHERE id > 0) p WHERE d.id = p.id`);
+}
+
+export async function cteFilteredByJoin(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)
+    DELETE FROM items d USING pending p JOIN allowed a ON a.id = p.id WHERE d.id = p.id`);
+}

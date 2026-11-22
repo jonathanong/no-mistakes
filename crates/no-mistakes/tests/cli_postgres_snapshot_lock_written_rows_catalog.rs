@@ -104,12 +104,12 @@ fn postgres_lock_written_rows_parameter_transactions_check_json_snapshot() {
         .as_array()
         .unwrap();
     let has_advisory = |line: u64| advisories.iter().any(|advisory| advisory["line"] == line);
-    for line in [5, 12, 97, 102, 130, 170, 180, 185, 231, 246, 275] {
+    for line in [5, 12, 97, 102, 130, 170, 180, 185, 231, 246, 275, 282] {
         assert!(!has_advisory(line), "expected a proof for line {line}");
     }
     for line in [
         17, 21, 107, 112, 117, 123, 136, 143, 149, 155, 160, 165, 175, 191, 198, 220, 225, 238,
-        252, 257, 262, 268,
+        252, 257, 262, 268, 286, 291, 296, 301, 306,
     ] {
         assert!(has_advisory(line), "expected an abstention for line {line}");
     }
@@ -119,13 +119,15 @@ fn postgres_lock_written_rows_parameter_transactions_check_json_snapshot() {
         .iter()
         .map(|advisory| advisory["line"].as_u64().unwrap())
         .collect();
-    for line in [5, 175, 191, 198, 220, 225, 238, 252, 257, 262, 268] {
+    for line in [
+        5, 175, 191, 198, 220, 225, 238, 252, 257, 262, 268, 286, 291, 296, 301, 306,
+    ] {
         assert!(
             advisory_lines.contains(&line),
             "expected an abstention for line {line}"
         );
     }
-    for line in [130, 180, 185, 203, 208, 213, 231, 246, 275] {
+    for line in [130, 180, 185, 203, 208, 213, 231, 246, 275, 282] {
         assert!(
             !advisory_lines.contains(&line),
             "expected a proof for line {line}"
