@@ -1,0 +1,13 @@
+---
+source: crates/no-mistakes/src/queue/tests/job_options.rs
+expression: "serde_json::to_string_pretty(&rows).unwrap()"
+---
+[
+  {
+    "file": "flow.ts",
+    "line": 18,
+    "job": "known-child",
+    "message": "job options missing priority",
+    "sourceLine": "children: [{ queueName: \"items\", name: \"known-child\", opts: {} }],"
+  }
+]

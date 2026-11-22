@@ -43,6 +43,36 @@ fn indexed_prepared_facts_report_matches_plain_prepared_facts_report() {
 }
 
 #[test]
+fn legacy_shared_queue_reports_do_not_load_required_job_options() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-required-config/default-on");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            queue: true,
+            ..Default::default()
+        },
+    );
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, facts.files())
+            .unwrap();
+    let standalone = analyze_project(&root, None, &[]).unwrap();
+    assert_eq!(standalone.check.len(), 1);
+    assert_eq!(standalone.check[0].kind, "missing-job-option");
+
+    let shared = analyze_project_with_facts(&root, None, &[], &facts).unwrap();
+    let prepared = analyze_project_with_prepared_facts(&root, &tsconfig, &[], &facts).unwrap();
+    let indexed =
+        analyze_project_with_prepared_facts_indexed(&root, &tsconfig, &[], &facts).unwrap();
+    for report in [&shared, &prepared, indexed.report()] {
+        assert_eq!(report.producers, standalone.producers);
+        assert!(report.check.is_empty(), "{:?}", report.check);
+    }
+}
+
+#[test]
 fn aggregate_queue_check_reports_selected_parse_failures_without_negative_findings() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("partial-failures"));
     let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);

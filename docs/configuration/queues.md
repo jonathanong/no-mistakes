@@ -132,6 +132,8 @@ spread abstains instead of reporting a missing key when it leaves the effective
 options unresolved and the effective list for that queue is non-empty.
 `check --config <path>` and `analyzeProject({ config, ... })` use the
 selected document's required job options, including an empty policy.
+Rust callers analyzing prepared facts can pass the selected config to the
+catalog-aware queue API.
 Same-file constant options and spreads resolve from the binding at each use.
 See [`queues check`](../cli/queues-check.md#required-job-options).
 

@@ -42,6 +42,8 @@ pub fn analyze_project_indexed(
     standalone::analyze_project_indexed(&root, tsconfig_path, filters, snapshot)
 }
 
+/// Analyze shared facts with a single TypeScript resolver. For caller-selected
+/// queue policy, use the catalog-aware prepared entry point.
 pub fn analyze_project_with_facts(
     root: &Path,
     tsconfig_path: Option<&Path>,
@@ -78,9 +80,8 @@ fn analyze_project_with_facts_inner<T>(
 
 /// Analyze shared queue facts with a TypeScript config already prepared by the caller.
 ///
-/// Legacy callers use this entrypoint with one caller-selected config. Aggregate
-/// checks use the catalog-aware entrypoint below so each importer selects its
-/// visible workspace config.
+/// Aggregate checks use the catalog-aware entry point below, which accepts the
+/// selected queue policy and resolves aliases with each importer's workspace config.
 #[doc(hidden)]
 pub fn analyze_project_with_prepared_facts(
     root: &Path,
@@ -179,12 +180,7 @@ fn resolve_legacy_queue_relationships<T>(
         &HashMap<PathBuf, FileFacts>,
     ) -> T,
 ) -> T {
-    let mut facts = queue_project_facts_from_shared(shared, filter, root);
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    if let Ok(config) = session.dataset(root).config(None) {
-        crate::queue::job_options::stamp(&mut facts, &config.queues);
-    }
+    let facts = queue_project_facts_from_shared(shared, filter, root);
     let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = queue_import_resolver(tsconfig, root, &visible_files);
     resolve_queue_relationships_with_resolver(root, &facts, &resolver, builder)

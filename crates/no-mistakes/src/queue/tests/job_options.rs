@@ -272,6 +272,40 @@ fn flow_queue_members_follow_spread_order() {
 }
 
 #[test]
+fn unresolved_flow_spread_abstains_from_children() {
+    let root = fixture("job-options-unresolved-flow");
+    let report = analyze_project(&root, None, &[]).unwrap();
+    let jobs = report
+        .check
+        .iter()
+        .filter(|finding| finding.kind == "missing-job-option")
+        .map(|finding| finding.job.as_deref().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(jobs, ["known-child"]);
+    let rows = report
+        .check
+        .iter()
+        .filter(|finding| finding.kind == "missing-job-option")
+        .map(|finding| {
+            serde_json::json!({
+                "file": finding.file, "line": finding.line,
+                "job": finding.job, "message": finding.message,
+                "sourceLine": source_line(&root, &finding.file, finding.line),
+            })
+        })
+        .collect::<Vec<_>>();
+    insta::assert_snapshot!(
+        "unresolved_flow_children",
+        serde_json::to_string_pretty(&rows).unwrap()
+    );
+    assert!(report.diagnostics.iter().any(|diagnostic| {
+        diagnostic
+            .message
+            .ends_with("the options object is not statically known")
+    }));
+}
+
+#[test]
 fn recursive_flow_children_abstain() {
     let root = fixture("job-options");
     let report = analyze_project(&root, None, &[]).unwrap();
