@@ -23,6 +23,7 @@ mod coverage_tests;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckFailure;
 use crate::codebase::dependencies::graph::DepGraph;
+use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -39,7 +40,20 @@ pub const RULE_ID: &str = "postgres-sql-fragment-escape";
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct Options {
-    trusted_sql_tags: Vec<crate::codebase::postgres::embedded::TrustedSqlTag>,
+    trusted_sql_tags: Vec<TrustedSqlTag>,
+}
+
+pub(crate) fn demands_analysis(config: &NoMistakesConfig) -> bool {
+    config.rule_applications(RULE_ID).iter().any(|application| {
+        application
+            .try_rule_options::<Options>()
+            .map_or(true, |options| has_trusted_tags(&options.trusted_sql_tags))
+    })
+}
+
+fn has_trusted_tags(tags: &[TrustedSqlTag]) -> bool {
+    tags.iter()
+        .any(|tag| !tag.module.is_empty() && !tag.name.is_empty())
 }
 
 pub(crate) fn check_with_graph(
