@@ -124,8 +124,9 @@ producer should pass the same keys, such as `attempts`, `backoff`,
 `removeOnComplete`, or `removeOnFail`. `queues.requiredJobOptionsByQueue`
 replaces the global list for that queue name. A present key of `[]` exempts
 the queue. Producers are `add`, each `addBulk` element, `upsertJobScheduler`
-templates, flow roots and children, and a configured enqueue factory's
-`options` argument. `defaultJobOptions` on the queue factory counts, including
+templates, flow roots and children, and configured enqueue factories.
+Factories without an `options` argument rely on queue defaults.
+`defaultJobOptions` on the resolved queue definition counts, including
 defaults supplied by a same-file const object spread in its options. An unknown
 spread abstains instead of reporting a missing key when it leaves the effective
 options unresolved and the effective list for that queue is non-empty.

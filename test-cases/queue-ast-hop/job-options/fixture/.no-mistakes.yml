@@ -17,3 +17,6 @@ queues:
         queue: 0
         job: 1
         options: 2
+      - callee: enqueueBare
+        queue: 0
+        job: 1

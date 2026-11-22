@@ -54,8 +54,8 @@ pub(super) fn note_enqueue(
         self_dedup: false,
         priority,
     });
+    crate::queue::job_options::note_argument_options(visitor, &binding, &job, call, options);
     if let Some(index) = options {
-        crate::queue::job_options::note_argument_options(visitor, &binding, &job, call, index);
         if let Some(expr) = call.arguments.get(index).and_then(Argument::as_expression) {
             super::super::dedup::note_dedup_argument(visitor, call, expr, job, recorded);
         }

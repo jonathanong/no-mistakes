@@ -8,6 +8,9 @@ use oxc_ast::ast::{
 };
 use oxc_span::GetSpan;
 
+#[path = "job_options_flow_members.rs"]
+mod members;
+
 pub(super) fn note_scheduler(
     visitor: &mut QueueVisitor<'_>,
     call: &CallExpression<'_>,
@@ -50,7 +53,7 @@ fn scheduler_template(call: &CallExpression<'_>) -> (Option<String>, JobOptionEv
     }
 }
 
-pub(super) fn note_flow(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
+pub(super) fn note_flow<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpression<'a>) {
     let Some(Expression::ObjectExpression(object)) = call
         .arguments
         .first()
@@ -70,20 +73,21 @@ pub(super) fn note_flow(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
     note_flow_node(visitor, object);
 }
 
-fn note_flow_node(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>) {
+fn note_flow_node<'a>(visitor: &mut QueueVisitor<'a>, object: &ObjectExpression<'a>) {
+    let members = members::read(object, &visitor.object_bindings);
+    let queue_name = members.queue_name();
+    let job = members.job();
     let Some(evidence) = flow_opts(object) else {
         push_site(
             visitor,
             object.span().start,
             None,
-            member_string(object, "queueName"),
-            member_string(object, "name"),
+            queue_name,
+            job,
             JobOptionEvidence::open(),
         );
         return;
     };
-    let queue_name = folded_string(object, "queueName");
-    let job = folded_string(object, "name");
     let known_spreads = evidence
         .spreads
         .iter()
@@ -97,7 +101,7 @@ fn note_flow_node(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>)
         evidence,
     );
     if known_spreads {
-        if let Some(children) = folded_expr(object, "children") {
+        if let Some(children) = members.children() {
             note_children(visitor, children, queue_name);
         }
     }
@@ -139,35 +143,9 @@ fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
     Some(evidence)
 }
 
-fn folded_string(object: &ObjectExpression<'_>, key: &str) -> Option<String> {
-    folded_expr(object, key).and_then(super::super::extract_helpers::static_string)
-}
-
-fn folded_expr<'a>(object: &'a ObjectExpression<'a>, key: &str) -> Option<&'a Expression<'a>> {
-    let mut found = None;
-    for property in &object.properties {
-        match property {
-            ObjectPropertyKind::ObjectProperty(property) => {
-                if crate::ast::property_key_name(&property.key).as_deref() == Some(key) {
-                    found = Some(&property.value);
-                }
-            }
-            ObjectPropertyKind::SpreadProperty(spread) => {
-                if let Expression::ObjectExpression(inner) = spread.argument.get_inner_expression()
-                {
-                    if let Some(value) = folded_expr(inner, key) {
-                        found = Some(value);
-                    }
-                }
-            }
-        }
-    }
-    found
-}
-
-fn note_children(
-    visitor: &mut QueueVisitor<'_>,
-    expr: &Expression<'_>,
+fn note_children<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    expr: &Expression<'a>,
     queue_name: Option<String>,
 ) {
     let expr = expr.get_inner_expression();

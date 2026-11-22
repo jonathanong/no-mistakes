@@ -176,6 +176,36 @@ expression: snapshot
     },
     {
       "kind": "missing-job-option",
+      "file": "factory-no-options.ts",
+      "line": 4,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": "bare-factory-missing",
+      "message": "job options missing backoff",
+      "sourceLine": "enqueueBare(widgets, \"bare-factory-missing\");"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow-queue-spreads.ts",
+      "line": 11,
+      "queueFile": "queues.ts",
+      "queueName": "items",
+      "job": "flow-to-required",
+      "message": "job options missing priority",
+      "sourceLine": "flow.add({ name: \"flow-to-required\", ...{ queueName: \"orders\" }, ...target, data: {}, opts: {} });"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow-queue-spreads.ts",
+      "line": 13,
+      "queueFile": "queues.ts",
+      "queueName": "items",
+      "job": "flow-explicit-after",
+      "message": "job options missing priority",
+      "sourceLine": "flow.add({ ...unresolved, queueName: \"items\", name: \"flow-explicit-after\", data: {}, opts: {} });"
+    },
+    {
+      "kind": "missing-job-option",
       "file": "flow.ts",
       "line": 20,
       "queueFile": "queues.ts",
@@ -213,6 +243,46 @@ expression: snapshot
       "job": "folded-child",
       "message": "job options missing backoff",
       "sourceLine": "children: [{ name: \"folded-child\", queueName: \"widgets\", data: {} }],"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "queue-default-producers.ts",
+      "line": 7,
+      "queueFile": "queue-default-primary.ts",
+      "queueName": "shared",
+      "job": "primary-defaults",
+      "message": "job options missing backoff",
+      "sourceLine": "primary.add(\"primary-defaults\", {});"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "queue-default-producers.ts",
+      "line": 8,
+      "queueFile": "queue-default-secondary.ts",
+      "queueName": "shared",
+      "job": "secondary-defaults",
+      "message": "job options missing removeOnComplete",
+      "sourceLine": "secondary.add(\"secondary-defaults\", {});"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "queue-default-producers.ts",
+      "line": 10,
+      "queueFile": "queue-default-secondary.ts",
+      "queueName": "shared",
+      "job": "through-star",
+      "message": "job options missing removeOnComplete",
+      "sourceLine": "enqueueBare(throughStar.selected, \"through-star\");"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "queue-default-producers.ts",
+      "line": 12,
+      "queueFile": "queue-default-secondary.ts",
+      "queueName": "shared",
+      "job": "through-alias",
+      "message": "job options missing removeOnComplete",
+      "sourceLine": "alias.add(\"through-alias\", {});"
     },
     {
       "kind": "missing-job-option",
@@ -429,6 +499,12 @@ expression: snapshot
       "sourceLine": "enqueueWidget(widgets, \"spread-opts\", ...rest);"
     },
     {
+      "file": "flow-queue-spreads.ts",
+      "line": 12,
+      "message": "job options were not judged because the queue name did not resolve",
+      "sourceLine": "flow.add({ name: \"flow-unknown-after\", ...{ queueName: \"items\" }, ...unresolved, data: {}, opts: {} });"
+    },
+    {
       "file": "flow.ts",
       "line": 22,
       "message": "job options were not judged because the options object is not statically known",
@@ -443,7 +519,7 @@ expression: snapshot
     {
       "file": "flow.ts",
       "line": 27,
-      "message": "job options were not judged because the options object is not statically known",
+      "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add({"
     },
     {
@@ -467,19 +543,19 @@ expression: snapshot
     {
       "file": "flow.ts",
       "line": 85,
-      "message": "job options were not judged because the options object is not statically known",
+      "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add({"
     },
     {
       "file": "flow.ts",
       "line": 123,
-      "message": "job options were not judged because the options object is not statically known",
+      "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add({"
     },
     {
       "file": "flow.ts",
       "line": 139,
-      "message": "job options were not judged because the options object is not statically known",
+      "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add({"
     },
     {

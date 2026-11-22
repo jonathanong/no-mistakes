@@ -117,10 +117,12 @@ The default is `[]`, and an empty list leaves this command's output unchanged.
 including `[]` to exempt the queue. The check reads `queue.add` options,
 each `queue.addBulk` element's `opts`, the `opts` field of an
 `upsertJobScheduler` template, `opts` on a flow root and its children, and
-the configured enqueue-factory `options` argument. Keys present on the
-queue's `defaultJobOptions` count as set. Queue constructors and configured
-queue factories follow same-file const object literals and their const aliases,
-including when spread into the queue options. A later known
+configured enqueue factories. A factory without a configured `options`
+argument can still satisfy required keys through queue defaults. Keys
+present on the resolved queue definition's `defaultJobOptions` count as set.
+Queue constructors and configured queue factories follow same-file const
+object literals and their const aliases, including when spread into the queue
+options. A later known
 `defaultJobOptions` replaces the earlier member. A known spread without that
 member leaves it intact. A later known write can replace an earlier unknown
 spread or computed key. A later unknown spread or computed key can overwrite
@@ -128,9 +130,11 @@ the known member and makes the defaults unresolved. A flow node folds
 a spread of a statically known object the same way `queue.add` folds its
 options object, including a const object and a const alias of one. Identifier
 spreads stay in source order: a later known `opts` object replaces earlier
-keys, and a later object without `opts` does not erase them. A spread that
-is not a known object, or a computed property key, abstains and does not
-walk that node's children. A spread before the options argument abstains
+keys, and a later object without `opts` does not erase them. A later known
+`queueName` sets the queue used for per-queue overrides. A spread that may
+replace `queueName` leaves it unknown until a later known value resolves it.
+Unresolved spreads and dynamic computed keys can prevent the check from
+judging the node and its children. A spread before the options argument abstains
 that call. `.add` counts only
 when the receiver is a resolved queue binding or the call is a configured
 enqueue factory. An unresolved receiver abstains.

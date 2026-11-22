@@ -114,20 +114,6 @@ fn apply_map(
     }
 }
 
-pub(crate) fn defined_queue_file(
-    facts: &HashMap<PathBuf, FileFacts>,
-    queue_name: &str,
-) -> Option<PathBuf> {
-    facts
-        .iter()
-        .filter(|(_, file)| {
-            crate::queue::factory_resolve::defined_queue_names(file).any(|name| name == queue_name)
-        })
-        .map(|(path, _)| path)
-        .min()
-        .cloned()
-}
-
 pub(super) fn local_checks(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> Vec<CheckFinding> {
     let mut out = Vec::new();
     for (path, file) in facts {

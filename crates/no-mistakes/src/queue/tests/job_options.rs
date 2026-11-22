@@ -186,6 +186,89 @@ fn required_job_options_are_reported() {
 }
 
 #[test]
+fn factories_without_options_are_judged_with_queue_defaults() {
+    let rows = required_option_rows("factory-no-options.ts");
+    assert_eq!(
+        rows,
+        vec![(
+            "bare-factory-missing".to_string(),
+            "queues.ts".to_string(),
+            "job options missing backoff".to_string(),
+        )]
+    );
+}
+
+#[test]
+fn duplicate_queue_names_keep_the_resolved_definition_defaults() {
+    let rows = required_option_rows("queue-default-producers.ts");
+    assert_eq!(
+        rows,
+        vec![
+            (
+                "primary-defaults".to_string(),
+                "queue-default-primary.ts".to_string(),
+                "job options missing backoff".to_string()
+            ),
+            (
+                "secondary-defaults".to_string(),
+                "queue-default-secondary.ts".to_string(),
+                "job options missing removeOnComplete".to_string()
+            ),
+            (
+                "through-star".to_string(),
+                "queue-default-secondary.ts".to_string(),
+                "job options missing removeOnComplete".to_string()
+            ),
+            (
+                "through-alias".to_string(),
+                "queue-default-secondary.ts".to_string(),
+                "job options missing removeOnComplete".to_string()
+            ),
+        ]
+    );
+}
+
+#[test]
+fn flow_queue_members_follow_spread_order() {
+    let root = fixture("job-options");
+    let rows = required_option_rows("flow-queue-spreads.ts");
+    assert_eq!(
+        rows.iter()
+            .map(|(job, _, message)| (job.as_str(), message.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            ("flow-to-required", "job options missing priority"),
+            ("flow-explicit-after", "job options missing priority"),
+        ]
+    );
+    let report = analyze_project(&root, None, &[]).unwrap();
+    assert!(report.diagnostics.iter().any(|diagnostic| {
+        diagnostic.file == "flow-queue-spreads.ts"
+            && diagnostic
+                .message
+                .ends_with("the queue name did not resolve")
+            && source_line(&root, &diagnostic.file, diagnostic.line).contains("flow-unknown-after")
+    }));
+}
+
+fn required_option_rows(file: &str) -> Vec<(String, String, String)> {
+    let report = analyze_project(&fixture("job-options"), None, &[]).unwrap();
+    report
+        .check
+        .into_iter()
+        .filter_map(|finding| {
+            (finding.kind == "missing-job-option" && finding.file == file).then(|| {
+                (
+                    finding.job.unwrap(),
+                    finding.queue_file.unwrap(),
+                    finding.message,
+                )
+            })
+        })
+        .collect()
+}
+
+#[test]
 fn unset_job_options_add_nothing() {
     let root = fixture("job-options-unset");
     let report = analyze_project(&root, None, &[]).unwrap();

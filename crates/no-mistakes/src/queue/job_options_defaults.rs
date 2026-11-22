@@ -48,7 +48,7 @@ pub(crate) fn note_argument_options(
     binding: &str,
     job: &Option<String>,
     call: &CallExpression<'_>,
-    index: usize,
+    index: Option<usize>,
 ) {
     push_site(
         visitor,
@@ -56,7 +56,7 @@ pub(crate) fn note_argument_options(
         Some(binding.to_string()),
         None,
         job.clone(),
-        evidence_at(call, index),
+        index.map_or_else(JobOptionEvidence::default, |index| evidence_at(call, index)),
     );
 }
 

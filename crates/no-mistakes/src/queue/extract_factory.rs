@@ -85,8 +85,12 @@ pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDecl
         let exported = export_name(&spec.exported);
         if visitor.facts.queue_bindings.contains_key(&local) {
             if let Some(queue_name) = visitor.facts.queue_bindings.get(&local).cloned() {
-                visitor.facts.queue_exports.insert(exported, queue_name);
+                visitor
+                    .facts
+                    .queue_exports
+                    .insert(exported.clone(), queue_name);
             }
+            visitor.facts.reexports.push((exported, local));
             continue;
         }
         visitor.facts.reexports.push((exported, local));

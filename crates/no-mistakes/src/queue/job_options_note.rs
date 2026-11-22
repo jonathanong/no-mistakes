@@ -43,7 +43,7 @@ fn record_const(
     facts.const_objects.insert(name, read_object(object));
 }
 
-pub(crate) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
+pub(crate) fn note_call<'a>(visitor: &mut QueueVisitor<'a>, call: &CallExpression<'a>) {
     let Expression::StaticMemberExpression(member) = &call.callee else {
         return;
     };
