@@ -52,7 +52,10 @@ export, and says to restore the namespace export fact. A direct `import()` or
 `require()` whose argument is not a string literal, or whose literal specifier
 was not recorded, is listed on `incomplete` and is not placed by scanning
 source text. A recorded literal, including a type-position `import("...")`
-and an `import()` in a function body or call argument, is not that gap. The
+and an `import()` in a function body or call argument, is not that gap. A
+`const` binding initialized by a direct `createRequire(...)` call, where
+`createRequire` is imported from `node:module` or `module`, records the same
+literal `require()` fact as a CommonJS `require`. The
 message names the file and says to restore the literal import fact, and that
 load does not become a finding. One such file does not drop findings from files
 whose facts are complete. This rule does not change the shared canonical

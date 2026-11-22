@@ -38,6 +38,7 @@ words:
   - callsite
   - callsites
   - constantize
+  - createRequire
   - conname
   - condeferrable
   - ctid
