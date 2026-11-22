@@ -162,8 +162,8 @@ struct ImportCollector {
     call_import_bindings: Vec<ImportedBinding>,
     /// Recognized immutable CommonJS locals, keyed by their lexical owner.
     commonjs_bindings: FxHashMap<usize, FxHashSet<String>>,
-    /// Top-level loads visible to function bodies visited before initialization.
     predeclared_commonjs_bindings: FxHashMap<usize, FxHashSet<String>>,
+    created_requires: CreatedRequireState,
     call_export_bindings: Vec<ExportedBinding>,
     callable_aliases: Vec<CallableAliasBinding>,
     callable_alias_index: Vec<FxHashMap<String, usize>>,

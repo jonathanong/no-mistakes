@@ -102,6 +102,7 @@ include!("extract_visit_types.rs");
 include!("extract_binding_helpers.rs");
 include!("extract_commonjs_bindings.rs");
 include!("extract_syntax_helpers.rs");
+include!("extract_created_require.rs");
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 #[path = "extract/tests/binding_and_hoist_coverage.rs"]
