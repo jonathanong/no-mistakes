@@ -76,8 +76,9 @@ for case in ["small-max", "full-max", "small-low", "full-low"]:
         for position, name in enumerate(["baseline", "candidate", "candidate", "baseline"]):
             run(name, case, f"{cycle}-{position}")
     if case.endswith("max"):
-        for position, name in enumerate(["baseline", "candidate", "candidate", "baseline"]):
-            run(name, case, f"parse-{position}", timings=True)
+        for cycle in range(args.rounds):
+            for position, name in enumerate(["baseline", "candidate", "candidate", "baseline"]):
+                run(name, case, f"parse-{cycle}-{position}", timings=True)
 
 summary = []
 for case in ["small-max", "full-max", "small-low", "full-low"]:

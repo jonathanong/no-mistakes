@@ -20,7 +20,7 @@ no-mistakes check --root "$PWD" --config configs/half-b-16-max.yml --jobs 8 --ti
 
 `--timeout 0` disables the command deadline; `--lock-timeout 0` disables the invocation-lock wait deadline. `measure.py` passes both flags.
 
-`measure.py BASELINE CANDIDATE OUTPUT` runs balanced baseline/candidate/candidate/baseline release comparisons. Each invocation starts with fresh in-memory analysis state. It checks exact report bytes and status, and records wall time, user plus system CPU, and peak RSS. Acceptance runs have no observer flags. Separate `--timings` runs attribute the parse phase; those instrumented runs do not supply the acceptance wall/CPU measurements.
+`measure.py BASELINE CANDIDATE OUTPUT` runs balanced baseline/candidate/candidate/baseline release comparisons. Each invocation starts with fresh in-memory analysis state. It checks exact report bytes and status, and records wall time, user plus system CPU, and peak RSS. Acceptance runs have no observer flags. For each Max case, separate `--timings` runs repeat the same ABBA cycles; these instrumented runs attribute the parse phase and do not supply the acceptance wall/CPU measurements. `--rounds N` gives each binary `2N` acceptance samples and `2N` separate parse-attribution samples per Max case.
 
 Use `--jobs 1`, `--jobs 4`, and `--jobs 0` for single-worker, four-worker, and default-worker memory controls. `measure.py` defaults to 8 workers; `--jobs 0` omits the child CLI flag and uses its logical-CPU default. `RAYON_NUM_THREADS` is removed from each child environment.
 
