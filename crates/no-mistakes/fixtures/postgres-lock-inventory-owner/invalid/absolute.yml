@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-lock-inventory
+    scope: repository
+    options:
+      baselineFile: 'C:/outside/baseline.json'

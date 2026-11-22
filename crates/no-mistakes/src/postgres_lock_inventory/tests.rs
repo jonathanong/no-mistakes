@@ -15,14 +15,29 @@ fn options(root: &Path, config: &str) -> PostgresLockInventoryOptions {
 
 #[test]
 fn rejects_invalid_baseline_contents_and_paths() {
-    let root = fixture("invalid");
-    for (config, expected) in [
-        ("syntax.yml", "expected ident"),
-        ("version.yml", "unsupported version 2"),
-        ("path.yml", "repository-relative path"),
-        ("duplicate.yml", "duplicate baseline site"),
+    for (scenario, config, expected) in [
+        ("invalid", "syntax.yml", "expected ident"),
+        ("invalid", "version.yml", "unsupported version 2"),
+        ("invalid", "path.yml", "repository-relative path"),
+        ("invalid", "absolute.yml", "repository-relative path"),
+        ("invalid", "duplicate.yml", "duplicate baseline site"),
+        (
+            "invalid",
+            "empty-identity.yml",
+            "empty baseline site identity",
+        ),
+        (
+            "invalid",
+            "empty-helper.yml",
+            "helpers must be non-empty names",
+        ),
+        (
+            "queries",
+            "directory-baseline.yml",
+            "must be a regular file",
+        ),
     ] {
-        let error = run(&options(&root, config)).unwrap_err();
+        let error = run(&options(&fixture(scenario), config)).unwrap_err();
         assert!(
             format!("{error:#}").contains(expected),
             "{config}: {error:#}"
@@ -39,9 +54,19 @@ fn normalizes_root_and_bootstraps_the_default_baseline_directory() {
     let report = run(&write).unwrap();
     assert!(report.baseline_updated);
     assert_eq!(report.baseline_file, ".no-mistakes/postgres-locks.json");
-    assert!(root.join(&report.baseline_file).is_file());
     assert_eq!(report.sites.len(), 1);
-    assert_eq!(report.sites[0].file, "queries.sql");
+    let site = &report.sites[0];
+    assert_eq!(site.file, "queries.sql");
+    let bytes = std::fs::read(root.join(&report.baseline_file)).unwrap();
+    let written: LockInventoryBaseline = serde_json::from_slice(&bytes).unwrap();
+    let mut expected = LockInventoryBaseline::default();
+    assert_eq!(expected.version, 1);
+    expected.sites.push(LockInventoryBaselineSite {
+        key: site.key.clone(),
+        file: site.file.clone(),
+        category: site.category.clone(),
+    });
+    assert_eq!(written, expected);
     let read = run(&options(root, "config.yml")).unwrap();
     assert_eq!(read.sites, report.sites);
     assert!(read.added.is_empty());
