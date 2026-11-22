@@ -8,8 +8,8 @@ fn object_bindings_share_the_processor_pass_and_index_only_on_lookup() {
     let allocator = Allocator::default();
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/queue-ast-hop");
     for (file, visits, indexed) in [
-        ("invalid-job-id/fixture/configured-enqueue.ts", 0, false),
-        ("job-scheduler-template/fixture/disabled.ts", 1, false),
+        ("invalid-job-id/fixture/configured-enqueue.ts", 1, true),
+        ("job-scheduler-template/fixture/plain.ts", 1, false),
         ("job-scheduler-template/fixture/orders.ts", 1, true),
     ] {
         let path = fixture.join(file);

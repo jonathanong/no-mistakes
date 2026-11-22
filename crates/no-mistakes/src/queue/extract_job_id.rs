@@ -32,22 +32,28 @@ pub(super) struct PendingCheck {
 }
 
 fn queue_receiver(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> Option<Receiver> {
-    let (binding, id) = match expr.get_inner_expression() {
-        Expression::Identifier(id) => (JobIdQueue::Named(id.name.to_string()), &**id),
+    let (binding, symbol) = match expr.get_inner_expression() {
+        Expression::Identifier(id) => {
+            let symbol = referenced_symbol(visitor, id)?;
+            (
+                JobIdQueue::Named(visitor.producer_binding(id.name.as_str(), id.span.start)),
+                symbol,
+            )
+        }
         Expression::StaticMemberExpression(member) => {
             let Expression::Identifier(id) = &member.object else {
                 return None;
             };
             let source = visitor.namespace_imports.get(id.name.as_str())?.clone();
             let exported = member.property.name.to_string();
-            (JobIdQueue::Namespace { source, exported }, &**id)
+            (
+                JobIdQueue::Namespace { source, exported },
+                referenced_symbol(visitor, id)?,
+            )
         }
         _ => return None,
     };
-    Some(Receiver::Queue {
-        binding,
-        symbol: referenced_symbol(visitor, id)?,
-    })
+    Some(Receiver::Queue { binding, symbol })
 }
 
 pub(super) fn note_factory_options(

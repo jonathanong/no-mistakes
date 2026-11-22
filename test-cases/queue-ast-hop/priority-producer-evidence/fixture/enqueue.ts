@@ -2,7 +2,7 @@ import { Queue, Worker } from "bullmq";
 import {
   ambiguousFlow,
   computed,
-  crossFileFlow,
+  __flow__crossFileFlow as crossFileFlow,
   duplicate,
   numeric,
   sameCase,
@@ -13,6 +13,7 @@ import {
   unknownComputed,
 } from "./queues";
 import * as queueModule from "./queues";
+import { createQueue } from "./factory";
 
 declare const key: string;
 declare const route: number;
@@ -80,3 +81,15 @@ export function shadowLocalQueue(localQueue: Queue) {
 }
 localQueue.add("plain", {});
 localQueue.add("rush", {}, { priority: 5 });
+
+const scopedQueue = createQueue("outerScoped");
+new Worker("outerScoped", async () => {});
+new Worker("innerScoped", async () => {});
+scopedQueue.add("outerPlain", {});
+
+export function enqueueInner() {
+  const scopedQueue = createQueue("innerScoped");
+  scopedQueue.add("innerPlain", {});
+  scopedQueue.add("innerRush", {}, { priority: 5 });
+}
+scopedQueue.add("outerRush", {}, { priority: 7 });

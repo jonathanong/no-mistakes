@@ -1,4 +1,5 @@
 use crate::queue::extract::FileFacts;
+use crate::queue::extract_model::ProducerBinding;
 use crate::queue::graph_model::InternalProducer;
 use crate::queue::types::QueueKey;
 use std::collections::{HashMap, HashSet};
@@ -10,17 +11,20 @@ pub(super) fn flow_queue_definitions<'a>(
 ) -> HashMap<&'a str, Option<&'a PathBuf>> {
     let flow_names = producers
         .iter()
-        .filter_map(|producer| producer.site.binding.strip_prefix("__flow__"))
+        .filter_map(|producer| match &producer.site.binding {
+            ProducerBinding::Flow(queue) => Some(queue.as_str()),
+            _ => None,
+        })
         .collect::<HashSet<_>>();
     let mut definitions = HashMap::new();
     if flow_names.is_empty() {
         return definitions;
     }
     for (path, file) in facts {
-        for (binding, queue) in &file.queue_bindings {
-            if !binding.starts_with("__flow__") && flow_names.contains(queue.as_str()) {
+        for queue in crate::queue::factory_resolve::defined_queue_names(file) {
+            if flow_names.contains(queue) {
                 definitions
-                    .entry(queue.as_str())
+                    .entry(queue)
                     .and_modify(|existing| {
                         if *existing != Some(path) {
                             *existing = None;

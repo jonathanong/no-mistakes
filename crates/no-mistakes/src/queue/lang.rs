@@ -124,7 +124,7 @@ fn language_producer(
         site: ProducerSite {
             file: path.to_path_buf(),
             line: 0,
-            binding: String::new(),
+            binding: crate::queue::extract_model::ProducerBinding::Named(String::new()),
             job: Some(identity),
             job_import: None,
             raw_job: Some(job.to_string()),

@@ -42,10 +42,11 @@ pub(super) fn note_enqueue(
         ),
         None => EnqueuePriority::Unprioritized,
     };
+    let producer_binding = visitor.producer_binding(&binding, call.span.start);
     visitor.facts.producers.push(ProducerSite {
         file: visitor.path.to_path_buf(),
         line: line_number(visitor.source, call.span.start),
-        binding,
+        binding: producer_binding,
         job: job.clone(),
         job_import,
         raw_job,

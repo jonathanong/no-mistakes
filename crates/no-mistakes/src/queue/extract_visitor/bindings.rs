@@ -2,6 +2,7 @@ use super::QueueVisitor;
 use crate::ast::js_literal;
 use crate::queue::extract_helpers::{binding_name, literal_expr, static_string};
 use crate::queue::extract_job_id;
+use crate::queue::extract_model::LocalQueue;
 use oxc_ast::ast::{Argument, Expression, VariableDeclarator};
 use oxc_ast_visit::walk;
 
@@ -41,18 +42,13 @@ impl<'a> QueueVisitor<'a> {
                     .first()
                     .and_then(|arg| self.literal_arg(arg))
                 {
-                    self.facts
-                        .queue_bindings
-                        .insert(name.clone(), queue_name.clone());
-                    self.facts.queue_exports.insert(name.clone(), queue_name);
-                    self.queue_declarations.insert(name.clone(), declaration);
+                    self.note_queue_declaration(&name, declaration, LocalQueue::Known(queue_name));
                     if extract_job_id::is_imported_callee(self, &new_expr.callee) {
                         extract_job_id::note_queue_binding(self, &decl.id);
                     }
                 }
             } else if self.is_flow_constructor(&new_expr.callee) {
-                self.flow_bindings.insert(name.clone());
-                self.queue_declarations.insert(name.clone(), declaration);
+                self.flow_bindings.insert(declaration);
                 if extract_job_id::is_imported_callee(self, &new_expr.callee) {
                     extract_job_id::note_flow_binding(self, &decl.id);
                 }
@@ -70,31 +66,14 @@ impl<'a> QueueVisitor<'a> {
             }
         }
         if let Some(Expression::Identifier(id)) = &decl.init {
-            self.note_alias(&name, id.name.as_str(), declaration);
-            if extract_job_id::queue_identifier(self, id) {
-                extract_job_id::note_queue_binding(self, &decl.id);
+            if let Some(queue) = self.local_queue(id.name.as_str(), id.span.start) {
+                self.note_queue_declaration(&name, declaration, queue);
+                if extract_job_id::queue_identifier(self, id) {
+                    extract_job_id::note_queue_binding(self, &decl.id);
+                }
             }
         }
         walk::walk_variable_declarator(self, decl);
-    }
-
-    fn note_alias(&mut self, name: &str, local: &str, declaration: u32) {
-        if let Some(queue_name) = self.facts.queue_bindings.get(local).cloned() {
-            self.facts
-                .queue_bindings
-                .insert(name.to_string(), queue_name.clone());
-            self.facts
-                .queue_exports
-                .insert(name.to_string(), queue_name);
-        } else if self.facts.string_imports.contains_key(local) {
-            self.facts
-                .reexports
-                .push((name.to_string(), local.to_string()));
-        } else {
-            return;
-        }
-        self.queue_declarations
-            .insert(name.to_string(), declaration);
     }
 }
 

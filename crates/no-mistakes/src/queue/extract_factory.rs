@@ -1,4 +1,5 @@
 use crate::queue::extract_helpers::{binding_name, export_name, static_string};
+use crate::queue::extract_model::LocalQueue;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
     Argument, CallExpression, Declaration, ExportAllDeclaration, ExportDeclaration,
@@ -54,27 +55,14 @@ pub(super) fn note_queue_binding(
         return false;
     };
     if let Some(queue_name) = visitor.literal_arg(arg) {
-        visitor
-            .facts
-            .queue_bindings
-            .insert(name.to_string(), queue_name.clone());
-        visitor
-            .facts
-            .queue_exports
-            .insert(name.to_string(), queue_name);
+        visitor.note_queue_declaration(name, declaration, LocalQueue::Known(queue_name));
     } else if let Some(imported) =
         identifier_arg(arg).filter(|name| visitor.facts.string_imports.contains_key(name))
     {
-        visitor
-            .facts
-            .pending_queue_bindings
-            .insert(name.to_string(), imported);
+        visitor.note_queue_declaration(name, declaration, LocalQueue::ImportedName(imported));
     } else {
         return false;
     }
-    visitor
-        .queue_declarations
-        .insert(name.to_string(), declaration);
     true
 }
 pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDeclaration<'_>) {

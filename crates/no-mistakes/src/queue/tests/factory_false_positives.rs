@@ -7,7 +7,7 @@ fn site(worker_index: Option<usize>) -> ProducerSite {
     ProducerSite {
         file: PathBuf::from("/repo/workers/side.ts"),
         line: 4,
-        binding: "leaf".to_string(),
+        binding: crate::queue::extract_model::ProducerBinding::Named("leaf".to_string()),
         job: Some("ping".to_string()),
         job_import: None,
         raw_job: None,

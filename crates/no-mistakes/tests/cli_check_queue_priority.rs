@@ -104,10 +104,14 @@ fn queue_priority_producer_evidence_check_json_snapshot() {
             ("crossFileFlow", "direct"),
             ("crossFileFlow", "flowRush"),
             ("duplicate", "newName"),
+            ("innerScoped", "innerPlain"),
+            ("innerScoped", "innerRush"),
             ("localQueue", "plain"),
             ("localQueue", "rush"),
             ("numeric", "large"),
             ("numeric", "plain"),
+            ("outerScoped", "outerPlain"),
+            ("outerScoped", "outerRush"),
             ("sameCase", "caseRush"),
             ("sameCase", "plain"),
             ("sameLine", "plain"),
@@ -118,7 +122,10 @@ fn queue_priority_producer_evidence_check_json_snapshot() {
         ],
     );
     assert!(findings.iter().all(|finding| {
-        let queue_file = if finding["queueName"] == "localQueue" {
+        let queue_file = if matches!(
+            finding["queueName"].as_str(),
+            Some("localQueue" | "outerScoped" | "innerScoped")
+        ) {
             "enqueue.ts"
         } else {
             "queues.ts"

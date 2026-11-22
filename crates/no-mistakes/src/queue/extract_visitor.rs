@@ -8,6 +8,7 @@ use std::path::Path;
 mod bindings;
 mod enqueue_calls;
 mod helpers;
+mod queue_bindings;
 mod rate_limit;
 mod wait_wrappers;
 mod waits;
@@ -25,8 +26,7 @@ pub(super) struct QueueVisitor<'a> {
     pub queue_classes: HashSet<String>,
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
-    pub flow_bindings: HashSet<String>,
-    pub queue_declarations: HashMap<String, u32>,
+    pub flow_bindings: HashSet<u32>,
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,

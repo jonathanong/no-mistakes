@@ -5,3 +5,7 @@ projects:
     queues:
       enqueues: ["**/*.ts"]
       workers: ["**/*.ts"]
+queues:
+  factories:
+    queue:
+      - { callee: createQueue, name: 0 }

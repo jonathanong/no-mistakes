@@ -66,9 +66,7 @@ fn extract_queue_facts<'a>(
     scoping: Option<&'a Scoping>,
 ) -> QueueVisitor<'a> {
     let scoped_scheduler = scoping.is_some() && needs_scheduler_scoping(source, roles);
-    let collect_bindings =
-        scoped_scheduler || source.contains("upsertJobScheduler") || source.contains('\\');
-    let index = super::extract_factory::queue_index(program, roles, collect_bindings);
+    let index = super::extract_factory::queue_index(program, roles, true);
     let scheduler_factories = if scoped_scheduler {
         super::extract_factory::scheduler_factories(program, roles)
     } else {
@@ -88,7 +86,6 @@ fn extract_queue_facts<'a>(
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),
         flow_bindings: HashSet::new(),
-        queue_declarations: HashMap::new(),
         configured_factory_names: factory_names,
         roles,
         queue_name_index: HashMap::new(),

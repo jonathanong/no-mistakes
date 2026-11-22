@@ -1,15 +1,20 @@
-use crate::fx::FxHashMap;
 use oxc_ast::ast::{
-    BindingPattern, Expression, FormalParameters, VariableDeclarationKind, VariableDeclarator,
+    BindingPattern, Expression, ForStatementLeft, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_span::Span;
 use oxc_syntax::scope::ScopeId;
-use std::cell::{Cell, OnceCell, RefCell};
+use std::cell::Cell;
+
+#[path = "object_binding_index.rs"]
+mod index;
+pub(in crate::queue) use index::ObjectBindings;
 
 pub struct ObjectBinding<'a> {
     pub name: &'a str,
     pub scope_start: u32,
     pub scope_end: u32,
+    pub scope_depth: usize,
+    bare_var: bool,
     pub visible_from: u32,
     pub resolve_at: u32,
     pub value: Option<&'a Expression<'a>>,
@@ -22,53 +27,22 @@ enum ScopeKind {
     Block,
 }
 
+#[derive(Clone, Copy)]
 struct Scope {
     start: u32,
     end: u32,
     kind: ScopeKind,
+    depth: usize,
 }
 
-type BindingsByName<'a> = FxHashMap<&'a str, Vec<ObjectBinding<'a>>>;
-
-#[derive(Default)]
-pub(super) struct ObjectBindings<'a> {
-    by_name: OnceCell<BindingsByName<'a>>,
-    declarations: RefCell<Vec<ObjectBinding<'a>>>,
-    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-    pub(super) program_visits: usize,
-}
-
-impl<'a> ObjectBindings<'a> {
-    pub(super) fn lookup(&self, name: &str, at: u32) -> Option<&ObjectBinding<'a>> {
-        let binding = self
-            .named(name)
+impl<'a> ObjectBinding<'a> {
+    pub fn in_scope<'b>(bindings: &'b [Self], name: &str, at: u32) -> Option<&'b Self> {
+        bindings
             .iter()
-            .filter(|binding| binding.scope_start <= at && at < binding.scope_end)
-            .max_by_key(|binding| binding.scope_start)?;
-        (at >= binding.visible_from).then_some(binding)
-    }
-
-    pub(super) fn named(&self, name: &str) -> &[ObjectBinding<'a>] {
-        self.by_name
-            .get_or_init(|| {
-                let mut by_name = BindingsByName::default();
-                for binding in self.declarations.take() {
-                    by_name.entry(binding.name).or_default().push(binding);
-                }
-                by_name
+            .filter(|binding| {
+                binding.name == name && binding.scope_start <= at && at < binding.scope_end
             })
-            .get(name)
-            .map(Vec::as_slice)
-            .unwrap_or_default()
-    }
-
-    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-    pub(super) fn was_indexed(&self) -> bool {
-        self.by_name.get().is_some()
-    }
-
-    fn insert(&mut self, binding: ObjectBinding<'a>) {
-        self.declarations.get_mut().push(binding);
+            .max_by_key(|binding| (binding.scope_depth, !binding.bare_var, binding.scope_start))
     }
 }
 
@@ -84,26 +58,36 @@ impl<'a> Collector<'a> {
         self.scopes.last().expect("binding scope")
     }
 
-    fn var_span(&self) -> (u32, u32) {
-        let scope = self
+    fn var_scope(&self) -> Scope {
+        *self
             .scopes
             .iter()
             .rev()
             .find(|scope| matches!(scope.kind, ScopeKind::Function | ScopeKind::Arrow))
-            .expect("function scope");
-        (scope.start, scope.end)
+            .expect("function scope")
     }
 
     fn push_scope(&mut self, start: u32, end: u32, kind: ScopeKind) {
-        self.scopes.push(Scope { start, end, kind });
+        let depth = self.scopes.len();
+        self.scopes.push(Scope {
+            start,
+            end,
+            kind,
+            depth,
+        });
     }
 
     fn mask(&mut self, name: &'a str, visible_from: u32) {
-        let scope = self.current();
+        self.mask_in_scope(name, *self.current(), visible_from);
+    }
+
+    fn mask_in_scope(&mut self, name: &'a str, scope: Scope, visible_from: u32) {
         self.bindings.insert(ObjectBinding {
             name,
             scope_start: scope.start,
             scope_end: scope.end,
+            scope_depth: scope.depth,
+            bare_var: false,
             visible_from,
             resolve_at: visible_from,
             value: None,
@@ -135,12 +119,21 @@ impl<'a> Collector<'a> {
         }
     }
 
-    fn mask_params(&mut self, params: &FormalParameters<'a>, visible_from: u32) {
-        for param in &params.items {
-            self.mask_pattern(&param.pattern, visible_from);
+    fn mask_iterated_vars(&mut self, left: &ForStatementLeft<'a>, body_start: u32) {
+        let ForStatementLeft::VariableDeclaration(decl) = left else {
+            return;
+        };
+        if decl.kind != VariableDeclarationKind::Var {
+            return;
         }
-        if let Some(rest) = &params.rest {
-            self.mask_pattern(&rest.rest.argument, visible_from);
+        let mut scope = self.var_scope();
+        scope.start = body_start;
+        let mut names = Vec::new();
+        for declarator in &decl.declarations {
+            visit::collect_names(&declarator.id, &mut names);
+        }
+        for name in names {
+            self.mask_in_scope(name, scope, body_start);
         }
     }
 
@@ -149,15 +142,16 @@ impl<'a> Collector<'a> {
         kind: VariableDeclarationKind,
         declarator: &'a VariableDeclarator<'a>,
     ) {
-        let module = self.scopes.len() == 1;
-        let (var_start, var_end) = self.var_span();
-        let current = self.current();
-        let (scope_start, scope_end, visible_from) = if kind == VariableDeclarationKind::Var {
-            (var_start, var_end, var_start)
-        } else if module {
-            (current.start, current.end, current.start)
+        let var = kind == VariableDeclarationKind::Var;
+        let scope = if var {
+            self.var_scope()
         } else {
-            (current.start, current.end, declarator.span.end)
+            *self.current()
+        };
+        let visible_from = if var || scope.depth == 0 {
+            scope.start
+        } else {
+            declarator.span.end
         };
         let value = if kind == VariableDeclarationKind::Const {
             match &declarator.id {
@@ -179,10 +173,10 @@ impl<'a> Collector<'a> {
         visit::bind_pattern(
             self,
             &declarator.id,
-            scope_start,
-            scope_end,
+            scope,
             visible_from,
             declarator.span.end.saturating_sub(1),
+            var && declarator.init.is_none(),
             value,
         );
     }

@@ -1,6 +1,7 @@
 use crate::ast;
 use crate::queue::extract::{FileFacts, ProducerSite};
 use crate::queue::extract_helpers::{literal_expr, literal_or_import};
+use crate::queue::extract_model::ProducerBinding;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{Argument, CallExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
@@ -8,7 +9,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 pub(super) fn record_enqueue(
-    binding: &str,
+    binding: &ProducerBinding,
     method: &str,
     path: &Path,
     source: &str,
@@ -31,7 +32,7 @@ pub(super) fn record_enqueue(
         facts.producers.push(ProducerSite {
             file: path.to_path_buf(),
             line: line_number(source, call.span.start),
-            binding: binding.to_string(),
+            binding: binding.clone(),
             raw_job: call.arguments.first().map(|arg| span(source, arg.span())),
             job,
             job_import,
@@ -45,7 +46,7 @@ pub(super) fn record_enqueue(
 }
 
 fn record_bulk(
-    binding: &str,
+    binding: &ProducerBinding,
     path: &Path,
     source: &str,
     consts: &HashMap<String, String>,
@@ -56,7 +57,7 @@ fn record_bulk(
         return;
     };
     let Argument::ArrayExpression(array) = argument else {
-        facts.opaque_priority_bindings.insert(binding.to_string());
+        facts.opaque_priority_bindings.insert(binding.clone());
         return;
     };
     let mut opaque = false;
@@ -72,7 +73,7 @@ fn record_bulk(
         }
     }
     if opaque {
-        facts.opaque_priority_bindings.insert(binding.to_string());
+        facts.opaque_priority_bindings.insert(binding.clone());
     }
 }
 
@@ -107,13 +108,10 @@ pub(super) fn record_flow(
         return;
     };
     let priority = crate::queue::extract_priority::from_job_object(object, &facts.const_numbers);
-    let binding = format!("__flow__{queue}");
-    facts.queue_bindings.insert(binding.clone(), queue.clone());
-    facts.queue_exports.insert(binding.clone(), queue);
     facts.producers.push(ProducerSite {
         file: path.to_path_buf(),
         line: line_number(source, call.span.start),
-        binding,
+        binding: ProducerBinding::Flow(queue),
         raw_job,
         job,
         job_import,
@@ -124,7 +122,7 @@ pub(super) fn record_flow(
 }
 
 fn record_bulk_item(
-    binding: &str,
+    binding: &ProducerBinding,
     path: &Path,
     source: &str,
     consts: &HashMap<String, String>,
@@ -140,7 +138,7 @@ fn record_bulk_item(
     facts.producers.push(ProducerSite {
         file: path.to_path_buf(),
         line: line_number(source, call.span.start),
-        binding: binding.to_string(),
+        binding: binding.clone(),
         raw_job: Some(span(source, name.span())),
         job,
         job_import,

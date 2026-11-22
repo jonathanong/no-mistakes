@@ -1,5 +1,6 @@
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::queue::extract::FileFacts;
+use crate::queue::extract_model::{LocalQueue, ProducerBinding};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -17,6 +18,7 @@ pub(super) fn resolve_imported_queue_names<R: ImportResolverFacade>(
             apply_update(facts, update);
         }
     }
+    declarations::resolve_names(facts, resolver, remapper);
 }
 
 enum Update {
@@ -187,14 +189,7 @@ pub(super) fn binding_queue<R: ImportResolverFacade>(
     })
 }
 
-pub(super) fn definition_files(facts: &HashMap<PathBuf, FileFacts>) -> HashMap<String, PathBuf> {
-    let mut paths = facts.keys().cloned().collect::<Vec<_>>();
-    paths.sort();
-    let mut out = HashMap::new();
-    for path in paths {
-        for name in facts[&path].queue_bindings.values() {
-            out.entry(name.clone()).or_insert_with(|| path.clone());
-        }
-    }
-    out
-}
+#[path = "factory_resolve_declarations.rs"]
+mod declarations;
+
+pub(super) use declarations::{defined_queue_names, definition_files};
