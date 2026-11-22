@@ -15,18 +15,21 @@ it does not assert that an existing lock is safe or that a project has no locks.
 ## What it catches
 
 The inventory reports physical lock sites in the configured scope and compares
-their stable keys with an optional baseline. A site key includes its
-root-relative file, category, token-normalized statement, and an ordinal for
-duplicate identical statements in one file.
+their stable keys with an optional baseline. A SQL lock-statement key includes
+its root-relative file, category, token-normalized statement, and an ordinal for
+duplicate identical statements in one file. SQL helper keys use the qualified
+function name and duplicate ordinal.
 
-Comment-only, whitespace-only, and line-movement changes within a file do not
-change a key. SQL token changes, including changes to literals or operators,
-change the key. Renaming a file or changing the SQL creates a new site; the old
-baseline key is then reported as stale. Duplicate ordinals distinguish identical
-statements without using line numbers. Configured TypeScript helper
-calls use the callee, argument count and static argument shapes, plus the
-duplicate ordinal; changing argument values within the same shape does not
-create a new helper site. SQL helper calls use the qualified function name.
+For SQL lock statements, comment-only, whitespace-only, and line-movement
+changes within a file do not change a key. Changing statement tokens, including
+literals or operators, changes the key. Renaming a file or changing a statement
+creates a new site; the old baseline key is then reported as stale. Duplicate
+ordinals distinguish identical statements without using line numbers.
+Configured TypeScript helper calls use the callee, argument count and static
+argument shapes, plus the duplicate ordinal; changing argument values within
+the same shape does not create a new helper site. SQL helper calls use only the
+qualified function name and duplicate ordinal, so changes to their argument
+tokens do not change the helper key.
 Imported SQL sites are located at each configured executor call, so directives
 at that call remain applicable. Distinct imported helper definitions in complete
 alternatives retain separate sites, even when their function names match.

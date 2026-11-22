@@ -11,9 +11,11 @@ no-mistakes postgres lock-inventory --root . --config .no-mistakes.yml
 ```
 
 The report includes category counts, stable site keys, added and removed sites,
-and unanalyzed SQL. Comment-only, whitespace-only, and line-movement changes
-within a file preserve a key. Changes to SQL tokens, including literals and
-operators, or renaming a file create new identities. Suppressions affect
+and unanalyzed SQL. For SQL lock statements, comment-only, whitespace-only, and
+line-movement changes within a file preserve a key; changing statement tokens,
+including literals and operators, or renaming a file creates a new identity.
+SQL helper keys use the qualified function name and duplicate ordinal, so
+changes to helper argument tokens do not change those keys. Suppressions affect
 ordinary check findings while the inventory retains physical sites.
 
 After reviewing the initial inventory, `--write-baseline` can create a missing
