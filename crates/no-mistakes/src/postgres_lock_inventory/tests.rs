@@ -99,3 +99,17 @@ fn reports_sql_parse_and_read_gaps_alongside_other_files() {
     assert_eq!(report.unanalyzed[1].file, "missing.sql");
     assert!(report.unanalyzed[1].reason.contains("read"));
 }
+
+#[test]
+fn deleted_tracked_baseline_cannot_bootstrap_new_lock_sites() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture("tracked"));
+    let root = fixture.path();
+    crate::test_support::git_init(root);
+    crate::test_support::git_add_force(root, &["baseline.json", "config.yml", "queries.sql"]);
+    std::fs::remove_file(root.join("baseline.json")).unwrap();
+    let mut write = options(root, "config.yml");
+    write.write_baseline = true;
+    let error = run(&write).unwrap_err();
+    assert!(format!("{error:#}").contains("tracked baseline cannot be reinitialized"));
+    assert!(!root.join("baseline.json").exists());
+}
