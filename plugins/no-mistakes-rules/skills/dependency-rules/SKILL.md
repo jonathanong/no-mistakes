@@ -19,14 +19,14 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 ## Publishing
 
 - SHOULD NOT publish from a laptop or with a long-lived token once trusted publishing (OIDC) is configured; the first publish that creates the package is the exception.
-- MUST NOT publish without a dry run that shows no secrets, env files, or stray files.
+- SHOULD verify the files included in the package before publishing. Check for credentials, local env files, and unintended artifacts.
 - MUST NOT republish an existing version or replace a module with a stub.
-- MUST NOT retry auth or registry failures blindly.
+- SHOULD NOT retry a publish with unchanged credentials after an authentication failure. Retry transient registry failures with a bounded policy.
 - MUST NOT ship a breaking change under a non-major version of a package that promises SemVer at or above 1.0.
 
 ## Dependabot
 
 - MUST NOT put security updates behind a cooldown.
-- MUST NOT auto-merge majors, pre-1.0 minors, prereleases, or downgrades.
-- MUST NOT auto-approve bot PRs; let required checks gate auto-merge.
+- SHOULD NOT auto-merge majors, pre-1.0 minors, prereleases, or downgrades without a policy that accounts for compatibility risk.
+- SHOULD NOT auto-approve bot PRs without verifying that the change meets the repository’s review policy and passes required checks.
 - MUST NOT run PR code in the privileged auto-merge workflow.

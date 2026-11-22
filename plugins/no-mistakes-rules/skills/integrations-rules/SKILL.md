@@ -9,7 +9,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Outbound calls
 
-- MUST NOT call a partner without separate connect and read timeouts; a missing read timeout hangs the worker.
+- SHOULD NOT call a partner without a timeout that covers connecting and reading the response.
 - MUST NOT retry a non-idempotent call without an idempotency key the provider honors, or a lookup proving the first attempt failed.
 - MUST NOT record "sent" before delivery is confirmed.
 - MUST NOT round money, weights, or quantities before the final step, or mix units.
