@@ -99,3 +99,22 @@ new Worker("redeclared", async () => {});
 var redeclared;
 redeclared.add("plain", {});
 redeclared.add("rush", {}, { priority: 3 });
+
+declare function asQueueList(value: unknown): Queue[];
+declare function asEntries(value: unknown): Record<string, unknown>;
+
+var iteratedOf = createQueue("iteratedOf");
+new Worker("iteratedOf", async () => {});
+iteratedOf.add("beforeRush", {}, { priority: 5 });
+for (var iteratedOf of asQueueList(iteratedOf.add("iterablePlain", {}))) {
+  iteratedOf.add("iterationPlain", {});
+}
+iteratedOf.add("afterPlain", {});
+
+var iteratedIn = createQueue("iteratedIn");
+new Worker("iteratedIn", async () => {});
+iteratedIn.add("beforeRush", {}, { priority: 6 });
+for (var iteratedIn in asEntries(iteratedIn.add("iterablePlain", {}))) {
+  iteratedIn.add("iterationPlain", {});
+}
+iteratedIn.add("afterPlain", {});

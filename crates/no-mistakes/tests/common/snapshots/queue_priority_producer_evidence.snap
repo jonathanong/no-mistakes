@@ -11,6 +11,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [
         {
           "file": "enqueue.ts",
+          "job": "beforeRush",
+          "kind": "mixed-priority",
+          "line": 108,
+          "message": "queue \"iteratedOf\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: enqueue.ts:109 (iterablePlain)",
+          "queueFile": "enqueue.ts",
+          "queueName": "iteratedOf",
+          "sourceLine": "iteratedOf.add(\"beforeRush\", {}, { priority: 5 });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "beforeRush",
+          "kind": "mixed-priority",
+          "line": 116,
+          "message": "queue \"iteratedIn\" mixes priority 0 and priority > 0; this producer sets priority 6 while other producers enqueue with priority 0: enqueue.ts:117 (iterablePlain)",
+          "queueFile": "enqueue.ts",
+          "queueName": "iteratedIn",
+          "sourceLine": "iteratedIn.add(\"beforeRush\", {}, { priority: 6 });"
+        },
+        {
+          "file": "enqueue.ts",
           "job": "caseRush",
           "kind": "mixed-priority",
           "line": 68,
@@ -68,6 +88,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueFile": "enqueue.ts",
           "queueName": "innerScoped",
           "sourceLine": "scopedQueue.add(\"innerRush\", {}, { priority: 5 });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "iterablePlain",
+          "kind": "mixed-priority",
+          "line": 109,
+          "message": "queue \"iteratedOf\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:108 (beforeRush, priority 5)",
+          "queueFile": "enqueue.ts",
+          "queueName": "iteratedOf",
+          "sourceLine": "for (var iteratedOf of asQueueList(iteratedOf.add(\"iterablePlain\", {}))) {"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "iterablePlain",
+          "kind": "mixed-priority",
+          "line": 117,
+          "message": "queue \"iteratedIn\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:116 (beforeRush, priority 6)",
+          "queueFile": "enqueue.ts",
+          "queueName": "iteratedIn",
+          "sourceLine": "for (var iteratedIn in asEntries(iteratedIn.add(\"iterablePlain\", {}))) {"
         },
         {
           "file": "enqueue.ts",
