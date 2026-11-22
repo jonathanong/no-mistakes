@@ -34,11 +34,20 @@ supported. Inline entries in `test.projects` can use the same literal object
 and wrapper forms.
 
 The rule checks explicit `test.exclude` arrays in those objects. Leaving
-`exclude` unset preserves Vitest's defaults. The rule skips callback configs,
-CommonJS exports, re-exported or indirect root bindings, external project
-config files, coverage exclusions, and other properties named `exclude`.
-Arrays with unknown entries or unrecognized spreads, as well as conditional or call-based
-`exclude` values, are also skipped.
+`exclude` unset preserves Vitest's defaults. The recognized
+`configDefaults.exclude` spread satisfies all configured
+`requiredGlobs`, including custom entries; no additional strings are needed.
+Recognition is syntactic and required glob matching is exact-string: a
+handwritten string is checked as written. For example, Vitest's combined
+default pattern `**/.{idea,git,cache,output,temp}/**` does not satisfy the
+separate required string `**/.git/**`.
+
+The rule skips callback configs, CommonJS exports, re-exported or indirect root
+bindings, external project config files, coverage exclusions, and other
+properties named `exclude`. Arrays with unknown entries or unrecognized
+spreads, as well as conditional or call-based `exclude` values, are also
+skipped. The rule does not merge config roots through `mergeConfig`, recognize
+`defineConfig` imported from `vite`, or inspect Vitest workspace files.
 
 ## Counterexample
 
@@ -55,9 +64,9 @@ The finding names the missing exclusions and points to the `exclude` property.
 
 ## Fix
 
-Add the missing strings explicitly or spread `configDefaults.exclude` from
-`vitest/config`. A renamed import works as well. Add any required custom strings
-alongside the spread.
+Add the missing strings explicitly or spread `configDefaults.exclude` imported
+from `vitest/config`. A renamed import works as well. The recognized spread
+satisfies all configured `requiredGlobs`, including custom entries.
 
 ## Valid example
 
@@ -66,7 +75,7 @@ alongside the spread.
 import { configDefaults as defaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: { exclude: [...defaults.exclude, '**/generated/**'] },
+  test: { exclude: [...defaults.exclude] },
 });
 ```
 

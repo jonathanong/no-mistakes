@@ -4,4 +4,4 @@ rules:
     message: Keep the generated tests excluded.
     options:
       config: custom.ts
-      requiredGlobs: ['tmp/**', 'tmp/**']
+      requiredGlobs: ['**/dist/**', '**/dist/**']

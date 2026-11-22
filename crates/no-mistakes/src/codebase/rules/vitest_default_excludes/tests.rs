@@ -55,11 +55,9 @@ fn reports_only_literal_test_exclusion_overrides() {
 #[test]
 fn configured_globs_replace_defaults_and_allow_message_override() {
     let findings = run("custom.yml");
-    assert_eq!(findings.len(), 2);
-    assert_eq!([findings[0].line, findings[1].line], [5, 8]);
-    assert!(findings
-        .iter()
-        .all(|finding| finding.message == "Keep the generated tests excluded."));
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].line, 5);
+    assert_eq!(findings[0].message, "Keep the generated tests excluded.");
 }
 
 #[test]

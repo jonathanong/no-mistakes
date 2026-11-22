@@ -1,11 +1,11 @@
-import { configDefaults } from 'vitest/config'
+import { configDefaults as defaults } from 'vitest/config'
 
 export default {
   test: {
-    exclude: [],
+    exclude: ['**/node_modules/**', '**/.git/**'],
     projects: [
-      { test: { exclude: ['tmp/**'] } },
-      { test: { exclude: [...configDefaults.exclude] } },
+      { test: { exclude: ['**/dist/**'] } },
+      { test: { exclude: [...defaults.exclude] } },
     ],
   },
 }

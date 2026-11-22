@@ -24,6 +24,7 @@ const DEFAULT_GLOBS: [&str; 2] = ["**/node_modules/**", "**/.git/**"];
 pub(crate) struct ExcludeArray {
     line: usize,
     globs: FxHashSet<String>,
+    spreads_config_defaults: bool,
 }
 
 #[derive(Default, Deserialize)]
@@ -167,6 +168,9 @@ fn check_application(
         .into());
     }
     Ok(file_facts.vitest_default_excludes.iter().filter_map(|array| {
+        if array.spreads_config_defaults {
+            return None;
+        }
         let missing: Vec<_> = app.required_globs.iter()
             .filter(|glob| !array.globs.contains(glob.as_str()))
             .map(String::as_str)

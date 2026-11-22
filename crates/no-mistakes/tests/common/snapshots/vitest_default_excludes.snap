@@ -49,14 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "Keep the generated tests excluded.",
           "rule": "vitest-default-excludes",
-          "sourceLine": "exclude: [],"
-        },
-        {
-          "file": "custom.ts",
-          "line": 8,
-          "message": "Keep the generated tests excluded.",
-          "rule": "vitest-default-excludes",
-          "sourceLine": "{ test: { exclude: [...configDefaults.exclude] } },"
+          "sourceLine": "exclude: ['**/node_modules/**', '**/.git/**'],"
         }
       ],
       "warnings": []

@@ -1,4 +1,4 @@
-use super::{ExcludeArray, DEFAULT_GLOBS};
+use super::ExcludeArray;
 use crate::codebase::ts_source::{line_number, unwrap_ts_wrappers};
 use oxc_ast::ast::{
     ArrayExpressionElement, CallExpression, Expression, ImportDeclarationSpecifier,
@@ -121,12 +121,13 @@ impl<'a> VitestImports<'a> {
             return None;
         };
         let mut globs = FxHashSet::default();
+        let mut spreads_config_defaults = false;
         for element in &array.elements {
             if let ArrayExpressionElement::SpreadElement(spread) = element {
                 if !self.default_spread(&spread.argument) {
                     return None;
                 }
-                globs.extend(DEFAULT_GLOBS.into_iter().map(str::to_owned));
+                spreads_config_defaults = true;
             } else {
                 globs.insert(literal_glob(element.as_expression()?)?.into_owned());
             }
@@ -134,6 +135,7 @@ impl<'a> VitestImports<'a> {
         Some(ExcludeArray {
             line: line_number(source, exclude.key.span().start),
             globs,
+            spreads_config_defaults,
         })
     }
 
