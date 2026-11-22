@@ -10,5 +10,7 @@ if "--output" in args:
     artifact_id = args[-1].split("/")[-2]
     Path(args[args.index("--output") + 1]).write_bytes(
         base64.b64decode((root / f"{artifact_id}.zip.base64").read_bytes()))
+    if "--write-out" in args:
+        print("200", end="")
 else:
     print((root / "linux-metadata.json").read_text())
