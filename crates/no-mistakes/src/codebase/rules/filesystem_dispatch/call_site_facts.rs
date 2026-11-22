@@ -34,6 +34,8 @@ pub(super) fn prepare_call_site_facts(
     plan.lint_suppression_paths =
         crate::codebase::rules::forbidden_lint_suppressions::required_files(root, config, files)?;
     plan.require_call_site_paths(&call_site_files);
+    plan.vitest_default_exclude_paths =
+        super::vitest_default_excludes::required_files(root, config)?;
     super::required_companion_imports::configure_fact_plan(
         root, config, files, sources, &mut plan,
     )?;
@@ -44,6 +46,7 @@ pub(super) fn prepare_call_site_facts(
     crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if plan.lint_suppression_paths.is_empty()
+        && plan.vitest_default_exclude_paths.is_empty()
         && !needs_call_sites
         && plan.companion_import_plans.is_empty()
         && plan.production_import_paths.is_empty()
@@ -56,6 +59,7 @@ pub(super) fn prepare_call_site_facts(
     }
     let mut files = call_site_files;
     files.extend(plan.lint_suppression_paths.iter().cloned());
+    files.extend(plan.vitest_default_exclude_paths.iter().cloned());
     files.extend(plan.production_import_paths.iter().cloned());
     if plan.postgres_schema || plan.postgres_dml {
         files.extend(crate::codebase::postgres::postgres_sql_paths(

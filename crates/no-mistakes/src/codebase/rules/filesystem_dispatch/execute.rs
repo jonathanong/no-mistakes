@@ -73,6 +73,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
 ) -> Result<Vec<RuleFinding>> {
     let owned_facts = if facts.is_none()
         && (rule_enabled(config, FORBIDDEN_LINT_SUPPRESSIONS)
+            || rule_enabled(config, VITEST_DEFAULT_EXCLUDES)
             || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
             || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)
             || crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
@@ -92,7 +93,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         false,
     )
 }
-
 fn run_prepared_filesystem_rules(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -128,22 +128,25 @@ fn run_prepared_filesystem_rules(
     )?;
     inventory::register_trusted_external_candidates(root, config, &candidates, &sources)?;
     let markdown_facts = markdown_dispatch::prepare(root, config, &candidates, &sources)?;
-    run_enabled_rules(&RuleRunInputs {
-        root,
-        config,
-        snapshot,
-        next_config_resolver,
-        vitest_catalog,
-        sources: &sources,
-        facts,
-        defer_suppression,
-        workflow_documents,
-        tsconfig_gate_project_inputs,
-        config_path,
-        candidates: &candidates,
-        markdown_facts: &markdown_facts,
-        acc: &acc,
-    });
+    run_enabled_rules(
+        &RuleRunInputs {
+            root,
+            config,
+            snapshot,
+            next_config_resolver,
+            vitest_catalog,
+            sources: &sources,
+            facts,
+            defer_suppression,
+            workflow_documents,
+            tsconfig_gate_project_inputs,
+            config_path,
+            candidates: &candidates,
+            markdown_facts: &markdown_facts,
+            acc: &acc,
+        },
+        session,
+    );
     let mut results = acc.into_inner().expect("mutex poisoned");
     results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();

@@ -54,6 +54,7 @@ fn dispatch_uses_fallback_for_an_unknown_rule() {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, &files);
     let findings = super::run_rule::run_rule_with_sources(super::run_rule::RunRuleRequest {
         next_config_resolver: None,
+        session: None,
         rule_id: "future-filesystem-rule",
         fallback,
         root,
@@ -87,6 +88,7 @@ fn run_rule_dispatches_markdown_link_display_text() {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
     let findings = super::run_rule::run_rule_with_sources(super::run_rule::RunRuleRequest {
         next_config_resolver: None,
+        session: None,
         rule_id: MARKDOWN_LINK_DISPLAY_TEXT,
         fallback,
         root: &root,

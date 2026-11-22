@@ -1,0 +1,3 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository

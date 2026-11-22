@@ -1,0 +1,17 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: vitest.config.ts
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: absent.ts
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: suppressed.ts
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: shadowed.ts

@@ -1182,6 +1182,10 @@ keep PostgreSQL executor and resource bindings local to each body. Namespace
 `var` declarations hoist within that body without shadowing outer imports.
 
 
+TS/JS [`vitest-default-excludes`](rules/vitest-default-excludes.md) checks
+literal discovery exclusions on a selected config and its inline projects through
+Rust, CLI `check`, async Node `check()`, and batched `analyzeProject()` checks.
+
 TS/JS [`vitest-project-policy`](rules/vitest-project-policy.md) checks per-project
 literal properties through CLI `check`, asynchronous Node `check()`, and batched
 `analyzeProject()` checks. Optional `requiredExcludeGlobs` applies the same

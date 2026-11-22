@@ -1,0 +1,7 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    message: Keep the generated tests excluded.
+    options:
+      config: custom.ts
+      requiredGlobs: ['tmp/**', 'tmp/**']

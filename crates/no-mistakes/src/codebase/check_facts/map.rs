@@ -131,6 +131,8 @@ impl CheckFactMap {
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
     pub(crate) fact_extraction_panicked: bool,
+    pub(crate) vitest_default_excludes:
+        Vec<crate::codebase::rules::vitest_default_excludes::ExcludeArray>,
     pub(crate) sql_source_prerequisites: super::SqlSourcePrerequisites,
     pub ts: Arc<TsFileFacts>,
     pub(crate) lint_suppressions:

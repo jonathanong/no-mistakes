@@ -60,6 +60,7 @@ fn collect_with_request(
     // Overlapping richer entries must receive call facts in their first pass,
     // without requesting call summaries from unrelated primary/graph files.
     plan.require_call_site_paths(&supplemental_call_sites);
+    let vitest_default_exclude_paths = Arc::clone(&plan.vitest_default_exclude_paths);
     // Main collection can admit these paths through production imports,
     // Playwright sources, or runner helpers. Keep the richer entry when it does.
     let mut facts = super::collect_with_scope(
@@ -76,22 +77,23 @@ fn collect_with_request(
     );
     // Every earlier inserter retains scoped demand, so a present key already
     // carries the requested call facts; only absent paths need the light pass.
-    let missing = supplemental_call_sites
-        .into_iter()
+    let missing: std::collections::BTreeSet<_> = supplemental_call_sites
+        .iter()
+        .chain(vitest_default_exclude_paths.iter())
         .filter(|path| !facts.ts.contains_key(path))
-        .collect::<Vec<_>>();
+        .cloned()
+        .collect();
     if !missing.is_empty() {
+        let mut plan = CheckFactPlan {
+            vitest_default_exclude_paths,
+            ..Default::default()
+        };
+        plan.require_call_site_paths(&supplemental_call_sites);
         let supplemental = super::super::collect_fact_map_with_sources(
             session,
             root,
-            &missing,
-            &CheckFactPlan {
-                graph: crate::codebase::ts_source::facts::TsFactPlan {
-                    call_sites: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
+            &missing.into_iter().collect::<Vec<_>>(),
+            &plan,
             None,
             &sources,
         );

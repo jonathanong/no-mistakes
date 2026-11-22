@@ -13,6 +13,7 @@ pub(super) struct RunRuleRequest<'a> {
     pub(super) sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     pub(super) facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
     pub(super) defer_suppression: bool,
+    pub(super) session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
 }
 
 pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
@@ -27,6 +28,7 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         sources,
         facts,
         defer_suppression,
+        session,
     } = request;
     match rule_id {
         AGENTS_MD_MAX_SIZE => {
@@ -185,6 +187,7 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             sources,
             facts,
             defer_suppression,
+            session,
         }),
     }
 }

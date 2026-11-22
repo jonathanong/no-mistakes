@@ -12,6 +12,10 @@ impl CheckFactPlan {
         self.merge_location_demand(&other);
         super::super::family_scope::include_scopes(self, &other);
         self.merge_call_site_paths(&other);
+        if !other.vitest_default_exclude_paths.is_empty() {
+            Arc::make_mut(&mut self.vitest_default_exclude_paths)
+                .extend(other.vitest_default_exclude_paths.iter().cloned());
+        }
         if !other.lint_suppression_paths.is_empty() {
             Arc::make_mut(&mut self.lint_suppression_paths)
                 .extend(other.lint_suppression_paths.iter().cloned());

@@ -109,6 +109,7 @@ pub(in super::super) const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::TSCONFIG_FILE_COVERAGE,
     rules::TSCONFIG_GATE_COVERAGE,
     rules::VITEST_CI_PATH_COVERAGE,
+    rules::VITEST_DEFAULT_EXCLUDES,
     rules::VITEST_PROJECT_MAPPING,
     rules::VITEST_PROJECT_POLICY,
     rules::VITEST_TEST_CORRESPONDENCE,

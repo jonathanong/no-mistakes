@@ -140,6 +140,7 @@ test("lint suppression and Vitest property configuration compile from the packag
   const program = ts.createProgram(
     [
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
     ],
     {
@@ -310,6 +311,18 @@ test("declared config exports its unused allow-entry policy", () => {
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/resolve-config-types";/,
+  );
+});
+
+test("Vitest default excludes exports its configuration type", () => {
+  const types = readFileSync(join(packageRoot, "vitest-default-excludes-types.d.ts"), "utf8");
+  assert.match(types, /export interface VitestDefaultExcludesOptions/);
+  assert.match(types, /config: string;/);
+  assert.match(types, /requiredGlobs\?: string\[\];/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./vitest-default-excludes-types";',
+    ),
   );
 });
 

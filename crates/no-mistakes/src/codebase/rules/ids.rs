@@ -123,4 +123,5 @@ pub use super::workspace_package_cycles::RULE_ID as WORKSPACE_PACKAGE_CYCLES;
 pub use super::github_actions_cache_key_policy::RULE_ID as GITHUB_ACTIONS_CACHE_KEY_POLICY;
 pub use super::github_actions_max_inline_script_lines::RULE_ID as GITHUB_ACTIONS_MAX_INLINE_SCRIPT_LINES;
 
+pub use super::vitest_default_excludes::RULE_ID as VITEST_DEFAULT_EXCLUDES;
 pub use super::vitest_project_policy::RULE_ID as VITEST_PROJECT_POLICY;

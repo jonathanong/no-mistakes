@@ -16,8 +16,12 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         sources,
         facts,
         defer_suppression,
+        session,
         ..
     } = request;
+    if rule_id == VITEST_DEFAULT_EXCLUDES {
+        return vitest_default_excludes::check_prepared(root, config, facts, sources, session);
+    }
     if rule_id == VITEST_PROJECT_POLICY {
         return vitest_project_policy::check_with_files_and_sources(
             root,

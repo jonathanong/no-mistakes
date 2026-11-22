@@ -40,6 +40,14 @@ pub mod github_actions_vitest_project_selection;
 mod github_actions_workflow_files;
 mod ids;
 pub use advisory_rules::ADVISORY_RULE_IDS;
+mod byte_prefilter;
+mod catalog_rule;
+mod config_diagnostic;
+mod configured_root;
+mod entrypoints;
+#[doc(hidden)]
+pub mod file_diagnostics;
+pub mod filesystem_dispatch;
 pub mod integration_test_no_mocks;
 mod lexical_mask;
 pub mod lockfile_allowlist;
@@ -52,6 +60,7 @@ pub mod markdown_mermaid_validation;
 pub mod markdown_reachability;
 pub(crate) mod markdown_scope;
 pub mod markdown_structure_budget;
+mod masked_source;
 mod native_sql_advice;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
@@ -67,6 +76,7 @@ pub mod package_json_nested_workspace_coverage;
 pub mod package_json_registry_only;
 pub mod package_json_required_fields;
 pub mod package_json_workspace_coverage;
+pub(crate) mod path_filter;
 mod playwright_project_catalog;
 pub mod pnpm_overrides_ban;
 pub mod pnpm_release_age_policy;
@@ -79,6 +89,7 @@ pub mod postgres_conflict_ordering;
 pub mod postgres_constraint_validate;
 pub mod postgres_duplicate_function_body;
 pub mod postgres_explicit_columns;
+mod postgres_findings;
 pub mod postgres_finite_text_columns;
 pub mod postgres_fk_index;
 mod postgres_function_name;
@@ -114,26 +125,38 @@ pub mod postgres_table_shape;
 pub mod postgres_unanalyzable_schema;
 pub(crate) mod postgres_undeclared_executors;
 pub(crate) mod postgres_unmatched_executors;
+mod prepared_facts;
+mod prepared_postgres_scan;
 pub mod production_dependency_declarations;
 pub mod production_exports_test_only;
 pub mod query_reached_per_item;
+mod reexports;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
 pub mod require_test_per_subdir;
 pub mod required_companion_imports;
 pub mod required_entrypoint_reachability;
 pub mod required_local_docs;
+mod rule_context;
+mod run;
 mod runner_project_catalog;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
 pub mod rust_rules_combined;
+mod selected_files;
 pub mod server_route_client_boundary;
 pub mod shellcheck_runner;
+mod simple_schema_rule;
+mod sort_findings;
+mod source_access;
+mod sql_glob_rules;
 pub mod strict_package_layout;
 pub mod structured_config_policy;
+mod suppression;
 pub mod swift_no_raw_print;
 pub mod swift_viewmodel_main_actor;
+mod target_roots;
 pub mod test_email_domain_policy;
 pub mod test_fixture_size_cap;
 pub mod test_no_dependency_pins;
@@ -143,43 +166,28 @@ pub mod tsconfig_alias_folder_mapping;
 pub mod tsconfig_file_coverage;
 pub mod tsconfig_gate_coverage;
 pub mod unconstructed_error_class;
+mod variant_findings;
 pub mod version_pin_consistency;
 pub mod vite_optimize_deps_nested_imports;
 pub mod vitest_ci_path_coverage;
+pub mod vitest_default_excludes;
 mod vitest_project_catalog;
 pub mod vitest_project_mapping;
 pub mod vitest_project_policy;
 pub mod vitest_test_correspondence;
 pub mod workflow_topology_policy;
 pub mod workspace_package_cycles;
-
-mod byte_prefilter;
-mod catalog_rule;
-mod config_diagnostic;
-mod configured_root;
-mod entrypoints;
-#[doc(hidden)]
-pub mod file_diagnostics;
-pub mod filesystem_dispatch;
-mod masked_source;
-pub(crate) mod path_filter;
-mod postgres_findings;
-mod prepared_facts;
-mod prepared_postgres_scan;
-mod reexports;
-mod rule_context;
-mod run;
-mod selected_files;
-mod simple_schema_rule;
-mod sort_findings;
-mod source_access;
-mod sql_glob_rules;
-mod suppression;
-mod target_roots;
-mod variant_findings;
-
 pub use reexports::*;
-
+mod graph_source_prerequisites;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod postgres_executor_options_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[path = "prepared_facts/tests.rs"]
+mod prepared_facts_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod query_reached_per_item_prepared_tests;
+#[cfg(test)]
+mod sql_rule_observer_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod suppression_absolute_paths_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
@@ -190,16 +198,3 @@ mod suppression_tests;
 mod target_roots_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-mod query_reached_per_item_prepared_tests;
-#[cfg(test)]
-mod sql_rule_observer_tests;
-
-mod graph_source_prerequisites;
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
-mod postgres_executor_options_tests;
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
-#[path = "prepared_facts/tests.rs"]
-mod prepared_facts_tests;

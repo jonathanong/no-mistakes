@@ -1,0 +1,6 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: vitest.config.ts
+      requiredGlobs: [42]

@@ -151,6 +151,11 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     CheckFileFacts {
         fact_extraction_panicked: false,
         lint_suppressions: plan.collect_lint_suppressions(path, program, source),
+        vitest_default_excludes: if plan.vitest_default_exclude_paths.contains(path) {
+            crate::codebase::rules::vitest_default_excludes::collect(program, source)
+        } else {
+            Vec::new()
+        },
         ts: ts.into(),
         production_imports: None,
         source: stored_source,

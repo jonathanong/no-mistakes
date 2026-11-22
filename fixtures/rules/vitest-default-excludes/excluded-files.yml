@@ -1,0 +1,16 @@
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    include: [vitest.external.ts]
+    options:
+      config: ignored-by-include.ts
+  - rule: vitest-default-excludes
+    scope: repository
+    exclude: [ignored-by-exclude.ts]
+    options:
+      config: ignored-by-exclude.ts
+  - rule: vitest-default-excludes
+    scope: repository
+    include: [vitest.external.ts]
+    options:
+      config: vitest.external.ts
