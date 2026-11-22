@@ -1,7 +1,7 @@
 use super::super::extract_model::JobOptionEvidence;
 use super::super::extract_visitor::QueueVisitor;
-use super::site::{member_expr, member_string, push_site};
-use super::walk::read_member;
+use super::site::{member_string, push_site};
+use super::walk::{read, read_member};
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
     ObjectPropertyKind,
@@ -71,35 +71,90 @@ pub(super) fn note_flow(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
 }
 
 fn note_flow_node(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>) {
-    let queue_name = member_string(object, "queueName");
-    let job = member_string(object, "name");
-    if object
-        .properties
-        .iter()
-        .any(|property| matches!(property, ObjectPropertyKind::SpreadProperty(_)))
-    {
+    let Some(evidence) = flow_opts(object) else {
         push_site(
             visitor,
             object.span().start,
             None,
-            queue_name,
-            job,
+            member_string(object, "queueName"),
+            member_string(object, "name"),
             JobOptionEvidence::open(),
         );
         return;
-    }
+    };
+    let queue_name = folded_string(object, "queueName");
+    let job = folded_string(object, "name");
     push_site(
         visitor,
         object.span().start,
         None,
         queue_name.clone(),
         job,
-        read_member(object, "opts").unwrap_or_default(),
+        evidence,
     );
-    let Some(children) = member_expr(object, "children") else {
-        return;
-    };
-    note_children(visitor, children, queue_name);
+    if let Some(children) = folded_expr(object, "children") {
+        note_children(visitor, children, queue_name);
+    }
+}
+
+/// `None` means a spread is not a known object, so the caller abstains and
+/// skips children. Identifier spreads stay pending for `finish`.
+fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
+    let mut evidence = JobOptionEvidence::default();
+    let mut pending = None;
+    for property in &object.properties {
+        match property {
+            ObjectPropertyKind::ObjectProperty(property) => {
+                if crate::ast::property_key_name(&property.key).as_deref() == Some("opts") {
+                    evidence = read(&property.value);
+                    pending = None;
+                }
+            }
+            ObjectPropertyKind::SpreadProperty(spread) => {
+                match spread.argument.get_inner_expression() {
+                    Expression::ObjectExpression(inner) => {
+                        if let Some(member) = read_member(inner, "opts") {
+                            evidence = member;
+                            pending = None;
+                        }
+                    }
+                    Expression::Identifier(id) => pending = Some(id.name.to_string()),
+                    _ => return None,
+                }
+            }
+        }
+    }
+    if let Some(name) = pending {
+        evidence.member = Some("opts".to_string());
+        evidence.spreads = vec![name];
+    }
+    Some(evidence)
+}
+
+fn folded_string(object: &ObjectExpression<'_>, key: &str) -> Option<String> {
+    folded_expr(object, key).and_then(super::super::extract_helpers::static_string)
+}
+
+fn folded_expr<'a>(object: &'a ObjectExpression<'a>, key: &str) -> Option<&'a Expression<'a>> {
+    let mut found = None;
+    for property in &object.properties {
+        match property {
+            ObjectPropertyKind::ObjectProperty(property) => {
+                if crate::ast::property_key_name(&property.key).as_deref() == Some(key) {
+                    found = Some(&property.value);
+                }
+            }
+            ObjectPropertyKind::SpreadProperty(spread) => {
+                if let Expression::ObjectExpression(inner) = spread.argument.get_inner_expression()
+                {
+                    if let Some(value) = folded_expr(inner, key) {
+                        found = Some(value);
+                    }
+                }
+            }
+        }
+    }
+    found
 }
 
 fn note_children(

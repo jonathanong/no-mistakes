@@ -99,6 +99,9 @@ enqueueWidget(widgets, "spread-opts", ...rest);
 enqueueWidget(defined.widgets, "namespaced", { backoff: 1 });
 memory.add("m", {});
 unknownQueue.add("ghost", {});
+const tags = new Set<string>();
+tags.add("red");
+(new Set<string>()).add("blue");
 
 const inner = { attempts: 1 };
 const left = { ...inner, removeOnComplete: true };

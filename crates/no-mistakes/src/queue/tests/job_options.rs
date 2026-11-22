@@ -30,6 +30,34 @@ fn required_job_options_are_reported() {
     assert!(!findings
         .iter()
         .any(|finding| finding.job.as_deref() == Some("open")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("red")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("blue")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("ghost")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("folded-inline")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("folded-const")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("kept-opts")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("called-spread")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.job.as_deref() != Some("hidden-child")));
+    assert!(findings.iter().any(|finding| {
+        finding.job.as_deref() == Some("folded-child")
+            && finding.message == "job options missing backoff"
+    }));
     assert!(report.diagnostics.iter().any(|diagnostic| {
         diagnostic.message.starts_with("job options") && diagnostic.file.ends_with("enqueue.ts")
     }));
@@ -183,6 +211,31 @@ fn unresolved_queue_uses_the_global_list_when_no_queue_overrides_exist() {
         .unwrap()
         .job_option_findings
         .is_empty());
+}
+
+#[test]
+fn unresolved_receiver_abstains_without_queue_overrides() {
+    let mut facts = HashMap::new();
+    let file = FileFacts {
+        required_job_options: Some(RequiredJobOptions {
+            global: vec!["attempts".to_string()],
+            by_queue: BTreeMap::new(),
+        }),
+        job_option_sites: vec![JobOptionSite {
+            line: 4,
+            binding: Some("tags".to_string()),
+            queue_name: None,
+            queue_file: None,
+            job: Some("red".to_string()),
+            evidence: JobOptionEvidence::default(),
+        }],
+        ..FileFacts::default()
+    };
+    facts.insert(PathBuf::from("/tmp/enqueue.ts"), file);
+    crate::queue::job_options::judge_into_facts(&mut facts);
+    let judged = facts.get(Path::new("/tmp/enqueue.ts")).unwrap();
+    assert!(judged.job_option_findings.is_empty());
+    assert!(judged.diagnostics.is_empty());
 }
 
 fn source_line(root: &Path, file: &str, line: usize) -> String {

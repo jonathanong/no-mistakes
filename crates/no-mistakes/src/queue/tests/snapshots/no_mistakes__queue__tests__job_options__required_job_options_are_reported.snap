@@ -127,7 +127,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 106,
+      "line": 109,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "left",
@@ -137,7 +137,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 109,
+      "line": 112,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "kept",
@@ -147,7 +147,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 111,
+      "line": 114,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "skipped",
@@ -157,7 +157,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "flow.ts",
-      "line": 16,
+      "line": 20,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "child",
@@ -167,12 +167,22 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "flow.ts",
-      "line": 17,
+      "line": 21,
       "queueFile": "flow.ts",
       "queueName": "missing",
       "job": "orphan",
       "message": "job options missing attempts, removeOnComplete, backoff",
       "sourceLine": "{ name: \"orphan\", queueName: \"missing\", data: {}, opts: {} },"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow.ts",
+      "line": 79,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": "folded-child",
+      "message": "job options missing backoff",
+      "sourceLine": "children: [{ name: \"folded-child\", queueName: \"widgets\", data: {} }],"
     },
     {
       "kind": "missing-job-option",
@@ -353,46 +363,46 @@ expression: snapshot
       "sourceLine": "enqueueWidget(widgets, \"spread-opts\", ...rest);"
     },
     {
-      "file": "enqueue.ts",
-      "line": 101,
-      "message": "job options were not judged because the queue name did not resolve",
-      "sourceLine": "unknownQueue.add(\"ghost\", {});"
-    },
-    {
       "file": "flow.ts",
-      "line": 18,
+      "line": 22,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "...mysteryKids,"
     },
     {
       "file": "flow.ts",
-      "line": 19,
+      "line": 23,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "makeItem(),"
     },
     {
       "file": "flow.ts",
-      "line": 23,
+      "line": 27,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "flow.add({"
     },
     {
       "file": "flow.ts",
-      "line": 30,
+      "line": 34,
       "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add({"
     },
     {
       "file": "flow.ts",
-      "line": 42,
+      "line": 46,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "children: mystery,"
     },
     {
       "file": "flow.ts",
-      "line": 45,
+      "line": 49,
       "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add(mystery);"
+    },
+    {
+      "file": "flow.ts",
+      "line": 83,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "flow.add({"
     },
     {
       "file": "schedulers.ts",

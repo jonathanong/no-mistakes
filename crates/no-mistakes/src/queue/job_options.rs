@@ -70,14 +70,15 @@ pub(super) fn finish(facts: &mut FileFacts) {
     }
     for site in &mut facts.job_option_sites {
         if site.evidence.member.as_deref() == Some("opts") {
-            let name = &site.evidence.spreads[0];
-            site.evidence = if let Some(found) = opts.get(name) {
-                found.clone()
-            } else if objects.contains_key(name) {
-                JobOptionEvidence::default()
+            let name = site.evidence.spreads[0].clone();
+            if let Some(found) = opts.get(&name) {
+                site.evidence = found.clone();
+            } else if objects.contains_key(&name) {
+                site.evidence.member = None;
+                site.evidence.spreads.clear();
             } else {
-                JobOptionEvidence::open()
-            };
+                site.evidence = JobOptionEvidence::open();
+            }
         } else {
             walk::apply_evidence(&mut site.evidence, &objects);
         }

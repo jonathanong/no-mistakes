@@ -86,7 +86,8 @@ pub(crate) struct JobOptionEvidence {
     pub keys: BTreeSet<String>,
     pub open: bool,
     pub spreads: Vec<String>,
-    /// When set, finish replaces this evidence with that member of `spreads[0]`.
+    /// When set, finish reads this member from `spreads[0]`.
+    /// A const without that member keeps keys already recorded.
     pub member: Option<String>,
 }
 

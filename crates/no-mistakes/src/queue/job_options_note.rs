@@ -62,7 +62,11 @@ pub(crate) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
         {
             super::flow::note_flow(visitor, call);
         }
-        "add" => note_add(visitor, call, binding),
+        "add" => {
+            if binding.is_some() {
+                note_add(visitor, call, binding);
+            }
+        }
         "addBulk" => note_bulk(visitor, call, binding),
         "upsertJobScheduler" => super::flow::note_scheduler(visitor, call, binding),
         _ => {}

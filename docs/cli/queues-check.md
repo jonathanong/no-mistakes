@@ -120,7 +120,12 @@ each `queue.addBulk` element's `opts`, the `opts` field of an
 the configured enqueue-factory `options` argument. Keys present on the
 queue's `defaultJobOptions` count as set. A later explicit
 `defaultJobOptions` wins over an earlier unknown spread; a later unknown
-spread or computed key can overwrite the explicit member.
+spread or computed key can overwrite the explicit member. A flow node folds
+a spread of a statically known object the same way `queue.add` folds its
+options object, including a const object. A spread that is not a known
+object abstains and does not walk that node's children. `.add` counts only
+when the receiver is a resolved queue binding or the call is a configured
+enqueue factory. An unresolved receiver abstains.
 
 An unknown spread, call, or computed key abstains. Abstentions are not
 findings. `queues check` still prints only the findings array. The warning is

@@ -78,6 +78,9 @@ fn judge_site(
     policy: &RequiredJobOptions,
     defaults: &HashMap<(PathBuf, String), JobOptionEvidence>,
 ) -> Option<Note> {
+    if site.binding.is_some() && site.queue_name.is_none() {
+        return None;
+    }
     if site.queue_name.is_none() && !policy.by_queue.is_empty() {
         return Some(diagnostic(path, site.line, NAME_OPEN));
     }
