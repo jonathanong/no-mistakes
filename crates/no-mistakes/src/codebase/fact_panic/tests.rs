@@ -28,7 +28,7 @@ pub(crate) fn with_injected_panic<T>(path: &Path, run: impl FnOnce() -> T) -> T 
     with_injected_attempt(path, None, run)
 }
 
-#[cfg(any(nm_shard_all, nm_shard_0))]
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) fn with_injected_panic_on_attempt<T>(
     path: &Path,
     attempt: usize,
