@@ -89,7 +89,7 @@ fn text_readers_keep_static_module_and_export_names() {
 }
 
 #[test]
-fn module_load_fallback_recognizes_a_literal_require() {
+fn literal_require_needs_a_recorded_specifier() {
     let [literal, _, _] = module_load_windows();
     let mut facts = TsFileFacts::default();
     facts
@@ -101,11 +101,14 @@ fn module_load_fallback_recognizes_a_literal_require() {
         Some("./resolved-columns")
     );
 
+    assert!(!fact_reads::unrecorded_static_specifier(&facts, literal, 0));
+
     facts.namespaces.literal_import_spans.clear();
     assert_eq!(
-        fact_reads::depth_zero_module_specifier(&facts, literal, 0).as_deref(),
-        Some("./columns")
+        fact_reads::depth_zero_module_specifier(&facts, literal, 0),
+        None
     );
+    assert!(fact_reads::unrecorded_static_specifier(&facts, literal, 0));
 }
 
 #[test]
