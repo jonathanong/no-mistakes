@@ -17,7 +17,8 @@ identities. Suppressions affect ordinary check findings while the inventory
 retains physical sites.
 
 After reviewing the initial inventory, `--write-baseline` can create a missing
-baseline. Commit it. Subsequent writes may only prune removed sites; they
+baseline. Commit it. Restore a deleted tracked baseline before rewriting;
+deletion cannot reset the ratchet. Subsequent writes may only prune removed sites; they
 reject new sites or any unanalyzed SQL. Stored routine definitions remain
 unanalyzed because their bodies are outside the shared executable-SQL
 projection. Scope those sources separately and configure helper call names.

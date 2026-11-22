@@ -30,7 +30,8 @@ no-mistakes postgres lock-inventory --root . --config .no-mistakes.yml
 ```
 
 When the configured baseline does not exist, the explicit option creates the
-initial baseline. Add that file to Git before checking it. For an existing
+initial baseline. A deleted tracked baseline must first be restored; deletion
+cannot reset the ratchet. Add a new file to Git before checking it. For an existing
 baseline, writing may prune stale removed-site entries, but refuses to accept
 new sites or proceed while SQL remains unresolved. New sites remain diagnostics;
 the writer cannot accept them. Review every addition and stale entry before
