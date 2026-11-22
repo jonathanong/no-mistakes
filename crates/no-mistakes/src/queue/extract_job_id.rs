@@ -1,8 +1,6 @@
-use crate::queue::extract_helpers::static_string;
+use crate::queue::extract_model::JobIdQueue;
 use crate::queue::extract_visitor::QueueVisitor;
-use oxc_ast::ast::{
-    Argument, BindingPattern, CallExpression, Expression, IdentifierReference, VariableDeclarator,
-};
+use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_syntax::symbol::SymbolId;
 
 #[path = "extract_job_id_message.rs"]
@@ -13,65 +11,17 @@ use reader::{Evidence, Reader};
 
 const KIND: &str = "invalid-job-id";
 
-pub(super) fn note_const(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclarator<'_>) {
-    let (Some(scoping), BindingPattern::BindingIdentifier(id), Some(init)) =
-        (visitor.scoping, &decl.id, &decl.init)
-    else {
-        return;
-    };
-    if let Some(symbol) = id.symbol_id.get() {
-        if scoping.symbol_flags(symbol).is_const_variable() {
-            if let Some(value) = static_string(init.get_inner_expression()) {
-                visitor.job_id_consts.insert(symbol, value);
-            }
-        }
-    }
-}
-
-pub(super) fn note_flow_binding(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
-    if let Some(symbol) = stable_binding(visitor, pattern) {
-        visitor.job_id_flows.insert(symbol);
-    }
-}
-
-pub(super) fn note_queue_binding(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
-    if let Some(symbol) = stable_binding(visitor, pattern) {
-        visitor.job_id_queues.insert(symbol);
-    }
-}
-
-fn stable_binding(visitor: &QueueVisitor<'_>, pattern: &BindingPattern<'_>) -> Option<SymbolId> {
-    let BindingPattern::BindingIdentifier(id) = pattern else {
-        return None;
-    };
-    let symbol = id.symbol_id.get()?;
-    (!visitor.scoping?.symbol_is_mutated(symbol)).then_some(symbol)
-}
-
-fn referenced_symbol(visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> Option<SymbolId> {
-    visitor
-        .scoping?
-        .get_reference(id.reference_id.get()?)
-        .symbol_id()
-}
-
-fn imported(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool {
-    visitor.scoping.is_some_and(|scoping| {
-        let flags = scoping.symbol_flags(symbol);
-        flags.is_import() && !flags.is_type_import()
-    })
-}
-
-pub(super) fn queue_identifier(visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> bool {
-    referenced_symbol(visitor, id)
-        .is_some_and(|symbol| visitor.job_id_queues.contains(&symbol) || imported(visitor, symbol))
-}
+#[path = "extract_job_id_scope.rs"]
+mod scope;
+use scope::{imported, referenced_symbol};
+pub(super) use scope::{
+    is_imported_callee, note_const, note_flow_binding, note_queue_binding, queue_identifier,
+};
 
 enum Receiver {
     Queue {
-        binding: String,
+        binding: JobIdQueue,
         symbol: SymbolId,
-        namespace: bool,
     },
     Flow(SymbolId),
 }
@@ -82,20 +32,21 @@ pub(super) struct PendingCheck {
 }
 
 fn queue_receiver(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> Option<Receiver> {
-    let (binding, id, namespace) = match expr.get_inner_expression() {
-        Expression::Identifier(id) => (id.name.to_string(), &**id, false),
+    let (binding, id) = match expr.get_inner_expression() {
+        Expression::Identifier(id) => (JobIdQueue::Named(id.name.to_string()), &**id),
         Expression::StaticMemberExpression(member) => {
             let Expression::Identifier(id) = &member.object else {
                 return None;
             };
-            (visitor.imported_member_binding(expr)?, &**id, true)
+            let source = visitor.namespace_imports.get(id.name.as_str())?.clone();
+            let exported = member.property.name.to_string();
+            (JobIdQueue::Namespace { source, exported }, &**id)
         }
         _ => return None,
     };
     Some(Receiver::Queue {
         binding,
         symbol: referenced_symbol(visitor, id)?,
-        namespace,
     })
 }
 
@@ -122,15 +73,19 @@ pub(super) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
     if !matches!(method, "add" | "addBulk" | "upsertJobScheduler") {
         return;
     }
-    let Some(
-        receiver @ Receiver::Queue {
-            symbol, namespace, ..
-        },
-    ) = queue_receiver(visitor, &member.object)
+    let Some(receiver @ Receiver::Queue { symbol, .. }) = queue_receiver(visitor, &member.object)
     else {
         return;
     };
-    if method == "add" && !namespace {
+    if method == "add"
+        && matches!(
+            receiver,
+            Receiver::Queue {
+                binding: JobIdQueue::Named(_),
+                ..
+            }
+        )
+    {
         let mut reader = Reader::new(visitor);
         reader.node_arg(call.arguments.first());
         let evidence = reader.evidence;
@@ -165,12 +120,10 @@ fn publish(visitor: &mut QueueVisitor<'_>, receiver: Receiver, evidence: Vec<Evi
 pub(super) fn finish(visitor: &mut QueueVisitor<'_>) {
     for pending in std::mem::take(&mut visitor.job_id_pending) {
         let binding = match pending.receiver {
-            Receiver::Queue {
-                binding,
-                symbol,
-                namespace,
-            } if imported(visitor, symbol)
-                || (!namespace && visitor.job_id_queues.contains(&symbol)) =>
+            Receiver::Queue { binding, symbol }
+                if imported(visitor, symbol)
+                    || (matches!(binding, JobIdQueue::Named(_))
+                        && visitor.job_id_queues.contains(&symbol)) =>
             {
                 Some(binding)
             }

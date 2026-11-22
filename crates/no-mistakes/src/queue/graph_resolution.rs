@@ -1,5 +1,7 @@
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::queue::extract::FileFacts;
+use crate::queue::extract_model::JobIdQueue;
+use crate::queue::factory_resolve::follow::{lookup_export, Want};
 use crate::queue::graph_model::{InternalProducer, InternalWorker};
 use crate::queue::types::QueueKey;
 use std::collections::HashMap;
@@ -45,7 +47,20 @@ pub(super) fn resolve_producers<R: ImportResolverFacade>(
             });
         }
         for (binding, check) in &file.job_id_sites {
-            if resolve(binding).is_some() {
+            let resolved = match binding {
+                JobIdQueue::Named(binding) => resolve(binding).is_some(),
+                JobIdQueue::Namespace { source, exported } => lookup_export(
+                    facts,
+                    resolver,
+                    remapper,
+                    path,
+                    source,
+                    exported,
+                    Want::Queue,
+                )
+                .is_some_and(|name| definitions.contains_key(&name)),
+            };
+            if resolved {
                 checks.push((path.clone(), check.clone()));
             }
         }

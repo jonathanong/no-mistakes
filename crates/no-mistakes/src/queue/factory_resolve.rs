@@ -162,9 +162,8 @@ fn apply_update(facts: &mut HashMap<PathBuf, FileFacts>, update: Update) -> bool
 #[cfg(test)]
 #[path = "factory_resolve_apply_tests.rs"]
 mod apply_tests;
-
 #[path = "factory_resolve_follow.rs"]
-mod follow;
+pub(super) mod follow;
 
 pub(super) fn binding_queue<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,

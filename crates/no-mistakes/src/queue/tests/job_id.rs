@@ -80,6 +80,22 @@ fn invalid_job_id_findings_match_snapshot() {
     assert!(rows
         .iter()
         .any(|row| row["file"].as_str().unwrap().ends_with("suppressed.ts")));
+    let receiver_jobs = rows
+        .iter()
+        .filter(|row| row["file"] == "receiver-evidence.ts")
+        .map(|row| row["job"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        receiver_jobs,
+        [
+            "effective",
+            "namespace",
+            "wrapped",
+            "factory-queue",
+            "after-spread",
+            "after-computed"
+        ]
+    );
     let pretty = format!("{}\n", serde_json::to_string_pretty(&rows).unwrap());
     insta::with_settings!({ prepend_module_to_snapshot => false }, {
         insta::assert_snapshot!("invalid_job_id", pretty);

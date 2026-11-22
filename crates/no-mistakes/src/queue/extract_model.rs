@@ -37,6 +37,12 @@ pub(crate) struct WorkerSite {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) enum JobIdQueue {
+    Named(String),
+    Namespace { source: String, exported: String },
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct LocalCheck {
     pub line: usize,
     pub kind: String,
@@ -79,5 +85,5 @@ pub(crate) struct FileFacts {
     /// A job-name use outside a literal comparison or switch label keeps imported processors open.
     pub referenced_jobs_dynamic: bool,
     pub checks: Vec<LocalCheck>,
-    pub job_id_sites: Vec<(String, LocalCheck)>,
+    pub job_id_sites: Vec<(JobIdQueue, LocalCheck)>,
 }

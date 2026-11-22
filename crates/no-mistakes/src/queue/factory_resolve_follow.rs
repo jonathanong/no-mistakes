@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy)]
-pub(super) enum Want {
+pub(in crate::queue) enum Want {
     Queue,
     Either,
 }
@@ -52,7 +52,7 @@ pub(super) fn reexport_queue<R: ImportResolverFacade>(
         .or_else(|| lookup(facts, resolver, remapper, path, local, Want::Queue))
 }
 
-pub(super) fn lookup_export<R: ImportResolverFacade>(
+pub(in crate::queue) fn lookup_export<R: ImportResolverFacade>(
     facts: &std::collections::HashMap<PathBuf, FileFacts>,
     resolver: &R,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,

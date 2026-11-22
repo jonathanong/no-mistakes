@@ -123,6 +123,48 @@ expression: pretty
     "sourceLine": "opts: { jobId: \"item{child}\" },"
   },
   {
+    "file": "receiver-evidence.ts",
+    "job": "effective",
+    "line": 7,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "direct.add(\"effective\", {}, { jobId: \"safe-id\", [\"jobId\"]: \"new:id\" });"
+  },
+  {
+    "file": "receiver-evidence.ts",
+    "job": "namespace",
+    "line": 8,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "callbacks.widgets.add(\"namespace\", {}, { jobId: \"namespace:id\" });"
+  },
+  {
+    "file": "receiver-evidence.ts",
+    "job": "wrapped",
+    "line": 9,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "(callbacks.widgets as Queue).add(\"wrapped\", {}, { jobId: \"wrapped:id\" });"
+  },
+  {
+    "file": "receiver-evidence.ts",
+    "job": "factory-queue",
+    "line": 16,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "factoryQueue.add(\"factory-queue\", {}, { jobId: \"factory:id\" });"
+  },
+  {
+    "file": "receiver-evidence.ts",
+    "job": "after-spread",
+    "line": 41,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "direct.add(\"after-spread\", {}, { ...opaqueOptions, jobId: \"new:id\" });"
+  },
+  {
+    "file": "receiver-evidence.ts",
+    "job": "after-computed",
+    "line": 42,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "direct.add(\"after-computed\", {}, { [opaqueKey]: \"maybe\", [\"jobId\"]: \"new:id\" });"
+  },
+  {
     "file": "scoped-enqueue.ts",
     "job": "inner",
     "line": 9,

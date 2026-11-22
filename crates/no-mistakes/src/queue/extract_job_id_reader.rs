@@ -94,10 +94,8 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
     }
 
     fn direct(&mut self, job: Option<String>, object: &ObjectExpression<'_>) {
-        for (key, value) in properties(object) {
-            if property_key_name(key).as_deref() == Some("jobId") {
-                self.job_id(job.clone(), value);
-            }
+        if let Some(value) = property_expr(object, "jobId") {
+            self.job_id(job, value);
         }
     }
 
@@ -140,18 +138,14 @@ impl<'visitor, 'a> Reader<'visitor, 'a> {
     }
 }
 
-fn properties<'a>(
-    object: &'a ObjectExpression<'a>,
-) -> impl Iterator<Item = (&'a oxc_ast::ast::PropertyKey<'a>, &'a Expression<'a>)> {
-    object.properties.iter().filter_map(|property| {
+fn property_expr<'a>(object: &'a ObjectExpression<'a>, name: &str) -> Option<&'a Expression<'a>> {
+    for property in object.properties.iter().rev() {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return None;
         };
-        Some((&property.key, &property.value))
-    })
-}
-
-fn property_expr<'a>(object: &'a ObjectExpression<'a>, name: &str) -> Option<&'a Expression<'a>> {
-    properties(object)
-        .find_map(|(key, value)| (property_key_name(key).as_deref() == Some(name)).then_some(value))
+        if property_key_name(&property.key)?.as_ref() == name {
+            return Some(&property.value);
+        }
+    }
+    None
 }
