@@ -90,21 +90,17 @@ fn a_created_require_records_literal_calls_at_top_level_and_inside_functions() {
     assert_eq!(expected.len(), 4, "{expected:?}");
     assert_eq!(facts.namespaces.literal_import_spans, expected);
     assert!(
-        require_imports(&facts)
-            .iter()
-            .all(|(_, _, computed)| *computed),
+        require_imports(&facts).is_empty(),
         "a literal created-require call records a span and keeps its call site"
     );
 }
 
 #[test]
-fn a_non_literal_created_require_stays_computed_without_a_span() {
+fn a_non_literal_created_require_is_kept_out_of_shared_imports() {
     let facts = facts_of(DYNAMIC, SourceType::ts());
     assert!(facts.namespaces.literal_import_spans.is_empty());
-    assert_eq!(
-        require_imports(&facts),
-        vec![("specifier".to_string(), ImportKind::Require, true)]
-    );
+    assert!(facts.namespaces.computed_created_require);
+    assert!(require_imports(&facts).is_empty());
 }
 
 #[test]

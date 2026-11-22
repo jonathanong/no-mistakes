@@ -4,72 +4,70 @@ use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKin
 use crate::codebase::dependencies::graph::{DepGraph, ImportTarget};
 use std::path::{Path, PathBuf};
 
-pub(super) enum ModuleHit {
-    File(PathBuf),
-    Open,
-    /// A bare specifier with no recorded import target. It is not an unresolved import.
-    Unproven,
-}
-
-pub(super) fn module_hit(
+pub(super) fn module_file(
     graph: Option<&DepGraph>,
     _facts: &CheckFactMap,
     catalog: &Catalog<'_>,
     importer: &Path,
     specifier: &str,
-) -> ModuleHit {
-    let hit = probe_module(graph, catalog, importer, specifier);
-    if matches!(hit, ModuleHit::Unproven) {
-        catalog.record_unproven(importer, specifier);
-    }
-    hit
+) -> Option<PathBuf> {
+    module_lookup(graph, catalog, importer, specifier, true)
 }
 
-fn probe_module(
+fn module_lookup(
     graph: Option<&DepGraph>,
     catalog: &Catalog<'_>,
     importer: &Path,
     specifier: &str,
-) -> ModuleHit {
-    if let Some(recorded) = graph.and_then(|graph| graph.import_target(importer, specifier)) {
-        match recorded {
-            ImportTarget::File(path) => return ModuleHit::File(path.clone()),
-            ImportTarget::Ambiguous => return ModuleHit::Open,
-            ImportTarget::Unresolved => {}
+    record_gap: bool,
+) -> Option<PathBuf> {
+    use crate::codebase::ts_resolver::is_bare_node_builtin;
+    if specifier.starts_with("node:") || is_bare_node_builtin(specifier) {
+        return None;
+    }
+    let recorded = graph.and_then(|graph| graph.import_target(importer, specifier));
+    if let Some(ImportTarget::File(path)) = recorded {
+        return Some(path.clone());
+    }
+    let relative = specifier.starts_with('.') || Path::new(specifier).is_absolute();
+    let trusted = catalog.tags.iter().any(|tag| {
+        !tag.module.is_empty()
+            && !tag.name.is_empty()
+            && super::tags::module_matches(specifier, &tag.module)
+    });
+    let ambient = catalog.ambient_files(specifier);
+    let resolution = if matches!(recorded, Some(ImportTarget::Ambiguous)) {
+        // A recorded ambiguity may only use the resolver to classify the
+        // spelling. It cannot prove a unique module.
+        catalog
+            .resolution
+            .and_then(|resolution| {
+                resolution.resolve(specifier, importer, relative || (trusted && record_gap))
+            })
+            .map(|_| None)
+    } else {
+        catalog.resolution.and_then(|resolution| {
+            resolution.resolve(specifier, importer, relative || (trusted && record_gap))
+        })
+    };
+    if let Some(Some(path)) = &resolution {
+        return Some(path.clone());
+    }
+    if recorded != Some(&ImportTarget::Ambiguous) {
+        if relative && catalog.resolution.is_none() {
+            let hits = relative_hits(catalog, importer, specifier);
+            if hits.len() == 1 {
+                return hits.into_iter().next();
+            }
+        }
+        if ambient.len() == 1 {
+            return ambient.into_iter().next();
         }
     }
-    if let Some(path) = relative_module(catalog, importer, specifier) {
-        return ModuleHit::File(path);
+    if record_gap && (relative || trusted || !ambient.is_empty() || resolution.is_some()) {
+        catalog.record_unresolved(importer, specifier);
     }
-    let mut hits = Vec::new();
-    if specifier.starts_with('.') {
-        hits.extend(relative_hits(catalog, importer, specifier));
-    }
-    if hits.is_empty() {
-        hits.extend(catalog.ambient_files(specifier));
-    }
-    hits.sort();
-    hits.dedup();
-    if hits.len() == 1 {
-        ModuleHit::File(hits.remove(0))
-    } else if hits.is_empty() && graph.is_none() && !specifier.starts_with('.') {
-        ModuleHit::Unproven
-    } else {
-        ModuleHit::Open
-    }
-}
-
-pub(super) fn module_file(
-    graph: Option<&DepGraph>,
-    facts: &CheckFactMap,
-    catalog: &Catalog<'_>,
-    importer: &Path,
-    specifier: &str,
-) -> Option<PathBuf> {
-    match module_hit(graph, facts, catalog, importer, specifier) {
-        ModuleHit::File(path) => Some(path),
-        ModuleHit::Open | ModuleHit::Unproven => None,
-    }
+    None
 }
 
 pub(super) fn import_hit_fragments(
@@ -80,30 +78,15 @@ pub(super) fn import_hit_fragments(
     import: &ImportedBinding,
     is_tag: bool,
 ) -> Vec<Fragment> {
-    let hit = if is_tag {
-        probe_module(graph, catalog, importer, &import.specifier)
-    } else {
-        module_hit(graph, facts, catalog, importer, &import.specifier)
+    let Some(module) = module_lookup(graph, catalog, importer, &import.specifier, !is_tag) else {
+        return Vec::new();
     };
-    match hit {
-        ModuleHit::Open => vec![Fragment::open(&import.specifier)],
-        ModuleHit::Unproven => Vec::new(),
-        ModuleHit::File(module) if import.kind == ImportedBindingKind::Namespace => {
-            super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
-        }
-        ModuleHit::File(module) => {
-            let name = super::tags::exported_name(import);
-            super::visible::visible(catalog, graph, facts, &module, &name, &mut Vec::new())
-        }
+    if import.kind == ImportedBindingKind::Namespace {
+        super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
+    } else {
+        let name = super::tags::exported_name(import);
+        super::visible::visible(catalog, graph, facts, &module, &name, &mut Vec::new())
     }
-}
-
-fn relative_module(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Option<PathBuf> {
-    if !specifier.starts_with('.') {
-        return None;
-    }
-    let mut hits = relative_hits(catalog, importer, specifier);
-    (hits.len() == 1).then(|| hits.pop()).flatten()
 }
 
 fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec<PathBuf> {

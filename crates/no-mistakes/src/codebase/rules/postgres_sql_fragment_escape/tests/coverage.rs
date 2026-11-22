@@ -34,34 +34,6 @@ fn catalog_keeps_fragments_when_collection_is_incomplete() {
     let partial = by_export(&catalog, "partialColumns");
     assert_eq!(partial.len(), 1);
     assert!(partial[0].producer.ends_with("incomplete.ts"));
-    let unresolved_order = alias::hop(
-        &catalog,
-        Some(&world.graph),
-        &world.facts,
-        &world.escape,
-        "missing",
-        "orderColumns",
-        &mut Vec::new(),
-    );
-    assert_eq!(unresolved_order.len(), 1);
-    assert_eq!(
-        unresolved_order[0].open_specifier.as_deref(),
-        Some("missing")
-    );
-    let unresolved_widget = alias::hop(
-        &catalog,
-        Some(&world.graph),
-        &world.facts,
-        &world.escape,
-        "missing",
-        "widgetColumns",
-        &mut Vec::new(),
-    );
-    assert_eq!(unresolved_widget.len(), 1);
-    assert_eq!(
-        unresolved_widget[0].open_specifier.as_deref(),
-        Some("missing")
-    );
 }
 
 #[test]
@@ -399,6 +371,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         Some(&world.graph),
         &world.facts,
         None,
+        None,
     )
     .findings;
     let mut targets: Vec<&str> = findings
@@ -412,6 +385,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         &[],
         Some(&world.graph),
         &world.facts,
+        None,
         None
     )
     .findings
@@ -421,6 +395,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         &[TrustedSqlTag::default()],
         Some(&world.graph),
         &world.facts,
+        None,
         None
     )
     .findings
@@ -430,6 +405,7 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         &NoMistakesConfig::default(),
         None,
         &world.facts,
+        None,
         None,
     )
     .expect("unconfigured rule");

@@ -1,4 +1,4 @@
-use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 use std::path::PathBuf;
 
 #[test]
@@ -93,16 +93,11 @@ fn postgres_sql_fragment_escape_absence_gap_matches_siblings() {
             && finding["target"] == "COLS"
             && finding["sourceLine"] == "COLS.append(extra);"
     }));
-    assert!(rules
-        .iter()
-        .all(|finding| finding["file"] != "bare-escape.ts"));
-    let incomplete = on["incomplete"].as_array().expect("incomplete");
-    assert!(incomplete.iter().any(|gap| {
-        gap["consumer"] == "postgres-sql-fragment-escape"
-            && gap["file"] == "bare-escape.ts"
-            && gap["message"]
-                .as_str()
-                .is_some_and(|message| message.contains("`@example/columns`"))
+    assert!(rules.iter().any(|finding| {
+        finding["rule"] == "postgres-sql-fragment-escape"
+            && finding["file"] == "bare-escape.ts"
+            && finding["target"] == "COLS"
+            && finding["sourceLine"] == "COLS.append(extra);"
     }));
     for report in [on, off] {
         let rules = report["rules"].as_array().expect("rules");
@@ -138,4 +133,72 @@ fn sibling_report(report: &serde_json::Value) -> serde_json::Value {
         rows.retain(|row| row["consumer"] != "postgres-sql-fragment-escape");
     }
     copy
+}
+
+#[test]
+fn postgres_sql_fragment_escape_import_resolution_snapshot() {
+    let root = rules_path(
+        "postgres-sql-fragment-escape",
+        "fixtures",
+        "import-resolution",
+    );
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_import_resolution",
+        &[("imports", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["imports"]["report"];
+    let findings = report["rules"].as_array().expect("findings");
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding["file"] == "confirmed.ts"));
+    let gaps = report["incomplete"].as_array().expect("incomplete");
+    assert_eq!(gaps.len(), 1, "{gaps:?}");
+    assert_eq!(gaps[0]["file"], "relevant.ts");
+    assert!(gaps[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("`./missing-columns`"));
+}
+
+#[test]
+fn postgres_sql_fragment_escape_bounds_import_resolution_work() {
+    let root = rules_path(
+        "postgres-sql-fragment-escape",
+        "fixtures",
+        "import-resolution",
+    );
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "--jobs",
+            "2",
+            "--lock-timeout",
+            "0",
+            "--verbose-timings",
+            "check",
+            "--root",
+        ])
+        .arg(root)
+        .args(["--format", "json"])
+        .output()
+        .expect("run fragment check");
+    assert_eq!(output.status.code(), Some(1));
+    let diagnostics = String::from_utf8(output.stderr).expect("diagnostics");
+    assert!(
+        diagnostics
+            .lines()
+            .any(|line| line == "[work] graph.builds: 1"),
+        "{diagnostics}"
+    );
+    let candidates = diagnostics
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("[work] postgres_sql_fragment_escape.module_candidates: ")
+        })
+        .expect("module candidate work")
+        .parse::<usize>()
+        .expect("candidate count");
+    assert!((1..=6).contains(&candidates), "{diagnostics}");
 }

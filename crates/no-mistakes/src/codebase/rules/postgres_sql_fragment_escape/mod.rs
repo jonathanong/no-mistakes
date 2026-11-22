@@ -3,10 +3,13 @@ mod alias;
 mod dynamic;
 mod fact_reads;
 mod fragments;
+mod import_resolution;
+pub(crate) use import_resolution::FragmentImportResolution;
 mod modules;
 mod mutate;
 mod names;
 mod namespace_uses;
+mod relevance;
 mod resolve;
 mod scan;
 mod scan_file;
@@ -62,6 +65,7 @@ pub(crate) fn check_with_graph(
     graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
+    resolution: Option<&FragmentImportResolution<'_>>,
 ) -> Result<FragmentEscapeCheck> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
@@ -76,7 +80,14 @@ pub(crate) fn check_with_graph(
     for application in applications {
         let opts: Options = application.try_rule_options()?;
         let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
-        let mut next = scan::scan(&root, &opts.trusted_sql_tags, graph, facts, sources);
+        let mut next = scan::scan(
+            &root,
+            &opts.trusted_sql_tags,
+            graph,
+            facts,
+            sources,
+            resolution.map(|projection| projection as &dyn import_resolution::FragmentResolver),
+        );
         next.findings
             .retain(|finding| filter.is_match(&root.join(&finding.file)));
         next.gaps

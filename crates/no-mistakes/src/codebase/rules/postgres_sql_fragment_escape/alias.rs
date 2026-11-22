@@ -1,5 +1,5 @@
 use super::fragments::{Catalog, Fragment};
-use super::modules::{module_hit, ModuleHit};
+use super::modules::module_file;
 use super::source_text::file_text;
 use super::tags::{exported_name, imported};
 use super::text::{export_alias_local, import_specifier};
@@ -19,11 +19,9 @@ pub(super) fn hop(
     name: &str,
     stack: &mut Vec<(PathBuf, String)>,
 ) -> Vec<Fragment> {
-    match module_hit(graph, facts, catalog, module, spec) {
-        ModuleHit::File(next) => visible(catalog, graph, facts, &next, name, stack),
-        ModuleHit::Open => vec![Fragment::open(spec)],
-        ModuleHit::Unproven => Vec::new(),
-    }
+    module_file(graph, facts, catalog, module, spec)
+        .map(|next| visible(catalog, graph, facts, &next, name, stack))
+        .unwrap_or_default()
 }
 
 pub(super) fn source_alias(
@@ -94,11 +92,9 @@ fn reexported_namespace(
     module: &Path,
     spec: &str,
 ) -> Vec<Fragment> {
-    match module_hit(graph, facts, catalog, module, spec) {
-        ModuleHit::File(next) => visible_all(catalog, graph, facts, &next, &mut Vec::new()),
-        ModuleHit::Open => vec![Fragment::open(spec)],
-        ModuleHit::Unproven => Vec::new(),
-    }
+    module_file(graph, facts, catalog, module, spec)
+        .map(|next| visible_all(catalog, graph, facts, &next, &mut Vec::new()))
+        .unwrap_or_default()
 }
 
 fn star_import(source: &str, local: &str) -> bool {
@@ -149,17 +145,15 @@ pub(super) fn star_fragments(
             .map(|binding| binding.exported.clone()),
     );
     for spec in &ts.star_reexport_specifiers {
-        match module_hit(graph, facts, catalog, module, spec) {
-            ModuleHit::File(next) => found.extend(star_fragments(
+        if let Some(next) = module_file(graph, facts, catalog, module, spec) {
+            found.extend(star_fragments(
                 catalog,
                 graph,
                 facts,
                 &next,
                 &next_blocked,
                 stack,
-            )),
-            ModuleHit::Open => found.push(Fragment::open(spec)),
-            ModuleHit::Unproven => {}
+            ));
         }
     }
     stack.pop();

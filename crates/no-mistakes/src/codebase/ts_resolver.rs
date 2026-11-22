@@ -26,6 +26,9 @@ include!("ts_resolver/scoped_policy.rs");
 include!("ts_resolver/scoped_selection.rs");
 include!("ts_resolver/scoped_setup.rs");
 include!("ts_resolver/project_resolver.rs");
+#[path = "ts_resolver/node_builtins.rs"]
+mod node_builtins;
+pub(crate) use node_builtins::is_bare_node_builtin;
 
 #[path = "ts_resolver/declarations.rs"]
 pub(crate) mod declarations;

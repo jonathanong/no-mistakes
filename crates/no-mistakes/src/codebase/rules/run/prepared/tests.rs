@@ -133,6 +133,7 @@ fn malformed_fragment_options_keep_the_graph_plan_and_options_error() {
         None,
         &crate::codebase::check_facts::CheckFactMap::default(),
         None,
+        None,
     )
     .err()
     .expect("malformed fragment options must fail");

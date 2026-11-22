@@ -1,11 +1,12 @@
+use super::import_resolution::FragmentResolver;
 use super::tags::is_fragment_binding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::fx::{fx_map, FxHashMap};
-use dashmap::DashSet;
+use dashmap::mapref::entry::Entry;
+use dashmap::DashMap;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
 
 type RelativeIndex = FxHashMap<PathBuf, FxHashMap<String, Vec<PathBuf>>>;
 type FragmentIndex = FxHashMap<PathBuf, FxHashMap<String, Vec<Fragment>>>;
@@ -16,7 +17,6 @@ type AmbientIndex = FxHashMap<String, Vec<PathBuf>>;
 pub(super) struct Fragment {
     pub producer: PathBuf,
     pub exported: String,
-    pub open_specifier: Option<String>,
 }
 
 pub(super) struct Catalog<'a> {
@@ -25,14 +25,17 @@ pub(super) struct Catalog<'a> {
     pub(super) by_export: FragmentIndex,
     by_producer: ProducerIndex,
     ambient: AmbientIndex,
-    unproven: OnceLock<DashSet<(PathBuf, String)>>,
+    pub(super) resolution: Option<&'a dyn FragmentResolver>,
+    pub(super) tags: &'a [TrustedSqlTag],
+    unresolved: DashMap<PathBuf, String>,
 }
 
 impl<'a> Catalog<'a> {
     pub(super) fn build(
         facts: &CheckFactMap,
-        tags: &[TrustedSqlTag],
+        tags: &'a [TrustedSqlTag],
         sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+        resolution: Option<&'a dyn FragmentResolver>,
     ) -> Self {
         let mut fragments = Vec::new();
         for file in facts.graph_file_universe() {
@@ -48,7 +51,6 @@ impl<'a> Catalog<'a> {
                         fragments.push(Fragment {
                             producer: file.clone(),
                             exported: export.exported.clone(),
-                            open_specifier: None,
                         });
                     }
                 }
@@ -58,22 +60,34 @@ impl<'a> Catalog<'a> {
         let (by_export, by_producer) = index_fragments(&fragments);
         Self {
             sources,
-            relative: relative_index(facts),
+            relative: if resolution.is_none() {
+                relative_index(facts)
+            } else {
+                fx_map()
+            },
             by_export,
             by_producer,
             ambient: ambient_index(facts, sources),
-            unproven: OnceLock::new(),
+            resolution,
+            tags,
+            unresolved: DashMap::new(),
         }
     }
 
-    pub(super) fn record_unproven(&self, importer: &Path, specifier: &str) {
-        self.unproven
-            .get_or_init(DashSet::new)
-            .insert((importer.to_path_buf(), specifier.to_owned()));
+    pub(super) fn record_unresolved(&self, importer: &Path, specifier: &str) {
+        match self.unresolved.entry(importer.to_path_buf()) {
+            Entry::Occupied(mut entry) if specifier < entry.get().as_str() => {
+                entry.insert(specifier.to_owned());
+            }
+            Entry::Occupied(_) => {}
+            Entry::Vacant(entry) => {
+                entry.insert(specifier.to_owned());
+            }
+        }
     }
 
-    pub(super) fn into_unproven(self) -> impl Iterator<Item = (PathBuf, String)> {
-        self.unproven.into_inner().into_iter().flatten()
+    pub(super) fn take_unresolved(&mut self) -> DashMap<PathBuf, String> {
+        std::mem::take(&mut self.unresolved)
     }
 
     pub(super) fn ambient_files(&self, specifier: &str) -> Vec<PathBuf> {
@@ -172,16 +186,6 @@ fn push_relative(index: &mut RelativeIndex, parent: &Path, stem: &str, file: &Pa
         .entry(stem.to_string())
         .or_default()
         .push(file.to_path_buf());
-}
-
-impl Fragment {
-    pub(super) fn open(specifier: &str) -> Self {
-        Self {
-            producer: PathBuf::new(),
-            exported: String::new(),
-            open_specifier: Some(specifier.to_string()),
-        }
-    }
 }
 
 pub(super) fn dedup(found: &mut Vec<Fragment>) {

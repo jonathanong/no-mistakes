@@ -60,7 +60,7 @@ fn a_named_import_value_use_stays_with_the_call_scan() {
 }
 
 #[test]
-fn an_unresolved_namespace_value_use_stays_open() {
+fn an_unresolved_namespace_value_use_is_not_a_fragment() {
     let mut world = world();
     {
         let entry = world.facts.ts.get_mut(&world.escape).expect("escape facts");
@@ -83,6 +83,14 @@ fn an_unresolved_namespace_value_use_stays_open() {
     let catalog = catalog(&world);
     let ctx = ctx(&world, &catalog, &world.escape);
     let sites = value_sites(&ctx);
-    assert_eq!(sites.len(), 1);
-    assert_eq!(sites[0].1[0].open_specifier.as_deref(), Some("./missing"));
+    assert!(sites.is_empty());
+    let mut catalog = catalog;
+    assert_eq!(
+        catalog
+            .take_unresolved()
+            .get(&world.escape)
+            .as_deref()
+            .map(String::as_str),
+        Some("./missing")
+    );
 }

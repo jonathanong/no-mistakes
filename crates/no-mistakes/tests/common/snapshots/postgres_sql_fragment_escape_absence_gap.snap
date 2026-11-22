@@ -29,11 +29,6 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "incomplete": [
         {
           "consumer": "postgres-sql-fragment-escape",
-          "file": "bare-escape.ts",
-          "message": "`bare-escape.ts` could not resolve bare specifier `@example/columns` without the canonical import graph, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the graph prerequisite and rerun the check."
-        },
-        {
-          "consumer": "postgres-sql-fragment-escape",
           "file": "wide.ts",
           "message": "`wide.ts` value flow is incomplete (value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations), so a write, rebind, or escape of an exported SQL fragment may be missing. Simplify the file so value flow finishes, then rerun the check."
         },
@@ -52,6 +47,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "bare-escape.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(extra);",
+          "target": "COLS"
+        },
         {
           "file": "relative-escape.ts",
           "import": "columns.ts",

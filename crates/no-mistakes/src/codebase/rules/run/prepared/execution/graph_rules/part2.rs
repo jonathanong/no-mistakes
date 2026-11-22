@@ -80,38 +80,7 @@ pub(super) fn collect(
             }
         }
     }
-    if rule_enabled(config, crate::codebase::rules::POSTGRES_SQL_FRAGMENT_ESCAPE) {
-        let consumer = "postgres-sql-fragment-escape";
-        if dependency_graph.is_some()
-            || session.is_none_or(|session| session.check_consumer_ready(consumer))
-            || session.is_some_and(|session| session.partial_checks_enabled())
-        {
-            let result = (|| -> Result<()> {
-                let report =
-                    crate::perf_trace::rule("analysis.rules.postgres-sql-fragment-escape", || {
-                        crate::codebase::rules::postgres_sql_fragment_escape::check_with_graph(
-                            root,
-                            config,
-                            dependency_graph,
-                            shared,
-                            request.sources,
-                        )
-                    })?;
-                if let Some(session) = session {
-                    for gap in report.gaps {
-                        session.record_check_failure(gap);
-                    }
-                }
-                findings.extend(report.findings);
-                Ok(())
-            })();
-            if let Some(session) = session {
-                session.capture_check_result(consumer, result)?;
-            } else {
-                result?;
-            }
-        }
-    }
+    super::fragment_escape::collect(request, session, findings)?;
     if rule_enabled(
         config,
         crate::codebase::rules::POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,

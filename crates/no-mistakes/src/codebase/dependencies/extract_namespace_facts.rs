@@ -76,6 +76,8 @@ pub struct NamespaceFacts {
     /// Literal `import()`, `require()`, or type-position `import("...")`
     /// specifiers keyed by the `import` or `require` keyword.
     pub literal_import_spans: Vec<(u32, String)>,
+    /// A runtime load through a created require without a literal specifier.
+    pub computed_created_require: bool,
     /// Classes in an ambient declaration or in a module block that is not a
     /// tracked namespace: `declare class`, `declare module`, `declare global`.
     pub unreported_class_ids: Vec<CallableId>,

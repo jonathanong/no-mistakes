@@ -3,6 +3,7 @@ use super::*;
 use crate::codebase::rules::test_no_live_repository_scan::Resolution;
 
 mod coverage;
+mod fragment_escape;
 mod part0;
 mod part1;
 mod part2;

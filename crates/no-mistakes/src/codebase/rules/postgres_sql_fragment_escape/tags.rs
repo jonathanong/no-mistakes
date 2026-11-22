@@ -19,6 +19,9 @@ pub(super) fn is_fragment_binding(
 }
 
 fn trusted_tag_call(ts: &TsFileFacts, tags: &[TrustedSqlTag], start: u32, end: u32) -> bool {
+    if !ts.value_flow.tagged_templates.contains_key(&(start, end)) {
+        return false;
+    }
     let Some(call) = ts
         .value_flow
         .calls
@@ -27,7 +30,7 @@ fn trusted_tag_call(ts: &TsFileFacts, tags: &[TrustedSqlTag], start: u32, end: u
     else {
         return false;
     };
-    if call.arguments.len() != 1 || !ts.value_flow.tagged_templates.contains_key(&(start, end)) {
+    if call.arguments.len() != 1 {
         return false;
     }
     let ValueExpression::Named { name, .. } = &call.callee else {
@@ -68,9 +71,7 @@ fn bindings(ts: &TsFileFacts) -> impl Iterator<Item = &ImportedBinding> {
 }
 
 fn import_is_tag(binding: &ImportedBinding, tag: &TrustedSqlTag) -> bool {
-    let module = binding.specifier == tag.module
-        || binding.specifier.starts_with(&format!("{}/", tag.module));
-    if !module {
+    if !module_matches(&binding.specifier, &tag.module) {
         return false;
     }
     if tag.name == "default" {
@@ -78,4 +79,11 @@ fn import_is_tag(binding: &ImportedBinding, tag: &TrustedSqlTag) -> bool {
     } else {
         binding.kind == ImportedBindingKind::Named && binding.imported == tag.name
     }
+}
+
+pub(super) fn module_matches(specifier: &str, module: &str) -> bool {
+    specifier == module
+        || specifier
+            .strip_prefix(module)
+            .is_some_and(|rest| rest.starts_with('/'))
 }

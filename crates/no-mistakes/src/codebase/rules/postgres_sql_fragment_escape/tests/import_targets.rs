@@ -1,5 +1,5 @@
 use super::super::{alias, modules, resolve, visible};
-use super::support::{catalog, ctx, fragment_facts, import, insert, world};
+use super::support::{assert_from, catalog, ctx, fragment_facts, import, insert, world};
 use crate::codebase::check_facts::CheckFileFacts;
 use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBindingKind};
 use crate::codebase::dependencies::graph::{merge_import_target, ImportTarget};
@@ -63,10 +63,7 @@ fn recorded_import_targets_replace_neighbor_stems() {
         "orderColumns",
         &mut Vec::new(),
     );
-    assert_eq!(
-        (open.len(), open[0].open_specifier.as_deref()),
-        (1, Some("pkg/sql"))
-    );
+    assert!(open.is_empty());
 }
 
 #[test]
@@ -105,7 +102,6 @@ fn resolved_tag_import_keeps_a_fragment_exported_under_that_name() {
     let found = resolve::name_fragments(&file_ctx, "sql");
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].exported, "default");
-    assert!(found[0].open_specifier.is_none());
 
     let mut open_world = super::support::world();
     let producer = open_world.columns.clone();
@@ -120,7 +116,7 @@ fn resolved_tag_import_keeps_a_fragment_exported_under_that_name() {
 }
 
 #[test]
-fn a_reexported_namespace_without_a_recorded_target_stays_quiet_or_open() {
+fn a_reexported_namespace_without_a_resolved_target_has_no_proven_fragments() {
     let world = world();
     let catalog = catalog(&world);
     let mut ts = TsFileFacts::default();
@@ -156,10 +152,7 @@ fn a_reexported_namespace_without_a_recorded_target_stays_quiet_or_open() {
         "orderColumns",
         &mut Vec::new(),
     );
-    assert_eq!(
-        (open.len(), open[0].open_specifier.as_deref()),
-        (1, Some("./missing"))
-    );
+    assert!(open.is_empty());
 }
 
 #[test]
@@ -183,13 +176,9 @@ fn a_bare_star_reexport_without_a_graph_is_not_an_unresolved_warning() {
         &[],
         &mut Vec::new(),
     );
-    assert!(starred
-        .iter()
-        .all(|fragment| fragment.open_specifier.is_none()));
+    assert_from(&starred, &world.columns, &["orderColumns", "widgetColumns"]);
     let all = visible::visible_all(&catalog, None, &world.facts, &world.index, &mut Vec::new());
-    assert!(all
-        .iter()
-        .all(|fragment| fragment.open_specifier.as_deref() != Some("pkg/sql")));
+    assert_from(&all, &world.columns, &["orderColumns", "widgetColumns"]);
     let one = visible::visible(
         &catalog,
         None,
@@ -198,7 +187,7 @@ fn a_bare_star_reexport_without_a_graph_is_not_an_unresolved_warning() {
         "notExported",
         &mut Vec::new(),
     );
-    assert!(one.iter().all(|fragment| fragment.open_specifier.is_none()));
+    assert!(one.is_empty());
 }
 
 #[test]

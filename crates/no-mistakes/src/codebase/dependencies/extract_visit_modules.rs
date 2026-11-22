@@ -84,16 +84,13 @@ fn record_runtime_require_import(
     collector: &mut ImportCollector,
     call: &CallExpression<'_>,
     kind: ImportKind,
-    literal_edge: bool,
+    shared_edge: bool,
 ) {
     let Some(first) = call.arguments.first() else {
         return;
     };
-    let Some(expr) = first.as_expression() else {
-        collector.push_computed("<computed>", kind, call.span.start as usize);
-        return;
-    };
-    if let Some(specifier) = static_import_specifier(expr) {
+    let expression = first.as_expression();
+    if let Some(specifier) = expression.and_then(static_import_specifier) {
         collector
             .namespace
             .facts
@@ -101,16 +98,20 @@ fn record_runtime_require_import(
             .push((call.span.start, specifier.clone()));
         // A created-require binding keeps the call site, so loader rules still
         // name that callee. The literal span is the specifier fact.
-        if literal_edge {
+        if shared_edge {
             collector.push(&specifier, kind, call.span.start as usize);
         }
         return;
     }
-    collector.push_computed(
-        &computed_import_specifier(expr),
-        kind,
-        call.span.start as usize,
-    );
+    if shared_edge {
+        let specifier = expression.map_or_else(
+            || "<computed>".to_string(),
+            computed_import_specifier,
+        );
+        collector.push_computed(&specifier, kind, call.span.start as usize);
+    } else if kind == ImportKind::Require {
+        collector.namespace.facts.computed_created_require = true;
+    }
 }
 
 fn computed_import_specifier(expr: &Expression<'_>) -> String {

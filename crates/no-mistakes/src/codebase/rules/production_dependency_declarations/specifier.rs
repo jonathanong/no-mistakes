@@ -1,67 +1,11 @@
 //! Bare import specifier classification: relative vs. self-reference vs. Node
 //! builtin vs. a real package name that must be declared in `package.json`.
 
-/// Node's built-in module names, both bare (`"fs"`) and `node:`-prefixed
-/// (`"node:fs"`) forms. Neither form requires a `package.json` declaration.
-const NODE_BUILTIN_MODULES: &[&str] = &[
-    "assert",
-    "async_hooks",
-    "buffer",
-    "child_process",
-    "cluster",
-    "console",
-    "constants",
-    "crypto",
-    "dgram",
-    "diagnostics_channel",
-    "dns",
-    "domain",
-    "events",
-    "fs",
-    "http",
-    "http2",
-    "https",
-    "inspector",
-    "module",
-    "net",
-    "os",
-    "path",
-    "perf_hooks",
-    "process",
-    "punycode",
-    "querystring",
-    "readline",
-    "repl",
-    "stream",
-    "string_decoder",
-    "sys",
-    "timers",
-    "tls",
-    "trace_events",
-    "tty",
-    "url",
-    "util",
-    "v8",
-    "vm",
-    "wasi",
-    "worker_threads",
-    "zlib",
-];
+pub(super) use crate::codebase::ts_resolver::is_bare_node_builtin as is_node_builtin;
 
 /// `true` for a relative specifier (`./foo`, `../foo`) — never a package.
 pub(super) fn is_relative(specifier: &str) -> bool {
     specifier.starts_with('.')
-}
-
-/// `true` for a bare Node built-in module name, including a subpath import
-/// (`"fs/promises"`). Never requires a `package.json` dependency declaration.
-///
-/// Only handles the bare form: `is_scheme_prefixed` already intercepts the
-/// `node:`-prefixed form earlier in `emit_finding`, so a specifier reaching
-/// this function has never had that prefix.
-pub(super) fn is_node_builtin(name: &str) -> bool {
-    let module = name.split('/').next().unwrap_or(name);
-    NODE_BUILTIN_MODULES.contains(&module)
 }
 
 /// `true` for a specifier using a non-npm URL/loader scheme (e.g. Vite's

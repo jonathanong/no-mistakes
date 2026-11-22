@@ -1,0 +1,43 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "imports": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "relevant.ts",
+          "message": "`relevant.ts` could not resolve import `./missing-columns`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "confirmed.ts",
+          "import": "columns.ts",
+          "line": 6,
+          "message": "exported SQL fragment `aliasColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "aliasColumns.append(suffix);",
+          "target": "aliasColumns"
+        },
+        {
+          "file": "confirmed.ts",
+          "import": "packages/fragments/src/columns.ts",
+          "line": 7,
+          "message": "exported SQL fragment `workspaceColumns` from `packages/fragments/src/columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "workspaceColumns.append(suffix);",
+          "target": "workspaceColumns"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

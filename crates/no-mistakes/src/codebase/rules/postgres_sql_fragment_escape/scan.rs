@@ -1,4 +1,5 @@
 use super::fragments::Catalog;
+use super::import_resolution::FragmentResolver;
 use super::scan_file::one;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckFailure;
@@ -21,6 +22,7 @@ pub(super) fn scan(
     graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
+    resolution: Option<&dyn FragmentResolver>,
 ) -> ScanReport {
     if !super::has_trusted_tags(tags) {
         return ScanReport {
@@ -28,7 +30,7 @@ pub(super) fn scan(
             gaps: Vec::new(),
         };
     }
-    let catalog = Catalog::build(facts, tags, sources);
+    let mut catalog = Catalog::build(facts, tags, sources, resolution);
     let mut rows: Vec<ScanReport> = facts
         .graph_file_universe()
         .par_iter()
@@ -47,16 +49,24 @@ pub(super) fn scan(
     }
     findings.sort();
     findings.dedup();
-    gaps.extend(catalog.into_unproven().map(|(file, specifier)| {
+    let unresolved = catalog.take_unresolved();
+    let proved: crate::fx::FxHashSet<&str> =
+        findings.iter().map(|item| item.file.as_str()).collect();
+    gaps.extend(unresolved.into_iter().filter_map(|(file, specifier)| {
         let relative = relative_slash_path(root, &file);
-        CheckFailure {
+        if !proved.contains(relative.as_str())
+            && !super::relevance::reaches_fragment(&catalog, graph, facts, &file)
+        {
+            return None;
+        }
+        Some(CheckFailure {
             consumer: super::RULE_ID.to_string(),
             file: Some(file),
             property: None,
             message: format!(
-                "`{relative}` could not resolve bare specifier `{specifier}` without the canonical import graph, so a write, rebind, or escape of an exported SQL fragment may be missing. Fix the graph prerequisite and rerun the check."
+                "`{relative}` could not resolve import `{specifier}`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
             ),
-        }
+        })
     }));
     gaps.sort();
     gaps.dedup();

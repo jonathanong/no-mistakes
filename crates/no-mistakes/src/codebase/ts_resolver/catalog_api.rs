@@ -68,6 +68,10 @@ impl TsConfigCatalog {
         }
     }
 
+    pub(crate) fn has_path_aliases(&self) -> bool {
+        self.configs.iter().any(|entry| !entry.config.paths.is_empty())
+    }
+
     pub(crate) fn config_for(&self, importing_file: &Path) -> &TsConfig {
         self.selection(importing_file)
             .map(|index| &self.configs[index].config)

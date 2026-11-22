@@ -55,9 +55,8 @@ reports nothing. An empty tag list adds no graph or catalog demand.
 
 ## What it catches
 
-One finding names the exported fragment and the file that declares it. An
-unresolved or ambiguous import names the specifier instead of a file. The line
-is the escape:
+One finding names the exported fragment and the file that declares it. The
+reported line identifies the write, rebind, or escape.
 
 - `.append` on the fragment, or on a member reached through a namespace import,
   a string key, a rename, a default import, or `export *`. A spread or
@@ -89,21 +88,17 @@ or `as` assertion around that argument is left to `postgres-no-executor-adapter`
 The same-file adapter finding and this rule can both report when one file both
 calls the executor and escapes the fragment.
 
-Each import uses the shared resolver's target for that specifier. The rule
-does not match a specifier to a neighbor by file stem. When that target is
-a file, the file is used even if its name differs from the specifier. When
-the target is missing or unresolved, a relative specifier is joined
-lexically to the importer, and a specifier can match a file that contains
-`declare module "specifier"` when that file is unique. When those steps do
-not name one file, or the recorded targets disagree, the use is reported.
-That finding names the specifier and does not attribute a local file. If the
-canonical graph is unavailable, an attempted bare-specifier resolution with no
-ambient match adds an entry to `incomplete` for the importing file. The entry
-names the specifier and asks you to fix the graph prerequisite. The rule still
-reports escapes proven through relative imports or unique ambient matches. A use
-of the configured trusted tag itself is not a fragment, so an unresolved or
-ambiguous import of that tag stays silent. Any other binding from that
-specifier is still reported.
+The rule uses the request's prepared import targets and TypeScript resolver
+scope. This also covers path aliases and workspace packages when the
+canonical graph is unavailable. A unique ambient declaration can identify a
+module.
+
+A failed or ambiguous local import can add one `incomplete` entry per file
+when the file otherwise reaches a proven exported SQL fragment. The entry
+identifies the unresolved specifier. Built-in Node modules and ordinary
+external packages outside `trustedSqlTags` are outside this search. A use of
+the trusted tag itself stays silent. `check` exits 1 when the report contains
+an incomplete entry, even if the report has zero findings.
 
 ## Valid example
 
