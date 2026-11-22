@@ -104,7 +104,9 @@ An initial baseline is created only with the explicit baseline-writing option.
 Add the new file to Git, then run the check against that tracked baseline. A
 missing baseline is treated as empty, so its current sites appear as additions
 until initialized. An existing baseline can only shrink: writing refuses to
-accept added sites or unresolved SQL. Review stale entries before pruning them.
+accept added sites or unresolved SQL. A deleted tracked baseline must be
+restored before rewriting; deleting it cannot reset the ratchet. Review stale
+entries before pruning them.
 Do not use baseline writing to accept new sites.
 
 ## Suppression

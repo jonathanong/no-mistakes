@@ -57,6 +57,10 @@ pub fn run(options: &PostgresLockInventoryOptions) -> Result<LockInventoryReport
             Err(error) => return Err(error).context("read lock inventory baseline"),
         };
         anyhow::ensure!(
+            existing || !visible.git_index_paths_for(&root).contains(&path),
+            "restore the tracked lock inventory baseline before rewriting it; a tracked baseline cannot be reinitialized"
+        );
+        anyhow::ensure!(
             report.unanalyzed.is_empty(),
             "cannot rewrite lock inventory baseline while SQL is unanalyzed"
         );
