@@ -33,6 +33,15 @@ fn job_scheduler_templates_flag_literal_options_and_abstain_when_unknown() {
             report.check
         );
     }
+    assert_eq!(
+        report
+            .check
+            .iter()
+            .filter(|finding| finding.file == "arrow-scope.ts")
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [4, 18]
+    );
     let mut findings = report.check.clone();
     findings.sort();
     assert!(findings.len() > 4, "{findings:?}");
@@ -44,6 +53,25 @@ fn job_scheduler_templates_flag_literal_options_and_abstain_when_unknown() {
             "{option} should be named, check: {findings:?}"
         );
     }
+    let factory_findings = findings
+        .iter()
+        .filter(|finding| finding.file == "factory-scope.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(factory_findings.len(), 1, "{factory_findings:?}");
+    assert_eq!(factory_findings[0].line, 3);
+    let switch_findings = findings
+        .iter()
+        .filter(|finding| finding.file == "switch-scope.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(switch_findings.len(), 1, "{switch_findings:?}");
+    assert_eq!(switch_findings[0].line, 9);
+    let replacements = findings
+        .iter()
+        .filter(|finding| finding.file == "opts-replacement.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(replacements.len(), 2, "{replacements:?}");
+    assert!(replacements[0].message.starts_with("`jobId`"));
+    assert!(replacements[1].message.starts_with("`deduplication`"));
     insta::assert_snapshot!(render(&root, &findings));
 
     let files = crate::codebase::ts_source::discover_files(&root, &[]);

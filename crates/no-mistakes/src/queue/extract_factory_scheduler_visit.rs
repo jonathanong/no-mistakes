@@ -3,9 +3,10 @@ use oxc_allocator::{Allocator, CloneIn};
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, BlockStatement, CatchClause, Expression,
     ForInStatement, ForOfStatement, ForStatement, Function, FunctionType, Program, Statement,
-    VariableDeclaration,
+    StaticBlock, SwitchStatement, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 
 pub(super) fn stored_expr<'a>(
@@ -140,6 +141,25 @@ impl<'a> Visit<'a> for Collector<'a> {
     fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
         self.push_scope(stmt.span.start, stmt.span.end, ScopeKind::Block);
         walk::walk_for_of_statement(self, stmt);
+        self.scopes.pop();
+    }
+
+    fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
+        self.push_scope(block.span.start, block.span.end, ScopeKind::Function);
+        walk::walk_static_block(self, block);
+        self.scopes.pop();
+    }
+
+    fn visit_switch_statement(&mut self, stmt: &SwitchStatement<'a>) {
+        self.visit_expression(&stmt.discriminant);
+        self.push_scope(
+            stmt.discriminant.span().end,
+            stmt.span.end,
+            ScopeKind::Block,
+        );
+        for case in &stmt.cases {
+            self.visit_switch_case(case);
+        }
         self.scopes.pop();
     }
 

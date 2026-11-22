@@ -12,7 +12,6 @@ const item = { delay: 1 };
 const pair = { parent: { id: "outer" } };
 const fallback = { jobId: "outer" };
 const itemRest = { deduplication: { id: "outer" } };
-const varItem = { delay: 1 };
 const a = b;
 const b = a;
 let mutable = { delay: 1 };
@@ -149,18 +148,6 @@ function scheduleRestProps({ ...itemRest }: { delay?: number }) {
   });
 }
 
-function scheduleVarArrow() {
-  const wrap = () => {
-    var varItem = { attempts: 1 };
-    return varItem;
-  };
-  orders.upsertJobScheduler("daily", { every: 1000 }, {
-    name: "pack",
-    opts: varItem,
-  });
-  return wrap;
-}
-
 void scheduleShadow;
 void scheduleTdz;
 void scheduleArrow;
@@ -173,4 +160,3 @@ void scheduleDestructured;
 void scheduleArray;
 void scheduleDefault;
 void scheduleRestProps;
-void scheduleVarArrow;

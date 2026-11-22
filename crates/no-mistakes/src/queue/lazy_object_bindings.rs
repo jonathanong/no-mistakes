@@ -1,12 +1,15 @@
 use super::extract_factory_scheduler_bind::{collect_object_bindings, lookup, ObjectBinding};
+use crate::fx::{fx_map, FxHashMap};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
 use std::cell::OnceCell;
 
+type BindingsByName<'a> = FxHashMap<&'a str, Vec<ObjectBinding<'a>>>;
+
 pub(super) struct LazyObjectBindings<'a> {
     pub(super) program: &'a Program<'a>,
     allocator: &'a Allocator,
-    bindings: OnceCell<Vec<ObjectBinding<'a>>>,
+    bindings: OnceCell<BindingsByName<'a>>,
 }
 
 impl<'a> LazyObjectBindings<'a> {
@@ -19,12 +22,21 @@ impl<'a> LazyObjectBindings<'a> {
     }
 
     pub(super) fn lookup(&self, name: &str, at: u32) -> Option<&ObjectBinding<'a>> {
-        lookup(self.all(), name, at)
+        lookup(self.named(name), name, at)
     }
 
-    fn all(&self) -> &[ObjectBinding<'a>] {
+    pub(super) fn named(&self, name: &str) -> &[ObjectBinding<'a>] {
         self.bindings
-            .get_or_init(|| collect_object_bindings(self.program, self.allocator))
+            .get_or_init(|| {
+                let mut by_name: BindingsByName<'_> = fx_map();
+                for binding in collect_object_bindings(self.program, self.allocator) {
+                    by_name.entry(binding.name).or_default().push(binding);
+                }
+                by_name
+            })
+            .get(name)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
     }
 
     #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

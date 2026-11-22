@@ -24,6 +24,16 @@ pub(crate) fn needs_job_id_scoping(source: &str) -> bool {
     source.contains("jobId") || source.contains('\\')
 }
 
+pub(crate) fn needs_scheduler_scoping(
+    source: &str,
+    roles: &crate::config::v2::schema::QueueFactoryRoles,
+) -> bool {
+    roles
+        .job_scheduler
+        .iter()
+        .any(|role| source.contains(&role.callee))
+}
+
 pub(crate) fn extract_program_with_scoping(
     path: &Path,
     source: &str,

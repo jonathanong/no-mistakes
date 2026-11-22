@@ -74,7 +74,7 @@ impl<'a> Collector<'a> {
             .scopes
             .iter()
             .rev()
-            .find(|scope| scope.kind == ScopeKind::Function)
+            .find(|scope| matches!(scope.kind, ScopeKind::Function | ScopeKind::Arrow))
             .expect("function scope");
         (scope.start, scope.end)
     }

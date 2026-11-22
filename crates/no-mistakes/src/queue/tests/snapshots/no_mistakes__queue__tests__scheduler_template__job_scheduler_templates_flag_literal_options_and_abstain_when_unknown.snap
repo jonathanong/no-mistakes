@@ -2,11 +2,16 @@
 source: crates/no-mistakes/src/queue/tests/scheduler_template.rs
 expression: "render(&root, &findings)"
 ---
+arrow-scope.ts:4: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const options = { delay: 1 };
+arrow-scope.ts:18: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const options = { delay: 2 };
 disabled.ts:9: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | delay: 1,
 disabled.ts:10: `jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | jobId: "kept",
+factory-scope.ts:3: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | schedulePack({ opts: { delay: 1 } });
 factory.ts:8: `jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { jobId: "orders" },
 factory.ts:13: `parent` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { parent: { id: "items" } },
 file-disabled.ts:8: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { delay: 1 },
+opts-replacement.ts:7: `jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const withId = { opts: { jobId: "scheduled-id" } };
+opts-replacement.ts:14: `deduplication` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | orders.upsertJobScheduler("no-opts-in-spread", {}, { opts: { deduplication: { id: "x" } }, ...tracking });
 orders.ts:5: `jobId` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const packOptions = { attempts: 2, jobId: "pack-1" };
 orders.ts:11: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const earlyTemplate = { name: "pack", opts: { delay: 2 } };
 orders.ts:12: `parent` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const row = { parent: { id: "outer" } };
@@ -24,3 +29,4 @@ orders.ts:100: `delay` is set on a job-scheduler template. The scheduler's repea
 orders.ts:107: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { delay: 7 },
 orders.ts:126: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { delay: 11 },
 plain.ts:9: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | opts: { delay: 15 },
+switch-scope.ts:9: `delay` is set on a job-scheduler template. The scheduler's repeat settings control timing and identity. | const template = { name: "inner", opts: { delay: 1 } };
