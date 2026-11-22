@@ -1,5 +1,6 @@
 use super::fact_reads::export_site;
 use super::fragments::Fragment;
+use super::load_gap::{missing_sourced_export_gaps, missing_static_load_gap};
 use super::resolve::{binding_fragments, call_fragments, name_fragments, FileCtx};
 use super::scan::FileScan;
 use super::source_text::file_text;
@@ -53,16 +54,21 @@ pub(super) fn one(
         ));
     }
     let owned = file_text(ts, sources, file);
-    if owned.is_none() {
+    let Some(source) = owned.as_deref() else {
         coverage_gaps.push(gap(
             file,
             format!(
                 "`{relative}` could not be read, so a write, rebind, or escape of an exported SQL fragment in this file may be missing. Restore a readable source file and rerun the check."
             ),
         ));
-    }
-    let source = owned.as_deref().unwrap_or("");
+        return Some(FileScan {
+            findings: Vec::new(),
+            coverage_gaps,
+            gaps: Vec::new(),
+        });
+    };
     let mut findings = Vec::new();
+    let mut gaps = Vec::new();
     let empty = fx_map();
     let probe = FileCtx {
         graph,
@@ -111,21 +117,28 @@ pub(super) fn one(
         if export.specifier.is_some() || exported_value(ts, &export.local) {
             continue;
         }
-        let Some(offset) = export_site(ts, source, &export.local) else {
-            continue;
-        };
-        emit(
-            &mut findings,
-            root,
-            &ctx,
-            offset,
-            &name_fragments(&ctx, &export.local),
-        );
+        if let Some(offset) = export_site(ts, &export.local) {
+            emit(
+                &mut findings,
+                root,
+                &ctx,
+                offset,
+                &name_fragments(&ctx, &export.local),
+            );
+        }
+    }
+    for message in missing_sourced_export_gaps(&ctx, &relative) {
+        gaps.push(gap(file, message));
+    }
+    if let Some(message) = missing_static_load_gap(ts, source, &relative).filter(|_| {
+        !findings.is_empty() || super::relevance::reaches_fragment(catalog, graph, facts, file)
+    }) {
+        gaps.push(gap(file, message));
     }
     Some(FileScan {
         findings,
         coverage_gaps,
-        gaps: Vec::new(),
+        gaps,
     })
 }
 

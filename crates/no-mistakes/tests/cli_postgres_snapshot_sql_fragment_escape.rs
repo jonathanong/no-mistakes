@@ -124,6 +124,85 @@ fn postgres_sql_fragment_escape_absence_gap_matches_siblings() {
     }
 }
 
+#[test]
+fn postgres_sql_fragment_escape_fact_miss_reexport_snapshot() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/fact-miss"),
+    );
+    // reexport.ts re-exports widgetColumns. The finding's sourceLine is that
+    // saved export line.
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_fact_miss",
+        &[("fact_miss", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let rules = reports["fact_miss"]["report"]["rules"]
+        .as_array()
+        .expect("rules");
+    assert!(
+        rules.iter().any(|finding| {
+            finding["rule"] == "postgres-sql-fragment-escape"
+                && finding["file"] == "reexport.ts"
+                && finding["sourceLine"].is_string()
+        }),
+        "{rules:?}"
+    );
+}
+
+#[test]
+fn postgres_sql_fragment_escape_literal_positions_snapshot() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/literal-positions"),
+    );
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_literal_positions",
+        &[(
+            "literal_positions",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+        &[],
+        &[],
+    );
+    let report = &reports["literal_positions"]["report"];
+    let rules = report["rules"].as_array().expect("rules");
+    for file in ["function-load.ts", "created-require.mts"] {
+        assert!(
+            rules.iter().any(|finding| {
+                finding["rule"] == "postgres-sql-fragment-escape"
+                    && finding["file"] == file
+                    && finding["sourceLine"] == "parts.append(extra);"
+            }),
+            "{file}: {rules:?}"
+        );
+    }
+    for finding in rules {
+        if finding.get("file").and_then(|file| file.as_str()).is_some() {
+            assert!(finding["sourceLine"].is_string(), "{finding}");
+        }
+    }
+    assert!(rules
+        .iter()
+        .all(|finding| finding["sourceLine"] != "resolvedPath.widgetColumns.append(extra);"));
+    let incomplete = report["incomplete"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or(&[]);
+    assert!(incomplete
+        .iter()
+        .all(|gap| gap["file"] != "lexical-no-load.ts"));
+    assert!(
+        incomplete.iter().all(|row| {
+            let message = row["message"].as_str().unwrap_or("");
+            !message.contains("export offset") && !message.contains("no recorded specifier")
+        }),
+        "{incomplete:?}"
+    );
+}
+
 fn sibling_report(report: &serde_json::Value) -> serde_json::Value {
     let mut copy = report.clone();
     if let Some(rules) = copy["rules"].as_array_mut() {
@@ -282,4 +361,66 @@ fn postgres_sql_fragment_escape_dependency_gaps_snapshot() {
     let findings = report["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0]["file"], "fragment.ts");
+}
+
+#[test]
+fn postgres_sql_fragment_escape_missing_load_snapshot() {
+    let root = rules_path("postgres-sql-fragment-escape", "fixtures", "missing-load");
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_missing_load",
+        &[
+            ("related", root.clone(), root.join(".no-mistakes.yml")),
+            ("unrelated", root.clone(), root.join("irrelevant.yml")),
+        ],
+        &[],
+        &[],
+    );
+    let related = &reports["related"];
+    assert_eq!(related["exitCode"], 1);
+    assert!(related["report"]["rules"].as_array().unwrap().is_empty());
+    let gaps = related["report"]["incomplete"]
+        .as_array()
+        .expect("incomplete");
+    assert_eq!(gaps.len(), 1, "{gaps:?}");
+    assert_eq!(gaps[0]["file"], "relevant.ts");
+    assert!(gaps[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("no recorded specifier"));
+
+    let unrelated = &reports["unrelated"];
+    assert_eq!(unrelated["exitCode"], 0);
+    assert!(unrelated["report"]["rules"].as_array().unwrap().is_empty());
+    assert!(unrelated["report"]["incomplete"].is_null());
+}
+
+#[test]
+fn postgres_sql_fragment_escape_load_and_coverage_gaps_snapshot() {
+    let root = rules_path(
+        "postgres-sql-fragment-escape",
+        "fixtures",
+        "missing-load-coverage",
+    );
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_load_and_coverage_gaps",
+        &[("mixed", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let mixed = &reports["mixed"];
+    assert_eq!(mixed["exitCode"], 1);
+    let report = &mixed["report"];
+    assert!(report["rules"].as_array().unwrap().is_empty());
+    let gaps = report["incomplete"].as_array().expect("incomplete");
+    assert_eq!(gaps.len(), 2, "{gaps:?}");
+    assert_eq!(gaps[0]["file"], "consumer.ts");
+    assert!(gaps[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("no recorded specifier"));
+    assert_eq!(gaps[1]["file"], "related-broken.ts");
+    assert!(gaps[1]["message"]
+        .as_str()
+        .unwrap()
+        .contains("has a fatal parse error"));
 }

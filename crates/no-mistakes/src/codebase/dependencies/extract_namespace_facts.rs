@@ -81,6 +81,8 @@ pub struct NamespaceFacts {
     pub created_require_specifiers: Vec<String>,
     /// A runtime load through a created require without a literal specifier.
     pub computed_created_require: bool,
+    /// Literal `require.resolve()` call offsets return paths rather than module values.
+    pub literal_require_resolve_offsets: Vec<u32>,
     /// Classes in an ambient declaration or in a module block that is not a
     /// tracked namespace: `declare class`, `declare module`, `declare global`.
     pub unreported_class_ids: Vec<CallableId>,

@@ -1,0 +1,36 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "related": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "relevant.ts",
+          "message": "`relevant.ts` has no recorded specifier for a direct `import()` or `require()`, so a write, rebind, or escape of an exported SQL fragment is not recovered from source text. Restore the literal import fact and rerun the check."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unrelated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

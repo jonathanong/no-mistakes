@@ -1,8 +1,5 @@
+use super::super::root_target_metrics::tests::{LEGACY, LEGACY_IDENTIFIER};
 use super::*;
-thread_local! {
-    pub(in super::super) static LEGACY: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-    pub(in super::super) static LEGACY_IDENTIFIER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-}
 struct Mode(bool);
 impl Drop for Mode {
     fn drop(&mut self) {

@@ -357,7 +357,7 @@ jobs:
         run: node --test .github/scripts/benchmark-handoff.test.cjs
       - name: Test parallel CI contracts
         timeout-minutes: 2
-        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs
+        run: node --test .github/scripts/cache-retention.test.cjs .github/scripts/cache-topology.test.cjs .github/scripts/standalone-shards.test.cjs .github/scripts/standalone-build-resources.test.cjs .github/scripts/standalone-download.test.cjs .github/scripts/network-setup-retry.test.cjs .github/scripts/vitest-shard.config.test.cjs .github/scripts/ci-parallel-layout.test.cjs .github/scripts/libtest-argv-runner.test.cjs .github/scripts/cargo-cache-inputs.test.cjs .github/scripts/native-cargo-units.test.cjs .github/scripts/native-compile-profile.test.cjs .github/scripts/native-compile-profile-workflow.test.cjs .github/scripts/macos-pr-scope.test.cjs .github/scripts/rust-pr-scope.test.cjs .github/scripts/rust-build-deadlines.test.cjs .github/scripts/postgres-source-identities.test.cjs .github/scripts/javascript-coverage-upload-budget.test.cjs
       - name: Test documentation link gateway retry
         timeout-minutes: 2
         run: node --test .github/scripts/lychee-gateway.test.cjs .github/scripts/lychee-github-gateway.test.cjs
@@ -391,7 +391,7 @@ jobs:
             command: cargo check --locked --tests --no-default-features -p no-mistakes
             flags: -D warnings
           - name: PostgreSQL source identities
-            command: "cargo nextest run --locked -p no-mistakes --lib --no-default-features --features test-instrumentation codebase::postgres::source::"
+            command: bash .github/scripts/with-resource-samples.sh node .github/scripts/postgres-source-identities.cjs
             flags: -D warnings
           - name: coverage warnings
             command: cargo check --locked --workspace --lib --tests --all-features
@@ -841,12 +841,13 @@ jobs:
           SHARDS: ${{ needs.javascript-shards.result }}
         run: test "$SHARDS" = success
       - name: Upload JavaScript coverage to Codecov
-        timeout-minutes: 5
+        timeout-minutes: 2
         continue-on-error: true
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
           files: coverage/lcov.info
+          disable_search: true
           flags: javascript
           fail_ci_if_error: true
   linux-api-tests:

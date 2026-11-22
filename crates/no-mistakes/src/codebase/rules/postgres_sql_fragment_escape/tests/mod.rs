@@ -1,4 +1,6 @@
 mod coverage;
+mod created_require_gap;
+mod export_offset_gaps;
 mod facts;
 mod import_targets;
 mod incomplete;

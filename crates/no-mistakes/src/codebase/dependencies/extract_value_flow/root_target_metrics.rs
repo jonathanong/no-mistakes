@@ -20,3 +20,7 @@ pub(super) fn phase_key(index: usize) {
         counts.set(values);
     });
 }
+
+#[cfg(test)]
+#[path = "root_target_legacy_tests.rs"]
+pub(super) mod tests;
