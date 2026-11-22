@@ -10,6 +10,8 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+type VersionSites = BTreeMap<(Option<PathBuf>, Option<usize>, Occurrence), usize>;
+
 pub(super) fn collect(
     options: &CompiledOptions,
     path: &Path,
@@ -60,7 +62,7 @@ pub(super) fn collect(
                 }
             }
         }
-        for ((_, site), count) in sites {
+        for ((_, _, site), count) in sites {
             row.sites.extend(std::iter::repeat_n(site, count));
         }
     }
@@ -73,7 +75,7 @@ fn version_sites(
     call: &EmbeddedSqlCall,
     variant_index: usize,
     statement: &SqlStatementFileFacts,
-) -> BTreeMap<(Option<PathBuf>, Occurrence), usize> {
+) -> VersionSites {
     let mut sites = BTreeMap::new();
     if !statement.lock_inventory.is_empty() {
         let positions = Positions::new(call, variant_index);
@@ -85,7 +87,7 @@ fn version_sites(
                 category: lock.category.clone(),
                 fingerprint: lock.fingerprint.clone(),
             };
-            *sites.entry((source_file, site)).or_insert(0) += 1;
+            *sites.entry((source_file, None, site)).or_insert(0) += 1;
         }
     }
     for (index, function) in statement.function_calls.iter().enumerate() {
@@ -97,12 +99,13 @@ fn version_sites(
             .as_ref()
             .and_then(|locations| locations.position(SqlFactSite::Function(index)))
             .filter(|position| position.source_path.is_some());
-        if let Some(position) = imported {
+        let source_line = imported.and_then(|position| {
             helper.line = call.line as usize;
-            helper.column = position.source_offset.unwrap_or(helper.column);
-        }
+            helper.column = position.source_offset.unwrap_or(0);
+            (helper.column == 0).then_some(position.source_line)
+        });
         let source_file = imported.and_then(|position| position.source_path.clone());
-        *sites.entry((source_file, helper)).or_insert(0) += 1;
+        *sites.entry((source_file, source_line, helper)).or_insert(0) += 1;
     }
     sites
 }

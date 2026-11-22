@@ -32,11 +32,10 @@ pub(super) fn recovered<R: FnMut(&str, &Path) -> Option<PathBuf>>(
     }
     let sql = constant.sql.clone();
     // Preserve legacy named-import locations for profiles without exact origin demand.
-    let sql =
-        if site.member.is_some() || (options.exact_constant_origins && sql.positions.is_empty()) {
-            with_origin_entry(sql)
-        } else {
-            sql
-        };
+    let sql = if site.member.is_some() || options.exact_constant_origins {
+        with_origin_entry(sql)
+    } else {
+        sql
+    };
     Some(sql.with_source_file(&origin))
 }

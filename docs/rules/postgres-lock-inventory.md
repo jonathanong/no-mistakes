@@ -26,9 +26,10 @@ the old baseline key is then reported as stale. Duplicate ordinals distinguish
 identical statements without using line numbers. Configured TypeScript helper
 calls use the callee, argument count and static argument shapes, plus the
 duplicate ordinal; changing argument values within the same shape does not
-create a new helper site. SQL helper calls use the qualified function name. Imported SQL sites are
-located at each configured executor call, so directives at that call remain
-applicable.
+create a new helper site. SQL helper calls use the qualified function name.
+Imported SQL sites are located at each configured executor call, so directives
+at that call remain applicable. Distinct imported helper definitions in complete
+alternatives retain separate sites, even when their function names match.
 
 Counts cover the four row-lock strengths (`FOR UPDATE`, `FOR NO KEY UPDATE`,
 `FOR SHARE`, and `FOR KEY SHARE`), the `NOWAIT` and `SKIP LOCKED` modifiers,

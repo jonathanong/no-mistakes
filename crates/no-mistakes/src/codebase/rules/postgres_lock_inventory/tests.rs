@@ -168,6 +168,19 @@ fn reused_imported_sql_uses_each_executor_location_and_callbacks_count_only_call
 }
 
 #[test]
+fn distinct_imported_helpers_in_complete_alternatives_keep_both_sites() {
+    let report = report("imported", &["alternatives.mts", "lock-clause.mts"]);
+    assert!(report.unanalyzed.is_empty(), "{:?}", report.unanalyzed);
+    let sites: Vec<_> = report
+        .sites
+        .iter()
+        .map(|site| (site.file.as_str(), site.line, site.category.as_str()))
+        .collect();
+    assert_eq!(sites, [("alternatives.mts", 5, "helper"); 2]);
+    assert_ne!(report.sites[0].key, report.sites[1].key);
+}
+
+#[test]
 fn scopes_helper_only_and_native_applications_to_their_own_baselines() {
     let root = fixture("scoped");
     let standalone = crate::postgres_lock_inventory::run(
