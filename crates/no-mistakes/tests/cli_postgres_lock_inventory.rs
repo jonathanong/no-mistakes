@@ -12,6 +12,7 @@ fn postgres_lock_inventory_check_json_snapshot() {
         "helper-only",
         "routine",
         "imported-helper",
+        "imported-alternatives",
     ]
     .map(|name| {
         let root = rules_path("postgres-lock-inventory", "fixture", name);
@@ -41,6 +42,11 @@ fn postgres_lock_inventory_check_json_snapshot() {
         .as_array()
         .unwrap()
         .is_empty());
+    let alternatives = reports["imported-alternatives"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(alternatives.len(), 2);
+    assert!(alternatives.iter().all(|finding| finding["line"] == 5));
     assert_eq!(reports["suppressed"]["exitCode"], 0);
     assert_eq!(reports["moved"]["exitCode"], 0);
     assert_eq!(reports["removed"]["exitCode"], 1);
