@@ -19,11 +19,11 @@ their stable keys with an optional baseline. A site key includes its
 root-relative file, category, token-normalized statement, and an ordinal for
 duplicate identical statements in one file.
 
-Comments, whitespace, and line movement within a file do not change a key.
-SQL literals and operators remain part of the normalized statement, so changing
-them changes the key. Renaming a file or changing the SQL creates a new site;
-the old baseline key is then reported as stale. Duplicate ordinals distinguish
-identical statements without using line numbers. Configured TypeScript helper
+Comment-only, whitespace-only, and line-movement changes within a file do not
+change a key. SQL token changes, including changes to literals or operators,
+change the key. Renaming a file or changing the SQL creates a new site; the old
+baseline key is then reported as stale. Duplicate ordinals distinguish identical
+statements without using line numbers. Configured TypeScript helper
 calls use the callee, argument count and static argument shapes, plus the
 duplicate ordinal; changing argument values within the same shape does not
 create a new helper site. SQL helper calls use the qualified function name.
@@ -54,9 +54,10 @@ Executor selection uses the standard PostgreSQL options, including
 `exclude` select source files; `sqlInclude` selects SQL files.
 
 The baseline is compared with an empty inventory when it is missing, so every
-current site is reported as added. With a baseline, newly added sites and stale
-removed entries are diagnostics. Unresolved SQL is listed and prevents baseline
-creation or pruning, since its lock sites cannot be established.
+current site is reported as added. With a baseline, newly added sites are
+diagnostics. Stale-entry diagnostics are deferred while any SQL is unresolved,
+because incomplete inventory cannot establish which baseline entries were
+removed. Unresolved SQL is listed and prevents baseline creation or pruning.
 
 ## Valid example
 

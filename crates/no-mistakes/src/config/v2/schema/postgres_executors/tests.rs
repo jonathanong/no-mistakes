@@ -66,6 +66,29 @@ fn replacement_and_extension_conflict_even_when_empty_for_every_executor_rule() 
 }
 
 #[test]
+fn lock_inventory_requires_scope_but_allows_helper_only_configuration() {
+    let bare: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/config/postgres-executor-names/lock-inventory-bare.yml"
+    )))
+    .unwrap();
+    let error = bare.rules[0]
+        .try_rule_options::<Value>()
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("postgres-lock-inventory"), "{error}");
+    assert!(error.contains("executorNames: []"), "{error}");
+
+    let helper_only: crate::config::v2::NoMistakesConfig =
+        serde_yaml::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/config/postgres-executor-names/lock-inventory-helper-only.yml"
+        )))
+        .unwrap();
+    assert!(helper_only.rules[0].try_rule_options::<Value>().is_ok());
+}
+
+#[test]
 fn executor_validation_covers_every_prepared_public_rule() {
     let ids = |values: &[&str]| {
         values

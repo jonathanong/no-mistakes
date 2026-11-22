@@ -38,6 +38,40 @@ pub(super) fn publish(
     Ok(())
 }
 
+pub(super) fn staged_deletion(root: &Path, relative: &str) -> Result<bool> {
+    let mut command = std::process::Command::new("git");
+    command
+        .current_dir(root)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_COMMON_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .args([
+            "--literal-pathspecs",
+            "diff",
+            "--cached",
+            "--relative",
+            "--no-renames",
+            "--no-ext-diff",
+            "--name-only",
+            "--diff-filter=D",
+            "-z",
+            "--",
+            relative,
+        ]);
+    let output = crate::invocation::command_output(&mut command)
+        .context("compare the baseline path with Git HEAD")?;
+    ensure!(
+        output.status.success(),
+        "compare the baseline path with Git HEAD: {}",
+        String::from_utf8_lossy(&output.stderr).trim()
+    );
+    Ok(output
+        .stdout
+        .split(|&byte| byte == 0)
+        .any(|path| path == relative.as_bytes()))
+}
+
 fn prepare_parent(root: &Path, parent: &Path) -> Result<PathBuf> {
     let canonical_root = root.canonicalize().context("resolve repository root")?;
     let mut ancestor = parent;

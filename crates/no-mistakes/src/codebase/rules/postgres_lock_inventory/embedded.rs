@@ -1,4 +1,4 @@
-use super::scan::{record_parse_failures, sql_helper, FileInventory, Occurrence};
+use super::scan::{sql_helper, FileInventory, Occurrence};
 use super::CompiledOptions;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::SqlFactSite;
@@ -9,6 +9,7 @@ use crate::codebase::postgres::{
 use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+mod gaps;
 
 type VersionSites = BTreeMap<(Option<PathBuf>, Option<usize>, Occurrence), usize>;
 
@@ -37,31 +38,16 @@ pub(super) fn collect(
             continue;
         }
         let mut sites = BTreeMap::new();
+        let mut gaps = gaps::AlternativeGaps::default();
         for (variant_index, statement) in versions.iter().enumerate() {
-            if call
-                .variants
-                .get(variant_index)
-                .is_some_and(|variant| variant.variants_truncated)
-            {
-                row.gaps.push((
-                    call.line as usize,
-                    "executor SQL alternatives are incomplete",
-                ));
-                continue;
-            }
-            let mut positions = None;
-            if !record_parse_failures(statement, row, |line| {
-                positions
-                    .get_or_insert_with(|| Positions::new(call, variant_index))
-                    .source(line, 1)
-                    .1
-            }) {
+            if !gaps.record(call, variant_index, statement) {
                 for (site, count) in version_sites(options, call, variant_index, statement) {
                     let previous = sites.entry(site).or_insert(0);
                     *previous = (*previous).max(count);
                 }
             }
         }
+        gaps.append_to(&mut row.gaps);
         for ((_, _, site), count) in sites {
             row.sites.extend(std::iter::repeat_n(site, count));
         }

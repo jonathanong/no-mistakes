@@ -138,3 +138,62 @@ fn deleted_tracked_baseline_cannot_bootstrap_new_lock_sites() {
     assert!(format!("{error:#}").contains("tracked baseline cannot be reinitialized"));
     assert!(!root.join("baseline.json").exists());
 }
+
+#[test]
+fn staged_baseline_deletion_cannot_bootstrap_new_lock_sites() {
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture("tracked"));
+    let root = fixture.path();
+    crate::test_support::git_init(root);
+    crate::test_support::git_commit_all(root, "save an empty lock baseline");
+    git(root, &["rm", "--", "baseline.json"]);
+
+    let mut write = options(root, "config.yml");
+    write.write_baseline = true;
+    let error = run(&write).unwrap_err();
+    assert!(format!("{error:#}").contains("tracked baseline cannot be reinitialized"));
+    assert!(!root.join("baseline.json").exists());
+
+    git(
+        root,
+        &[
+            "restore",
+            "--source=HEAD",
+            "--staged",
+            "--worktree",
+            "--",
+            "baseline.json",
+        ],
+    );
+    let error = run(&write).unwrap_err();
+    assert!(format!("{error:#}").contains("baseline may only go down"));
+    assert!(root.join("baseline.json").is_file());
+}
+
+#[test]
+fn inventories_only_the_configured_transaction_callback() {
+    let report = run(&options(&fixture("callbacks"), "config.yml")).unwrap();
+    assert!(report.unanalyzed.is_empty());
+    let [site] = report.added.as_slice() else {
+        panic!("expected one callback lock, got {:?}", report.added);
+    };
+    assert_eq!(site.file, "queries.ts");
+    assert_eq!(site.line, 5);
+    assert_eq!(site.category, "for-update");
+}
+
+fn git(root: &Path, args: &[&str]) {
+    let output = std::process::Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_COMMON_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}

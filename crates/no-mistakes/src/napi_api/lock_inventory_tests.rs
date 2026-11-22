@@ -25,6 +25,7 @@ fn lock_inventory_napi_and_check_reports_match_library_results() {
         "helper-only",
         "routine",
         "imported-helper",
+        "callbacks",
     ] {
         let root = fixture(name);
         let mut options = json!({ "root": root, "config": ".no-mistakes.yml" });
@@ -44,6 +45,7 @@ fn lock_inventory_napi_and_check_reports_match_library_results() {
         );
 
         match name {
+            "callbacks" => assert_eq!(library.added.len(), 1, "{name}"),
             "added" | "helper-only" => assert!(!library.added.is_empty(), "{name}"),
             "unknown" | "routine" => assert!(!library.unanalyzed.is_empty(), "{name}"),
             "removed" => assert!(!library.removed.is_empty(), "{name}"),

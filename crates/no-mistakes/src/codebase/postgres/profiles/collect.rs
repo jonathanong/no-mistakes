@@ -43,7 +43,10 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 profile = profile.with_exact_constant_origins();
             }
             profile = with_identifier_options(profile, rule_id, &options);
-            profile.track_transaction_helpers = *rule_id == "postgres-lock-written-rows-only";
+            profile.track_transaction_helpers = matches!(
+                *rule_id,
+                "postgres-lock-written-rows-only" | "postgres-lock-inventory"
+            );
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.
             if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {

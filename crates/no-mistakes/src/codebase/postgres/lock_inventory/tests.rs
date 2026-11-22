@@ -171,7 +171,7 @@ fn reports_root_routine_declarations_as_inventory_gaps_even_when_parsing_succeed
     assert!(!facts.parse_failed);
     assert_eq!(facts.lock_inventory_unanalyzed, [3, 8]);
     assert_eq!(facts.lock_inventory.len(), 1);
-    assert_eq!(facts.lock_inventory[0].line, 13);
+    assert_eq!(facts.lock_inventory[0].line, 14);
     let narrow = extract_sql_conflict_policy_facts(&sql, &[]);
     assert!(narrow.lock_inventory_unanalyzed.is_empty());
 }

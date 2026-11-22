@@ -6,6 +6,7 @@ fn postgres_lock_inventory_check_json_snapshot() {
         "added",
         "clean",
         "unknown",
+        "gap-multiplicity",
         "moved",
         "removed",
         "suppressed",
@@ -13,6 +14,7 @@ fn postgres_lock_inventory_check_json_snapshot() {
         "routine",
         "imported-helper",
         "imported-alternatives",
+        "callbacks",
     ]
     .map(|name| {
         let root = rules_path("postgres-lock-inventory", "fixture", name);
@@ -29,6 +31,13 @@ fn postgres_lock_inventory_check_json_snapshot() {
     );
     assert_eq!(reports["clean"]["exitCode"], 0);
     assert_eq!(reports["unknown"]["exitCode"], 1);
+    assert_eq!(
+        reports["gap-multiplicity"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        5
+    );
     assert_eq!(reports["routine"]["exitCode"], 1);
     assert_eq!(
         reports["imported-helper"]["report"]["rules"]
@@ -47,9 +56,58 @@ fn postgres_lock_inventory_check_json_snapshot() {
         .unwrap();
     assert_eq!(alternatives.len(), 2);
     assert!(alternatives.iter().all(|finding| finding["line"] == 5));
+    assert_eq!(reports["callbacks"]["report"]["rules"][0]["line"], 5);
+    assert_eq!(
+        reports["callbacks"]["report"]["rules"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
     assert_eq!(reports["suppressed"]["exitCode"], 0);
     assert_eq!(reports["moved"]["exitCode"], 0);
     assert_eq!(reports["removed"]["exitCode"], 1);
+}
+
+#[test]
+fn inventory_preserves_distinct_gaps_and_rejects_per_rule_uncertainty_policy() {
+    let root = rules_path("postgres-lock-inventory", "fixture", "gap-multiplicity");
+    let report = no_mistakes::postgres_lock_inventory::run(
+        &no_mistakes::postgres_lock_inventory::PostgresLockInventoryOptions {
+            root: root.clone(),
+            config: Some(".no-mistakes.yml".into()),
+            write_baseline: false,
+        },
+    )
+    .unwrap();
+    let gaps: Vec<_> = report
+        .unanalyzed
+        .iter()
+        .map(|gap| (gap.file.as_str(), gap.line, gap.reason.as_str()))
+        .collect();
+    assert_eq!(
+        gaps,
+        [
+            ("app.ts", 3, "executor SQL could not be resolved"),
+            ("app.ts", 3, "executor SQL could not be resolved"),
+            ("app.ts", 7, "SQL could not be parsed completely"),
+            ("locks.sql", 1, "SQL could not be parsed completely"),
+            ("locks.sql", 1, "SQL could not be parsed completely"),
+        ]
+    );
+    for (config, key) in [
+        ("legacy-policy.yml", "unanalyzableSql"),
+        ("shared-policy.yml", "unanalyzable"),
+    ] {
+        let error =
+            no_mistakes::config::v2::load_v2_config(&root, Some(&root.join(config))).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains(&format!("does not support options.{key}")),
+            "{error:#}"
+        );
+    }
 }
 
 #[test]

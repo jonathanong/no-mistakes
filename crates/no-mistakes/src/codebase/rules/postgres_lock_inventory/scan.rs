@@ -12,8 +12,10 @@ use std::path::{Path, PathBuf};
 #[derive(Default)]
 pub(super) struct FileInventory {
     pub(super) sites: Vec<Occurrence>,
-    pub(super) gaps: Vec<(usize, &'static str)>,
+    pub(super) gaps: Vec<Gap>,
 }
+
+pub(super) type Gap = (usize, &'static str);
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) struct Occurrence {
@@ -59,7 +61,7 @@ fn native(
         return Ok(row);
     };
     for statement in statements {
-        if !record_parse_failures(statement, &mut row, std::convert::identity) {
+        if !record_parse_failures(statement, &mut row.gaps, std::convert::identity) {
             row.sites.extend(sql_sites(options, statement));
         }
     }
@@ -108,21 +110,20 @@ fn typescript(
 
 pub(super) fn record_parse_failures(
     statement: &SqlStatementFileFacts,
-    row: &mut FileInventory,
+    gaps: &mut Vec<Gap>,
     mut routine_source_line: impl FnMut(usize) -> usize,
 ) -> bool {
-    row.gaps.extend(
+    gaps.extend(
         statement
             .parse_failure_sites()
             .map(|(_, line)| (line, "SQL could not be parsed completely")),
     );
-    row.gaps
-        .extend(statement.lock_inventory_unanalyzed.iter().map(|&line| {
-            (
-                routine_source_line(line),
-                "stored routine body could not be resolved",
-            )
-        }));
+    gaps.extend(statement.lock_inventory_unanalyzed.iter().map(|&line| {
+        (
+            routine_source_line(line),
+            "stored routine body could not be resolved",
+        )
+    }));
     statement.parse_failed || !statement.lock_inventory_unanalyzed.is_empty()
 }
 

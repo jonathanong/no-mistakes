@@ -1,5 +1,18 @@
 use super::*;
 
+pub(in super::super) fn validate_inventory_policy(rule: &RuleDef) -> Result<()> {
+    if rule.rule == "postgres-lock-inventory" {
+        for key in ["unanalyzable", "unanalyzableSql"] {
+            anyhow::ensure!(
+                rule.options.get(key).is_none(),
+                "{} does not support options.{key} because unresolved SQL is always reported",
+                rule.rule
+            );
+        }
+    }
+    Ok(())
+}
+
 pub(super) fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
     if !sql_policy_rule(&rule.rule) {
         if legacy_sql_options(&rule.rule) {
@@ -61,7 +74,6 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-grouping-not-aggregation"
             | "postgres-idempotent-insert"
             | "postgres-lock-ordering"
-            | "postgres-lock-inventory"
             | "postgres-lock-written-rows-only"
             | "postgres-no-generated-column-writes"
             | "postgres-no-offset"

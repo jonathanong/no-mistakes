@@ -5,6 +5,6 @@ void query(`
 `);
 
 declare function reserveJob(id: number): void;
-reserveJob(1); reserveJob(/* id */ 2);
+reserveJob(10); reserveJob(/* id */ 20);
 declare function reservejob(id: number): void;
 reservejob(3);

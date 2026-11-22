@@ -44,7 +44,8 @@ fn inventory_exact_origins_keep_legacy_executor_profiles_separate() {
     let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
     assign_prepared_embedded_sql_options(&config, &mut plan).unwrap();
     let legacy = EmbeddedSqlOptions::configured("@example/db", &["query".into()]);
-    let inventory = legacy.clone().with_exact_constant_origins();
+    let mut inventory = legacy.clone().with_exact_constant_origins();
+    inventory.track_transaction_helpers = true;
     assert_eq!(
         plan.embedded_sql_options,
         [legacy.clone(), inventory.clone()]

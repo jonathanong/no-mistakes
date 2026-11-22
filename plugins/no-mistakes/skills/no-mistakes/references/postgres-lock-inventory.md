@@ -11,16 +11,16 @@ no-mistakes postgres lock-inventory --root . --config .no-mistakes.yml
 ```
 
 The report includes category counts, stable site keys, added and removed sites,
-and unanalyzed SQL. Moving a statement within one file or changing its
-formatting preserves its key. SQL content changes and file renames create new
-identities. Suppressions affect ordinary check findings while the inventory
-retains physical sites.
+and unanalyzed SQL. Comment-only, whitespace-only, and line-movement changes
+within a file preserve a key. Changes to SQL tokens, including literals and
+operators, or renaming a file create new identities. Suppressions affect
+ordinary check findings while the inventory retains physical sites.
 
 After reviewing the initial inventory, `--write-baseline` can create a missing
 baseline. Commit it. Restore a deleted tracked baseline before rewriting;
-deletion cannot reset the ratchet. Subsequent writes may only prune removed sites; they
-reject new sites or any unanalyzed SQL. Stored routine definitions remain
-unanalyzed because their bodies are outside the shared executable-SQL
+deletion cannot reset the ratchet. Subsequent writes may only prune removed
+sites; they reject new sites or any unanalyzed SQL. Stored routine definitions
+remain unanalyzed because their bodies are outside the shared executable-SQL
 projection. Scope those sources separately and configure helper call names.
 
 Use `await postgresLockInventory({ root, config, writeBaseline: false })` for

@@ -3,4 +3,5 @@ rules:
   - rule: postgres-lock-inventory
     scope: repository
     options:
+      executorNames: []
       baselineFile: syntax.json

@@ -16,6 +16,7 @@ pub(crate) const RULE_IDS: &[&str] = &[
     "postgres-no-unbounded-sql-identifier",
     "postgres-conflict-ordering",
     "postgres-lock-written-rows-only",
+    "postgres-lock-inventory",
     "postgres-lock-ordering",
     "postgres-idempotent-insert",
     "postgres-require-query-annotation",
@@ -58,6 +59,17 @@ pub(super) fn validate(rule: &RuleDef) -> Result<()> {
     let import = rule.options.get("importSpecifier");
     let names = rule.options.get("executorNames");
     let extras = rule.options.get("extraExecutorNames");
+    let helpers = rule.options.get("helpers");
+    if rule.rule == "postgres-lock-inventory"
+        && helpers.is_some_and(|value| {
+            !value.is_sequence()
+                || value
+                    .as_sequence()
+                    .is_some_and(|helpers| !helpers.is_empty())
+        })
+    {
+        return Ok(());
+    }
     if import.is_some_and(|value| value.as_str().is_some_and(|s| !s.is_empty()))
         || names.is_some_and(Value::is_sequence)
         || extras.is_some_and(Value::is_sequence)

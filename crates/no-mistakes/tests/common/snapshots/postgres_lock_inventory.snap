@@ -131,6 +131,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "gap-multiplicity": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function unresolved(left: string, right: string) { query(left); query(right); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "app.ts",
+          "line": 3,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "export function unresolved(left: string, right: string) { query(left); query(right); }",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "app.ts",
+          "line": 7,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(flag ? `${malformed} SELECT 1;` : `${malformed} SELECT 2;`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 1 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???; SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "locks.sql",
+          "line": 1,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely, occurrence 2 of 2). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???; SELECT FROM ???;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "helper-only": {
     "exitCode": 1,
     "report": {

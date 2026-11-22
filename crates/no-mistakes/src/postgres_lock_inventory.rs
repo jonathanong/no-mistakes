@@ -57,7 +57,10 @@ pub fn run(options: &PostgresLockInventoryOptions) -> Result<LockInventoryReport
             Err(error) => return Err(error).context("read lock inventory baseline"),
         };
         anyhow::ensure!(
-            existing || !visible.git_index_paths_for(&root).contains(&path),
+            existing
+                || (!visible.git_index_paths_for(&root).contains(&path)
+                    && !(visible.git_index_available_for(&root)
+                        && write::staged_deletion(&root, &report.baseline_file)?)),
             "restore the tracked lock inventory baseline before rewriting it; a tracked baseline cannot be reinitialized"
         );
         anyhow::ensure!(

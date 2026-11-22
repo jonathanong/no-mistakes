@@ -55,14 +55,16 @@ impl CompiledOptions {
             .iter()
             .map(|name| name.to_ascii_lowercase())
             .collect();
-        let embedded = EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_extra_executor_names(opts.extra_executor_names.as_deref())
-            .with_exclude_executor_names(&opts.exclude_executor_names)
-            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
-            .with_executor_option_properties(&opts.executor_option_properties)
-            .with_executor_options(&opts.executor_options)
-            .with_trusted_sql_tags(&opts.trusted_sql_tags)
-            .with_exact_constant_origins();
+        let mut embedded =
+            EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
+                .with_extra_executor_names(opts.extra_executor_names.as_deref())
+                .with_exclude_executor_names(&opts.exclude_executor_names)
+                .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
+                .with_executor_option_properties(&opts.executor_option_properties)
+                .with_executor_options(&opts.executor_options)
+                .with_trusted_sql_tags(&opts.trusted_sql_tags)
+                .with_exact_constant_origins();
+        embedded.track_transaction_helpers = true;
         Ok(Self {
             paths: RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
             schema: PostgresSchemaOptions {

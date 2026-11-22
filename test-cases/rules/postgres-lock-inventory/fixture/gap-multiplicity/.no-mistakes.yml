@@ -1,0 +1,10 @@
+version: 2
+unanalyzable: ignore
+rules:
+  - rule: postgres-lock-inventory
+    scope: repository
+    options:
+      baselineFile: baseline.json
+      sqlInclude: ["**/*.sql"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
