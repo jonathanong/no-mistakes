@@ -1,4 +1,5 @@
-use super::super::text;
+use super::super::{fact_reads, text};
+use crate::codebase::ts_source::facts::TsFileFacts;
 
 #[test]
 fn text_readers_keep_static_module_and_export_names() {
@@ -105,4 +106,47 @@ fn text_readers_keep_static_module_and_export_names() {
         Some("./columns")
     );
     assert_eq!(text::import_call_specifier("import(name)"), None);
+}
+
+#[test]
+fn module_load_fallback_recognizes_a_literal_require() {
+    let [literal, _, _] = module_load_windows();
+    let mut facts = TsFileFacts::default();
+    facts
+        .namespaces
+        .literal_import_spans
+        .push((0, "./resolved-columns".to_string()));
+    assert_eq!(
+        fact_reads::depth_zero_module_specifier(&facts, literal, 0).as_deref(),
+        Some("./resolved-columns")
+    );
+
+    facts.namespaces.literal_import_spans.clear();
+    assert_eq!(
+        fact_reads::depth_zero_module_specifier(&facts, literal, 0).as_deref(),
+        Some("./columns")
+    );
+}
+
+#[test]
+fn direct_module_load_requires_a_complete_call_to_the_exact_callee() {
+    let [literal, helper, escaped] = module_load_windows();
+    assert!(fact_reads::direct_module_load(literal));
+    assert!(!fact_reads::direct_module_load(helper));
+    assert!(fact_reads::direct_module_load(escaped));
+
+    let (open_comment, _) = escaped.split_once("*/").expect("block comment");
+    assert!(!fact_reads::direct_module_load(open_comment));
+
+    let open_call = escaped.strip_suffix(')').expect("closing parenthesis");
+    assert!(!fact_reads::direct_module_load(open_call));
+}
+
+fn module_load_windows() -> [&'static str; 3] {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/fact-readers/module-load-windows.cjs"
+    ));
+    let mut lines = source.lines().map(|line| line.trim_end_matches(';'));
+    std::array::from_fn(|_| lines.next().expect("module load fixture line"))
 }

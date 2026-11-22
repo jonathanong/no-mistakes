@@ -1,5 +1,6 @@
 use super::*;
 use oxc_allocator::Allocator;
+use oxc_ast::builder::AstBuilder;
 use oxc_parser::Parser;
 
 pub(super) fn namespaces(source: &str) -> NamespaceFacts {
@@ -450,4 +451,39 @@ fn a_file_without_namespaces_or_imports_has_no_namespace_facts() {
     );
     facts.export_name_offsets.clear();
     assert_eq!(facts, NamespaceFacts::default());
+}
+
+#[test]
+fn import_equals_ignores_qualified_type_names_rooted_at_this() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/codebase-analysis/qualified-import-equals/fixture/aliases.ts"
+    ));
+    let allocator = Allocator::default();
+    let mut parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source).namespaces;
+    assert_eq!(
+        facts.import_equals_members,
+        [(
+            "Alias".to_string(),
+            "Widgets".to_string(),
+            "Errors".to_string()
+        )]
+    );
+
+    let Statement::TSImportEqualsDeclaration(alias) = &mut parsed.program.body[1] else {
+        panic!("expected an import-equals declaration");
+    };
+    let TSModuleReference::QualifiedName(outer) = &mut alias.module_reference else {
+        panic!("expected a qualified alias");
+    };
+    let TSTypeName::QualifiedName(inner) = &mut outer.left else {
+        panic!("expected a nested qualified name");
+    };
+    // OXC's parser disallows `this` in import-equals but its AST can represent it.
+    inner.left = TSTypeName::new_this_expression(inner.left.span(), &AstBuilder::new(&allocator));
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source).namespaces;
+    assert!(facts.import_equals_members.is_empty());
+    assert!(facts.member_uses.is_empty());
 }

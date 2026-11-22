@@ -10,15 +10,26 @@ const DYNAMIC: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/dynamic.mts"
 ));
+const FACTORIES: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/factories.mts"
+));
+const NON_FACTORIES: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/non-factories.mts"
+));
+const SHADOWED: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/shadowed.mts"
+));
+const GLOBAL: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/created-require/global.cjs"
+));
 
-fn facts_of(source: &str) -> ImportFacts {
+fn facts_of(source: &str, source_type: SourceType) -> ImportFacts {
     let allocator = Allocator::default();
-    let parsed = Parser::new(
-        &allocator,
-        source,
-        SourceType::from_path("created.mts").expect("mts source type"),
-    )
-    .parse();
+    let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
         parsed.diagnostics.is_empty(),
         "parse errors: {:#?}",
@@ -74,7 +85,7 @@ fn require_imports(facts: &ImportFacts) -> Vec<(String, ImportKind, bool)> {
 
 #[test]
 fn a_created_require_records_literal_calls_at_top_level_and_inside_functions() {
-    let facts = facts_of(LOADS);
+    let facts = facts_of(LOADS, SourceType::ts());
     let expected = require_literals(LOADS);
     assert_eq!(expected.len(), 4, "{expected:?}");
     assert_eq!(facts.namespaces.literal_import_spans, expected);
@@ -88,7 +99,7 @@ fn a_created_require_records_literal_calls_at_top_level_and_inside_functions() {
 
 #[test]
 fn a_non_literal_created_require_stays_computed_without_a_span() {
-    let facts = facts_of(DYNAMIC);
+    let facts = facts_of(DYNAMIC, SourceType::ts());
     assert!(facts.namespaces.literal_import_spans.is_empty());
     assert_eq!(
         require_imports(&facts),
@@ -97,86 +108,95 @@ fn a_non_literal_created_require_stays_computed_without_a_span() {
 }
 
 #[test]
-fn renamed_and_namespace_factories_record_require_and_resolve() {
-    let facts = facts_of(concat!(
-        "import { createRequire as makeRequire } from 'node:module'\n",
-        "import * as nodeModule from 'module'\n",
-        "const load = makeRequire(import.meta.url)\n",
-        "const again = nodeModule.createRequire(import.meta.url)\n",
-        "load('../widget.cjs')\n",
-        "again.resolve('../item.cjs')\n",
-    ));
-    let mut specifiers: Vec<_> = facts
-        .namespaces
-        .literal_import_spans
-        .iter()
-        .map(|(_, specifier)| specifier.clone())
-        .collect();
-    specifiers.sort();
+fn renamed_namespace_and_default_factories_record_literal_loads() {
+    let facts = facts_of(FACTORIES, SourceType::ts());
     assert_eq!(
-        specifiers,
-        vec!["../item.cjs".to_string(), "../widget.cjs".to_string()]
+        facts.namespaces.literal_import_spans,
+        [
+            (offset(FACTORIES, "load("), "../widget.cjs".to_string()),
+            (
+                offset(FACTORIES, "again.resolve("),
+                "../item.cjs".to_string()
+            ),
+            (
+                offset(FACTORIES, "defaults("),
+                "../defaults.cjs".to_string()
+            ),
+        ]
     );
     assert!(require_imports(&facts).is_empty());
 }
 
 #[test]
-fn mutable_aliased_and_shadowed_factories_do_not_record_a_require() {
-    for source in [
-        concat!(
-            "import { createRequire } from 'node:module'\n",
-            "let require = createRequire(import.meta.url)\n",
-            "require('../widget.cjs')\n",
-        ),
-        concat!(
-            "import { createRequire } from 'node:module'\n",
-            "const make = createRequire\n",
-            "const require = make(import.meta.url)\n",
-            "require('../widget.cjs')\n",
-        ),
-        concat!(
-            "import { createRequire } from 'node:module'\n",
-            "const require = createRequire(import.meta.url)\n",
-            "export function load() {\n",
-            "  const require = (specifier: string) => specifier\n",
-            "  return require('../widget.cjs')\n",
-            "}\n",
-            "require('../item.cjs')\n",
-        ),
-        concat!(
-            "import type { createRequire } from 'node:module'\n",
-            "const require = createRequire(import.meta.url)\n",
-            "require('../widget.cjs')\n",
-        ),
-    ] {
-        let facts = facts_of(source);
-        let spans = facts.namespaces.literal_import_spans;
-        assert!(
-            spans
-                .iter()
-                .all(|(_, specifier)| specifier != "../widget.cjs"),
-            "{source}\n{spans:?}"
-        );
-    }
+fn only_a_const_from_a_runtime_factory_records_a_literal_load() {
+    let facts = facts_of(NON_FACTORIES, SourceType::ts());
+    assert_eq!(
+        facts.namespaces.literal_import_spans,
+        [(
+            offset(NON_FACTORIES, "direct("),
+            "../direct.cjs".to_string()
+        )]
+    );
+    assert!(require_imports(&facts).is_empty());
+    assert!(facts
+        .imports
+        .iter()
+        .any(|import| import.side_effect_only && import.specifier == "node:module"));
 }
 
 #[test]
 fn an_outer_created_require_still_records_after_an_inner_shadow() {
-    let source = concat!(
-        "import { createRequire } from 'node:module'\n",
-        "const require = createRequire(import.meta.url)\n",
-        "export function load() {\n",
-        "  const require = (specifier: string) => specifier\n",
-        "  return require('../widget.cjs')\n",
-        "}\n",
-        "require('../item.cjs')\n",
-    );
-    let facts = facts_of(source);
+    let facts = facts_of(SHADOWED, SourceType::ts());
     assert_eq!(
         facts.namespaces.literal_import_spans,
-        require_literals(source)
+        require_literals(SHADOWED)
             .into_iter()
             .filter(|(_, specifier)| specifier == "../item.cjs")
             .collect::<Vec<_>>()
     );
+}
+
+#[test]
+fn global_require_records_both_import_edges_and_call_sites() {
+    let facts = facts_of(GLOBAL, SourceType::cjs());
+    assert_eq!(
+        require_imports(&facts),
+        [
+            ("../item.cjs".to_string(), ImportKind::RequireResolve, false),
+            ("../widget.cjs".to_string(), ImportKind::Require, false),
+        ]
+    );
+    let calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .map(|call| {
+            (
+                call.callee.as_str(),
+                call.caller.as_deref(),
+                call.offset,
+                call.static_arg.as_deref(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        calls,
+        [
+            (
+                "require",
+                Some("loadWidget"),
+                offset(GLOBAL, "require("),
+                Some("../widget.cjs"),
+            ),
+            (
+                "require.resolve",
+                Some("loadWidget"),
+                offset(GLOBAL, "require.resolve("),
+                Some("../item.cjs"),
+            ),
+        ]
+    );
+}
+
+fn offset(source: &str, token: &str) -> u32 {
+    u32::try_from(source.find(token).expect("call in fixture")).expect("offset")
 }

@@ -6,7 +6,6 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
         predeclare_program_statement_binding(collector, statement);
     }
     predeclare_hoisted_var_bindings(collector, &program.body);
-    note_created_require_factories(collector, program);
     for statement in &program.body {
         match statement {
             Statement::VariableDeclaration(declaration) => {
@@ -110,6 +109,7 @@ fn predeclare_class_binding(collector: &mut ImportCollector, class: &Class<'_>) 
 }
 
 fn predeclare_import_bindings(collector: &mut ImportCollector, import: &ImportDeclaration<'_>) {
+    note_created_require_import(collector, import);
     collector.record_bounded_import(import);
     let Some(specifiers) = &import.specifiers else {
         return;
