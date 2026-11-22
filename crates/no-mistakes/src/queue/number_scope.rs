@@ -12,9 +12,7 @@ pub(super) fn seed_program(visitor: &mut QueueVisitor<'_>, program: &Program<'_>
 }
 
 pub(super) fn prepare_statements(visitor: &mut QueueVisitor<'_>, statements: &[Statement<'_>]) {
-    for name in direct_binding_names(statements) {
-        visitor.facts.const_numbers.remove(&name);
-    }
+    hide_statements(visitor, statements);
     let mut pending = direct_const_inits(statements);
     let mut changed = true;
     while changed {
@@ -30,6 +28,10 @@ pub(super) fn prepare_statements(visitor: &mut QueueVisitor<'_>, statements: &[S
         }
         pending = later;
     }
+}
+
+pub(super) fn hide_statements(visitor: &mut QueueVisitor<'_>, statements: &[Statement<'_>]) {
+    hide(visitor, &direct_binding_names(statements));
 }
 
 pub(super) fn hide_params(visitor: &mut QueueVisitor<'_>, params: &FormalParameters<'_>) {
@@ -153,6 +155,8 @@ fn push_pattern(names: &mut Vec<String>, pattern: &BindingPattern<'_>) {
         fn visit_binding_identifier(&mut self, id: &oxc_ast::ast::BindingIdentifier<'_>) {
             self.0.push(id.name.to_string());
         }
+
+        fn visit_expression(&mut self, _expression: &Expression<'_>) {}
     }
     Names(names).visit_binding_pattern(pattern);
 }

@@ -81,7 +81,9 @@ Each finding's `message` names the other producers.
 It reads `queue.add`'s third argument, an `addBulk` item's `opts`, a flow
 job's `opts`, and the `options` argument of a configured enqueue factory. A
 missing priority, a literal `0`, and a same-file `const` whose value is `0`
-are priority 0. A finite integer greater than 0, including a same-file `const`
+are priority 0. This classification also applies when the queue supplies
+a positive `defaultJobOptions.priority`, so the check can report a mix that
+the queue's defaults would avoid. A finite integer greater than 0, including a same-file `const`
 and unary `+`, is the other form. Parentheses and `as const` on that integer
 stay static. A `const` later in the same scope still counts, including
 `for (const level = 9;;)`. A parameter, `let`, `var`, `for` header, or other

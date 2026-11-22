@@ -25,9 +25,6 @@ pub(crate) fn visit_function<'a>(
     }
     super::dedup::mask_parameters(visitor, &func.params);
     crate::queue::number_scope::hide_params(visitor, &func.params);
-    if let Some(body) = &func.body {
-        crate::queue::number_scope::hide_function_vars(visitor, &body.statements);
-    }
     let worker = enter_worker(visitor, func.span);
     enter_job(visitor, &func.params, func.span);
     walk::walk_function(visitor, func, flags);
@@ -48,9 +45,6 @@ pub(crate) fn visit_arrow<'a>(visitor: &mut QueueVisitor<'a>, arrow: &ArrowFunct
     let frames = visitor.job_frames.clone();
     super::dedup::mask_parameters(visitor, &arrow.params);
     crate::queue::number_scope::hide_params(visitor, &arrow.params);
-    if let oxc_ast::ast::ArrowFunctionBody::FunctionBody(body) = &arrow.body {
-        crate::queue::number_scope::hide_function_vars(visitor, &body.statements);
-    }
     let worker = enter_worker(visitor, arrow.span);
     enter_job(visitor, &arrow.params, arrow.span);
     walk::walk_arrow_function_expression(visitor, arrow);
@@ -82,7 +76,13 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
     if !tracks {
         visitor.visit_expression(&stmt.discriminant);
     }
+    let numbers = visitor.facts.const_numbers.clone();
     for case in &stmt.cases {
+        crate::queue::number_scope::hide_statements(visitor, &case.consequent);
+    }
+    let case_numbers = visitor.facts.const_numbers.clone();
+    for case in &stmt.cases {
+        visitor.facts.const_numbers.clone_from(&case_numbers);
         let label = tracks
             .then(|| case_label(visitor, case.test.as_ref()))
             .flatten();
@@ -98,6 +98,7 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
         }
         visitor.current_case = previous;
     }
+    visitor.facts.const_numbers = numbers;
 }
 
 fn enter_job(

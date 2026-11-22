@@ -16,6 +16,7 @@ pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockState
 }
 
 pub(crate) fn visit_body<'a>(visitor: &mut QueueVisitor<'a>, body: &FunctionBody<'a>) {
+    crate::queue::number_scope::hide_function_vars(visitor, &body.statements);
     crate::queue::number_scope::prepare_statements(visitor, &body.statements);
     mask_statements(visitor, &body.statements);
     walk::walk_function_body(visitor, body);
