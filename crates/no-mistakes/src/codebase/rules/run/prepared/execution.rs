@@ -159,3 +159,10 @@ pub(super) fn run(
     }
     Ok(finalize_findings(findings, suppression_sources, advisories))
 }
+
+#[cfg(test)]
+mod fragment_graph_facts;
+#[cfg(test)]
+mod fragment_graph_tests;
+#[cfg(test)]
+mod sibling_graph_tests;

@@ -1,6 +1,6 @@
 use super::alias::{hop, source_alias};
 use super::fragments::{dedup, Catalog, Fragment};
-use super::modules::{module_hit, ModuleHit};
+use super::modules::module_file;
 use super::tags::{exported_name, imported};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ExportedBinding;
@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn visible(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     name: &str,
@@ -32,7 +32,7 @@ pub(super) fn visible(
 
 pub(super) fn visible_all(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     stack: &mut Vec<PathBuf>,
@@ -49,11 +49,10 @@ pub(super) fn visible_all(
             .map(|binding| binding.exported.clone())
             .collect();
         for spec in &ts.star_reexport_specifiers {
-            match module_hit(graph, facts, catalog, module, spec) {
-                ModuleHit::File(next) => found.extend(super::alias::star_fragments(
+            if let Some(next) = module_file(graph, facts, catalog, module, spec) {
+                found.extend(super::alias::star_fragments(
                     catalog, graph, facts, &next, &blocked, stack,
-                )),
-                ModuleHit::Open => found.push(Fragment::open(spec)),
+                ));
             }
         }
         for binding in &ts.exported_bindings {
@@ -67,7 +66,7 @@ pub(super) fn visible_all(
 
 fn follow(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     name: &str,
@@ -89,11 +88,8 @@ fn follow(
             .any(|binding| binding.exported == name);
     if !shadowed {
         for spec in &ts.star_reexport_specifiers {
-            match module_hit(graph, facts, catalog, module, spec) {
-                ModuleHit::File(next) => {
-                    found.extend(visible(catalog, graph, facts, &next, name, stack));
-                }
-                ModuleHit::Open => found.push(Fragment::open(spec)),
+            if let Some(next) = module_file(graph, facts, catalog, module, spec) {
+                found.extend(visible(catalog, graph, facts, &next, name, stack));
             }
         }
     }
@@ -105,7 +101,7 @@ fn follow(
 
 fn relay_all(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,
@@ -139,7 +135,7 @@ fn relay_all(
 
 fn relay_one(
     catalog: &Catalog,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     module: &Path,
     ts: &TsFileFacts,

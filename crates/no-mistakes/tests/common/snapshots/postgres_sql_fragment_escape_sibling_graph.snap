@@ -1,0 +1,39 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "sibling_graph": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "forbidden-calls",
+          "file": "wide.ts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        },
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "wide.ts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "extend.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetColumns` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetColumns.append(extra);",
+          "target": "widgetColumns"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

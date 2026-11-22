@@ -350,10 +350,16 @@ mod callable_alias_tdz;
 mod class_and_overload_regressions;
 #[path = "tests/coverage_shapes.rs"]
 mod coverage_shapes;
+#[cfg(test)]
+#[path = "tests/created_require.rs"]
+mod created_require;
 #[path = "tests/dynamic_callee_shapes.rs"]
 mod dynamic_callee_shapes;
 #[path = "tests/eager_requires.rs"]
 mod eager_requires;
+#[cfg(test)]
+#[path = "tests/literal_import_spans.rs"]
+mod literal_import_spans;
 #[cfg(test)]
 #[path = "tests/namespace_facts.rs"]
 mod namespace_facts;

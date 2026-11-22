@@ -165,6 +165,14 @@ fn finish_namespace_facts(state: NamespaceState) -> NamespaceFacts {
         .sites
         .sort_by_key(|site| (site.caller_id, site.offset));
     facts.opaque_specifiers.sort();
+    facts.import_equals_members.sort();
+    facts.import_equals_aliases.sort();
+    facts.import_equals_requires.sort();
+    facts.export_name_offsets.sort();
+    facts.sourced_export_offsets.sort();
+    facts.sourced_export_offsets.dedup();
+    facts.literal_import_spans.sort();
+    facts.literal_import_spans.dedup();
     facts.unreported_class_ids.sort();
     facts
 }

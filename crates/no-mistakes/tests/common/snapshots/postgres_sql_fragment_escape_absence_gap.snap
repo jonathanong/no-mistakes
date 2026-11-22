@@ -1,0 +1,62 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "fragment_off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "wide.ts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fragment_on": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "unconstructed-error-class",
+          "file": "wide.ts",
+          "message": "value-flow foreign receiver analysis exceeded the per-file work budget (100000 units); use a narrower analysis root to exclude vendored or minified assets, or simplify shared receiver mutations"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bare-escape.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(extra);",
+          "target": "COLS"
+        },
+        {
+          "file": "relative-escape.ts",
+          "import": "columns.ts",
+          "line": 4,
+          "message": "exported SQL fragment `COLS` from `columns.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "COLS.append(extra);",
+          "target": "COLS"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

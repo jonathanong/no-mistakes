@@ -132,7 +132,14 @@ and [`postgres-no-unbounded-sql-identifier`](../rules/postgres-no-unbounded-sql-
 use the same async `check()` path. They borrow prepared import, value-flow, and
 embedded-SQL facts plus the canonical graph; report fields are unchanged.
 [`postgres-sql-fragment-escape`](../rules/postgres-sql-fragment-escape.md) uses
-that same path to report cross-file escapes of exported SQL fragments.
+that same path to report cross-file escapes of exported SQL fragments. It reads
+prepared facts directly and does not change the canonical graph. A file
+with an operational error, a fatal parse error, incomplete value flow, or
+unreadable source is listed on `CheckReport.incomplete` when `trustedSqlTags`
+is non-empty and the file passes the application's include and exclude
+filters, and that gap does not drop findings from complete files. An empty
+`trustedSqlTags` list produces no gaps. An absent entry is not proof that the
+file was analyzed.
 
 `parsePostgresSql()` exposes structured trigger `eventFacts`, cast
 `dataTypeFacts`, and literal EXECUTE `using` expressions through the same async

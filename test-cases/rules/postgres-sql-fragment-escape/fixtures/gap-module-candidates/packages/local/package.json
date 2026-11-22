@@ -1,0 +1,8 @@
+{
+  "name": "@example/local",
+  "private": true,
+  "imports": {
+    "#fields": "./columns.ts",
+    "#hidden": "./not-visible.ts"
+  }
+}

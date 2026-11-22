@@ -116,6 +116,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "computed-created-loader": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/created.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: Non-literal or unsupported require specifier; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "load(specifier);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/created.mts",
+          "line": 6,
+          "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: src/created.mts:6 `./value.mts` (dynamic or require selector), src/direct.mts:4 `./value.mts` (dynamic or require selector), src/direct.mts:5 `./value.mts` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "load(\"./value.mts\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/direct.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: Runtime-resolved import at column 7; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "await import(specifier);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/direct.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: Non-literal or unsupported require specifier; use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "require(specifier);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/direct.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: Runtime-resolved import target; exports reached through it are unknown; suppress this line with // no-mistakes-disable-line production-exports-only-used-by-tests -- runtime-resolved import boundary",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "require(specifier);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "overloads-default-production": {
     "exitCode": 0,
     "report": {

@@ -69,6 +69,81 @@ fn canonical_graph_plans_include_calls_and_imports_for_sql_cross_file_rules() {
 }
 
 #[test]
+fn empty_fragment_tags_match_disabled_graph_demand() {
+    use crate::config::v2::{load_v2_config, NoMistakesConfig};
+
+    let directory = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-fragment-escape/configs");
+    let load = |file: &str| load_v2_config(&directory, Some(&directory.join(file))).unwrap();
+    let empty = load("empty-tags.yml");
+    let active = load("append-chain.yml");
+    let mut disabled = active.clone();
+    disabled.rules[0].enabled = false;
+
+    let baseline = NoMistakesConfig::default();
+    assert!(canonical_graph_plan(&baseline).is_none());
+    for config in [&disabled, &empty] {
+        assert_eq!(
+            canonical_graph_plan(config),
+            canonical_graph_plan(&baseline)
+        );
+        assert_eq!(try_canonical_graph_plan(config).unwrap(), None);
+        assert!(!canonical_graph_requires_full_file_universe(config));
+    }
+
+    let annotations = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/annotation-multi-root-shared-walks");
+    for file in ["max.yml", "low.yml"] {
+        let mut config = load_v2_config(&annotations, Some(&annotations.join(file))).unwrap();
+        let plan = try_canonical_graph_plan(&config).unwrap();
+        let full_universe = canonical_graph_requires_full_file_universe(&config);
+        config.rules.extend(empty.rules.clone());
+        assert_eq!(try_canonical_graph_plan(&config).unwrap(), plan, "{file}");
+        assert_eq!(
+            canonical_graph_requires_full_file_universe(&config),
+            full_universe,
+            "{file}"
+        );
+    }
+
+    let required = try_canonical_graph_plan(&active).unwrap().unwrap();
+    assert!(required.calls && required.imports);
+    assert!(required.ts_fact_plan().needs_value_flow());
+    assert!(canonical_graph_requires_full_file_universe(&active));
+    let mut mixed = empty;
+    mixed.rules.extend(active.rules);
+    assert_eq!(try_canonical_graph_plan(&mixed).unwrap(), Some(required));
+    assert!(canonical_graph_requires_full_file_universe(&mixed));
+}
+
+#[test]
+fn malformed_fragment_options_keep_the_graph_plan_and_options_error() {
+    let directory = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-fragment-escape/configs");
+    let mut config =
+        crate::config::v2::load_v2_config(&directory, Some(&directory.join("empty-tags.yml")))
+            .unwrap();
+    config.rules[0].options["trustedSqlTags"] = serde_yaml::Value::String("invalid".to_string());
+    config.rules[0].include.push("[".to_string());
+
+    assert!(try_canonical_graph_plan(&config).unwrap().is_some());
+    let error = crate::codebase::rules::postgres_sql_fragment_escape::check_with_graph(
+        &directory,
+        &config,
+        None,
+        &crate::codebase::check_facts::CheckFactMap::default(),
+        None,
+        None,
+    )
+    .err()
+    .expect("malformed fragment options must fail");
+    assert!(
+        error.to_string().contains("options.trustedSqlTags"),
+        "{error:#}"
+    );
+}
+
+#[test]
 fn legacy_prepared_request_without_sources_uses_the_request_session() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/empty");

@@ -12,6 +12,7 @@ const CASES: &[&str] = &[
     "augmentation",
     "runtime-controls",
     "computed",
+    "computed-created-loader",
     "clean",
 ];
 
@@ -52,6 +53,7 @@ fn precision_controls_preserve_enforcement_and_site_counts() {
         ("augmentation", 0, 0),
         ("runtime-controls", 1, 4),
         ("computed", 0, 3),
+        ("computed-created-loader", 0, 5),
         ("clean", 0, 0),
     ] {
         let root = rules_path(

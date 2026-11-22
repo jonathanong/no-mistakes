@@ -10,10 +10,12 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
         match statement {
             Statement::VariableDeclaration(declaration) => {
                 collector.record_static_commonjs_bindings(declaration, true);
+                record_created_require_declaration(collector, declaration);
             }
             Statement::ExportDeclaration(export) => {
                 if let Declaration::VariableDeclaration(declaration) = &export.declaration {
                     collector.record_static_commonjs_bindings(declaration, true);
+                    record_created_require_declaration(collector, declaration);
                 }
             }
             _ => {}
@@ -107,6 +109,7 @@ fn predeclare_class_binding(collector: &mut ImportCollector, class: &Class<'_>) 
 }
 
 fn predeclare_import_bindings(collector: &mut ImportCollector, import: &ImportDeclaration<'_>) {
+    note_created_require_import(collector, import);
     collector.record_bounded_import(import);
     let Some(specifiers) = &import.specifiers else {
         return;

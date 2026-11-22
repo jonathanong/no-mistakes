@@ -1,86 +1,91 @@
 use super::fragments::{Catalog, Fragment};
-use super::source_text::file_text;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::extract::{ImportedBinding, ImportedBindingKind};
-use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
+use crate::codebase::dependencies::extract::{is_indexable, ImportedBinding, ImportedBindingKind};
+use crate::codebase::dependencies::graph::{DepGraph, ImportTarget};
 use std::path::{Path, PathBuf};
 
-pub(super) enum ModuleHit {
-    File(PathBuf),
-    Open,
-}
-
-pub(super) fn module_hit(
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-    catalog: &Catalog<'_>,
-    importer: &Path,
-    specifier: &str,
-) -> ModuleHit {
-    if let Some(recorded) = graph.import_target(importer, specifier) {
-        match recorded {
-            ImportTarget::File(path) => return ModuleHit::File(path.clone()),
-            ImportTarget::Ambiguous => return ModuleHit::Open,
-            ImportTarget::Unresolved => {}
-        }
-    }
-    if let Some(path) = relative_module(catalog, importer, specifier) {
-        return ModuleHit::File(path);
-    }
-    let mut hits = Vec::new();
-    if specifier.starts_with('.') {
-        hits.extend(relative_hits(catalog, importer, specifier));
-    }
-    if hits.is_empty() {
-        hits.extend(ambient_hits(facts, catalog, specifier));
-    }
-    hits.sort();
-    hits.dedup();
-    if hits.len() == 1 {
-        ModuleHit::File(hits.remove(0))
-    } else {
-        ModuleHit::Open
-    }
-}
-
 pub(super) fn module_file(
-    graph: &DepGraph,
-    facts: &CheckFactMap,
+    graph: Option<&DepGraph>,
+    _facts: &CheckFactMap,
     catalog: &Catalog<'_>,
     importer: &Path,
     specifier: &str,
 ) -> Option<PathBuf> {
-    match module_hit(graph, facts, catalog, importer, specifier) {
-        ModuleHit::File(path) => Some(path),
-        ModuleHit::Open => None,
+    module_lookup(graph, catalog, importer, specifier, true)
+}
+
+pub(super) fn module_lookup(
+    graph: Option<&DepGraph>,
+    catalog: &Catalog<'_>,
+    importer: &Path,
+    specifier: &str,
+    record_gap: bool,
+) -> Option<PathBuf> {
+    use crate::codebase::ts_resolver::is_bare_node_builtin;
+    if specifier.starts_with("node:") || is_bare_node_builtin(specifier) {
+        return None;
     }
+    let recorded = graph.and_then(|graph| graph.import_target(importer, specifier));
+    if let Some(ImportTarget::File(path)) = recorded {
+        return is_indexable(path).then(|| path.clone());
+    }
+    let relative = specifier.starts_with('.') || Path::new(specifier).is_absolute();
+    if relative
+        && crate::codebase::ts_resolver::has_explicit_non_source_extension(Path::new(specifier))
+    {
+        return None;
+    }
+    let trusted = catalog.tags.iter().any(|tag| {
+        !tag.module.is_empty()
+            && !tag.name.is_empty()
+            && super::tags::module_matches(specifier, &tag.module)
+    });
+    let ambient = catalog.ambient_files(specifier);
+    let resolution = catalog.resolution.and_then(|resolution| {
+        resolution.resolve(specifier, importer, relative || (trusted && record_gap))
+    });
+    if let Some(Some(path)) = &resolution {
+        if !is_indexable(path) {
+            return None;
+        }
+        if recorded != Some(&ImportTarget::Ambiguous) {
+            return Some(path.clone());
+        }
+    }
+    if recorded != Some(&ImportTarget::Ambiguous) {
+        if relative && catalog.resolution.is_none() {
+            let hits = relative_hits(catalog, importer, specifier);
+            if hits.len() == 1 {
+                return hits.into_iter().next();
+            }
+        }
+        if ambient.len() == 1 {
+            return ambient.into_iter().next();
+        }
+    }
+    if record_gap && (relative || !ambient.is_empty() || resolution.is_some()) {
+        catalog.record_unresolved(importer, specifier);
+    }
+    None
 }
 
 pub(super) fn import_hit_fragments(
     catalog: &Catalog<'_>,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
     importer: &Path,
     import: &ImportedBinding,
+    is_tag: bool,
 ) -> Vec<Fragment> {
-    match module_hit(graph, facts, catalog, importer, &import.specifier) {
-        ModuleHit::Open => vec![Fragment::open(&import.specifier)],
-        ModuleHit::File(module) if import.kind == ImportedBindingKind::Namespace => {
-            super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
-        }
-        ModuleHit::File(module) => {
-            let name = super::tags::exported_name(import);
-            super::visible::visible(catalog, graph, facts, &module, &name, &mut Vec::new())
-        }
+    let Some(module) = module_lookup(graph, catalog, importer, &import.specifier, !is_tag) else {
+        return Vec::new();
+    };
+    if import.kind == ImportedBindingKind::Namespace {
+        super::visible::visible_all(catalog, graph, facts, &module, &mut Vec::new())
+    } else {
+        let name = super::tags::exported_name(import);
+        super::visible::visible(catalog, graph, facts, &module, &name, &mut Vec::new())
     }
-}
-
-fn relative_module(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Option<PathBuf> {
-    if !specifier.starts_with('.') {
-        return None;
-    }
-    let mut hits = relative_hits(catalog, importer, specifier);
-    (hits.len() == 1).then(|| hits.pop()).flatten()
 }
 
 fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec<PathBuf> {
@@ -97,18 +102,24 @@ fn relative_hits(catalog: &Catalog<'_>, importer: &Path, specifier: &str) -> Vec
     catalog.relative_candidates(parent, stem)
 }
 
-fn ambient_hits(facts: &CheckFactMap, catalog: &Catalog<'_>, specifier: &str) -> Vec<PathBuf> {
-    let double = format!("declare module \"{specifier}\"");
-    let single = format!("declare module '{specifier}'");
-    facts
-        .graph_file_universe()
-        .iter()
-        .filter(|file| {
-            facts
-                .get_ts_facts(file)
-                .and_then(|ts| file_text(ts, catalog.sources, file))
-                .is_some_and(|source| source.contains(&double) || source.contains(&single))
-        })
-        .cloned()
-        .collect()
+pub(super) fn declare_module_specifiers(source: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    push_declare_modules(source, "declare module \"", '"', &mut found);
+    push_declare_modules(source, "declare module '", '\'', &mut found);
+    found.sort();
+    found.dedup();
+    found
+}
+
+fn push_declare_modules(source: &str, marker: &str, quote: char, found: &mut Vec<String>) {
+    let mut rest = source;
+    while let Some(index) = rest.find(marker) {
+        let after = &rest[index + marker.len()..];
+        if let Some(end) = after.find(quote) {
+            if !after[..end].is_empty() {
+                found.push(after[..end].to_string());
+            }
+        }
+        rest = &rest[index + marker.len()..];
+    }
 }

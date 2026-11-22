@@ -15,6 +15,11 @@ fn catalog_keeps_fragments_when_collection_is_incomplete() {
     let world = world();
     let catalog = catalog(&world);
     assert_eq!(by_export(&catalog, "orderColumns").len(), 1);
+    assert_eq!(catalog.local(&world.columns, "widgetColumns").len(), 1);
+    assert!(catalog
+        .local_all(&world.columns)
+        .iter()
+        .any(|fragment| fragment.exported == "orderColumns"));
     let widgets = by_export(&catalog, "widgetColumns");
     let producers: Vec<&Path> = widgets
         .iter()
@@ -29,34 +34,6 @@ fn catalog_keeps_fragments_when_collection_is_incomplete() {
     let partial = by_export(&catalog, "partialColumns");
     assert_eq!(partial.len(), 1);
     assert!(partial[0].producer.ends_with("incomplete.ts"));
-    let unresolved_order = alias::hop(
-        &catalog,
-        &world.graph,
-        &world.facts,
-        &world.escape,
-        "missing",
-        "orderColumns",
-        &mut Vec::new(),
-    );
-    assert_eq!(unresolved_order.len(), 1);
-    assert_eq!(
-        unresolved_order[0].open_specifier.as_deref(),
-        Some("missing")
-    );
-    let unresolved_widget = alias::hop(
-        &catalog,
-        &world.graph,
-        &world.facts,
-        &world.escape,
-        "missing",
-        "widgetColumns",
-        &mut Vec::new(),
-    );
-    assert_eq!(unresolved_widget.len(), 1);
-    assert_eq!(
-        unresolved_widget[0].open_specifier.as_deref(),
-        Some("missing")
-    );
 }
 
 #[test]
@@ -66,7 +43,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     let mut aliased = TsFileFacts::default();
     assert!(alias::source_alias(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.escape,
         &aliased,
@@ -80,7 +57,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     };
     assert!(alias::source_alias(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.escape,
         &aliased,
@@ -94,7 +71,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     };
     assert!(alias::source_alias(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.escape,
         &aliased,
@@ -111,7 +88,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     assert_from(
         &alias::source_alias(
             &catalog,
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &world.escape,
             &aliased,
@@ -124,7 +101,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
 
     let mut starred = alias::star_fragments(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.index,
         &[],
@@ -134,7 +111,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     assert_from(&starred, &world.columns, &["orderColumns", "widgetColumns"]);
     assert!(alias::star_fragments(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.index,
         &[],
@@ -143,7 +120,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     .is_empty());
     assert!(alias::star_fragments(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         Path::new("/repo/missing.ts"),
         &[],
@@ -154,7 +131,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     assert_from(
         &visible::visible(
             &catalog,
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &world.columns,
             "widgetColumns",
@@ -165,7 +142,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert!(visible::visible(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.columns,
         "widgetColumns",
@@ -175,7 +152,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     assert_from(
         &visible::visible_all(
             &catalog,
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &world.index,
             &mut Vec::new(),
@@ -185,7 +162,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert!(visible::visible_all(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.index,
         &mut vec![world.index.clone()]
@@ -193,7 +170,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     .is_empty());
     assert!(visible::visible(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         Path::new("/repo/missing.ts"),
         "notExported",
@@ -202,7 +179,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     .is_empty());
     assert!(visible::visible(
         &catalog,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         &world.index,
         "notExported",
@@ -212,7 +189,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
 
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             &world.escape,
@@ -222,7 +199,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             &world.ambient,
@@ -232,7 +209,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             &world.escape,
@@ -242,7 +219,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             &world.escape,
@@ -251,12 +228,18 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
         Some(world.ambient.clone())
     );
     assert_eq!(
-        modules::module_file(&world.graph, &world.facts, &catalog, &world.escape, "dir/"),
+        modules::module_file(
+            Some(&world.graph),
+            &world.facts,
+            &catalog,
+            &world.escape,
+            "dir/"
+        ),
         None
     );
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             Path::new("/repo/unknown.ts"),
@@ -266,7 +249,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             Path::new("/"),
@@ -276,7 +259,7 @@ fn aliases_stars_and_module_paths_resolve_one_file() {
     );
     assert_eq!(
         modules::module_file(
-            &world.graph,
+            Some(&world.graph),
             &world.facts,
             &catalog,
             &world.escape,
@@ -385,24 +368,37 @@ fn dynamic_calls_follow_a_resolved_namespace() {
     let findings = scan::scan(
         Path::new("/repo"),
         &world.tags,
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
         None,
-    );
+        None,
+    )
+    .findings;
     let mut targets: Vec<&str> = findings
         .iter()
         .map(|finding| finding.target.as_deref().unwrap_or(""))
         .collect();
     targets.sort_unstable();
     assert_eq!(targets, ["orderColumns", "widgetColumns"]);
-    assert!(scan::scan(Path::new("/repo"), &[], &world.graph, &world.facts, None).is_empty());
+    assert!(scan::scan(
+        Path::new("/repo"),
+        &[],
+        Some(&world.graph),
+        &world.facts,
+        None,
+        None
+    )
+    .findings
+    .is_empty());
     assert!(scan::scan(
         Path::new("/repo"),
         &[TrustedSqlTag::default()],
-        &world.graph,
+        Some(&world.graph),
         &world.facts,
+        None,
         None
     )
+    .findings
     .is_empty());
     let unconfigured = super::super::check_with_graph(
         Path::new("/repo"),
@@ -410,9 +406,10 @@ fn dynamic_calls_follow_a_resolved_namespace() {
         None,
         &world.facts,
         None,
+        None,
     )
     .expect("unconfigured rule");
-    assert!(unconfigured.is_empty());
+    assert!(unconfigured.findings.is_empty());
 }
 
 #[test]
@@ -458,10 +455,13 @@ fn tags_require_a_matching_sql_import() {
 }
 
 fn by_export(catalog: &Catalog<'_>, name: &str) -> Vec<Fragment> {
-    catalog
-        .fragments
-        .iter()
-        .filter(|fragment| fragment.exported == name)
-        .cloned()
-        .collect()
+    let mut found = Vec::new();
+    for names in catalog.by_export.values() {
+        if let Some(matches) = names.get(name) {
+            found.extend(matches.iter().cloned());
+        }
+    }
+    found.sort();
+    found.dedup();
+    found
 }

@@ -96,6 +96,20 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
             return subprocess.CompletedProcess(argv, 0)
         return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
 
+    def http_transport(self, scenario):
+        scripts = json.loads((FIXTURES / "http-transfer-statuses.json").read_text())
+        statuses = iter(scripts[scenario])
+
+        def transport(argv, **kwargs):
+            if "--output" in argv:
+                status = next(statuses)
+                if status != "200":
+                    self.calls.append((argv, kwargs))
+                    raise subprocess.CalledProcessError(22, argv, output=status)
+            return self.transport(argv, **kwargs)
+
+        return transport
+
     def run_main(self, names=()):
         output, errors = io.StringIO(), io.StringIO()
         with redirect_stdout(output), redirect_stderr(errors):
@@ -115,7 +129,7 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 2)
         argv, options = self.calls[1]
         for option, value in (("--connect-timeout", "10"),
-                              ("--continue-at", "-"),
+                              ("--continue-at", "-"), ("--write-out", "%{http_code}"),
                               ("--speed-limit", "1024"), ("--speed-time", "30")):
             self.assertEqual(argv[argv.index(option) + 1], value)
         self.assertNotIn("--max-time", argv)
@@ -128,6 +142,8 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertNotIn("--retry-delay", argv)
         self.assertNotIn("test-token", " ".join(argv))
         self.assertIn("test-token", options["input"])
+        self.assertEqual(options["stdout"], subprocess.PIPE)
+        self.assertNotIn("stderr", options)
         self.assertGreater(options["timeout"], 0)
         self.assertLessEqual(options["timeout"], download.OVERALL_SECONDS)
 
@@ -150,11 +166,15 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
                 output.write(base64.b64decode((FIXTURES / "runtime.zip.base64").read_bytes()))
             return subprocess.CompletedProcess(argv, 0)
 
-        with patch.object(download.subprocess, "run", side_effect=transport):
+        with (
+            patch.object(download.subprocess, "run", side_effect=transport),
+            patch.object(download.time, "sleep") as sleep,
+        ):
             code, report, _ = self.run_main()
         self.assertEqual(code, 0)
         self.assertTrue(report["success"])
         self.assertEqual(downloads["count"], 2)
+        sleep.assert_called_once_with(1)
 
     def test_range_rejection_discards_partial_and_downloads_fresh(self):
         downloads = {"count": 0}
@@ -182,18 +202,67 @@ class NativeRuntimeDownloadTests(unittest.TestCase):
         self.assertEqual(Path("target/debug/no-mistakes.exe").read_bytes(),
                          b"native runtime fixture\n")
 
-    def test_http_failure_during_download_is_not_retried(self):
-        def transport(argv, **kwargs):
-            self.calls.append((argv, kwargs))
-            if "--output" in argv:
-                raise subprocess.CalledProcessError(22, argv)
-            return subprocess.CompletedProcess(argv, 0, json.dumps(self.metadata))
+    def test_gateway_error_retries_and_extracts_verified_runtime(self):
+        with (
+            patch.object(download.subprocess, "run",
+                         side_effect=self.http_transport("recovered")),
+            patch.object(download.time, "sleep") as sleep,
+        ):
+            code, report, _ = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertTrue(report["success"])
+        self.assertEqual(len(self.calls), 3)
+        self.assertEqual(self.calls[1][0], self.calls[2][0])
+        self.assertEqual(Path("target/debug/no-mistakes.exe").read_bytes(),
+                         b"native runtime fixture\n")
+        sleep.assert_called_once_with(1)
 
-        with patch.object(download.subprocess, "run", side_effect=transport):
+    def test_repeated_server_errors_stop_after_three_attempts(self):
+        with (
+            patch.object(download.subprocess, "run",
+                         side_effect=self.http_transport("exhausted")),
+            patch.object(download.time, "sleep") as sleep,
+        ):
+            code, report, errors = self.run_main()
+        self.assertEqual(code, 1)
+        self.assertFalse(report["success"])
+        self.assertIn("failed during download", errors)
+        self.assertEqual(len(self.calls), 4)
+        self.assertEqual([entry.args for entry in sleep.call_args_list], [(1,), (2,)])
+        self.assertFalse(Path("target").exists())
+
+    def test_download_404_stops_after_one_attempt(self):
+        with (
+            patch.object(download.subprocess, "run",
+                         side_effect=self.http_transport("missing")),
+            patch.object(download.time, "sleep") as sleep,
+        ):
             code, report, _ = self.run_main()
         self.assertEqual(code, 1)
         self.assertFalse(report["success"])
-        self.assertEqual(sum("--output" in argv for argv, _ in self.calls), 1)
+        self.assertEqual(len(self.calls), 2)
+        sleep.assert_not_called()
+
+    def test_backoff_consumes_only_remaining_deadline(self):
+        now = [0]
+
+        def advance(seconds):
+            now[0] += seconds
+
+        with (
+            patch.object(download.subprocess, "run",
+                         side_effect=self.http_transport("recovered")),
+            patch.object(download.time, "monotonic", side_effect=lambda: now[0]),
+            patch.object(download.time, "sleep", side_effect=advance) as sleep,
+        ):
+            deadline = download.Deadline()
+            now[0] = download.OVERALL_SECONDS - 0.25
+            with self.assertRaises(TimeoutError):
+                download.transfer("https://example.invalid/runtime.zip", Path("runtime.zip"),
+                                  "", deadline, resume=True)
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][1]["timeout"], 0.25)
+        sleep.assert_called_once_with(0.25)
 
     def test_metadata_has_separate_bounded_timeout(self):
         with patch.object(download.subprocess, "run", side_effect=self.transport):

@@ -37,8 +37,15 @@ fn visit_export_all_declaration_with_scope(
     // a later named import of that name may call one member of its source.
     if !export.export_kind.is_type() {
         if let Some(exported) = export.exported.as_ref().and_then(module_export_name_name) {
+            let specifier = crate::ast::js_literal(&export.source);
+            collector.note_sourced_export_offset(
+                specifier.as_ref(),
+                "*",
+                exported.as_ref(),
+                export.span.start,
+            );
             collector.call_export_bindings.push(ExportedBinding {
-                specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
+                specifier: Some(specifier.into_owned()),
                 // `*` cannot be an ECMAScript export name. It distinguishes
                 // the namespace object from a normal named re-export.
                 local: "*".to_string(),
@@ -57,6 +64,11 @@ fn visit_import_expression_with_scope(
     import: &ImportExpression<'_>,
 ) {
     if let Some(specifier) = static_import_specifier(&import.source) {
+        collector
+            .namespace
+            .facts
+            .literal_import_spans
+            .push((import.span.start, specifier.clone()));
         collector.push(&specifier, ImportKind::Dynamic, import.span.start as usize);
     } else {
         collector.push_computed(
@@ -72,23 +84,36 @@ fn record_runtime_require_import(
     collector: &mut ImportCollector,
     call: &CallExpression<'_>,
     kind: ImportKind,
+    shared_edge: bool,
 ) {
     let Some(first) = call.arguments.first() else {
         return;
     };
-    let Some(expr) = first.as_expression() else {
-        collector.push_computed("<computed>", kind, call.span.start as usize);
-        return;
-    };
-    if let Some(specifier) = static_import_specifier(expr) {
-        collector.push(&specifier, kind, call.span.start as usize);
+    let expression = first.as_expression();
+    if let Some(specifier) = expression.and_then(static_import_specifier) {
+        collector
+            .namespace
+            .facts
+            .literal_import_spans
+            .push((call.span.start, specifier.clone()));
+        // A created-require binding keeps the call site, so loader rules still
+        // name that callee. The literal span is the specifier fact.
+        if shared_edge {
+            collector.push(&specifier, kind, call.span.start as usize);
+        } else if kind == ImportKind::Require {
+            collector.namespace.facts.created_require_specifiers.push(specifier);
+        }
         return;
     }
-    collector.push_computed(
-        &computed_import_specifier(expr),
-        kind,
-        call.span.start as usize,
-    );
+    if shared_edge {
+        let specifier = expression.map_or_else(
+            || "<computed>".to_string(),
+            computed_import_specifier,
+        );
+        collector.push_computed(&specifier, kind, call.span.start as usize);
+    } else if kind == ImportKind::Require {
+        collector.namespace.facts.computed_created_require = true;
+    }
 }
 
 fn computed_import_specifier(expr: &Expression<'_>) -> String {
@@ -113,8 +138,16 @@ fn computed_import_specifier(expr: &Expression<'_>) -> String {
 }
 
 fn visit_ts_import_type_with_scope(collector: &mut ImportCollector, import: &TSImportType<'_>) {
+    let specifier = crate::ast::js_literal(&import.source);
+    // `typeof import("./mod")` is a type node. Its keyword is still the
+    // offset a direct `import()` scan uses.
+    collector
+        .namespace
+        .facts
+        .literal_import_spans
+        .push((import.span.start, specifier.clone().into_owned()));
     collector.push(
-        crate::ast::js_literal(&import.source).as_ref(),
+        specifier.as_ref(),
         ImportKind::Type,
         import.span.start as usize,
     );

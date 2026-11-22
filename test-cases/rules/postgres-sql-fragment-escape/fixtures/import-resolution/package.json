@@ -1,0 +1,6 @@
+{
+  "name": "fragment-resolution-fixture",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"]
+}

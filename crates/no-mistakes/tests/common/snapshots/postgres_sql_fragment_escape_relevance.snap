@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "proof": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "dynamic.ts",
+          "message": "`dynamic.ts` could not resolve import `./missing`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "producer.ts",
+          "message": "`producer.ts` could not resolve import `./missing`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
+        },
+        {
+          "consumer": "postgres-sql-fragment-escape",
+          "file": "reexport.ts",
+          "message": "`reexport.ts` could not resolve import `./missing`, so an escape of an exported SQL fragment may be missing. Resolve the import and rerun the check."
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

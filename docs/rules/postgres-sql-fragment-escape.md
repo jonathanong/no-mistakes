@@ -7,9 +7,9 @@ is the escape site: the call, export, or binding that writes, rebinds, or
 passes the fragment outside an `.append(...)` argument.
 
 `postgres-no-executor-adapter` still proves append chains inside one file. This
-rule borrows the prepared inventory, TypeScript facts, and canonical import
-graph. It does not re-parse files and it does not join SQL identifier
-interpolation. There is no autofix.
+rule reads prepared TypeScript facts. When the canonical import graph was
+built, it uses recorded import targets. It does not re-parse files and it does
+not join SQL identifier interpolation. There is no autofix.
 
 ```yaml
 rules:
@@ -26,7 +26,9 @@ empty list reports nothing. Each entry needs a non-empty `module` and `name`.
 `name: default` matches a default import of that module, including
 `import sql from "@example/sql"`. A bare name matches a named import. `module`
 matches that specifier or a subpath under it. `include` and `exclude` are the
-shared path filters and are not options of this rule. A project `postgres`
+shared path filters and are not options of this rule. They select both findings
+and gaps. A gap for a file outside that filter is omitted, including when an
+included file imports the excluded file. A project `postgres`
 block can supply `trustedSqlTags`; do not restate them on the rule when it
 does.
 
@@ -37,15 +39,23 @@ file that appends it. Another file can still call `.append` on the fragment,
 rebind it, re-export it, or pass the module namespace to `Object.assign`,
 `Object.values`, or `Reflect`. A single-file lint cannot see that escape.
 Enable this rule next to the adapter lint when exported SQL constants are
-shared across files. A file whose prepared facts include an operational error
-or an incomplete value-flow is still checked. A fragment binding or a write
-that those facts still record is reported.
+shared across files. Operational errors, incomplete value flow, unreadable
+source, and missing prepared facts can add `incomplete` entries within the
+runtime dependency closure of a file that reaches a fragment or uses a
+configured SQL tag. When parsing yields no usable facts, a file can enter
+that closure only through an import from a relevant file. A tag import
+alone does not establish relevance. Usable prepared facts can still establish
+a finding and keep that file in scope for a gap.
+
+When value flow is incomplete, graph-dependent sibling rules keep the
+canonical graph prerequisite and their own diagnostics. An ESLint-only setup
+omits this cross-file check. An empty `trustedSqlTags` list produces no
+findings and adds no graph or catalog demand.
 
 ## What it catches
 
-One finding names the exported fragment and the file that declares it. An
-unresolved or ambiguous import names the specifier instead of a file. The line
-is the escape:
+One finding names the exported fragment and the file that declares it. The
+reported line identifies the write, rebind, or escape.
 
 - `.append` on the fragment, or on a member reached through a namespace import,
   a string key, a rename, a default import, or `export *`. A spread or
@@ -62,9 +72,14 @@ is the escape:
   `import Local = columns.COLS` names that export alone and stays silent until
   a later write or escape.
 - `const parts = require(...)`, `import ext = require(...)`, and
-  `await import(...)`, including `.then`.
+  `await import(...)`, including `.then`. A member on that call, such as
+  `require("./producer").version`, is not the whole module.
 - An `export { local as public }` of an imported fragment, and an exported
   binding whose value is a member of an imported namespace.
+
+Literal loads through a `const` initialized by `createRequire(...)` are recorded
+by the shared import visitor, including calls inside functions. The factory must
+come from `node:module` or `module`. A non-literal argument remains unproven.
 
 A member read that is the sole argument of `.append(...)` is not an escape.
 `query.append(fragment)` and `query.append(ns["FRAGMENT"])` stay silent. A `!`
@@ -72,17 +87,20 @@ or `as` assertion around that argument is left to `postgres-no-executor-adapter`
 The same-file adapter finding and this rule can both report when one file both
 calls the executor and escapes the fragment.
 
-Each import uses the shared resolver's target for that specifier. The rule
-does not match a specifier to a neighbor by file stem. When that target is
-a file, the file is used even if its name differs from the specifier. When
-the target is missing or unresolved, a relative specifier is joined
-lexically to the importer, and a specifier can match a file that contains
-`declare module "specifier"` when that file is unique. When those steps do
-not name one file, or the recorded targets disagree, the use is reported.
-That finding names the specifier and does not attribute a local file. A use
-of the configured trusted tag itself is not a fragment, so an unresolved or
-ambiguous import of that tag stays silent. Any other binding from that
-specifier is still reported.
+The rule uses the request's prepared import targets and TypeScript resolver
+scope. This also covers path aliases and workspace packages when the
+canonical graph is unavailable. A unique ambient declaration can identify a
+module.
+
+A failed or ambiguous local code import can add one `incomplete` entry per
+file when the file otherwise reaches a proven exported SQL fragment. The
+entry identifies the unresolved specifier. Built-in Node modules, external
+packages (including external trusted-tag modules and their subpaths), and
+resolved non-code files are outside this search. Relative JSON and asset
+specifiers with extensions recognized by the TypeScript resolver also stay
+outside the search. A module in the project can supply a fragment through a
+path alias or workspace mapping. `check` exits 1 when the report contains an incomplete entry, even
+if the report has zero findings.
 
 ## Valid example
 

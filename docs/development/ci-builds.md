@@ -87,8 +87,9 @@ target artifact; Linux supplies its CLI and addon names in one invocation so
 both components share one deadline. Each artifact comes from the validated
 producer run and is verified against its SHA256 metadata. The downloader closes
 network, archive, and temporary-file resources before returning.
-Transient download failures receive bounded retries with backoff; digest failures
-remain fatal. The downloader reports metadata, transfer, checksum, extraction,
+Transfers allow up to three attempts for transient connection failures and HTTP
+5xx responses, with backoff inside the shared deadline. HTTP 4xx responses and
+digest mismatches fail immediately. The downloader reports metadata, transfer, checksum, extraction,
 and total timings to distinguish network stalls from completion stalls. Its
 internal deadline leaves room before the workflow step deadline; a stalled
 transfer still fails the required native API gate.

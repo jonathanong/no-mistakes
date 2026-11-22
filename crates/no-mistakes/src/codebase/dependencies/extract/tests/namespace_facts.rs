@@ -1,5 +1,6 @@
 use super::*;
 use oxc_allocator::Allocator;
+use oxc_ast::builder::AstBuilder;
 use oxc_parser::Parser;
 
 pub(super) fn namespaces(source: &str) -> NamespaceFacts {
@@ -418,7 +419,71 @@ fn an_import_of_the_same_name_merges_with_the_namespace() {
 }
 
 #[test]
+fn a_sourced_reexport_does_not_set_the_local_export_offset() {
+    let source = concat!(
+        "export { name as other } from './producer';\n",
+        "const name = 1;\n",
+        "export { name };\n",
+    );
+    let facts = namespaces(source);
+    let local = u32::try_from(source.rfind("export").expect("local export")).expect("offset");
+    let sourced = u32::try_from(source.find("export").expect("sourced export")).expect("offset");
+    assert_eq!(facts.export_name_offsets, vec![("name".to_string(), local)]);
+    assert_eq!(
+        facts.sourced_export_offsets,
+        vec![(
+            "./producer".to_string(),
+            "name".to_string(),
+            "other".to_string(),
+            sourced
+        )]
+    );
+}
+
+#[test]
 fn a_file_without_namespaces_or_imports_has_no_namespace_facts() {
-    let facts = namespaces("class A extends Error {}\nconst x = new A();\nexport { x };\n");
+    let source = "class A extends Error {}\nconst x = new A();\nexport { x };\n";
+    let mut facts = namespaces(source);
+    let export_at = u32::try_from(source.find("export").expect("export")).expect("offset");
+    assert_eq!(
+        facts.export_name_offsets,
+        vec![("x".to_string(), export_at)]
+    );
+    facts.export_name_offsets.clear();
     assert_eq!(facts, NamespaceFacts::default());
+}
+
+#[test]
+fn import_equals_ignores_qualified_type_names_rooted_at_this() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/codebase-analysis/qualified-import-equals/fixture/aliases.ts"
+    ));
+    let allocator = Allocator::default();
+    let mut parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source).namespaces;
+    assert_eq!(
+        facts.import_equals_members,
+        [(
+            "Alias".to_string(),
+            "Widgets".to_string(),
+            "Errors".to_string()
+        )]
+    );
+
+    let Statement::TSImportEqualsDeclaration(alias) = &mut parsed.program.body[1] else {
+        panic!("expected an import-equals declaration");
+    };
+    let TSModuleReference::QualifiedName(outer) = &mut alias.module_reference else {
+        panic!("expected a qualified alias");
+    };
+    let TSTypeName::QualifiedName(inner) = &mut outer.left else {
+        panic!("expected a nested qualified name");
+    };
+    // OXC's parser disallows `this` in import-equals but its AST can represent it.
+    inner.left = TSTypeName::new_this_expression(inner.left.span(), &AstBuilder::new(&allocator));
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source).namespaces;
+    assert!(facts.import_equals_members.is_empty());
+    assert!(facts.member_uses.is_empty());
 }

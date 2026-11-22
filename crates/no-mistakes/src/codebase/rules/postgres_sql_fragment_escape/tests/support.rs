@@ -345,14 +345,14 @@ pub(super) fn world() -> World {
 }
 
 pub(super) fn catalog(world: &World) -> Catalog<'_> {
-    Catalog::build(&world.facts, &world.tags, None)
+    Catalog::build(&world.facts, &world.tags, None, None)
 }
 
 pub(super) fn ctx<'a>(world: &'a World, catalog: &'a Catalog<'a>, file: &'a Path) -> FileCtx<'a> {
     let ts = world.facts.get_ts_facts(file).expect("facts");
     let source = ts.source.as_deref().unwrap_or(world.escape_source.as_str());
     FileCtx {
-        graph: &world.graph,
+        graph: Some(&world.graph),
         facts: &world.facts,
         catalog,
         tags: &world.tags,

@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_outcome::CheckFailure;
+use crate::codebase::rules::postgres_sql_fragment_escape;
 
 pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
@@ -15,24 +16,39 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     "no-single-enqueue-in-loop",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
-    "postgres-sql-fragment-escape",
+    postgres_sql_fragment_escape::RULE_ID,
 ];
+
+fn configured_graph_consumers(
+    config: &crate::config::v2::NoMistakesConfig,
+) -> impl Iterator<Item = &'static str> + '_ {
+    GRAPH_CONSUMERS.iter().copied().filter(move |consumer| {
+        if *consumer == postgres_sql_fragment_escape::RULE_ID {
+            postgres_sql_fragment_escape::demands_analysis(config)
+        } else {
+            config.rule_configured(consumer)
+        }
+    })
+}
 
 pub(super) fn graph_failed(
     config: &crate::config::v2::NoMistakesConfig,
     session: &AnalysisSession,
     error: &anyhow::Error,
 ) {
-    for consumer in GRAPH_CONSUMERS {
-        if config.rule_configured(consumer) {
-            let source = error.downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>();
-            session.record_check_failure(CheckFailure {
-                consumer: (*consumer).into(),
-                file: source.and_then(|failure| failure.file.clone()),
-                property: source.and_then(|failure| failure.property.clone()),
-                message: format!("{error:#}"),
-            });
+    let source = error.downcast_ref::<crate::codebase::check_outcome::CheckInputFailure>();
+    for consumer in configured_graph_consumers(config) {
+        if consumer == postgres_sql_fragment_escape::RULE_ID
+            && source.is_some_and(|failure| failure.file.is_some())
+        {
+            continue;
         }
+        session.record_check_failure(CheckFailure {
+            consumer: consumer.into(),
+            file: source.and_then(|failure| failure.file.clone()),
+            property: source.and_then(|failure| failure.property.clone()),
+            message: format!("{error:#}"),
+        });
     }
 }
 
@@ -98,6 +114,7 @@ fn register_value_flow_failures(
     session: &AnalysisSession,
 ) {
     let mut failures = Vec::new();
+    let mut consumers = None;
     let complete_imports = forbidden_dependencies::eligible_partial_graph_plan(config).is_some();
     let files: std::collections::BTreeSet<_> = shared
         .files()
@@ -112,20 +129,24 @@ fn register_value_flow_failures(
         else {
             continue;
         };
-        for consumer in GRAPH_CONSUMERS
-            .iter()
-            .filter(|consumer| config.rule_configured(consumer))
-            .filter(|consumer| **consumer != FORBIDDEN_DEPENDENCIES || !complete_imports)
-        {
+        let consumers = consumers.get_or_insert_with(|| {
+            configured_graph_consumers(config)
+                .filter(|consumer| *consumer != FORBIDDEN_DEPENDENCIES || !complete_imports)
+                .collect::<Vec<_>>()
+        });
+        for &consumer in consumers.iter() {
+            if consumer == postgres_sql_fragment_escape::RULE_ID {
+                continue;
+            }
             failures.push(CheckFailure {
-                consumer: (*consumer).into(),
+                consumer: consumer.into(),
                 file: Some(file.clone()),
                 property: None,
                 message: reason.clone(),
             });
         }
     }
-    if !failures.is_empty() {
+    if consumers.is_some_and(|consumers| !consumers.is_empty()) {
         if let Some(crate::codebase::check_outcome::Prerequisite::Failed(previous)) =
             session.check_prerequisite("codebase.canonical-graph")
         {
