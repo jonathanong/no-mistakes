@@ -294,6 +294,22 @@ fn github_actions_local_action_checkout_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn vitest_default_excludes_is_in_the_public_rule_inventory() {
+    let rule = "vitest-default-excludes";
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    for path in [
+        "docs/rules/vitest-default-excludes.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn vitest_project_policy_is_in_the_public_rule_inventory() {
     let rule = "vitest-project-policy";
     assert!(rule_ids_from_source(&repo_root()).contains(rule));

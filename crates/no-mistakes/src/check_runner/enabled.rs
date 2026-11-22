@@ -63,6 +63,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         lint_suppression_paths: Default::default(),
         call_site_paths: Default::default(),
         production_import_paths: Default::default(),
+        vitest_default_exclude_paths: Default::default(),
         companion_import_plans: Default::default(),
         symbols: enabled.unique_exports || enabled.storybook_stories,
         symbols_paths: Default::default(),

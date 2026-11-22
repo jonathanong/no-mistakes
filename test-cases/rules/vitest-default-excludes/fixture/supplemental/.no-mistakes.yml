@@ -1,0 +1,15 @@
+version: 2
+filesystem:
+  skipDirectories: [skipped]
+tests:
+  vitest:
+    configs: [skipped/vitest.config.ts]
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: skipped/vitest.config.ts
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: missing.config.ts

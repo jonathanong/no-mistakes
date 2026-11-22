@@ -648,6 +648,16 @@ rules:
             - runner.arch
 ```
 
+### Vitest discovery exclusions
+
+[`vitest-default-excludes`](../rules/vitest-default-excludes.md) checks literal
+`test.exclude` arrays in the file selected by the required root-relative
+`options.config` and in its inline projects. Optional `requiredGlobs` replaces
+the default list of `**/node_modules/**` and `**/.git/**`. Entries must be
+nonempty strings, duplicates are deduplicated, and an empty array disables the
+check. A spread of `configDefaults.exclude` imported from `vitest/config`
+retains the defaults.
+
 ### Vitest project properties
 
 [`vitest-project-policy`](../rules/vitest-project-policy.md) accepts an explicit

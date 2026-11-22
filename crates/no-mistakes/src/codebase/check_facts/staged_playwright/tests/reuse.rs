@@ -335,3 +335,59 @@ fn config_graph_facts_are_collected_without_an_outer_ast_cache() {
     assert!(facts.get_ts_facts(&config).is_some());
     assert!(facts.ts.get(&config).unwrap().parsed);
 }
+
+#[test]
+fn vitest_config_demand_keeps_read_failure_for_an_overlapping_playwright_config() {
+    use crate::codebase::rules::vitest_default_excludes::required_files;
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/vitest-default-excludes"),
+    );
+    let load_paths = |file| {
+        let config = crate::config::v2::load_v2_config(&root, Some(&root.join(file))).unwrap();
+        required_files(&root, &config).unwrap()
+    };
+    let missing = root.join("nonexistent.ts");
+    let playwright_only = root.join("missing-playwright.config.ts");
+    let mut plan = CheckFactPlan {
+        vitest_default_exclude_paths: load_paths("custom.yml"),
+        ..Default::default()
+    };
+    plan.include(CheckFactPlan {
+        vitest_default_exclude_paths: load_paths("missing-config-file.yml"),
+        ..Default::default()
+    });
+    assert!(plan
+        .vitest_default_exclude_paths
+        .contains(&root.join("custom.ts")));
+    assert!(plan.vitest_default_exclude_paths.contains(&missing));
+
+    let mut settings = occurrence_settings(&[], &[]);
+    settings.playwright_configs = vec![missing.clone(), playwright_only.clone()];
+    let scoped = vec![playwright_only.clone()];
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &scoped);
+    let playwright = PlaywrightFactPlan::from_settings(
+        &root,
+        settings,
+        std::collections::HashMap::new(),
+        false,
+        &snapshot,
+    )
+    .unwrap();
+    let facts = crate::codebase::check_facts::collect_check_facts_with_playwright(
+        &root,
+        scoped.clone(),
+        plan,
+        Some(playwright),
+    );
+    assert_eq!(facts.files, scoped);
+    assert!(facts.ts.get(&playwright_only).is_none());
+    let error = facts
+        .ts
+        .get(&missing)
+        .unwrap()
+        .parse_error
+        .as_ref()
+        .unwrap();
+    assert!(error.contains("failed to read"), "{error}");
+}

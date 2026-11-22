@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: vitest-default-excludes
+    scope: repository
+    options:
+      config: vitest.config.ts

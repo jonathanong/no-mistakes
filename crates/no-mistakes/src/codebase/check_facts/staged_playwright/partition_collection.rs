@@ -46,7 +46,10 @@ pub(super) fn collect_partitions(
             ordinary_tests
                 .as_ref()
                 .unwrap_or(&partitions.playwright_only_tests),
-            with_imports(CheckFactPlan::default()),
+            with_imports(CheckFactPlan {
+                vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
+                ..CheckFactPlan::default()
+            }),
         ),
     ];
     for (files, partition_plan) in test_partitions {
@@ -61,7 +64,10 @@ pub(super) fn collect_partitions(
         );
     }
     if !call_tests.is_empty() {
-        let mut call_plan = with_imports(CheckFactPlan::default());
+        let mut call_plan = with_imports(CheckFactPlan {
+            vitest_default_exclude_paths: plan.vitest_default_exclude_paths.clone(),
+            ..CheckFactPlan::default()
+        });
         call_plan.graph.call_sites = true;
         collect_test_partition(
             session,
@@ -108,7 +114,10 @@ pub(super) fn collect_partitions(
             facts,
         );
     }
-    if !plan.graph.is_empty() || !plan.call_site_paths.is_empty() {
+    if !plan.graph.is_empty()
+        || !plan.call_site_paths.is_empty()
+        || !plan.vitest_default_exclude_paths.is_empty()
+    {
         collect_test_partition(
             session,
             root,

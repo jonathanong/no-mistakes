@@ -7,14 +7,18 @@ use std::path::PathBuf;
 pub(super) fn cached_config_file_facts(
     session: crate::codebase::check_facts::FactRequest<'_>,
     root: &Path,
-    files: &[PathBuf],
-    graph_files: &[PathBuf],
+    file_scope: (&[PathBuf], &[PathBuf]),
     plan: &CheckFactPlan,
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
+    precollected: &FileIdMap<super::super::CheckFileFacts>,
 ) -> FileIdMap<super::super::CheckFileFacts> {
     crate::perf_trace::trace("parse", || {
-        let universe = files.iter().chain(graph_files).collect::<HashSet<_>>();
+        let universe = file_scope
+            .0
+            .iter()
+            .chain(file_scope.1)
+            .collect::<HashSet<_>>();
         let collected = playwright
             .config_files()
             .iter()
@@ -24,9 +28,25 @@ pub(super) fn cached_config_file_facts(
                     .as_ref()
                     .is_some_and(|runner| runner.contains(path))
             })
-            .filter(|path| universe.contains(path) || plan.legacy_symbol_paths.contains(*path))
+            .filter(|path| !precollected.contains_key(path))
             .filter_map(|path| {
-                let source = sources.read_source_path(path).ok()?;
+                let vitest_demanded = plan.vitest_default_exclude_paths.contains(path);
+                if !vitest_demanded
+                    && !universe.contains(path)
+                    && !plan.legacy_symbol_paths.contains(path)
+                {
+                    return None;
+                }
+                let source = match sources.read_source_path(path) {
+                    Ok(source) => source,
+                    Err(error) if vitest_demanded => {
+                        return Some((
+                            path.clone(),
+                            super::super::file_parse_error::read_facts(root, path, plan, error),
+                        ));
+                    }
+                    Err(_) => return None,
+                };
                 let variants = [super::super::file::CheckFactVariant {
                     collect_tests: session.collect_tests(plan, path),
                     root,

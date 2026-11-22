@@ -31,6 +31,7 @@ macro_rules! filesystem_rules {
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files => "",
             DECLARED_PAYLOAD_COMPATIBILITY => declared_payload_compatibility::check_with_files => "",
             VITEST_PROJECT_POLICY => vitest_project_policy::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/vitest-project-policy-options.yml")),
+            VITEST_DEFAULT_EXCLUDES => vitest_default_excludes::check_with_files => include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/rules/filesystem-dispatch/all-rules/vitest-default-excludes-options.yml")),
             VITE_OPTIMIZE_DEPS_NESTED_IMPORTS => vite_optimize_deps_nested_imports::check_with_files => "      configFiles: []\n      packages: []\n",
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files => "",
             SWIFT_NO_RAW_PRINT => swift_no_raw_print::check_with_files => "",

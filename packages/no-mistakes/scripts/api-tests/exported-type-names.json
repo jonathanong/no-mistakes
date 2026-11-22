@@ -476,6 +476,7 @@
   "UnusedAllowEntryPolicy",
   "VerboseDiagnostics",
   "VitestDeclaredProjectPolicy",
+  "VitestDefaultExcludesOptions",
   "VitestProjectPolicy",
   "VitestProjectPolicyOptions",
   "VitestPropertyLiteral",

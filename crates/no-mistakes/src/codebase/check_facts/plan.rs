@@ -12,6 +12,8 @@ pub struct CheckFactPlan {
     pub postgres_executor_warning_scans: Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
     /// Exact configured files whose AST comments are requested.
     pub lint_suppression_paths: Arc<std::collections::BTreeSet<PathBuf>>,
+    #[doc(hidden)]
+    pub vitest_default_exclude_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Exact call-source demand; broad `graph.call_sites` remains independent.
     #[doc(hidden)]
     pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,

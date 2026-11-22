@@ -42,11 +42,11 @@ pub(super) fn collect_with_sources_and_session(
     let config_facts = cached_config_file_facts(
         session,
         root,
-        &file_scope.0,
-        &file_scope.1,
+        (&file_scope.0, &file_scope.1),
         &plan,
         &playwright,
         &sources,
+        &precollected,
     );
     precollected.extend(config_facts);
     collect_with_precollected_ts_sources_and_session(

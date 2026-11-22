@@ -415,7 +415,7 @@ remain failures. See
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--verbose-timings` | `collectDiagnostics(operation, ...args)` returns `{ result, diagnostics }` without stderr |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions` and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
+| `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy`)                                                                                                                                                                                                                                                           |
 | `config resolve [--view declared]`           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `lock status` | `lockStatus()` (read-only shared-lock probe; does not wait) |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
@@ -469,7 +469,7 @@ no separate JSON field is added.
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)`; configured `forbidden-lint-suppressions` and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
+| `check` | `check(options)`; configured `forbidden-lint-suppressions`, `vitest-default-excludes`, and `vitest-project-policy` use `checkJson`; reports may include `CheckReport.incomplete` (`CheckFailure[]`) and optional `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`) |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -910,6 +910,12 @@ paths with the same configuration and ordered per-job checkout analysis as CLI
 rule, `file`/`line` locate the local action's `uses:` line, and `target` identifies
 the `job#step` (one-based step position). No new runtime
 export, option type, or report field is needed.
+
+The configured [`vitest-default-excludes`](rules/vitest-default-excludes.md)
+rule runs through async `check()` using the existing `checkJson` binding and
+through batched `analyzeProject()` check reports. `VitestDefaultExcludesOptions`
+exports the selected `config` and optional `requiredGlobs`. Findings use the
+standard `RuleFinding` shape.
 
 The configured [`vitest-project-policy`](rules/vitest-project-policy.md) rule
 runs through `check()` and `analyzeProject()` check queries using the existing

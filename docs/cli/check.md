@@ -325,6 +325,11 @@ repository. An unconditional foreign root checkout invalidates all paths' readin
 Findings point to the local `uses:` line; see [the rule](../rules/github-actions-local-action-checkout.md)
 for sparse checkout coverage and suppression.
 
+Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
+literal `test.exclude` arrays that drop Vitest's discovery exclusions in the
+selected config or its inline projects. Set `options.config` to select the file
+and optionally set `options.requiredGlobs` to replace the default required list.
+
 Enable [`vitest-project-policy`](../rules/vitest-project-policy.md) to check
 literal properties across declared Vitest projects. Its explicit `config` and
 `helpers` path/glob inputs bound source reads using the prepared visible-file

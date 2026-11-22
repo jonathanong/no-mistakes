@@ -16,6 +16,7 @@ pub(super) fn demands_by_path(
             forbidden_call_arguments: request.plan.forbidden_call_arguments.clone(),
             graph: request.plan.graph,
             call_site_paths: request.plan.call_site_paths.clone(),
+            vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
             graph_context: request.plan.graph_context.clone(),
             integration_runner_configs: request.plan.integration_runner_configs.clone(),
             ..CheckFactPlan::default()
@@ -51,20 +52,37 @@ pub(super) fn demands_by_path(
                 // in the same parse; map assembly retains the exact graph plan.
                 plan.graph.imports = true;
             }
+        }
+        // Independently configured sources remain addressable without joining
+        // the primary or graph universe. Existing placements keep their plan.
+        let supplemental_vitest = request
+            .plan
+            .vitest_default_exclude_paths
+            .iter()
+            .filter(|path| !plans.contains_key(path.as_path()))
+            .cloned()
+            .collect::<Vec<_>>();
+        if let Some(playwright) = &request.playwright {
             for path in playwright.config_files() {
-                let path = normalize(path);
-                if plans.contains_key(&path) {
-                    // Staged collection derives the exact union fact from the
-                    // already-cached config AST, so a Rayon demand would only
-                    // force the same config through a second parser cache.
-                    plans.remove(&path);
-                }
+                // Staged collection already owns these ordinary config programs.
+                plans.remove(&normalize(path));
             }
         }
         if let Some(runner) = &request.plan.integration_runner_configs {
             for path in runner.paths() {
                 plans.remove(&normalize(path));
             }
+        }
+        if !supplemental_vitest.is_empty() {
+            let supplemental_plan = CheckFactPlan {
+                vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
+                ..CheckFactPlan::default()
+            };
+            plans.extend(
+                supplemental_vitest
+                    .into_iter()
+                    .map(|path| (path, supplemental_plan.clone())),
+            );
         }
         for (path, plan) in plans {
             if crate::codebase::dependencies::extract::is_indexable(&path)

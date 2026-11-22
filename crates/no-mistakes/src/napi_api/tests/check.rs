@@ -435,6 +435,9 @@ mod check_transformed_uuid_predicates;
 #[path = "check_postgres_utility.rs"]
 mod check_postgres_utility;
 
+#[path = "check_vitest_default_excludes.rs"]
+mod check_vitest_default_excludes;
+
 #[path = "check_vitest_project_policy.rs"]
 mod check_vitest_project_policy;
 

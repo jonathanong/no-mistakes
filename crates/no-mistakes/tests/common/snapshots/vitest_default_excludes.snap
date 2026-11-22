@@ -1,0 +1,135 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "custom": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "malformed-suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-default-excludes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-default-excludes",
+          "target": "vitest-default-excludes"
+        },
+        {
+          "file": "suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-default-excludes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-default-excludes",
+          "target": "vitest-default-excludes"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 30,
+          "message": "directive for `vitest-default-excludes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line vitest-default-excludes",
+          "target": "vitest-default-excludes"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 33,
+          "message": "directive for `vitest-default-excludes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "{ test: { exclude: [] } }, // no-mistakes-disable-line vitest-default-excludes",
+          "target": "vitest-default-excludes"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "custom.ts",
+          "line": 5,
+          "message": "Keep the generated tests excluded.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: ['**/node_modules/**', '**/.git/**'],"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "literal-controls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "malformed-suppressed.ts",
+          "line": 1,
+          "message": "directive for `vitest-default-excludes` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file vitest-default-excludes",
+          "target": "vitest-default-excludes"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 10,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: ['**/node_modules/**', 'tmp/**'],"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 14,
+          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [] } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 27,
+          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { ...overrides, exclude: [] } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 34,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [`**/node_mod\\u0075les/**`] } },"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "vitest.config.ts",
+          "line": 5,
+          "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "exclude: ['**/generated/**'],"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 7,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { name: 'unit', exclude: ['**/node_modules/**'] } },"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
