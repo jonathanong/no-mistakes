@@ -34,14 +34,11 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 fn config() -> NoMistakesConfig {
-    let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(concat!(
+    serde_yaml::from_str(include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-lock-written-rows-only/configs/fail.yml"
+        "/../../test-cases/rules/postgres-lock-written-rows-only/configs/checks-fail.yml"
     )))
-    .unwrap();
-    config.rules[0].options["checks"] =
-        serde_yaml::to_value(BTreeMap::from(CHECKS.map(|check| (check, "fail")))).unwrap();
-    config
+    .unwrap()
 }
 #[test]
 fn reports_each_phase_one_lock_policy() {
