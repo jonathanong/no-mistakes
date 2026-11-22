@@ -170,12 +170,12 @@ fn record_require_import(collector: &mut ImportCollector, call: &CallExpression<
         } else {
             ImportKind::Require
         };
-        record_runtime_require_import(collector, call, kind);
+        record_runtime_require_import(collector, call, kind, true);
         return true;
     }
     let Some(kind) = created_require_kind(collector, &call.callee) else {
         return false;
     };
-    record_runtime_require_import(collector, call, kind);
-    true
+    record_runtime_require_import(collector, call, kind, false);
+    false
 }

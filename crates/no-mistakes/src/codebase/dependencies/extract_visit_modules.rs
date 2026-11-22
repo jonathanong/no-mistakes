@@ -84,6 +84,7 @@ fn record_runtime_require_import(
     collector: &mut ImportCollector,
     call: &CallExpression<'_>,
     kind: ImportKind,
+    literal_edge: bool,
 ) {
     let Some(first) = call.arguments.first() else {
         return;
@@ -98,7 +99,11 @@ fn record_runtime_require_import(
             .facts
             .literal_import_spans
             .push((call.span.start, specifier.clone()));
-        collector.push(&specifier, kind, call.span.start as usize);
+        // A created-require binding keeps the call site, so loader rules still
+        // name that callee. The literal span is the specifier fact.
+        if literal_edge {
+            collector.push(&specifier, kind, call.span.start as usize);
+        }
         return;
     }
     collector.push_computed(

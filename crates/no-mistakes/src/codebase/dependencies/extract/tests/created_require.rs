@@ -78,28 +78,11 @@ fn a_created_require_records_literal_calls_at_top_level_and_inside_functions() {
     let expected = require_literals(LOADS);
     assert_eq!(expected.len(), 4, "{expected:?}");
     assert_eq!(facts.namespaces.literal_import_spans, expected);
-    let mut imports = require_imports(&facts);
-    imports.retain(|(_, _, computed)| !computed);
-    assert_eq!(
-        imports,
-        vec![
-            (
-                "../early-widget.cjs".to_string(),
-                ImportKind::Require,
-                false
-            ),
-            (
-                "../item-defaults.cjs".to_string(),
-                ImportKind::Require,
-                false
-            ),
-            ("../order-table.cjs".to_string(), ImportKind::Require, false),
-            (
-                "../widget-settings.cjs".to_string(),
-                ImportKind::Require,
-                false
-            ),
-        ]
+    assert!(
+        require_imports(&facts)
+            .iter()
+            .all(|(_, _, computed)| *computed),
+        "a literal created-require call records a span and keeps its call site"
     );
 }
 
@@ -123,13 +106,18 @@ fn renamed_and_namespace_factories_record_require_and_resolve() {
         "load('../widget.cjs')\n",
         "again.resolve('../item.cjs')\n",
     ));
+    let mut specifiers: Vec<_> = facts
+        .namespaces
+        .literal_import_spans
+        .iter()
+        .map(|(_, specifier)| specifier.clone())
+        .collect();
+    specifiers.sort();
     assert_eq!(
-        require_imports(&facts),
-        vec![
-            ("../item.cjs".to_string(), ImportKind::RequireResolve, false),
-            ("../widget.cjs".to_string(), ImportKind::Require, false),
-        ]
+        specifiers,
+        vec!["../item.cjs".to_string(), "../widget.cjs".to_string()]
     );
+    assert!(require_imports(&facts).is_empty());
 }
 
 #[test]
