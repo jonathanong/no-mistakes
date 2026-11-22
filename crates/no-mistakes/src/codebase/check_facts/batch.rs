@@ -15,7 +15,7 @@ pub(crate) struct BatchCheckFactRequest {
 
 pub(super) struct FactDemand {
     pub(super) request: usize,
-    pub(super) plan: CheckFactPlan,
+    pub(super) plan: Arc<CheckFactPlan>,
 }
 
 pub(super) type CollectedDemand = (PathBuf, Vec<FactDemand>, Vec<Option<super::CheckFileFacts>>);

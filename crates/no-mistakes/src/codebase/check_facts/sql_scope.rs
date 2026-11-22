@@ -163,11 +163,12 @@ pub(super) fn collect(
     }
     for variants in demands.values_mut() {
         for variant in variants.iter_mut().filter(|variant| variant.request == id) {
-            let original_ts = variant.plan.collected_ts_plan();
-            variant.plan.graph.include(original_ts);
-            variant.plan.embedded_sql = false;
-            variant.plan.embedded_sql_options.clear();
-            variant.plan.embedded_sql_head_calls_only.clear();
+            let plan = std::sync::Arc::make_mut(&mut variant.plan);
+            let original_ts = plan.collected_ts_plan();
+            plan.graph.include(original_ts);
+            plan.embedded_sql = false;
+            plan.embedded_sql_options.clear();
+            plan.embedded_sql_head_calls_only.clear();
         }
     }
     collected

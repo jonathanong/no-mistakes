@@ -1,6 +1,7 @@
 use super::{BatchCheckFactRequest, CheckFactPlan, FactDemand};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 pub(super) fn demands_by_path(
     requests: &[BatchCheckFactRequest],
@@ -12,7 +13,8 @@ pub(super) fn demands_by_path(
         .take_while(|_| crate::invocation::check_timeout().is_ok())
     {
         let graph_only = super::super::graph_only_files(&request.files, &request.graph_files);
-        let graph_plan = CheckFactPlan {
+        let primary_plan = Arc::new(request.plan.clone());
+        let graph_plan = Arc::new(CheckFactPlan {
             forbidden_call_arguments: request.plan.forbidden_call_arguments.clone(),
             graph: request.plan.graph,
             call_site_paths: request.plan.call_site_paths.clone(),
@@ -20,22 +22,23 @@ pub(super) fn demands_by_path(
             graph_context: request.plan.graph_context.clone(),
             integration_runner_configs: request.plan.integration_runner_configs.clone(),
             ..CheckFactPlan::default()
-        };
+        });
         let mut plans = BTreeMap::new();
         for path in &request.files {
-            plans.insert(normalize(path), request.plan.clone());
+            plans.insert(normalize(path), Arc::clone(&primary_plan));
         }
         for path in request.plan.production_import_paths.iter() {
             plans
                 .entry(normalize(path))
-                .or_insert_with(|| request.plan.clone());
+                .or_insert_with(|| Arc::clone(&primary_plan));
         }
         for path in graph_only {
             let path = normalize(&path);
-            let mut plan = graph_plan.clone();
+            let mut plan = Arc::clone(&graph_plan);
             if request.plan.legacy_symbol_paths.contains(&path) {
                 // An explicit symbols target can be visible to the graph while
                 // remaining outside the configured check file scope.
+                let plan = Arc::make_mut(&mut plan);
                 plan.symbols = request.plan.symbols;
                 plan.legacy_symbol_paths.insert(path.clone());
             }
@@ -43,14 +46,20 @@ pub(super) fn demands_by_path(
         }
         if let Some(playwright) = &request.playwright {
             for path in playwright.paths() {
-                plans.entry(normalize(path)).or_insert(graph_plan.clone());
+                plans
+                    .entry(normalize(path))
+                    .or_insert_with(|| Arc::clone(&graph_plan));
             }
             for path in playwright.source_files().iter() {
-                let plan = plans.entry(normalize(path)).or_insert(graph_plan.clone());
+                let plan = plans
+                    .entry(normalize(path))
+                    .or_insert_with(|| Arc::clone(&graph_plan));
                 // Staged Playwright decides whether source imports are needed
                 // after test facts exist. Collect that request-local superset
                 // in the same parse; map assembly retains the exact graph plan.
-                plan.graph.imports = true;
+                if !plan.graph.imports {
+                    Arc::make_mut(plan).graph.imports = true;
+                }
             }
         }
         // Independently configured sources remain addressable without joining
@@ -102,3 +111,6 @@ pub(super) fn demands_by_path(
 fn normalize(path: &std::path::Path) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(path)
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests;

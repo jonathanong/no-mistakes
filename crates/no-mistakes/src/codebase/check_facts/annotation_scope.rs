@@ -66,13 +66,16 @@ pub(super) fn collect(
         .build_scoped(
             |thread| crate::ast::with_owned_request_parse_cache(|| thread.run()),
             |pool| {
+                let mut deferred_plan = request.plan.clone();
+                deferred_plan.defer_query_annotation = true;
+                let deferred_plan = std::sync::Arc::new(deferred_plan);
                 let mut cached = Vec::new();
                 let mut tasks = Vec::new();
                 for path in paths {
                     let mut variants = pending.remove(&path).unwrap();
                     for variant in &mut variants {
-                        if variant.request == id {
-                            variant.plan.defer_query_annotation = true;
+                        if variant.request == id && variant.plan.query_annotation {
+                            variant.plan = std::sync::Arc::clone(&deferred_plan);
                         }
                     }
                     let task = (path, variants);

@@ -367,7 +367,7 @@ fn all_selected_payload_classifies_once_and_retains_no_seed_set() {
                 (*path).clone(),
                 vec![FactDemand {
                     request: 0,
-                    plan: plan.clone(),
+                    plan: Arc::new(plan.clone()),
                 }],
             )
         })
@@ -415,7 +415,7 @@ fn middle_exclusion_retains_selected_prefix_and_required_excluded_support() {
                 path.clone(),
                 vec![FactDemand {
                     request: 0,
-                    plan: plan.clone(),
+                    plan: Arc::new(plan.clone()),
                 }],
             )
         })
