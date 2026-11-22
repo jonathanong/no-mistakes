@@ -37,49 +37,35 @@ pub(super) fn read_object(object: &ObjectExpression<'_>) -> JobOptionEvidence {
     out
 }
 
-/// A later explicit key replaces earlier spreads. A later unknown spread or
-/// computed key can overwrite that explicit member.
 pub(super) fn read_member(object: &ObjectExpression<'_>, key: &str) -> Option<JobOptionEvidence> {
-    let mut explicit = None;
-    let mut unknown_before = false;
-    let mut open_after = false;
+    read_member_with(object, key, |spread| match spread.get_inner_expression() {
+        Expression::ObjectExpression(inner) => read_member(inner, key),
+        _ => Some(JobOptionEvidence::open()),
+    })
+}
+
+pub(super) fn read_member_with(
+    object: &ObjectExpression<'_>,
+    key: &str,
+    mut spread_value: impl FnMut(&Expression<'_>) -> Option<JobOptionEvidence>,
+) -> Option<JobOptionEvidence> {
+    let mut evidence = None;
     for property in &object.properties {
-        match property {
-            ObjectPropertyKind::SpreadProperty(spread) => {
-                let argument = spread.argument.get_inner_expression();
-                if let Expression::ObjectExpression(inner) = argument {
-                    if let Some(member) = read_member(inner, key) {
-                        explicit = Some(member);
-                        open_after = false;
-                    }
-                } else if explicit.is_some() {
-                    open_after = true;
-                } else {
-                    unknown_before = true;
-                }
-            }
+        let next = match property {
+            ObjectPropertyKind::SpreadProperty(spread) => spread_value(&spread.argument),
             ObjectPropertyKind::ObjectProperty(property) => {
-                match crate::ast::property_key_name(&property.key).as_deref() {
-                    Some(name) if name == key => {
-                        explicit = Some(read(&property.value));
-                        open_after = false;
-                    }
-                    Some(_) => {}
-                    None if explicit.is_some() => open_after = true,
-                    None => unknown_before = true,
+                match crate::ast::property_key_name(&property.key) {
+                    Some(name) if name == key => Some(read(&property.value)),
+                    Some(_) => None,
+                    None => Some(JobOptionEvidence::open()),
                 }
             }
+        };
+        if next.is_some() {
+            evidence = next;
         }
     }
-    if open_after {
-        Some(JobOptionEvidence::open())
-    } else if let Some(explicit) = explicit {
-        Some(explicit)
-    } else if unknown_before {
-        Some(JobOptionEvidence::open())
-    } else {
-        None
-    }
+    evidence
 }
 
 pub(super) fn resolve_objects(

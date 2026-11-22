@@ -1,41 +1,44 @@
 use super::super::extract_model::{JobOptionEvidence, QueueDefaultOptions};
 use super::super::extract_visitor::QueueVisitor;
 use super::site::{evidence_at, push_site};
-use super::walk::read_member;
+use crate::queue::object_bindings::ObjectBindings;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
 
+#[path = "job_options_default_read.rs"]
+mod read;
+
 pub(crate) fn note_factory_defaults(
     visitor: &mut QueueVisitor<'_>,
-    binding: &str,
+    declaration: u32,
     queue_name: Option<&str>,
     name_index: usize,
     call: &CallExpression<'_>,
 ) {
-    let mut recorded = blank(binding, queue_name.map(str::to_string));
+    let mut recorded = blank(declaration, queue_name.map(str::to_string));
     for (index, arg) in call.arguments.iter().enumerate() {
         if index == name_index {
             continue;
         }
-        note_options_argument(arg, &mut recorded);
+        note_options_argument(arg, &visitor.object_bindings, &mut recorded);
     }
     visitor.facts.queue_defaults.push(recorded);
 }
 
 pub(crate) fn note_constructed_defaults(
     visitor: &mut QueueVisitor<'_>,
-    binding: &str,
+    declaration: u32,
     new_expr: &oxc_ast::ast::NewExpression<'_>,
 ) {
     let mut recorded = blank(
-        binding,
+        declaration,
         new_expr
             .arguments
             .first()
             .and_then(|arg| visitor.literal_arg(arg)),
     );
     if let Some(arg) = new_expr.arguments.get(1) {
-        note_options_argument(arg, &mut recorded);
+        note_options_argument(arg, &visitor.object_bindings, &mut recorded);
     }
     visitor.facts.queue_defaults.push(recorded);
 }
@@ -57,34 +60,24 @@ pub(crate) fn note_argument_options(
     );
 }
 
-fn blank(binding: &str, queue_name: Option<String>) -> QueueDefaultOptions {
+fn blank(declaration: u32, queue_name: Option<String>) -> QueueDefaultOptions {
     QueueDefaultOptions {
-        binding: Some(binding.to_string()),
+        declaration,
         queue_name,
-        container: None,
         evidence: JobOptionEvidence::default(),
     }
 }
 
-fn note_options_argument(arg: &Argument<'_>, recorded: &mut QueueDefaultOptions) {
+fn note_options_argument(
+    arg: &Argument<'_>,
+    bindings: &ObjectBindings<'_>,
+    recorded: &mut QueueDefaultOptions,
+) {
     let Some(expr) = arg.as_expression() else {
-        recorded.container = None;
         recorded.evidence = JobOptionEvidence::open();
         return;
     };
-    match expr.get_inner_expression() {
-        Expression::ObjectExpression(object) => {
-            recorded.container = None;
-            recorded.evidence = read_member(object, "defaultJobOptions").unwrap_or_default();
-        }
-        Expression::Identifier(id) => {
-            recorded.container = Some(id.name.to_string());
-            recorded.evidence = JobOptionEvidence::default();
-        }
-        Expression::StringLiteral(_) => {}
-        _ => {
-            recorded.container = None;
-            recorded.evidence = JobOptionEvidence::open();
-        }
+    if !matches!(expr.get_inner_expression(), Expression::StringLiteral(_)) {
+        recorded.evidence = read::queue_defaults(expr, bindings);
     }
 }

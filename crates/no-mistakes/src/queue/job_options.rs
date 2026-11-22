@@ -54,21 +54,6 @@ pub(super) fn finish(facts: &mut FileFacts) {
     let objects = walk::resolve_objects(&raw_objects);
     let mut opts = std::mem::take(&mut facts.const_opts);
     apply_map(&mut opts, &objects);
-    let mut defaults = std::mem::take(&mut facts.const_queue_defaults);
-    apply_map(&mut defaults, &objects);
-    for recorded in &mut facts.queue_defaults {
-        if let Some(name) = recorded.container.take() {
-            recorded.evidence = if let Some(found) = defaults.get(&name) {
-                found.clone()
-            } else if objects.contains_key(&name) {
-                JobOptionEvidence::default()
-            } else {
-                JobOptionEvidence::open()
-            };
-        } else {
-            walk::apply_evidence(&mut recorded.evidence, &objects);
-        }
-    }
     for site in &mut facts.job_option_sites {
         if site.evidence.member.as_deref() == Some("opts") {
             fold_opts_spreads(&mut site.evidence, &opts, &objects, &raw_objects);

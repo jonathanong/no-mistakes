@@ -1,4 +1,4 @@
-use super::local_queues;
+use super::{local_queues, producers::resolved_binding};
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::queue::extract::FileFacts;
 use crate::queue::types::QueueKey;
@@ -27,31 +27,20 @@ pub(in crate::queue) fn resolve_job_option_sites<R: ImportResolverFacade>(
                     queue_name: name.clone(),
                 })
                 .or_else(|| {
-                    site.binding
-                        .as_ref()
-                        .and_then(|binding| local.get(binding).cloned())
+                    resolved_binding(
+                        &local,
+                        facts,
+                        resolver,
+                        remapper,
+                        path,
+                        site.binding.as_ref()?,
+                        definitions,
+                    )
                 });
-            let binding = key.is_none().then(|| site.binding.clone()).flatten();
-            slots.push((path.clone(), index, key, binding));
+            slots.push((path.clone(), index, key));
         }
     }
-    for slot in &mut slots {
-        if slot.2.is_some() {
-            continue;
-        }
-        let Some(binding) = slot.3.as_deref() else {
-            continue;
-        };
-        slot.2 = crate::queue::factory_resolve::binding_queue(
-            facts,
-            resolver,
-            remapper,
-            &slot.0,
-            binding,
-            definitions,
-        );
-    }
-    for (path, index, key, _) in slots {
+    for (path, index, key) in slots {
         let Some(key) = key else {
             continue;
         };

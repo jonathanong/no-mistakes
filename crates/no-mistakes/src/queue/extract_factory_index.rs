@@ -1,6 +1,6 @@
 //! Index local processors and scoped bindings using the prepared AST.
 use crate::fx::FxHashMap;
-use crate::queue::extract_factory_scheduler_bind::{
+use crate::queue::object_bindings::{
     Collector as ObjectBindingCollector, ObjectBindings,
 };
 use crate::queue::extract_helpers::{binding_name, export_name, is_queue_package};

@@ -28,6 +28,7 @@ pub(super) fn push_site(
     job: Option<String>,
     evidence: JobOptionEvidence,
 ) {
+    let binding = binding.map(|name| visitor.producer_binding(&name, start));
     visitor.facts.job_option_sites.push(JobOptionSite {
         line: line_number(visitor.source, start),
         binding,

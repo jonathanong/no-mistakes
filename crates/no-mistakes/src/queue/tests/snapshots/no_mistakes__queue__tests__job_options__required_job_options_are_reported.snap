@@ -6,6 +6,26 @@ expression: snapshot
   "findings": [
     {
       "kind": "missing-job-option",
+      "file": "default-spreads.ts",
+      "line": 17,
+      "queueFile": "default-spreads.ts",
+      "queueName": "replaced",
+      "job": "defaults-after-known-override",
+      "message": "job options missing backoff",
+      "sourceLine": "replaced.add(\"defaults-after-known-override\", {});"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "default-spreads.ts",
+      "line": 26,
+      "queueFile": "default-spreads.ts",
+      "queueName": "factoryQueue",
+      "job": "defaults-from-factory-spread",
+      "message": "job options missing backoff",
+      "sourceLine": "factoryQueue.add(\"defaults-from-factory-spread\", {});"
+    },
+    {
+      "kind": "missing-job-option",
       "file": "enqueue.ts",
       "line": 36,
       "queueFile": "queues.ts",
@@ -246,6 +266,36 @@ expression: snapshot
     }
   ],
   "diagnostics": [
+    {
+      "file": "default-spreads.ts",
+      "line": 20,
+      "message": "job options were not judged because defaultJobOptions is not statically known",
+      "sourceLine": "open.add(\"defaults-after-unknown\", {});"
+    },
+    {
+      "file": "default-spreads.ts",
+      "line": 30,
+      "message": "job options were not judged because defaultJobOptions is not statically known",
+      "sourceLine": "shadowed.add(\"defaults-from-shadow\", {});"
+    },
+    {
+      "file": "default-spreads.ts",
+      "line": 36,
+      "message": "job options were not judged because defaultJobOptions is not statically known",
+      "sourceLine": "circular.add(\"defaults-from-cycle\", {});"
+    },
+    {
+      "file": "default-spreads.ts",
+      "line": 41,
+      "message": "job options were not judged because defaultJobOptions is not statically known",
+      "sourceLine": "mutableQueue.add(\"defaults-from-mutable\", {});"
+    },
+    {
+      "file": "default-spreads.ts",
+      "line": 44,
+      "message": "job options were not judged because defaultJobOptions is not statically known",
+      "sourceLine": "importedQueue.add(\"defaults-from-import\", {});"
+    },
     {
       "file": "enqueue.ts",
       "line": 48,

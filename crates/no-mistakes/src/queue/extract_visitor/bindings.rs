@@ -50,7 +50,7 @@ impl<'a> QueueVisitor<'a> {
                         extract_job_id::note_queue_binding(self, &decl.id);
                     }
                 }
-                super::super::job_options::note_constructed_defaults(self, &name, new_expr);
+                super::super::job_options::note_constructed_defaults(self, declaration, new_expr);
             } else if self.is_flow_constructor(&new_expr.callee) {
                 self.flow_bindings.insert(declaration);
                 if extract_job_id::is_imported_callee(self, &new_expr.callee) {

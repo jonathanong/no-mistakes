@@ -64,7 +64,13 @@ pub(super) fn note_queue_binding(
     } else {
         return false;
     }
-    super::job_options::note_factory_defaults(visitor, name, queue_name.as_deref(), index, call);
+    super::job_options::note_factory_defaults(
+        visitor,
+        declaration,
+        queue_name.as_deref(),
+        index,
+        call,
+    );
     true
 }
 pub(super) fn note_export(visitor: &mut QueueVisitor<'_>, decl: &ExportNamedDeclaration<'_>) {
@@ -166,6 +172,7 @@ mod index;
 mod job_scope;
 #[path = "extract_factory_scope.rs"]
 mod scope;
+
 pub(super) use calls::{note_factory_call, note_wait, scheduler_factories};
 pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::queue_index;

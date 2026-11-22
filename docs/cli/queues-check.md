@@ -118,9 +118,13 @@ including `[]` to exempt the queue. The check reads `queue.add` options,
 each `queue.addBulk` element's `opts`, the `opts` field of an
 `upsertJobScheduler` template, `opts` on a flow root and its children, and
 the configured enqueue-factory `options` argument. Keys present on the
-queue's `defaultJobOptions` count as set. A later explicit
-`defaultJobOptions` wins over an earlier unknown spread; a later unknown
-spread or computed key can overwrite the explicit member. A flow node folds
+queue's `defaultJobOptions` count as set. Queue constructors and configured
+queue factories follow same-file const object literals and their const aliases,
+including when spread into the queue options. A later known
+`defaultJobOptions` replaces the earlier member. A known spread without that
+member leaves it intact. A later known write can replace an earlier unknown
+spread or computed key. A later unknown spread or computed key can overwrite
+the known member and makes the defaults unresolved. A flow node folds
 a spread of a statically known object the same way `queue.add` folds its
 options object, including a const object and a const alias of one. Identifier
 spreads stay in source order: a later known `opts` object replaces earlier

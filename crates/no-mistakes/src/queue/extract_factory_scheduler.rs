@@ -1,5 +1,5 @@
 use crate::fx::{fx_set, FxHashSet};
-use crate::queue::extract_factory_scheduler_bind::ObjectBindings;
+use crate::queue::object_bindings::ObjectBindings;
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;

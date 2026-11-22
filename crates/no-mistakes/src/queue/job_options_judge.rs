@@ -1,5 +1,5 @@
 use super::super::extract_model::{
-    FileFacts, JobOptionEvidence, JobOptionFinding, JobOptionSite, RequiredJobOptions,
+    FileFacts, JobOptionEvidence, JobOptionFinding, JobOptionSite, LocalQueue, RequiredJobOptions,
 };
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -45,10 +45,11 @@ fn index_defaults(
     for (path, file) in facts {
         for defaults in &file.queue_defaults {
             let name = defaults.queue_name.clone().or_else(|| {
-                defaults
-                    .binding
-                    .as_ref()
-                    .and_then(|binding| file.queue_bindings.get(binding).cloned())
+                let LocalQueue::Known(name) = file.queue_declarations.get(&defaults.declaration)?
+                else {
+                    return None;
+                };
+                Some(name.clone())
             });
             let Some(name) = name else {
                 continue;

@@ -1,5 +1,5 @@
 use super::super::extract_helpers::binding_name;
-use super::super::extract_model::JobOptionEvidence;
+use super::super::extract_model::{JobOptionEvidence, ProducerBinding};
 use super::super::extract_visitor::QueueVisitor;
 use super::site::{evidence_at, job_at, member_string, push_site};
 use super::walk::{read_member, read_object};
@@ -40,9 +40,6 @@ fn record_const(
     if let Some(opts) = read_member(object, "opts") {
         facts.const_opts.insert(name.clone(), opts);
     }
-    if let Some(defaults) = read_member(object, "defaultJobOptions") {
-        facts.const_queue_defaults.insert(name.clone(), defaults);
-    }
     facts.const_objects.insert(name, read_object(object));
 }
 
@@ -56,9 +53,12 @@ pub(crate) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_
     };
     match member.property.name.as_str() {
         "add"
-            if binding
-                .as_deref()
-                .is_some_and(|name| visitor.flow_bindings.contains(name)) =>
+            if binding.as_deref().is_some_and(|name| {
+                matches!(
+                    visitor.producer_binding(name, call.span.start),
+                    ProducerBinding::Local(at) if visitor.flow_bindings.contains(&at)
+                )
+            }) =>
         {
             super::flow::note_flow(visitor, call);
         }

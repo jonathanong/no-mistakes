@@ -182,5 +182,5 @@ impl<'a> Collector<'a> {
     }
 }
 
-#[path = "extract_factory_scheduler_visit.rs"]
+#[path = "object_bindings_visit.rs"]
 mod visit;

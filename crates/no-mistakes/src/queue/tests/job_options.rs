@@ -3,7 +3,7 @@ use crate::config::v2::NoMistakesConfig;
 use crate::queue::extract_model::{
     FileFacts, JobOptionEvidence, JobOptionSite, RequiredJobOptions,
 };
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 #[test]
@@ -86,6 +86,46 @@ fn required_job_options_are_reported() {
     assert!(report.diagnostics.iter().any(|diagnostic| {
         diagnostic.message.starts_with("job options") && diagnostic.file.ends_with("enqueue.ts")
     }));
+    for job in [
+        "defaults-after-known-override",
+        "defaults-from-factory-spread",
+    ] {
+        assert!(
+            findings.iter().any(|finding| {
+                finding.job.as_deref() == Some(job)
+                    && finding.message == "job options missing backoff"
+            }),
+            "{job}"
+        );
+    }
+    let defaults_diagnostics: BTreeSet<_> = report
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| {
+            diagnostic.file == "default-spreads.ts"
+                && diagnostic
+                    .message
+                    .contains("defaultJobOptions is not statically known")
+        })
+        .map(|diagnostic| source_line(&root, &diagnostic.file, diagnostic.line))
+        .collect();
+    assert_eq!(
+        defaults_diagnostics,
+        BTreeSet::from(
+            [
+                r#"open.add("defaults-after-unknown", {});"#,
+                r#"shadowed.add("defaults-from-shadow", {});"#,
+                r#"circular.add("defaults-from-cycle", {});"#,
+                r#"mutableQueue.add("defaults-from-mutable", {});"#,
+                r#"importedQueue.add("defaults-from-import", {});"#,
+            ]
+            .map(str::to_owned)
+        )
+    );
+    assert!(findings.iter().all(|finding| !matches!(
+        finding.job.as_deref(),
+        Some("defaults-from-known-spread" | "defaults-after-known")
+    )));
     let mut rows = Vec::new();
     for finding in findings {
         rows.push(serde_json::json!({
@@ -248,7 +288,9 @@ fn unresolved_receiver_abstains_without_queue_overrides() {
         }),
         job_option_sites: vec![JobOptionSite {
             line: 4,
-            binding: Some("tags".to_string()),
+            binding: Some(crate::queue::extract_model::ProducerBinding::Named(
+                "tags".to_string(),
+            )),
             queue_name: None,
             queue_file: None,
             job: Some("red".to_string()),

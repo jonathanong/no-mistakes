@@ -92,7 +92,7 @@ pub(in crate::queue) fn resolve_producers<R: ImportResolverFacade>(
     out
 }
 
-fn resolved_binding<R: ImportResolverFacade>(
+pub(super) fn resolved_binding<R: ImportResolverFacade>(
     local: &HashMap<String, QueueKey>,
     facts: &HashMap<PathBuf, FileFacts>,
     resolver: &R,

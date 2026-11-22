@@ -108,7 +108,7 @@ impl JobOptionEvidence {
 #[derive(Debug, Clone)]
 pub(crate) struct JobOptionSite {
     pub line: usize,
-    pub binding: Option<String>,
+    pub binding: Option<ProducerBinding>,
     pub queue_name: Option<String>,
     pub queue_file: Option<PathBuf>,
     pub job: Option<String>,
@@ -117,10 +117,8 @@ pub(crate) struct JobOptionSite {
 
 #[derive(Debug, Clone)]
 pub(crate) struct QueueDefaultOptions {
-    pub binding: Option<String>,
+    pub declaration: u32,
     pub queue_name: Option<String>,
-    /// Const name whose object is the whole queue-options argument.
-    pub container: Option<String>,
     pub evidence: JobOptionEvidence,
 }
 
@@ -184,7 +182,6 @@ pub(crate) struct FileFacts {
     /// Resolved `(queue file, queue name)` pairs filled after binding resolution.
     pub opaque_priority_queues: Vec<(PathBuf, String)>,
     pub const_objects: HashMap<String, JobOptionEvidence>,
-    pub const_queue_defaults: HashMap<String, JobOptionEvidence>,
     pub const_opts: HashMap<String, JobOptionEvidence>,
     pub job_option_sites: Vec<JobOptionSite>,
     pub queue_defaults: Vec<QueueDefaultOptions>,
