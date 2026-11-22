@@ -34,7 +34,14 @@ export default config({
       { test: { exclude: [`**/node_mod\u0075les/**`] } },
       { test: { exclude: [`**/node_modules/**`, `**/.git/**`] } },
       { test: { exclude: [`**/${flag}/**`] } },
+      vitest.defineProject({ test: { exclude: [] } }),
+      mergeConfig({ test: { exclude: [] } }),
+      defineProject({ test: { exclude: [] } }, flag),
+      { exclude: [], test: {} },
       'vitest.external.ts',
     ],
   },
 })
+
+import * as vitest from 'vitest/config'
+import { mergeConfig } from 'vitest/config'
