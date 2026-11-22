@@ -1,4 +1,7 @@
-use crate::codebase::postgres::{EmbeddedSqlCall, SqlStatementFileFacts};
+use crate::codebase::postgres::{
+    idents::relation_suffix_key, statements::lock_writes::DdlEvent, EmbeddedSqlCall,
+    SqlStatementFileFacts,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn group(
@@ -48,4 +51,53 @@ pub(super) fn unresolved_transactions(
         })
         .filter_map(|(_, call)| call.transaction_id.or(call.caller_transaction_id))
         .collect()
+}
+
+#[derive(Default)]
+pub(super) struct CatalogInvalidations<'a> {
+    relations: BTreeSet<&'a str>,
+    uncertain_scopes: BTreeSet<u32>,
+}
+
+impl<'a> CatalogInvalidations<'a> {
+    pub(super) fn collect(
+        calls: &[EmbeddedSqlCall],
+        grouped: &BTreeMap<usize, Vec<&'a SqlStatementFileFacts>>,
+    ) -> Self {
+        let mut invalidations = Self::default();
+        for (index, call) in calls.iter().enumerate() {
+            let versions = grouped.get(&index).map(Vec::as_slice).unwrap_or_default();
+            if call.is_unanalyzable()
+                || versions.len() != 1
+                || versions.iter().any(|facts| {
+                    facts.parse_failed
+                        || facts.lock_writes.relation_identity_changed
+                        || facts.lock_writes.dynamic_setting_name
+                        || facts
+                            .setting_uses
+                            .iter()
+                            .any(|setting| setting.name == "search_path")
+                })
+            {
+                invalidations.uncertain_scopes.insert(call.execution_scope);
+            }
+            for change in versions
+                .iter()
+                .flat_map(|facts| &facts.lock_writes.ddl_events)
+            {
+                if let DdlEvent::Change(relation) = change {
+                    invalidations
+                        .relations
+                        .insert(relation_suffix_key(relation));
+                }
+            }
+        }
+        invalidations
+    }
+
+    pub(super) fn permits(&self, call: &EmbeddedSqlCall, relation: Option<&str>) -> bool {
+        !self.uncertain_scopes.contains(&call.execution_scope)
+            && relation
+                .is_some_and(|relation| !self.relations.contains(relation_suffix_key(relation)))
+    }
 }

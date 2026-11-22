@@ -43,7 +43,7 @@ export interface PostgresLockWrittenRowsOnlyOptions {
   transactionExecutorTypeNames?: string[];
   /** Static options properties overriding the transaction executor. Empty by default. */
   executorOptionProperties?: string[];
-  /** Root-relative catalog for DDL relations; complete coverage enables trigger inference. */
+  /** Root-relative catalog for DDL relations; complete coverage enables trigger and non-null CTE key proofs. */
   schemaCatalogPath?: string;
   /** Adds routing property names to executorOptionProperties. Empty by default. */
   executorOptions?: PostgresLockWrittenRowsExecutorOption[];

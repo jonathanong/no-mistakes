@@ -17,6 +17,7 @@ const cases = [
   ["atomic-cte", "checks-fail.yml", 4],
   ["parameter-transactions", "parameter-transactions-disabled.yml", 0],
   ["parameter-transactions", "parameter-transactions.yml", 0],
+  ["parameter-transactions", "parameter-transactions-no-catalog.yml", 0],
   ["ddl-related", "checks-fail.yml", 0],
   ["ddl-guard", "checks-fail.yml", 0],
   ["ddl-catalog", "ddl-catalog.yml", 1],

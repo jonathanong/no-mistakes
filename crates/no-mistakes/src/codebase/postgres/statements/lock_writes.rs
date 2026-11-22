@@ -1,6 +1,7 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod advisory;
 mod cte_delete;
+pub(crate) use cte_delete::CteWriteLink;
 mod ddl;
 pub(crate) use ddl::DdlEvent;
 mod helpers;
@@ -29,7 +30,7 @@ pub(crate) struct LockWriteFacts {
     pub relation_identity_changed: bool,
     pub dynamic_setting_name: bool,
     pub advisory_keys: Vec<Vec<AdvisoryKey>>,
-    pub linked_cte_locks: BTreeSet<usize>,
+    pub linked_cte_locks: BTreeMap<usize, CteWriteLink>,
     pub self_contained_locks: BTreeMap<usize, Range<usize>>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,9 +73,10 @@ pub(super) fn collect<const ADVANCED: bool>(
                 scope::mark_self_contained(&mut out, first_lock, first_write);
                 if out.locks.len() == first_lock + 1
                     && out.self_contained_locks.contains_key(&first_lock)
-                    && cte_delete::linked(statement, positions)
                 {
-                    out.linked_cte_locks.insert(first_lock);
+                    if let Some(link) = cte_delete::linked(statement, positions) {
+                        out.linked_cte_locks.insert(first_lock, link);
+                    }
                 }
             }
         }

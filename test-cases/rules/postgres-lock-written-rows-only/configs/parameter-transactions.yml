@@ -3,6 +3,7 @@ rules:
   - rule: postgres-lock-written-rows-only
     scope: repository
     options:
+      schemaCatalogPath: schema.json
       importSpecifier: "@example/db"
       executorFactoryNames: [beginTransaction]
       executorTypeNames: [PoolQuery]

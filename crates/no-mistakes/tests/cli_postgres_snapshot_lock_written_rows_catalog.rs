@@ -93,16 +93,41 @@ fn postgres_lock_written_rows_parameter_transactions_check_json_snapshot() {
                 "parameter-transactions",
                 "parameter-transactions.yml",
             ),
+            (
+                "no_catalog",
+                "parameter-transactions",
+                "parameter-transactions-no-catalog.yml",
+            ),
         ],
     );
     let advisories = report["enabled"]["report"]["advisories"]
         .as_array()
         .unwrap();
     let has_advisory = |line: u64| advisories.iter().any(|advisory| advisory["line"] == line);
-    for line in [5, 12, 97, 102, 130, 170] {
+    for line in [5, 12, 97, 102, 130, 170, 180, 185] {
         assert!(!has_advisory(line), "expected a proof for line {line}");
     }
-    for line in [17, 21, 107, 112, 117, 123, 136, 143, 149, 155, 160, 165] {
+    for line in [
+        17, 21, 107, 112, 117, 123, 136, 143, 149, 155, 160, 165, 175, 191, 198,
+    ] {
         assert!(has_advisory(line), "expected an abstention for line {line}");
+    }
+    let advisory_lines: Vec<_> = report["no_catalog"]["report"]["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|advisory| advisory["line"].as_u64().unwrap())
+        .collect();
+    for line in [5, 175, 191, 198] {
+        assert!(
+            advisory_lines.contains(&line),
+            "expected an abstention for line {line}"
+        );
+    }
+    for line in [130, 180, 185, 203, 208, 213] {
+        assert!(
+            !advisory_lines.contains(&line),
+            "expected a proof for line {line}"
+        );
     }
 }

@@ -302,6 +302,9 @@ those bindings do not shadow an imported factory outside the namespace.
 The rule can prove a row lock locally when its own SQL statement writes the
 locked rows. For example, a CTE can select a column from rows with `FOR UPDATE`
 and a `DELETE ... USING` can match the target to that CTE on the same column.
+Use `IS NOT DISTINCT FROM` for a nullable join key. An equality join requires
+a non-null key proven by the CTE predicate or by `schemaCatalogPath` with
+complete coverage when the surrounding SQL leaves that schema evidence intact.
 This proof can clear abstentions from unresolved transaction membership or other
 unresolved SQL in the transaction.
 
@@ -334,7 +337,8 @@ PostgreSQL schema catalog used to connect DDL targets to locked relations
 through partitioning, inheritance, and foreign keys.
 Guard-read proofs do not require a catalog. Ordering-only catalogs are accepted,
 but absent relationship metadata cannot prove that two relations are linked.
-Only complete catalogs contribute trigger-derived write evidence.
+Only complete catalogs contribute trigger-derived write evidence and non-null
+CTE join-key evidence.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required

@@ -966,7 +966,8 @@ Configured factory bindings support `const`, `using`, and `await using`.
 `PostgresLockWrittenRowsOnlyOptions.schemaCatalogPath` optionally supplies schema
 relationships for table locks that order later DDL in the same transaction.
 Guard-relation reads before later DDL do not require a catalog. Complete catalogs
-also supply trigger-derived write evidence; ordering-only catalogs do not.
+also supply trigger-derived write evidence and non-null CTE join-key evidence;
+ordering-only catalogs do not.
 Direct imported factory callbacks also establish transaction membership for a
 simple first parameter. Local, unexported option helpers specialize literal
 boolean arguments; unresolved callers and unknown flags retain findings. Zero

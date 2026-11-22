@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::postgres::statements::lock_writes::{LockWriteFacts, RowAccess};
+use crate::codebase::postgres::statements::lock_writes::{CteWriteLink, LockWriteFacts, RowAccess};
 mod keys;
 use keys::{compare_keys, identity};
 pub(super) fn enabled_for(call: &EmbeddedSqlCall, written: bool, outside: bool) -> bool {
@@ -43,13 +43,12 @@ pub(super) fn check_membership(
     output: &mut Output<'_>,
     site: &Site<'_>,
     lock: &RowAccess,
-    access: &LockWriteFacts,
-    lock_index: usize,
+    same_statement: bool,
     writes: &writes::Writes<'_>,
     unresolved: &BTreeSet<u32>,
 ) {
     let call = site.call;
-    if same_statement(call, lock, access, lock_index) {
+    if same_statement {
         return;
     }
     match call.caller_transaction_id {
@@ -64,8 +63,21 @@ pub(super) fn same_statement(
     lock: &RowAccess,
     access: &LockWriteFacts,
     lock_index: usize,
+    catalog: Option<&SchemaCatalog>,
 ) -> bool {
-    access.linked_cte_locks.contains(&lock_index)
+    access
+        .linked_cte_locks
+        .get(&lock_index)
+        .is_some_and(|link| match link {
+            CteWriteLink::Complete => true,
+            CteWriteLink::RequiresNonNull(column) => catalog.is_some_and(|catalog| {
+                catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete
+                    && lock
+                        .relation
+                        .as_deref()
+                        .is_some_and(|relation| catalog.column_is_not_null(relation, column))
+            }),
+        })
         || access
             .self_contained_locks
             .get(&lock_index)

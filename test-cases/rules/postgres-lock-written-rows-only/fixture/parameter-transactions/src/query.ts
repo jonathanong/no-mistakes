@@ -128,7 +128,7 @@ export async function atomicWithOpaqueSql(opaque: string) {
   const tx = await beginTransaction();
   await tx.query(opaque);
   await tx.query(`WITH pending AS (
-    SELECT id FROM child FOR UPDATE
+    SELECT id FROM child WHERE id IS NOT NULL FOR UPDATE
   ) DELETE FROM child USING pending WHERE child.id = pending.id`);
 }
 
@@ -169,4 +169,47 @@ export async function renamedKey(tx: Tx, id: number) {
 export async function ordinaryAlias(tx: Tx, id: number) {
   await tx.query("SELECT 1 FROM items AS i WHERE i.id = $1 FOR UPDATE", [id]);
   await tx.query("UPDATE items SET value = 1 WHERE id = $1", [id]);
+}
+
+export async function nullableJoin(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id IS NULL FOR UPDATE)
+    DELETE FROM items USING pending WHERE items.owner_id = pending.owner_id`);
+}
+
+export async function explicitNonNullJoin(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id IS NOT NULL FOR UPDATE)
+    DELETE FROM items USING pending WHERE items.owner_id = pending.owner_id`);
+}
+
+export async function nullSafeJoin(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id IS NULL FOR UPDATE)
+    DELETE FROM items USING pending WHERE items.owner_id IS NOT DISTINCT FROM pending.owner_id`);
+}
+
+export async function catalogMayBeStale(query: PoolQuery) {
+  await query("ALTER TABLE mutable_items ALTER COLUMN id DROP NOT NULL");
+  await query(`WITH pending AS (SELECT id FROM mutable_items FOR UPDATE)
+    DELETE FROM mutable_items USING pending WHERE mutable_items.id = pending.id`);
+}
+
+export async function catalogOnlyAfterOpaqueSql(opaque: string) {
+  const tx = await beginTransaction();
+  await tx.query(opaque);
+  await tx.query(`WITH pending AS (SELECT id FROM child FOR UPDATE)
+    DELETE FROM child USING pending WHERE child.id = pending.id`);
+}
+
+export async function equalityProvesNonNull(query: PoolQuery, id: number) {
+  await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id = $1 FOR UPDATE)
+    DELETE FROM items USING pending WHERE items.owner_id = pending.owner_id`, [id]);
+}
+
+export async function reverseEqualityProvesNonNull(query: PoolQuery, id: number) {
+  await query(`WITH pending AS (SELECT i.owner_id FROM items i WHERE $1 = i.owner_id FOR UPDATE)
+    DELETE FROM items USING pending WHERE items.owner_id = pending.owner_id`, [id]);
+}
+
+export async function conjunctionProvesNonNull(query: PoolQuery) {
+  await query(`WITH pending AS (SELECT owner_id FROM items WHERE value > 0 AND owner_id IS NOT NULL FOR UPDATE)
+    DELETE FROM items USING pending WHERE items.owner_id = pending.owner_id`);
 }

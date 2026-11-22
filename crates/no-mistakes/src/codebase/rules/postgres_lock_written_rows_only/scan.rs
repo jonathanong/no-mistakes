@@ -79,6 +79,8 @@ fn scan_file(
     let check_outside = enabled(CHECKS[3]);
     let grouped = statements::group(statements);
     let unresolved = statements::unresolved_transactions(&embedded.calls, &grouped);
+    let catalog_invalidations =
+        catalog.map(|_| statements::CatalogInvalidations::collect(&embedded.calls, &grouped));
     let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
     let trigger_disabled = settings::trigger_disabled_transactions(&embedded.calls, &grouped);
     let mut writes = writes::Writes::default();
@@ -150,14 +152,25 @@ fn scan_file(
                         &mut output,
                         &site,
                         lock,
-                        access,
-                        lock_index,
+                        rows::same_statement(
+                            call,
+                            lock,
+                            access,
+                            lock_index,
+                            catalog.filter(|_| {
+                                call.caller_transaction_id
+                                    .is_none_or(|id| !unresolved.contains(&id))
+                                    && catalog_invalidations.as_ref().is_some_and(|invalidations| {
+                                        invalidations.permits(call, lock.relation.as_deref())
+                                    })
+                            }),
+                        ),
                         &writes,
                         &unresolved,
                     );
                 } else if let Some(id) = call.transaction_id {
                     let unresolved = unresolved.contains(&id);
-                    if unresolved && rows::same_statement(call, lock, access, lock_index) {
+                    if unresolved && rows::same_statement(call, lock, access, lock_index, None) {
                         continue;
                     }
                     let written_by_trigger = lock.relation.as_deref().is_some_and(|relation| {

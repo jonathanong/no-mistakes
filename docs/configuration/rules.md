@@ -739,8 +739,8 @@ Configured factory bindings support `const`, `using`, and `await using` with
 block scope. Optional `schemaCatalogPath` supplies schema relationships for
 table locks that order later DDL. A read of a locked guard relation before later
 DDL in the same transaction also establishes that purpose without a catalog.
-Complete catalogs also supply trigger-derived write evidence; ordering-only
-catalogs do not.
+Complete catalogs also supply trigger-derived write evidence and non-null CTE
+join-key evidence; ordering-only catalogs do not.
 Direct callbacks passed to a configured imported transaction factory can provide
 the transaction client. Local, unexported helpers can forward an options parameter
 and select SQL with a literal boolean argument at each caller. Unknown callers
