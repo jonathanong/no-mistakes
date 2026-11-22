@@ -78,7 +78,7 @@ suppression.
 This is a check for registration syntax in one module, not a proof that the
 registration executes before an error, remains installed, or handles failures
 correctly. A listener in a nested function referencing the same binding counts.
-Reassigned bindings cannot establish which pool instance owns a listener; use
+Bindings with multiple writes cannot establish which pool instance owns a listener; use
 separate stable bindings and register each instance explicitly.
 
 ## Suppression

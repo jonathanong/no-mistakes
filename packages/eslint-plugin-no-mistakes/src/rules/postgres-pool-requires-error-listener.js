@@ -53,7 +53,7 @@ function hasBoundErrorListener(node, context) {
   const binding = poolBinding(node);
   if (binding?.type !== "Identifier") return false;
   const variable = resolveVariable(binding, context);
-  if (!variable?.defs.some((definition) => definition.type === "Variable")) return false;
+  if (!variable) return false;
   if (
     variable.references.some((reference) => reference.isWrite() && reference.identifier !== binding)
   ) {

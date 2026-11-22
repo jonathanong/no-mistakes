@@ -24,3 +24,6 @@ export function createChainedPool() {
 let shared = new Pool(config);
 shared = createChainedPool();
 shared.on("error", handleError);
+
+unresolvedPool = new Pool(config);
+unresolvedPool.on("error", handleError);

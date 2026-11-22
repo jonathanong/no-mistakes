@@ -23,6 +23,12 @@ let assigned;
 assigned = new Pool(config);
 assigned.on("error", handleError);
 
+export function replacePool(pool) {
+  pool = new Pool(config);
+  pool.on("error", handleError);
+  return pool;
+}
+
 export function createPool() {
   const local = new Pool(config);
   local.on("error", handleError);
@@ -32,3 +38,5 @@ export function createPool() {
 export function createChainedPool() {
   return new Pool(config).on("error", handleError);
 }
+
+export const singleClient = new pg.Client(config);
