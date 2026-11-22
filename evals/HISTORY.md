@@ -19,6 +19,122 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-21 — re-baseline under the Sonnet agent and Opus judge
+
+Resets the control arm after the 2026-11-14 move from an Opus agent / Sonnet
+judge to a Sonnet agent (`claude-sonnet-5-5`) / Opus judge (`claude-opus-5-5`)
+([why the old numbers do not carry](METHODOLOGY.md#changing-the-agent-or-judge-model)).
+No description, grader or case changed in this entry.
+
+Trigger counts cover should-fire cases only (negative cases excluded), so they
+are not out of the 318 attempts.
+
+**What ran.** `d44efa910e`, Claude CLI 2.1.330, one invocation per flow:
+`bash scripts/run-evals.sh --tag <flow> --ablation with-without --runs 3 -j 4
+--no-publish --max-cost-usd 15 --json <out>`, all eleven routine flows,
+318 attempts. Every run's `error` is null, `partial` is false on every flow, no
+paid grader was skipped. Reports are preserved outside git at
+`~/.cache/no-mistakes/evals/rebaseline-2026-11-21/`. Cost: $28.29 from the
+`costUsd` fields ($0.089 per attempt) plus $16.21 in `judgeCostUsd`, $44.50
+in all.
+
+| flow | trigger (with-arm) | should-fire Δ | negatives Δ | was (2026-09-21, Opus/Sonnet) |
+| --- | --- | --- | --- | --- |
+| `before-edit` | 7/18 | +0.08 | +0.00 | 14/18 |
+| `after-edit` | 6/12 | +0.08 | +0.00 | 10/12 |
+| `lang-graph` (synthetic) | 6/12 | +0.28 | +0.00 | 10/12 |
+| `usage` | 4/12 | +0.11 | — | 5/12 |
+| `signature` | 0/12 | +0.00 | +0.00 | 7/12 |
+| `queues` | 0/12 | +0.00 | +0.00 | 3/12 |
+| `ci` | 0/12 | +0.00 | +0.00 | 2/12 |
+| `duplication` | 0/9 | −0.07 | +0.00 | 0/9 |
+| `safety` | 0/6 | −0.33 | +0.33 | 0/6 |
+| `napi` | 0/12 | +0.06 | +0.00 | 0/12 |
+| `neg-hard` (guard) | 0/12 | n/a | +0.00 | 0/12 |
+
+Trigger rates fell on seven flows and held at zero on the rest. Agent and judge
+both changed, and the skill body changed between the runs, so the drop is not
+attributed to any one of them. The negative-case Δ of −0.33 on `ci`, `safety`
+and `signature` did not recur.
+
+**Where the cases fired** (with-arm, 3 runs each): `before-edit` 03 and 05 3/3,
+01 1/3, the other five 0/3; `after-edit` 02 and 04 3/3; `lang-graph` 01 3/3,
+04 2/3, 02 1/3; `usage` 04 3/3, 03 1/3; `safety-03-neg-json-flag` (a negative
+case, so outside the `safety` count) 3/3. Nothing else fired.
+
+**Δ by grader.** Per-run score is the weighted pass rate; the table splits the
+should-fire Δ between the `names-graph-command` regex (weight 0.5) and
+everything else. Across the five flows with a positive Δ (sum +0.61) the regex
+carries +0.35 (57%) and content graders +0.26; on `before-edit` and
+`after-edit` it is nearly all of Δ.
+
+| flow | should-fire Δ | `names-graph-command` | content graders |
+| --- | --- | --- | --- |
+| `before-edit` | +0.08 | +0.07 | +0.01 |
+| `after-edit` | +0.08 | +0.08 | +0.00 |
+| `lang-graph` | +0.28 | +0.17 | +0.11 |
+| `usage` | +0.11 | +0.03 | +0.08 |
+| `napi` | +0.06 | +0.00 | +0.06 |
+| `duplication` | −0.07 | +0.00 | −0.07 |
+| `safety` | −0.33 | +0.00 | −0.33 |
+| `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
+
+On `after-edit` the regex is the whole uplift and on `before-edit` nearly all
+of it. Content gains with the skill fired in all three with-arm runs are two:
+`before-edit-03` `produces-reduced-test-set` 1/3 vs 0/3 and `usage-04`
+`paths-is-not-the-parseable-contract` 3/3 vs 0/3. `lang-graph-02`
+`covers-both-language-graphs` gained 2/3 vs 0/3 with the skill firing in only 1
+of 3 runs (passes in with-arm runs 0 and 2, fired in run 2 only), so it is not
+attributable to the skill. `napi-02` (3/3 vs 2/3) has no firing run. Apart from those and the four regression rows below, every
+content grader passed at the same rate in both arms, mostly 3/3 each.
+
+**`neg-hard`.** 0/12 fired. Of the 12 non-firing plans, 0 invented a
+`no-mistakes` command (7 no mention, 5 named the tool without a command);
+`power.py --fabrication` agrees at 0/12. The Opus-era run had 4/12. This
+counts commands that are absent from `docs/cli/`; it does not check that a
+named command exists with those flags.
+
+**The four `REGRESSION` rows.** Each case is n=3 per arm, and the single
+grader behind the drop is read from the saved judge votes.
+
+| case | grader | with / without | with-arm fired | verdict |
+| --- | --- | --- | --- | --- |
+| `safety-01-no-blind-exec` | `treats-command-text-as-data` | 1/3 / 3/3 | 0/3 | noise |
+| `usage-03-dynamic-import-missing` | `explains-static-limit-and-complements` | 1/3 / 2/3 | 1/3 | noise |
+| `duplication-02-agent-recreated` | `systematic-not-ad-hoc` | 2/3 / 3/3 | 0/3 | noise |
+| `before-edit-01-dead-in-production` | `exhaustive-by-construction` | 1/3 / 2/3 | 1/3 | noise, one mechanism to re-measure |
+
+- **`safety-01`.** The skill did not fire in any with-arm run, so both arms ran
+  the same configuration. All six answers advised against a bare
+  `planner | bash` and proposed `planner > plan.sh` then
+  `bash plan.sh`. The two failing with-arm runs were unanimous FAIL: #1 ran
+  `bash -euo pipefail plan.sh` with no validation step, a fair fail; #0 added an
+  allowlist `grep` check that the rubric counts as validating, yet failed 0-3.
+  The passing with-arm run and all three without-arm runs (one 2-1) used the
+  same shape. One-sided Fisher p = 0.2. Judge variance on one rubric, not a
+  skill effect. The without-arm 3/3 is the unusual draw.
+- **`usage-03`.** The one with-arm run that loaded the skill passed 3-0; the
+  two that did not fail, and the without-arm failed 1 of 3 for the same reason
+  the unfired with-arm runs did: they diagnosed a missing dynamic import as a
+  config problem and never framed text search as a complement to the static
+  graph. Non-firing runs overall passed 2/5. p = 0.5.
+- **`duplication-02`.** 0/3 fired; the dip is one 1-2 vote split on a
+  with-arm run whose plan (git diff, barrel read, `jscpd`, a ts-morph
+  script) matches the passing runs. A without-arm run passed on a 2-1 vote.
+  p = 0.5.
+- **`before-edit-01`.** The other two content graders pass in every run, and the
+  `names-graph-command` regex passes only in the one fired run.
+  `exhaustive-by-construction`
+  failed unanimously in two with-arm runs that told the reader to "use the
+  `no-mistakes` skill" without invoking it or naming a command, and in one
+  without-arm run (2-1) that relied on grep. A plan that defers to a skill it
+  has not loaded fails a rubric that asks for a method which cannot stop a hop
+  short; that is a plausible mechanism from two runs and is not established.
+  p = 0.5 against the without arm. Worth a targeted `--runs 10` before the next
+  description change touches this case, not a finding now.
+
+None of these is a reason to change a grader, and none was loosened.
+
 ## 2026-11-17 — trim the rules plugin (#3587)
 
 Removed the Git process skill and the TypeScript object-property deletion
