@@ -128,11 +128,7 @@ impl<'a> VitestImports<'a> {
                 }
                 globs.extend(DEFAULT_GLOBS.into_iter().map(str::to_owned));
             } else {
-                let Expression::StringLiteral(value) = unwrap_ts_wrappers(element.as_expression()?)
-                else {
-                    return None;
-                };
-                globs.insert(crate::ast::js_literal(value).into_owned());
+                globs.insert(literal_glob(element.as_expression()?)?.into_owned());
             }
         }
         Some(ExcludeArray {
@@ -149,5 +145,17 @@ impl<'a> VitestImports<'a> {
             && member.property.name == "exclude"
             && matches!(unwrap_ts_wrappers(&member.object), Expression::Identifier(binding)
                 if self.defaults.contains(binding.name.as_str()))
+    }
+}
+
+fn literal_glob<'a>(expression: &'a Expression<'a>) -> Option<std::borrow::Cow<'a, str>> {
+    match unwrap_ts_wrappers(expression) {
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(value)),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            let quasi = template.quasis.first()?;
+            quasi.value.cooked?;
+            Some(crate::ast::template_quasi_text(quasi))
+        }
+        _ => None,
     }
 }

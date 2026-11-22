@@ -100,6 +100,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Add **/node_modules/**, **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
           "rule": "vitest-default-excludes",
           "sourceLine": "{ test: { ...overrides, exclude: [] } },"
+        },
+        {
+          "file": "vitest.config.ts",
+          "line": 34,
+          "message": "Add **/.git/** to test.exclude. Setting test.exclude replaces Vitest's default exclusions.",
+          "rule": "vitest-default-excludes",
+          "sourceLine": "{ test: { exclude: [`**/node_mod\\u0075les/**`] } },"
         }
       ],
       "warnings": []

@@ -31,6 +31,9 @@ export default config({
         exclude: [],
       } },
       { test: { exclude: [] } }, // no-mistakes-disable-line vitest-default-excludes
+      { test: { exclude: [`**/node_mod\u0075les/**`] } },
+      { test: { exclude: [`**/node_modules/**`, `**/.git/**`] } },
+      { test: { exclude: [`**/${flag}/**`] } },
       'vitest.external.ts',
     ],
   },
