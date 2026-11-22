@@ -24,7 +24,7 @@ fn queue_priority_mix_check_json_snapshot() {
             .count(),
         1
     );
-    assert_eq!(findings.len(), 17, "{findings:?}");
+    assert_eq!(findings.len(), 19, "{findings:?}");
     assert!(report["warnings"].as_array().unwrap().is_empty());
     for key in ["rules", "codebase", "integration", "react", "advisories"] {
         assert!(

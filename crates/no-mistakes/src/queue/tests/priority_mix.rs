@@ -30,7 +30,7 @@ fn mixed_literal_priorities_report_the_minority_form() {
         report.check
     );
     let findings = mixed(&report);
-    assert_eq!(findings.len(), 20, "{findings:?}");
+    assert_eq!(findings.len(), 22, "{findings:?}");
 
     let widgets = queue(&findings, "widgets");
     assert_eq!(widgets.len(), 1);
@@ -64,9 +64,27 @@ fn mixed_literal_priorities_report_the_minority_form() {
         "classes",
         "copies",
         "bundles",
+        "marks",
+        "defaults",
     ] {
         assert!(queue(&findings, name).is_empty(), "{name} should abstain");
     }
+
+    let others = queue(&findings, "others");
+    assert_eq!(others.len(), 2);
+    assert!(others.iter().any(|finding| {
+        finding.file == "names.ts"
+            && finding.line == 22
+            && finding.job.as_deref() == Some("shadeOther")
+            && finding.message.contains("sets priority 5")
+            && finding.message.contains("storeOther")
+    }));
+    assert!(others.iter().any(|finding| {
+        finding.file == "names.ts"
+            && finding.line == 26
+            && finding.job.as_deref() == Some("storeOther")
+            && finding.message.contains("shadeOther, priority 5")
+    }));
 
     let batches = queue(&findings, "batches");
     assert_eq!(batches.len(), 2);

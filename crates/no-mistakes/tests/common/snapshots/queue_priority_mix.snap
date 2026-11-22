@@ -150,6 +150,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "sourceLine": "return widgets.add(\"packWidget\", { id });"
         },
         {
+          "file": "names.ts",
+          "job": "shadeOther",
+          "kind": "mixed-priority",
+          "line": 22,
+          "message": "queue \"others\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: names.ts:26 (storeOther)",
+          "queueFile": "queues.ts",
+          "queueName": "others",
+          "sourceLine": "return others.add(\"shadeOther\", { id }, { priority: RANK });"
+        },
+        {
+          "file": "names.ts",
+          "job": "storeOther",
+          "kind": "mixed-priority",
+          "line": 26,
+          "message": "queue \"others\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: names.ts:22 (shadeOther, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "others",
+          "sourceLine": "others.add(\"storeOther\", { id });"
+        },
+        {
           "file": "parcels.ts",
           "job": "rushParcel",
           "kind": "mixed-priority",

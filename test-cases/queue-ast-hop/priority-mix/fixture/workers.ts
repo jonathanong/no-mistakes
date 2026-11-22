@@ -30,3 +30,6 @@ export const boxesWorker = new Worker("boxes", async () => {});
 export const classesWorker = new Worker("classes", async () => {});
 export const copiesWorker = new Worker("copies", async () => {});
 export const bundlesWorker = new Worker("bundles", async () => {});
+export const marksWorker = new Worker("marks", async () => {});
+export const defaultsWorker = new Worker("defaults", async () => {});
+export const othersWorker = new Worker("others", async () => {});

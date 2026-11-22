@@ -88,7 +88,9 @@ stay static. A `const` later in the same scope still counts, including
 binding with the same name hides the outer `const` for the scope that binding
 owns. A `var` inside a class static block does not. A `for...of` or `for...in`
 header hides that name on the right-hand side too. A class expression's name
-hides an outer `const` inside the class and not after it.
+hides an outer `const` inside the class and not after it. A named function
+expression and `export default function` hide that function's name the same
+way.
 
 The check abstains for the whole queue when any producer priority is not one
 of those two forms. That includes a trailing spread, a spread before the

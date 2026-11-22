@@ -196,6 +196,5 @@ pub(super) use calls::{note_factory_call, note_wait, scheduler_factories};
 pub(super) use dedup::{note_self_dedup, visit_variable_declaration};
 pub(super) use index::queue_index;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};
-pub(super) use scope::{
-    visit_block, visit_body, visit_catch, visit_class, visit_for, visit_for_in, visit_for_of,
-};
+pub(super) use scope::{visit_block, visit_body, visit_catch, visit_class};
+pub(super) use scope::{visit_for, visit_for_in, visit_for_of};

@@ -21,6 +21,7 @@ pub(crate) fn visit_function<'a>(
     let frames = visitor.job_frames.clone();
     if let Some(id) = &func.id {
         super::scope::mask_name(visitor, id.name.as_str());
+        visitor.facts.const_numbers.remove(id.name.as_str());
     }
     super::dedup::mask_parameters(visitor, &func.params);
     crate::queue::number_scope::hide_params(visitor, &func.params);
