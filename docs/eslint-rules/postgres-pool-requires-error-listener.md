@@ -45,8 +45,8 @@ export const pool = new pg.Pool({ host: "example.invalid" }).on("error", (error)
 A literal `error` event registered with `on`, `once`, or `addListener` on the
 same pool binding satisfies the check. Other events or another pool's listener
 do not. Named import aliases, default-member imports, and namespace imports
-are recognized. Type-only imports and constructors from unconfigured modules
-are not selected.
+are recognized. Type-only imports and constructors from modules not listed in
+the configuration are not selected.
 
 ## Options
 
