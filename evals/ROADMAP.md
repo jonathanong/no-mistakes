@@ -39,7 +39,7 @@ commands that no prompt or grader mentions today:
 | `tests plan` with a deleted file | "I deleted this test file — what lost coverage?" | `references/impact-recipes.md` has a recipe; nothing measures whether it is reached |
 | `playwright tests` / selector coverage | "is anything still asserting on `data-testid=checkout-total`?" | no case asks from the assertion side |
 | `lockfile diff` | "which packages actually changed in this lockfile bump?" | named in the decision tree only |
-| `postgres catalog` | "how do I give the PostgreSQL rules a schema catalog?" | added to `SKILL.md` in #1139, after the last re-baseline |
+| `postgres catalog` | "how do I give the PostgreSQL rules a schema catalog?" | added to `SKILL.md` in #1139; still no case exercises it after the 2026-11-21 re-baseline |
 | `infra resource-refs`, `swift importers` | "what references `aws_s3_bucket.assets`?" | real language/infra graphs, unlike `lang-graph`'s synthetic one |
 
 These are **skill surface, not demonstrated demand**: no mined-prompt evidence
@@ -58,7 +58,10 @@ description to reach a new subject is the change most likely to over-trigger.
 `duplication` 0/9, `safety` 0/6 and `napi` 0/12 are first observations with
 95% upper bounds of 22–39%. One more `runs: 3` pass each (~$12 single-arm)
 would show whether they are structurally dead or unlucky, which decides whether
-a clause is worth screening for them.
+a clause is worth screening for them. The 2026-11-21 re-baseline re-measured
+them under the Sonnet agent / Opus judge and they stayed at 0/9, 0/6 and 0/12
+([HISTORY](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge));
+that is a second observation under a different agent, not a deeper one.
 
 ### 4. Re-measure the negative-case Δ
 
@@ -66,7 +69,9 @@ a clause is worth screening for them.
 plugin arm scoring *worse* than no plugin on a question the graph cannot
 answer. At n=3 that is one run flipping. A deeper run on just those three cases
 (`--runs 10`, ~$10 both arms) would settle whether the skill distracts the
-agent there.
+agent there. The 2026-11-21 re-baseline (Sonnet agent / Opus judge) read 0.00
+on `ci` and `signature` and +0.33 on `safety`, so the −0.33 did not recur at
+`runs: 3`; the models changed, so this is not a like-for-like re-measure.
 
 ## Considered and not built
 

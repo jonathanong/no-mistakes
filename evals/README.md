@@ -15,58 +15,90 @@ having loaded it.
 
 ## Current results
 
-> **Opus-era numbers.** Everything in this section was measured with an
-> Opus agent and a Sonnet judge. The suite now runs a Sonnet agent
-> (`claude-sonnet-5-5`) under an Opus judge (`claude-opus-5-5`), so none of
-> these counts, Δs or noise margins carry over: gate only against a control
-> arm measured under the current models
-> ([why](METHODOLOGY.md#changing-the-agent-or-judge-model)).
-
 **Description:** the `description:` line in `plugins/no-mistakes/skills/no-mistakes/SKILL.md`
-today. **Measured:** 2026-09-21, all eleven routine flows, `runs: 3`, both
-arms, Opus agent / Sonnet judge, 318 runs, zero errored runs. The `heldout`
+today. **Measured:** 2026-11-21 on `d44efa910e` (skill body and
+`names-graph-command` graders as of that commit), Claude CLI 2.1.330, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, all eleven routine flows,
+`runs: 3`, `--ablation with-without -j 4`, one invocation per flow, 318
+attempts, zero errored runs and `partial: false` on every flow. The `heldout`
 flow is not measured for this description; cases 07-09 are reserved, unrun,
 for the next candidate.
 
 | flow | trigger (with-arm) | should-fire Δ | negatives Δ |
 | --- | --- | --- | --- |
-| `before-edit` | **14/18 (78%)** | +0.14 | +0.00 |
-| `after-edit` | **10/12 (83%)** | +0.19 | +0.00 |
-| `lang-graph` ⚠️ synthetic fixture | **10/12 (83%)** | +0.50 | +0.00 |
-| `signature` | **7/12 (58%)** | +0.31 | −0.33 |
-| `usage` | **5/12 (42%)** | +0.28 | — |
-| `queues` | **3/12 (25%)** | +0.08 | +0.00 |
-| `ci` | **2/12 (17%)** | +0.00 | −0.33 |
-| `duplication` | **0/9** | +0.00 | +0.00 |
-| `safety` | **0/6** | +0.00 | −0.33 |
+| `before-edit` | **7/18 (39%)** | +0.08 | +0.00 |
+| `after-edit` | **6/12 (50%)** | +0.08 | +0.00 |
+| `lang-graph` ⚠️ synthetic fixture | **6/12 (50%)** | +0.28 | +0.00 |
+| `usage` | **4/12 (33%)** | +0.11 | — |
+| `signature` | **0/12** | +0.00 | +0.00 |
+| `queues` | **0/12** | +0.00 | +0.00 |
+| `ci` | **0/12** | +0.00 | +0.00 |
+| `duplication` | **0/9** | −0.07 | +0.00 |
+| `safety` | **0/6** | −0.33 | +0.33 |
 | `napi` | **0/12** | +0.06 | +0.00 |
 | `neg-hard` — over-trigger guard, lower is better | **0/12** | n/a | +0.00 |
 
 Δ is the mean weighted grader score per run, with-skill minus without-skill,
-`skill-fired` excluded. On `neg-hard` the skill never fired, but 4 of the 12
-non-firing plans invented a `no-mistakes` command that does not exist.
+`skill-fired` excluded. On `neg-hard` the skill never fired and none of the 12
+non-firing plans invented a `no-mistakes` command (`summarize.py --mentions`:
+7 no mention, 5 named without a command; `power.py --fabrication`: 0/12).
 
-The skill body has changed since this run (the PostgreSQL catalog paragraph in
-`SKILL.md`, six lines in `references/playwright.md`); the `description:` line
-has not. Build any new control arm from today's skill
-([why](METHODOLOGY.md#what-the-control-cost-to-get-right-and-the-trap-it-exposed)).
-The skill body and the `names-graph-command` graders changed again in the
-drift-sweep PR; the suite was not re-run after that change.
+**This is the control arm for future description changes, and it is not
+comparable with the earlier Opus-agent / Sonnet-judge table** (2026-09-21,
+[HISTORY.md](HISTORY.md#the-full-re-baseline)): agent and judge both changed.
+Trigger rates are lower on most flows (`signature` 7/12 to 0/12, `before-edit`
+14/18 to 7/18, `after-edit` 10/12 to 6/12, `lang-graph` 10/12 to 6/12,
+`queues` 3/12 to 0/12, `ci` 2/12 to 0/12, `usage` 5/12 to 4/12; the zero flows
+stayed at zero), but the gaps cannot be attributed to the agent, the judge, or
+the intervening skill-body changes. Gate a candidate against a same-day control
+measured under these models, never against these stored counts
+([why](METHODOLOGY.md#changing-the-agent-or-judge-model)).
+
+**Per-grader decomposition of Δ.** Almost all of the positive Δ is the
+`names-graph-command` regex, which only passes when the plan names a command
+from `SKILL.md`, so it mostly records that the skill was used:
+
+| flow | should-fire Δ | from `names-graph-command` | from content graders |
+| --- | --- | --- | --- |
+| `before-edit` | +0.08 | +0.07 | +0.01 |
+| `after-edit` | +0.08 | +0.08 | +0.00 |
+| `lang-graph` | +0.28 | +0.17 | +0.11 |
+| `usage` | +0.11 | +0.03 | +0.08 |
+| `napi` | +0.06 | +0.00 | +0.06 |
+| `duplication` | −0.07 | +0.00 | −0.07 |
+| `safety` | −0.33 | +0.00 | −0.33 |
+| `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
+
+Content-grader gains with the skill fired are `before-edit-03-full-suite`
+`produces-reduced-test-set` (1/3 vs 0/3), `lang-graph-02-cross-lang`
+`covers-both-language-graphs` (2/3 vs 0/3) and `usage-04-paths-in-ci`
+`paths-is-not-the-parseable-contract` (3/3 vs 0/3, fired 3/3). The `napi` gain
+is one run on `napi-02-repeated-calls` with the skill never fired, so it is
+noise. `before-edit-05-where-used` fired 3/3 and scored 3/3 on both content
+graders in both arms: its +0.20 is the regex alone. The four `REGRESSION` rows
+are explained in [HISTORY.md](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge);
+each is within the margins below. The earlier negative-case Δ of −0.33 on `ci`,
+`safety` and `signature` did not recur (those flows read 0.00, 0.00 and
++0.33).
 
 Earlier descriptions, their scores, and how this one was chosen are in
 [HISTORY.md](HISTORY.md).
 
 ## How to read these numbers
 
-- **Differences under ~4 counts are not results.** At `runs: 3` two runs of
-  the *identical* description differ by ≥2 in 44% of pairs. A gate must
-  tolerate a wrong-way gap of **4** on `before-edit`, **3** on `signature` and
-  `after-edit`, **2** on `neg-hard`
+- **Differences of 2-3 counts are not results.** At `runs: 3`, `power.py` on
+  the 2026-11-21 control gives the wrong-way gap a gate must tolerate between
+  two measurements of the *same* description (`allowed`): **3** on
+  `before-edit`, `usage` and `lang-graph`; **2** on `after-edit`, `signature`,
+  `queues`, `ci`, `napi` and `neg-hard`. These come from a control whose
+  rates are mostly 0, so they understate the spread at a higher trigger rate;
+  the Opus-era margins (4 on `before-edit`) are retired with its numbers
   ([derivation](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025)).
   Run [`power.py`](power.py) before writing any gate.
-- **A zero is not certain.** The exact one-sided 95% upper bounds on
-  `duplication` 0/9, `safety` 0/6 and `napi` 0/12 are 28%, 39% and 22%. A zero
-  rules out a high rate, nothing more.
+- **A zero is not certain.** The exact one-sided 95% upper bounds on 0/12
+  (`signature`, `queues`, `ci`, `napi`, `neg-hard`), `duplication` 0/9 and
+  `safety` 0/6 are 22%, 28% and 39%. A zero rules out a high rate, nothing
+  more.
 - **Tuned flows overstate generalization.** The description was written
   against these flows; only a held-out case measures how it generalizes, and
   none is current.
@@ -196,11 +228,15 @@ The plugin arm must never score below the baseline arm. `summarize.py` prints a
 Explain every row before merging: an unfired loss points at the description or
 a grader, a fired one at the skill's content.
 
-**Cost:** ~$0.15 per case × run × arm at `-j 4`, judge included (2026-11-14
-smoke: 8 `before-edit` cases, `--runs 1`, both arms, 16 runs, $2.38). A
-17-case single-arm screen is ~$8; the full 53-case both-arm re-baseline is
-~320 runs and ~$48. Opus-agent runs cost $0.16–0.19. A total far below the
-estimate means runs errored — see
+**Cost:** the 2026-11-21 re-baseline (318 attempts, Sonnet agent, Opus judge)
+reported $28.29 in the per-flow `costUsd` fields, $0.089 per attempt, plus
+$16.21 of judge cost in the per-run `judgeCostUsd` fields: $44.50 and $0.140
+per attempt together. Plan with ~$0.14 per case × run × arm at `-j 4`, judge
+included (2026-11-14 smoke: 8 `before-edit` cases, `--runs 1`, both arms, 16
+runs, $2.38); budget `--max-cost-usd` against the agent figure unless you have
+checked whether the cap counts judge cost. A 17-case single-arm screen is ~$7;
+the full 53-case both-arm re-baseline is ~320 runs and ~$45. Opus-agent runs
+cost $0.16-0.19. A total far below the estimate means runs errored — see
 [METHODOLOGY](METHODOLOGY.md#running-a-measurement).
 
 ## Flows
