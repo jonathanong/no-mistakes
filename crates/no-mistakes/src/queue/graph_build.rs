@@ -95,7 +95,7 @@ fn build_report_and_relationships(
         root, &producers, &workers,
     ));
     let (dedup_checks, dedup_diagnostics) =
-        crate::queue::cycles::self_dedup_findings(root, &producers, &workers);
+        crate::queue::rate_limit::findings(root, &producers, &workers, facts);
     check.extend(dedup_checks);
     let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     report_diagnostics.extend(dedup_diagnostics);

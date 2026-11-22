@@ -27,6 +27,7 @@ keep a database. Static literals produce edges; dynamic values are skipped.
 | Move a file and leave broken imports | `resolve-check` |
 | Change a signature and miss callers | `symbols --mode signature-impact`, `call-sites` |
 | Rename a queue job and miss the worker | `queues check`, `queues related` |
+| Rate-limit one job on a shared queue | `queues check` |
 | Parse human CLI output | `--format json` |
 
 Configured Python, Go, Rust, and other language graphs use

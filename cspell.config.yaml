@@ -31,6 +31,8 @@ words:
   - asynq
   - Basenames
   - bullmq
+  - rateLimit
+  - RateLimitError
   - callees
   - BeginInvokeOnMainThread
   - callsite

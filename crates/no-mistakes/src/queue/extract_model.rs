@@ -44,6 +44,13 @@ pub(crate) struct LocalCheck {
     pub message: String,
 }
 
+/// A `RateLimitError` throw or `.rateLimit()` call inside a processor.
+#[derive(Debug, Clone)]
+pub(crate) struct RateLimitSite {
+    pub line: usize,
+    pub worker_index: usize,
+}
+
 #[derive(Debug, Default, Clone)]
 pub(crate) struct FileFacts {
     pub imports: Vec<ImportBinding>,
@@ -59,6 +66,8 @@ pub(crate) struct FileFacts {
     /// `export { imported as exported } from`. Kept off `string_imports` so a
     /// same-named local import is not overwritten.
     pub export_from: HashMap<String, (String, String)>,
+    /// `RateLimitError` throws and `.rateLimit()` calls inside a processor.
+    pub rate_limits: Vec<RateLimitSite>,
     /// Local queue binding whose name argument is an imported identifier.
     pub pending_queue_bindings: HashMap<String, String>,
     /// `(exported name, local binding)` aliases of a queue object.
