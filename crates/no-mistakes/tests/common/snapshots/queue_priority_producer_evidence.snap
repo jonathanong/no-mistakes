@@ -113,6 +113,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "enqueue.ts",
           "job": "plain",
           "kind": "mixed-priority",
+          "line": 100,
+          "message": "queue \"redeclared\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:101 (rush, priority 3)",
+          "queueFile": "enqueue.ts",
+          "queueName": "redeclared",
+          "sourceLine": "redeclared.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
           "line": 23,
           "message": "queue \"sameLine\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:24 (rush1, priority 1), enqueue.ts:25 (rush2, priority 1), enqueue.ts:26 (rush3, priority 1)",
           "queueFile": "queues.ts",
@@ -178,6 +188,16 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "queueFile": "enqueue.ts",
           "queueName": "localQueue",
           "sourceLine": "localQueue.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "rush",
+          "kind": "mixed-priority",
+          "line": 101,
+          "message": "queue \"redeclared\" mixes priority 0 and priority > 0; this producer sets priority 3 while other producers enqueue with priority 0: enqueue.ts:100 (plain)",
+          "queueFile": "enqueue.ts",
+          "queueName": "redeclared",
+          "sourceLine": "redeclared.add(\"rush\", {}, { priority: 3 });"
         },
         {
           "file": "enqueue.ts",

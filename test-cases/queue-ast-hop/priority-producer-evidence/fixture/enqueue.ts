@@ -93,3 +93,9 @@ export function enqueueInner() {
   scopedQueue.add("innerRush", {}, { priority: 5 });
 }
 scopedQueue.add("outerRush", {}, { priority: 7 });
+
+var redeclared = createQueue("redeclared");
+new Worker("redeclared", async () => {});
+var redeclared;
+redeclared.add("plain", {});
+redeclared.add("rush", {}, { priority: 3 });
