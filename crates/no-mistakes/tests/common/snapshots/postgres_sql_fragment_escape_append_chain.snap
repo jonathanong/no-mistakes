@@ -696,6 +696,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-sql-fragment-escape",
           "sourceLine": "ns.widgetColumns.append(extra);",
           "target": "widgetColumns"
+        },
+        {
+          "file": "wildcardFragmentMutator.ts",
+          "import": "widgets/items.ts",
+          "line": 4,
+          "message": "exported SQL fragment `widgetItems` from `widgets/items.ts` is written, rebound, or escaped",
+          "rule": "postgres-sql-fragment-escape",
+          "sourceLine": "widgetItems.append(extra);",
+          "target": "widgetItems"
         }
       ],
       "warnings": []

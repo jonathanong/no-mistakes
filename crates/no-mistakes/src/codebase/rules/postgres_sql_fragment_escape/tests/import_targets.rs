@@ -419,7 +419,13 @@ fn spaced_ambient_declaration_names_the_external_specifier() {
     }
     let catalog = catalog(&world);
     let hit = |specifier: &str| {
-        modules::module_file(Some(&world.graph), &world.facts, &catalog, &escape, specifier)
+        modules::module_file(
+            Some(&world.graph),
+            &world.facts,
+            &catalog,
+            &escape,
+            specifier,
+        )
     };
     assert_eq!(hit("orders-widget"), Some(declared));
     assert_eq!(hit("single-widget"), Some(single));
