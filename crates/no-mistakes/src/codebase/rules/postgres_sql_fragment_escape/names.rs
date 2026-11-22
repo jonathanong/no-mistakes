@@ -35,7 +35,7 @@ pub(super) fn namespace_of(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Option<P
     }
 }
 
-fn initializer_module(ctx: &FileCtx<'_>, binding: &ValueBinding) -> Option<PathBuf> {
+pub(super) fn initializer_module(ctx: &FileCtx<'_>, binding: &ValueBinding) -> Option<PathBuf> {
     let (start, _, window) = initializer_window(ctx, binding)?;
     if !super::fact_reads::window_loads_module(window) {
         return None;

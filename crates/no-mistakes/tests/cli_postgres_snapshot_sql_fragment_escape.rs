@@ -202,3 +202,30 @@ fn postgres_sql_fragment_escape_bounds_import_resolution_work() {
         .expect("candidate count");
     assert!((1..=6).contains(&candidates), "{diagnostics}");
 }
+
+#[test]
+fn postgres_sql_fragment_escape_relevance_snapshot() {
+    let root = rules_path(
+        "postgres-sql-fragment-escape",
+        "fixtures",
+        "fragment-relevance",
+    );
+    let reports = assert_saved_fixture_report(
+        "postgres_sql_fragment_escape_relevance",
+        &[("proof", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["proof"];
+    assert_eq!(report["exitCode"], 1);
+    assert!(report["report"]["rules"].as_array().unwrap().is_empty());
+    let gaps = report["report"]["incomplete"].as_array().expect("gaps");
+    let files = gaps
+        .iter()
+        .map(|gap| gap["file"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(files, ["dynamic.ts", "producer.ts", "reexport.ts"]);
+    assert!(gaps
+        .iter()
+        .all(|gap| gap["message"].as_str().unwrap().contains("`./missing`")));
+}
