@@ -10,6 +10,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 mod allow;
 mod candidate_policy;
+mod candidates;
 mod config;
 mod traces;
 pub(crate) use config::graph_plan;
@@ -26,26 +27,6 @@ pub(crate) fn check_with_graph_and_session(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let root = root.as_path();
-    let mut positions = BTreeMap::new();
-    for file in facts.graph_file_universe() {
-        let Some(ts) = facts.get_ts_facts(file) else {
-            continue;
-        };
-        if ts.parse_error.is_some() || ts.operational_error.is_some() {
-            continue;
-        }
-        for position in &ts.per_item_calls {
-            positions.insert(
-                (
-                    file.clone(),
-                    position.offset,
-                    position.caller_id,
-                    position.is_callback,
-                ),
-                position,
-            );
-        }
-    }
     let mut findings = Vec::new();
     for application in config.rule_applications(RULE_ID) {
         let options: Options = application.try_rule_options()?;
@@ -60,12 +41,25 @@ pub(crate) fn check_with_graph_and_session(
             options.allow.len(),
         );
         prerequisites::require_sources(graph, facts, &filter, session)?;
-        for kind in &options.effects {
+        let scoped_sites = candidates::select(graph, facts, &filter);
+        let effects = if scoped_sites.is_empty() {
+            &[]
+        } else {
+            options.effects.as_slice()
+        };
+        for kind in effects {
             let effect = &config.effects[kind];
             let configured_sinks = Sinks::new(effect, graph);
             let mut sinks: BTreeMap<NodeId, Vec<(&ResolvedCallSite, bool)>> = BTreeMap::new();
             let mut excluded = Vec::new();
-            for site in graph.resolved_call_sites() {
+            let resolved_sites = graph.resolved_call_sites();
+            if let Some(observer) = crate::diagnostics::current() {
+                observer.increment(
+                    "query_reached_per_item.sink_sites",
+                    resolved_sites.len() as u64,
+                );
+            }
+            for site in resolved_sites {
                 if site
                     .caller
                     .as_deref()
@@ -84,30 +78,15 @@ pub(crate) fn check_with_graph_and_session(
             }
             excluded.sort();
             excluded.dedup();
-            let candidates = graph
-                .resolved_call_sites()
-                .iter()
-                .filter_map(|site| {
-                    positions
-                        .get(&(
-                            site.file.clone(),
-                            site.offset,
-                            site.caller_id,
-                            site.invocation
-                                == crate::codebase::dependencies::extract::InvocationKind::Callback,
-                        ))
-                        .map(|position| (site, *position))
-                })
-                .collect::<Vec<_>>();
             let policy = candidate_policy::CandidatePolicy {
                 sinks: &configured_sinks,
                 options: &options,
                 effect,
-                filter: &filter,
                 excluded: &excluded,
             };
-            let candidates: Vec<_> = candidates
-                .into_iter()
+            let candidates: Vec<_> = scoped_sites
+                .iter()
+                .copied()
                 .filter(|(site, position)| policy.includes(site, position))
                 .collect();
             let mut roots = candidates

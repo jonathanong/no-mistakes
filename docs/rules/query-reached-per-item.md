@@ -159,6 +159,8 @@ report, including when several stages share the same executor annotation.
 Worker count does not change which invocations report. The saved
 `stage-import-index-workload` fixture locks all 48 `stage.run` and `stage.check`
 locations, their callback targets, and their configured executor provenance.
+File filters select per-item occurrences. Their call paths can reach configured
+sinks through helpers in other files.
 Static indexed property types, including `NonNullable<Options['query']>`, preserve
 the selected callable origin. Statically invoked async callbacks preserve returned
 executor metadata. A nullish choice between a typed executor and a configured

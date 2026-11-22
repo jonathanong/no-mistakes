@@ -110,6 +110,67 @@ fn query_reached_per_item_stage_import_index_check_json_snapshot() {
 }
 
 #[test]
+fn query_reached_per_item_scoped_stage_check_json_snapshot() {
+    let dir = "query-reached-per-item/stage-import-index-workload";
+    assert_saved_fixture(
+        "query_reached_per_item_scoped_stage",
+        &[
+            rule("caller_only", dir, "caller-only.yml"),
+            rule("noise_only", dir, "noise-only.yml"),
+            rule("noise_only_allow", dir, "noise-only-allow.yml"),
+        ],
+    );
+}
+
+#[test]
+fn query_reached_per_item_checks_scoped_occurrences_before_effect_sinks() {
+    let all = check_stage_scope(".no-mistakes.yml");
+    let caller = check_stage_scope("caller-only.yml");
+    let noise = check_stage_scope("noise-only.yml");
+    let off = check_stage_scope("off.yml");
+
+    assert_eq!(caller.status.code(), Some(1));
+    assert_eq!(caller.stdout, all.stdout);
+    assert_eq!(noise.status.code(), Some(0));
+    assert_eq!(noise.stdout, off.stdout);
+    assert_eq!(query_projection_work(&caller, "candidate_positions"), 48);
+    assert_eq!(query_projection_work(&caller, "candidate_sites"), 48);
+    assert!(query_projection_work(&caller, "sink_sites") > 48);
+    for metric in ["candidate_positions", "candidate_sites", "sink_sites"] {
+        assert_eq!(query_projection_work(&noise, metric), 0, "{metric}");
+    }
+    assert!(String::from_utf8_lossy(&noise.stderr)
+        .lines()
+        .any(|line| line == "[work] graph.builds: 1"));
+}
+
+fn check_stage_scope(config: &str) -> std::process::Output {
+    let (_, root, config) = rule(
+        "scope",
+        "query-reached-per-item/stage-import-index-workload",
+        config,
+    );
+    std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .current_dir(&root)
+        .env_remove("RAYON_NUM_THREADS")
+        .args(["--lock-timeout", "0", "--jobs", "2", "check", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(config)
+        .args(["--format", "json", "--verbose-timings"])
+        .output()
+        .unwrap()
+}
+
+fn query_projection_work(output: &std::process::Output, metric: &str) -> u64 {
+    let prefix = format!("[work] query_reached_per_item.{metric}: ");
+    String::from_utf8_lossy(&output.stderr)
+        .lines()
+        .find_map(|line| line.strip_prefix(&prefix))
+        .map_or(0, |count| count.parse().unwrap())
+}
+
+#[test]
 fn required_companion_imports_json_matches_snapshot() {
     assert_saved_fixture(
         "required_companion_imports",

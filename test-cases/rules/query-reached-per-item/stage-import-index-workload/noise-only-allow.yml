@@ -1,0 +1,13 @@
+effects:
+  postgres:
+    typedExecutors:
+      - { module: './database.mts', export: TransactionQuery }
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    include: ['src/noise-*.mts']
+    options:
+      effects: [postgres]
+      allow:
+        - file: src/noise-00.mts
+          callee: normalize00
