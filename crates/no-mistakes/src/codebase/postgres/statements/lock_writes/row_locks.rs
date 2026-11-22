@@ -51,6 +51,7 @@ pub(super) fn collect_explicit(
             {
                 row.key = keyed.key;
                 row.recovered_key = keyed.recovered_key;
+                row.key_identity_unproven |= keyed.key_identity_unproven;
             }
         }
         if !locks.contains(&row) {
@@ -154,7 +155,7 @@ fn unresolved() -> RowAccess {
         relation: None,
         key: None,
         recovered_key: None,
-        key_aliases_renamed: false,
+        key_identity_unproven: false,
         has_predicate: false,
     }
 }

@@ -56,7 +56,11 @@ pub(super) fn annotate(
                                 | ArrayExpressionElement::Elision(_) => None,
                                 _ => element
                                     .as_expression()
-                                    .and_then(|value| identity(visitor, value)),
+                                    .and_then(|value| identity(visitor, value))
+                                    .filter(|identity| {
+                                        fact.caller_transaction_id.is_none()
+                                            || stable_parameter_identity(visitor, identity)
+                                    }),
                             })
                             .collect(),
                     )
@@ -64,6 +68,14 @@ pub(super) fn annotate(
                 _ => None,
             })
             .unwrap_or_default();
+}
+
+pub(super) fn stable_parameter_identity(visitor: &ScopeVisitor<'_>, identity: &str) -> bool {
+    identity.starts_with("literal:")
+        || identity
+            .strip_prefix("binding:")
+            .and_then(|position| position.parse::<u32>().ok())
+            .is_some_and(|position| visitor.stable_primitives.contains(&position))
 }
 
 pub(super) fn annotate_receiver(

@@ -38,7 +38,7 @@ pub(crate) struct RowAccess {
     pub relation: Option<String>,
     pub key: Option<(String, String)>,
     pub recovered_key: Option<(String, (u32, u32))>,
-    pub key_aliases_renamed: bool,
+    pub key_identity_unproven: bool,
     pub has_predicate: bool,
 }
 

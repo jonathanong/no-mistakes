@@ -6,15 +6,20 @@ pub(super) fn compare_keys(
     write: &RowAccess,
     write_call: &EmbeddedSqlCall,
 ) -> Option<bool> {
+    if lock.key_identity_unproven || write.key_identity_unproven {
+        return None;
+    }
+    if std::ptr::eq(lock_call, write_call) && lock_call.caller_transaction_id.is_none() {
+        let (lock_column, lock_key) = lock.key.as_ref()?;
+        let (write_column, write_key) = write.key.as_ref()?;
+        return (lock_column == write_column).then_some(lock_key == write_key);
+    }
     let (lock_column, lock_key) = proven_key(lock, lock_call)?;
     let (write_column, write_key) = proven_key(write, write_call)?;
     (lock_column == write_column).then_some(lock_key == write_key)
 }
 
 fn proven_key<'a>(row: &'a RowAccess, call: &EmbeddedSqlCall) -> Option<(&'a str, String)> {
-    if row.key_aliases_renamed {
-        return None;
-    }
     if let (Some((column, at)), Some(_)) = (&row.recovered_key, call.caller_transaction_id) {
         if call.bound_value_sql != call.sql_text {
             return None;

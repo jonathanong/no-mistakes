@@ -213,3 +213,67 @@ export async function conjunctionProvesNonNull(query: PoolQuery) {
   await query(`WITH pending AS (SELECT owner_id FROM items WHERE value > 0 AND owner_id IS NOT NULL FOR UPDATE)
     DELETE FROM items USING pending WHERE items.owner_id = pending.owner_id`);
 }
+
+export async function coercingObjectKey(tx: Tx) {
+  let next = 1;
+  const key = { toPostgres: () => next++ };
+  await tx.query("SELECT id FROM items WHERE id = $1 FOR UPDATE", [key]);
+  await tx.query("UPDATE items SET value = 1 WHERE id = $1", [key]);
+}
+
+export async function changingObjectKey(tx: Tx, key: { value: number }) {
+  await tx.query("SELECT id FROM items WHERE id = $1 FOR UPDATE", [key]);
+  key.value += 1;
+  await tx.query("UPDATE items SET value = 1 WHERE id = $1", [key]);
+}
+
+export async function primitiveKeyWithPayload(tx: Tx, id: number, payload: object) {
+  await tx.query("SELECT id FROM items WHERE id = $1 FOR UPDATE", [id]);
+  await tx.query("UPDATE items SET value = $1 WHERE id = $2", [payload, id]);
+}
+
+export async function differentCoercionSlots(query: PoolQuery) {
+  let next = 1;
+  const key = { toPostgres: () => next++ };
+  await query(`WITH locked AS (SELECT id FROM items WHERE id = $1 FOR UPDATE),
+    changed AS (UPDATE items SET value = 1 WHERE id = $2 RETURNING id)
+    SELECT id FROM locked`, [key, key]);
+}
+
+export async function sameCoercionSlot(query: PoolQuery) {
+  let next = 1;
+  const key = { toPostgres: () => next++ };
+  await query(`WITH locked AS (SELECT id FROM items WHERE id = $1 FOR UPDATE),
+    changed AS (UPDATE items SET value = 1 WHERE id = $1 RETURNING id)
+    SELECT id FROM locked`, [key]);
+}
+
+export async function differentArrayCasts(tx: Tx, id: number) {
+  await tx.query("SELECT id FROM items WHERE id = $1::integer FOR UPDATE", [id]);
+  await tx.query("UPDATE items SET value = 1 WHERE id = $1::numeric", [id]);
+}
+
+export async function differentTagCasts(tx: Tx, id: number) {
+  await tx.query(sql`SELECT id FROM items WHERE id = ${id}::integer FOR UPDATE`);
+  await tx.query(sql`UPDATE items SET value = 1 WHERE id = ${id}::numeric`);
+}
+
+export async function differentStatementCasts(query: PoolQuery, id: number) {
+  await query(`WITH locked AS (SELECT id FROM items WHERE id = $1::integer FOR UPDATE),
+    changed AS (UPDATE items SET value = 1 WHERE id = $1::numeric RETURNING id)
+    SELECT id FROM locked`, [id]);
+}
+
+export async function castOnOneLockTarget(tx: Tx, item: number, child: number) {
+  await tx.query(`SELECT 1 FROM items x JOIN child y ON y.parent_id = x.id
+    WHERE x.id = $1::integer AND y.id = $2 FOR UPDATE OF x FOR UPDATE OF y`, [item, child]);
+  await tx.query("UPDATE items SET value = 1 WHERE id = $1", [item]);
+  await tx.query("UPDATE child SET value = 1 WHERE id = $1", [child]);
+}
+
+export async function plainKeysOnBothLockTargets(tx: Tx, item: number, child: number) {
+  await tx.query(`SELECT 1 FROM items x JOIN child y ON y.parent_id = x.id
+    WHERE x.id = $1 AND y.id = $2 FOR UPDATE OF x FOR UPDATE OF y`, [item, child]);
+  await tx.query("UPDATE items SET value = 1 WHERE id = $1", [item]);
+  await tx.query("UPDATE child SET value = 1 WHERE id = $1", [child]);
+}

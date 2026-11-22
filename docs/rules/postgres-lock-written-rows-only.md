@@ -311,7 +311,7 @@ unresolved SQL in the transaction.
 Set `transactionExecutorTypeNames: [TransactionQuery]` to match an awaited
 lock and a later unconditional, awaited write on the same parameter in the
 same function. SQL parameter arrays and trusted SQL tag interpolations can
-prove matching keys when they refer to the same stable binding. This option
+prove matching keys when untransformed SQL values refer to the same stable primitive binding. This option
 also selects those names as executor types and defaults to an empty list. Use names
 imported directly from the configured executor module that exclusively represent
 transaction executors. The proof requires a simple, stable parameter with a

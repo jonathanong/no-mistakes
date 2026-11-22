@@ -1,7 +1,12 @@
 use super::*;
 use crate::codebase::postgres::idents::ident_key;
 
-type Keys = (Option<(String, String)>, Option<(String, (u32, u32))>);
+#[derive(Default)]
+struct Keys {
+    key: Option<(String, String)>,
+    recovered_key: Option<(String, (u32, u32))>,
+    value_cast: bool,
+}
 type BoundValue = (Option<String>, Option<(u32, u32)>);
 pub(super) fn access(
     table: &TableFactor,
@@ -15,7 +20,7 @@ pub(super) fn access(
             args: None,
             ..
         } => {
-            let (key, recovered_key) = predicate
+            let keys = predicate
                 .and_then(|expr| equality(expr, qualifier(table).as_deref(), positions))
                 .unwrap_or_default();
             RowAccess {
@@ -25,18 +30,19 @@ pub(super) fn access(
                         .is_some_and(|alias| generated(&alias.name, positions)))
                 .then(|| object_name_identity(name)),
                 has_predicate: predicate.is_some(),
-                key,
-                recovered_key,
-                key_aliases_renamed: alias
-                    .as_ref()
-                    .is_some_and(|alias| !alias.columns.is_empty()),
+                key: keys.key,
+                recovered_key: keys.recovered_key,
+                key_identity_unproven: keys.value_cast
+                    || alias
+                        .as_ref()
+                        .is_some_and(|alias| !alias.columns.is_empty()),
             }
         }
         _ => RowAccess {
             relation: None,
             key: None,
             recovered_key: None,
-            key_aliases_renamed: false,
+            key_identity_unproven: false,
             has_predicate: predicate.is_some(),
         },
     }
@@ -70,7 +76,11 @@ fn equality(
         let (value, origin) = bound(value_expr, positions)?;
         let recovered_key = origin.map(|at| (column.clone(), at));
         let key = value.map(|value| (column, value));
-        Some((key, recovered_key))
+        Some(Keys {
+            key,
+            recovered_key,
+            value_cast: matches!(unwrap_expr(value_expr), Expr::Cast { .. }),
+        })
     };
     binding(left, right).or_else(|| binding(right, left))
 }
