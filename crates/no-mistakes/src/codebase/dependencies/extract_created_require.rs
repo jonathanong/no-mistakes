@@ -5,15 +5,6 @@ struct CreatedRequireState {
     namespaces: FxHashSet<String>,
 }
 
-fn note_created_require_factories(collector: &mut ImportCollector, program: &Program<'_>) {
-    for statement in &program.body {
-        let Statement::ImportDeclaration(import) = statement else {
-            continue;
-        };
-        note_created_require_import(collector, import);
-    }
-}
-
 fn note_created_require_import(collector: &mut ImportCollector, import: &ImportDeclaration<'_>) {
     if import.import_kind.is_type() {
         return;
@@ -149,22 +140,20 @@ fn record_require_import(collector: &mut ImportCollector, call: &CallExpression<
         .then_some("require.resolve")
         .or_else(|| is_require_callee(&call.callee).then_some("require"));
     if let Some(callee) = require_callee.filter(|_| collector.global_require_available()) {
-        if collector.should_record_call(callee) {
-            collector.function_calls.push(FunctionCall {
-                caller: collector.current_function(),
-                caller_id: collector.current_function_id(),
-                syntactic_caller: collector.current_syntactic_caller(),
-                callee: callee.to_string(),
-                line: import_line_at(&collector.line_starts, call.span.start as usize),
-                offset: call.span.start,
-                is_callback: false,
-                invocation: InvocationKind::Call,
-                target_identity: collector.call_target_identity(callee),
-                callee_binding_scope: collector.callee_binding_scope(callee),
-                static_arg: call.arguments.first().and_then(static_path_argument),
-                static_cwd: None,
-            });
-        }
+        collector.function_calls.push(FunctionCall {
+            caller: collector.current_function(),
+            caller_id: collector.current_function_id(),
+            syntactic_caller: collector.current_syntactic_caller(),
+            callee: callee.to_string(),
+            line: import_line_at(&collector.line_starts, call.span.start as usize),
+            offset: call.span.start,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: collector.call_target_identity(callee),
+            callee_binding_scope: collector.callee_binding_scope(callee),
+            static_arg: call.arguments.first().and_then(static_path_argument),
+            static_cwd: None,
+        });
         let kind = if callee == "require.resolve" {
             ImportKind::RequireResolve
         } else {

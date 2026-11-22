@@ -78,6 +78,10 @@ is the escape:
 - An `export { local as public }` of an imported fragment, and an exported
   binding whose value is a member of an imported namespace.
 
+Literal loads through a `const` initialized by `createRequire(...)` are recorded
+by the shared import visitor, including calls inside functions. The factory must
+come from `node:module` or `module`. A non-literal argument remains unproven.
+
 A member read that is the sole argument of `.append(...)` is not an escape.
 `query.append(fragment)` and `query.append(ns["FRAGMENT"])` stay silent. A `!`
 or `as` assertion around that argument is left to `postgres-no-executor-adapter`.
