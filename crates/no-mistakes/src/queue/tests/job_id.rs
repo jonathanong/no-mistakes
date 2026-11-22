@@ -93,7 +93,8 @@ fn invalid_job_id_findings_match_snapshot() {
             "wrapped",
             "factory-queue",
             "after-spread",
-            "after-computed"
+            "after-computed",
+            "queue-alias"
         ]
     );
     let pretty = format!("{}\n", serde_json::to_string_pretty(&rows).unwrap());

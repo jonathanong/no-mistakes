@@ -42,3 +42,21 @@ direct.add("after-spread", {}, { ...opaqueOptions, jobId: "new:id" });
 direct.add("after-computed", {}, { [opaqueKey]: "maybe", ["jobId"]: "new:id" });
 
 new Worker("review-direct", async () => {});
+
+import * as factoryExports from "./factory";
+
+const queueAlias = direct;
+queueAlias.add("queue-alias", {}, { jobId: "alias:id" });
+enqueueConfigured(direct, "implicit-options");
+enqueueConfigured(externalQueue, "unresolved-receiver", { jobId: "opaque:id" });
+factoryExports.registry.add("non-queue-export", {}, { jobId: "opaque:id" });
+factoryExports.registry.nested.add("nested-receiver", {}, { jobId: "opaque:id" });
+direct.add("unresolved-id", {}, { jobId: externalJobId });
+
+let mutableQueue = new Queue("review-direct");
+mutableQueue = direct;
+mutableQueue.add("mutable-queue", {}, { jobId: "opaque:id" });
+
+let mutableFlow = new FlowProducer();
+mutableFlow = new FlowProducer();
+mutableFlow.add({ name: "mutable-flow", queueName: "review-direct", opts: { jobId: "opaque:id" } });

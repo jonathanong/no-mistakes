@@ -165,6 +165,13 @@ expression: pretty
     "sourceLine": "direct.add(\"after-computed\", {}, { [opaqueKey]: \"maybe\", [\"jobId\"]: \"new:id\" });"
   },
   {
+    "file": "receiver-evidence.ts",
+    "job": "queue-alias",
+    "line": 49,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "queueAlias.add(\"queue-alias\", {}, { jobId: \"alias:id\" });"
+  },
+  {
     "file": "scoped-enqueue.ts",
     "job": "inner",
     "line": 9,
