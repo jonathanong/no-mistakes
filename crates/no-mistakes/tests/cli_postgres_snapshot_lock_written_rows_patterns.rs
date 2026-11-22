@@ -122,6 +122,52 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
 }
 
 #[test]
+fn postgres_lock_written_rows_share_uncertainty_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_share_uncertainty",
+        &[("advise", "share-lock-uncertainty", "share-uncertainty.yml")],
+    );
+    let advise = &reports["advise"]["report"];
+    assert!(lines(advise, "advisories", "share-lock-then-write").is_empty());
+    assert_eq!(
+        lines(advise, "advisories", "unanalyzable"),
+        [8, 16, 22, 29, 37]
+    );
+}
+
+#[test]
+fn postgres_lock_written_rows_redundant_prelock_boundaries_check_json_snapshot() {
+    let reports = snapshot(
+        "postgres_lock_written_rows_redundant_prelock_boundaries",
+        &[(
+            "advise",
+            "redundant-prelock-boundaries",
+            "redundant-advise.yml",
+        )],
+    );
+    let advise = &reports["advise"]["report"];
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "redundant-prelock",
+            Some("src/adjacency.ts")
+        ),
+        [5]
+    );
+    assert_eq!(lines(advise, "advisories", "redundant-prelock"), [5]);
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "unanalyzable",
+            Some("src/unsupported-sql.ts")
+        ),
+        [5, 11, 17, 23, 35, 47, 53]
+    );
+}
+
+#[test]
 fn postgres_lock_written_rows_redundant_prelocks_check_json_snapshot() {
     let reports = snapshot(
         "postgres_lock_written_rows_redundant_prelocks",
