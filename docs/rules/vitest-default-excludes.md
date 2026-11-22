@@ -37,8 +37,8 @@ The rule checks explicit `test.exclude` arrays in those objects. Leaving
 `exclude` unset preserves Vitest's defaults. The rule skips callback configs,
 CommonJS exports, re-exported or indirect root bindings, external project
 config files, coverage exclusions, and other properties named `exclude`.
-Arrays with unknown entries or spreads and conditional or call-based
-`exclude` values are also skipped.
+Arrays with unknown entries or unrecognized spreads, as well as conditional or call-based
+`exclude` values, are also skipped.
 
 ## Counterexample
 
