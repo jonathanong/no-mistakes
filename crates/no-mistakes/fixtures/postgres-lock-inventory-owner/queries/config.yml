@@ -2,3 +2,5 @@ version: 2
 rules:
   - rule: postgres-lock-inventory
     scope: repository
+    options:
+      executorNames: []

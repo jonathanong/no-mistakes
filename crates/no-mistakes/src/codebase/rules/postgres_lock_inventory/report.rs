@@ -20,7 +20,6 @@ pub(super) fn build(
         append_file(&mut report, &file, row);
     }
     report.unanalyzed.sort_unstable();
-    report.unanalyzed.dedup();
     report
 }
 

@@ -138,6 +138,9 @@ invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
 
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) has a
+strict uncertainty contract instead of these policy overrides.
+
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
 also consumes the shared policy, but deliberately stays advisory only: its
 query rewrites need review and benchmarks even when the shape is proven.

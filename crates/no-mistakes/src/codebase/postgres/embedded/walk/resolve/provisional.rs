@@ -29,7 +29,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn record_executor_call(
         let namespace = visitor.namespace_expression(receiver);
         let broad = visitor.bindings.contains(MEMBER_QUERY_OPT_IN);
         let uncertain = visitor.uncertain_detached_member(receiver);
+        let transaction_member = visitor.query_binding
+            && matches!(unwrap_ts_wrappers(receiver), Expression::Identifier(id)
+                if super::super::transaction_flow::scoped_transaction(visitor, id.name.as_str(), call.span.start).is_some());
         if broad
+            || transaction_member
             || visitor.is_transaction_candidate(receiver)
             || uncertain
             || (visitor.proven_executor(receiver) && (!namespace || visitor.query_binding))

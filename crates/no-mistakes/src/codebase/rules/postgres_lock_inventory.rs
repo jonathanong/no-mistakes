@@ -121,13 +121,20 @@ fn report_findings(report: LockInventoryReport) -> Vec<RuleFinding> {
             site.category,
         ));
     }
-    for gap in report.unanalyzed {
-        findings.push(finding(
-            gap.file,
-            gap.line,
-            format!("incomplete PostgreSQL lock inventory ({}). Make the configured SQL or helper call statically analyzable", gap.reason),
-            "unanalyzable".into(),
-        ));
+    for gaps in report.unanalyzed.chunk_by(PartialEq::eq) {
+        for (index, gap) in gaps.iter().enumerate() {
+            let reason = if gaps.len() == 1 {
+                gap.reason.clone()
+            } else {
+                format!("{}, occurrence {} of {}", gap.reason, index + 1, gaps.len())
+            };
+            findings.push(finding(
+                gap.file.clone(),
+                gap.line,
+                format!("incomplete PostgreSQL lock inventory ({reason}). Make the configured SQL or helper call statically analyzable"),
+                "unanalyzable".into(),
+            ));
+        }
     }
     if !report.removed.is_empty() {
         findings.push(finding(

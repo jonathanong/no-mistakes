@@ -1010,10 +1010,11 @@ advisory in every mode.
 `await postgresLockInventory({ root, config, writeBaseline: false })` returns
 the `LockInventoryReport` fields `sites`, category `counts`, `unanalyzed` SQL
 inputs, `baselineFile`, `added`, `removed`, and `baselineUpdated`, plus optional
-invocation metadata such as `jobsPoolWarning`. The optional
-`writeBaseline` creates a missing baseline or prunes an existing one, refusing
-new sites or unresolved SQL. The command and this asynchronous API share one
-prepared analysis. Ordinary `check()` and `analyzeProject()` check reports use
-the same rule and standard suppressions. See the
-[rule](rules/postgres-lock-inventory.md) and
-[command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
+invocation metadata such as `jobsPoolWarning`. Site keys ignore comments and
+whitespace; SQL token changes create new keys. With `writeBaseline: true`, a
+missing baseline is initialized from the analyzed sites. An existing baseline
+can only shrink by pruning stale entries and refuses added sites. Both paths
+refuse unresolved SQL. The command and this asynchronous API share one prepared
+analysis. Ordinary `check()` and `analyzeProject()` check reports use the same
+rule and standard suppressions. See the [rule](rules/postgres-lock-inventory.md)
+and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.

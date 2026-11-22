@@ -43,11 +43,14 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 profile = profile.with_exact_constant_origins();
             }
             profile = with_identifier_options(profile, rule_id, &options);
+            profile.track_transaction_helpers = matches!(
+                *rule_id,
+                "postgres-lock-written-rows-only" | "postgres-lock-inventory"
+            );
             if *rule_id == "postgres-lock-written-rows-only" {
                 use crate::codebase::rules::postgres_lock_written_rows_only::{
                     REDUNDANT_PRELOCK, SHARE_LOCK_THEN_WRITE,
                 };
-                profile.track_transaction_helpers = true;
                 profile.track_share_lock_writes = matches!(
                     options
                         .checks

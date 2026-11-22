@@ -169,9 +169,9 @@ fn reports_root_routine_declarations_as_inventory_gaps_even_when_parsing_succeed
     let sql = fixture("routines.sql");
     let facts = extract_sql_statement_facts(&sql);
     assert!(!facts.parse_failed);
-    assert_eq!(facts.lock_inventory_unanalyzed, [3, 8]);
+    assert_eq!(facts.lock_inventory_unanalyzed, [3, 7]);
     assert_eq!(facts.lock_inventory.len(), 1);
-    assert_eq!(facts.lock_inventory[0].line, 13);
+    assert_eq!(facts.lock_inventory[0].line, 12);
     let narrow = extract_sql_conflict_policy_facts(&sql, &[]);
     assert!(narrow.lock_inventory_unanalyzed.is_empty());
 }

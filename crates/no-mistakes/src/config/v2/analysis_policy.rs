@@ -3,6 +3,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 mod legacy;
 use legacy::legacy_policy;
+pub(super) use legacy::validate_inventory_policy;
 pub(crate) use legacy::validate_low_alias;
 pub(super) use legacy::{legacy_sql_options, sql_policy_rule};
 mod fallback;
@@ -47,6 +48,7 @@ pub struct EffectiveRuleAnalysis {
 
 impl NoMistakesConfig {
     pub fn requested_rule_analysis(&self, rule: &RuleDef) -> Result<EffectiveRuleAnalysis> {
+        validate_inventory_policy(rule)?;
         let effort = self
             .effort_override
             .or(option(rule, "effort")?)
@@ -57,7 +59,9 @@ impl NoMistakesConfig {
         {
             validate_low_alias(rule)?;
         }
-        let mut unanalyzable = if let Some(shared) = option(rule, "unanalyzable")? {
+        let mut unanalyzable = if rule.rule == "postgres-lock-inventory" {
+            Unanalyzable::Report
+        } else if let Some(shared) = option(rule, "unanalyzable")? {
             shared
         } else {
             legacy_policy(rule)?

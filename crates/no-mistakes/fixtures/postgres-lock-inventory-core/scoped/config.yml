@@ -15,4 +15,5 @@ rules:
       include: ["*.sql"]
       exclude: ["excluded.sql"]
       sqlInclude: ["*.sql"]
+      executorNames: []
       baselineFile: native.json
