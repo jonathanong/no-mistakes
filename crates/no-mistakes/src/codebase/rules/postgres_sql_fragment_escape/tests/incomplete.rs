@@ -168,8 +168,9 @@ fn only_reached_missing_facts_and_operational_failures_produce_gaps() {
     );
     let reached = root.join("query-broken.ts");
     let unrelated = root.join("unrelated-broken.ts");
-    let operational = root.join("transitive-broken.ts");
-    let unrelated_operational = root.join("shadowed-broken.ts");
+    let operational = root.join("reached-unreadable.ts");
+    let unrelated_operational = root.join("unrelated-unreadable.ts");
+    assert!(!operational.exists() && !unrelated_operational.exists());
     let mut facts = CheckFactMap {
         graph_files_complete: true,
         graph_files: vec![reached.clone(), unrelated, root.join("tsconfig.json")],
@@ -183,7 +184,7 @@ fn only_reached_missing_facts_and_operational_failures_produce_gaps() {
         ImportedBindingKind::Named,
     ));
     producer.imported_bindings.push(import(
-        "./transitive-broken",
+        "./reached-unreadable",
         "second",
         "second",
         ImportedBindingKind::Named,
