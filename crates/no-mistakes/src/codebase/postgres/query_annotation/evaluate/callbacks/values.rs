@@ -15,6 +15,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         visited: &mut CallbackState,
     ) {
         self.retain_temporary_values(values);
+        #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+        super::super::effects::call_value_work_tests::record_callback_visits(values.len());
         for value in values {
             match value {
                 Value::Aggregate(values)
@@ -22,7 +24,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 | Value::Object(values)
                 | Value::Record(values, _)
                 | Value::Joined(values)
-                | Value::Possible(values) => self.callback_values(values, depth, visited),
+                | Value::Possible(values)
+                    if values.contains_arguments() || values.contains_environment() =>
+                {
+                    self.callback_values(values, depth, visited);
+                }
                 Value::Promise(value) | Value::Evaluated(value, _) => {
                     self.callback_values(std::slice::from_ref(value.as_ref()), depth, visited);
                 }

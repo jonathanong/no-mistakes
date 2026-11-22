@@ -68,7 +68,8 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
     let id = *id;
     let frame_count = evaluator.scopes.len();
     assert!(evaluator.events.is_empty());
-    evaluator.opaque_callbacks(&[callback], 0);
+    let nested = Value::Aggregate(vec![callback].into());
+    evaluator.opaque_callbacks(&[nested], 0);
     assert!(matches!(
         evaluator.scopes[env].get("statement"),
         Some(Value::Unknown)

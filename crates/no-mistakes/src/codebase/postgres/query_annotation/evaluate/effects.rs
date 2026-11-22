@@ -3,6 +3,8 @@ mod borrowed_tests;
 #[cfg(test)]
 mod builder_free_tests;
 mod builder_ids;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+pub(super) mod call_value_work_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod captured_write_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

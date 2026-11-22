@@ -107,7 +107,8 @@ fn array_callbacks_visit_live_aliases_and_cycles_once() {
         evaluator.active_callback_functions = Some(Default::default());
         evaluator.active_callback_executions = Some(Default::default());
         let mut state = super::super::CallbackState::default();
-        evaluator.callback_values(&roots, 8, &mut state);
+        let nested = Value::Aggregate(Vec::from(roots).into());
+        evaluator.callback_values(&[nested], 8, &mut state);
         assert_eq!(
             state.functions.len(),
             1,
