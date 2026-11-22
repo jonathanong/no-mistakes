@@ -14,11 +14,12 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT paginate a growing result with `OFFSET`; its cost grows with page depth and concurrent inserts shift rows between pages. Use keyset `(key, id) < ($1, $2)` ordered the same way.
 - MUST NOT trust a client page size; clamp it to a static ceiling.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
-- MUST NOT issue one query per item in a loop, `.map`, or `Promise.all`; write the batch query and make the single-item call wrap it.
+- SHOULD NOT issue one query per item for an input-sized batch when one query can do the same work.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.
 - SHOULD NOT put volatile functions (`random()`, `clock_timestamp()`) in predicates unless per-row evaluation is intended; they are evaluated per row.
 - MUST NOT write non-idempotent `INSERT`s on retried paths; use `ON CONFLICT` on a key the retry repeats, not a freshly generated one.
-- MUST NOT write generated or trigger-maintained columns.
+- MUST NOT assign a non-DEFAULT value to a generated column.
+- SHOULD NOT write trigger-maintained columns unless the schema allows an explicit override.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
 - SHOULD NOT cast or wrap an indexed column in a predicate (UUIDs, timestamps); compare the raw column to a bound.
@@ -27,8 +28,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 
 ## Locks, transactions, connections
 
-- SHOULD NOT lock rows you neither write nor read to decide a write. When an invariant needs serialization, prefer a row lock on the parent or aggregate-root row over an advisory lock.
-- SHOULD NOT take an advisory lock when a row lock can express the same serialization.
+- SHOULD NOT take row locks unrelated to the work or its serialization invariant.
 - MUST NOT lock or upsert several rows in unspecified order; `ORDER BY` the key, or use `SKIP LOCKED` for competing workers.
 - MUST NOT hold a transaction or pooled client across an external call or unrelated work; release clients in `finally`.
 - MUST NOT `Promise.all` statements on one transaction client expecting parallelism; merge them into one statement.
@@ -40,7 +40,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT write an ORM lock that never executes; lazy querysets take no lock until evaluated, and some ORMs drop the lock on bulk delete.
 - MUST NOT lock related tables in different orders on different paths; lock parent before child everywhere.
 - MUST NOT pick which parent to lock from an unlocked read of the child's foreign key; lock that parent, then lock the child and re-check the key, retrying if it moved.
-- MUST NOT ship a job that locks contended rows without retrying deadlocks with jittered backoff.
+- SHOULD NOT ship a job that locks contended rows without a recovery path for deadlocks, such as bounded retries with backoff.
 - MUST NOT keep using a transaction after a statement fails unless it ran in a savepoint you rolled back to; every later statement fails with `25P02`.
 - MUST NOT run logging or metrics code that queries the database on the transaction's connection; its failure aborts the transaction.
 - MUST NOT rely on `SERIALIZABLE` to stop a racing writer unless each transaction reads rows the other writes. A guard (hold, ban, cancel) must read the rows the writer would change; otherwise SSI orders the writer first with no `40001`.
@@ -53,21 +53,17 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT leave a `NOT VALID` constraint without a later `VALIDATE CONSTRAINT`.
 - MUST NOT exceed 63-byte identifiers; PostgreSQL truncates them silently.
 - MUST NOT put `now()` or `timestamptz + interval` in generated or index expressions; they are not immutable.
-- MUST NOT run DDL or session settings from runtime or seed SQL; keep them in migrations.
-- MUST NOT raise `statement_timeout` or idle timeouts to make slow work fit; split, reorder, or shrink the work. Exception: a migration step that cannot be split, such as an index build on a large table, may raise it for that step only (`SET LOCAL` in a transaction, or `SET` then `RESET` around a `CONCURRENTLY` build) with its reason stated beside it.
+- SHOULD NOT change persistent application schema from runtime or seed SQL. Use migrations for schema changes and scope session settings to the work that needs them.
+- SHOULD NOT raise `statement_timeout` or idle timeouts to make slow work fit when you can split, reorder, or shrink the work. An indivisible step, such as building an index on a large table, may use a higher timeout scoped to that step.
 - MUST NOT update append-only history rows, or delete them outside a retention policy.
-- MUST NOT add a `NOT NULL`, unique, or check constraint without first querying for rows that already violate it.
+- SHOULD NOT add a `NOT NULL`, unique, or check constraint to an existing table without checking whether existing rows satisfy it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
 - SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
-- SHOULD NOT add an index that is a prefix of another, or copy near-identical trigger functions.
-- SHOULD NOT add `updated_at` to rows that are only inserted and deleted.
-- SHOULD NOT repeat a column's value inside a JSON column on the same row.
 
 ## Partitioning
 
-- MUST NOT partition before retention and query predicates show it helps, or partition short-lived rows.
-- MUST NOT read partition children directly; query the parent with partition-key bounds.
-- MUST NOT omit the partition key from unique constraints or reader predicates; check pruning in the plan.
-- MUST NOT assume UUIDv7 order is commit order; re-read an overlapping window instead of trusting a high-water mark.
-- MUST NOT attach a populated range or drop a partition without checking the default partition, retention, and holds.
+- SHOULD NOT partition a table without evidence that partitioning helps retention, query performance, or maintenance.
+- SHOULD NOT read individual partitions in ordinary application queries. Query the parent with partition-key bounds when available.
+- SHOULD NOT omit partition-key bounds from queries that can use partition pruning. Check pruning in the plan.
+- MUST NOT infer commit order from UUIDv7 values alone.

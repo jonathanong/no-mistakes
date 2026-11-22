@@ -13,7 +13,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 - MUST NOT run production code in a test without asserting its outcome.
 - MUST NOT name a test for behavior it never asserts.
 - SHOULD NOT match error message text; assert type, code, or structured fields.
-- MUST NOT raise coverage with weak tests or exclude files from coverage; strengthen the test or refactor the code.
+- MUST NOT inflate coverage with assertions that cannot detect faults in the exercised behavior, or exclude application logic just to pass a threshold.
 - MUST NOT treat a passing rerun as a fix for a flaky test; find the cause.
 - MUST NOT assert something about every item in a collection without asserting it is non-empty; a per-item assertion passes over zero items. Asserting the collection equals `[]` is fine.
 - MUST NOT accept "either outcome is fine" when one outcome is a degraded fallback.
@@ -38,19 +38,20 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Isolation and timing
 
-- MUST NOT leave `.only`, `.skip`, `.todo`, or conditional skips; fix or delete the test.
+- MUST NOT commit `.only` when it prevents other tests from running.
+- SHOULD NOT leave `.skip`, `.todo`, or conditional skips without a stated reason. Tests may be gated on supported platforms.
 - MUST NOT share mutable module-scope state between tests, or depend on test order; build state per test.
 - MUST NOT mark suites sequential to hide shared state; remove the shared state.
 - MUST NOT sleep or use timing waits; await the specific condition with a named deadline.
 - SHOULD NOT depend on the real clock; control time in the test.
-- MUST NOT let gating tests call live third parties; replay recorded responses.
+- SHOULD NOT make a required test depend on a live third party when a fake or recorded response can verify the contract.
 - MUST NOT skip a test when a credential or service is missing in CI; fail it.
 - MUST NOT assert "nothing happened" before the event that would have caused it has settled.
 - MUST NOT leak workers, subscriptions, handles, or console output past the test.
 - MUST NOT attach a rejection, event, or response observer after the action that triggers it; register first.
 - MUST NOT raise or remove a timeout to hide slowness; fix the wait condition.
 - MUST NOT use fixed identities in a shared store, or reset shared state broadly; randomize ids and clean only what the test owns.
-- MUST NOT scan the live repository checkout from unit tests; use saved fixtures.
+- SHOULD NOT scan the live repository checkout from a unit test when a saved fixture can cover the behavior.
 - MUST NOT change shared database schema or server settings inside tests; migrate before the suite.
 - MUST NOT hardcode dates a test depends on being in the future or past; derive them from the injected clock.
 
@@ -58,7 +59,8 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 - SHOULD NOT fix a bug without a regression test.
 - MUST NOT accept a changed snapshot without reviewing the diff, or regenerate snapshots by default in CI.
-- MUST NOT hardcode git SHAs, real email domains, or real credentials in fixtures; use reserved test values.
+- MUST NOT put credentials for non-test environments in fixtures.
+- SHOULD NOT use real Git SHAs or email domains when synthetic Git SHAs or reserved domains can exercise the same behavior.
 
 ## Platform notes
 

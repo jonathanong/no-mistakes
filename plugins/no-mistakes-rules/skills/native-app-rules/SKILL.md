@@ -9,13 +9,13 @@ MUST NOT is a defect. SHOULD NOT needs a stated reason.
 
 ## Shared
 
-- MUST NOT hardcode user-facing copy; use typed localization keys.
+- SHOULD NOT hardcode user-facing copy that needs localization. Use the app's localization mechanism.
 - MUST NOT ship debug-only session or cookie loading in release builds, or default release endpoints to localhost.
 - MUST NOT store sessions outside secure storage.
 
 ## Swift
 
-- MUST NOT leave view models off `@MainActor`.
+- MUST NOT publish UI state outside the isolation required by the UI framework. Preserve main-actor isolation where SwiftUI requires it.
 - MUST NOT leave Darwin-only tests ungated (`#if canImport(Darwin)`).
 - MUST NOT omit the keychain access group when sandbox entitlements are on.
 - SHOULD NOT call `print()` in shipped code; use a logger.
