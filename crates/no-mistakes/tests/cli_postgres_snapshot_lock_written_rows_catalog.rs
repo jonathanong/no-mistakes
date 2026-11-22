@@ -77,3 +77,60 @@ fn postgres_lock_written_rows_trigger_writes_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_parameter_transactions_check_json_snapshot() {
+    let report = snapshot(
+        "postgres_lock_written_rows_parameter_transactions",
+        &[
+            (
+                "disabled",
+                "parameter-transactions",
+                "parameter-transactions-disabled.yml",
+            ),
+            (
+                "enabled",
+                "parameter-transactions",
+                "parameter-transactions.yml",
+            ),
+            (
+                "no_catalog",
+                "parameter-transactions",
+                "parameter-transactions-no-catalog.yml",
+            ),
+        ],
+    );
+    let advisories = report["enabled"]["report"]["advisories"]
+        .as_array()
+        .unwrap();
+    let has_advisory = |line: u64| advisories.iter().any(|advisory| advisory["line"] == line);
+    for line in [5, 12, 97, 102, 130, 170, 180, 185, 231, 246, 275, 282] {
+        assert!(!has_advisory(line), "expected a proof for line {line}");
+    }
+    for line in [
+        17, 21, 107, 112, 117, 123, 136, 143, 149, 155, 160, 165, 175, 191, 198, 220, 225, 238,
+        252, 257, 262, 268, 286, 291, 296, 301, 306,
+    ] {
+        assert!(has_advisory(line), "expected an abstention for line {line}");
+    }
+    let advisory_lines: Vec<_> = report["no_catalog"]["report"]["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|advisory| advisory["line"].as_u64().unwrap())
+        .collect();
+    for line in [
+        5, 175, 191, 198, 220, 225, 238, 252, 257, 262, 268, 286, 291, 296, 301, 306,
+    ] {
+        assert!(
+            advisory_lines.contains(&line),
+            "expected an abstention for line {line}"
+        );
+    }
+    for line in [130, 180, 185, 203, 208, 213, 231, 246, 275, 282] {
+        assert!(
+            !advisory_lines.contains(&line),
+            "expected a proof for line {line}"
+        );
+    }
+}

@@ -207,7 +207,10 @@ ids to `fail` after reviewing row, table, constant advisory, and autocommit
 locks. The executor replacement, additive, and exclusion options above also
 apply to this rule. Configure transaction factories through `executorFactoryNames`
 for `const`, `using`, and `await using` bindings, or a simple first parameter
-of a direct factory callback. Configure `executorOptions: [{ name: query }]`
+of a direct factory callback. Use `transactionExecutorTypeNames` for imported
+transaction-only parameter types. A local write proof requires a matching write
+on the same parameter and in the same function. Configure
+`executorOptions: [{ name: query }]`
 (or `executorOptionProperties: [query]`) when a wrapper routes its transaction
 through an inline options object. These property names leave bare executor
 binding resolution unchanged. Local, unexported option helpers can forward

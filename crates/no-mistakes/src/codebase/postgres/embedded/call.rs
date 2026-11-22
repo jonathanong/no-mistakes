@@ -13,6 +13,8 @@ pub struct EmbeddedSqlCall {
     pub helper_definition: bool,
     pub lock_helper: Option<Box<(String, u32)>>,
     pub transaction_id: Option<u32>,
+    #[doc(hidden)]
+    pub caller_transaction_id: Option<u32>,
     pub transaction_line: Option<u32>,
     pub executor_transaction_known: bool,
     pub execution_unconditional: bool,

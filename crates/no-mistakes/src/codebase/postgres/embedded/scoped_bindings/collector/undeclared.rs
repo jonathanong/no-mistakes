@@ -16,6 +16,7 @@ impl ScopeCollector {
             delayed,
             factories: imports.factories,
             types: imports.types,
+            transaction_types: imports.transaction_types,
             found: ScopedExecutors {
                 undeclared_imports: imports.undeclared_runtime,
                 ..Default::default()

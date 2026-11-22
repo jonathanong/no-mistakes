@@ -40,6 +40,7 @@ fn public_call_versions_are_readable_and_legacy_construction_is_explicit() {
         helper_definition: false,
         lock_helper: None,
         transaction_id: None,
+        caller_transaction_id: None,
         transaction_line: None,
         executor_transaction_known: false,
         execution_unconditional: false,

@@ -9,6 +9,7 @@ use std::collections::{HashMap, HashSet};
 pub(super) struct ImportClassification {
     pub(super) factories: HashSet<String>,
     pub(super) types: HashSet<String>,
+    pub(super) transaction_types: HashSet<String>,
     pub(super) undeclared_runtime: HashMap<String, super::super::UndeclaredExecutorType>,
     pub(super) undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
     pub(super) provisional_factories: HashMap<String, Vec<u32>>,
@@ -113,6 +114,9 @@ fn classify_import(
                 classified.factories.insert(local.clone());
             }
             if type_import {
+                if contains(&options.transaction_executor_type_names, imported.as_ref()) {
+                    classified.transaction_types.insert(local.clone());
+                }
                 classified.types.insert(local);
             }
             continue;

@@ -299,6 +299,26 @@ invalidates its transaction proof. Case-block shadows apply only after the
 switch discriminant, which is evaluated in the outer environment. Namespace
 blocks own their `var` bindings, including declarations inside nested blocks;
 those bindings do not shadow an imported factory outside the namespace.
+The rule can prove a row lock locally when its own SQL statement writes the
+locked rows. For example, a CTE can select a column from rows with `FOR UPDATE`
+and a `DELETE ... USING` can match the target to that CTE on the same column.
+Use `IS NOT DISTINCT FROM` for a nullable join key. An equality join requires
+a non-null key proven by the CTE predicate or by `schemaCatalogPath` with
+complete coverage when the surrounding SQL leaves that schema evidence intact.
+This proof can clear abstentions from unresolved transaction membership or other
+unresolved SQL in the transaction.
+
+Set `transactionExecutorTypeNames: [TransactionQuery]` to match an awaited
+lock and a later unconditional, awaited write on the same parameter in the
+same function. SQL parameter arrays and trusted SQL tag interpolations can
+prove matching keys when untransformed SQL values refer to the same stable primitive binding. This option
+also selects those names as executor types and defaults to an empty list. Use names
+imported directly from the configured executor module that exclusively represent
+transaction executors. The proof requires a simple, stable parameter with a
+direct type annotation. A pool-or-transaction union retains unresolved
+membership. A lock without a proven local write remains unanalyzable because
+the caller may perform the write after the function returns.
+
 With an import specifier, executor names
 default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.
@@ -317,7 +337,8 @@ PostgreSQL schema catalog used to connect DDL targets to locked relations
 through partitioning, inheritance, and foreign keys.
 Guard-read proofs do not require a catalog. Ordering-only catalogs are accepted,
 but absent relationship metadata cannot prove that two relations are linked.
-Only complete catalogs contribute trigger-derived write evidence.
+Only complete catalogs contribute trigger-derived write evidence and non-null
+CTE join-key evidence.
 
 `checks` defaults to all four ids at `advise`. `allow` defaults to `[]`;
 selectors are optional `relation`, `key`, `file`, and `line`, with a required

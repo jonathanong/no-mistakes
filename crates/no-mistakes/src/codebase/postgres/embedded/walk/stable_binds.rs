@@ -14,7 +14,11 @@ pub(super) struct ParameterFields {
     pub suspensions: Vec<oxc_span::Span>,
 }
 
-fn origins(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> Vec<(u32, u32)> {
+fn origins(
+    visitor: &ScopeVisitor<'_>,
+    call: &CallExpression<'_>,
+    caller_owned: bool,
+) -> Vec<(u32, u32)> {
     let Some(Expression::TaggedTemplateExpression(tag)) = call
         .arguments
         .first()
@@ -24,7 +28,13 @@ fn origins(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> Vec<(u32, u
         return Vec::new();
     };
     let mut origins = Vec::new();
-    for expr in &tag.quasi.expressions {
+    for (index, expr) in tag.quasi.expressions.iter().enumerate() {
+        if caller_owned
+            && super::super::tags::quasi_text(&tag.quasi.quasis[index + 1], false)
+                .starts_with(|ch: char| ch.is_ascii_digit())
+        {
+            continue;
+        }
         match expr {
             Expression::Identifier(id) => {
                 let Some(binding) = visitor.lookup(id.name.as_str()) else {
@@ -52,6 +62,9 @@ fn origins(visitor: &ScopeVisitor<'_>, call: &CallExpression<'_>) -> Vec<(u32, u
             _ => return Vec::new(),
         }
     }
+    if caller_owned {
+        return origins;
+    }
     let counts = origins
         .iter()
         .fold(FxHashMap::<u32, usize>::default(), |mut counts, (_, id)| {
@@ -67,7 +80,9 @@ pub(super) fn annotate(
     call: &CallExpression<'_>,
     fact: &mut super::super::EmbeddedSqlCall,
 ) {
-    let ids: FxHashMap<_, _> = origins(visitor, call).into_iter().collect();
+    let ids: FxHashMap<_, _> = origins(visitor, call, fact.caller_transaction_id.is_some())
+        .into_iter()
+        .collect();
     if ids.is_empty() {
         return;
     }

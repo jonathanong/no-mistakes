@@ -1,7 +1,11 @@
 use super::*;
-use crate::codebase::postgres::statements::lock_writes::RowAccess;
+use crate::codebase::postgres::statements::lock_writes::{CteWriteLink, LockWriteFacts, RowAccess};
+mod keys;
+use keys::{compare_keys, identity};
 pub(super) fn enabled_for(call: &EmbeddedSqlCall, written: bool, outside: bool) -> bool {
-    if call.executor_transaction_known {
+    if call.caller_transaction_id.is_some() {
+        written
+    } else if call.executor_transaction_known {
         if call.transaction_id.is_some() {
             written
         } else {
@@ -11,7 +15,102 @@ pub(super) fn enabled_for(call: &EmbeddedSqlCall, written: bool, outside: bool) 
         written || outside
     }
 }
-pub(super) fn check(
+pub(super) fn check_transaction(
+    output: &mut Output<'_>,
+    site: &Site<'_>,
+    lock: &RowAccess,
+    writes: &writes::Writes<'_>,
+    id: u32,
+    unresolved: bool,
+    written_by_trigger: bool,
+) {
+    if unresolved {
+        output.unresolved(site, "transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set");
+    } else if let Some(relation) = &lock.relation {
+        if !written_by_trigger {
+            let (candidates, ambiguous) = writes.for_relation(id, relation);
+            check(output, site, lock, candidates, relation, ambiguous);
+        }
+    } else {
+        output.unresolved(
+            site,
+            "locked relation is unresolved; lock a single explicit base relation",
+        );
+    }
+}
+
+pub(super) fn check_membership(
+    output: &mut Output<'_>,
+    site: &Site<'_>,
+    lock: &RowAccess,
+    same_statement: bool,
+    writes: &writes::Writes<'_>,
+    unresolved: &BTreeSet<u32>,
+) {
+    let call = site.call;
+    if same_statement {
+        return;
+    }
+    match call.caller_transaction_id {
+        Some(id) if !unresolved.contains(&id) && caller_write(call, lock, writes, id) => {}
+        Some(_) => output.unresolved(site, "transaction is owned by the caller and a matching local write could not be proven"),
+        None => output.unresolved(site, "transaction membership is unresolved; acquire the lock through a configured transaction factory"),
+    }
+}
+
+pub(super) fn same_statement(
+    call: &EmbeddedSqlCall,
+    lock: &RowAccess,
+    access: &LockWriteFacts,
+    lock_index: usize,
+    catalog: Option<&SchemaCatalog>,
+) -> bool {
+    access
+        .linked_cte_locks
+        .get(&lock_index)
+        .is_some_and(|link| match link {
+            CteWriteLink::Complete => true,
+            CteWriteLink::RequiresNonNull(column) => catalog.is_some_and(|catalog| {
+                catalog.coverage() == crate::codebase::postgres::CatalogCoverage::Complete
+                    && lock
+                        .relation
+                        .as_deref()
+                        .is_some_and(|relation| catalog.column_is_not_null(relation, column))
+            }),
+        })
+        || access
+            .self_contained_locks
+            .get(&lock_index)
+            .is_some_and(|range| {
+                access.writes[range.clone()].iter().any(|write| {
+                    write.relation == lock.relation
+                        && (!write.has_predicate
+                            || compare_keys(lock, call, write, call) == Some(true))
+                })
+            })
+}
+
+fn caller_write(
+    call: &EmbeddedSqlCall,
+    lock: &RowAccess,
+    writes: &writes::Writes<'_>,
+    id: u32,
+) -> bool {
+    let Some(relation) = &lock.relation else {
+        return false;
+    };
+    let (candidates, ambiguous) = writes.for_relation(id, relation);
+    call.execution_awaited
+        && !ambiguous
+        && candidates.iter().any(|(write, candidate)| {
+            candidate.execution_scope == call.execution_scope
+                && candidate.execution_range.0 > call.execution_range.1
+                && (!write.has_predicate
+                    || compare_keys(lock, call, write, candidate) == Some(true))
+        })
+}
+
+fn check(
     output: &mut Output<'_>,
     site: &Site<'_>,
     lock: &RowAccess,
@@ -51,20 +150,6 @@ pub(super) fn check(
         output.emit(site, CHECKS[0], Some(relation), lock.key.as_ref().map(|(_, key)| key.as_str()), &format!("locked row in {relation} is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock"));
     }
 }
-fn identity(value: &str, call: &EmbeddedSqlCall) -> Option<String> {
-    if value.starts_with([':', '?']) {
-        return None;
-    }
-    if let Some(index) = value
-        .strip_prefix('$')
-        .and_then(|value| value.parse::<usize>().ok())
-        .and_then(|index| index.checked_sub(1))
-    {
-        return call.bound_parameters.get(index)?.clone();
-    }
-    Some(format!("literal:{value}"))
-}
-
 pub(super) fn constant_key(
     keys: &[crate::codebase::postgres::statements::lock_writes::AdvisoryKey],
     call: &EmbeddedSqlCall,

@@ -31,6 +31,19 @@ impl ScopeCollector {
         }
     }
 
+    pub(in crate::codebase::postgres::embedded::scoped_bindings) fn finish_transaction_parameters(
+        &mut self,
+    ) {
+        for (ty, name, span) in self.transaction_parameters.drain(..) {
+            if !self.type_shadows.iter().any(|(shadow, scope)| {
+                *shadow == ty && scope.start <= span.start && span.start < scope.end
+            }) {
+                self.found.transaction_parameters.insert(span.start);
+                self.found.transactions.entry(name).or_default().push(span);
+            }
+        }
+    }
+
     pub(in crate::codebase::postgres::embedded::scoped_bindings) fn finish_undeclared_annotations(
         &mut self,
     ) {

@@ -20,6 +20,7 @@ pub(super) fn hide_cte(row: &mut RowAccess, scopes: &[BTreeSet<String>]) {
     {
         row.relation = None;
         row.key = None;
+        row.recovered_key = None;
     }
 }
 
@@ -37,7 +38,8 @@ pub(super) fn mark_self_contained(out: &mut LockWriteFacts, lock: usize, write: 
             .as_deref()
             .is_some_and(|relation| relations.contains(relation))
         {
-            out.self_contained_locks.insert(index);
+            out.self_contained_locks
+                .insert(index, write..out.writes.len());
         }
     }
 }

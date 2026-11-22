@@ -56,6 +56,7 @@ pub(super) type UndeclaredReceiverTypes = HashMap<String, super::UndeclaredExecu
 pub(crate) struct ScopedExecutors {
     spans: HashMap<String, Vec<Span>>,
     pub(super) transactions: HashMap<String, Vec<Span>>,
+    pub(super) transaction_parameters: crate::fx::FxHashSet<u32>,
     pub(super) delayed: std::collections::HashSet<u32>,
     pub(super) undeclared: HashMap<u32, HashMap<String, UndeclaredReceiverTypes>>,
     pub(super) undeclared_this: Vec<(Span, UndeclaredReceiverTypes)>,
@@ -96,6 +97,7 @@ pub(crate) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> Sc
     if visitor.needs_walk() {
         visitor.visit_program(program);
         visitor.finish_callback_transactions();
+        visitor.finish_transaction_parameters();
         visitor.finish_undeclared_annotations();
         visitor.finish_delayed_receivers();
     }

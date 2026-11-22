@@ -2,14 +2,15 @@ use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{bindings::member_query_receiver, EmbeddedSqlCall};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{ArrayExpressionElement, CallExpression, Expression};
+mod boundary;
 pub(super) mod options;
+pub(super) use boundary::end_boundary;
 
 pub(super) fn annotate(
     visitor: &ScopeVisitor<'_>,
     call: &CallExpression<'_>,
     fact: &mut EmbeddedSqlCall,
 ) {
-    super::stable_binds::annotate(visitor, call, fact);
     fact.execution_awaited = visitor.awaited_lock_helper_calls.contains(&call.span.start);
     fact.lock_scope_analysis = visitor.executor_options.track_transaction_helpers;
     let owner = visitor
@@ -25,13 +26,16 @@ pub(super) fn annotate(
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
         && !visitor.exited_functions.contains(&owner);
-    match options::annotate(visitor, call, fact) {
-        Some(false) => return,
-        Some(true) => {}
-        None => {
-            let receiver = member_query_receiver(call).unwrap_or(&call.callee);
+    let routed = options::annotate(visitor, call, fact);
+    if routed.is_none() {
+        let receiver = member_query_receiver(call).unwrap_or(&call.callee);
+        if !super::caller_transactions::annotate(visitor, call, receiver, fact) {
             annotate_receiver(visitor, receiver, call.span.start, fact);
         }
+    }
+    super::stable_binds::annotate(visitor, call, fact);
+    if routed == Some(false) {
+        return;
     }
     fact.bound_parameters =
         call.arguments
@@ -52,7 +56,11 @@ pub(super) fn annotate(
                                 | ArrayExpressionElement::Elision(_) => None,
                                 _ => element
                                     .as_expression()
-                                    .and_then(|value| identity(visitor, value)),
+                                    .and_then(|value| identity(visitor, value))
+                                    .filter(|identity| {
+                                        fact.caller_transaction_id.is_none()
+                                            || stable_parameter_identity(visitor, identity)
+                                    }),
                             })
                             .collect(),
                     )
@@ -60,6 +68,14 @@ pub(super) fn annotate(
                 _ => None,
             })
             .unwrap_or_default();
+}
+
+pub(super) fn stable_parameter_identity(visitor: &ScopeVisitor<'_>, identity: &str) -> bool {
+    identity.starts_with("literal:")
+        || identity
+            .strip_prefix("binding:")
+            .and_then(|position| position.parse::<u32>().ok())
+            .is_some_and(|position| visitor.stable_primitives.contains(&position))
 }
 
 pub(super) fn annotate_receiver(
@@ -87,8 +103,9 @@ pub(super) fn annotate_receiver(
                     .max_by_key(|span| span.start)
             })
             .filter(|span| {
-                binding.as_ref().and_then(|value| value.value_identity)
-                    == source_identity(span.start)
+                !visitor.scoped.transaction_parameters.contains(&span.start)
+                    && binding.as_ref().and_then(|value| value.value_identity)
+                        == source_identity(span.start)
             });
         if let Some(span) = transaction {
             fact.transaction_id = Some(span.start);
@@ -131,65 +148,6 @@ pub(super) fn literal_identity(expression: &Expression<'_>) -> Option<String> {
         Expression::BooleanLiteral(value) => Some(format!("literal:{}", value.value)),
         Expression::NullLiteral(_) => Some("literal:null".into()),
         _ => None,
-    }
-}
-
-pub(super) fn end_boundary(
-    visitor: &mut ScopeVisitor<'_>,
-    call: &CallExpression<'_>,
-    before: usize,
-) {
-    if visitor.executor_options.track_transaction_helpers {
-        let owner = visitor
-            .member_query_proof
-            .function_ids
-            .last()
-            .copied()
-            .unwrap_or(0);
-        if visitor.exited_functions.contains(&owner) {
-            return;
-        }
-    }
-    let (receiver, method_end) = match unwrap_ts_wrappers(&call.callee) {
-        Expression::StaticMemberExpression(member) => (
-            &member.object,
-            matches!(member.property.name.as_str(), "commit" | "rollback"),
-        ),
-        Expression::Identifier(_) if visitor.executor_options.track_transaction_helpers => {
-            (&call.callee, false)
-        }
-        _ => return,
-    };
-    let Expression::Identifier(id) = unwrap_ts_wrappers(receiver) else {
-        return;
-    };
-    let sql_end = visitor.calls[before..].iter().any(|fact| {
-        fact.sql_text.as_deref().is_some_and(|sql| {
-            matches!(
-                sql.trim()
-                    .trim_end_matches(';')
-                    .trim()
-                    .to_ascii_uppercase()
-                    .as_str(),
-                "COMMIT" | "ROLLBACK" | "END" | "ABORT"
-            )
-        })
-    });
-    super::transaction_flow::note_boundary(visitor, call, method_end || sql_end);
-    if (method_end || sql_end)
-        && visitor.executor_options.track_transaction_helpers
-        && options::end_alias(visitor, id, call)
-    {
-        return;
-    }
-    if (method_end || sql_end) && visitor.scoped.transactions.contains_key(id.name.as_str()) {
-        let identity = visitor
-            .scopes
-            .iter_mut()
-            .rev()
-            .find_map(|scope| scope.get_mut(id.name.as_str()))
-            .and_then(|binding| binding.value_identity.take());
-        super::transaction_flow::complete_boundary(visitor, call, identity);
     }
 }
 

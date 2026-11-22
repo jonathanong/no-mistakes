@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [PoolQuery]
+      transactionExecutorTypeNames: [TransactionQuery]
+      trustedSqlTags: [{ module: "@example/db", name: sql }]
+      unanalyzableSql: advise

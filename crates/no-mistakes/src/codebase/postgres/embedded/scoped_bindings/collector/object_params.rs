@@ -1,5 +1,5 @@
 use super::{owners, NameHit, PendingRelativeSpan, ScopeCollector};
-use oxc_ast::ast::{BindingPattern, ObjectPattern, TSSignature, TSType};
+use oxc_ast::ast::{BindingPattern, ObjectPattern, TSSignature, TSType, TSTypeName};
 use oxc_span::{GetSpan, Span};
 
 impl ScopeCollector {
@@ -29,6 +29,23 @@ impl ScopeCollector {
                         param.pattern.span().start,
                         annotated,
                     );
+                    let span = Span::new(ident.span.start, scope.end);
+                    if !self.transaction_types.is_empty()
+                        && !param.optional
+                        && param.initializer.is_none()
+                    {
+                        if let TSType::TSTypeReference(reference) = annotated {
+                            if let TSTypeName::IdentifierReference(ty) = &reference.type_name {
+                                if self.transaction_types.contains(ty.name.as_str()) {
+                                    self.transaction_parameters.push((
+                                        ty.name.to_string(),
+                                        ident.name.to_string(),
+                                        span,
+                                    ));
+                                }
+                            }
+                        }
+                    }
                     let hit = owners::type_hit(&self.types, &self.provisional_types, annotated);
                     self.record(
                         ident.name.as_str(),

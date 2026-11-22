@@ -1,0 +1,24 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "child": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "integer", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "mutable_items": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "integer", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "items": {
+      "relationKind": "table",
+      "columns": {
+        "owner_id": { "dataType": "integer", "nullable": true, "ordinalPosition": 1 }
+      }
+    }
+  }
+}

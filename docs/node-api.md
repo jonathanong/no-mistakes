@@ -952,8 +952,10 @@ contracts are `PostgresLockWrittenRowsOnlyOptions`,
 `PostgresLockWrittenRowsExecutorOption`.
 `PostgresLockWrittenRowsOnlyOptions` includes `executorNames`,
 `extraExecutorNames`, and `excludeExecutorNames` with the selection contract
-above. Per-check severity defaults to `advise`. Unresolved SQL or transaction
-membership follows the configured unanalyzable policy.
+above. `transactionExecutorTypeNames` selects imported transaction-only executor
+types for local write proofs on function parameters. Per-check severity defaults
+to `advise`. Unresolved SQL or transaction membership follows the configured
+unanalyzable policy.
 
 `PostgresLockWrittenRowsOnlyOptions.executorOptions` selects executor-routing
 properties with entries such as `{ name: "query" }` for `{ query: tx }`.
@@ -964,7 +966,8 @@ Configured factory bindings support `const`, `using`, and `await using`.
 `PostgresLockWrittenRowsOnlyOptions.schemaCatalogPath` optionally supplies schema
 relationships for table locks that order later DDL in the same transaction.
 Guard-relation reads before later DDL do not require a catalog. Complete catalogs
-also supply trigger-derived write evidence; ordering-only catalogs do not.
+also supply trigger-derived write evidence and non-null CTE join-key evidence;
+ordering-only catalogs do not.
 Direct imported factory callbacks also establish transaction membership for a
 simple first parameter. Local, unexported option helpers specialize literal
 boolean arguments; unresolved callers and unknown flags retain findings. Zero

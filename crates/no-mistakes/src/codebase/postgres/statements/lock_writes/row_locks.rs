@@ -44,10 +44,15 @@ pub(super) fn collect_explicit(
         let factor = factors[0];
         let mut row = access(factor, select.selection.as_ref(), positions);
         if query.locks.len() > 1 && row.key.is_none() {
-            row.key = select
+            if let Some(keyed) = select
                 .selection
                 .as_ref()
-                .and_then(|predicate| conjunctive_key(factor, predicate, positions));
+                .and_then(|predicate| conjunctive_key(factor, predicate, positions))
+            {
+                row.key = keyed.key;
+                row.recovered_key = keyed.recovered_key;
+                row.key_identity_unproven |= keyed.key_identity_unproven;
+            }
         }
         if !locks.contains(&row) {
             locks.push(row);
@@ -60,7 +65,7 @@ fn conjunctive_key(
     factor: &TableFactor,
     predicate: &Expr,
     positions: PlaceholderPositions<'_>,
-) -> Option<(String, String)> {
+) -> Option<RowAccess> {
     match super::unwrap_expr(predicate) {
         Expr::BinaryOp {
             left,
@@ -68,7 +73,10 @@ fn conjunctive_key(
             right,
         } => conjunctive_key(factor, left, positions)
             .or_else(|| conjunctive_key(factor, right, positions)),
-        expression => access(factor, Some(expression), positions).key,
+        expression => {
+            let row = access(factor, Some(expression), positions);
+            row.key.is_some().then_some(row)
+        }
     }
 }
 
@@ -146,6 +154,8 @@ fn unresolved() -> RowAccess {
     RowAccess {
         relation: None,
         key: None,
+        recovered_key: None,
+        key_identity_unproven: false,
         has_predicate: false,
     }
 }

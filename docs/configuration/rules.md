@@ -720,7 +720,10 @@ is opt-in and inherits the selected PostgreSQL executor scope. Its `checks`
 map sets `fail`, `advise` (default), or `ignore` independently for
 `row-lock-unwritten-relation`, `table-lock`, `constant-advisory-lock`, and
 `row-lock-outside-transaction`. `allow` selects relation/key/call-site exceptions
-with required reasons. `writeSets` asserts helper-written relations for one
+with required reasons. The rule's `transactionExecutorTypeNames` option adds
+imported executor types that exclusively represent transaction executors. This
+option defaults to `[]` and enables local write proofs on parameters with those
+types. `writeSets` asserts helper-written relations for one
 file and transaction factory line. Both lists default to empty and participate
 in unused-entry accounting. Unresolved SQL and transaction membership follow
 `unanalyzable` / `unanalyzableSql`. Its `executorOptions` defaults to `[]`;
@@ -736,8 +739,8 @@ Configured factory bindings support `const`, `using`, and `await using` with
 block scope. Optional `schemaCatalogPath` supplies schema relationships for
 table locks that order later DDL. A read of a locked guard relation before later
 DDL in the same transaction also establishes that purpose without a catalog.
-Complete catalogs also supply trigger-derived write evidence; ordering-only
-catalogs do not.
+Complete catalogs also supply trigger-derived write evidence and non-null CTE
+join-key evidence; ordering-only catalogs do not.
 Direct callbacks passed to a configured imported transaction factory can provide
 the transaction client. Local, unexported helpers can forward an options parameter
 and select SQL with a literal boolean argument at each caller. Unknown callers

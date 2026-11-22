@@ -1,0 +1,1084 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 102,
+          "message": "src/query.ts:102: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 107,
+          "message": "src/query.ts:107: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 112,
+          "message": "src/query.ts:112: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 117,
+          "message": "src/query.ts:117: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 123,
+          "message": "src/query.ts:123: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${1} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 129,
+          "message": "src/query.ts:129: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 136,
+          "message": "src/query.ts:136: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 142,
+          "message": "src/query.ts:142: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 143,
+          "message": "src/query.ts:143: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 155,
+          "message": "src/query.ts:155: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 160,
+          "message": "src/query.ts:160: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items ORDER BY id OFFSET 1 FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT 1 FROM items AS i(name, id) WHERE i.id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 17,
+          "message": "src/query.ts:17: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 170,
+          "message": "src/query.ts:170: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT 1 FROM items AS i WHERE i.id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 175,
+          "message": "src/query.ts:175: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id IS NULL FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 191,
+          "message": "src/query.ts:191: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM mutable_items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 197,
+          "message": "src/query.ts:197: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 198,
+          "message": "src/query.ts:198: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH pending AS (SELECT id FROM child FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 21,
+          "message": "src/query.ts:21: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 220,
+          "message": "src/query.ts:220: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 225,
+          "message": "src/query.ts:225: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 231,
+          "message": "src/query.ts:231: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 238,
+          "message": "src/query.ts:238: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = $1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 252,
+          "message": "src/query.ts:252: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1::integer FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 257,
+          "message": "src/query.ts:257: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id}::integer FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 26,
+          "message": "src/query.ts:26: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 262,
+          "message": "src/query.ts:262: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = $1::integer FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 268,
+          "message": "src/query.ts:268: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM items x JOIN child y ON y.parent_id = x.id",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 275,
+          "message": "src/query.ts:275: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM items x JOIN child y ON y.parent_id = x.id",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 286,
+          "message": "src/query.ts:286: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT i.id AS selected_id FROM items i FOR UPDATE OF i)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 291,
+          "message": "src/query.ts:291: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT 1 FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 296,
+          "message": "src/query.ts:296: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 301,
+          "message": "src/query.ts:301: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 306,
+          "message": "src/query.ts:306: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 36,
+          "message": "src/query.ts:36: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 43,
+          "message": "src/query.ts:43: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 49,
+          "message": "src/query.ts:49: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 55,
+          "message": "src/query.ts:55: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 62,
+          "message": "src/query.ts:62: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 67,
+          "message": "src/query.ts:67: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 73,
+          "message": "src/query.ts:73: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 82,
+          "message": "src/query.ts:82: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "src/query.ts:93: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lockFromHelper locks at line 88",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockFromHelper(tx.query);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 97,
+          "message": "src/query.ts:97: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 107,
+          "message": "src/query.ts:107: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 112,
+          "message": "src/query.ts:112: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 117,
+          "message": "src/query.ts:117: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 123,
+          "message": "src/query.ts:123: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${1} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 129,
+          "message": "src/query.ts:129: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 136,
+          "message": "src/query.ts:136: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 142,
+          "message": "src/query.ts:142: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 143,
+          "message": "src/query.ts:143: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 155,
+          "message": "src/query.ts:155: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 160,
+          "message": "src/query.ts:160: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items ORDER BY id OFFSET 1 FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT 1 FROM items AS i(name, id) WHERE i.id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 17,
+          "message": "src/query.ts:17: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 175,
+          "message": "src/query.ts:175: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id IS NULL FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 191,
+          "message": "src/query.ts:191: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM mutable_items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 197,
+          "message": "src/query.ts:197: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 198,
+          "message": "src/query.ts:198: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH pending AS (SELECT id FROM child FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 21,
+          "message": "src/query.ts:21: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 220,
+          "message": "src/query.ts:220: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 225,
+          "message": "src/query.ts:225: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 238,
+          "message": "src/query.ts:238: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = $1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 252,
+          "message": "src/query.ts:252: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1::integer FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 257,
+          "message": "src/query.ts:257: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id}::integer FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 26,
+          "message": "src/query.ts:26: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 262,
+          "message": "src/query.ts:262: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = $1::integer FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 268,
+          "message": "src/query.ts:268: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM items x JOIN child y ON y.parent_id = x.id",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 286,
+          "message": "src/query.ts:286: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT i.id AS selected_id FROM items i FOR UPDATE OF i)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 291,
+          "message": "src/query.ts:291: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT 1 FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 296,
+          "message": "src/query.ts:296: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 301,
+          "message": "src/query.ts:301: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 306,
+          "message": "src/query.ts:306: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 36,
+          "message": "src/query.ts:36: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 43,
+          "message": "src/query.ts:43: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 49,
+          "message": "src/query.ts:49: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 55,
+          "message": "src/query.ts:55: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 62,
+          "message": "src/query.ts:62: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 67,
+          "message": "src/query.ts:67: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 73,
+          "message": "src/query.ts:73: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 82,
+          "message": "src/query.ts:82: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "src/query.ts:93: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lockFromHelper locks at line 88",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockFromHelper(tx.query);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 107,
+          "message": "src/query.ts:107: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 112,
+          "message": "src/query.ts:112: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 117,
+          "message": "src/query.ts:117: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 123,
+          "message": "src/query.ts:123: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${1} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 129,
+          "message": "src/query.ts:129: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 136,
+          "message": "src/query.ts:136: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id} FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 142,
+          "message": "src/query.ts:142: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 143,
+          "message": "src/query.ts:143: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 155,
+          "message": "src/query.ts:155: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 160,
+          "message": "src/query.ts:160: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items ORDER BY id OFFSET 1 FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT 1 FROM items AS i(name, id) WHERE i.id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 17,
+          "message": "src/query.ts:17: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 175,
+          "message": "src/query.ts:175: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT owner_id FROM items WHERE owner_id IS NULL FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 191,
+          "message": "src/query.ts:191: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM mutable_items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 197,
+          "message": "src/query.ts:197: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: executed SQL cannot be recovered completely; use static SQL so lock scope and writes can be checked",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(opaque);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 198,
+          "message": "src/query.ts:198: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`WITH pending AS (SELECT id FROM child FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 21,
+          "message": "src/query.ts:21: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 220,
+          "message": "src/query.ts:220: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 225,
+          "message": "src/query.ts:225: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 238,
+          "message": "src/query.ts:238: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = $1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 252,
+          "message": "src/query.ts:252: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = $1::integer FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 257,
+          "message": "src/query.ts:257: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(sql`SELECT id FROM items WHERE id = ${id}::integer FOR UPDATE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 26,
+          "message": "src/query.ts:26: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 262,
+          "message": "src/query.ts:262: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = $1::integer FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 268,
+          "message": "src/query.ts:268: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM items x JOIN child y ON y.parent_id = x.id",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 286,
+          "message": "src/query.ts:286: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT i.id AS selected_id FROM items i FOR UPDATE OF i)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 291,
+          "message": "src/query.ts:291: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT 1 FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 296,
+          "message": "src/query.ts:296: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 301,
+          "message": "src/query.ts:301: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 306,
+          "message": "src/query.ts:306: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH pending AS (SELECT id FROM items FOR UPDATE)",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 32,
+          "message": "src/query.ts:32: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 36,
+          "message": "src/query.ts:36: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 43,
+          "message": "src/query.ts:43: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 49,
+          "message": "src/query.ts:49: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(sql`WITH pending AS (",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 55,
+          "message": "src/query.ts:55: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 62,
+          "message": "src/query.ts:62: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 67,
+          "message": "src/query.ts:67: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction membership is unresolved; acquire the lock through a configured transaction factory",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT id FROM items WHERE id = 1 FOR UPDATE),",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 73,
+          "message": "src/query.ts:73: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 82,
+          "message": "src/query.ts:82: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: transaction is owned by the caller and a matching local write could not be proven",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(\"SELECT id FROM items WHERE id = 1 FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "src/query.ts:93: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in items is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock; helper lockFromHelper locks at line 88",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockFromHelper(tx.query);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

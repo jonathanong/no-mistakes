@@ -28,6 +28,8 @@ pub(in crate::codebase::postgres::embedded::walk) struct State {
     objects: FxHashMap<NonZeroU32, Captured>,
     aliases: FxHashMap<NonZeroU32, Captured>,
     reads: RefCell<FxHashSet<u32>>,
+    pub(in crate::codebase::postgres::embedded::walk) caller_transaction_reads:
+        RefCell<FxHashSet<u32>>,
     pub(in crate::codebase::postgres::embedded::walk) mutated: FxHashSet<NonZeroU32>,
 }
 
