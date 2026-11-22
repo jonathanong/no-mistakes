@@ -32,10 +32,10 @@ pub(super) fn reaches_fragment(
     {
         return true;
     }
-    if !ts.exported_bindings.is_empty() || !ts.star_reexport_specifiers.is_empty() {
-        if !visible_all(catalog, graph, facts, file, &mut Vec::new()).is_empty() {
-            return true;
-        }
+    if (!ts.exported_bindings.is_empty() || !ts.star_reexport_specifiers.is_empty())
+        && !visible_all(catalog, graph, facts, file, &mut Vec::new()).is_empty()
+    {
+        return true;
     }
     if ts.namespaces.literal_import_spans.is_empty() {
         return false;
