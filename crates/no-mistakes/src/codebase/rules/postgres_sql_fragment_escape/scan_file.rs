@@ -23,9 +23,11 @@ pub(super) fn one(
     catalog: &super::fragments::Catalog<'_>,
     file: &Path,
 ) -> Option<ScanReport> {
-    let ts = facts.get_ts_facts(file)?;
-    let mut gaps = Vec::new();
+    let Some(ts) = facts.get_ts_facts(file) else {
+        return super::scan::missing_facts(root, file);
+    };
     let relative = relative_slash_path(root, file);
+    let mut gaps = Vec::new();
     if let Some(reason) = &ts.operational_error {
         gaps.push(gap(
             file,

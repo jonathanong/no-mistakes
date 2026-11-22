@@ -18,6 +18,19 @@ pub(super) fn module_hit(
     importer: &Path,
     specifier: &str,
 ) -> ModuleHit {
+    let hit = probe_module(graph, catalog, importer, specifier);
+    if matches!(hit, ModuleHit::Unproven) {
+        catalog.record_unproven(importer, specifier);
+    }
+    hit
+}
+
+fn probe_module(
+    graph: Option<&DepGraph>,
+    catalog: &Catalog<'_>,
+    importer: &Path,
+    specifier: &str,
+) -> ModuleHit {
     if let Some(recorded) = graph.and_then(|graph| graph.import_target(importer, specifier)) {
         match recorded {
             ImportTarget::File(path) => return ModuleHit::File(path.clone()),
@@ -65,8 +78,14 @@ pub(super) fn import_hit_fragments(
     facts: &CheckFactMap,
     importer: &Path,
     import: &ImportedBinding,
+    is_tag: bool,
 ) -> Vec<Fragment> {
-    match module_hit(graph, facts, catalog, importer, &import.specifier) {
+    let hit = if is_tag {
+        probe_module(graph, catalog, importer, &import.specifier)
+    } else {
+        module_hit(graph, facts, catalog, importer, &import.specifier)
+    };
+    match hit {
         ModuleHit::Open => vec![Fragment::open(&import.specifier)],
         ModuleHit::Unproven => Vec::new(),
         ModuleHit::File(module) if import.kind == ImportedBindingKind::Namespace => {

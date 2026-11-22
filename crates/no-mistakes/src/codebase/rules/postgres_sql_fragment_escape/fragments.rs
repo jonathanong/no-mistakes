@@ -3,7 +3,9 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::postgres::embedded::TrustedSqlTag;
 use crate::fx::{fx_map, FxHashMap};
+use dashmap::DashSet;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 type RelativeIndex = FxHashMap<PathBuf, FxHashMap<String, Vec<PathBuf>>>;
 type FragmentIndex = FxHashMap<PathBuf, FxHashMap<String, Vec<Fragment>>>;
@@ -23,6 +25,7 @@ pub(super) struct Catalog<'a> {
     pub(super) by_export: FragmentIndex,
     by_producer: ProducerIndex,
     ambient: AmbientIndex,
+    unproven: OnceLock<DashSet<(PathBuf, String)>>,
 }
 
 impl<'a> Catalog<'a> {
@@ -59,7 +62,18 @@ impl<'a> Catalog<'a> {
             by_export,
             by_producer,
             ambient: ambient_index(facts, sources),
+            unproven: OnceLock::new(),
         }
+    }
+
+    pub(super) fn record_unproven(&self, importer: &Path, specifier: &str) {
+        self.unproven
+            .get_or_init(DashSet::new)
+            .insert((importer.to_path_buf(), specifier.to_owned()));
+    }
+
+    pub(super) fn into_unproven(self) -> impl Iterator<Item = (PathBuf, String)> {
+        self.unproven.into_inner().into_iter().flatten()
     }
 
     pub(super) fn ambient_files(&self, specifier: &str) -> Vec<PathBuf> {

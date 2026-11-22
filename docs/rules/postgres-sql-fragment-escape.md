@@ -43,7 +43,8 @@ shared across files. A file whose prepared facts include an operational error,
 a fatal parse error, an incomplete value-flow, or unreadable source is still
 checked from those facts. A fragment binding or a write that those facts still
 record is reported. The same file is listed on the check result's `incomplete`
-field. The message names the file and says a write, rebind, or escape that
+field. A TypeScript or JavaScript file in the graph scope with missing
+prepared facts also appears there. The message names the file and says a write, rebind, or escape that
 lived only in the missing text may be absent. One such file does not drop
 findings from files whose facts are complete. This rule does not change the
 shared canonical graph. When value flow is incomplete, the canonical-graph
@@ -95,7 +96,11 @@ the target is missing or unresolved, a relative specifier is joined
 lexically to the importer, and a specifier can match a file that contains
 `declare module "specifier"` when that file is unique. When those steps do
 not name one file, or the recorded targets disagree, the use is reported.
-That finding names the specifier and does not attribute a local file. A use
+That finding names the specifier and does not attribute a local file. If the
+canonical graph is unavailable, an attempted bare-specifier resolution with no
+ambient match adds an entry to `incomplete` for the importing file. The entry
+names the specifier and asks you to fix the graph prerequisite. The rule still
+reports escapes proven through relative imports or unique ambient matches. A use
 of the configured trusted tag itself is not a fragment, so an unresolved or
 ambiguous import of that tag stays silent. Any other binding from that
 specifier is still reported.

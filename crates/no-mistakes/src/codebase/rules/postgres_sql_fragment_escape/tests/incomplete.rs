@@ -159,3 +159,25 @@ fn unreadable_consumer_still_reports_a_recorded_append() {
         report.gaps[0].message
     );
 }
+
+#[test]
+fn missing_prepared_facts_for_a_graph_file_produce_a_gap() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-sql-fragment-escape/fixtures/absence-gap"),
+    );
+    let file = root.join("relative-escape.ts");
+    assert!(file.is_file());
+    let facts = CheckFactMap {
+        graph_files_complete: true,
+        graph_files: vec![file.clone(), root.join("tsconfig.json")],
+        ..CheckFactMap::default()
+    };
+    let report = scan::scan(&root, &[sql_tag()], None, &facts, None);
+    assert!(report.findings.is_empty());
+    assert_eq!(report.gaps.len(), 1);
+    assert_eq!(report.gaps[0].file.as_deref(), Some(file.as_path()));
+    assert!(report.gaps[0]
+        .message
+        .contains("missing prepared TypeScript facts"));
+}

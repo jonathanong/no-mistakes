@@ -86,6 +86,24 @@ fn postgres_sql_fragment_escape_absence_gap_matches_siblings() {
     let on = &reports["fragment_on"]["report"];
     let off = &reports["fragment_off"]["report"];
     assert_eq!(sibling_report(on), sibling_report(off));
+    let rules = on["rules"].as_array().expect("rules");
+    assert!(rules.iter().any(|finding| {
+        finding["rule"] == "postgres-sql-fragment-escape"
+            && finding["file"] == "relative-escape.ts"
+            && finding["target"] == "COLS"
+            && finding["sourceLine"] == "COLS.append(extra);"
+    }));
+    assert!(rules
+        .iter()
+        .all(|finding| finding["file"] != "bare-escape.ts"));
+    let incomplete = on["incomplete"].as_array().expect("incomplete");
+    assert!(incomplete.iter().any(|gap| {
+        gap["consumer"] == "postgres-sql-fragment-escape"
+            && gap["file"] == "bare-escape.ts"
+            && gap["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("`@example/columns`"))
+    }));
     for report in [on, off] {
         let rules = report["rules"].as_array().expect("rules");
         assert!(
