@@ -120,7 +120,7 @@ impl EmbeddedSqlCall {
                             track_share_lock_writes: self.track_share_lock_writes,
                             track_redundant_prelocks: self.track_redundant_prelocks,
                             next_discarded_query: self.next_discarded_query,
-                            stable_prelock_bindings: self.stable_prelock_bindings,
+                            stable_prelock_parameters: self.stable_prelock_parameters.clone(),
                             helper_definition: self.helper_definition,
                             lock_helper: self.lock_helper.clone(),
                             transaction_id: self.transaction_id,

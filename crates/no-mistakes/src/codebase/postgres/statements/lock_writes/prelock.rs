@@ -5,11 +5,9 @@ use super::{
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{
     Assignment, BinaryOperator, Expr, GroupByExpr, LockType, Query, SelectItem, SetExpr, Statement,
-    TableFactor, Update, Value,
+    TableFactor, TableInheritance, Update, Value,
 };
-
 mod upsert;
-
 pub(super) fn collect(
     statement: &Statement,
     out: &mut LockWriteFacts,
@@ -29,14 +27,16 @@ pub(super) fn collect(
             out.conditional_write_keys = update_keys(update, positions).unwrap_or_default();
         }
         Statement::Insert(insert) => {
-            out.conditional_write_keys
-                .extend(upsert::upsert_key(insert, positions));
+            if let Some(key) = upsert::upsert_key(insert, positions) {
+                out.conditional_write_keys.push(key);
+                out.conditional_write_unique = true;
+            }
         }
         _ => {}
     }
 }
 
-fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<RowAccess> {
+fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<(RowAccess, bool)> {
     let SetExpr::Select(select) = query.body.as_ref() else {
         return None;
     };
@@ -64,13 +64,11 @@ fn locked_key(query: &Query, positions: PlaceholderPositions<'_>) -> Option<RowA
     let [table] = select.from.as_slice() else {
         return None;
     };
-    if !plain_table(&table.relation) {
-        return None;
-    }
+    let only = plain_table(&table.relation)?;
     let qualifier = qualifier(&table.relation)?;
     equality(select.selection.as_ref()?, &qualifier, positions)?;
     let row = row_locks::collect_legacy(query, positions, true);
-    row.relation.is_some().then_some(row)
+    row.relation.is_some().then_some((row, only))
 }
 
 fn update_keys(update: &Update, positions: PlaceholderPositions<'_>) -> Option<Vec<RowAccess>> {
@@ -81,9 +79,7 @@ fn update_keys(update: &Update, positions: PlaceholderPositions<'_>) -> Option<V
         return None;
     }
     let target = &update.table.relation;
-    if !plain_table(target) {
-        return None;
-    }
+    plain_table(target)?;
     let relation = access(target, None, positions).relation?;
     let qualifier = qualifier(target)?;
     let mut keys = Vec::new();
@@ -179,15 +175,26 @@ fn plain_assignments(assignments: &[Assignment]) -> bool {
     })
 }
 
-fn plain_table(table: &TableFactor) -> bool {
-    matches!(
-        table,
-        TableFactor::Table {
-            alias,
-            args: None,
-            sample: None,
-            inheritance: None,
-            ..
-        } if alias.as_ref().is_none_or(|alias| alias.columns.is_empty())
-    )
+fn plain_table(table: &TableFactor) -> Option<bool> {
+    let TableFactor::Table {
+        alias,
+        args: None,
+        sample: None,
+        inheritance,
+        ..
+    } = table
+    else {
+        return None;
+    };
+    if alias
+        .as_ref()
+        .is_some_and(|alias| !alias.columns.is_empty())
+    {
+        return None;
+    }
+    match inheritance {
+        None => Some(false),
+        Some(TableInheritance::Only { .. }) => Some(true),
+        Some(TableInheritance::IncludeDescendants) => None,
+    }
 }

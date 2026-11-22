@@ -5,12 +5,14 @@ const { normalizeCheckFailurePaths } = require("./check-policy-test-helpers");
 const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const cases = [
-  ["advisory-ban-existing", "advisory-ban.yml", 10, 0],
+  ["advisory-ban-existing", "advisory-ban.yml", 11, 0],
   ["locking-cte-existing", "locking-cte.yml", 0, 2],
-  ["share-lock-sequences", "share-advise.yml", 0, 22],
-  ["share-lock-sequences", "share-fail.yml", 9, 13],
+  ["share-lock-sequences", "share-advise.yml", 0, 25],
+  ["share-lock-sequences", "share-fail.yml", 10, 15],
+  ["share-lock-sequences", "share-read-only-fail.yml", 0, 1],
   ["share-lock-sequences", "disabled.yml", 0, 1],
-  ["redundant-prelocks", "redundant-advise.yml", 0, 10],
+  ["redundant-prelocks", "redundant-advise.yml", 0, 20],
+  ["redundant-prelocks", "redundant-no-catalog.yml", 0, 20],
   ["redundant-prelocks", "disabled.yml", 0, 1],
   ["resource-transactions", "checks-fail.yml", 1],
   ["resource-options", "resource-options.yml", 4],

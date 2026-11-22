@@ -10,7 +10,7 @@ rules:
         bannedFunctionCall:
           functions:
             - pg_advisory_lock
-            - pg_catalog.pg_advisory_lock_shared
+            - pg_advisory_lock_shared
             - pg_advisory_xact_lock
             - pg_advisory_xact_lock_shared
             - pg_try_advisory_lock

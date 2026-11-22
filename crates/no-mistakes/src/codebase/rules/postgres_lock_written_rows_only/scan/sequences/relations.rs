@@ -19,6 +19,10 @@ pub(super) struct Writes<'a> {
 }
 
 impl<'a> Writes<'a> {
+    pub fn is_empty(&self) -> bool {
+        self.exact.is_empty()
+    }
+
     pub fn clear(&mut self) {
         self.exact.clear();
         self.qualified_leaves.clear();

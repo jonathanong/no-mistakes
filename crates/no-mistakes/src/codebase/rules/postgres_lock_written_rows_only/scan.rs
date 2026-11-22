@@ -79,6 +79,8 @@ fn scan_file(
     let check_outside = enabled(CHECKS[3]);
     let grouped = statements::group(statements);
     let unresolved = statements::unresolved_transactions(&embedded.calls, &grouped);
+    let catalog_invalidations =
+        catalog.map(|_| statements::CatalogInvalidations::collect(&embedded.calls, &grouped));
     sequences::scan(
         &mut output,
         (&file, &source),
@@ -86,9 +88,8 @@ fn scan_file(
         &grouped,
         &unresolved,
         &options.embedded,
+        catalog.zip(catalog_invalidations.as_ref()),
     );
-    let catalog_invalidations =
-        catalog.map(|_| statements::CatalogInvalidations::collect(&embedded.calls, &grouped));
     let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
     let trigger_disabled = settings::trigger_disabled_transactions(&embedded.calls, &grouped);
     let mut writes = writes::Writes::default();

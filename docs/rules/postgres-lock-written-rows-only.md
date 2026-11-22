@@ -75,8 +75,8 @@ INSERT INTO order_events (order_id) SELECT id FROM parent;
 
 If the same known transaction does not update or delete `orders`,
 `row-lock-unwritten-relation` reports the lock. A later write to `orders` in
-that transaction satisfies the existing check. CTE names do not establish a
-base relation identity.
+that transaction satisfies the check only when it writes the locked row with a
+matching provable key. CTE names do not establish a base relation identity.
 
 ## Share lock followed by a write
 
@@ -107,18 +107,23 @@ directly awaited before the lock does not match this sequence.
 ## Redundant pre-lock before a conditional write
 
 This check is advisory-only. Set `checks.redundant-prelock: advise` to report a
-direct, awaited `SELECT 1 ... FOR UPDATE` whose result is discarded when the
+direct, awaited `SELECT 1 FROM ONLY ... FOR UPDATE` whose result is discarded when the
 next direct awaited SQL call is a conditional `UPDATE` or supported upsert with
-the same statically proven row key. The rule abstains when it cannot prove
-that the selected values are unused, the predicates match, the keys stay
-unchanged, and both calls belong to the same known transaction. Intervening
+the same statically proven unique row key. An `UPDATE` requires a matching
+unique key in the complete catalog supplied through `schemaCatalogPath`.
+For a supported upsert, a single-column `ON CONFLICT` target establishes the
+unique key. Use `FROM ONLY` when the lock should exclude inherited rows, since
+a parent table's unique key does not constrain its inheritance children.
+The rule abstains when it cannot prove that the selected values are
+unused, the key predicates match, the key binds stay unchanged, and both calls
+belong to the same known transaction. Intervening
 reads, consumed results, computed projections, unconditional writes, and
 unresolved transaction membership do not produce this finding. `fail` is an
 invalid severity for this check. An unresolved proof may still produce an
 unanalyzable diagnostic according to `unanalyzableSql`.
 
 ```sql
-SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE;
+SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE;
 UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running';
 ```
 

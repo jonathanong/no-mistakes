@@ -71,11 +71,15 @@ pub(super) fn annotate(
             })
             .unwrap_or_default();
     if fact.track_redundant_prelocks {
-        fact.stable_prelock_bindings = fact.bound_parameters.iter().all(|parameter| {
-            parameter
-                .as_deref()
-                .is_some_and(|identity| stable_parameter_identity(visitor, identity))
-        });
+        fact.stable_prelock_parameters = fact
+            .bound_parameters
+            .iter()
+            .map(|parameter| {
+                parameter
+                    .as_deref()
+                    .is_some_and(|identity| stable_parameter_identity(visitor, identity))
+            })
+            .collect();
     }
 }
 

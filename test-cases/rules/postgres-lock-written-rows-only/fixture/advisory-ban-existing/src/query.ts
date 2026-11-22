@@ -5,6 +5,7 @@ export async function dynamicKeys(key: string, first: number, second: number) {
   await query(`SELECT pg_try_advisory_xact_lock($1, $2)`, [first, second]);
   await query(`SELECT pg_advisory_lock($1)`, [key]);
   await query(`SELECT pg_catalog.pg_advisory_lock_shared($1)`, [key]);
+  await query(`SELECT pg_advisory_lock_shared($1)`, [key]);
   await query(`SELECT pg_advisory_xact_lock($1)`, [key]);
   await query(`SELECT pg_advisory_xact_lock_shared($1)`, [key]);
   await query(`SELECT pg_try_advisory_lock($1)`, [key]);

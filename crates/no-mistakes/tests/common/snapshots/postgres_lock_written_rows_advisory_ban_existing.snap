@@ -22,23 +22,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 10,
-          "message": "src/query.ts:10: function call \"pg_try_advisory_lock\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "message": "src/query.ts:10: function call \"pg_advisory_xact_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "rule": "postgres-sql-shape-policy",
+          "sourceLine": "await query(`SELECT pg_advisory_xact_lock_shared($1)`, [key]);",
+          "target": "banned-function-call"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: function call \"pg_try_advisory_lock\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
           "sourceLine": "await query(`SELECT pg_try_advisory_lock($1)`, [key]);",
           "target": "banned-function-call"
         },
         {
           "file": "src/query.ts",
-          "line": 11,
-          "message": "src/query.ts:11: function call \"pg_try_advisory_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "line": 12,
+          "message": "src/query.ts:12: function call \"pg_try_advisory_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
           "sourceLine": "await query(`SELECT pg_try_advisory_lock_shared($1)`, [key]);",
           "target": "banned-function-call"
         },
         {
           "file": "src/query.ts",
-          "line": 12,
-          "message": "src/query.ts:12: function call \"pg_try_advisory_xact_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "line": 13,
+          "message": "src/query.ts:13: function call \"pg_try_advisory_xact_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
           "sourceLine": "await query(`SELECT pg_try_advisory_xact_lock_shared($1)`, [key]);",
           "target": "banned-function-call"
@@ -78,17 +86,17 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/query.ts",
           "line": 8,
-          "message": "src/query.ts:8: function call \"pg_advisory_xact_lock\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "message": "src/query.ts:8: function call \"pg_advisory_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
-          "sourceLine": "await query(`SELECT pg_advisory_xact_lock($1)`, [key]);",
+          "sourceLine": "await query(`SELECT pg_advisory_lock_shared($1)`, [key]);",
           "target": "banned-function-call"
         },
         {
           "file": "src/query.ts",
           "line": 9,
-          "message": "src/query.ts:9: function call \"pg_advisory_xact_lock_shared\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
+          "message": "src/query.ts:9: function call \"pg_advisory_xact_lock\" is banned by this SQL shape policy; remove the call or replace it with an allowed operation",
           "rule": "postgres-sql-shape-policy",
-          "sourceLine": "await query(`SELECT pg_advisory_xact_lock_shared($1)`, [key]);",
+          "sourceLine": "await query(`SELECT pg_advisory_xact_lock($1)`, [key]);",
           "target": "banned-function-call"
         }
       ],

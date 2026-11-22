@@ -47,11 +47,7 @@ fn awaited_call(statement: &Statement<'_>) -> Option<u32> {
         .arguments
         .iter()
         .map(|arg| arg.as_expression().map(unwrap_ts_wrappers));
-    let static_sql = match arguments.next()? {
-        Some(Expression::StringLiteral(_)) => true,
-        Some(Expression::TemplateLiteral(template)) => template.expressions.is_empty(),
-        _ => false,
-    };
+    let static_sql = arguments.next()?.is_some_and(static_sql_argument);
     let safe_binds = match arguments.next() {
         None => true,
         Some(Some(Expression::ArrayExpression(array))) => array.elements.iter().all(|element| {
@@ -70,4 +66,19 @@ fn awaited_call(statement: &Statement<'_>) -> Option<u32> {
     };
     (callee && !call.optional && static_sql && safe_binds && arguments.next().is_none())
         .then_some(call.span.start)
+}
+
+fn static_sql_argument(argument: &Expression<'_>) -> bool {
+    match unwrap_ts_wrappers(argument) {
+        Expression::StringLiteral(_) => true,
+        Expression::TemplateLiteral(template) => template.expressions.is_empty(),
+        Expression::ConditionalExpression(choice) => {
+            matches!(
+                unwrap_ts_wrappers(&choice.test),
+                Expression::Identifier(_) | Expression::BooleanLiteral(_)
+            ) && static_sql_argument(&choice.consequent)
+                && static_sql_argument(&choice.alternate)
+        }
+        _ => false,
+    }
 }

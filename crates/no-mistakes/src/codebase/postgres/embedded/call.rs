@@ -17,7 +17,7 @@ pub struct EmbeddedSqlCall {
     #[doc(hidden)]
     pub next_discarded_query: Option<u32>,
     #[doc(hidden)]
-    pub stable_prelock_bindings: bool,
+    pub stable_prelock_parameters: Vec<bool>,
     pub helper_definition: bool,
     pub lock_helper: Option<Box<(String, u32)>>,
     pub transaction_id: Option<u32>,

@@ -147,7 +147,7 @@ impl ScopeVisitor<'_> {
             replacement.track_share_lock_writes = original.track_share_lock_writes;
             replacement.track_redundant_prelocks = original.track_redundant_prelocks;
             replacement.next_discarded_query = original.next_discarded_query;
-            replacement.stable_prelock_bindings = original.stable_prelock_bindings;
+            replacement.stable_prelock_parameters = original.stable_prelock_parameters;
             replacement.execution_scope = original.execution_scope;
             replacement.execution_range = original.execution_range;
             replacement

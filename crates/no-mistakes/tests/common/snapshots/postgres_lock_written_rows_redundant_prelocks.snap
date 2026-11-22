@@ -7,11 +7,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     "report": {
       "advisories": [
         {
+          "file": "src/inheritance.ts",
+          "line": 11,
+          "message": "src/inheritance.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/inheritance.ts",
+          "line": 5,
+          "message": "src/inheritance.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/query.ts",
           "line": 100,
           "message": "src/query.ts:100: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY accounts WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
         },
         {
@@ -19,7 +35,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 106,
           "message": "src/query.ts:106: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY public.accounts WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
         },
         {
@@ -27,7 +43,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 11,
           "message": "src/query.ts:11: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "redundant-prelock"
         },
         {
@@ -35,7 +51,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 118,
           "message": "src/query.ts:118: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM \"schema.with.dot\".accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY \"schema.with.dot\".accounts WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "redundant-prelock"
         },
         {
@@ -43,7 +59,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 124,
           "message": "src/query.ts:124: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM accounts JOIN account_events ON accounts.id = account_events.account_id WHERE accounts.id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY accounts JOIN account_events ON accounts.id = account_events.account_id WHERE accounts.id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
         },
         {
@@ -51,7 +67,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 48,
           "message": "src/query.ts:48: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT coalesce(state, 'queued') FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT coalesce(state, 'queued') FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
         },
         {
@@ -59,7 +75,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "src/query.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "redundant-prelock"
         },
         {
@@ -67,7 +83,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 68,
           "message": "src/query.ts:68: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM jobs AS j(original_id, id, state) WHERE j.id = $1 FOR UPDATE`, [key]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs AS j(original_id, id, state) WHERE j.id = $1 FOR UPDATE`, [key]);",
           "target": "unanalyzable"
         },
         {
@@ -75,7 +91,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 74,
           "message": "src/query.ts:74: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM jobs AS j WHERE j.id = $1 FOR UPDATE`, [key]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs AS j WHERE j.id = $1 FOR UPDATE`, [key]);",
           "target": "redundant-prelock"
         },
         {
@@ -83,7 +99,71 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 81,
           "message": "src/query.ts:81: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write share a transaction and immutable row key",
           "rule": "postgres-lock-written-rows-only",
-          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/stable-key.ts",
+          "line": 11,
+          "message": "src/stable-key.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write share a transaction and immutable row key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/stable-key.ts",
+          "line": 5,
+          "message": "src/stable-key.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 11,
+          "message": "src/unique-key.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY partial_jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 17,
+          "message": "src/unique-key.ts:17: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY deferred_jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 24,
+          "message": "src/unique-key.ts:24: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY stale_jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 5,
+          "message": "src/unique-key.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY jobs WHERE state = 'running' FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 11,
+          "message": "src/variant-sequences.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the redundant pre-lock sequence across SQL variants; use one fixed lock and write statement",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(enabled ? `SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE` : `SELECT 1 FROM jobs WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 5,
+          "message": "src/variant-sequences.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the redundant pre-lock sequence across SQL variants; use one fixed lock and write statement",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
           "target": "unanalyzable"
         }
       ],
@@ -136,6 +216,179 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "postgres-lock-written-rows-only: redundant-prelock supports only advise or ignore"
         }
       ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/inheritance.ts",
+          "line": 11,
+          "message": "src/inheritance.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/inheritance.ts",
+          "line": 5,
+          "message": "src/inheritance.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 100,
+          "message": "src/query.ts:100: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 106,
+          "message": "src/query.ts:106: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY public.accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 118,
+          "message": "src/query.ts:118: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY \"schema.with.dot\".accounts WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 124,
+          "message": "src/query.ts:124: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY accounts JOIN account_events ON accounts.id = account_events.account_id WHERE accounts.id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 48,
+          "message": "src/query.ts:48: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT coalesce(state, 'queued') FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 68,
+          "message": "src/query.ts:68: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs AS j(original_id, id, state) WHERE j.id = $1 FOR UPDATE`, [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 74,
+          "message": "src/query.ts:74: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs AS j WHERE j.id = $1 FOR UPDATE`, [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 81,
+          "message": "src/query.ts:81: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write share a transaction and immutable row key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/stable-key.ts",
+          "line": 11,
+          "message": "src/stable-key.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write share a transaction and immutable row key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE\", [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/stable-key.ts",
+          "line": 5,
+          "message": "src/stable-key.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 11,
+          "message": "src/unique-key.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY partial_jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 17,
+          "message": "src/unique-key.ts:17: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY deferred_jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 24,
+          "message": "src/unique-key.ts:24: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY stale_jobs WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unique-key.ts",
+          "line": 5,
+          "message": "src/unique-key.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(\"SELECT 1 FROM ONLY jobs WHERE state = 'running' FOR UPDATE\");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 11,
+          "message": "src/variant-sequences.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the redundant pre-lock sequence across SQL variants; use one fixed lock and write statement",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(enabled ? `SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE` : `SELECT 1 FROM jobs WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 5,
+          "message": "src/variant-sequences.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the redundant pre-lock sequence across SQL variants; use one fixed lock and write statement",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM ONLY jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],

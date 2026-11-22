@@ -1,5 +1,7 @@
 use super::*;
 
+mod potential;
+
 pub(super) fn scan(
     output: &mut Output<'_>,
     file: &str,
@@ -10,30 +12,34 @@ pub(super) fn scan(
 ) {
     let mut ordered = Vec::new();
     let mut uncertain_writes = BTreeMap::<_, relations::Writes<'_>>::new();
-    let candidates = complete_calls(calls, grouped)
-        .filter(|(_, facts)| !facts.lock_writes.share_statements.is_empty());
-    for (call, facts) in candidates {
-        let proven_order = ordered_transaction(call, unresolved).is_some();
-        if let Some(transaction) = transaction_scope(call) {
-            if proven_order {
-                ordered.push((transaction, call, facts));
-            } else {
-                uncertain_writes.entry(transaction).or_default().extend(
-                    facts
-                        .lock_writes
-                        .writes
-                        .iter()
-                        .filter_map(|write| write.relation.as_deref()),
-                );
+    let candidates = variants::groups(calls, grouped);
+    let potential = potential::PotentialWrites::collect(candidates.clone());
+    for (call, versions) in candidates {
+        let proven = match versions {
+            [facts] if !facts.parse_failed => {
+                ordered_transaction(call, unresolved).map(|tx| (tx, *facts))
             }
+            _ => None,
+        };
+        if let Some((transaction, facts)) = proven {
+            if !facts.lock_writes.share_statements.is_empty() {
+                ordered.push((transaction, call, facts));
+            }
+            continue;
         }
-        if !proven_order
-            && !known_autocommit(call)
-            && facts
-                .lock_writes
-                .share_statements
+        if let Some(transaction) = transaction_scope(call) {
+            uncertain_writes.entry(transaction).or_default().extend(
+                versions
+                    .iter()
+                    .filter(|facts| !facts.parse_failed)
+                    .flat_map(|facts| &facts.lock_writes.writes)
+                    .filter_map(|write| write.relation.as_deref()),
+            );
+        }
+        if !known_autocommit(call)
+            && versions
                 .iter()
-                .any(|statement| !statement.locks.is_empty())
+                .any(|facts| !facts.parse_failed && potential.may_follow_lock(call, facts))
         {
             output.unresolved(
                 &Site { file, source, call },
@@ -83,11 +89,16 @@ pub(super) fn scan(
                     } else {
                         continue;
                     }
-                } else {
+                } else if !written.is_empty()
+                    || uncertain.is_some_and(|writes| !writes.is_empty())
+                    || potential.may_follow(call, None)
+                {
                     output.unresolved(
                         &site,
                         "cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
                     );
+                } else {
+                    continue;
                 }
                 reported.insert(relation);
             }

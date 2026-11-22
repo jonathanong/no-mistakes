@@ -2,11 +2,15 @@ use super::cli_postgres_snapshot_lock_written_rows::snapshot;
 use serde_json::Value;
 
 fn lines(report: &Value, category: &str, target: &str) -> Vec<u64> {
+    lines_in_file(report, category, target, None)
+}
+
+fn lines_in_file(report: &Value, category: &str, target: &str, file: Option<&str>) -> Vec<u64> {
     let mut lines = report[category]
         .as_array()
         .unwrap()
         .iter()
-        .filter(|item| item["target"] == target)
+        .filter(|item| item["target"] == target && file.is_none_or(|file| item["file"] == file))
         .map(|item| item["line"].as_u64().unwrap())
         .collect::<Vec<_>>();
     lines.sort_unstable();
@@ -24,7 +28,7 @@ fn postgres_lock_written_rows_advisory_ban_existing_check_json_snapshot() {
         )],
     );
     let report = &reports["all_variants_and_path_scope"]["report"];
-    assert_eq!(report["rules"].as_array().unwrap().len(), 10);
+    assert_eq!(report["rules"].as_array().unwrap().len(), 11);
     assert!(report["rules"]
         .as_array()
         .unwrap()
@@ -59,19 +63,56 @@ fn postgres_lock_written_rows_share_lock_sequences_check_json_snapshot() {
         &[
             ("advise", "share-lock-sequences", "share-advise.yml"),
             ("fail", "share-lock-sequences", "share-fail.yml"),
+            (
+                "read_only",
+                "share-lock-sequences",
+                "share-read-only-fail.yml",
+            ),
             ("disabled", "share-lock-sequences", "disabled.yml"),
         ],
     );
     for (case, category) in [("advise", "advisories"), ("fail", "rules")] {
         assert_eq!(
-            lines(&reports[case]["report"], category, "share-lock-then-write"),
+            lines_in_file(
+                &reports[case]["report"],
+                category,
+                "share-lock-then-write",
+                Some("src/query.ts")
+            ),
             [6, 12, 18, 75, 92, 98, 103, 189, 209]
+        );
+        assert_eq!(
+            lines_in_file(
+                &reports[case]["report"],
+                category,
+                "share-lock-then-write",
+                Some("src/lock-targets.ts")
+            ),
+            [5]
         );
     }
     assert_eq!(
-        lines(&reports["advise"]["report"], "advisories", "unanalyzable"),
+        lines_in_file(
+            &reports["advise"]["report"],
+            "advisories",
+            "unanalyzable",
+            Some("src/query.ts")
+        ),
         [56, 63, 69, 86, 114, 134, 141, 149, 165, 171, 177, 195, 202]
     );
+    assert_eq!(
+        lines_in_file(
+            &reports["advise"]["report"],
+            "advisories",
+            "unanalyzable",
+            Some("src/variant-sequences.ts")
+        ),
+        [5, 11]
+    );
+    assert!(reports["read_only"]["report"]["rules"]
+        .as_array()
+        .unwrap()
+        .is_empty());
     assert!(lines(
         &reports["disabled"]["report"],
         "advisories",
@@ -87,6 +128,11 @@ fn postgres_lock_written_rows_redundant_prelocks_check_json_snapshot() {
         &[
             ("advise", "redundant-prelocks", "redundant-advise.yml"),
             (
+                "no_catalog",
+                "redundant-prelocks",
+                "redundant-no-catalog.yml",
+            ),
+            (
                 "invalid_fail",
                 "redundant-prelocks",
                 "redundant-invalid-fail.yml",
@@ -94,17 +140,96 @@ fn postgres_lock_written_rows_redundant_prelocks_check_json_snapshot() {
             ("disabled", "redundant-prelocks", "disabled.yml"),
         ],
     );
-    assert_eq!(
-        lines(
-            &reports["advise"]["report"],
+    let advise = &reports["advise"]["report"];
+    for case in ["advise", "no_catalog"] {
+        assert_eq!(
+            lines_in_file(
+                &reports[case]["report"],
+                "advisories",
+                "unanalyzable",
+                Some("src/inheritance.ts")
+            ),
+            [5, 11]
+        );
+        assert!(lines_in_file(
+            &reports[case]["report"],
             "advisories",
-            "redundant-prelock"
+            "redundant-prelock",
+            Some("src/inheritance.ts")
+        )
+        .is_empty());
+    }
+
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "unanalyzable",
+            Some("src/variant-sequences.ts")
+        ),
+        [5, 11]
+    );
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "redundant-prelock",
+            Some("src/query.ts")
         ),
         [5, 11, 74, 118]
     );
     assert_eq!(
-        lines(&reports["advise"]["report"], "advisories", "unanalyzable"),
+        lines_in_file(advise, "advisories", "unanalyzable", Some("src/query.ts")),
         [48, 68, 81, 100, 106, 124]
+    );
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "redundant-prelock",
+            Some("src/stable-key.ts")
+        ),
+        [5]
+    );
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "unanalyzable",
+            Some("src/stable-key.ts")
+        ),
+        [11]
+    );
+    assert!(lines_in_file(
+        &reports["advise"]["report"],
+        "advisories",
+        "redundant-prelock",
+        Some("src/upsert-source-bounds.ts"),
+    )
+    .is_empty());
+    assert!(lines_in_file(
+        advise,
+        "advisories",
+        "redundant-prelock",
+        Some("src/unique-key.ts")
+    )
+    .is_empty());
+    assert_eq!(
+        lines_in_file(
+            advise,
+            "advisories",
+            "unanalyzable",
+            Some("src/unique-key.ts")
+        ),
+        [5, 11, 17, 24]
+    );
+    assert_eq!(
+        lines(
+            &reports["no_catalog"]["report"],
+            "advisories",
+            "redundant-prelock"
+        ),
+        [11]
     );
     assert!(
         reports["invalid_fail"]["report"]["incomplete"][0]["message"]

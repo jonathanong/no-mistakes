@@ -3,6 +3,8 @@ use crate::codebase::postgres::{EmbeddedSqlOptions, SqlStatementFileFacts};
 
 mod relations;
 mod share;
+mod unique;
+mod variants;
 
 type Transaction = (u32, u32);
 
@@ -13,12 +15,14 @@ pub(super) fn scan(
     grouped: &BTreeMap<usize, Vec<&SqlStatementFileFacts>>,
     unresolved: &BTreeSet<u32>,
     options: &EmbeddedSqlOptions,
+    catalog: unique::CatalogContext<'_, '_>,
 ) {
     if options.track_share_lock_writes {
         share::scan(output, file, source, calls, grouped, unresolved);
     }
     if options.track_redundant_prelocks {
-        redundant_prelocks(output, file, source, calls, grouped, unresolved);
+        variants::scan_redundant(output, file, source, calls, grouped);
+        redundant_prelocks(output, file, source, calls, grouped, unresolved, catalog);
     }
 }
 
@@ -29,17 +33,13 @@ fn redundant_prelocks(
     calls: &[EmbeddedSqlCall],
     grouped: &BTreeMap<usize, Vec<&SqlStatementFileFacts>>,
     unresolved: &BTreeSet<u32>,
+    catalog: unique::CatalogContext<'_, '_>,
 ) {
     let candidates = complete_calls(calls, grouped);
     let writes: BTreeMap<_, _> = candidates
         .clone()
         .filter(|(_, facts)| !facts.lock_writes.conditional_write_keys.is_empty())
-        .map(|(call, facts)| {
-            (
-                call.execution_range.0,
-                (call, &facts.lock_writes.conditional_write_keys),
-            )
-        })
+        .map(|(call, facts)| (call.execution_range.0, (call, &facts.lock_writes)))
         .collect();
     for (call, facts) in candidates {
         let Some(next) = call
@@ -48,9 +48,10 @@ fn redundant_prelocks(
         else {
             continue;
         };
-        let Some((write_call, keys)) = writes.get(&next) else {
+        let Some((write_call, write_facts)) = writes.get(&next) else {
             continue;
         };
+        let keys = &write_facts.conditional_write_keys;
         if known_autocommit(call) || known_autocommit(write_call) {
             continue;
         }
@@ -60,7 +61,7 @@ fn redundant_prelocks(
         if matches!((lock_tx, write_tx), (Some(left), Some(right)) if left != right) {
             continue;
         }
-        let Some(lock) = &facts.lock_writes.prelock else {
+        let Some((lock, only)) = &facts.lock_writes.prelock else {
             if facts.lock_writes.locks.iter().any(|lock| {
                 keys.iter().any(|write| {
                     relations::same(lock.relation.as_deref(), write.relation.as_deref())
@@ -72,7 +73,7 @@ fn redundant_prelocks(
             continue;
         };
         let (mut matches, mut unknown_key, mut unknown_relation) = (false, false, false);
-        for write in *keys {
+        for write in keys {
             let same_relation =
                 relations::same(lock.relation.as_deref(), write.relation.as_deref());
             if same_relation == Some(false) {
@@ -83,17 +84,26 @@ fn redundant_prelocks(
             {
                 continue;
             }
-            let same = rows::compare_keys(lock, call, write, write_call);
+            let same = rows::compare_keys(lock, call, write, write_call).filter(|same| {
+                !*same
+                    || (rows::stable_prelock_key(lock, call)
+                        && rows::stable_prelock_key(write, write_call))
+            });
             matches |= same_relation == Some(true) && same == Some(true);
             unknown_key |= same_relation == Some(true) && same.is_none();
             unknown_relation |= same_relation.is_none() && same != Some(false);
         }
-        if matches
-            && lock_tx.is_some()
-            && write_tx.is_some()
-            && call.stable_prelock_bindings
-            && write_call.stable_prelock_bindings
-        {
+        if matches && lock_tx.is_some() && write_tx.is_some() {
+            if !only {
+                output.unresolved(&site, "cannot prove the pre-lock excludes inherited rows; use FROM ONLY when the lock should target just this table");
+                continue;
+            }
+            if !write_facts.conditional_write_unique
+                && !unique::key(catalog, call, lock, unresolved)
+            {
+                output.unresolved(&site, "cannot prove the pre-lock predicate identifies one row; provide schemaCatalogPath with a matching unique key");
+                continue;
+            }
             output.emit(
                 &site,
                 super::super::REDUNDANT_PRELOCK,

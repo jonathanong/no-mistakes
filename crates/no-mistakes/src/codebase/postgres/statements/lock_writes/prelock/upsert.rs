@@ -35,6 +35,8 @@ pub(super) fn upsert_key(
         return None;
     };
     if source.with.is_some()
+        || source.limit_clause.is_some()
+        || source.fetch.is_some()
         || generated_name(relation, positions)
         || generated(key, positions)
         || !plain_assignments(&update.assignments)

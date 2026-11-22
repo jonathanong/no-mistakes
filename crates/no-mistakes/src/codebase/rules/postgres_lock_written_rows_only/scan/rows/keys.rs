@@ -34,15 +34,32 @@ fn proven_key<'a>(row: &'a RowAccess, call: &EmbeddedSqlCall) -> Option<(&'a str
     Some((column, identity(value, call)?))
 }
 
+pub(in super::super) fn stable_prelock_key(row: &RowAccess, call: &EmbeddedSqlCall) -> bool {
+    row.key.as_ref().is_some_and(|(_, value)| {
+        if value.starts_with('$') {
+            parameter_index(value)
+                .and_then(|index| call.stable_prelock_parameters.get(index))
+                .copied()
+                == Some(true)
+        } else {
+            !value.starts_with([':', '?'])
+        }
+    })
+}
+
+fn parameter_index(value: &str) -> Option<usize> {
+    value
+        .strip_prefix('$')?
+        .parse::<usize>()
+        .ok()?
+        .checked_sub(1)
+}
+
 pub(super) fn identity(value: &str, call: &EmbeddedSqlCall) -> Option<String> {
     if value.starts_with([':', '?']) {
         return None;
     }
-    if let Some(index) = value
-        .strip_prefix('$')
-        .and_then(|value| value.parse::<usize>().ok())
-        .and_then(|index| index.checked_sub(1))
-    {
+    if let Some(index) = parameter_index(value) {
         return call.bound_parameters.get(index)?.clone();
     }
     Some(format!("literal:{value}"))

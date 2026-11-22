@@ -959,6 +959,8 @@ to `advise` for the four established checks. The opt-in sequence checks
 `share-lock-then-write` and `redundant-prelock` remain disabled unless named in
 `checks`; `redundant-prelock` is advisory-only and rejects `fail`. Unresolved
 SQL or transaction membership follows the configured unanalyzable policy.
+Redundant pre-lock proofs require `FROM ONLY` and a unique key established by
+`schemaCatalogPath` for updates or the supported upsert conflict target.
 
 `PostgresLockWrittenRowsOnlyOptions.executorOptions` selects executor-routing
 properties with entries such as `{ name: "query" }` for `{ query: tx }`.

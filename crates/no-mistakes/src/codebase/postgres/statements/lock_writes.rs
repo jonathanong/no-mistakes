@@ -33,9 +33,10 @@ pub(crate) struct LockWriteFacts {
     pub linked_cte_locks: BTreeMap<usize, CteWriteLink>,
     pub self_contained_locks: BTreeMap<usize, Range<usize>>,
     pub share_statements: Vec<sequences::ShareStatement>,
-    pub prelock: Option<RowAccess>,
+    pub prelock: Option<(RowAccess, bool)>,
     pub prelock_attempt: bool,
     pub conditional_write_keys: Vec<RowAccess>,
+    pub conditional_write_unique: bool,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RowAccess {
@@ -45,7 +46,6 @@ pub(crate) struct RowAccess {
     pub key_identity_unproven: bool,
     pub has_predicate: bool,
 }
-
 pub(super) fn collect<const ADVANCED: bool>(
     statements: &[Statement],
     positions: PlaceholderPositions<'_>,

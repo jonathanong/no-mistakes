@@ -206,10 +206,11 @@ executors. Start with its default advisory checks, then set individual check
 ids to `fail` after reviewing row, table, constant advisory, and autocommit
 locks. The opt-in `share-lock-then-write` check reports later writes after a
 shared row lock in the same known transaction. The opt-in
-`redundant-prelock` check advises only when a discarded direct `SELECT 1` is
-immediately followed by a conditional write with the same immutable key; it
+`redundant-prelock` check advises only when a discarded direct `SELECT 1 FROM ONLY` is
+immediately followed by a conditional write with the same immutable unique key;
+updates require catalog evidence, and upserts use their conflict target. It
 cannot be configured to fail. The executor replacement, additive, and exclusion
-options above also apply to this rule. Configure transaction factories through `executorFactoryNames`
+options above also
 apply to this rule. Configure transaction factories through `executorFactoryNames`
 for `const`, `using`, and `await using` bindings, or a simple first parameter
 of a direct factory callback. Use `transactionExecutorTypeNames` for imported

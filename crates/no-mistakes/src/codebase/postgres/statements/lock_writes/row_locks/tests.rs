@@ -6,7 +6,7 @@ fn explicit_locks(sql: &str) -> Vec<RowAccess> {
         .unwrap()
         .into_iter()
         .flat_map(|statement| match statement {
-            Statement::Query(query) => collect_explicit(&query, None)
+            Statement::Query(query) => collect_explicit(&query, None, false)
                 .into_iter()
                 .map(|(row, _)| row)
                 .collect(),
