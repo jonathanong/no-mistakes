@@ -118,9 +118,10 @@ fn use_name(ctx: &FileCtx<'_>, name: &str, depth: u8) -> Vec<Fragment> {
     }
     if !locally_bound(ctx, name) {
         if let Some(import) = imported(ctx.ts, name) {
+            let is_tag = binding_is_tag(ctx.ts, ctx.tags, name);
             let mut found =
-                import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import);
-            if binding_is_tag(ctx.ts, ctx.tags, name) {
+                import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import, is_tag);
+            if is_tag {
                 found.retain(|fragment| fragment.open_specifier.is_none());
             }
             return found;

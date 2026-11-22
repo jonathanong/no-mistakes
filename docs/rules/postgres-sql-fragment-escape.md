@@ -42,7 +42,9 @@ Enable this rule next to the adapter lint when exported SQL constants are
 shared across files. A file whose prepared facts include an operational error,
 a fatal parse error, or an incomplete value-flow is still checked. A fragment
 binding or a write that those facts still record is reported, and the same
-file is listed on the check result's `incomplete` field. An unreadable file
+file is listed on the check result's `incomplete` field. A TypeScript or
+JavaScript file in the graph scope with missing prepared facts also appears
+there. An unreadable file
 is not scanned. Its `incomplete` entry names the file, and a recorded write
 is not reported on line 1. A sourced `export { name } from` or `export * as name from` whose recorded
 offset is missing is listed on `incomplete` when that module exports a
@@ -138,7 +140,11 @@ the target is missing or unresolved, a relative specifier is joined
 lexically to the importer, and a specifier can match a file that contains
 `declare module "specifier"` when that file is unique. When those steps do
 not name one file, or the recorded targets disagree, the use is reported.
-That finding names the specifier and does not attribute a local file. A use
+That finding names the specifier and does not attribute a local file. If the
+canonical graph is unavailable, an attempted bare-specifier resolution with no
+ambient match adds an entry to `incomplete` for the importing file. The entry
+names the specifier and asks you to fix the graph prerequisite. The rule still
+reports escapes proven through relative imports or unique ambient matches. A use
 of the configured trusted tag itself is not a fragment, so an unresolved or
 ambiguous import of that tag stays silent. Any other binding from that
 specifier is still reported.

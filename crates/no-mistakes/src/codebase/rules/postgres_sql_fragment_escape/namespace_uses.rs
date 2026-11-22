@@ -17,7 +17,8 @@ pub(super) fn value_sites(ctx: &FileCtx<'_>) -> Vec<(u32, Vec<Fragment>)> {
         if import.kind != ImportedBindingKind::Namespace {
             continue;
         }
-        let found = import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import);
+        let found =
+            import_hit_fragments(ctx.catalog, ctx.graph, ctx.facts, ctx.file, import, false);
         if found.is_empty() {
             continue;
         }
