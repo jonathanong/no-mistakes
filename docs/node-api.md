@@ -947,15 +947,18 @@ The opt-in [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-
 rule runs through the existing asynchronous `check()` API and the same rule
 configuration as `no-mistakes check`; it adds no runtime export. Its public
 contracts are `PostgresLockWrittenRowsOnlyOptions`,
-`PostgresLockWrittenRowsCheck`, `PostgresLockWrittenRowsSeverity`,
+`PostgresLockWrittenRowsCheck`, `PostgresLockWrittenRowsChecks`,
+`PostgresLockWrittenRowsSeverity`,
 `PostgresLockWrittenRowsAllow`, `PostgresLockWrittenRowsWriteSet`, and
 `PostgresLockWrittenRowsExecutorOption`.
 `PostgresLockWrittenRowsOnlyOptions` includes `executorNames`,
 `extraExecutorNames`, and `excludeExecutorNames` with the selection contract
 above. `transactionExecutorTypeNames` selects imported transaction-only executor
 types for local write proofs on function parameters. Per-check severity defaults
-to `advise`. Unresolved SQL or transaction membership follows the configured
-unanalyzable policy.
+to `advise` for the four established checks. The opt-in sequence checks
+`share-lock-then-write` and `redundant-prelock` remain disabled unless named in
+`checks`; `redundant-prelock` is advisory-only and rejects `fail`. Unresolved
+SQL or transaction membership follows the configured unanalyzable policy.
 
 `PostgresLockWrittenRowsOnlyOptions.executorOptions` selects executor-routing
 properties with entries such as `{ name: "query" }` for `{ query: tx }`.

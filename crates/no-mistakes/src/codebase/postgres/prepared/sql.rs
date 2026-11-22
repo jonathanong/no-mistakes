@@ -95,6 +95,8 @@ pub(super) fn collect(
                                 grouping_complete: grouping_complete.as_deref(),
                                 collect_index_probes: plan.postgres_index_probes,
                                 collect_body_bounds: plan.postgres_body_bounds,
+                                share_lock_writes: false,
+                                redundant_prelocks: false,
                             },
                         );
                         value.parse_failures = failures.iter()

@@ -41,7 +41,22 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
             }
             profile = with_identifier_options(profile, rule_id, &options);
             if *rule_id == "postgres-lock-written-rows-only" {
+                use crate::codebase::rules::postgres_lock_written_rows_only::{
+                    REDUNDANT_PRELOCK, SHARE_LOCK_THEN_WRITE,
+                };
                 profile.track_transaction_helpers = true;
+                profile.track_share_lock_writes = matches!(
+                    options
+                        .checks
+                        .get(SHARE_LOCK_THEN_WRITE)
+                        .and_then(serde_json::Value::as_str),
+                    Some("advise" | "fail")
+                );
+                profile.track_redundant_prelocks = options
+                    .checks
+                    .get(REDUNDANT_PRELOCK)
+                    .and_then(serde_json::Value::as_str)
+                    == Some("advise");
                 profile = profile
                     .with_transaction_executor_types(&options.transaction_executor_type_names);
             }

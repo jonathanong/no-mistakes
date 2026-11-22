@@ -13,6 +13,14 @@ pub(super) fn annotate(
 ) {
     fact.execution_awaited = visitor.awaited_lock_helper_calls.contains(&call.span.start);
     fact.lock_scope_analysis = visitor.executor_options.track_transaction_helpers;
+    fact.track_share_lock_writes = visitor.executor_options.track_share_lock_writes;
+    fact.track_redundant_prelocks = visitor.executor_options.track_redundant_prelocks;
+    if fact.track_redundant_prelocks {
+        fact.next_discarded_query = visitor
+            .adjacent_discarded_queries
+            .get(&call.span.start)
+            .copied();
+    }
     let owner = visitor
         .member_query_proof
         .function_ids
@@ -68,6 +76,13 @@ pub(super) fn annotate(
                 _ => None,
             })
             .unwrap_or_default();
+    if fact.track_redundant_prelocks {
+        fact.stable_prelock_bindings = fact.bound_parameters.iter().all(|parameter| {
+            parameter
+                .as_deref()
+                .is_some_and(|identity| stable_parameter_identity(visitor, identity))
+        });
+    }
 }
 
 pub(super) fn stable_parameter_identity(visitor: &ScopeVisitor<'_>, identity: &str) -> bool {

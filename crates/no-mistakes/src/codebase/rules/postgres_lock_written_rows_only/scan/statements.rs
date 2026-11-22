@@ -1,5 +1,5 @@
 use crate::codebase::postgres::{
-    idents::relation_suffix_key, statements::lock_writes::DdlEvent, EmbeddedSqlCall,
+    idents::relation_suffix_key, statements::lock_writes::DdlEvent, EmbeddedSqlCall, SchemaCatalog,
     SqlStatementFileFacts,
 };
 use std::collections::{BTreeMap, BTreeSet};
@@ -95,7 +95,21 @@ impl<'a> CatalogInvalidations<'a> {
         invalidations
     }
 
-    pub(super) fn permits(&self, call: &EmbeddedSqlCall, relation: Option<&str>) -> bool {
+    pub(super) fn for_lock<'catalog>(
+        context: Option<(&'catalog SchemaCatalog, &Self)>,
+        call: &EmbeddedSqlCall,
+        relation: Option<&str>,
+        unresolved: &BTreeSet<u32>,
+    ) -> Option<&'catalog SchemaCatalog> {
+        let (catalog, invalidations) = context?;
+        (call
+            .caller_transaction_id
+            .is_none_or(|id| !unresolved.contains(&id))
+            && invalidations.permits(call, relation))
+        .then_some(catalog)
+    }
+
+    fn permits(&self, call: &EmbeddedSqlCall, relation: Option<&str>) -> bool {
         !self.uncertain_scopes.contains(&call.execution_scope)
             && relation
                 .is_some_and(|relation| !self.relations.contains(relation_suffix_key(relation)))

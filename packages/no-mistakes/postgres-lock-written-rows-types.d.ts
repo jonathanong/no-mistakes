@@ -4,8 +4,15 @@ export type PostgresLockWrittenRowsCheck =
   | "row-lock-unwritten-relation"
   | "table-lock"
   | "constant-advisory-lock"
-  | "row-lock-outside-transaction";
+  | "row-lock-outside-transaction"
+  | "share-lock-then-write"
+  | "redundant-prelock";
 export type PostgresLockWrittenRowsSeverity = "fail" | "advise" | "ignore";
+export type PostgresLockWrittenRowsChecks = {
+  [Check in PostgresLockWrittenRowsCheck]?: Check extends "redundant-prelock"
+    ? Exclude<PostgresLockWrittenRowsSeverity, "fail">
+    : PostgresLockWrittenRowsSeverity;
+};
 /** At least one selector; all supplied selectors must match. */
 export interface PostgresLockWrittenRowsAllow {
   relation?: string;
@@ -51,7 +58,7 @@ export interface PostgresLockWrittenRowsOnlyOptions {
   effort?: Effort;
   unanalyzable?: Unanalyzable;
   unanalyzableSql?: "fail" | "ignore" | "advise";
-  checks?: Partial<Record<PostgresLockWrittenRowsCheck, PostgresLockWrittenRowsSeverity>>;
+  checks?: PostgresLockWrittenRowsChecks;
   allow?: PostgresLockWrittenRowsAllow[];
   writeSets?: PostgresLockWrittenRowsWriteSet[];
 }

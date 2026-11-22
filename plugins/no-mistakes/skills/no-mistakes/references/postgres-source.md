@@ -204,7 +204,12 @@ never imported from the selected module and called in scoped files. See
 Use opt-in `postgres-lock-written-rows-only` to audit configured transaction
 executors. Start with its default advisory checks, then set individual check
 ids to `fail` after reviewing row, table, constant advisory, and autocommit
-locks. The executor replacement, additive, and exclusion options above also
+locks. The opt-in `share-lock-then-write` check reports later writes after a
+shared row lock in the same known transaction. The opt-in
+`redundant-prelock` check advises only when a discarded direct `SELECT 1` is
+immediately followed by a conditional write with the same immutable key; it
+cannot be configured to fail. The executor replacement, additive, and exclusion
+options above also apply to this rule. Configure transaction factories through `executorFactoryNames`
 apply to this rule. Configure transaction factories through `executorFactoryNames`
 for `const`, `using`, and `await using` bindings, or a simple first parameter
 of a direct factory callback. Use `transactionExecutorTypeNames` for imported
@@ -218,7 +223,15 @@ optional options and specialize literal boolean flags; unknown callers or flags
 retain findings, including helpers with no resolved callers. Directly await static executor-parameter lock helpers and pass matching
 executor parameters; imported helpers and re-exports reuse prepared summaries.
 Hashed global advisory keys are checked, while atomic lock/write CTEs on the
-same relation are accepted. Table locks can order later DDL in the same
+same relation are accepted. A locking CTE that writes a different relation
+still reports the locked relation when the transaction does not write it.
+To ban advisory locks regardless of key, configure all eight PostgreSQL
+advisory-lock function names under `postgres-sql-shape-policy`'s
+`banned-function-call` shape; use that rule's `include`/`exclude` options to
+scope paths. The names are `pg_advisory_lock`, `pg_advisory_lock_shared`,
+`pg_advisory_xact_lock`, `pg_advisory_xact_lock_shared`, `pg_try_advisory_lock`,
+`pg_try_advisory_lock_shared`, `pg_try_advisory_xact_lock`, and
+`pg_try_advisory_xact_lock_shared`. Table locks can order later DDL in the same
 transaction, including a guard-relation read between the lock and DDL. Optional
 `schemaCatalogPath` supplies known schema relationships for DDL targets.
 Keep `allow` reasons and `writeSets` assertions

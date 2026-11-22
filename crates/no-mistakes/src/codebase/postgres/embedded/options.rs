@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-
 const DEFAULT_EXECUTOR_NAMES: &[&str] = &["query", "read", "write"];
 
 /// A named import the user asserts is a parameterized SQL tag.
@@ -55,8 +54,11 @@ pub struct EmbeddedSqlOptions {
     pub sql_literal_helpers: Vec<String>,
     #[serde(skip)]
     pub track_transaction_helpers: bool,
+    #[serde(skip)]
+    pub track_share_lock_writes: bool,
+    #[serde(skip)]
+    pub track_redundant_prelocks: bool,
 }
-
 impl EmbeddedSqlOptions {
     pub(crate) fn is_callable_export(&self, name: &str) -> bool {
         DEFAULT_EXECUTOR_NAMES.contains(&name)
@@ -106,6 +108,8 @@ impl EmbeddedSqlOptions {
             sql_identifier_assertions: Vec::new(),
             sql_literal_helpers: Vec::new(),
             track_transaction_helpers: false,
+            track_share_lock_writes: false,
+            track_redundant_prelocks: false,
         }
     }
 

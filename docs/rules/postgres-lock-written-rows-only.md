@@ -22,9 +22,107 @@ check already acquires the required parent KEY SHARE lock.
 | `table-lock` | `LOCK TABLE` in any mode without a proven later DDL purpose in the same transaction. | Use a bounded row lock, or make the DDL ordering explicit. |
 | `constant-advisory-lock` | Literal or constant keys (including builtin `hashtext` / `hashtextextended` of constants) to `pg_advisory_lock`, `pg_advisory_xact_lock`, their `try_` forms, and two-key variants. | Use a key derived from the written entity. |
 | `row-lock-outside-transaction` | A row lock on a known non-transaction executor, unless the same SQL statement writes the locked relation. | Move the lock and write into one transaction. |
+| `share-lock-then-write` | A known `FOR SHARE` or `FOR KEY SHARE` lock followed later by an update or delete of the same relation in the same transaction. | Choose a lock mode that matches the write, or use the conditional write directly. |
+| `redundant-prelock` | Advisory-only: a discarded `SELECT 1 FOR UPDATE` immediately precedes a conditional write with the same provable key. | Remove the unused pre-lock and let the conditional write decide the race. |
 
-Each check defaults to `advise`. `fail` emits a failing finding and `ignore`
-disables that check. Never interpret an unresolved statement as a proven write.
+The four established checks default to `advise`. The two sequence checks are
+opt-in and stay disabled unless listed in `checks`. `fail` emits a failing
+finding for `share-lock-then-write`; `redundant-prelock` accepts only `advise`
+or `ignore`, and configuration with `fail` is invalid. `ignore` disables a
+check. Never interpret an unresolved statement as a proven write.
+
+## Ban advisory locks
+
+`constant-advisory-lock` reports only keys proven constant. To ban advisory
+locks regardless of key, use `postgres-sql-shape-policy` with its
+`banned-function-call` shape and list all eight PostgreSQL function names:
+
+```yaml
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions:
+            - pg_advisory_lock
+            - pg_advisory_lock_shared
+            - pg_advisory_xact_lock
+            - pg_advisory_xact_lock_shared
+            - pg_try_advisory_lock
+            - pg_try_advisory_lock_shared
+            - pg_try_advisory_xact_lock
+            - pg_try_advisory_xact_lock_shared
+      exclude: [src/intentional-locks.ts]
+```
+
+This shape matches parsed function calls, including schema-qualified names.
+Scope paths with its `include` and `exclude` options; there is no per-function
+allow-path option for this shape.
+
+## Locking CTE that writes another relation
+
+A lock inside a CTE remains associated with its base relation. Writing another
+table in the statement does not count as updating or deleting the locked rows:
+
+```sql
+WITH parent AS MATERIALIZED (
+  SELECT o.id FROM orders AS o WHERE o.id = $1 FOR UPDATE OF o
+)
+INSERT INTO order_events (order_id) SELECT id FROM parent;
+```
+
+If the same known transaction does not update or delete `orders`,
+`row-lock-unwritten-relation` reports the lock. A later write to `orders` in
+that transaction satisfies the existing check. CTE names do not establish a
+base relation identity.
+
+## Share lock followed by a write
+
+Enable this check with `checks.share-lock-then-write: advise` (or `fail`). It
+reports a `FOR SHARE` or `FOR KEY SHARE` statement when a later statement in
+the same known transaction updates or deletes the same relation. Competing
+transactions can deadlock if both keep shared locks and then request lock modes
+that conflict with each other. `FOR KEY SHARE` is compatible with
+`FOR NO KEY UPDATE`, so the pattern alone does not prove a deadlock for every
+schema and write shape.
+
+```sql
+SELECT 1 FROM accounts WHERE id = $1 FOR SHARE;
+UPDATE accounts SET balance = balance - $2 WHERE id = $1;
+```
+
+Choose the lock strength required by the later write before reading, or remove
+the pre-lock when a conditional write already decides whether the row changes.
+The check relies on direct awaited SQL calls with known transaction membership
+and statement order. It does not infer locks or writes through helpers, dynamic
+SQL, or unresolved control flow; those cases follow `unanalyzableSql`.
+`FOR UPDATE` and `FOR NO KEY UPDATE` are not shared-lock candidates, and a write
+before the lock does not match this sequence.
+
+## Redundant pre-lock before a conditional write
+
+This check is advisory-only. Set `checks.redundant-prelock: advise` to report a
+direct, awaited `SELECT 1 ... FOR UPDATE` whose result is discarded when the
+next direct awaited SQL call is a conditional `UPDATE` or supported upsert with
+the same statically proven row key. The rule abstains when it cannot prove
+that the selected values are unused, the predicates match, the keys stay
+unchanged, and both calls belong to the same known transaction. Intervening
+reads, consumed results, computed projections, unconditional writes, and
+unresolved transaction membership do not produce this finding. `fail` is an
+invalid severity for this check. An unresolved proof may still produce an
+unanalyzable diagnostic according to `unanalyzableSql`.
+
+```sql
+SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE;
+UPDATE jobs SET state = 'done' WHERE id = $1 AND state = 'running';
+```
+
+The conditional write already decides whether it can change the row, so remove
+the extra lock when no code needs the locked row value before that write. If
+the transaction does read a selected value, keep the lock and make that use
+clear.
 
 For the examples below, opt in with explicit failing severities:
 

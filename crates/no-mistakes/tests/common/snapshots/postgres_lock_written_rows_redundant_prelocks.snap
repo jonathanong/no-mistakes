@@ -1,0 +1,114 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 11,
+          "message": "src/query.ts:11: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 48,
+          "message": "src/query.ts:48: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT coalesce(state, 'queued') FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 68,
+          "message": "src/query.ts:68: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the discarded lock reads only a static key and has no other effects",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs AS j(original_id, id, state) WHERE j.id = $1 FOR UPDATE`, [key]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 74,
+          "message": "src/query.ts:74: postgres-lock-written-rows-only application #0 reports an advisory violation for redundant-prelock: the following conditional write decides whether to change the locked row; remove the unused pre-lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs AS j WHERE j.id = $1 FOR UPDATE`, [key]);",
+          "target": "redundant-prelock"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 81,
+          "message": "src/query.ts:81: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the pre-lock and conditional write share a transaction and immutable row key",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM jobs WHERE id = $1 FOR UPDATE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: reviewed transaction protocol",
+          "target": "postgres-lock-written-rows-only"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 93,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: reviewed transaction protocol",
+          "target": "postgres-lock-written-rows-only"
+        }
+      ],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-lock-written-rows-only",
+          "message": "postgres-lock-written-rows-only: redundant-prelock supports only advise or ignore"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

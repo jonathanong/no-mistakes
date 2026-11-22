@@ -1,11 +1,13 @@
 use super::{
     helpers::{access, generated_name, qualifier},
-    RowAccess,
+    scope, RowAccess,
 };
 use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_part_key};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
-use sqlparser::ast::{BinaryOperator, Expr, ObjectNamePart, Query, Select, SetExpr, TableFactor};
-use std::collections::BTreeMap;
+use sqlparser::ast::{
+    BinaryOperator, Expr, LockType, ObjectNamePart, Query, Select, SetExpr, TableFactor,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
@@ -13,19 +15,46 @@ mod tests;
 pub(super) fn collect_advanced(
     query: &Query,
     positions: PlaceholderPositions<'_>,
-) -> Vec<RowAccess> {
-    if query.locks.iter().all(|lock| lock.of.is_some()) {
-        return collect_explicit(query, positions);
+    scopes: &[BTreeSet<String>],
+    locks: &mut Vec<RowAccess>,
+    mut share_relations: Option<&mut Vec<Option<String>>>,
+    top_level: bool,
+) {
+    let rows = if query.locks.iter().all(|lock| lock.of.is_some()) {
+        collect_explicit(query, positions)
+    } else {
+        let row = collect_legacy(query, positions, true);
+        let shared = if row.relation.is_some() {
+            query
+                .locks
+                .iter()
+                .all(|lock| lock.lock_type == LockType::Share)
+        } else {
+            has_share(query)
+        };
+        vec![(row, shared)]
+    };
+    for (mut lock, shared) in rows {
+        scope::hide_cte(&mut lock, scopes);
+        if shared {
+            if let Some(relations) = share_relations.as_deref_mut() {
+                relations.push(if top_level {
+                    lock.relation.clone()
+                } else {
+                    None
+                });
+            }
+        }
+        locks.push(lock);
     }
-    vec![collect_legacy(query, positions, true)]
 }
 
 pub(super) fn collect_explicit(
     query: &Query,
     positions: PlaceholderPositions<'_>,
-) -> Vec<RowAccess> {
+) -> Vec<(RowAccess, bool)> {
     let SetExpr::Select(select) = query.body.as_ref() else {
-        return vec![unresolved()];
+        return vec![(unresolved(), has_share(query))];
     };
     let relations = relation_index(select);
     let mut locks = Vec::new();
@@ -35,11 +64,11 @@ pub(super) fn collect_explicit(
             .as_ref()
             .filter(|target| !generated_name(target, positions))
         else {
-            return vec![unresolved()];
+            return vec![(unresolved(), has_share(query))];
         };
         let target = object_name_identity(target);
         let Some(factors) = relations.get(&target).filter(|factors| factors.len() == 1) else {
-            return vec![unresolved()];
+            return vec![(unresolved(), has_share(query))];
         };
         let factor = factors[0];
         let mut row = access(factor, select.selection.as_ref(), positions);
@@ -54,8 +83,11 @@ pub(super) fn collect_explicit(
                 row.key_identity_unproven |= keyed.key_identity_unproven;
             }
         }
-        if !locks.contains(&row) {
-            locks.push(row);
+        let shared = lock.lock_type == LockType::Share;
+        if let Some((_, prior_shared)) = locks.iter_mut().find(|(candidate, _)| *candidate == row) {
+            *prior_shared &= shared;
+        } else {
+            locks.push((row, shared));
         }
     }
     locks
@@ -148,6 +180,13 @@ pub(super) fn collect_legacy(
         }
         _ => unresolved(),
     }
+}
+
+fn has_share(query: &Query) -> bool {
+    query
+        .locks
+        .iter()
+        .any(|lock| lock.lock_type == LockType::Share)
 }
 
 fn unresolved() -> RowAccess {

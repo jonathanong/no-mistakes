@@ -31,3 +31,6 @@ mod cli_postgres_snapshot_issue_3651;
 
 #[path = "cli_postgres_snapshot_require_query_annotation_destructured.rs"]
 mod cli_postgres_snapshot_require_query_annotation_destructured;
+
+#[path = "cli_postgres_snapshot_lock_written_rows_patterns.rs"]
+mod cli_postgres_snapshot_lock_written_rows_patterns;

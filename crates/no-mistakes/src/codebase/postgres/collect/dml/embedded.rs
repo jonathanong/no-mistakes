@@ -61,12 +61,18 @@ pub(super) fn embedded_call_facts_with_policy(
                     call.lock_scope_analysis,
                     crate::codebase::postgres::statements::StatementPolicySources {
                         bind_values: binds,
+                        share_lock_writes: call.track_share_lock_writes,
+                        redundant_prelocks: call.track_redundant_prelocks,
                         ..policy.clone()
                     },
                 )
             } else if conflict_only {
                 extract_sql_conflict_policy_facts(sql, &call.recovered_placeholder_positions)
-            } else if call.lock_scope_analysis && !policy.collect_grouping {
+            } else if call.lock_scope_analysis
+                && !policy.collect_grouping
+                && !call.track_share_lock_writes
+                && !call.track_redundant_prelocks
+            {
                 crate::codebase::postgres::statements::extract_sql_lock_scope_facts(
                     sql,
                     collect_bounds,
@@ -87,7 +93,11 @@ pub(super) fn embedded_call_facts_with_policy(
                     collect_bounds,
                     Some(&call.recovered_placeholder_positions),
                     projection,
-                    policy.clone(),
+                    crate::codebase::postgres::statements::StatementPolicySources {
+                        share_lock_writes: call.track_share_lock_writes,
+                        redundant_prelocks: call.track_redundant_prelocks,
+                        ..policy.clone()
+                    },
                     call.lock_scope_analysis,
                 )
             } else {

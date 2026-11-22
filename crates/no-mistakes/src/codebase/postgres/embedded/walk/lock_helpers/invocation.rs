@@ -23,6 +23,7 @@ impl<'a> ScopeVisitor<'a> {
                 continue;
             }
             fact.lock_scope_analysis = true;
+            fact.track_share_lock_writes = self.executor_options.track_share_lock_writes;
             fact.line = byte_offset_to_line(self.source, call.span.start as usize);
             fact.callee = name.to_owned();
             fact.kind = EmbeddedSqlKind::Dynamic;

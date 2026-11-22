@@ -17,7 +17,6 @@ pub(crate) fn collect_calls<'a>(
     demand: (bool, bool),
 ) -> CollectedCalls {
     let (head_calls_only, exact_sql_origins) = demand;
-    let track_order = !provisional.is_empty();
     let imported_namespace_names =
         super::super::namespace_imports::configured_namespaces(program, options);
     let imported_value_origins =
@@ -47,6 +46,7 @@ pub(crate) fn collect_calls<'a>(
         lock_summary_passes: 0,
         lock_helper_applications: Default::default(),
         awaited_lock_helper_calls: Default::default(),
+        adjacent_discarded_queries: Default::default(),
         imported_lock_helpers: Vec::new(),
         lock_helpers: super::super::lock_helpers::collect(
             program,
@@ -105,7 +105,7 @@ pub(crate) fn collect_calls<'a>(
         pending_calls: Vec::new(),
         confirmed_order: Vec::new(),
         next_seq: 0,
-        track_order,
+        track_order: !provisional.is_empty(),
         fragments: Vec::new(),
         fragment_variants: Vec::new(),
         fragment_sites: Vec::new(),

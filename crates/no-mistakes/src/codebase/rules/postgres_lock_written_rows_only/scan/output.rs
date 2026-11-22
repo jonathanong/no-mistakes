@@ -58,7 +58,7 @@ impl<'a> Output<'a> {
             relation,
             key,
             message,
-            self.options.checks.get(check).copied().unwrap_or_default(),
+            self.options.mode(check),
         );
     }
     fn push(

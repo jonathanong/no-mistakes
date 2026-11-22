@@ -1,6 +1,6 @@
 use super::{EmbeddedSqlCall, RowAccess};
 
-pub(super) fn compare_keys(
+pub(in super::super) fn compare_keys(
     lock: &RowAccess,
     lock_call: &EmbeddedSqlCall,
     write: &RowAccess,
