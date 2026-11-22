@@ -61,7 +61,8 @@ impl CompiledOptions {
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
             .with_executor_option_properties(&opts.executor_option_properties)
             .with_executor_options(&opts.executor_options)
-            .with_trusted_sql_tags(&opts.trusted_sql_tags);
+            .with_trusted_sql_tags(&opts.trusted_sql_tags)
+            .with_exact_constant_origins();
         Ok(Self {
             paths: RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
             schema: PostgresSchemaOptions {

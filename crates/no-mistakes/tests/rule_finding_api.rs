@@ -36,3 +36,21 @@ fn public_rule_finding_keeps_its_seven_field_literal_json_and_value_traits() {
     assert_eq!(finding.cmp(&later), Ordering::Less);
     assert_ne!(finding, later);
 }
+
+#[test]
+fn embedded_sql_options_keep_public_struct_update_and_hidden_provenance() {
+    let options = no_mistakes::codebase::postgres::EmbeddedSqlOptions {
+        import_specifier: "@example/db".into(),
+        executor_names: vec!["query".into()],
+        ..Default::default()
+    };
+    assert!(!options.exact_constant_origins);
+    let exact = no_mistakes::codebase::postgres::EmbeddedSqlOptions {
+        exact_constant_origins: true,
+        ..options.clone()
+    };
+    let value = serde_json::to_value(options).unwrap();
+    assert_eq!(value["importSpecifier"], "@example/db");
+    assert!(value.get("exactConstantOrigins").is_none());
+    assert_eq!(serde_json::to_value(exact).unwrap(), value);
+}

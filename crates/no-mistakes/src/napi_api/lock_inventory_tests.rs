@@ -24,6 +24,7 @@ fn lock_inventory_napi_and_check_reports_match_library_results() {
         "suppressed",
         "helper-only",
         "routine",
+        "imported-helper",
     ] {
         let root = fixture(name);
         let mut options = json!({ "root": root, "config": ".no-mistakes.yml" });
@@ -47,12 +48,20 @@ fn lock_inventory_napi_and_check_reports_match_library_results() {
             "unknown" | "routine" => assert!(!library.unanalyzed.is_empty(), "{name}"),
             "removed" => assert!(!library.removed.is_empty(), "{name}"),
             "suppressed" => assert_eq!(library.added.len(), 1, "{name}"),
+            "imported-helper" => assert_eq!(
+                library
+                    .added
+                    .iter()
+                    .map(|site| (site.file.as_str(), site.line))
+                    .collect::<Vec<_>>(),
+                [("app.ts", 8), ("app.ts", 15)]
+            ),
             _ => {}
         }
         let expected_findings = library.added.len()
             + library.unanalyzed.len()
             + usize::from(!library.removed.is_empty());
-        let expected_suppressed = usize::from(name == "suppressed");
+        let expected_suppressed = usize::from(matches!(name, "suppressed" | "imported-helper"));
         options["includeSuppressed"] = json!(true);
         let standalone = parse_json(
             &super::check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
@@ -95,6 +104,13 @@ fn lock_inventory_napi_and_check_reports_match_library_results() {
             assert_eq!(entry["file"], library.added[0].file);
             assert_eq!(entry["line"], library.added[0].line);
             assert_eq!(entry["directive"], json!({ "kind": "nextLine", "line": 1 }));
+        }
+        if name == "imported-helper" {
+            assert_eq!(suppressed[0]["line"], 15);
+            assert_eq!(
+                suppressed[0]["directive"],
+                json!({ "kind": "nextLine", "line": 14 })
+            );
         }
         assert_eq!(aggregate["reports"][0]["result"], standalone, "{name}");
     }

@@ -39,6 +39,9 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
             if *rule_id == "postgres-require-query-annotation" {
                 profile = profile.with_sql_literal_helpers(&options.sql_literal_helpers);
             }
+            if *rule_id == "postgres-lock-inventory" {
+                profile = profile.with_exact_constant_origins();
+            }
             profile = with_identifier_options(profile, rule_id, &options);
             if *rule_id == "postgres-lock-written-rows-only" {
                 use crate::codebase::rules::postgres_lock_written_rows_only::{

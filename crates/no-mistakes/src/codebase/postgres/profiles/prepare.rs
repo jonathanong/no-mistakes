@@ -100,7 +100,8 @@ pub(crate) fn prepare_rule_sql_facts(
                 )
             }),
         postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering")
-            || rule_ids.contains(&"postgres-lock-written-rows-only"),
+            || rule_ids.contains(&"postgres-lock-written-rows-only")
+            || rule_ids.contains(&"postgres-lock-inventory"),
         postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
         postgres_general_locations: rule_ids.iter().any(|id| {
             *id != "postgres-conflict-ordering"

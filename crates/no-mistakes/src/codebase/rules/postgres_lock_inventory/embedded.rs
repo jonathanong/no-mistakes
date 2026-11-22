@@ -1,6 +1,7 @@
 use super::scan::{record_parse_failures, sql_helper, FileInventory, Occurrence};
 use super::CompiledOptions;
 use crate::codebase::check_facts::SqlFactContext;
+use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::{
     EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlSourcePosition, SqlByteOrigins,
     SqlStatementFileFacts,
@@ -87,12 +88,21 @@ fn version_sites(
             *sites.entry((source_file, site)).or_insert(0) += 1;
         }
     }
-    for helper in statement
-        .function_calls
-        .iter()
-        .filter_map(|call| sql_helper(options, call))
-    {
-        *sites.entry((None, helper)).or_insert(0) += 1;
+    for (index, function) in statement.function_calls.iter().enumerate() {
+        let Some(mut helper) = sql_helper(options, function) else {
+            continue;
+        };
+        let imported = statement
+            .variant_locations
+            .as_ref()
+            .and_then(|locations| locations.position(SqlFactSite::Function(index)))
+            .filter(|position| position.source_path.is_some());
+        if let Some(position) = imported {
+            helper.line = call.line as usize;
+            helper.column = position.source_offset.unwrap_or(helper.column);
+        }
+        let source_file = imported.and_then(|position| position.source_path.clone());
+        *sites.entry((source_file, helper)).or_insert(0) += 1;
     }
     sites
 }
