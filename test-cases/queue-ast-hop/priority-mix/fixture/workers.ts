@@ -24,3 +24,8 @@ export const loopsWorker = new Worker("loops", async () => {});
 export const slotsWorker = new Worker("slots", async () => {});
 export const ranksWorker = new Worker("ranks", async () => {});
 export const indexesWorker = new Worker("indexes", async () => {});
+export const headsWorker = new Worker("heads", async () => {});
+export const blocksWorker = new Worker("blocks", async () => {});
+export const boxesWorker = new Worker("boxes", async () => {});
+export const classesWorker = new Worker("classes", async () => {});
+export const copiesWorker = new Worker("copies", async () => {});

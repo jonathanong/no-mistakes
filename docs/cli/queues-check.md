@@ -86,13 +86,15 @@ and unary `+`, is the other form. Parentheses and `as const` on that integer
 stay static. A `const` later in the same scope still counts, including
 `for (const level = 9;;)`. A parameter, `let`, `var`, `for` header, or other
 binding with the same name hides the outer `const` for the scope that binding
-owns. The right-hand side of `for...of` and `for...in` still sees the outer
-`const`.
+owns. A `var` inside a class static block does not. A `for...of` or `for...in`
+header hides that name on the right-hand side too. A class expression's name
+hides an outer `const` inside the class and not after it.
 
 The check abstains for the whole queue when any producer priority is not one
 of those two forms. That includes a trailing spread, a spread before the
 options argument, an `addBulk` argument that is not an array of object
-literals, a computed key that may overwrite `priority` or `opts`, a
+literals, an `addBulk` object item with no literal `name`, a computed key that
+may overwrite `priority` or `opts`, a
 non-integer, a negative number, a `let` or `var` binding, an imported number,
 and any other dynamic expression. Flow `children` are not producers, so this
 check does not read them. An unresolved queue is not grouped with a resolved

@@ -30,7 +30,7 @@ fn mixed_literal_priorities_report_the_minority_form() {
         report.check
     );
     let findings = mixed(&report);
-    assert_eq!(findings.len(), 16, "{findings:?}");
+    assert_eq!(findings.len(), 20, "{findings:?}");
 
     let widgets = queue(&findings, "widgets");
     assert_eq!(widgets.len(), 1);
@@ -60,6 +60,9 @@ fn mixed_literal_priorities_report_the_minority_form() {
         "tags",
         "loops",
         "slots",
+        "heads",
+        "classes",
+        "copies",
     ] {
         assert!(queue(&findings, name).is_empty(), "{name} should abstain");
     }
@@ -129,6 +132,24 @@ fn mixed_literal_priorities_report_the_minority_form() {
             && finding.message.contains("enqueues with priority 0")
             && finding.message.contains("fromIndex, priority 5")
     }));
+
+    let blocks = queue(&findings, "blocks");
+    assert_eq!(blocks.len(), 2);
+    assert!(blocks.iter().any(|finding| {
+        finding.job.as_deref() == Some("rankedBlock") && finding.message.contains("sets priority 5")
+    }));
+    assert!(blocks
+        .iter()
+        .any(|finding| finding.job.as_deref() == Some("plainBlock")));
+
+    let boxes = queue(&findings, "boxes");
+    assert_eq!(boxes.len(), 2);
+    assert!(boxes.iter().any(|finding| {
+        finding.job.as_deref() == Some("outerBox") && finding.message.contains("sets priority 5")
+    }));
+    assert!(boxes
+        .iter()
+        .any(|finding| finding.job.as_deref() == Some("storeBox")));
 }
 
 #[test]

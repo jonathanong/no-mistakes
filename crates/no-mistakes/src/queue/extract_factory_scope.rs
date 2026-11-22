@@ -57,11 +57,11 @@ fn visit_for_each<'a>(
     body: &Statement<'a>,
 ) {
     let numbers = visitor.facts.const_numbers.clone();
-    // The right-hand side is still the outer scope.
-    visitor.visit_expression(right);
+    // The for-of/for-in binding is in scope and uninitialized for the right-hand side.
     if let ForStatementLeft::VariableDeclaration(decl) = left {
         hide_declaration(visitor, decl);
     }
+    visitor.visit_expression(right);
     walk::walk_for_statement_left(visitor, left);
     visitor.visit_statement(body);
     visitor.facts.const_numbers = numbers;
@@ -74,12 +74,15 @@ fn hide_declaration(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclaration<'
 }
 
 pub(crate) fn visit_class<'a>(visitor: &mut QueueVisitor<'a>, class: &Class<'a>) {
+    let numbers = visitor.facts.const_numbers.clone();
     let frames = visitor.job_frames.clone();
     if let Some(id) = &class.id {
         mask_name(visitor, id.name.as_str());
+        visitor.facts.const_numbers.remove(id.name.as_str());
     }
     walk::walk_class(visitor, class);
     visitor.job_frames = frames;
+    visitor.facts.const_numbers = numbers;
 }
 
 pub(super) fn mask_name(visitor: &mut QueueVisitor<'_>, name: &str) {

@@ -1,4 +1,4 @@
-import { indexes, loops, ranks, slots } from "./queues";
+import { blocks, boxes, classes, copies, heads, indexes, loops, ranks, slots } from "./queues";
 
 const LEVEL = 5;
 
@@ -19,10 +19,51 @@ export function enqueueSlotted(levels: number[], id: string) {
 }
 
 export function enqueueIndexed(levels: number[], id: string) {
-  for (const LEVEL of [indexes.add("fromIndex", { id }, { priority: LEVEL }), ...levels]) {
-    loops.add("boxedItem", { id }, { priority: LEVEL });
+  for (const cursor of [indexes.add("fromIndex", { id }, { priority: LEVEL }), ...levels]) {
+    loops.add("boxedItem", { id }, { priority: cursor });
   }
   indexes.add("storeIndex", { id });
+}
+
+export function enqueueShadowedHead(levels: number[], id: string) {
+  for (const LEVEL of [heads.add("shadowHead", { id }, { priority: LEVEL }), ...levels]) {
+    loops.add("shadowBox", { id }, { priority: LEVEL });
+  }
+  heads.add("storeHead", { id });
+  heads.add("rushHead", { id }, { priority: 4 });
+}
+
+export function enqueueBlocked(id: string) {
+  class Local {
+    static {
+      var LEVEL = 2;
+    }
+  }
+  blocks.add("rankedBlock", { id }, { priority: LEVEL });
+  return Local;
+}
+
+export function enqueuePlainBlock(id: string) {
+  blocks.add("plainBlock", { id });
+}
+
+export function enqueueBoxed(id: string) {
+  const Box = class LEVEL {
+    send() {
+      classes.add("classItem", { id }, { priority: LEVEL });
+    }
+  };
+  classes.add("storeClass", { id });
+  classes.add("rushClass", { id }, { priority: 2 });
+  boxes.add("outerBox", { id }, { priority: LEVEL });
+  boxes.add("storeBox", { id });
+  return Box;
+}
+
+export function enqueueCopied(id: string, job: object) {
+  copies.addBulk([{ ...job }]);
+  copies.add("rushCopy", { id }, { priority: 4 });
+  copies.add("storeCopy", { id });
 }
 
 export function enqueueRanked(id: string) {

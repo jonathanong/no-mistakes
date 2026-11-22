@@ -62,7 +62,11 @@ fn record_bulk(
     let mut opaque = false;
     for element in &array.elements {
         if let oxc_ast::ast::ArrayExpressionElement::ObjectExpression(object) = element {
+            let recorded = facts.producers.len();
             record_bulk_items(binding, path, source, consts, facts, call, object);
+            if facts.producers.len() == recorded {
+                opaque = true;
+            }
         } else {
             opaque = true;
         }

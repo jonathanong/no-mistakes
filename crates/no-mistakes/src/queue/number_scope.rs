@@ -168,6 +168,8 @@ impl Visit<'_> for VarNames {
     ) {
     }
 
+    fn visit_static_block(&mut self, _block: &oxc_ast::ast::StaticBlock<'_>) {}
+
     fn visit_variable_declaration(&mut self, decl: &VariableDeclaration<'_>) {
         if decl.kind == VariableDeclarationKind::Var {
             push_declaration(&mut self.0, decl);
