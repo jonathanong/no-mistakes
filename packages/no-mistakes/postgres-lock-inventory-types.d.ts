@@ -2,7 +2,7 @@
 export interface PostgresLockInventoryOptions {
   /** Project root. Defaults to the current working directory. */
   root?: string;
-  /** Path to the no-mistakes configuration. Auto-discovered from root when omitted. */
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Create a missing baseline or shrink an existing baseline. Defaults to false. */
   writeBaseline?: boolean;
