@@ -224,7 +224,7 @@ almost every CLI command; see
 | CI or workflow impact                                  | `no-mistakes ci impact <file> --format json`; `no-mistakes ci env <NAME> --format json`; `no-mistakes ci topology --format json`; `no-mistakes ci topology-impact --root . --base "$BASE_SHA" --head "$HEAD_SHA" --entry-workflow ci.yml`                                     |
 | Private CI planning artifacts (npm package)            | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>`                                                                                                                                                                                             |
 | Terraform/OpenTofu or Swift                            | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes infra outputs <module-dir> --format json`; `no-mistakes infra test-for <file.tf> --format json`; `no-mistakes swift importers <file> --format json`; `no-mistakes swift test-targets <file> --json` |
-| Effective resolved config                              | `no-mistakes config resolve` (expanded report); `no-mistakes config resolve --view declared` (merged declarations)                                                                                                                                                                                                                                                  |
+| Effective resolved config                              | `no-mistakes config resolve` (expanded report); `no-mistakes config resolve --view declared` (merged declarations)                                                                                                                                                            |
 | Configured language graph                              | `no-mistakes dependents <file> --relationship <lang> --format json`                                                                                                                                                                                                           |
 
 `tests plan` supports `vitest`, `playwright`, `jest`, `dotnet`, `swift`,
@@ -360,13 +360,25 @@ For `github-actions-cache-key-policy`, list each portable cache path with its lo
 required key fragments such as `runner.os`. `rejectRestoreKeys` defaults to true and
 `allowHashFiles` defaults to false. `matrix.os` and `${{ 'runner.os' }}` do not satisfy
 `runner.os`. The output named by the key must be a hash of the lockfile. The checksum command
-must name that lockfile in the same simple command. A standalone `&` splits commands; an `&` in
+must name that lockfile in the same simple command. A redirect after the closing `}` or `)` of
+a brace group or parenthesized command applies to every command in the group that does not already redirect
+standard output. `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"` counts. A group with no redirect, or a redirect to another file, does not count.
+The redirect is fixed before the body runs. Assignments inside a parenthesized command do not
+affect later commands. A command after `;` on the same line is separate. A `;` inside a
+nested group stays in that group. The closing `)` may share a line with the last command,
+while `}` must be its own command. A later pipe discards
+the group unless standard output is redirected to a file first. A pipe inside `$(...)` or
+backticks stays in that substitution, and a standard-error redirect does not write the digest.
+The last standard-output redirect is the destination. A digit run is a descriptor only as its
+own word. `>=` sends standard output to a file named `=`. An unquoted heredoc counts only when
+the command's last standard-output redirect, or the group's, is the output file.
+A standalone `&` splits commands; an `&` in
 `2>&1`, `>&2`, `&>`, `&>>`, or `<&` does not. A digit prefix and a quoted suffix are one word,
 so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or `>`
 has no redirect target, so that ending does not hide the lockfile. Reassignment
 drops the proof unless the whole new value is a parameter expansion of that same variable.
 Mixing that expansion with other text drops the proof. A `>`, `>>`, or non-numeric `>&` redirect
-is required. Single quotes do not expand. A suffix on the redirect word is part of the
+is required. `>&2`, `>& 2`, and `2>&1` are not writes. Single quotes do not expand. A suffix on the redirect word is part of the
 filename, an escaped `$` is literal, and empty quotes do not make a single-quoted `$OUT`
 expand. Joining `"$"` to a name is not an expansion. A local
 composite `uses: ./...` counts when its declared output reads that proof. See the

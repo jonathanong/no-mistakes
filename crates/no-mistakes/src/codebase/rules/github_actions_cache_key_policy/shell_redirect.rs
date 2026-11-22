@@ -1,6 +1,9 @@
+use super::is_meta;
+
 pub fn redirect_targets(line: &str) -> Vec<String> {
     output_redirects(line)
         .into_iter()
+        .filter(|hit| hit.stdout)
         .map(|hit| hit.target)
         .collect()
 }
@@ -15,6 +18,7 @@ pub fn mask_output_redirects(line: &str) -> String {
 
 struct Hit {
     target: String,
+    stdout: bool,
     start: usize,
     end: usize,
 }
@@ -62,9 +66,7 @@ fn output_redirects(line: &str) -> Vec<Hit> {
             if let Some(hit) = filename_redirect(&chars, line, &mut index) {
                 hits.push(hit);
             }
-            if index <= origin {
-                index = origin + 1;
-            }
+            index = index.max(origin + 1);
             continue;
         }
         index += 1;
@@ -73,6 +75,7 @@ fn output_redirects(line: &str) -> Vec<Hit> {
 }
 
 fn filename_redirect(chars: &[(usize, char)], line: &str, index: &mut usize) -> Option<Hit> {
+    let stdout = super::redirects_stdout(chars, *index);
     let double = super::next_is(chars, *index, '>');
     let amp = !double && super::next_is(chars, *index, '&');
     if !double && !amp && super::next_is(chars, *index, '=') {
@@ -95,6 +98,7 @@ fn filename_redirect(chars: &[(usize, char)], line: &str, index: &mut usize) -> 
     *index = char_index(chars, next_at);
     (!target.is_empty()).then_some(Hit {
         target,
+        stdout,
         start,
         end: next_at,
     })
@@ -192,8 +196,4 @@ fn bare_word(line: &str, start: usize) -> (String, usize) {
         end += ch.len_utf8();
     }
     (token, start + end)
-}
-
-fn is_meta(ch: char) -> bool {
-    matches!(ch, '>' | '<' | '|' | '&' | ';' | '(' | ')')
 }

@@ -1,9 +1,12 @@
 use super::output_syntax::{
-    brace_close, brace_open, command_assign, heredoc_end, heredoc_start, inline_assign,
-    shell_assignment, strip_subst, unquote, var_ref,
+    brace_open, command_assign, heredoc_end, heredoc_start, inline_assign, shell_assignment,
+    strip_subst, unquote, var_ref,
 };
 use super::text::{command_hashes_lockfile, shell_line};
 use crate::fx::{fx_set, FxHashSet};
+
+#[path = "group.rs"]
+mod group;
 
 pub(super) struct Write {
     pub(super) name: String,
@@ -14,16 +17,31 @@ pub(super) struct Write {
 pub(super) enum Event {
     Assign(String, String),
     Write(Write),
+    BeginScope,
+    EndScope,
 }
 
 pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
-    let mut vars = fx_set();
+    let mut scopes = vec![fx_set()];
     let mut names = Vec::new();
     for event in events(run) {
         match event {
+            Event::BeginScope => {
+                let next = scopes[scopes.len() - 1].clone();
+                scopes.push(next);
+            }
+            Event::EndScope => {
+                let keep = scopes.len().saturating_sub(1).max(1);
+                scopes.truncate(keep);
+            }
             Event::Assign(name, rhs) => {
-                let keep = rhs_hashes(&rhs, &vars, lockfile)
-                    || (vars.contains(&name) && super::expand::same_name_expansion(&rhs, &name));
+                let keep = {
+                    let vars = &scopes[scopes.len() - 1];
+                    rhs_hashes(&rhs, vars, lockfile)
+                        || (vars.contains(&name) && super::expand::same_name_expansion(&rhs, &name))
+                };
+                let last = scopes.len() - 1;
+                let vars = &mut scopes[last];
                 if keep {
                     vars.insert(name);
                 } else {
@@ -31,8 +49,9 @@ pub(super) fn proven_output_names(run: &str, lockfile: &str) -> Vec<String> {
                 }
             }
             Event::Write(write) => {
+                let vars = &scopes[scopes.len() - 1];
                 if write.expand
-                    && expression_hashes(&write.value, &vars, lockfile)
+                    && expression_hashes(&write.value, vars, lockfile)
                     && !names.contains(&write.name)
                 {
                     names.push(write.name);
@@ -69,28 +88,30 @@ pub(super) fn events(run: &str) -> Vec<Event> {
     let mut index = 0;
     while index < lines.len() {
         let line = lines[index].trim();
-        if let Some((delim, strip, quoted)) = heredoc_start(line) {
-            let active = writes_output(line, &outputs);
-            index += 1;
-            while index < lines.len() && !heredoc_end(lines[index], &delim, strip) {
-                if active {
-                    if let Some((name, value)) = inline_assign(lines[index]) {
-                        events.push(Event::Write(Write {
-                            name,
-                            value,
-                            expand: !quoted,
-                        }));
+        if !starts_group(line) {
+            if let Some((delim, strip, quoted)) = heredoc_start(line) {
+                let active = writes_output(line, &outputs);
+                index += 1;
+                while index < lines.len() && !heredoc_end(lines[index], &delim, strip) {
+                    if active {
+                        if let Some((name, value)) = inline_assign(lines[index]) {
+                            events.push(Event::Write(Write {
+                                name,
+                                value,
+                                expand: !quoted,
+                            }));
+                        }
                     }
+                    index += 1;
                 }
-                index += 1;
+                if index < lines.len() {
+                    index += 1;
+                }
+                continue;
             }
-            if index < lines.len() {
-                index += 1;
-            }
-            continue;
         }
-        if brace_open(line) {
-            index = brace_events(&lines, index, &mut events, &mut outputs);
+        if let Some(next) = group::consume(&lines, index, &mut events, &mut outputs) {
+            index = next;
             continue;
         }
         if let Some((name, rhs)) = shell_assignment(line) {
@@ -107,6 +128,10 @@ pub(super) fn events(run: &str) -> Vec<Event> {
         index += 1;
     }
     events
+}
+
+fn starts_group(line: &str) -> bool {
+    brace_open(line) || line.starts_with('(')
 }
 
 fn remember_assign(
@@ -132,51 +157,8 @@ fn output_path(rhs: &str, outputs: &FxHashSet<String>) -> bool {
     }
 }
 
-fn writes_output(line: &str, outputs: &FxHashSet<String>) -> bool {
+pub(super) fn writes_output(line: &str, outputs: &FxHashSet<String>) -> bool {
     super::shell_cmd::redirect_targets(line)
         .iter()
         .any(|target| output_path(target, outputs))
-}
-
-fn brace_events(
-    lines: &[&str],
-    start: usize,
-    events: &mut Vec<Event>,
-    outputs: &mut FxHashSet<String>,
-) -> usize {
-    let mut armed = writes_output(lines[start], outputs);
-    let mut pending = Vec::new();
-    let mut index = start + 1;
-    while index < lines.len() && !brace_close(lines[index]) {
-        let line = lines[index].trim();
-        if let Some((name, rhs)) = shell_assignment(line) {
-            remember_assign(events, outputs, name, rhs);
-        } else if let Some((name, value)) = command_assign(line) {
-            if writes_output(line, outputs) {
-                events.push(Event::Write(Write {
-                    name,
-                    value,
-                    expand: true,
-                }));
-            } else {
-                pending.push(Write {
-                    name,
-                    value,
-                    expand: true,
-                });
-            }
-        }
-        index += 1;
-    }
-    if index < lines.len() && writes_output(lines[index], outputs) {
-        armed = true;
-    }
-    if armed {
-        events.extend(pending.into_iter().map(Event::Write));
-    }
-    if index < lines.len() {
-        index + 1
-    } else {
-        index
-    }
 }

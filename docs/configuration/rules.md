@@ -603,7 +603,20 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `rejectRestoreKeys` defaults to true. `allowHashFiles` defaults to false. A cache path outside
 `caches` is silent. `matrix.os` does not satisfy `runner.os`, and neither does a quoted
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
-`GITHUB_OUTPUT` name the key reads. The checksum command must name the lockfile in that same
+`GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
+or parenthesized command applies to every command in the group that does not already redirect standard
+output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` and
+`{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"` count. A group with no redirect, or
+a redirect to another file, does not. The redirect is fixed before the body runs. Assignments
+inside a parenthesized command do not affect later commands, and a command after `;` on the
+same line is separate. A `;` inside a nested group stays in that group. The closing `)` may
+share a line with the last command, while `}` must
+be its own command. A later pipe discards the group unless standard output is redirected to a
+file first. A pipe inside `$(...)` or backticks stays in that substitution, and a standard-error
+redirect does not write the digest. The last standard-output redirect is the destination. A
+digit run is a descriptor only as its own word. `>=` sends standard output to a file named
+`=`. An unquoted heredoc counts only when the command's last standard-output redirect, or the
+group's, is the output file. The checksum command must name the lockfile in that same
 simple command. A standalone `&` splits commands. An `&` in `2>&1`, `>&2`, `&>`, `&>>`, or `<&`
 does not, and neither does `&` inside `$(( ))`. A digit prefix and a quoted suffix are one
 word, so `>&1"widgets.lock"` is the file `1widgets.lock`, not fd 1. A command ending in `&`, `>&`, `&>`, `2>&`, or
@@ -612,8 +625,8 @@ whole new value is a parameter expansion of that same variable (`"$digest"`, `${
 `${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other
 text drops the proof. A `<<<` redirect is not a heredoc, and `<<` inside `$(( ))` is not a heredoc.
 A variable assigned from `$GITHUB_OUTPUT` is a `>` or `>>` redirect target, and `>&` before a
-non-numeric target is too. `>&2` is not a write. Single quotes do not expand, so `> '$OUT'` is
-not a write. A suffix on the redirect word is part of the filename, an escaped `$` is
+non-numeric target is too. `>&2`, `>& 2`, and `2>&1` are not writes. Single quotes do not expand, so `> '$OUT'` and `>& '$OUT'` are
+not writes. A suffix on the redirect word is part of the filename, an escaped `$` is
 literal, and empty quotes do not make a single-quoted `$OUT` expand. Joining `"$"` to a
 name is not an expansion, and a quoted piece of a redirect name stays part of that filename.
 Mentioning that

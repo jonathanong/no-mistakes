@@ -1,14 +1,68 @@
+#[path = "shell_heredoc.rs"]
+mod heredoc;
 #[path = "shell_redirect.rs"]
 mod redirect;
 
+pub(super) use heredoc::heredoc_at;
 pub(super) use redirect::{mask_output_redirects, redirect_targets};
 
+pub(super) fn redirects_stdout(chars: &[(usize, char)], gt: usize) -> bool {
+    let mut start = gt;
+    while start > 0 && chars[start - 1].1.is_ascii_digit() {
+        start -= 1;
+    }
+    if start == gt || (start > 0 && !is_boundary(chars[start - 1].1)) {
+        return true;
+    }
+    chars[gt - 1].1 == '1' && chars[start..gt - 1].iter().all(|(_, ch)| *ch == '0')
+}
+
+struct Piece<'a> {
+    text: &'a str,
+    piped: bool,
+    origin: usize,
+}
+
 pub(super) fn parts(cmd: &str) -> Vec<&str> {
+    pieces(cmd).into_iter().map(|piece| piece.text).collect()
+}
+
+pub(super) fn inherits_redirect(cmd: &str) -> Vec<(&str, bool)> {
+    pieces(cmd)
+        .into_iter()
+        .map(|piece| (piece.text, !piece.piped))
+        .collect()
+}
+
+pub(super) fn split_head(cmd: &str) -> (&str, &str) {
+    let parts = pieces(cmd);
+    let Some(first) = parts.first() else {
+        return ("", "");
+    };
+    if cmd[..first.origin].contains([';', '&', '|']) {
+        return ("", cmd[first.origin..].trim());
+    }
+    if let Some(next) = parts.get(1) {
+        return (first.text, cmd[next.origin..].trim());
+    }
+    (first.text, "")
+}
+
+pub(super) fn piped_head(cmd: &str) -> Option<&str> {
+    let piece = pieces(cmd).into_iter().next()?;
+    piece.piped.then_some(piece.text)
+}
+
+fn pieces(cmd: &str) -> Vec<Piece<'_>> {
     let chars: Vec<(usize, char)> = cmd.char_indices().collect();
-    let mut parts = Vec::new();
+    let mut pieces = Vec::new();
     let mut start = 0;
     let mut quote = None;
     let mut arith = 0i32;
+    let mut subst = 0i32;
+    let mut braces = 0i32;
+    let mut parens = 0i32;
+    let mut tick = false;
     let mut index = 0;
     while index < chars.len() {
         let (at, ch) = chars[index];
@@ -24,6 +78,15 @@ pub(super) fn parts(cmd: &str) -> Vec<&str> {
             index += 1;
             continue;
         }
+        if ch == '`' {
+            tick = !tick;
+            index += 1;
+            continue;
+        }
+        if tick {
+            index += 1;
+            continue;
+        }
         if starts(&chars, index, &['$', '(', '(']) {
             arith += 1;
             index += 3;
@@ -34,21 +97,44 @@ pub(super) fn parts(cmd: &str) -> Vec<&str> {
             index += 2;
             continue;
         }
-        if arith > 0 && ch == '&' {
+        if arith > 0 {
             index += 1;
             continue;
         }
-        let width = operator_width(&chars, index);
+        if starts(&chars, index, &['$', '(']) {
+            subst += 1;
+            index += 2;
+            continue;
+        }
+        if subst > 0 {
+            if ch == ')' {
+                subst -= 1;
+            }
+            index += 1;
+            continue;
+        }
+        let width = if braces == 0 && parens == 0 {
+            operator_width(&chars, index)
+        } else {
+            0
+        };
         if width == 0 {
+            match ch {
+                '{' => braces += 1,
+                '}' if braces > 0 => braces -= 1,
+                '(' => parens += 1,
+                ')' if parens > 0 => parens -= 1,
+                _ => {}
+            }
             index += 1;
             continue;
         }
-        push_part(&mut parts, cmd, start, at);
+        push_piece(&mut pieces, cmd, start, at, ch == '|' && width == 1);
         index += width;
         start = chars.get(index).map(|(next, _)| *next).unwrap_or(cmd.len());
     }
-    push_part(&mut parts, cmd, start, cmd.len());
-    parts
+    push_piece(&mut pieces, cmd, start, cmd.len(), false);
+    pieces
 }
 
 fn operator_width(chars: &[(usize, char)], index: usize) -> usize {
@@ -77,42 +163,24 @@ fn next_is(chars: &[(usize, char)], index: usize, expected: char) -> bool {
     chars.get(index + 1).is_some_and(|(_, ch)| *ch == expected)
 }
 
-fn push_part<'a>(parts: &mut Vec<&'a str>, cmd: &'a str, start: usize, end: usize) {
-    let part = cmd[start..end].trim();
-    if !part.is_empty() {
-        parts.push(part);
+fn push_piece<'a>(
+    pieces: &mut Vec<Piece<'a>>,
+    cmd: &'a str,
+    start: usize,
+    end: usize,
+    piped: bool,
+) {
+    let raw = &cmd[start..end];
+    let text = raw.trim();
+    if text.is_empty() {
+        return;
     }
-}
-
-pub(super) fn heredoc_at(line: &str) -> Option<usize> {
-    let chars: Vec<(usize, char)> = line.char_indices().collect();
-    let mut arith = 0i32;
-    let mut index = 0;
-    while index < chars.len() {
-        if starts(&chars, index, &['$', '(', '(']) {
-            arith += 1;
-            index += 3;
-            continue;
-        }
-        if arith > 0 && starts(&chars, index, &[')', ')']) {
-            arith -= 1;
-            index += 2;
-            continue;
-        }
-        if starts(&chars, index, &['<', '<', '<']) {
-            index += 3;
-            continue;
-        }
-        if arith == 0 && starts(&chars, index, &['<', '<']) {
-            return Some(chars[index].0);
-        }
-        index += if starts(&chars, index, &['<', '<']) {
-            2
-        } else {
-            1
-        };
-    }
-    None
+    let leading = raw.len() - raw.trim_start().len();
+    pieces.push(Piece {
+        text,
+        piped,
+        origin: start + leading,
+    });
 }
 
 fn starts(chars: &[(usize, char)], index: usize, prefix: &[char]) -> bool {
@@ -121,4 +189,12 @@ fn starts(chars: &[(usize, char)], index: usize, prefix: &[char]) -> bool {
             .get(index + offset)
             .is_some_and(|(_, ch)| ch == expected)
     })
+}
+
+fn is_boundary(ch: char) -> bool {
+    ch.is_whitespace() || is_meta(ch)
+}
+
+fn is_meta(ch: char) -> bool {
+    matches!(ch, '>' | '<' | '|' | '&' | ';' | '(' | ')')
 }
