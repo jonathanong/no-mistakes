@@ -7,9 +7,12 @@ const { platformFiles, linuxFiles } = require("./native-api-files.cjs");
 const inventory = require("../../test-cases/native-api-shards/inventory.json");
 
 test("native API shards collect every legacy file including the large real addon suite", () => {
-  assert.equal(platformFiles.length, 7);
-  assert.equal(new Set(platformFiles).size, 7);
+  assert.equal(platformFiles.length, 8);
+  assert.equal(new Set(platformFiles).size, 8);
   assert.ok(platformFiles.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+  assert.ok(
+    platformFiles.includes("packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js"),
+  );
   const source = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
   assert.match(source, /"list",\s*\.\.\.files,\s*"--no-static-parse"/);
   assert.match(source, /"run",\s*\.\.\.files,\s*`--testNamePattern=/);
@@ -87,7 +90,7 @@ test("native API runner collects dynamic cases and executes case filters without
       .map(JSON.parse);
     assert.equal(commands.length, 6);
     for (const args of commands) {
-      assert.deepEqual(args.slice(1, 8), platformFiles);
+      assert.deepEqual(args.slice(1, 9), platformFiles);
       assert.ok(args.includes("--coverage=false"));
       assert.ok(!args.some((arg) => arg.includes("cargo")));
     }
@@ -114,7 +117,7 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       env: { ...process.env, NATIVE_API_FIXTURE_SUITE: "linux" },
     });
   try {
-    assert.equal(linuxFiles.length, 24);
+    assert.equal(linuxFiles.length, 25);
     assert.equal(new Set(linuxFiles).size, linuxFiles.length);
     assert.deepEqual([...new Set(expected.map((row) => row.file))].sort(), [...linuxFiles].sort());
     assert.ok(platformFiles.every((file) => linuxFiles.includes(file)));
@@ -136,7 +139,7 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       .split("\n")
       .map(JSON.parse);
     assert.equal(commands.length, 8);
-    for (const args of commands) assert.deepEqual(args.slice(1, 25), linuxFiles);
+    for (const args of commands) assert.deepEqual(args.slice(1, 26), linuxFiles);
     const invalid = invoke(1, "unknown");
     assert.equal(invalid.status, 1);
     assert.match(invalid.stderr, /suite must be platform or linux/);

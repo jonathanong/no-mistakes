@@ -192,6 +192,7 @@ test("native workflow compiles independent archives and consumers never build Ru
     "postgres-procedural-occurrence-api",
     "postgres-procedural-loop-coverage-api",
     "guarded-array-receiver-api",
+    "dependabot-cooldown-policy-api",
     "forbidden-dependencies-globs-api",
   ];
   const { platformFiles } = require("./native-api-files.cjs");
