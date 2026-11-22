@@ -605,7 +605,8 @@ For [`github-actions-cache-key-policy`](../rules/github-actions-cache-key-policy
 `${{ 'runner.os' }}`. The digest is `hashFiles` or a hash of the lockfile written to the
 `GITHUB_OUTPUT` name the key reads. A redirect after the closing `}` or `)` of a brace group
 or parenthesized command applies to every command in the group that does not already redirect standard
-output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` counts. A group with no redirect, or
+output. `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` and
+`{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"` count. A group with no redirect, or
 a redirect to another file, does not. The redirect is fixed before the body runs. Assignments
 inside a parenthesized command do not affect later commands, and a command after `;` on the
 same line is separate. A `;` inside a nested group stays in that group. The closing `)` may
@@ -624,8 +625,8 @@ whole new value is a parameter expansion of that same variable (`"$digest"`, `${
 `${digest%% *}`, `${digest%%[[:space:]]*}`, `${digest:0:16}`, `${digest#*}`). Mixing it with other
 text drops the proof. A `<<<` redirect is not a heredoc, and `<<` inside `$(( ))` is not a heredoc.
 A variable assigned from `$GITHUB_OUTPUT` is a `>` or `>>` redirect target, and `>&` before a
-non-numeric target is too. `>&2` is not a write. Single quotes do not expand, so `> '$OUT'` is
-not a write. A suffix on the redirect word is part of the filename, an escaped `$` is
+non-numeric target is too. `>&2`, `>& 2`, and `2>&1` are not writes. Single quotes do not expand, so `> '$OUT'` and `>& '$OUT'` are
+not writes. A suffix on the redirect word is part of the filename, an escaped `$` is
 literal, and empty quotes do not make a single-quoted `$OUT` expand. Joining `"$"` to a
 name is not an expansion, and a quoted piece of a redirect name stays part of that filename.
 Mentioning that

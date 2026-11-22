@@ -51,12 +51,17 @@ pub(super) fn stdout_binding(line: &str, outputs: &FxHashSet<String>) -> Stdout 
             continue;
         }
         if ch == '>' && fd_before(&chars, index) == 1 {
-            if chars.get(index + 1).is_some_and(|(_, next)| *next == '&') {
-                if dup_leaves(&chars, index) {
+            let amp = chars.get(index + 1).is_some_and(|(_, next)| *next == '&');
+            let fd = amp
+                .then_some(index + 2)
+                .and_then(|at| fd_number(&chars, at));
+            if let Some(fd) = fd {
+                if fd != 1 {
                     effect = Stdout::Leave;
                 }
             } else {
-                let (word, next) = redirect_word(line, &chars, index);
+                let origin = if amp { index + 1 } else { index };
+                let (word, next) = redirect_word(line, &chars, origin);
                 effect = if !word.is_empty() && writes_output(&format!(">{word}"), outputs) {
                     Stdout::Prove
                 } else {
@@ -108,13 +113,6 @@ fn redirect_word(line: &str, chars: &[(usize, char)], gt: usize) -> (String, usi
         .map(|(offset, _)| *offset)
         .unwrap_or(line.len());
     (line[byte..end].to_string(), at)
-}
-
-fn dup_leaves(chars: &[(usize, char)], gt: usize) -> bool {
-    if !chars.get(gt + 1).is_some_and(|(_, ch)| *ch == '&') {
-        return true;
-    }
-    fd_number(chars, gt + 2) != Some(1)
 }
 
 fn fd_before(chars: &[(usize, char)], gt: usize) -> u32 {

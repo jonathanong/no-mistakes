@@ -142,7 +142,23 @@ fn group_redirect_fixtures_match_the_suffix() {
         assert!(source.contains(">> \"$GITHUB_OUTPUT\""), "{file}");
         super::assert_silent(&findings, file);
     }
-    for file in ["group-plain.yml", "group-other-file.yml"] {
+    for file in [
+        "group-amp-output.yml",
+        "paren-amp-output.yml",
+        "group-heredoc-amp.yml",
+    ] {
+        let source = super::source("policy", &format!(".github/workflows/{file}"));
+        assert!(source.contains(">& \"$GITHUB_OUTPUT\""), "{file}");
+        super::assert_silent(&findings, file);
+    }
+    for file in [
+        "group-plain.yml",
+        "group-other-file.yml",
+        "group-amp-fd.yml",
+        "group-amp-spaced-fd.yml",
+        "group-stdout-dup.yml",
+        "group-amp-quoted.yml",
+    ] {
         let source = super::source("policy", &format!(".github/workflows/{file}"));
         assert!(source.contains("echo \"digest=$digest\""), "{file}");
         super::assert_needles(
@@ -253,6 +269,12 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{\n  cat <<EOF\ndigest=$digest\nEOF\n} >> \"$GITHUB_OUTPUT\"",
         "{\n  cat <<EOF > /tmp/orders >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
         "{\n  cat <<EOF 2>> /tmp/orders\ndigest=$digest\nEOF\n} >> \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } >& \"$GITHUB_OUTPUT\"",
+        "( echo \"digest=$digest\" ) >& \"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } >&\"$GITHUB_OUTPUT\"",
+        "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\" >&1",
+        "{ echo \"digest=$digest\"; } > /tmp/orders >& \"$GITHUB_OUTPUT\"",
+        "{\n  cat <<EOF >& \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
     ] {
         assert_eq!(proven(script), digest, "{script}");
     }
@@ -269,6 +291,14 @@ fn group_parser_covers_quotes_nesting_and_descriptors() {
         "{\n  cat <<'EOF' >> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
         "{\n  cat <<EOF > \"$GITHUB_OUTPUT\" > /tmp/orders\ndigest=$digest\nEOF\n}",
         "{\n  cat <<EOF 2>> \"$GITHUB_OUTPUT\"\ndigest=$digest\nEOF\n}",
+        "{ echo \"digest=$digest\"; } >&2",
+        "{ echo \"digest=$digest\"; } >& 2",
+        "{ echo \"digest=$digest\"; } 2>&1",
+        "{ echo \"digest=$digest\"; } >& '$GITHUB_OUTPUT'",
+        "{ echo \"digest=$digest\"; } >> \"$GITHUB_OUTPUT\" >&2",
+        "{ echo \"digest=$digest\"; } >&",
+        "{ echo \"digest=$digest\"; } >& \"$GITHUB_OUTPUT\" > /tmp/orders",
+        "{\n  cat <<EOF >& '$GITHUB_OUTPUT'\ndigest=$digest\nEOF\n}",
     ] {
         assert!(proven(script).is_empty(), "{script}");
     }

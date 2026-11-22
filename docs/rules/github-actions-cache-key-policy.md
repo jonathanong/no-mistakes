@@ -39,8 +39,9 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `printf`, an unquoted heredoc, and a brace group or parenthesized command redirected to `GITHUB_OUTPUT`
   all count. A redirect after the closing `}` or `)` applies to every command in that group
   that does not already redirect standard output, including
-  `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"` and
-  `( echo "digest=$digest" ) >> "$GITHUB_OUTPUT"`. A group with no redirect, or a redirect
+  `{ echo "digest=$digest"; } >> "$GITHUB_OUTPUT"`,
+  `( echo "digest=$digest" ) >> "$GITHUB_OUTPUT"`, and
+  `{ echo "digest=$digest"; } >& "$GITHUB_OUTPUT"`. A group with no redirect, or a redirect
   to another file, does not count. The redirect is fixed before the group body runs, so an
   assignment inside the group does not change that destination. Assignments inside a
   parenthesized command do not affect later commands. A command after `;` on the same line
@@ -58,7 +59,7 @@ The key must also prove a digest of the configured lockfile, in either of these 
   `$GITHUB_OUTPUT`. `echo "$OUT"`, `test -f "$OUT"`, and passing `$OUT` as an argument are not
   writes. Single quotes do not expand, so `> '$OUT'` and `> '${OUT}'` are not writes; an unquoted
   or double-quoted `$OUT` or `${OUT}` is. `>&` before a non-numeric target, including
-  `>& "$OUT"` and `>&"$OUT"`, is a file redirect. `>&2` and `>& 2` are not. A suffix on the
+  `>& "$OUT"` and `>&"$OUT"`, is a file redirect. `>&2`, `>& 2`, and `2>&1` are not. A suffix on the
   redirect word, such as `"$OUT".bak` or `"$OUT"bak`, is part of the filename and is not
   another variable. An escaped `\$` is literal, so `>\$GITHUB_OUTPUT` is not a write. Empty
   quotes do not make a single-quoted `$OUT` expand, so `> '$OUT'""` is not a write. Joining
