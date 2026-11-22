@@ -50,7 +50,7 @@ shared canonical graph. When value flow is incomplete, the canonical-graph
 prerequisite stays failed, and every other graph rule keeps the same readiness
 and output as a run that does not configure this rule. An ESLint-only run does
 not report these cross-file escapes. Set `trustedSqlTags` here, or this rule
-reports nothing.
+reports nothing. An empty tag list adds no graph or catalog demand.
 
 ## What it catches
 

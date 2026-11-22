@@ -42,22 +42,14 @@ fn exhausted_value_flow_preserves_previous_graph_prerequisite_failures() {
 }
 
 #[test]
-fn fragment_escape_keeps_the_failed_graph_prerequisite() {
+fn only_fragments_with_tags_inherit_graph_prerequisite_failures() {
+    let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases");
     let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/foreign-receiver-work-budget/fixture"),
+        &fixtures.join("codebase-analysis/foreign-receiver-work-budget/fixture"),
     );
-    let mut config =
+    let config =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    config.rules.push(crate::config::v2::schema::RuleDef {
-        rule: "postgres-sql-fragment-escape".to_string(),
-        scope: Some(crate::config::v2::schema::RuleScope::Repository),
-        options: serde_yaml::from_str(
-            "trustedSqlTags:\n  - {module: \"@example/sql\", name: default}",
-        )
-        .unwrap(),
-        ..crate::config::v2::schema::RuleDef::default()
-    });
+    let fragment_configs = fixtures.join("rules/postgres-sql-fragment-escape/configs");
     let shared = crate::codebase::check_facts::collect_check_facts(
         &root,
         vec![root.join("src/shared-2048.mts")],
@@ -70,12 +62,30 @@ fn fragment_escape_keeps_the_failed_graph_prerequisite() {
             ..Default::default()
         },
     );
-    let session = AnalysisSession::disabled();
-    register_value_flow_failures(&config, &shared, &session);
-    assert!(!session.check_consumer_ready("postgres-sql-fragment-escape"));
-    assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
-    assert!(matches!(
-        session.check_prerequisite("codebase.canonical-graph"),
-        Some(Prerequisite::Failed(_))
-    ));
+    for (file, demands_analysis) in [("empty-tags.yml", false), ("append-chain.yml", true)] {
+        let fragment_config =
+            crate::config::v2::load_v2_config(&root, Some(&fragment_configs.join(file))).unwrap();
+        let mut config = config.clone();
+        config.rules.extend(fragment_config.rules);
+
+        let session = AnalysisSession::disabled();
+        register_value_flow_failures(&config, &shared, &session);
+        assert_eq!(
+            session.check_consumer_ready(postgres_sql_fragment_escape::RULE_ID),
+            !demands_analysis
+        );
+        assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
+        assert!(matches!(
+            session.check_prerequisite("codebase.canonical-graph"),
+            Some(Prerequisite::Failed(_))
+        ));
+
+        let session = AnalysisSession::disabled();
+        graph_failed(&config, &session, &anyhow::anyhow!("graph failed"));
+        assert_eq!(
+            session.check_consumer_ready(postgres_sql_fragment_escape::RULE_ID),
+            !demands_analysis
+        );
+        assert!(!session.check_consumer_ready(UNCONSTRUCTED_ERROR_CLASS));
+    }
 }

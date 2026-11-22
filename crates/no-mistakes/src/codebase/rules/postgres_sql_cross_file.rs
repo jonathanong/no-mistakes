@@ -30,10 +30,7 @@ use anyhow::Result;
 use std::path::Path;
 
 pub(crate) fn needs_deep_analysis(config: &NoMistakesConfig) -> bool {
-    if !config
-        .rule_applications("postgres-sql-fragment-escape")
-        .is_empty()
-    {
+    if super::postgres_sql_fragment_escape::demands_analysis(config) {
         return true;
     }
     [

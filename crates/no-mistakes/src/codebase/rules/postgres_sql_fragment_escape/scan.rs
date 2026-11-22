@@ -20,10 +20,7 @@ pub(super) fn scan(
     facts: &CheckFactMap,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> ScanReport {
-    if !tags
-        .iter()
-        .any(|tag| !tag.module.is_empty() && !tag.name.is_empty())
-    {
+    if !super::has_trusted_tags(tags) {
         return ScanReport {
             findings: Vec::new(),
             gaps: Vec::new(),

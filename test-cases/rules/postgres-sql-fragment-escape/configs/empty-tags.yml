@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-sql-fragment-escape
+    scope: repository
+    options:
+      trustedSqlTags: []
