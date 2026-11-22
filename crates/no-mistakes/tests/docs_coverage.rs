@@ -94,6 +94,22 @@ fn column_check_constraints_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn postgres_pool_error_listener_rule_has_public_documentation() {
+    let page = "postgres-pool-requires-error-listener.md";
+    let docs = repo_root().join("docs/eslint-rules");
+    assert!(read(&docs.join("README.md")).contains(page));
+    let body = read(&docs.join(page));
+    for contract in [
+        "extraModules",
+        "once",
+        "addListener",
+        "no-mistakes-disable-file",
+    ] {
+        assert!(body.contains(contract), "missing {contract}");
+    }
+}
+
+#[test]
 fn identifier_inventory_includes_root_and_agent_documents() {
     // Saved root/agent documents protect scan scope; ignored build output stays out.
     let source = repo_root().join("test-cases/docs/identifier-inventory/fixture");

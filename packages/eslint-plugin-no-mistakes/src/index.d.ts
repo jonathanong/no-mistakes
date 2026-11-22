@@ -41,6 +41,10 @@ declare namespace plugin {
     mode?: PostgresNoExecutorAdapterMode;
     nonWritingCallees?: PostgresNonWritingCallee[];
   }
+
+  export interface PostgresPoolRequiresErrorListenerOptions {
+    extraModules?: string[];
+  }
 }
 
 export = plugin;

@@ -83,6 +83,11 @@ See [options and examples](../../docs/eslint-rules/no-object-mutation.md).
 It suggests removing `async` only when the visible contract allows a synchronous return, and it never autofixes.
 See [options and examples](../../docs/eslint-rules/postgres-no-async-sql-builder.md).
 
+`postgres-pool-requires-error-listener` is an opt-in rule for node-postgres pools
+without a same-module idle-client error listener. Compatible module names can
+be added with `extraModules`.
+See [options and examples](../../docs/eslint-rules/postgres-pool-requires-error-listener.md).
+
 `require-options-on-imported-call` requires a static options object on configured
 imports, globals with no local binding, and terminal methods with a matching receiver shape.
 See [options and examples](../../docs/eslint-rules/require-options-on-imported-call.md).

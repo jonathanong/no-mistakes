@@ -321,6 +321,14 @@ names no scanned file imports) is not available in these ESLint rules: they run 
 file and cannot know a name never matched anywhere. See the
 [migration notes](migrations/explicit-postgres-executors.md#reporting-unmatched-names).
 
+### `postgres-pool-requires-error-listener`
+
+Opt-in. `extraModules?: string[]` defaults to `[]` and adds exact compatible
+module names to the built-in `pg` import. A pool needs a same-module
+`on("error", ...)`, `once`, or `addListener` registration on its own binding.
+Named, default-member, and namespace imports are supported. There is no autofix;
+see [the rule reference](eslint-rules/postgres-pool-requires-error-listener.md).
+
 ### `server-require-nullable-fetch-wrapper`
 
 `includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,

@@ -66,6 +66,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md)                   | Keep transaction lifecycle in a dedicated helper.                                         |
 | [`postgres-no-nonliteral-sql-registry-key`](postgres-no-nonliteral-sql-registry-key.md) | Suggest a throwing switch instead of a runtime registry key.                              |
 | [`postgres-no-unbounded-query-fanout`](postgres-no-unbounded-query-fanout.md)           | Bound concurrent mapped database queries.                                                 |
+| [`postgres-pool-requires-error-listener`](postgres-pool-requires-error-listener.md) | Register an idle-client error listener beside each pool. |
 
 ## React and tests
 
