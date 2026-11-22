@@ -7,6 +7,14 @@ fn fixture(scenario: &str) -> PathBuf {
 }
 
 fn report(scenario: &str, paths: &[&str]) -> LockInventoryReport {
+    report_with_prepared_facts(scenario, paths, |_, _, _| {})
+}
+
+fn report_with_prepared_facts(
+    scenario: &str,
+    paths: &[&str],
+    inspect: impl FnOnce(&Path, &CheckFactMap, &NoMistakesConfig),
+) -> LockInventoryReport {
     let root = fixture(scenario);
     let files: Vec<_> = paths.iter().map(|file| root.join(file)).collect();
     let mut config = NoMistakesConfig::default();
@@ -21,6 +29,7 @@ fn report(scenario: &str, paths: &[&str]) -> LockInventoryReport {
     let sources = super::super::source_store_for_files(&files);
     let facts = super::super::prepare_sql_rule_facts(&root, &config, &files, &sources, RULE_ID)
         .expect("prepare inventory fixture");
+    inspect(&root, &facts, &config);
     inventory_with_files_sources_and_facts(&root, &config, &files, &sources, &facts)
         .expect("collect inventory fixture")
 }
@@ -101,10 +110,47 @@ fn stored_routine_body_excludes_uncertain_sql_and_defers_removals() {
 
 #[test]
 fn reused_imported_sql_uses_each_executor_location_and_callbacks_count_only_calls() {
-    let report = report("imported", &["queries.mts", "lock-clause.mts"]);
+    use crate::codebase::postgres::statements::SqlFactSite;
+
+    let report = report_with_prepared_facts(
+        "imported",
+        &["queries.mts", "lock-clause.mts"],
+        |root, facts, config| {
+            let options = CompiledOptions::from_rule(&config.rules[0]).unwrap();
+            let statements = facts
+                .postgres_statements(&root.join("queries.mts"), Some(&options.embedded))
+                .unwrap();
+            let origin = statements
+                .iter()
+                .filter_map(|statement| statement.variant_locations.as_ref())
+                .find(|locations| locations.original_call_line == 29)
+                .and_then(|locations| locations.position(SqlFactSite::Function(0)))
+                .expect("prepared imported SQL helper position");
+            assert_eq!(
+                origin.source_path.as_deref(),
+                Some(root.join("lock-clause.mts").as_path())
+            );
+            assert_eq!(origin.source_line, 5);
+        },
+    );
     assert!(report.unanalyzed.is_empty(), "{:?}", report.unanalyzed);
     assert_eq!(report.counts["for-update"], 3);
-    assert_eq!(report.counts["helper"], 1);
+    assert_eq!(report.counts["helper"], 4);
+    let helper_sites: Vec<_> = report
+        .sites
+        .iter()
+        .filter(|site| site.category == "helper")
+        .map(|site| (site.file.as_str(), site.line))
+        .collect();
+    assert_eq!(
+        helper_sites,
+        [
+            ("queries.mts", 25),
+            ("queries.mts", 29),
+            ("queries.mts", 32),
+            ("queries.mts", 35)
+        ]
+    );
     let executor_sites: Vec<_> = report
         .sites
         .iter()

@@ -52,6 +52,9 @@ pub struct EmbeddedSqlOptions {
     pub sql_literal_helpers: Vec<String>,
     #[serde(skip)]
     pub track_transaction_helpers: bool,
+    #[doc(hidden)]
+    #[serde(skip)]
+    pub exact_constant_origins: bool,
 }
 
 impl EmbeddedSqlOptions {
@@ -102,6 +105,7 @@ impl EmbeddedSqlOptions {
             sql_identifier_assertions: Vec::new(),
             sql_literal_helpers: Vec::new(),
             track_transaction_helpers: false,
+            exact_constant_origins: false,
         }
     }
 
@@ -163,6 +167,11 @@ impl EmbeddedSqlOptions {
         self.raw_sql_tags = tags.to_vec();
         self.raw_sql_tags.sort();
         self.raw_sql_tags.dedup();
+        self
+    }
+
+    pub(crate) fn with_exact_constant_origins(mut self) -> Self {
+        self.exact_constant_origins = true;
         self
     }
 

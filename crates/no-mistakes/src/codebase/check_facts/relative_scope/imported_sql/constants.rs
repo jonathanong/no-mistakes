@@ -31,12 +31,12 @@ pub(super) fn recovered<R: FnMut(&str, &Path) -> Option<PathBuf>>(
         return None;
     }
     let sql = constant.sql.clone();
-    // Stamp the newly supported namespace literal before composition supplies
-    // a caller-local marker; preserve existing named-import report locations.
-    let sql = if site.member.is_some() {
-        with_origin_entry(sql)
-    } else {
-        sql
-    };
+    // Preserve legacy named-import locations for profiles without exact origin demand.
+    let sql =
+        if site.member.is_some() || (options.exact_constant_origins && sql.positions.is_empty()) {
+            with_origin_entry(sql)
+        } else {
+            sql
+        };
     Some(sql.with_source_file(&origin))
 }

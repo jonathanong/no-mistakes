@@ -1,6 +1,6 @@
 import sql from "sql-template-strings";
 import { query } from "@example/db";
-import { lockClause } from "./lock-clause.mts";
+import { helperSql, lockClause } from "./lock-clause.mts";
 declare function schedule(callback: () => void): void;
 declare function reserveJob(): void;
 
@@ -23,3 +23,13 @@ schedule(() => {
 });
 schedule(reserveJob);
 schedule(() => reserveJob());
+
+const importedSql = sql`/* imported helper */`;
+importedSql.append(helperSql);
+void query(importedSql);
+
+const localSql = `
+  SELECT reserveJob(9)
+`;
+void query(localSql);
+void query("SELECT reserveJob(11)");

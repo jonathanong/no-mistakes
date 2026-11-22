@@ -119,6 +119,9 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_exact_locations |= !config
         .rule_applications("postgres-lock-ordering")
         .is_empty();
+    plan.postgres_exact_locations |= !config
+        .rule_applications("postgres-lock-inventory")
+        .is_empty();
     plan.postgres_conflict_locations |= !config
         .rule_applications("postgres-conflict-ordering")
         .is_empty();
