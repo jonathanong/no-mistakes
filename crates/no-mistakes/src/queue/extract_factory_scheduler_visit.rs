@@ -1,26 +1,9 @@
 use super::{Collector, ScopeKind};
-use oxc_allocator::{Allocator, CloneIn};
-use oxc_ast::ast::{
-    ArrowFunctionExpression, BindingPattern, BlockStatement, CatchClause, Expression,
-    ForInStatement, ForOfStatement, ForStatement, Function, FunctionType, Program, Statement,
-    StaticBlock, SwitchStatement, VariableDeclaration,
-};
-use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
-use oxc_syntax::scope::ScopeFlags;
-
-pub(super) fn stored_expr<'a>(
-    expr: &Expression<'_>,
-    allocator: &'a Allocator,
-) -> Option<&'a Expression<'a>> {
-    let expr = crate::codebase::ts_source::unwrap_ts_wrappers(expr);
-    match expr {
-        Expression::ObjectExpression(_) | Expression::Identifier(_) => {
-            Some(allocator.alloc(expr.clone_in(allocator)))
-        }
-        _ => None,
-    }
-}
+use oxc_ast::ast::{BindingPattern, ClassType, Expression, FunctionType};
+use oxc_ast::ast_kind::AstKind;
+use oxc_span::{GetSpan, Span};
+use oxc_syntax::scope::ScopeId;
+use std::cell::Cell;
 
 pub(super) fn bind_pattern<'a>(
     collector: &mut Collector<'a>,
@@ -32,7 +15,7 @@ pub(super) fn bind_pattern<'a>(
     value: Option<&'a Expression<'a>>,
 ) {
     if let BindingPattern::BindingIdentifier(id) = pattern {
-        collector.bindings.push(super::ObjectBinding {
+        collector.bindings.insert(super::ObjectBinding {
             name: id.name.as_str(),
             scope_start,
             scope_end,
@@ -45,7 +28,7 @@ pub(super) fn bind_pattern<'a>(
     let mut names = Vec::new();
     collect_names(pattern, &mut names);
     for name in names {
-        collector.bindings.push(super::ObjectBinding {
+        collector.bindings.insert(super::ObjectBinding {
             name,
             scope_start,
             scope_end,
@@ -79,104 +62,94 @@ pub(super) fn collect_names<'a>(pattern: &BindingPattern<'a>, names: &mut Vec<&'
     }
 }
 
-impl<'a> Visit<'a> for Collector<'a> {
-    fn visit_program(&mut self, program: &Program<'a>) {
-        self.push_scope(program.span.start, program.span.end, ScopeKind::Function);
-        walk::walk_program(self, program);
-        self.scopes.pop();
+impl<'a> Collector<'a> {
+    pub(in crate::queue) fn enter_node(&mut self, kind: AstKind<'a>) {
+        match kind {
+            AstKind::Program(program) => {
+                #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+                {
+                    self.bindings.program_visits += 1;
+                }
+                self.push_span(program.span, ScopeKind::Function);
+            }
+            AstKind::Function(func) => {
+                if func.r#type == FunctionType::FunctionDeclaration {
+                    if let Some(id) = &func.id {
+                        self.mask(id.name.as_str(), self.current().start);
+                    }
+                }
+                self.push_span(func.span, ScopeKind::Function);
+                if func.r#type == FunctionType::FunctionExpression {
+                    if let Some(id) = &func.id {
+                        self.mask(id.name.as_str(), func.span.start);
+                    }
+                }
+                self.mask_params(&func.params, func.span.start);
+            }
+            AstKind::ArrowFunctionExpression(arrow) => {
+                self.push_span(arrow.span, ScopeKind::Arrow);
+                self.mask_params(&arrow.params, arrow.span.start);
+            }
+            AstKind::BlockStatement(block) => self.push_span(block.span, ScopeKind::Block),
+            AstKind::CatchClause(clause) => {
+                self.push_span(clause.span, ScopeKind::Block);
+                if let Some(param) = &clause.param {
+                    self.mask_pattern(&param.pattern, clause.span.start);
+                }
+            }
+            AstKind::ForStatement(stmt) => self.push_span(stmt.span, ScopeKind::Block),
+            AstKind::ForInStatement(stmt) => self.push_span(stmt.span, ScopeKind::Block),
+            AstKind::ForOfStatement(stmt) => self.push_span(stmt.span, ScopeKind::Block),
+            AstKind::StaticBlock(block) => self.push_span(block.span, ScopeKind::Function),
+            AstKind::SwitchStatement(stmt) => self.switches.push((
+                &stmt.scope_id,
+                Span::new(stmt.discriminant.span().end, stmt.span.end),
+            )),
+            AstKind::Class(class) if class.r#type == ClassType::ClassDeclaration => {
+                if let Some(id) = &class.id {
+                    self.mask(id.name.as_str(), self.current().start);
+                }
+            }
+            AstKind::VariableDeclaration(decl) => {
+                for declarator in &decl.declarations {
+                    self.record_declarator(decl.kind, declarator);
+                }
+            }
+            _ => {}
+        }
     }
 
-    fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
-        if func.r#type == FunctionType::FunctionDeclaration {
-            if let Some(id) = &func.id {
-                let start = self.current().start;
-                self.mask(id.name.as_str(), start);
+    pub(in crate::queue) fn enter_scope(&mut self, scope_id: &Cell<Option<ScopeId>>) {
+        // The switch discriminant is visited before its case bindings enter scope.
+        if let Some((switch_id, span)) = self.switches.last() {
+            if std::ptr::eq(*switch_id, scope_id) {
+                self.push_span(*span, ScopeKind::Block);
             }
         }
-        self.push_scope(func.span.start, func.span.end, ScopeKind::Function);
-        if func.r#type == FunctionType::FunctionExpression {
-            if let Some(id) = &func.id {
-                self.mask(id.name.as_str(), func.span.start);
-            }
+    }
+
+    pub(in crate::queue) fn leave_node(&mut self, kind: AstKind<'a>) {
+        if let AstKind::SwitchStatement(_) = kind {
+            self.switches.pop();
         }
-        self.mask_params(&func.params, func.span.start);
-        walk::walk_function(self, func, flags);
-        self.scopes.pop();
-    }
-
-    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
-        self.push_scope(arrow.span.start, arrow.span.end, ScopeKind::Arrow);
-        self.mask_params(&arrow.params, arrow.span.start);
-        walk::walk_arrow_function_expression(self, arrow);
-        self.scopes.pop();
-    }
-
-    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
-        self.push_scope(block.span.start, block.span.end, ScopeKind::Block);
-        walk::walk_block_statement(self, block);
-        self.scopes.pop();
-    }
-
-    fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
-        self.push_scope(clause.span.start, clause.span.end, ScopeKind::Block);
-        if let Some(param) = &clause.param {
-            self.mask_pattern(&param.pattern, clause.span.start);
+        if matches!(
+            kind,
+            AstKind::Program(_)
+                | AstKind::Function(_)
+                | AstKind::ArrowFunctionExpression(_)
+                | AstKind::BlockStatement(_)
+                | AstKind::CatchClause(_)
+                | AstKind::ForStatement(_)
+                | AstKind::ForInStatement(_)
+                | AstKind::ForOfStatement(_)
+                | AstKind::StaticBlock(_)
+                | AstKind::SwitchStatement(_)
+        ) {
+            self.scopes.pop();
         }
-        walk::walk_catch_clause(self, clause);
-        self.scopes.pop();
     }
 
-    fn visit_for_statement(&mut self, stmt: &ForStatement<'a>) {
-        self.push_scope(stmt.span.start, stmt.span.end, ScopeKind::Block);
-        walk::walk_for_statement(self, stmt);
-        self.scopes.pop();
-    }
-
-    fn visit_for_in_statement(&mut self, stmt: &ForInStatement<'a>) {
-        self.push_scope(stmt.span.start, stmt.span.end, ScopeKind::Block);
-        walk::walk_for_in_statement(self, stmt);
-        self.scopes.pop();
-    }
-
-    fn visit_for_of_statement(&mut self, stmt: &ForOfStatement<'a>) {
-        self.push_scope(stmt.span.start, stmt.span.end, ScopeKind::Block);
-        walk::walk_for_of_statement(self, stmt);
-        self.scopes.pop();
-    }
-
-    fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
-        self.push_scope(block.span.start, block.span.end, ScopeKind::Function);
-        walk::walk_static_block(self, block);
-        self.scopes.pop();
-    }
-
-    fn visit_switch_statement(&mut self, stmt: &SwitchStatement<'a>) {
-        self.visit_expression(&stmt.discriminant);
-        self.push_scope(
-            stmt.discriminant.span().end,
-            stmt.span.end,
-            ScopeKind::Block,
-        );
-        for case in &stmt.cases {
-            self.visit_switch_case(case);
-        }
-        self.scopes.pop();
-    }
-
-    fn visit_statement(&mut self, stmt: &Statement<'a>) {
-        if let Statement::ClassDeclaration(class) = stmt {
-            if let Some(id) = &class.id {
-                let start = self.current().start;
-                self.mask(id.name.as_str(), start);
-            }
-        }
-        walk::walk_statement(self, stmt);
-    }
-
-    fn visit_variable_declaration(&mut self, decl: &VariableDeclaration<'a>) {
-        for declarator in &decl.declarations {
-            self.record_declarator(decl.kind, declarator);
-        }
-        walk::walk_variable_declaration(self, decl);
+    fn push_span(&mut self, span: Span, kind: ScopeKind) {
+        self.push_scope(span.start, span.end, kind);
     }
 }

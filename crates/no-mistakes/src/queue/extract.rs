@@ -1,4 +1,3 @@
-use super::lazy_object_bindings::LazyObjectBindings;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
@@ -45,31 +44,32 @@ pub(crate) fn extract_program_with_scoping(
     record_waits: bool,
     scoping: Option<&Scoping>,
 ) -> FileFacts {
-    let binding_allocator = oxc_allocator::Allocator::default();
-    let bindings = LazyObjectBindings::new(program, &binding_allocator);
-    extract_with_bindings(
+    extract_queue_facts(
         path,
         source,
+        program,
         factory_names,
         roles,
         record_waits,
         scoping,
-        bindings,
     )
     .facts
 }
 
-fn extract_with_bindings<'a>(
+fn extract_queue_facts<'a>(
     path: &'a Path,
     source: &'a str,
+    program: &'a Program<'a>,
     factory_names: &'a [String],
     roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     record_waits: bool,
     scoping: Option<&'a Scoping>,
-    bindings: LazyObjectBindings<'a>,
 ) -> QueueVisitor<'a> {
-    let program = bindings.program;
-    let scheduler_factories = if scoping.is_some() && needs_scheduler_scoping(source, roles) {
+    let scoped_scheduler = scoping.is_some() && needs_scheduler_scoping(source, roles);
+    let collect_bindings =
+        scoped_scheduler || source.contains("upsertJobScheduler") || source.contains('\\');
+    let index = super::extract_factory::queue_index(program, roles, collect_bindings);
+    let scheduler_factories = if scoped_scheduler {
         super::extract_factory::scheduler_factories(program, roles)
     } else {
         Default::default()
@@ -93,7 +93,7 @@ fn extract_with_bindings<'a>(
         enqueue_factories: HashMap::new(),
         worker_factories: HashMap::new(),
         scheduler_factories,
-        object_bindings: bindings,
+        object_bindings: index.object_bindings,
         job_frames: Vec::new(),
         record_waits,
         scoping,
@@ -101,7 +101,7 @@ fn extract_with_bindings<'a>(
         claimed_processors: Vec::new(),
         current_case: None,
         namespace_imports: HashMap::new(),
-        processor_spans: super::extract_factory::processor_spans(program, roles),
+        processor_spans: index.processor_spans,
         dispatch_dynamic_workers: HashSet::new(),
         dispatch_jobs: HashMap::new(),
         dispatch_scopes: HashSet::new(),

@@ -1,7 +1,7 @@
 use crate::fx::{fx_set, FxHashSet};
+use crate::queue::extract_factory_scheduler_bind::ObjectBindings;
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
-use crate::queue::lazy_object_bindings::LazyObjectBindings;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 
@@ -68,7 +68,7 @@ struct Found<'a> {
 
 fn resolve<'expr, 'arena: 'expr>(
     expr: &'expr Expression<'expr>,
-    bindings: &'expr LazyObjectBindings<'arena>,
+    bindings: &'expr ObjectBindings<'arena>,
     at: u32,
     depth: u8,
 ) -> Option<Found<'expr>> {
@@ -91,7 +91,7 @@ type LocatedOptions<'a> = (&'a Expression<'a>, u32);
 fn collect_template<'expr, 'arena: 'expr>(
     found: Found<'expr>,
     source: &str,
-    bindings: &'expr LazyObjectBindings<'arena>,
+    bindings: &'expr ObjectBindings<'arena>,
 ) -> Option<Vec<(String, usize)>> {
     let mut hits = Vec::new();
     let mut opts = None;
@@ -121,7 +121,7 @@ fn collect_template<'expr, 'arena: 'expr>(
 fn collect<'expr, 'arena: 'expr>(
     found: Found<'expr>,
     source: &str,
-    bindings: &'expr LazyObjectBindings<'arena>,
+    bindings: &'expr ObjectBindings<'arena>,
     hits: &mut Vec<(String, usize)>,
     mut opts: Option<&mut Option<LocatedOptions<'expr>>>,
     active_spreads: &mut FxHashSet<u32>,

@@ -62,6 +62,10 @@ does not open that summary. `processorFile` identifies a
 direct imported processor argument; an inline callback that calls an imported
 helper does not adopt that helper module's job names.
 
+The scheduler template check takes same-file binding declarations from the
+queue processor index, which already visits the file to resolve named
+callbacks. It groups those declarations by name on the first template lookup.
+
 ## Suppression
 
 `queues check` findings use the rule id `queues-check`. A file directive

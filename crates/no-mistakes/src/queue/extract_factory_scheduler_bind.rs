@@ -1,9 +1,10 @@
-use oxc_allocator::Allocator;
+use crate::fx::FxHashMap;
 use oxc_ast::ast::{
-    BindingPattern, Expression, FormalParameters, Program, VariableDeclarationKind,
-    VariableDeclarator,
+    BindingPattern, Expression, FormalParameters, VariableDeclarationKind, VariableDeclarator,
 };
-use oxc_ast_visit::Visit;
+use oxc_span::Span;
+use oxc_syntax::scope::ScopeId;
+use std::cell::{Cell, OnceCell, RefCell};
 
 pub struct ObjectBinding<'a> {
     pub name: &'a str,
@@ -27,41 +28,55 @@ struct Scope {
     kind: ScopeKind,
 }
 
-pub fn collect_object_bindings<'a>(
-    program: &'a Program<'a>,
-    allocator: &'a Allocator,
-) -> Vec<ObjectBinding<'a>> {
-    let mut collector = Collector {
-        allocator,
-        bindings: Vec::new(),
-        scopes: Vec::new(),
-    };
-    collector.visit_program(program);
-    collector.bindings
+type BindingsByName<'a> = FxHashMap<&'a str, Vec<ObjectBinding<'a>>>;
+
+#[derive(Default)]
+pub(super) struct ObjectBindings<'a> {
+    by_name: OnceCell<BindingsByName<'a>>,
+    declarations: RefCell<Vec<ObjectBinding<'a>>>,
+    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+    pub(super) program_visits: usize,
 }
 
-pub(super) fn lookup<'bindings, 'a>(
-    bindings: &'bindings [ObjectBinding<'a>],
-    name: &str,
-    at: u32,
-) -> Option<&'bindings ObjectBinding<'a>> {
-    let mut best: Option<&ObjectBinding<'_>> = None;
-    for binding in bindings {
-        if binding.name != name || at < binding.scope_start || at >= binding.scope_end {
-            continue;
-        }
-        if best.is_none_or(|current| binding.scope_start >= current.scope_start) {
-            best = Some(binding);
-        }
+impl<'a> ObjectBindings<'a> {
+    pub(super) fn lookup(&self, name: &str, at: u32) -> Option<&ObjectBinding<'a>> {
+        let binding = self
+            .named(name)
+            .iter()
+            .filter(|binding| binding.scope_start <= at && at < binding.scope_end)
+            .max_by_key(|binding| binding.scope_start)?;
+        (at >= binding.visible_from).then_some(binding)
     }
-    let binding = best?;
-    (at >= binding.visible_from).then_some(binding)
+
+    pub(super) fn named(&self, name: &str) -> &[ObjectBinding<'a>] {
+        self.by_name
+            .get_or_init(|| {
+                let mut by_name = BindingsByName::default();
+                for binding in self.declarations.take() {
+                    by_name.entry(binding.name).or_default().push(binding);
+                }
+                by_name
+            })
+            .get(name)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+    }
+
+    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+    pub(super) fn was_indexed(&self) -> bool {
+        self.by_name.get().is_some()
+    }
+
+    fn insert(&mut self, binding: ObjectBinding<'a>) {
+        self.declarations.get_mut().push(binding);
+    }
 }
 
-struct Collector<'a> {
-    allocator: &'a Allocator,
-    bindings: Vec<ObjectBinding<'a>>,
+#[derive(Default)]
+pub(super) struct Collector<'a> {
+    pub(super) bindings: ObjectBindings<'a>,
     scopes: Vec<Scope>,
+    switches: Vec<(&'a Cell<Option<ScopeId>>, Span)>,
 }
 
 impl<'a> Collector<'a> {
@@ -85,7 +100,7 @@ impl<'a> Collector<'a> {
 
     fn mask(&mut self, name: &'a str, visible_from: u32) {
         let scope = self.current();
-        self.bindings.push(ObjectBinding {
+        self.bindings.insert(ObjectBinding {
             name,
             scope_start: scope.start,
             scope_end: scope.end,
@@ -132,7 +147,7 @@ impl<'a> Collector<'a> {
     fn record_declarator(
         &mut self,
         kind: VariableDeclarationKind,
-        declarator: &VariableDeclarator<'a>,
+        declarator: &'a VariableDeclarator<'a>,
     ) {
         let module = self.scopes.len() == 1;
         let (var_start, var_end) = self.var_span();
@@ -149,7 +164,13 @@ impl<'a> Collector<'a> {
                 BindingPattern::BindingIdentifier(_) => declarator
                     .init
                     .as_ref()
-                    .and_then(|expr| visit::stored_expr(expr, self.allocator)),
+                    .map(crate::codebase::ts_source::unwrap_ts_wrappers)
+                    .filter(|expr| {
+                        matches!(
+                            expr,
+                            Expression::ObjectExpression(_) | Expression::Identifier(_)
+                        )
+                    }),
                 _ => None,
             }
         } else {
