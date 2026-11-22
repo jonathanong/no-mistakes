@@ -1,4 +1,4 @@
-use super::{Options, CHECKS, RULE_ID};
+use super::{Options, CHECKS, REDUNDANT_PRELOCK, RULE_ID};
 use serde::Deserialize;
 #[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -38,6 +38,10 @@ pub(super) fn validate(options: &Options) -> anyhow::Result<()> {
             "{RULE_ID}: unknown check {check}"
         );
     }
+    anyhow::ensure!(
+        options.checks.get(REDUNDANT_PRELOCK) != Some(&Mode::Fail),
+        "{RULE_ID}: {REDUNDANT_PRELOCK} supports only advise or ignore"
+    );
     for entry in &options.allow {
         anyhow::ensure!(
             !entry.reason.trim().is_empty(),

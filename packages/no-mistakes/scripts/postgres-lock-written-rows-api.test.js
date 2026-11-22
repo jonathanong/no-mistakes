@@ -5,6 +5,15 @@ const { normalizeCheckFailurePaths } = require("./check-policy-test-helpers");
 const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const cases = [
+  ["advisory-ban-existing", "advisory-ban.yml", 11, 0],
+  ["locking-cte-existing", "locking-cte.yml", 0, 2],
+  ["share-lock-sequences", "share-advise.yml", 0, 25],
+  ["share-lock-sequences", "share-fail.yml", 10, 15],
+  ["share-lock-sequences", "share-read-only-fail.yml", 0, 1],
+  ["share-lock-sequences", "disabled.yml", 0, 1],
+  ["redundant-prelocks", "redundant-advise.yml", 0, 20],
+  ["redundant-prelocks", "redundant-no-catalog.yml", 0, 20],
+  ["redundant-prelocks", "disabled.yml", 0, 1],
   ["resource-transactions", "checks-fail.yml", 1],
   ["resource-options", "resource-options.yml", 4],
   ["caller-options", "caller-options.yml", 13],
@@ -32,7 +41,7 @@ const cases = [
   ["mixed-ddl-trigger", "mixed-ddl-trigger-ignored-check.yml", 0],
 ];
 
-for (const [fixture, config, count] of cases) {
+for (const [fixture, config, ruleCount, advisoryCount] of cases) {
   test(
     `compiled written-row locks ${fixture} (${config}) preserve CLI, async and batched parity`,
     { skip: !addon?.endsWith(".node") },
@@ -47,7 +56,9 @@ for (const [fixture, config, count] of cases) {
       const pending = cjs.check(options);
       assert.ok(pending instanceof Promise);
       const report = normalizeCheckFailurePaths(await pending);
-      assert.equal(report.rules.length, count, JSON.stringify(report));
+      assert.equal(report.rules.length, ruleCount, JSON.stringify(report));
+      if (advisoryCount !== undefined)
+        assert.equal(report.advisories.length, advisoryCount, JSON.stringify(report));
       assert.deepEqual(normalizeCheckFailurePaths(await esm.check(options)), report);
       const batched = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
       assert.deepEqual(normalizeCheckFailurePaths(batched.reports[0].result), report);

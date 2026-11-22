@@ -37,6 +37,10 @@ fn public_call_versions_are_readable_and_legacy_construction_is_explicit() {
     // construct legacy calls with an empty list or a default struct update.
     let explicit = EmbeddedSqlCall {
         lock_scope_analysis: false,
+        track_share_lock_writes: false,
+        track_redundant_prelocks: false,
+        next_discarded_query: None,
+        stable_prelock_parameters: Vec::new(),
         helper_definition: false,
         lock_helper: None,
         transaction_id: None,

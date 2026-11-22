@@ -11,12 +11,32 @@ mod policy;
 mod scan;
 use policy::{Allow, Mode, WriteSet};
 pub const RULE_ID: &str = "postgres-lock-written-rows-only";
-pub(super) const CHECKS: [&str; 4] = [
+pub(crate) const SHARE_LOCK_THEN_WRITE: &str = "share-lock-then-write";
+pub(crate) const REDUNDANT_PRELOCK: &str = "redundant-prelock";
+pub(super) const CHECKS: [&str; 6] = [
     "row-lock-unwritten-relation",
     "table-lock",
     "constant-advisory-lock",
     "row-lock-outside-transaction",
+    SHARE_LOCK_THEN_WRITE,
+    REDUNDANT_PRELOCK,
 ];
+
+pub(crate) fn is_sequence_check(check: &str) -> bool {
+    matches!(check, SHARE_LOCK_THEN_WRITE | REDUNDANT_PRELOCK)
+}
+
+impl CompiledOptions {
+    fn mode(&self, check: &str) -> Mode {
+        self.checks.get(check).copied().unwrap_or_else(|| {
+            if is_sequence_check(check) {
+                Mode::Ignore
+            } else {
+                Mode::default()
+            }
+        })
+    }
+}
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct Options {
@@ -112,6 +132,12 @@ fn compile(options: &Options) -> Result<CompiledOptions> {
             .with_executor_options(&options.executor_options)
             .with_trusted_sql_tags(&options.trusted_sql_tags);
     embedded.track_transaction_helpers = true;
+    embedded.track_share_lock_writes = options
+        .checks
+        .get(SHARE_LOCK_THEN_WRITE)
+        .is_some_and(|mode| *mode != Mode::Ignore);
+    embedded.track_redundant_prelocks =
+        options.checks.get(REDUNDANT_PRELOCK) == Some(&Mode::Advise);
     Ok(CompiledOptions {
         schema_catalog_path: (!options.schema_catalog_path.is_empty())
             .then(|| options.schema_catalog_path.clone()),

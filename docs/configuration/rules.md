@@ -719,8 +719,13 @@ selection there when a rule inherits a project PostgreSQL scope.
 is opt-in and inherits the selected PostgreSQL executor scope. Its `checks`
 map sets `fail`, `advise` (default), or `ignore` independently for
 `row-lock-unwritten-relation`, `table-lock`, `constant-advisory-lock`, and
-`row-lock-outside-transaction`. `allow` selects relation/key/call-site exceptions
-with required reasons. The rule's `transactionExecutorTypeNames` option adds
+`row-lock-outside-transaction`. The sequence checks `share-lock-then-write` and
+`redundant-prelock` are opt-in and stay disabled unless explicitly set.
+`redundant-prelock` accepts only `advise` or `ignore`; `fail` is invalid.
+Redundant pre-lock proofs require `FROM ONLY` and a unique key established by
+`schemaCatalogPath` for updates or the supported upsert conflict target.
+`allow` selects relation/key/call-site exceptions with required reasons. The
+rule's `transactionExecutorTypeNames` option adds
 imported executor types that exclusively represent transaction executors. This
 option defaults to `[]` and enables local write proofs on parameters with those
 types. `writeSets` asserts helper-written relations for one

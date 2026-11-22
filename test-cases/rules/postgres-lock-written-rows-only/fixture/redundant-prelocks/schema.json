@@ -1,0 +1,148 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "jobs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "jobs_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "jobs_child": {
+      "relationKind": "table",
+      "inheritedFrom": ["jobs"],
+      "columns": {
+        "id": { "dataType": "integer", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "\"schema.with.dot\".accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "accounts_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "partial_jobs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "partial_jobs_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "state = 'running'",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "deferred_jobs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "deferred_jobs_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": false,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "stale_jobs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        }
+      },
+      "indexes": {
+        "stale_jobs_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

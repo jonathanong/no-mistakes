@@ -40,6 +40,12 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &ast::Program<'a>) {
         self.walk_program_scope(program);
     }
+    fn visit_statements(&mut self, statements: &oxc_allocator::Vec<'a, ast::Statement<'a>>) {
+        if self.executor_options.track_redundant_prelocks {
+            discarded_queries::record(statements, &mut self.adjacent_discarded_queries);
+        }
+        walk::walk_statements(self, statements);
+    }
     fn visit_block_statement(&mut self, block: &ast::BlockStatement<'a>) {
         self.walk_block_scope(block);
     }
@@ -182,6 +188,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         variants::control::logical(self, expr);
     }
 }
+mod discarded_queries;
 mod stable_binds;
 mod transaction;
 mod transaction_flow;

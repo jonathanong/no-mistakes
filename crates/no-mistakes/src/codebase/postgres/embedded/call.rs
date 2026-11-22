@@ -10,6 +10,14 @@ pub struct EmbeddedSqlCall {
     /// Concrete alternatives for a recoverable Dynamic call; empty for legacy calls.
     pub variants: Vec<EmbeddedSqlVariant>,
     pub lock_scope_analysis: bool,
+    #[doc(hidden)]
+    pub track_share_lock_writes: bool,
+    #[doc(hidden)]
+    pub track_redundant_prelocks: bool,
+    #[doc(hidden)]
+    pub next_discarded_query: Option<u32>,
+    #[doc(hidden)]
+    pub stable_prelock_parameters: Vec<bool>,
     pub helper_definition: bool,
     pub lock_helper: Option<Box<(String, u32)>>,
     pub transaction_id: Option<u32>,

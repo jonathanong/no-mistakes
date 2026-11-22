@@ -137,10 +137,18 @@ pub(super) fn extract_from_parsed_and_sources(
             .collect_index_probes
             .then_some(&mut index_probes),
     );
+    let lock_writes = sources.projection.locks(
+        statements,
+        placeholder_positions,
+        (
+            sources.policy.share_lock_writes,
+            sources.policy.redundant_prelocks,
+        ),
+    );
     let (statement_kinds, setting_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
-        lock_writes: sources.projection.locks(statements, placeholder_positions),
+        lock_writes,
         statement_kinds,
         setting_uses,
         function_calls,

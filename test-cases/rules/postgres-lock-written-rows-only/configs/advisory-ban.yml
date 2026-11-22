@@ -1,0 +1,20 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      include: ['**/*.ts']
+      exclude: ['src/allowed.ts']
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions:
+            - pg_advisory_lock
+            - pg_advisory_lock_shared
+            - pg_advisory_xact_lock
+            - pg_advisory_xact_lock_shared
+            - pg_try_advisory_lock
+            - pg_try_advisory_lock_shared
+            - pg_try_advisory_xact_lock
+            - pg_try_advisory_xact_lock_shared
+      unanalyzableSql: ignore

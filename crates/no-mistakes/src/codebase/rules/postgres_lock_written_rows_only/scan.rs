@@ -14,6 +14,7 @@ use std::{
 mod ddl;
 mod output;
 mod rows;
+mod sequences;
 mod settings;
 mod statements;
 mod triggers;
@@ -29,7 +30,7 @@ pub(super) fn scan(
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let enabled = CHECKS
         .iter()
-        .any(|check| options.checks.get(*check).copied().unwrap_or_default() != Mode::Ignore);
+        .any(|check| options.mode(check) != Mode::Ignore);
     let catalog = options
         .schema_catalog_path
         .as_deref()
@@ -70,8 +71,7 @@ fn scan_file(
     let file = relative_slash_path(root, path);
     let source = super::super::read_language_source(sources, path).unwrap_or_default();
     options.checked_files.insert(file.clone());
-    let enabled =
-        |check: &str| options.checks.get(check).copied().unwrap_or_default() != Mode::Ignore;
+    let enabled = |check: &str| options.mode(check) != Mode::Ignore;
     if !CHECKS.iter().any(|check| enabled(check)) {
         return Ok(output.into_findings());
     }
@@ -81,6 +81,15 @@ fn scan_file(
     let unresolved = statements::unresolved_transactions(&embedded.calls, &grouped);
     let catalog_invalidations =
         catalog.map(|_| statements::CatalogInvalidations::collect(&embedded.calls, &grouped));
+    sequences::scan(
+        &mut output,
+        (&file, &source),
+        &embedded.calls,
+        &grouped,
+        &unresolved,
+        &options.embedded,
+        catalog.zip(catalog_invalidations.as_ref()),
+    );
     let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
     let trigger_disabled = settings::trigger_disabled_transactions(&embedded.calls, &grouped);
     let mut writes = writes::Writes::default();
@@ -148,23 +157,17 @@ fn scan_file(
                 }
                 let self_contained = access.self_contained_locks.get(&lock_index);
                 if !call.executor_transaction_known {
+                    let lock_catalog = statements::CatalogInvalidations::for_lock(
+                        catalog.zip(catalog_invalidations.as_ref()),
+                        call,
+                        lock.relation.as_deref(),
+                        &unresolved,
+                    );
                     rows::check_membership(
                         &mut output,
                         &site,
                         lock,
-                        rows::same_statement(
-                            call,
-                            lock,
-                            access,
-                            lock_index,
-                            catalog.filter(|_| {
-                                call.caller_transaction_id
-                                    .is_none_or(|id| !unresolved.contains(&id))
-                                    && catalog_invalidations.as_ref().is_some_and(|invalidations| {
-                                        invalidations.permits(call, lock.relation.as_deref())
-                                    })
-                            }),
-                        ),
+                        rows::same_statement(call, lock, access, lock_index, lock_catalog),
                         &writes,
                         &unresolved,
                     );

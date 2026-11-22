@@ -1,0 +1,34 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "other_relation_and_later_write": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 16,
+          "message": "src/query.ts:16: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in orders is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT o.id FROM orders AS o WHERE o.id = $1 FOR UPDATE OF o`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 5,
+          "message": "src/query.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for row-lock-unwritten-relation: locked row in orders is not written by this transaction; lock the written row instead or rely on the foreign key KEY SHARE lock",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH parent AS MATERIALIZED (SELECT o.id FROM orders AS o WHERE o.id = $1 FOR UPDATE OF o) INSERT INTO order_events (order_id) SELECT id FROM parent`, [id]);",
+          "target": "row-lock-unwritten-relation"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

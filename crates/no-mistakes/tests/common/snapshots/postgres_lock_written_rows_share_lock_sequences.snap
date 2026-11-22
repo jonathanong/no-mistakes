@@ -1,0 +1,474 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/lock-targets.ts",
+          "line": 5,
+          "message": "src/lock-targets.ts:5: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts a JOIN accounts b ON a.parent_id = b.id FOR UPDATE OF a FOR SHARE OF b`);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 103,
+          "message": "src/query.ts:103: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 114,
+          "message": "src/query.ts:114: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts JOIN account_events ON accounts.id = account_events.account_id FOR SHARE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 134,
+          "message": "src/query.ts:134: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 141,
+          "message": "src/query.ts:141: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 171,
+          "message": "src/query.ts:171: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 177,
+          "message": "src/query.ts:177: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 18,
+          "message": "src/query.ts:18: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE; UPDATE accounts SET touched = true WHERE id = $1`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 189,
+          "message": "src/query.ts:189: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM \"schema.with.dot\".accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 195,
+          "message": "src/query.ts:195: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 202,
+          "message": "src/query.ts:202: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 209,
+          "message": "src/query.ts:209: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 56,
+          "message": "src/query.ts:56: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 63,
+          "message": "src/query.ts:63: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH unused AS (SELECT 1 FROM jobs WHERE id = $1 FOR SHARE) SELECT 1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 69,
+          "message": "src/query.ts:69: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT 1 FROM jobs WHERE id = $1 FOR SHARE) SELECT * FROM locked`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 75,
+          "message": "src/query.ts:75: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH unused AS (SELECT 1) SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 86,
+          "message": "src/query.ts:86: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write; helper lockAccount locks at line 81",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockAccount(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 92,
+          "message": "src/query.ts:92: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 98,
+          "message": "src/query.ts:98: postgres-lock-written-rows-only application #0 reports an advisory violation for share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 11,
+          "message": "src/variant-sequences.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(enabled ? `SELECT 1 FROM accounts WHERE id = $1 FOR SHARE` : `SELECT 1 FROM accounts WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 5,
+          "message": "src/variant-sequences.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 127,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: reviewed transaction protocol",
+          "target": "postgres-lock-written-rows-only"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 114,
+          "message": "src/query.ts:114: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts JOIN account_events ON accounts.id = account_events.account_id FOR SHARE`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 134,
+          "message": "src/query.ts:134: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 141,
+          "message": "src/query.ts:141: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 149,
+          "message": "src/query.ts:149: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 165,
+          "message": "src/query.ts:165: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove whether the write executes after this share lock; await the lock and write directly in the same transaction",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await tx.query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 171,
+          "message": "src/query.ts:171: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 177,
+          "message": "src/query.ts:177: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 195,
+          "message": "src/query.ts:195: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 202,
+          "message": "src/query.ts:202: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove the share lock and write target the same relation; qualify both relation names consistently",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM public.accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 56,
+          "message": "src/query.ts:56: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 63,
+          "message": "src/query.ts:63: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH unused AS (SELECT 1 FROM jobs WHERE id = $1 FOR SHARE) SELECT 1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 69,
+          "message": "src/query.ts:69: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: cannot prove shared lock execution on a base relation; use a top-level lock and an explicit relation or FOR SHARE OF alias",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH locked AS (SELECT 1 FROM jobs WHERE id = $1 FOR SHARE) SELECT * FROM locked`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 86,
+          "message": "src/query.ts:86: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write; helper lockAccount locks at line 81",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await lockAccount(tx.query, id);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 11,
+          "message": "src/variant-sequences.ts:11: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(enabled ? `SELECT 1 FROM accounts WHERE id = $1 FOR SHARE` : `SELECT 1 FROM accounts WHERE id = $1`, [id]);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/variant-sequences.ts",
+          "line": 5,
+          "message": "src/variant-sequences.ts:5: postgres-lock-written-rows-only application #0 has unresolved SQL for unanalyzable: share lock transaction or statement order is unresolved; use a proven transaction executor and await the lock and write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock-targets.ts",
+          "line": 5,
+          "message": "src/lock-targets.ts:5: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts a JOIN accounts b ON a.parent_id = b.id FOR UPDATE OF a FOR SHARE OF b`);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 103,
+          "message": "src/query.ts:103: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 12,
+          "message": "src/query.ts:12: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 18,
+          "message": "src/query.ts:18: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE; UPDATE accounts SET touched = true WHERE id = $1`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 189,
+          "message": "src/query.ts:189: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM \"schema.with.dot\".accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 209,
+          "message": "src/query.ts:209: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 6,
+          "message": "src/query.ts:6: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 75,
+          "message": "src/query.ts:75: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`WITH unused AS (SELECT 1) SELECT 1 FROM jobs WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 92,
+          "message": "src/query.ts:92: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        },
+        {
+          "file": "src/query.ts",
+          "line": 98,
+          "message": "src/query.ts:98: share-lock-then-write: share lock precedes an update or delete of this relation in the same transaction; take a write-strength lock up front or use a conditional write",
+          "rule": "postgres-lock-written-rows-only",
+          "sourceLine": "await query(`SELECT 1 FROM accounts WHERE id = $1 FOR KEY SHARE`, [id]);",
+          "target": "share-lock-then-write"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "read_only": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 127,
+          "message": "directive for `postgres-lock-written-rows-only` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line postgres-lock-written-rows-only: reviewed transaction protocol",
+          "target": "postgres-lock-written-rows-only"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

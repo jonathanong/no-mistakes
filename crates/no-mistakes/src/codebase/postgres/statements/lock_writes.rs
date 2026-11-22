@@ -1,12 +1,13 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod advisory;
 mod cte_delete;
-pub(crate) use cte_delete::CteWriteLink;
 mod ddl;
-pub(crate) use ddl::DdlEvent;
+pub(crate) use {cte_delete::CteWriteLink, ddl::DdlEvent};
 mod helpers;
+mod prelock;
 mod row_locks;
 mod scope;
+mod sequences;
 mod settings;
 mod trigger_writes;
 use super::value::PlaceholderPositions;
@@ -17,7 +18,6 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     ops::{ControlFlow, Range},
 };
-
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LockWriteFacts {
     pub ddl_events: Vec<DdlEvent>,
@@ -32,6 +32,11 @@ pub(crate) struct LockWriteFacts {
     pub advisory_keys: Vec<Vec<AdvisoryKey>>,
     pub linked_cte_locks: BTreeMap<usize, CteWriteLink>,
     pub self_contained_locks: BTreeMap<usize, Range<usize>>,
+    pub share_statements: Vec<sequences::ShareStatement>,
+    pub prelock: Option<(RowAccess, bool)>,
+    pub prelock_attempt: bool,
+    pub conditional_write_keys: Vec<RowAccess>,
+    pub conditional_write_unique: bool,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RowAccess {
@@ -41,12 +46,15 @@ pub(crate) struct RowAccess {
     pub key_identity_unproven: bool,
     pub has_predicate: bool,
 }
-
 pub(super) fn collect<const ADVANCED: bool>(
     statements: &[Statement],
     positions: PlaceholderPositions<'_>,
+    (share_lock_writes, redundant_prelocks): (bool, bool),
 ) -> LockWriteFacts {
     let mut out = LockWriteFacts::default();
+    if let (true, [statement]) = (redundant_prelocks, statements) {
+        prelock::collect(statement, &mut out, positions);
+    }
     for statement in statements {
         if matches!(statement, Statement::Prepare { .. }) {
             continue;
@@ -62,15 +70,21 @@ pub(super) fn collect<const ADVANCED: bool>(
             } else {
                 (0, 0)
             };
+            let mut share_relations = share_lock_writes.then(Vec::new);
             let _ = statement.visit(&mut Collector::<ADVANCED> {
                 out: &mut out,
                 scopes: Vec::new(),
                 cte_depth: 0,
                 with_stack: Vec::new(),
                 positions,
+                share_relations: share_relations.as_mut(),
+                share_top_level: matches!(statement, Statement::Query(_)),
             });
             if ADVANCED {
                 scope::mark_self_contained(&mut out, first_lock, first_write);
+                if let Some(locks) = share_relations {
+                    sequences::push_share_statement(&mut out, locks, first_write);
+                }
                 if out.locks.len() == first_lock + 1
                     && out.self_contained_locks.contains_key(&first_lock)
                 {
@@ -89,6 +103,8 @@ struct Collector<'a, 'p, const ADVANCED: bool> {
     cte_depth: usize,
     with_stack: Vec<bool>,
     positions: PlaceholderPositions<'p>,
+    share_relations: Option<&'a mut Vec<Option<String>>>,
+    share_top_level: bool,
 }
 impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
     type Break = ();
@@ -101,11 +117,14 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
         }
         if !query.locks.is_empty() {
             if ADVANCED {
-                let mut locks = row_locks::collect_advanced(query, self.positions);
-                for lock in &mut locks {
-                    scope::hide_cte(lock, &self.scopes);
-                }
-                self.out.locks.extend(locks);
+                row_locks::collect_advanced(
+                    query,
+                    self.positions,
+                    &self.scopes,
+                    &mut self.out.locks,
+                    self.share_relations.as_deref_mut(),
+                    self.share_top_level && self.scopes.len() == 1,
+                );
             } else {
                 self.out.locks.push(row_locks::collect_legacy(
                     query,
@@ -177,6 +196,5 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
         ControlFlow::Continue(())
     }
 }
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

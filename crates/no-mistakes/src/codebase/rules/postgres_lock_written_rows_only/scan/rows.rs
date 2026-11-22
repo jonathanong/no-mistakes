@@ -1,7 +1,8 @@
 use super::*;
 use crate::codebase::postgres::statements::lock_writes::{CteWriteLink, LockWriteFacts, RowAccess};
 mod keys;
-use keys::{compare_keys, identity};
+use keys::identity;
+pub(super) use keys::{compare_keys, stable_prelock_key};
 pub(super) fn enabled_for(call: &EmbeddedSqlCall, written: bool, outside: bool) -> bool {
     if call.caller_transaction_id.is_some() {
         written

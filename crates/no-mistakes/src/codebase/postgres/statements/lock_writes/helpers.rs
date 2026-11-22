@@ -84,7 +84,7 @@ fn equality(
     };
     binding(left, right).or_else(|| binding(right, left))
 }
-fn column(
+pub(super) fn column(
     expr: &Expr,
     qualifier: Option<&str>,
     positions: PlaceholderPositions<'_>,
@@ -129,7 +129,10 @@ pub(super) fn constant(expr: &Expr) -> bool {
     }
 }
 
-fn generated(ident: &sqlparser::ast::Ident, positions: PlaceholderPositions<'_>) -> bool {
+pub(super) fn generated(
+    ident: &sqlparser::ast::Ident,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
     super::super::value::is_placeholder_ident_at(ident, Some(positions.unwrap_or_default()))
 }
 

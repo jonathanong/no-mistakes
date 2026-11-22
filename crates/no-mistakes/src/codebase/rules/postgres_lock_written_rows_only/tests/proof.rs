@@ -15,8 +15,7 @@ fn config(name: &str) -> NoMistakesConfig {
 
 fn failing_config(name: &str) -> NoMistakesConfig {
     let mut config = config(name);
-    config.rules[0].options["checks"] =
-        serde_yaml::to_value(BTreeMap::from(CHECKS.map(|id| (id, "fail")))).unwrap();
+    config.rules[0].options["checks"].clone_from(&super::config().rules[0].options["checks"]);
     config
 }
 

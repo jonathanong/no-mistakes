@@ -9,6 +9,8 @@ pub(crate) struct StatementPolicySources<'a> {
     pub(crate) grouping_complete: Option<&'a [bool]>,
     pub(crate) collect_index_probes: bool,
     pub(crate) collect_body_bounds: bool,
+    pub(crate) share_lock_writes: bool,
+    pub(crate) redundant_prelocks: bool,
     pub(crate) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
     pub(crate) schema: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
     pub(crate) functions: &'a [crate::codebase::postgres::SqlFunctionCallFact],
@@ -40,14 +42,15 @@ impl StatementProjection {
         self,
         statements: &[sqlparser::ast::Statement],
         positions: super::super::value::PlaceholderPositions<'_>,
+        demand: (bool, bool),
     ) -> super::super::lock_writes::LockWriteFacts {
         if matches!(
             self,
             StatementProjection::LockScope | StatementProjection::BodyBoundsLockScope
         ) {
-            super::super::lock_writes::collect::<true>(statements, positions)
+            super::super::lock_writes::collect::<true>(statements, positions, demand)
         } else {
-            super::super::lock_writes::collect::<false>(statements, positions)
+            super::super::lock_writes::collect::<false>(statements, positions, (false, false))
         }
     }
 }

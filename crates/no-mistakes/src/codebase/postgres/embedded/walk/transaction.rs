@@ -13,15 +13,17 @@ pub(super) fn annotate(
 ) {
     fact.execution_awaited = visitor.awaited_lock_helper_calls.contains(&call.span.start);
     fact.lock_scope_analysis = visitor.executor_options.track_transaction_helpers;
-    let owner = visitor
-        .member_query_proof
-        .function_ids
-        .last()
-        .copied()
-        .unwrap_or(0);
+    fact.track_share_lock_writes = visitor.executor_options.track_share_lock_writes;
+    fact.track_redundant_prelocks = visitor.executor_options.track_redundant_prelocks;
+    if fact.track_redundant_prelocks {
+        fact.next_discarded_query = visitor
+            .adjacent_discarded_queries
+            .get(&call.span.start)
+            .copied();
+    }
+    let owner = execution_scope(visitor);
     if visitor.executor_options.track_transaction_helpers {
-        fact.execution_scope = owner;
-        fact.execution_range = (call.span.start, call.span.end);
+        annotate_execution_location(call, fact, owner);
     }
     fact.execution_unconditional = visitor.control_depth == 0
         && visitor.loop_depth == 0
@@ -68,6 +70,35 @@ pub(super) fn annotate(
                 _ => None,
             })
             .unwrap_or_default();
+    if fact.track_redundant_prelocks {
+        fact.stable_prelock_parameters = fact
+            .bound_parameters
+            .iter()
+            .map(|parameter| {
+                parameter
+                    .as_deref()
+                    .is_some_and(|identity| stable_parameter_identity(visitor, identity))
+            })
+            .collect();
+    }
+}
+
+pub(super) fn execution_scope(visitor: &ScopeVisitor<'_>) -> u32 {
+    visitor
+        .member_query_proof
+        .function_ids
+        .last()
+        .copied()
+        .unwrap_or(0)
+}
+
+pub(super) fn annotate_execution_location(
+    call: &CallExpression<'_>,
+    fact: &mut EmbeddedSqlCall,
+    owner: u32,
+) {
+    fact.execution_scope = owner;
+    fact.execution_range = (call.span.start, call.span.end);
 }
 
 pub(super) fn stable_parameter_identity(visitor: &ScopeVisitor<'_>, identity: &str) -> bool {

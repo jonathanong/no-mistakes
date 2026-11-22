@@ -78,6 +78,7 @@ struct EmbeddedSqlRuleOptions {
     include: Vec<String>,
     test_globs: Vec<String>,
     helper_roots: Vec<String>,
+    checks: serde_json::Value,
     exclude: Vec<String>,
 }
 
