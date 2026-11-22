@@ -39,6 +39,9 @@ pub struct EmbeddedSqlOptions {
     pub executor_factory_names: Vec<String>,
     /// Imported type names whose annotated parameters are executors.
     pub executor_type_names: Vec<String>,
+    #[doc(hidden)]
+    #[serde(skip)]
+    pub transaction_executor_type_names: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub executor_option_properties: Vec<String>,
     /// Named imports trusted as parameterized SQL tags. Empty trusts none.
@@ -96,6 +99,7 @@ impl EmbeddedSqlOptions {
             exclude_executor_names: Vec::new(),
             executor_factory_names: Vec::new(),
             executor_type_names: Vec::new(),
+            transaction_executor_type_names: Vec::new(),
             executor_option_properties: Vec::new(),
             trusted_sql_tags: Vec::new(),
             raw_sql_tags: Vec::new(),
@@ -129,6 +133,14 @@ impl EmbeddedSqlOptions {
     pub fn with_scoped_executors(mut self, factories: &[String], types: &[String]) -> Self {
         self.executor_factory_names = sorted_unique(factories);
         self.executor_type_names = sorted_unique(types);
+        self
+    }
+
+    pub(crate) fn with_transaction_executor_types(mut self, types: &[String]) -> Self {
+        self.transaction_executor_type_names = sorted_unique(types);
+        self.executor_type_names.extend_from_slice(types);
+        self.executor_type_names.sort();
+        self.executor_type_names.dedup();
         self
     }
 

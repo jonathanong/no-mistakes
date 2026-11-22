@@ -77,3 +77,32 @@ fn postgres_lock_written_rows_trigger_writes_check_json_snapshot() {
         ],
     );
 }
+
+#[test]
+fn postgres_lock_written_rows_parameter_transactions_check_json_snapshot() {
+    let report = snapshot(
+        "postgres_lock_written_rows_parameter_transactions",
+        &[
+            (
+                "disabled",
+                "parameter-transactions",
+                "parameter-transactions-disabled.yml",
+            ),
+            (
+                "enabled",
+                "parameter-transactions",
+                "parameter-transactions.yml",
+            ),
+        ],
+    );
+    let advisories = report["enabled"]["report"]["advisories"]
+        .as_array()
+        .unwrap();
+    let has_advisory = |line: u64| advisories.iter().any(|advisory| advisory["line"] == line);
+    for line in [5, 12, 97, 102, 130, 170] {
+        assert!(!has_advisory(line), "expected a proof for line {line}");
+    }
+    for line in [17, 21, 107, 112, 117, 123, 136, 143, 149, 155, 160, 165] {
+        assert!(has_advisory(line), "expected an abstention for line {line}");
+    }
+}

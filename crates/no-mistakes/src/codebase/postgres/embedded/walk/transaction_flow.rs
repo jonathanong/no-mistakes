@@ -157,9 +157,13 @@ pub(super) fn complete_boundary(
         && visitor.control_depth == visitor.transaction_options.if_depth
         && visitor.awaited_lock_helper_calls.contains(&call.span.start)
     {
-        if let Some(identity) =
-            identity.filter(|identity| !visitor.transaction_options.mutated.contains(identity))
-        {
+        if let Some(identity) = identity.filter(|identity| {
+            !visitor.transaction_options.mutated.contains(identity)
+                && !visitor
+                    .scoped
+                    .transaction_parameters
+                    .contains(&(identity.get() - 1))
+        }) {
             visitor
                 .transaction_options
                 .completed

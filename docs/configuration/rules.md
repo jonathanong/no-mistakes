@@ -720,7 +720,10 @@ is opt-in and inherits the selected PostgreSQL executor scope. Its `checks`
 map sets `fail`, `advise` (default), or `ignore` independently for
 `row-lock-unwritten-relation`, `table-lock`, `constant-advisory-lock`, and
 `row-lock-outside-transaction`. `allow` selects relation/key/call-site exceptions
-with required reasons. `writeSets` asserts helper-written relations for one
+with required reasons. The rule's `transactionExecutorTypeNames` option adds
+imported executor types that exclusively represent transaction executors. This
+option defaults to `[]` and enables local write proofs on parameters with those
+types. `writeSets` asserts helper-written relations for one
 file and transaction factory line. Both lists default to empty and participate
 in unused-entry accounting. Unresolved SQL and transaction membership follow
 `unanalyzable` / `unanalyzableSql`. Its `executorOptions` defaults to `[]`;

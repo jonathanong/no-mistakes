@@ -21,6 +21,8 @@ pub(super) struct ScopeCollector {
     pub(super) track_resource_transactions: bool,
     factories: HashSet<String>,
     types: HashSet<String>,
+    transaction_types: HashSet<String>,
+    transaction_parameters: Vec<(String, String, Span)>,
     factory_shadows: HashMap<String, Vec<Span>>,
     callback_candidates: Vec<callback_transactions::Candidate>,
     undeclared: HashMap<String, super::super::UndeclaredExecutorType>,

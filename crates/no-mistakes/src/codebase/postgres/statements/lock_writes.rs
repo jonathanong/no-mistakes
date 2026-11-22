@@ -1,5 +1,6 @@
 use crate::codebase::postgres::idents::{object_name_identity, unwrap_expr};
 mod advisory;
+mod cte_delete;
 mod ddl;
 pub(crate) use ddl::DdlEvent;
 mod helpers;
@@ -11,7 +12,10 @@ use super::value::PlaceholderPositions;
 pub(crate) use advisory::AdvisoryKey;
 use helpers::{access, generated_name};
 use sqlparser::ast::{BinaryOperator, Expr, Query, Statement, TableFactor, Visit, Visitor};
-use std::{collections::BTreeSet, ops::ControlFlow};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    ops::{ControlFlow, Range},
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LockWriteFacts {
@@ -25,12 +29,15 @@ pub(crate) struct LockWriteFacts {
     pub relation_identity_changed: bool,
     pub dynamic_setting_name: bool,
     pub advisory_keys: Vec<Vec<AdvisoryKey>>,
-    pub self_contained_locks: BTreeSet<usize>,
+    pub linked_cte_locks: BTreeSet<usize>,
+    pub self_contained_locks: BTreeMap<usize, Range<usize>>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RowAccess {
     pub relation: Option<String>,
     pub key: Option<(String, String)>,
+    pub recovered_key: Option<(String, (u32, u32))>,
+    pub key_aliases_renamed: bool,
     pub has_predicate: bool,
 }
 
@@ -63,6 +70,12 @@ pub(super) fn collect<const ADVANCED: bool>(
             });
             if ADVANCED {
                 scope::mark_self_contained(&mut out, first_lock, first_write);
+                if out.locks.len() == first_lock + 1
+                    && out.self_contained_locks.contains_key(&first_lock)
+                    && cte_delete::linked(statement, positions)
+                {
+                    out.linked_cte_locks.insert(first_lock);
+                }
             }
         }
     }
@@ -126,6 +139,7 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
                 );
                 if !update.table.joins.is_empty() || update.from.is_some() {
                     target.key = None;
+                    target.recovered_key = None;
                     target.has_predicate = true;
                 }
                 self.out.writes.push(target);
@@ -139,6 +153,7 @@ impl<const ADVANCED: bool> Visitor for Collector<'_, '_, ADVANCED> {
                         access(&table.relation, delete.selection.as_ref(), self.positions);
                     if !table.joins.is_empty() || delete.using.is_some() {
                         target.key = None;
+                        target.recovered_key = None;
                         target.has_predicate = true;
                     }
                     self.out.writes.push(target);

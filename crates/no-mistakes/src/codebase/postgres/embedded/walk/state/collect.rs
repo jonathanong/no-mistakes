@@ -139,7 +139,7 @@ pub(crate) fn collect_calls<'a>(
     visitor.visit_program(program);
     visitor.flush_plain_returns();
     if options.track_transaction_helpers {
-        visitor.mark_lock_helper_definitions();
+        visitor.finish_transaction_helper_facts();
     }
     visitor.downgrade_escaped_member_calls();
     if !head_calls_only {

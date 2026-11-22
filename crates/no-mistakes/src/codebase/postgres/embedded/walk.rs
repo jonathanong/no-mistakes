@@ -3,6 +3,7 @@ use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 mod assignments;
 mod binding_visits;
+mod caller_transactions;
 mod calls;
 mod closed_values;
 mod const_literals;

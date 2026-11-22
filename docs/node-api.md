@@ -952,8 +952,10 @@ contracts are `PostgresLockWrittenRowsOnlyOptions`,
 `PostgresLockWrittenRowsExecutorOption`.
 `PostgresLockWrittenRowsOnlyOptions` includes `executorNames`,
 `extraExecutorNames`, and `excludeExecutorNames` with the selection contract
-above. Per-check severity defaults to `advise`. Unresolved SQL or transaction
-membership follows the configured unanalyzable policy.
+above. `transactionExecutorTypeNames` selects imported transaction-only executor
+types for local write proofs on function parameters. Per-check severity defaults
+to `advise`. Unresolved SQL or transaction membership follows the configured
+unanalyzable policy.
 
 `PostgresLockWrittenRowsOnlyOptions.executorOptions` selects executor-routing
 properties with entries such as `{ name: "query" }` for `{ query: tx }`.

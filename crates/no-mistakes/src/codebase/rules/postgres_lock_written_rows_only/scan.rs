@@ -78,46 +78,19 @@ fn scan_file(
     let check_written = enabled(CHECKS[0]);
     let check_outside = enabled(CHECKS[3]);
     let grouped = statements::group(statements);
-    let unresolved: BTreeSet<_> = embedded
-        .calls
-        .iter()
-        .enumerate()
-        .filter(|(index, call)| {
-            (!call.executor_transaction_known || call.is_unanalyzable())
-                || grouped.get(index).is_none_or(|versions| {
-                    versions.len() != 1
-                        || versions.iter().any(|version| {
-                            (version.parse_failed && !version.lock_writes.ddl_recovery_complete)
-                                || version
-                                    .lock_writes
-                                    .writes
-                                    .iter()
-                                    .any(|write| write.relation.is_none())
-                                || version.lock_writes.transaction_boundary
-                                || version.lock_writes.relation_identity_changed
-                                || version
-                                    .setting_uses
-                                    .iter()
-                                    .any(|setting| setting.name == "search_path")
-                                || (!call.execution_unconditional
-                                    && !version.lock_writes.writes.is_empty())
-                        })
-                })
-        })
-        .filter_map(|(_, call)| call.transaction_id)
-        .collect();
+    let unresolved = statements::unresolved_transactions(&embedded.calls, &grouped);
     let exemptions = ddl::exemptions(&embedded.calls, &grouped, &unresolved, catalog);
     let trigger_disabled = settings::trigger_disabled_transactions(&embedded.calls, &grouped);
     let mut writes = writes::Writes::default();
     let mut trigger_relations: BTreeMap<u32, BTreeSet<String>> = BTreeMap::new();
     for (index, call) in embedded.calls.iter().enumerate() {
-        if let Some(id) = call.transaction_id {
+        if let Some(id) = call.transaction_id.or(call.caller_transaction_id) {
             if let Some(versions) = grouped.get(&index) {
                 if versions.len() == 1
                     && call.execution_unconditional
-                    && call.executor_transaction_known
+                    && (call.executor_transaction_known || call.execution_awaited)
                 {
-                    if !trigger_disabled.contains(&id) {
+                    if call.executor_transaction_known && !trigger_disabled.contains(&id) {
                         trigger_relations
                             .entry(id)
                             .or_default()
@@ -171,26 +144,37 @@ fn scan_file(
                 if !rows::enabled_for(call, check_written, check_outside) {
                     continue;
                 }
+                let self_contained = access.self_contained_locks.get(&lock_index);
                 if !call.executor_transaction_known {
-                    output.unresolved(&site, "transaction membership is unresolved; acquire the lock through a configured transaction factory");
+                    rows::check_membership(
+                        &mut output,
+                        &site,
+                        lock,
+                        access,
+                        lock_index,
+                        &writes,
+                        &unresolved,
+                    );
                 } else if let Some(id) = call.transaction_id {
-                    if unresolved.contains(&id) {
-                        output.unresolved(&site, "transaction SQL is unresolved; make every write statically visible before comparing the lock with its write set");
-                    } else if let Some(relation) = &lock.relation {
-                        if trigger_relations.get(&id).is_some_and(|relations| {
-                            relations.contains(triggers.canonical(relation))
-                        }) {
-                            continue;
-                        }
-                        let (candidates, ambiguous) = writes.for_relation(id, relation);
-                        rows::check(&mut output, &site, lock, candidates, relation, ambiguous);
-                    } else {
-                        output.unresolved(
-                            &site,
-                            "locked relation is unresolved; lock a single explicit base relation",
-                        );
+                    let unresolved = unresolved.contains(&id);
+                    if unresolved && rows::same_statement(call, lock, access, lock_index) {
+                        continue;
                     }
-                } else if !access.self_contained_locks.contains(&lock_index) {
+                    let written_by_trigger = lock.relation.as_deref().is_some_and(|relation| {
+                        trigger_relations.get(&id).is_some_and(|relations| {
+                            relations.contains(triggers.canonical(relation))
+                        })
+                    });
+                    rows::check_transaction(
+                        &mut output,
+                        &site,
+                        lock,
+                        &writes,
+                        id,
+                        unresolved,
+                        written_by_trigger,
+                    );
+                } else if self_contained.is_none() {
                     output.emit(&site, CHECKS[3], lock.relation.as_deref(), None, "row lock in autocommit is released immediately; move the lock and write into the same transaction");
                 }
             }

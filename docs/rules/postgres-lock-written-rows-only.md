@@ -299,6 +299,23 @@ invalidates its transaction proof. Case-block shadows apply only after the
 switch discriminant, which is evaluated in the outer environment. Namespace
 blocks own their `var` bindings, including declarations inside nested blocks;
 those bindings do not shadow an imported factory outside the namespace.
+The rule can prove a row lock locally when its own SQL statement writes the
+locked rows. For example, a CTE can select a column from rows with `FOR UPDATE`
+and a `DELETE ... USING` can match the target to that CTE on the same column.
+This proof can clear abstentions from unresolved transaction membership or other
+unresolved SQL in the transaction.
+
+Set `transactionExecutorTypeNames: [TransactionQuery]` to match an awaited
+lock and a later unconditional, awaited write on the same parameter in the
+same function. SQL parameter arrays and trusted SQL tag interpolations can
+prove matching keys when they refer to the same stable binding. This option
+also selects those names as executor types and defaults to an empty list. Use names
+imported directly from the configured executor module that exclusively represent
+transaction executors. The proof requires a simple, stable parameter with a
+direct type annotation. A pool-or-transaction union retains unresolved
+membership. A lock without a proven local write remains unanalyzable because
+the caller may perform the write after the function returns.
+
 With an import specifier, executor names
 default to `query`, `read`, and `write`.
 `executorNames` replaces that list; use `extraExecutorNames` to extend it instead.

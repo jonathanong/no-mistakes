@@ -122,14 +122,7 @@ impl ScopeVisitor<'_> {
             || self.pending_calls[snapshot.pending.unwrap()].call.clone(),
             |index| self.calls[index].clone(),
         );
-        let metadata = (
-            original.transaction_id,
-            original.transaction_line,
-            original.executor_transaction_known,
-            original.execution_unconditional,
-            original.bound_parameters.clone(),
-        );
-        let mut replacement = if opaque {
+        let replacement = if opaque {
             let mut dynamic = original;
             dynamic.kind = EmbeddedSqlKind::Dynamic;
             dynamic.sql_text = None;
@@ -138,15 +131,25 @@ impl ScopeVisitor<'_> {
             dynamic.recovered_placeholder_positions.clear();
             dynamic
         } else if let Some(binding) = changed {
-            resolve::executor::executor_call_from_binding(self, call, original.callee, &binding)
+            let mut replacement = resolve::executor::executor_call_from_binding(
+                self,
+                call,
+                original.callee,
+                &binding,
+            );
+            replacement.transaction_id = original.transaction_id;
+            replacement.transaction_line = original.transaction_line;
+            replacement.executor_transaction_known = original.executor_transaction_known;
+            replacement.execution_unconditional = original.execution_unconditional;
+            replacement.bound_parameters = original.bound_parameters;
+            replacement.caller_transaction_id = original.caller_transaction_id;
+            replacement.execution_awaited = original.execution_awaited;
+            replacement.execution_scope = original.execution_scope;
+            replacement.execution_range = original.execution_range;
+            replacement
         } else {
             original
         };
-        replacement.transaction_id = metadata.0;
-        replacement.transaction_line = metadata.1;
-        replacement.executor_transaction_known = metadata.2;
-        replacement.execution_unconditional = metadata.3;
-        replacement.bound_parameters = metadata.4;
         if let Some(index) = snapshot.confirmed {
             self.calls[index] = replacement;
         } else {

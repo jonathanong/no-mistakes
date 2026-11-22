@@ -39,6 +39,8 @@ export interface PostgresLockWrittenRowsOnlyOptions {
   excludeExecutorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
+  /** Imported types that represent exclusively transaction executors. Empty by default. */
+  transactionExecutorTypeNames?: string[];
   /** Static options properties overriding the transaction executor. Empty by default. */
   executorOptionProperties?: string[];
   /** Root-relative catalog for DDL relations; complete coverage enables trigger inference. */

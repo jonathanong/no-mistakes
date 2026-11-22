@@ -120,6 +120,7 @@ impl EmbeddedSqlCall {
                             helper_definition: self.helper_definition,
                             lock_helper: self.lock_helper.clone(),
                             transaction_id: self.transaction_id,
+                            caller_transaction_id: self.caller_transaction_id,
                             transaction_line: self.transaction_line,
                             executor_transaction_known: self.executor_transaction_known,
                             execution_unconditional: self.execution_unconditional,

@@ -109,6 +109,7 @@ impl<'a> ScopeVisitor<'a> {
         self.poison_literal_reference(id);
         if self.executor_options.track_transaction_helpers {
             self.poison_transaction_options(id);
+            self.note_caller_transaction_escape(id);
         }
         self.escape_builder_reference(id);
     }
