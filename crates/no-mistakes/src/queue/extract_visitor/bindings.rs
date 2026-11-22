@@ -24,13 +24,16 @@ impl<'a> QueueVisitor<'a> {
                 self.const_strings.insert(name.clone(), value);
             }
             if self.binding_is_const {
-                let value =
-                    crate::queue::extract_priority::const_u32(init, &self.facts.const_numbers);
+                let value = crate::queue::extract_priority::const_nonnegative_integer(
+                    init,
+                    &self.facts.const_numbers,
+                );
                 if let Some(value) = value {
                     self.facts.const_numbers.insert(name.clone(), value);
                 }
             }
         }
+        let declaration = decl.span.end.saturating_sub(1);
         if let Some(Expression::NewExpression(new_expr)) = &decl.init {
             if self.is_queue_constructor(&new_expr.callee) {
                 if let Some(queue_name) = new_expr
@@ -42,31 +45,56 @@ impl<'a> QueueVisitor<'a> {
                         .queue_bindings
                         .insert(name.clone(), queue_name.clone());
                     self.facts.queue_exports.insert(name.clone(), queue_name);
+                    self.queue_declarations.insert(name.clone(), declaration);
                     if extract_job_id::is_imported_callee(self, &new_expr.callee) {
                         extract_job_id::note_queue_binding(self, &decl.id);
                     }
                 }
             } else if self.is_flow_constructor(&new_expr.callee) {
                 self.flow_bindings.insert(name.clone());
+                self.queue_declarations.insert(name.clone(), declaration);
                 if extract_job_id::is_imported_callee(self, &new_expr.callee) {
                     extract_job_id::note_flow_binding(self, &decl.id);
                 }
             }
         }
         if let Some(Expression::CallExpression(call_expr)) = &decl.init {
-            if super::super::extract_factory::note_queue_binding(self, &name, call_expr)
-                && extract_job_id::is_imported_callee(self, &call_expr.callee)
+            if super::super::extract_factory::note_queue_binding(
+                self,
+                &name,
+                call_expr,
+                declaration,
+            ) && extract_job_id::is_imported_callee(self, &call_expr.callee)
             {
                 extract_job_id::note_queue_binding(self, &decl.id);
             }
         }
         if let Some(Expression::Identifier(id)) = &decl.init {
-            super::super::extract_factory::note_alias(self, &name, id.name.as_str());
+            self.note_alias(&name, id.name.as_str(), declaration);
             if extract_job_id::queue_identifier(self, id) {
                 extract_job_id::note_queue_binding(self, &decl.id);
             }
         }
         walk::walk_variable_declarator(self, decl);
+    }
+
+    fn note_alias(&mut self, name: &str, local: &str, declaration: u32) {
+        if let Some(queue_name) = self.facts.queue_bindings.get(local).cloned() {
+            self.facts
+                .queue_bindings
+                .insert(name.to_string(), queue_name.clone());
+            self.facts
+                .queue_exports
+                .insert(name.to_string(), queue_name);
+        } else if self.facts.string_imports.contains_key(local) {
+            self.facts
+                .reexports
+                .push((name.to_string(), local.to_string()));
+        } else {
+            return;
+        }
+        self.queue_declarations
+            .insert(name.to_string(), declaration);
     }
 }
 

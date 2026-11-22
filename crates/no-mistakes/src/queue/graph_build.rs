@@ -78,9 +78,11 @@ fn build_report_and_relationships(
     let (dedup_checks, dedup_diagnostics) =
         crate::queue::rate_limit::findings(root, &producers, &workers, facts);
     check.extend(dedup_checks);
+    let mut check = dedup_sorted(check);
     check.extend(crate::queue::priority_mix::mixed_priority_findings(
         root, &producers, facts,
     ));
+    check.sort();
     let mut report_diagnostics = diagnostics(root, facts, &producers, &workers);
     report_diagnostics.extend(dedup_diagnostics);
     let report = ProjectReport {
@@ -89,7 +91,7 @@ fn build_report_and_relationships(
         jobs: public_jobs(root, &relationships),
         edges: public_edges(root, &relationships),
         diagnostics: dedup_sorted(report_diagnostics),
-        check: dedup_sorted(check),
+        check,
     };
     (report, relationships)
 }

@@ -93,6 +93,7 @@ pub(crate) fn visit_switch<'a>(visitor: &mut QueueVisitor<'a>, stmt: &SwitchStat
         if let Some(test) = &case.test {
             visitor.visit_expression(test);
         }
+        crate::queue::number_scope::prepare_statements(visitor, &case.consequent);
         for statement in &case.consequent {
             visit_statement(visitor, statement);
         }

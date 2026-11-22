@@ -130,7 +130,7 @@ fn language_producer(
             raw_job: Some(job.to_string()),
             worker_index: None,
             self_dedup: false,
-            priority: crate::queue::extract_model::EnqueuePriority::Unprioritized,
+            priority: crate::queue::extract_model::EnqueuePriority::Dynamic,
         },
         queue: Some(queue_key(root, cluster)),
     }

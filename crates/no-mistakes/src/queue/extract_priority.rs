@@ -2,14 +2,17 @@ use crate::queue::extract_model::EnqueuePriority;
 use oxc_ast::ast::{Argument, Expression, ObjectExpression, ObjectPropertyKind, UnaryOperator};
 use std::collections::HashMap;
 
-pub(crate) fn const_u32(expr: &Expression<'_>, numbers: &HashMap<String, u32>) -> Option<u32> {
+pub(crate) fn const_nonnegative_integer(
+    expr: &Expression<'_>,
+    numbers: &HashMap<String, f64>,
+) -> Option<f64> {
     match expr.get_inner_expression() {
         Expression::NumericLiteral(literal) => nonnegative_int(literal.value),
         Expression::Identifier(identifier) => numbers.get(identifier.name.as_str()).copied(),
         Expression::UnaryExpression(unary) => match unary.operator {
-            UnaryOperator::UnaryPlus => const_u32(&unary.argument, numbers),
+            UnaryOperator::UnaryPlus => const_nonnegative_integer(&unary.argument, numbers),
             UnaryOperator::UnaryNegation => {
-                const_u32(&unary.argument, numbers).filter(|value| *value == 0)
+                const_nonnegative_integer(&unary.argument, numbers).filter(|value| *value == 0.0)
             }
             _ => None,
         },
@@ -20,7 +23,7 @@ pub(crate) fn const_u32(expr: &Expression<'_>, numbers: &HashMap<String, u32>) -
 pub(crate) fn from_call_argument(
     arguments: &[Argument<'_>],
     index: usize,
-    numbers: &HashMap<String, u32>,
+    numbers: &HashMap<String, f64>,
 ) -> EnqueuePriority {
     if arguments
         .iter()
@@ -34,7 +37,7 @@ pub(crate) fn from_call_argument(
 
 pub(crate) fn from_optional_argument(
     argument: Option<&Argument<'_>>,
-    numbers: &HashMap<String, u32>,
+    numbers: &HashMap<String, f64>,
 ) -> EnqueuePriority {
     match argument {
         None => EnqueuePriority::Unprioritized,
@@ -48,7 +51,7 @@ pub(crate) fn from_optional_argument(
 
 pub(crate) fn from_job_object(
     object: &ObjectExpression<'_>,
-    numbers: &HashMap<String, u32>,
+    numbers: &HashMap<String, f64>,
 ) -> EnqueuePriority {
     own_key(object, "opts", |value| {
         from_options_expression(value, numbers)
@@ -57,7 +60,7 @@ pub(crate) fn from_job_object(
 
 fn from_options_expression(
     expr: &Expression<'_>,
-    numbers: &HashMap<String, u32>,
+    numbers: &HashMap<String, f64>,
 ) -> EnqueuePriority {
     let Expression::ObjectExpression(object) = expr.get_inner_expression() else {
         return EnqueuePriority::Dynamic;
@@ -65,9 +68,9 @@ fn from_options_expression(
     own_key(object, "priority", |value| classify_value(value, numbers))
 }
 
-fn classify_value(expr: &Expression<'_>, numbers: &HashMap<String, u32>) -> EnqueuePriority {
-    match const_u32(expr, numbers) {
-        Some(0) => EnqueuePriority::Unprioritized,
+fn classify_value(expr: &Expression<'_>, numbers: &HashMap<String, f64>) -> EnqueuePriority {
+    match const_nonnegative_integer(expr, numbers) {
+        Some(0.0) => EnqueuePriority::Unprioritized,
         Some(value) => EnqueuePriority::Prioritized(value),
         None => EnqueuePriority::Dynamic,
     }
@@ -108,9 +111,6 @@ fn own_key(
     }
 }
 
-fn nonnegative_int(value: f64) -> Option<u32> {
-    if !value.is_finite() || value < 0.0 || value > u32::MAX as f64 || value.fract() != 0.0 {
-        return None;
-    }
-    Some(value as u32)
+fn nonnegative_int(value: f64) -> Option<f64> {
+    (value.is_finite() && value >= 0.0 && value.fract() == 0.0).then_some(value)
 }

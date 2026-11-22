@@ -26,6 +26,7 @@ pub(super) struct QueueVisitor<'a> {
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
     pub flow_bindings: HashSet<String>,
+    pub queue_declarations: HashMap<String, u32>,
     pub configured_factory_names: &'a [String],
     pub roles: &'a crate::config::v2::schema::QueueFactoryRoles,
     pub queue_name_index: HashMap<String, usize>,
@@ -158,6 +159,10 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
     }
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
         super::extract_factory::visit_class(self, class);
+    }
+
+    fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
+        super::extract_factory::visit_static_block(self, block);
     }
 
     fn visit_statement(&mut self, stmt: &Statement<'a>) {

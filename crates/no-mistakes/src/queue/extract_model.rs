@@ -25,10 +25,10 @@ pub(crate) struct ProducerSite {
     pub priority: EnqueuePriority,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum EnqueuePriority {
     Unprioritized,
-    Prioritized(u32),
+    Prioritized(f64),
     Dynamic,
 }
 
@@ -96,7 +96,7 @@ pub(crate) struct FileFacts {
     pub checks: Vec<LocalCheck>,
     pub job_id_sites: Vec<(JobIdQueue, LocalCheck)>,
     /// Same-file `const` integers seen while extracting this file.
-    pub const_numbers: HashMap<String, u32>,
+    pub const_numbers: HashMap<String, f64>,
     /// Bindings whose bulk enqueue list was not a closed list of object literals.
     pub opaque_priority_bindings: HashSet<String>,
     /// Resolved `(queue file, queue name)` pairs filled after binding resolution.

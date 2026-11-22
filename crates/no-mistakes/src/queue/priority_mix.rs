@@ -3,41 +3,44 @@ use crate::queue::extract_model::EnqueuePriority;
 use crate::queue::graph_model::{CheckFinding, InternalProducer};
 use crate::queue::source::relative_string;
 use crate::queue::types::QueueKey;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+#[path = "priority_flow.rs"]
+mod flow;
+
+use flow::{flow_queue_definitions, opaque_queues, resolved_flow_queue};
 
 pub(super) fn mixed_priority_findings(
     root: &Path,
     producers: &[InternalProducer],
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> Vec<CheckFinding> {
-    let opaque = opaque_queues(facts);
-    let mut groups: HashMap<&QueueKey, Vec<&InternalProducer>> = HashMap::new();
+    let flow_queues = flow_queue_definitions(facts, producers);
+    let opaque = opaque_queues(facts, &flow_queues);
+    let mut groups: HashMap<QueueKey, Vec<&InternalProducer>> = HashMap::new();
     for producer in producers {
         let Some(queue) = producer.queue.as_ref() else {
+            continue;
+        };
+        let definition = if facts.contains_key(&producer.site.file) {
+            flow_queues.get(queue.queue_name.as_str())
+        } else {
+            None
+        };
+        let Some(queue) = resolved_flow_queue(queue, definition) else {
             continue;
         };
         groups.entry(queue).or_default().push(producer);
     }
     let mut findings = Vec::new();
     for (queue, group) in groups {
-        if opaque.contains(queue) {
+        if opaque.contains(&queue) {
             continue;
         }
-        findings.extend(report_queue(root, queue, &group));
+        findings.extend(report_queue(root, &queue, &group));
     }
     findings
-}
-
-fn opaque_queues(facts: &HashMap<PathBuf, FileFacts>) -> HashSet<QueueKey> {
-    facts
-        .values()
-        .flat_map(|file| &file.opaque_priority_queues)
-        .map(|(queue_file, queue_name)| QueueKey {
-            queue_file: queue_file.clone(),
-            queue_name: queue_name.clone(),
-        })
-        .collect()
 }
 
 fn report_queue(root: &Path, queue: &QueueKey, group: &[&InternalProducer]) -> Vec<CheckFinding> {

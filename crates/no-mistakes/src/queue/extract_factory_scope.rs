@@ -1,16 +1,35 @@
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
     BlockStatement, CatchClause, Class, Expression, ForInStatement, ForOfStatement, ForStatement,
-    ForStatementInit, ForStatementLeft, FunctionBody, Statement, VariableDeclaration,
+    ForStatementInit, ForStatementLeft, FunctionBody, Statement, StaticBlock, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 
 pub(crate) fn visit_block<'a>(visitor: &mut QueueVisitor<'a>, block: &BlockStatement<'a>) {
+    visit_scoped_statements(visitor, &block.body, |visitor| {
+        walk::walk_block_statement(visitor, block);
+    });
+}
+
+pub(crate) fn visit_static_block<'a>(visitor: &mut QueueVisitor<'a>, block: &StaticBlock<'a>) {
     let numbers = visitor.facts.const_numbers.clone();
-    crate::queue::number_scope::prepare_statements(visitor, &block.body);
+    crate::queue::number_scope::hide_function_vars(visitor, &block.body);
+    visit_scoped_statements(visitor, &block.body, |visitor| {
+        walk::walk_static_block(visitor, block);
+    });
+    visitor.facts.const_numbers = numbers;
+}
+
+fn visit_scoped_statements<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    statements: &[Statement<'a>],
+    walk: impl FnOnce(&mut QueueVisitor<'a>),
+) {
+    let numbers = visitor.facts.const_numbers.clone();
+    crate::queue::number_scope::prepare_statements(visitor, statements);
     let frames = visitor.job_frames.clone();
-    mask_statements(visitor, &block.body);
-    walk::walk_block_statement(visitor, block);
+    mask_statements(visitor, statements);
+    walk(visitor);
     visitor.job_frames = frames;
     visitor.facts.const_numbers = numbers;
 }

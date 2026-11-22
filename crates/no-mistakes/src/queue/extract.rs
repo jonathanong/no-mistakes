@@ -88,6 +88,7 @@ fn extract_queue_facts<'a>(
         worker_classes: HashSet::new(),
         flow_classes: HashSet::new(),
         flow_bindings: HashSet::new(),
+        queue_declarations: HashMap::new(),
         configured_factory_names: factory_names,
         roles,
         queue_name_index: HashMap::new(),

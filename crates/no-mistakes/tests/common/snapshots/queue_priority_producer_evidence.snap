@@ -1,0 +1,178 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "producers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "enqueue.ts",
+          "job": "caseRush",
+          "kind": "mixed-priority",
+          "line": 67,
+          "message": "queue \"sameCase\" mixes priority 0 and priority > 0; this producer sets priority 7 while other producers enqueue with priority 0: enqueue.ts:71 (plain)",
+          "queueFile": "queues.ts",
+          "queueName": "sameCase",
+          "sourceLine": "const submit = () => sameCase.add(\"caseRush\", {}, { priority: CASE_LEVEL });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "classMethod",
+          "kind": "mixed-priority",
+          "line": 58,
+          "message": "queue \"staticBlock\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:54 (duringStatic, priority 6)",
+          "queueFile": "queues.ts",
+          "queueName": "staticBlock",
+          "sourceLine": "staticBlock.add(\"classMethod\", {}, { priority: LEVEL });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "direct",
+          "kind": "mixed-priority",
+          "line": 73,
+          "message": "queue \"crossFileFlow\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: flows.ts:4 (flowRush, priority 2)",
+          "queueFile": "queues.ts",
+          "queueName": "crossFileFlow",
+          "sourceLine": "crossFileFlow.add(\"direct\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "duringStatic",
+          "kind": "mixed-priority",
+          "line": 54,
+          "message": "queue \"staticBlock\" mixes priority 0 and priority > 0; this producer sets priority 6 while other producers enqueue with priority 0: enqueue.ts:58 (classMethod)",
+          "queueFile": "queues.ts",
+          "queueName": "staticBlock",
+          "sourceLine": "staticBlock.add(\"duringStatic\", {}, { priority: LEVEL });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "large",
+          "kind": "mixed-priority",
+          "line": 29,
+          "message": "queue \"numeric\" mixes priority 0 and priority > 0; this producer sets priority 4294967296 while other producers enqueue with priority 0: enqueue.ts:28 (plain)",
+          "queueFile": "queues.ts",
+          "queueName": "numeric",
+          "sourceLine": "numeric.add(\"large\", {}, { priority: LARGE });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "newName",
+          "kind": "mixed-priority",
+          "line": 36,
+          "message": "queue \"duplicate\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:37 (rush1, priority 1), enqueue.ts:38 (rush2, priority 1)",
+          "queueFile": "queues.ts",
+          "queueName": "duplicate",
+          "sourceLine": "duplicate.addBulk([{ name: \"oldName\", name: \"newName\", data: {} }]);"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 22,
+          "message": "queue \"sameLine\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:23 (rush1, priority 1), enqueue.ts:24 (rush2, priority 1), enqueue.ts:25 (rush3, priority 1)",
+          "queueFile": "queues.ts",
+          "queueName": "sameLine",
+          "sourceLine": "sameLine.add(\"plain\", {}); sameLine.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 22,
+          "message": "queue \"sameLine\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:23 (rush1, priority 1), enqueue.ts:24 (rush2, priority 1), enqueue.ts:25 (rush3, priority 1)",
+          "queueFile": "queues.ts",
+          "queueName": "sameLine",
+          "sourceLine": "sameLine.add(\"plain\", {}); sameLine.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 28,
+          "message": "queue \"numeric\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:29 (large, priority 4294967296)",
+          "queueFile": "queues.ts",
+          "queueName": "numeric",
+          "sourceLine": "numeric.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 31,
+          "message": "queue \"computed\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:32 (rush, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "computed",
+          "sourceLine": "computed.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 46,
+          "message": "queue \"shadowed\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:47 (rush, priority 5), enqueue.ts:48 (anotherRush, priority 5)",
+          "queueFile": "queues.ts",
+          "queueName": "shadowed",
+          "sourceLine": "shadowed.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 71,
+          "message": "queue \"sameCase\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:67 (caseRush, priority 7)",
+          "queueFile": "queues.ts",
+          "queueName": "sameCase",
+          "sourceLine": "sameCase.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "plain",
+          "kind": "mixed-priority",
+          "line": 81,
+          "message": "queue \"localQueue\" mixes priority 0 and priority > 0; this producer enqueues with priority 0 while other producers set a priority greater than 0: enqueue.ts:82 (rush, priority 5)",
+          "queueFile": "enqueue.ts",
+          "queueName": "localQueue",
+          "sourceLine": "localQueue.add(\"plain\", {});"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "rush",
+          "kind": "mixed-priority",
+          "line": 32,
+          "message": "queue \"computed\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: enqueue.ts:31 (plain)",
+          "queueFile": "queues.ts",
+          "queueName": "computed",
+          "sourceLine": "computed.add(\"rush\", {}, { [\"priority\"]: 5 });"
+        },
+        {
+          "file": "enqueue.ts",
+          "job": "rush",
+          "kind": "mixed-priority",
+          "line": 82,
+          "message": "queue \"localQueue\" mixes priority 0 and priority > 0; this producer sets priority 5 while other producers enqueue with priority 0: enqueue.ts:81 (plain)",
+          "queueFile": "enqueue.ts",
+          "queueName": "localQueue",
+          "sourceLine": "localQueue.add(\"rush\", {}, { priority: 5 });"
+        },
+        {
+          "file": "flows.ts",
+          "job": "flowRush",
+          "kind": "mixed-priority",
+          "line": 4,
+          "message": "queue \"crossFileFlow\" mixes priority 0 and priority > 0; this producer sets priority 2 while other producers enqueue with priority 0: enqueue.ts:73 (direct)",
+          "queueFile": "queues.ts",
+          "queueName": "crossFileFlow",
+          "sourceLine": "flow.add({ name: \"flowRush\", queueName: \"crossFileFlow\", opts: { priority: 2 } });"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

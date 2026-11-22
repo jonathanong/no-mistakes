@@ -83,8 +83,8 @@ job's `opts`, and the `options` argument of a configured enqueue factory. A
 missing priority, a literal `0`, and a same-file `const` whose value is `0`
 are priority 0. This classification also applies when the queue supplies
 a positive `defaultJobOptions.priority`, so the check can report a mix that
-the queue's defaults would avoid. A finite integer greater than 0, including a same-file `const`
-and unary `+`, is the other form. Parentheses and `as const` on that integer
+the queue's defaults would avoid. A finite integer greater than 0, including a
+same-file `const` and unary `+`, is the other form. Parentheses and `as const` on that integer
 stay static. A `const` later in the same scope still counts, including
 `for (const level = 9;;)`. A parameter, `let`, `var`, `for` header, or other
 binding with the same name hides the outer `const` for the scope that binding
@@ -98,12 +98,14 @@ The check abstains for the whole queue when any producer priority is not one
 of those two forms. That includes a trailing spread, a spread before the
 options argument, an `addBulk` argument that is not an array of object
 literals, an `addBulk` object item with no literal `name` (the whole queue
-abstains, including when the other producers are in another file), a computed
-key that may overwrite `priority` or `opts`, a non-integer, a negative
+abstains, including when the other producers are in another file), an unresolved
+computed key that may overwrite `priority` or `opts`, a non-integer, a negative
 number, a `let` or `var` binding, an imported number, and any other dynamic
-expression. Flow `children` are not producers, so this
-check does not read them. An unresolved queue is not grouped with a resolved
-one. Give every producer on the queue priority 0, or give every producer a
+expression. Language queue producers lack static priority evidence. A flow
+root with a known queue name joins direct producers when that queue has one
+definition file. Multiple definition files for that name make the check
+abstain. Flow `children` are outside this check. An unresolved queue is not
+grouped with a resolved one. Give every producer on the queue priority 0, or give every producer a
 priority greater than 0.
 
 ## Suppression

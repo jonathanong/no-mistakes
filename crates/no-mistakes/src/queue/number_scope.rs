@@ -1,5 +1,5 @@
 use crate::queue::extract_model::{EnqueuePriority, FileFacts};
-use crate::queue::extract_priority::const_u32;
+use crate::queue::extract_priority::const_nonnegative_integer;
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
     BindingPattern, Declaration, Expression, FormalParameters, Function, Program, Statement,
@@ -19,7 +19,7 @@ pub(super) fn prepare_statements(visitor: &mut QueueVisitor<'_>, statements: &[S
         changed = false;
         let mut later = Vec::new();
         for (name, init) in pending {
-            if let Some(value) = const_u32(init, &visitor.facts.const_numbers) {
+            if let Some(value) = const_nonnegative_integer(init, &visitor.facts.const_numbers) {
                 visitor.facts.const_numbers.insert(name, value);
                 changed = true;
             } else {

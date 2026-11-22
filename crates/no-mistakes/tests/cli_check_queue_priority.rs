@@ -69,3 +69,60 @@ fn queue_priority_scope_order_check_json_snapshot() {
     assert!(message.contains("inDiscriminant, priority 5"), "{message}");
     assert!(message.contains("afterSwitch, priority 5"), "{message}");
 }
+
+#[test]
+fn queue_priority_producer_evidence_check_json_snapshot() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/queue-ast-hop/priority-producer-evidence/fixture");
+    let reports = crate::check_json_snapshot::assert_saved_fixture_report(
+        "queue_priority_producer_evidence",
+        &[("producers", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let report = &reports["producers"]["report"];
+    let findings = report["queues"].as_array().unwrap();
+    assert_eq!(reports["producers"]["exitCode"], 1);
+    assert!(findings
+        .iter()
+        .all(|finding| finding["kind"] == "mixed-priority"));
+    let mut producers = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding["queueName"].as_str().unwrap(),
+                finding["job"].as_str().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    producers.sort_unstable();
+    assert_eq!(
+        producers,
+        [
+            ("computed", "plain"),
+            ("computed", "rush"),
+            ("crossFileFlow", "direct"),
+            ("crossFileFlow", "flowRush"),
+            ("duplicate", "newName"),
+            ("localQueue", "plain"),
+            ("localQueue", "rush"),
+            ("numeric", "large"),
+            ("numeric", "plain"),
+            ("sameCase", "caseRush"),
+            ("sameCase", "plain"),
+            ("sameLine", "plain"),
+            ("sameLine", "plain"),
+            ("shadowed", "plain"),
+            ("staticBlock", "classMethod"),
+            ("staticBlock", "duringStatic"),
+        ],
+    );
+    assert!(findings.iter().all(|finding| {
+        let queue_file = if finding["queueName"] == "localQueue" {
+            "enqueue.ts"
+        } else {
+            "queues.ts"
+        };
+        finding["queueFile"] == queue_file
+    }));
+}

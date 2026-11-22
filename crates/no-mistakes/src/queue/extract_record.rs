@@ -63,7 +63,7 @@ fn record_bulk(
     for element in &array.elements {
         if let oxc_ast::ast::ArrayExpressionElement::ObjectExpression(object) = element {
             let recorded = facts.producers.len();
-            record_bulk_items(binding, path, source, consts, facts, call, object);
+            record_bulk_item(binding, path, source, consts, facts, call, object);
             if facts.producers.len() == recorded {
                 opaque = true;
             }
@@ -123,7 +123,7 @@ pub(super) fn record_flow(
     });
 }
 
-fn record_bulk_items(
+fn record_bulk_item(
     binding: &str,
     path: &Path,
     source: &str,
@@ -133,25 +133,37 @@ fn record_bulk_items(
     object: &oxc_ast::ast::ObjectExpression<'_>,
 ) {
     let priority = crate::queue::extract_priority::from_job_object(object, &facts.const_numbers);
-    for property in &object.properties {
-        if let ObjectPropertyKind::ObjectProperty(property) = property {
-            if crate::ast::property_key_name(&property.key).as_deref() == Some("name") {
-                let (job, job_import) =
-                    literal_or_import(&property.value, consts, &facts.string_imports);
-                facts.producers.push(ProducerSite {
-                    file: path.to_path_buf(),
-                    line: line_number(source, call.span.start),
-                    binding: binding.to_string(),
-                    raw_job: Some(span(source, property.value.span())),
-                    job,
-                    job_import,
-                    worker_index: None,
-                    self_dedup: false,
-                    priority,
-                });
-            }
+    let Some(name) = effective_bulk_name(object) else {
+        return;
+    };
+    let (job, job_import) = literal_or_import(name, consts, &facts.string_imports);
+    facts.producers.push(ProducerSite {
+        file: path.to_path_buf(),
+        line: line_number(source, call.span.start),
+        binding: binding.to_string(),
+        raw_job: Some(span(source, name.span())),
+        job,
+        job_import,
+        worker_index: None,
+        self_dedup: false,
+        priority,
+    });
+}
+
+fn effective_bulk_name<'a, 'b>(
+    object: &'b oxc_ast::ast::ObjectExpression<'a>,
+) -> Option<&'b oxc_ast::ast::Expression<'a>> {
+    for property in object.properties.iter().rev() {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            return None;
+        };
+        match crate::ast::property_key_name(&property.key).as_deref() {
+            Some("name") => return Some(&property.value),
+            Some(_) => {}
+            None => return None,
         }
     }
+    None
 }
 
 fn span(source: &str, span: oxc_span::Span) -> String {
