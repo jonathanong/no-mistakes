@@ -22,46 +22,36 @@ pub(in crate::queue) struct QueueIndex<'a> {
 pub(in crate::queue) fn queue_index<'a>(
     program: &'a Program<'a>,
     roles: &crate::config::v2::schema::QueueFactoryRoles,
-    collect_bindings: bool,
 ) -> QueueIndex<'a> {
     let mut collector = Collector {
         index: Index::default(),
         roles,
-        object_bindings: collect_bindings.then(ObjectBindingCollector::default),
+        object_bindings: ObjectBindingCollector::default(),
     };
     collector.visit_program(program);
     QueueIndex {
         processor_spans: collector.index.processor_spans(),
-        object_bindings: collector
-            .object_bindings
-            .map(|collector| collector.bindings)
-            .unwrap_or_default(),
+        object_bindings: collector.object_bindings.bindings,
     }
 }
 
 struct Collector<'a, 'r> {
     index: Index,
     roles: &'r crate::config::v2::schema::QueueFactoryRoles,
-    object_bindings: Option<ObjectBindingCollector<'a>>,
+    object_bindings: ObjectBindingCollector<'a>,
 }
 
 impl<'a> Visit<'a> for Collector<'a, '_> {
     fn enter_node(&mut self, kind: AstKind<'a>) {
-        if let Some(bindings) = &mut self.object_bindings {
-            bindings.enter_node(kind);
-        }
+        self.object_bindings.enter_node(kind);
     }
 
     fn leave_node(&mut self, kind: AstKind<'a>) {
-        if let Some(bindings) = &mut self.object_bindings {
-            bindings.leave_node(kind);
-        }
+        self.object_bindings.leave_node(kind);
     }
 
     fn enter_scope(&mut self, flags: ScopeFlags, scope_id: &Cell<Option<ScopeId>>) {
-        if let Some(bindings) = &mut self.object_bindings {
-            bindings.enter_scope(scope_id);
-        }
+        self.object_bindings.enter_scope(scope_id);
         let next = self.index.scopes.len();
         self.index.scopes.push(FxHashMap::default());
         self.index.parents.push(self.index.scope);

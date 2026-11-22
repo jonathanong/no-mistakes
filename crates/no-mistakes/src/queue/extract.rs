@@ -66,7 +66,7 @@ fn extract_queue_facts<'a>(
     scoping: Option<&'a Scoping>,
 ) -> QueueVisitor<'a> {
     let scoped_scheduler = scoping.is_some() && needs_scheduler_scoping(source, roles);
-    let index = super::extract_factory::queue_index(program, roles, true);
+    let index = super::extract_factory::queue_index(program, roles);
     let scheduler_factories = if scoped_scheduler {
         super::extract_factory::scheduler_factories(program, roles)
     } else {

@@ -8,7 +8,8 @@ fn object_bindings_share_the_processor_pass_and_index_only_on_lookup() {
     let allocator = Allocator::default();
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/queue-ast-hop");
     for (file, visits, indexed) in [
-        ("invalid-job-id/fixture/configured-enqueue.ts", 1, true),
+        ("invalid-job-id/fixture/configured-enqueue.ts", 1, false),
+        ("priority-mix/fixture/queues.ts", 1, true),
         ("job-scheduler-template/fixture/plain.ts", 1, false),
         ("job-scheduler-template/fixture/orders.ts", 1, true),
     ] {
@@ -32,8 +33,7 @@ fn object_binding_lookups_reuse_the_named_group() {
     let source = std::fs::read_to_string(path).unwrap();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
     assert!(parsed.diagnostics.is_empty());
-    let index =
-        super::super::extract_factory::queue_index(&parsed.program, &Default::default(), true);
+    let index = super::super::extract_factory::queue_index(&parsed.program, &Default::default());
     let bindings = index.object_bindings;
     assert!(!bindings.was_indexed());
     assert_eq!(bindings.program_visits, 1);

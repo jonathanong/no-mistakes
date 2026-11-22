@@ -65,7 +65,7 @@ helper does not adopt that helper module's job names.
 
 The scheduler template check takes same-file binding declarations from the
 queue processor index, which already visits the file to resolve named
-callbacks. It groups those declarations by name on the first template lookup.
+callbacks. It groups those declarations by name on the first binding lookup.
 
 ## Mixed priority
 
