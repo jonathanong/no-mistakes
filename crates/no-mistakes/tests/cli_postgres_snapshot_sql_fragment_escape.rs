@@ -156,14 +156,16 @@ fn postgres_sql_fragment_escape_literal_positions_snapshot() {
     );
     let report = &reports["literal_positions"]["report"];
     let rules = report["rules"].as_array().expect("rules");
-    assert!(
-        rules.iter().any(|finding| {
-            finding["rule"] == "postgres-sql-fragment-escape"
-                && finding["file"] == "function-load.ts"
-                && finding["sourceLine"].is_string()
-        }),
-        "{rules:?}"
-    );
+    for file in ["function-load.ts", "created-require.mts"] {
+        assert!(
+            rules.iter().any(|finding| {
+                finding["rule"] == "postgres-sql-fragment-escape"
+                    && finding["file"] == file
+                    && finding["sourceLine"] == "parts.append(extra);"
+            }),
+            "{file}: {rules:?}"
+        );
+    }
     for finding in rules {
         if finding.get("file").and_then(|file| file.as_str()).is_some() {
             assert!(finding["sourceLine"].is_string(), "{finding}");

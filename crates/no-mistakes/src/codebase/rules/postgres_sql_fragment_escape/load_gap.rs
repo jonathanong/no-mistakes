@@ -94,12 +94,13 @@ fn binding_misses_static_load(ts: &TsFileFacts, source: &str, binding: &ValueBin
             let Some(window) = source.get(*start as usize..*end as usize) else {
                 return false;
             };
-            window_loads_module(window) && unrecorded_static_specifier(ts, window, *start)
+            window_loads_module(ts, window, *start)
+                && unrecorded_static_specifier(ts, window, *start)
         }
         _ => {
             let rest = source.get(binding.declared_at as usize..).unwrap_or("");
             let window = declarator_text(rest);
-            window_loads_module(window)
+            window_loads_module(ts, window, binding.declared_at)
                 && unrecorded_static_specifier(ts, window, binding.declared_at)
         }
     }

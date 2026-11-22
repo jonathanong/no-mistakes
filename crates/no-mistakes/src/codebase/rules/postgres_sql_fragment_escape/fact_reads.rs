@@ -37,7 +37,7 @@ pub(super) fn depth_zero_module_specifier(
     window: &str,
     window_start: u32,
 ) -> Option<String> {
-    if let Some((index, _)) = depth_zero_callee(window) {
+    if let Some((index, _)) = depth_zero_callee(ts, window, window_start) {
         let offset = window_start.checked_add(u32::try_from(index).ok()?)?;
         return specifier_at_offset(ts, offset).map(str::to_string);
     }
@@ -52,7 +52,7 @@ pub(super) fn unrecorded_static_specifier(
     window: &str,
     window_start: u32,
 ) -> bool {
-    let Some((index, rest)) = depth_zero_callee(window) else {
+    let Some((index, rest)) = depth_zero_callee(ts, window, window_start) else {
         return false;
     };
     let offset = window_start.saturating_add(u32::try_from(index).unwrap_or(0));
@@ -65,7 +65,14 @@ pub(super) fn unrecorded_static_specifier(
         .is_some_and(|after| super::text::whole_quoted(after).is_some())
 }
 
-fn depth_zero_callee(window: &str) -> Option<(usize, &str)> {
+fn depth_zero_callee<'a>(
+    ts: &TsFileFacts,
+    window: &'a str,
+    window_start: u32,
+) -> Option<(usize, &'a str)> {
+    let spans = &ts.namespaces.literal_import_spans;
+    let first = spans.partition_point(|(offset, _)| *offset < window_start);
+    let mut recorded = spans[first..].iter().peekable();
     let mut depth = 0i32;
     for (index, ch) in window.char_indices() {
         if ch == '(' {
@@ -80,7 +87,17 @@ fn depth_zero_callee(window: &str) -> Option<(usize, &str)> {
             continue;
         }
         let rest = &window[index..];
-        if !callee_at_start(rest, "import") && !callee_at_start(rest, "require") {
+        let offset = window_start as u64 + index as u64;
+        while recorded
+            .peek()
+            .is_some_and(|(start, _)| u64::from(*start) < offset)
+        {
+            recorded.next();
+        }
+        let has_fact = recorded
+            .peek()
+            .is_some_and(|(start, _)| u64::from(*start) == offset);
+        if !has_fact && !callee_at_start(rest, "import") && !callee_at_start(rest, "require") {
             continue;
         }
         let prev = window[..index].chars().next_back();
@@ -93,34 +110,35 @@ fn depth_zero_callee(window: &str) -> Option<(usize, &str)> {
 }
 
 pub(super) fn specifier_at_offset(ts: &TsFileFacts, offset: u32) -> Option<&str> {
-    ts.namespaces
-        .literal_import_spans
-        .iter()
-        .find(|(start, _)| *start == offset)
+    let spans = &ts.namespaces.literal_import_spans;
+    let index = spans.partition_point(|(start, _)| *start < offset);
+    spans
+        .get(index)
+        .filter(|(start, _)| *start == offset)
         .map(|(_, specifier)| specifier.as_str())
 }
 
-pub(super) fn window_loads_module(window: &str) -> bool {
+pub(super) fn window_loads_module(ts: &TsFileFacts, window: &str, start: u32) -> bool {
     let rhs = window.split_once('=').map(|(_, rhs)| rhs).unwrap_or(window);
-    direct_module_load(rhs.trim().trim_end_matches(';'))
+    let call = rhs.trim_start();
+    let call = call
+        .strip_prefix("await")
+        .filter(|rest| rest.starts_with(char::is_whitespace))
+        .map(str::trim_start)
+        .unwrap_or(call);
+    let offset = start.saturating_add(u32::try_from(window.len() - call.len()).unwrap_or(u32::MAX));
+    let recorded = specifier_at_offset(ts, offset).is_some();
+    direct_module_load(call.trim_end().trim_end_matches(';'), recorded)
 }
 
-pub(super) fn direct_module_load(text: &str) -> bool {
-    let text = text.trim();
-    let text = text
-        .strip_prefix("await")
-        .map(str::trim_start)
-        .unwrap_or(text);
-    let Some(rest) = text
-        .strip_prefix("import")
-        .or_else(|| text.strip_prefix("require"))
-    else {
-        return false;
+pub(super) fn direct_module_load(text: &str, recorded: bool) -> bool {
+    let rest = if recorded {
+        text.find('(').map(|index| &text[index..])
+    } else {
+        text.strip_prefix("import")
+            .or_else(|| text.strip_prefix("require"))
     };
-    if rest.starts_with(|ch: char| ch == '_' || ch.is_ascii_alphanumeric()) {
-        return false;
-    }
-    let Some(rest) = rest.trim_start().strip_prefix('(') else {
+    let Some(rest) = rest.and_then(|rest| rest.trim_start().strip_prefix('(')) else {
         return false;
     };
     close_call(rest).is_some_and(|after| after.trim().is_empty())

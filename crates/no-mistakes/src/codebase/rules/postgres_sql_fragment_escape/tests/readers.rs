@@ -114,15 +114,15 @@ fn literal_require_needs_a_recorded_specifier() {
 #[test]
 fn direct_module_load_requires_a_complete_call_to_the_exact_callee() {
     let [literal, helper, escaped] = module_load_windows();
-    assert!(fact_reads::direct_module_load(literal));
-    assert!(!fact_reads::direct_module_load(helper));
-    assert!(fact_reads::direct_module_load(escaped));
+    assert!(fact_reads::direct_module_load(literal, false));
+    assert!(!fact_reads::direct_module_load(helper, false));
+    assert!(fact_reads::direct_module_load(escaped, false));
 
     let (open_comment, _) = escaped.split_once("*/").expect("block comment");
-    assert!(!fact_reads::direct_module_load(open_comment));
+    assert!(!fact_reads::direct_module_load(open_comment, false));
 
     let open_call = escaped.strip_suffix(')').expect("closing parenthesis");
-    assert!(!fact_reads::direct_module_load(open_call));
+    assert!(!fact_reads::direct_module_load(open_call, false));
 }
 
 fn module_load_windows() -> [&'static str; 3] {

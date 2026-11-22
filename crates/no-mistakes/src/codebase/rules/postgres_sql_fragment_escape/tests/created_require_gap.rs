@@ -1,3 +1,4 @@
+use super::super::fact_reads::{depth_zero_module_specifier, window_loads_module};
 use super::super::load_gap::missing_static_load_gap;
 use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands;
 use crate::codebase::ts_source::facts::TsFileFacts;
@@ -64,4 +65,21 @@ fn a_dynamic_created_require_stays_a_static_load_gap() {
             .is_some_and(|message| message.contains("no recorded specifier")),
         "{gap:?}"
     );
+}
+
+#[test]
+fn recorded_loads_use_the_call_offset_for_named_callees() {
+    let ts = extracted(LOADS);
+    for (callee, specifier) in [
+        ("load(", "../widget.cjs"),
+        ("again.resolve(", "../item.cjs"),
+    ] {
+        let start = LOADS.find(callee).expect("fixture call");
+        let window = LOADS[start..].lines().next().expect("fixture line");
+        assert!(window_loads_module(&ts, window, start as u32));
+        assert_eq!(
+            depth_zero_module_specifier(&ts, window, start as u32).as_deref(),
+            Some(specifier)
+        );
+    }
 }

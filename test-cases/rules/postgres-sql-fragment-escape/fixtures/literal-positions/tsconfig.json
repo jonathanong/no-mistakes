@@ -9,5 +9,5 @@
       "@example/sql": ["./sql.ts"]
     }
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.mts"]
 }
