@@ -35,6 +35,8 @@ pub(crate) use lifecycle::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewReads};
 /// Statement facts for one SQL source (file or embedded call).
 #[derive(Clone, PartialEq, Eq, Default)]
 pub struct SqlStatementFileFacts {
+    pub(crate) lock_inventory: Vec<super::lock_inventory::InventoryLockFact>,
+    pub(crate) lock_inventory_unanalyzed: Vec<usize>,
     pub(crate) lock_writes: super::statements::lock_writes::LockWriteFacts,
     /// Request-local provenance for complete embedded alternatives; absent for legacy sources.
     #[doc(hidden)]

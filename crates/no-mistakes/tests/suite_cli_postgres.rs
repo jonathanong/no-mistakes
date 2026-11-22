@@ -31,3 +31,8 @@ mod cli_postgres_snapshot_issue_3651;
 
 #[path = "cli_postgres_snapshot_require_query_annotation_destructured.rs"]
 mod cli_postgres_snapshot_require_query_annotation_destructured;
+
+#[path = "cli_postgres_lock_inventory.rs"]
+mod cli_postgres_lock_inventory;
+#[path = "cli_postgres_lock_inventory_lifecycle.rs"]
+mod cli_postgres_lock_inventory_lifecycle;

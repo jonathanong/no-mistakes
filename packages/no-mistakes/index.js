@@ -24,6 +24,7 @@ const jsonApis = createJsonApis({
   parsePostgresSql: "parsePostgresSqlJson",
   extractExecutedPostgresSql: "extractExecutedPostgresSqlJson",
   generatePostgresCatalog: "generatePostgresCatalogJson",
+  postgresLockInventory: "postgresLockInventoryJson",
   analyzeProject: "analyzeProjectJson",
   callSites: "callSitesJson",
   check: "checkJson",
@@ -179,6 +180,7 @@ module.exports.testsTargets = planning.testsTargets;
 module.exports.testsWhy = planning.testsWhy;
 
 module.exports.generatePostgresCatalog = jsonApis.generatePostgresCatalog;
+module.exports.postgresLockInventory = jsonApis.postgresLockInventory;
 module.exports.parsePostgresSql = jsonApis.parsePostgresSql;
 
 module.exports.collectDiagnostics = (operation, ...args) =>

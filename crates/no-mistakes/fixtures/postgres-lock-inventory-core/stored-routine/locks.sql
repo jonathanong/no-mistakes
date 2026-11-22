@@ -1,0 +1,6 @@
+SELECT id FROM accounts FOR SHARE;
+CREATE FUNCTION lock_job() RETURNS integer
+LANGUAGE SQL
+AS $$
+    SELECT id FROM jobs LIMIT 1 FOR UPDATE;
+$$;

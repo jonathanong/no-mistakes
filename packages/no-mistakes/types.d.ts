@@ -39,6 +39,7 @@ export type * from "./postgres-bounded-statements-types";
 export type * from "./query-reached-per-item-types";
 export type * from "./vitest-project-policy-types";
 export type * from "./postgres-lock-written-rows-types";
+export type * from "./postgres-lock-inventory-types";
 export type * from "./postgres-column-check-constraints-types";
 
 export type * from "./postgres-grouping-not-aggregation-types";

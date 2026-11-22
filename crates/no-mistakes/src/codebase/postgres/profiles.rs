@@ -12,6 +12,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-idempotent-insert",
     "postgres-conflict-ordering",
     "postgres-lock-written-rows-only",
+    "postgres-lock-inventory",
     "postgres-lock-ordering",
     "postgres-required-predicates",
     "postgres-generated-column-predicates",
@@ -171,6 +172,7 @@ pub(crate) fn load_schema_catalogs(
         .collect()
 }
 
+mod lock_inventory;
 mod sql_include;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
@@ -178,6 +180,9 @@ use sql_include::sql_patterns;
 
 mod prepare;
 pub(crate) mod scans;
+#[doc(hidden)]
+pub use lock_inventory::configure_lock_inventory_helper_call_sites;
+pub(crate) use lock_inventory::helper_call_site_files;
 pub(crate) use prepare::prepare_rule_sql_facts;
 mod annotation_effort;
 mod collect;

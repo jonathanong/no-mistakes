@@ -22,6 +22,7 @@ const RUST_NAPI_BINDING_FILES = [
   "crates/no-mistakes/src/napi_api.rs",
   "crates/no-mistakes/src/napi_api/diagnostics.rs",
   "crates/no-mistakes/src/napi_api/postgres_source.rs",
+  "crates/no-mistakes/src/napi_api/postgres_bindings.rs",
   "crates/no-mistakes/src/napi_api/typescript_modules.rs",
   "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
   "crates/no-mistakes/src/napi_api/planning_bindings.rs",
@@ -62,6 +63,7 @@ function declarationExportNames() {
   const declarations = [
     "index.d.ts",
     "index-ci-infra.d.ts",
+    "index-postgres-lock-inventory.d.ts",
     "invocation-types.d.ts",
     "diagnostics-collector.d.ts",
     "executed-postgres-sql-types.d.ts",

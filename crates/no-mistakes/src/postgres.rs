@@ -1,3 +1,4 @@
+mod lock_inventory;
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use no_mistakes::postgres_catalog::{generate, PostgresCatalogCoverage, PostgresCatalogOptions};
@@ -12,6 +13,8 @@ pub struct PostgresArgs {
 }
 #[derive(Subcommand)]
 enum PostgresCommand {
+    /// Inventory PostgreSQL locks and maintain a shrinking baseline.
+    LockInventory(lock_inventory::LockInventoryArgs),
     /// Generate a schema catalog from a live PostgreSQL schema.
     Catalog {
         #[arg(long)]
@@ -32,14 +35,25 @@ enum PostgresCommand {
     },
 }
 pub fn run(args: PostgresArgs) -> Result<ExitCode> {
-    let PostgresCommand::Catalog {
-        connection_env,
-        schema,
-        coverage,
-        search_path_schemas,
-        current_database,
-        output,
-    } = args.command;
+    let (connection_env, schema, coverage, search_path_schemas, current_database, output) =
+        match args.command {
+            PostgresCommand::LockInventory(args) => return lock_inventory::run(args),
+            PostgresCommand::Catalog {
+                connection_env,
+                schema,
+                coverage,
+                search_path_schemas,
+                current_database,
+                output,
+            } => (
+                connection_env,
+                schema,
+                coverage,
+                search_path_schemas,
+                current_database,
+                output,
+            ),
+        };
     let catalog = generate(&PostgresCatalogOptions {
         connection_env,
         schema,

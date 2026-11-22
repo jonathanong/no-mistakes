@@ -44,6 +44,10 @@ export function collectDiagnostics(
   options: Api.WithInvocationOptions<Api.PostgresCatalogOptions>,
 ): Promise<DiagnosticsResult<Api.WithInvocationResult<Api.PostgresCatalog>>>;
 export function collectDiagnostics(
+  operation: "postgresLockInventory",
+  options: Api.WithInvocationOptions<Api.PostgresLockInventoryOptions>,
+): Promise<DiagnosticsResult<Api.WithInvocationResult<Api.LockInventoryReport>>>;
+export function collectDiagnostics(
   operation: "resolveConfig",
   options: Api.WithInvocationOptions<Api.ConfigResolveOptions & { view: "declared" }>,
 ): Promise<DiagnosticsResult<Api.WithInvocationResult<Api.DeclaredConfig>>>;

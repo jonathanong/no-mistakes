@@ -383,3 +383,19 @@ fn vite_optimize_deps_nested_imports_documents_scope_options() {
         assert!(body.contains("ignorePackages"), "{path}");
     }
 }
+
+#[test]
+fn postgres_lock_inventory_has_rule_command_and_node_documentation() {
+    let root = repo_root();
+    let rule = "postgres-lock-inventory";
+    assert!(rule_ids_from_source(&root).contains(rule));
+    for path in [
+        "docs/rules/postgres-lock-inventory.md",
+        "docs/cli/postgres-lock-inventory.md",
+    ] {
+        let page = read(&root.join(path));
+        assert!(page.contains("baseline"), "{path}");
+        assert!(page.contains("unresolved"), "{path}");
+    }
+    assert!(read(&root.join("docs/node-api.md")).contains("postgresLockInventory"));
+}

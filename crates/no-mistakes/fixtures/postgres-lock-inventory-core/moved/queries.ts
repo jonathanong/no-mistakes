@@ -1,0 +1,10 @@
+import { query } from "@example/db";
+
+void query(`
+  SELECT id FROM jobs FOR /* wait */ SHARE
+`);
+
+declare function reserveJob(id: number): void;
+reserveJob(1); reserveJob(/* id */ 2);
+declare function reservejob(id: number): void;
+reservejob(3);

@@ -20,7 +20,7 @@ pub(super) fn prepare_call_site_facts(
         config,
         crate::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
     )?;
-    let needs_call_sites = !call_site_files.is_empty();
+    let mut needs_call_sites = !call_site_files.is_empty();
     let mut plan = CheckFactPlan {
         production_import_paths:
             super::production_dependency_declarations::required_import_fact_files(
@@ -34,6 +34,13 @@ pub(super) fn prepare_call_site_facts(
     plan.lint_suppression_paths =
         crate::codebase::rules::forbidden_lint_suppressions::required_files(root, config, files)?;
     plan.require_call_site_paths(&call_site_files);
+    let lock_inventory_helpers = crate::codebase::postgres::helper_call_site_files(
+        root,
+        config,
+        &sources.inventory().target_file_paths(),
+    )?;
+    plan.require_call_site_paths(&lock_inventory_helpers);
+    needs_call_sites |= !lock_inventory_helpers.is_empty();
     super::required_companion_imports::configure_fact_plan(
         root, config, files, sources, &mut plan,
     )?;
@@ -55,6 +62,7 @@ pub(super) fn prepare_call_site_facts(
         return Ok(None);
     }
     let mut files = call_site_files;
+    files.extend(lock_inventory_helpers);
     files.extend(plan.lint_suppression_paths.iter().cloned());
     files.extend(plan.production_import_paths.iter().cloned());
     if plan.postgres_schema || plan.postgres_dml {
