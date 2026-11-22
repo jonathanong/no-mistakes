@@ -83,14 +83,14 @@ pub(super) fn demands_by_path(
             }
         }
         if !supplemental_vitest.is_empty() {
-            let supplemental_plan = CheckFactPlan {
+            let supplemental_plan = Arc::new(CheckFactPlan {
                 vitest_default_exclude_paths: request.plan.vitest_default_exclude_paths.clone(),
                 ..CheckFactPlan::default()
-            };
+            });
             plans.extend(
                 supplemental_vitest
                     .into_iter()
-                    .map(|path| (path, supplemental_plan.clone())),
+                    .map(|path| (path, Arc::clone(&supplemental_plan))),
             );
         }
         for (path, plan) in plans {

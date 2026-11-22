@@ -34,10 +34,11 @@ fn collect_check_facts_inner(
     sources: Arc<crate::codebase::ts_source::SourceStore>,
     ts: FileIdMap<CheckFileFacts>,
 ) -> CheckFactMap {
-    let mut ts = if ts.is_empty() {
-        FileIdMap::with_inventory(Arc::clone(sources.inventory()))
-    } else {
+    let precollected = !ts.is_empty();
+    let mut ts = if precollected {
         ts
+    } else {
+        FileIdMap::with_inventory(Arc::clone(sources.inventory()))
     };
     let (files, graph_files, graph_files_complete) = file_scope;
     let graph_only_files = graph_only_files(&files, &graph_files);
@@ -46,8 +47,21 @@ fn collect_check_facts_inner(
     } else {
         plan.collected_ts_plan()
     };
+    let mut files_discovered = files.len() + graph_only_files.len();
+    if precollected && !plan.vitest_default_exclude_paths.is_empty() {
+        let scoped = files
+            .iter()
+            .chain(&graph_only_files)
+            .map(PathBuf::as_path)
+            .collect::<crate::fx::FxHashSet<_>>();
+        files_discovered += plan
+            .vitest_default_exclude_paths
+            .iter()
+            .filter(|path| ts.contains_key(path) && !scoped.contains(path.as_path()))
+            .count();
+    }
     let stats = CheckFactStats {
-        files_discovered: files.len() + graph_only_files.len(),
+        files_discovered,
         ..CheckFactStats::default()
     };
     let playwright = playwright.as_ref();
