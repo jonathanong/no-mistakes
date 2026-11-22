@@ -40,6 +40,7 @@ fn invalid_job_id_findings_match_snapshot() {
     let rows = invalid_rows(&root);
     let sources: Vec<String> = rows
         .iter()
+        .filter(|row| row["file"] == "enqueue.ts")
         .map(|row| row["sourceLine"].as_str().unwrap().to_string())
         .collect();
     for absent in [
@@ -115,4 +116,37 @@ fn invalid_job_id_respects_queues_check_directives() {
     assert!(!lines.iter().any(|line| line.contains("skip:me")));
     assert!(lines.iter().any(|line| line.contains("bare:id")));
     assert!(lines.iter().any(|line| line.contains(r#"jobId: "user:1""#)));
+}
+
+#[test]
+fn invalid_job_id_uses_the_lexical_const_and_resolved_queue_receiver() {
+    let root = fixture("invalid-job-id");
+    let rows = invalid_rows(&root);
+    let scoped = rows
+        .iter()
+        .filter(|row| row["file"] == "scoped-enqueue.ts")
+        .map(|row| {
+            (
+                row["job"].as_str().unwrap(),
+                row["message"].as_str().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    for absent in [
+        "parameter",
+        "mutable",
+        "unrelated-add",
+        "unrelated-bulk",
+        "unrelated-scheduler",
+        "unrelated-shadow",
+    ] {
+        assert!(!scoped.iter().any(|(job, _)| *job == absent), "{scoped:?}");
+    }
+    assert_eq!(scoped.len(), 3, "{scoped:?}");
+    assert_eq!(scoped[0].0, "inner");
+    assert!(scoped[0].1.contains("'{' or '}'"), "{scoped:?}");
+    assert_eq!(scoped[1].0, "outer");
+    assert!(scoped[1].1.contains("':'"), "{scoped:?}");
+    assert_eq!(scoped[2].0, "late");
+    assert!(scoped[2].1.contains("':'"), "{scoped:?}");
 }

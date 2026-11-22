@@ -124,7 +124,10 @@ impl QueueVisitor<'_> {
 
     /// `ns.q.add`: the root is an import, so the member call is a producer even
     /// when the queue behind that member does not resolve.
-    pub(super) fn imported_member_binding(&self, object: &Expression<'_>) -> Option<String> {
+    pub(in crate::queue) fn imported_member_binding(
+        &self,
+        object: &Expression<'_>,
+    ) -> Option<String> {
         let Expression::StaticMemberExpression(member) = object else {
             return None;
         };

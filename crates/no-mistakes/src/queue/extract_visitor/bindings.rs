@@ -26,16 +26,23 @@ impl<'a> QueueVisitor<'a> {
                         .queue_bindings
                         .insert(name.clone(), queue_name.clone());
                     self.facts.queue_exports.insert(name.clone(), queue_name);
+                    super::super::extract_job_id::note_queue_binding(self, &decl.id);
                 }
             } else if self.is_flow_constructor(&new_expr.callee) {
                 self.flow_bindings.insert(name.clone());
+                super::super::extract_job_id::note_flow_binding(self, &decl.id);
             }
         }
         if let Some(Expression::CallExpression(call_expr)) = &decl.init {
-            super::super::extract_factory::note_queue_binding(self, &name, call_expr);
+            if super::super::extract_factory::note_queue_binding(self, &name, call_expr) {
+                super::super::extract_job_id::note_queue_binding(self, &decl.id);
+            }
         }
         if let Some(Expression::Identifier(id)) = &decl.init {
             super::super::extract_factory::note_alias(self, &name, id.name.as_str());
+            if super::super::extract_job_id::queue_identifier(self, id) {
+                super::super::extract_job_id::note_queue_binding(self, &decl.id);
+            }
         }
         walk::walk_variable_declarator(self, decl);
     }

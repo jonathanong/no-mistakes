@@ -1,181 +1,190 @@
-use crate::ast::{js_literal, property_key_name, template_quasi_text};
-use crate::queue::extract_helpers::literal_expr;
-use crate::queue::extract_model::{FileFacts, LocalCheck};
-use crate::queue::source::line_number;
+use crate::queue::extract_helpers::static_string;
+use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{
-    Argument, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
-    ObjectPropertyKind,
+    Argument, BindingPattern, CallExpression, Expression, IdentifierReference, VariableDeclarator,
 };
-use std::collections::HashMap;
+use oxc_syntax::symbol::SymbolId;
 
 #[path = "extract_job_id_message.rs"]
 mod message;
+#[path = "extract_job_id_reader.rs"]
+mod reader;
+use reader::{Evidence, Reader};
 
 const KIND: &str = "invalid-job-id";
 
-pub(super) fn note_options_job_id(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
-    job: Option<String>,
-    options: &Expression<'_>,
-) {
-    let Expression::ObjectExpression(object) = options.get_inner_expression() else {
+pub(super) fn note_const(visitor: &mut QueueVisitor<'_>, decl: &VariableDeclarator<'_>) {
+    let (Some(scoping), BindingPattern::BindingIdentifier(id), Some(init)) =
+        (visitor.scoping, &decl.id, &decl.init)
+    else {
         return;
     };
-    note_direct_job_id(source, consts, facts, job, object);
-}
-
-pub(super) fn note_bulk_item(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
-    object: &ObjectExpression<'_>,
-) {
-    note_node(source, consts, facts, object, false);
-}
-
-pub(super) fn note_flow_node(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
-    expr: &Expression<'_>,
-) {
-    let Expression::ObjectExpression(object) = expr.get_inner_expression() else {
-        return;
-    };
-    note_node(source, consts, facts, object, true);
-}
-
-pub(super) fn note_scheduler(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
-    call: &CallExpression<'_>,
-) {
-    let Expression::StaticMemberExpression(member) = &call.callee else {
-        return;
-    };
-    if member.property.name != "upsertJobScheduler" {
-        return;
-    }
-    let Some(template) = call.arguments.get(2).and_then(Argument::as_expression) else {
-        return;
-    };
-    note_flow_node(source, consts, facts, template);
-}
-
-fn note_node(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
-    object: &ObjectExpression<'_>,
-    walk_children: bool,
-) {
-    let job = property_literal(object, consts, "name");
-    note_direct_job_id(source, consts, facts, job.clone(), object);
-    if let Some(opts) = property_expr(object, "opts") {
-        note_options_job_id(source, consts, facts, job, opts);
-    }
-    if !walk_children {
-        return;
-    }
-    let Some(children) = property_expr(object, "children") else {
-        return;
-    };
-    let Expression::ArrayExpression(array) = children.get_inner_expression() else {
-        return;
-    };
-    for element in &array.elements {
-        if let ArrayExpressionElement::ObjectExpression(child) = element {
-            note_node(source, consts, facts, child, true);
+    if let Some(symbol) = id.symbol_id.get() {
+        if scoping.symbol_flags(symbol).is_const_variable() {
+            if let Some(value) = static_string(init.get_inner_expression()) {
+                visitor.job_id_consts.insert(symbol, value);
+            }
         }
     }
 }
 
-fn note_direct_job_id(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
-    job: Option<String>,
-    object: &ObjectExpression<'_>,
-) {
-    for (key, value) in properties(object) {
-        if property_key_name(key).as_deref() == Some("jobId") {
-            note_job_id_expr(source, consts, facts, job.clone(), value);
-        }
+pub(super) fn note_flow_binding(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
+    if let Some(symbol) = stable_binding(visitor, pattern) {
+        visitor.job_id_flows.insert(symbol);
     }
 }
 
-fn properties<'a>(
-    object: &'a ObjectExpression<'a>,
-) -> impl Iterator<Item = (&'a oxc_ast::ast::PropertyKey<'a>, &'a Expression<'a>)> {
-    object.properties.iter().filter_map(|property| {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return None;
-        };
-        Some((&property.key, &property.value))
+pub(super) fn note_queue_binding(visitor: &mut QueueVisitor<'_>, pattern: &BindingPattern<'_>) {
+    if let Some(symbol) = stable_binding(visitor, pattern) {
+        visitor.job_id_queues.insert(symbol);
+    }
+}
+
+fn stable_binding(visitor: &QueueVisitor<'_>, pattern: &BindingPattern<'_>) -> Option<SymbolId> {
+    let BindingPattern::BindingIdentifier(id) = pattern else {
+        return None;
+    };
+    let symbol = id.symbol_id.get()?;
+    (!visitor.scoping?.symbol_is_mutated(symbol)).then_some(symbol)
+}
+
+fn referenced_symbol(visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> Option<SymbolId> {
+    visitor
+        .scoping?
+        .get_reference(id.reference_id.get()?)
+        .symbol_id()
+}
+
+fn imported(visitor: &QueueVisitor<'_>, symbol: SymbolId) -> bool {
+    visitor.scoping.is_some_and(|scoping| {
+        let flags = scoping.symbol_flags(symbol);
+        flags.is_import() && !flags.is_type_import()
     })
 }
 
-fn property_expr<'a>(object: &'a ObjectExpression<'a>, name: &str) -> Option<&'a Expression<'a>> {
-    properties(object)
-        .find_map(|(key, value)| (property_key_name(key).as_deref() == Some(name)).then_some(value))
+pub(super) fn queue_identifier(visitor: &QueueVisitor<'_>, id: &IdentifierReference<'_>) -> bool {
+    referenced_symbol(visitor, id)
+        .is_some_and(|symbol| visitor.job_id_queues.contains(&symbol) || imported(visitor, symbol))
 }
 
-fn property_literal(
-    object: &ObjectExpression<'_>,
-    consts: &HashMap<String, String>,
-    name: &str,
-) -> Option<String> {
-    property_expr(object, name).and_then(|expr| literal_expr(expr, consts))
+enum Receiver {
+    Queue {
+        binding: String,
+        symbol: SymbolId,
+        namespace: bool,
+    },
+    Flow(SymbolId),
 }
 
-fn note_job_id_expr(
-    source: &str,
-    consts: &HashMap<String, String>,
-    facts: &mut FileFacts,
+pub(super) struct PendingCheck {
+    receiver: Receiver,
+    evidence: Vec<Evidence>,
+}
+
+fn queue_receiver(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> Option<Receiver> {
+    let (binding, id, namespace) = match expr.get_inner_expression() {
+        Expression::Identifier(id) => (id.name.to_string(), &**id, false),
+        Expression::StaticMemberExpression(member) => {
+            let Expression::Identifier(id) = &member.object else {
+                return None;
+            };
+            (visitor.imported_member_binding(expr)?, &**id, true)
+        }
+        _ => return None,
+    };
+    Some(Receiver::Queue {
+        binding,
+        symbol: referenced_symbol(visitor, id)?,
+        namespace,
+    })
+}
+
+pub(super) fn note_factory_options(
+    visitor: &mut QueueVisitor<'_>,
+    receiver: &Expression<'_>,
     job: Option<String>,
-    expr: &Expression<'_>,
+    options: &Expression<'_>,
 ) {
-    match expr.get_inner_expression() {
-        Expression::StringLiteral(literal) => {
-            push_invalid(
-                source,
-                facts,
-                job,
-                literal.span.start,
-                js_literal(literal).as_ref(),
-            );
-        }
-        Expression::TemplateLiteral(template) => {
-            for quasi in &template.quasis {
-                push_invalid(
-                    source,
-                    facts,
-                    job.clone(),
-                    quasi.span.start,
-                    template_quasi_text(quasi).as_ref(),
-                );
+    let Some(receiver) = queue_receiver(visitor, receiver) else {
+        return;
+    };
+    let mut reader = Reader::new(visitor);
+    reader.options(job, options);
+    let evidence = reader.evidence;
+    publish(visitor, receiver, evidence);
+}
+
+pub(super) fn note_call(visitor: &mut QueueVisitor<'_>, call: &CallExpression<'_>) {
+    let Expression::StaticMemberExpression(member) = &call.callee else {
+        return;
+    };
+    let method = member.property.name.as_str();
+    if !matches!(method, "add" | "addBulk" | "upsertJobScheduler") {
+        return;
+    }
+    let Some(
+        receiver @ Receiver::Queue {
+            symbol, namespace, ..
+        },
+    ) = queue_receiver(visitor, &member.object)
+    else {
+        return;
+    };
+    if method == "add" && !namespace {
+        let mut reader = Reader::new(visitor);
+        reader.node_arg(call.arguments.first());
+        let evidence = reader.evidence;
+        publish(visitor, Receiver::Flow(symbol), evidence);
+    }
+    let mut reader = Reader::new(visitor);
+    match method {
+        "add" => {
+            let job = call
+                .arguments
+                .first()
+                .and_then(|arg| visitor.literal_arg(arg));
+            if let Some(expr) = call.arguments.get(2).and_then(Argument::as_expression) {
+                reader.options(job, expr);
             }
         }
-        Expression::Identifier(id) => {
-            if let Some(value) = consts.get(id.name.as_str()) {
-                push_invalid(source, facts, job, id.span.start, value);
-            }
-        }
-        _ => {}
+        "addBulk" => reader.bulk(call.arguments.first()),
+        _ => reader.node_arg(call.arguments.get(2)),
+    }
+    let evidence = reader.evidence;
+    publish(visitor, receiver, evidence);
+}
+
+fn publish(visitor: &mut QueueVisitor<'_>, receiver: Receiver, evidence: Vec<Evidence>) {
+    if !evidence.is_empty() {
+        visitor
+            .job_id_pending
+            .push(PendingCheck { receiver, evidence });
     }
 }
 
-fn push_invalid(source: &str, facts: &mut FileFacts, job: Option<String>, start: u32, text: &str) {
-    let Some(message) = message::invalid_message(text) else {
-        return;
-    };
-    facts.checks.push(LocalCheck {
-        line: line_number(source, start),
-        kind: KIND.to_string(),
-        job,
-        message,
-    });
+pub(super) fn finish(visitor: &mut QueueVisitor<'_>) {
+    for pending in std::mem::take(&mut visitor.job_id_pending) {
+        let binding = match pending.receiver {
+            Receiver::Queue {
+                binding,
+                symbol,
+                namespace,
+            } if imported(visitor, symbol)
+                || (!namespace && visitor.job_id_queues.contains(&symbol)) =>
+            {
+                Some(binding)
+            }
+            Receiver::Flow(symbol) if visitor.job_id_flows.contains(&symbol) => None,
+            _ => continue,
+        };
+        for evidence in pending.evidence {
+            if let Some(check) = evidence.finding(&visitor.job_id_consts) {
+                if let Some(binding) = &binding {
+                    visitor.facts.job_id_sites.push((binding.clone(), check));
+                } else {
+                    visitor.facts.checks.push(check);
+                }
+            }
+        }
+    }
 }

@@ -79,4 +79,5 @@ pub(crate) struct FileFacts {
     /// A job-name use outside a literal comparison or switch label keeps imported processors open.
     pub referenced_jobs_dynamic: bool,
     pub checks: Vec<LocalCheck>,
+    pub job_id_sites: Vec<(String, LocalCheck)>,
 }

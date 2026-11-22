@@ -42,15 +42,15 @@ pub(super) fn note_queue_binding(
     visitor: &mut QueueVisitor<'_>,
     name: &str,
     call: &CallExpression<'_>,
-) {
+) -> bool {
     let Expression::Identifier(id) = &call.callee else {
-        return;
+        return false;
     };
     let Some(&index) = visitor.queue_name_index.get(id.name.as_str()) else {
-        return;
+        return false;
     };
     let Some(arg) = call.arguments.get(index) else {
-        return;
+        return false;
     };
     if let Some(queue_name) = visitor.literal_arg(arg) {
         visitor
@@ -61,16 +61,18 @@ pub(super) fn note_queue_binding(
             .facts
             .queue_exports
             .insert(name.to_string(), queue_name);
-        return;
+        return true;
     }
-    if let Some(imported) = identifier_arg(arg) {
-        if visitor.facts.string_imports.contains_key(&imported) {
-            visitor
-                .facts
-                .pending_queue_bindings
-                .insert(name.to_string(), imported);
-        }
-    }
+    let Some(imported) =
+        identifier_arg(arg).filter(|name| visitor.facts.string_imports.contains_key(name))
+    else {
+        return false;
+    };
+    visitor
+        .facts
+        .pending_queue_bindings
+        .insert(name.to_string(), imported);
+    true
 }
 pub(super) fn note_alias(visitor: &mut QueueVisitor<'_>, name: &str, local: &str) {
     if let Some(queue_name) = visitor.facts.queue_bindings.get(local).cloned() {

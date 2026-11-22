@@ -4,6 +4,13 @@ expression: pretty
 ---
 [
   {
+    "file": "configured-enqueue.ts",
+    "job": "configured",
+    "line": 4,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "enqueueConfigured(jobs, \"configured\", { jobId: \"configured:1\" });"
+  },
+  {
     "file": "enqueue.ts",
     "job": "place",
     "line": 21,
@@ -114,6 +121,27 @@ expression: pretty
     "line": 68,
     "message": "custom jobId contains '{' or '}'; use '-' or '_' as the separator",
     "sourceLine": "opts: { jobId: \"item{child}\" },"
+  },
+  {
+    "file": "scoped-enqueue.ts",
+    "job": "inner",
+    "line": 9,
+    "message": "custom jobId contains '{' or '}'; use '-' or '_' as the separator",
+    "sourceLine": "jobs.add(\"inner\", {}, { jobId: id });"
+  },
+  {
+    "file": "scoped-enqueue.ts",
+    "job": "outer",
+    "line": 22,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "jobs.add(\"outer\", {}, { jobId: id });"
+  },
+  {
+    "file": "scoped-enqueue.ts",
+    "job": "late",
+    "line": 39,
+    "message": "custom jobId contains ':'; use '-' or '_' as the separator",
+    "sourceLine": "lateQueue.add(\"late\", {}, { jobId: lateId });"
   },
   {
     "file": "suppressed.ts",

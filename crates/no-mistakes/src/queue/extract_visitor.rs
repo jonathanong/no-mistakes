@@ -17,6 +17,10 @@ pub(super) struct QueueVisitor<'a> {
     pub source: &'a str,
     pub facts: FileFacts,
     pub const_strings: HashMap<String, String>,
+    pub job_id_consts: crate::fx::FxHashMap<oxc_syntax::symbol::SymbolId, String>,
+    pub job_id_flows: crate::fx::FxHashSet<oxc_syntax::symbol::SymbolId>,
+    pub job_id_queues: crate::fx::FxHashSet<oxc_syntax::symbol::SymbolId>,
+    pub job_id_pending: Vec<super::extract_job_id::PendingCheck>,
     pub queue_classes: HashSet<String>,
     pub worker_classes: HashSet<String>,
     pub flow_classes: HashSet<String>,
@@ -55,6 +59,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
 
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
         self.note_wait_variable(decl);
+        super::extract_job_id::note_const(self, decl);
         self.note_variable(decl);
     }
 
@@ -65,12 +70,7 @@ impl<'a> Visit<'a> for QueueVisitor<'a> {
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.note_wait_call(call);
-        super::extract_job_id::note_scheduler(
-            self.source,
-            &self.const_strings,
-            &mut self.facts,
-            call,
-        );
+        super::extract_job_id::note_call(self, call);
         self.note_enqueue_call(call);
         super::extract_factory::note_factory_call(self, call);
         walk::walk_call_expression(self, call);

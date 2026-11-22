@@ -1,8 +1,10 @@
-use super::{build_filter, build_prepared_report, build_report, queue_definitions, FileFacts};
-use super::{queue_project_facts_from_ts, resolve_producers, resolve_workers};
+use super::{
+    build_filter, build_prepared_report, build_report, queue_project_facts_from_ts, FileFacts,
+};
 use super::{
     InternalProducer, InternalWorker, Path, PathBuf, PreparedProjectReport, ProjectReport,
 };
+use crate::queue::graph_resolution::{queue_definitions, resolve_producers, resolve_workers};
 use std::collections::HashMap;
 
 pub(super) fn analyze_project(
@@ -136,7 +138,8 @@ fn analyze_project_inner<T>(
     crate::queue::factory_resolve::resolve_imported_queue_names(&mut facts, &resolver, &remapper);
     let queue_defs = queue_definitions(&facts);
     let definitions = crate::queue::factory_resolve::definition_files(&facts);
-    let mut producers = resolve_producers(&facts, &queue_defs, &definitions, &resolver, &remapper);
+    let mut producers =
+        resolve_producers(&mut facts, &queue_defs, &definitions, &resolver, &remapper);
     let mut workers = resolve_workers(&facts, &definitions, &resolver, &remapper);
     if let Some(config) = loaded_config.as_ref() {
         let (lang_producers, lang_workers) = crate::queue::lang::language_queue_sites(
