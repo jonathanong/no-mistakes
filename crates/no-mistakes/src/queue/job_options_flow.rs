@@ -84,6 +84,10 @@ fn note_flow_node(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>)
     };
     let queue_name = folded_string(object, "queueName");
     let job = folded_string(object, "name");
+    let known_spreads = evidence
+        .spreads
+        .iter()
+        .all(|name| visitor.facts.const_objects.contains_key(name));
     push_site(
         visitor,
         object.span().start,
@@ -92,22 +96,26 @@ fn note_flow_node(visitor: &mut QueueVisitor<'_>, object: &ObjectExpression<'_>)
         job,
         evidence,
     );
-    if let Some(children) = folded_expr(object, "children") {
-        note_children(visitor, children, queue_name);
+    if known_spreads {
+        if let Some(children) = folded_expr(object, "children") {
+            note_children(visitor, children, queue_name);
+        }
     }
 }
 
-/// `None` means a spread is not a known object, so the caller abstains and
-/// skips children. Identifier spreads stay pending for `finish`.
 fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
     let mut evidence = JobOptionEvidence::default();
-    let mut pending = None;
+    let mut pending = Vec::new();
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                if crate::ast::property_key_name(&property.key).as_deref() == Some("opts") {
-                    evidence = read(&property.value);
-                    pending = None;
+                match crate::ast::property_key_name(&property.key).as_deref() {
+                    Some("opts") => {
+                        evidence = read(&property.value);
+                        pending.clear();
+                    }
+                    Some(_) => {}
+                    None => return None,
                 }
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
@@ -115,18 +123,18 @@ fn flow_opts(object: &ObjectExpression<'_>) -> Option<JobOptionEvidence> {
                     Expression::ObjectExpression(inner) => {
                         if let Some(member) = read_member(inner, "opts") {
                             evidence = member;
-                            pending = None;
+                            pending.clear();
                         }
                     }
-                    Expression::Identifier(id) => pending = Some(id.name.to_string()),
+                    Expression::Identifier(id) => pending.push(id.name.to_string()),
                     _ => return None,
                 }
             }
         }
     }
-    if let Some(name) = pending {
+    if !pending.is_empty() {
         evidence.member = Some("opts".to_string());
-        evidence.spreads = vec![name];
+        evidence.spreads = pending;
     }
     Some(evidence)
 }

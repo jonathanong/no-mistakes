@@ -29,6 +29,7 @@ flow.add({
   queueName: "widgets",
   data: {},
   ...mystery,
+  children: [{ name: "mystery-child", queueName: "widgets", data: {} }],
 });
 
 flow.add({
@@ -60,6 +61,7 @@ flow.add({
   queueName: "widgets",
   data: {},
   ...knownOpts,
+  children: [{ name: "const-child", queueName: "widgets", data: {} }],
 });
 
 flow.add({
@@ -86,4 +88,58 @@ flow.add({
   data: {},
   ...extra(),
   children: [{ name: "hidden-child", queueName: "widgets", data: {} }],
+});
+
+const laterData = { data: { n: 2 } };
+const template = { opts: { backoff: 1 } };
+const alias = template;
+const dataAlias = dataOnly;
+const openBag = { ...mystery };
+const emptyBag = {};
+
+flow.add({
+  name: "both-spreads",
+  queueName: "widgets",
+  data: {},
+  ...knownOpts,
+  ...laterData,
+});
+
+flow.add({
+  name: "aliased",
+  queueName: "widgets",
+  data: {},
+  ...alias,
+});
+
+flow.add({
+  name: "data-alias",
+  queueName: "widgets",
+  opts: { backoff: 1 },
+  data: {},
+  ...dataAlias,
+});
+
+flow.add({
+  name: "open-bag",
+  queueName: "widgets",
+  opts: { backoff: 1 },
+  data: {},
+  ...openBag,
+});
+
+flow.add({
+  name: "empty-bag",
+  queueName: "widgets",
+  opts: { backoff: 1 },
+  data: {},
+  ...emptyBag,
+});
+
+flow.add({
+  name: "computed-node",
+  queueName: "widgets",
+  data: {},
+  [dynamicName]: { backoff: 1 },
+  children: [{ name: "computed-child", queueName: "widgets", data: {} }],
 });

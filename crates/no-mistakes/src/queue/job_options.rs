@@ -50,7 +50,8 @@ pub(crate) fn stamp_unconfigured(root: &Path, facts: &mut HashMap<PathBuf, FileF
 }
 
 pub(super) fn finish(facts: &mut FileFacts) {
-    let objects = walk::resolve_objects(&std::mem::take(&mut facts.const_objects));
+    let raw_objects = std::mem::take(&mut facts.const_objects);
+    let objects = walk::resolve_objects(&raw_objects);
     let mut opts = std::mem::take(&mut facts.const_opts);
     apply_map(&mut opts, &objects);
     let mut defaults = std::mem::take(&mut facts.const_queue_defaults);
@@ -70,19 +71,48 @@ pub(super) fn finish(facts: &mut FileFacts) {
     }
     for site in &mut facts.job_option_sites {
         if site.evidence.member.as_deref() == Some("opts") {
-            let name = site.evidence.spreads[0].clone();
-            if let Some(found) = opts.get(&name) {
-                site.evidence = found.clone();
-            } else if objects.contains_key(&name) {
-                site.evidence.member = None;
-                site.evidence.spreads.clear();
-            } else {
-                site.evidence = JobOptionEvidence::open();
-            }
+            fold_opts_spreads(&mut site.evidence, &opts, &objects, &raw_objects);
         } else {
             walk::apply_evidence(&mut site.evidence, &objects);
         }
     }
+}
+
+fn fold_opts_spreads(
+    evidence: &mut JobOptionEvidence,
+    opts: &HashMap<String, JobOptionEvidence>,
+    objects: &HashMap<String, JobOptionEvidence>,
+    raw: &HashMap<String, JobOptionEvidence>,
+) {
+    let names = std::mem::take(&mut evidence.spreads);
+    evidence.member = None;
+    let mut open = false;
+    for name in &names {
+        if let Some(found) = opts_for(name, opts, raw) {
+            *evidence = found.clone();
+            open = false;
+        } else if !objects.contains_key(name) {
+            open = true;
+        }
+    }
+    if open {
+        *evidence = JobOptionEvidence::open();
+    }
+}
+
+fn opts_for<'a>(
+    name: &str,
+    opts: &'a HashMap<String, JobOptionEvidence>,
+    raw: &HashMap<String, JobOptionEvidence>,
+) -> Option<&'a JobOptionEvidence> {
+    if let Some(found) = opts.get(name) {
+        return Some(found);
+    }
+    let item = raw.get(name)?;
+    if item.keys.is_empty() && item.spreads.len() == 1 {
+        return opts.get(&item.spreads[0]);
+    }
+    None
 }
 
 fn apply_map(

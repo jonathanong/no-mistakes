@@ -7,7 +7,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 35,
+      "line": 36,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "plain",
@@ -17,7 +17,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 38,
+      "line": 39,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "partial",
@@ -27,7 +27,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 40,
+      "line": 41,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "alias",
@@ -37,7 +37,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 64,
+      "line": 66,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "loose",
@@ -47,7 +47,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 70,
+      "line": 72,
       "queueFile": "queues.ts",
       "queueName": "items",
       "job": "pick",
@@ -57,7 +57,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 76,
+      "line": 78,
       "queueFile": "queues.ts",
       "queueName": "beforeComputed",
       "job": "early",
@@ -67,7 +67,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 78,
+      "line": 80,
       "queueFile": "queues.ts",
       "queueName": "nested",
       "job": "n",
@@ -77,7 +77,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 79,
+      "line": 81,
       "queueFile": "queues.ts",
       "queueName": "hollow",
       "job": "h",
@@ -87,7 +87,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 83,
+      "line": 85,
       "queueFile": "queues.ts",
       "queueName": "hostQueue",
       "job": "host",
@@ -97,7 +97,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 87,
+      "line": 89,
       "queueFile": "queues.ts",
       "queueName": "labeled",
       "job": "tag",
@@ -107,7 +107,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 97,
+      "line": 99,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "wrapped-plain",
@@ -117,7 +117,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 100,
+      "line": 102,
       "queueFile": "enqueue.ts",
       "queueName": "memory",
       "job": "m",
@@ -127,7 +127,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 109,
+      "line": 111,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "left",
@@ -137,7 +137,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 112,
+      "line": 114,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "kept",
@@ -147,7 +147,7 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "enqueue.ts",
-      "line": 114,
+      "line": 116,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "skipped",
@@ -177,7 +177,17 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "flow.ts",
-      "line": 79,
+      "line": 64,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": "const-child",
+      "message": "job options missing backoff",
+      "sourceLine": "children: [{ name: \"const-child\", queueName: \"widgets\", data: {} }],"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow.ts",
+      "line": 81,
       "queueFile": "queues.ts",
       "queueName": "widgets",
       "job": "folded-child",
@@ -238,55 +248,55 @@ expression: snapshot
   "diagnostics": [
     {
       "file": "enqueue.ts",
-      "line": 47,
+      "line": 48,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"cycle\", {}, loopA);"
     },
     {
       "file": "enqueue.ts",
-      "line": 49,
+      "line": 50,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"bad\", {}, bad);"
     },
     {
       "file": "enqueue.ts",
-      "line": 50,
+      "line": 51,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"open\", {}, { attempts: 1, ...mystery });"
     },
     {
       "file": "enqueue.ts",
-      "line": 51,
+      "line": 52,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"bare\", {}, mystery);"
     },
     {
       "file": "enqueue.ts",
-      "line": 52,
+      "line": 53,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"called\", {}, makeOpts());"
     },
     {
       "file": "enqueue.ts",
-      "line": 53,
+      "line": 54,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"ternary\", {}, flag ? { backoff: 1 } : { backoff: 1 });"
     },
     {
       "file": "enqueue.ts",
-      "line": 56,
+      "line": 57,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"spread-call\", {}, { backoff: 1, ...extra() });"
     },
     {
       "file": "enqueue.ts",
-      "line": 57,
+      "line": 58,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"computed\", {}, { [dynamic]: true, backoff: 1 });"
     },
     {
       "file": "enqueue.ts",
-      "line": 58,
+      "line": 59,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(...parts);"
     },
@@ -294,71 +304,77 @@ expression: snapshot
       "file": "enqueue.ts",
       "line": 60,
       "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "widgets.add(...head, \"shifted\", {});"
+    },
+    {
+      "file": "enqueue.ts",
+      "line": 62,
+      "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.add(\"mutable\", {}, ignored);"
     },
     {
       "file": "enqueue.ts",
-      "line": 65,
+      "line": 67,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "...bulkRest,"
     },
     {
       "file": "enqueue.ts",
-      "line": 66,
+      "line": 68,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "makeItem(),"
     },
     {
       "file": "enqueue.ts",
-      "line": 68,
+      "line": 70,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "widgets.addBulk(mysteryBulk);"
     },
     {
       "file": "enqueue.ts",
-      "line": 74,
+      "line": 76,
       "message": "job options were not judged because defaultJobOptions is not statically known",
       "sourceLine": "drafts.add(\"lose\", {});"
     },
     {
       "file": "enqueue.ts",
-      "line": 77,
+      "line": 79,
       "message": "job options were not judged because defaultJobOptions is not statically known",
       "sourceLine": "computedKey.add(\"ck\", {});"
     },
     {
       "file": "enqueue.ts",
-      "line": 80,
+      "line": 82,
       "message": "job options were not judged because defaultJobOptions is not statically known",
       "sourceLine": "shadow.add(\"dim\", {});"
     },
     {
       "file": "enqueue.ts",
-      "line": 81,
+      "line": 83,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "shadow.add(\"shade\", {}, mystery);"
     },
     {
       "file": "enqueue.ts",
-      "line": 84,
+      "line": 86,
       "message": "job options were not judged because defaultJobOptions is not statically known",
       "sourceLine": "foreign.add(\"abroad\", {});"
     },
     {
       "file": "enqueue.ts",
-      "line": 85,
+      "line": 87,
       "message": "job options were not judged because defaultJobOptions is not statically known",
       "sourceLine": "generated.add(\"gen\", {});"
     },
     {
       "file": "enqueue.ts",
-      "line": 86,
+      "line": 88,
       "message": "job options were not judged because defaultJobOptions is not statically known",
       "sourceLine": "spreadQueue.add(\"spr\", {});"
     },
     {
       "file": "enqueue.ts",
-      "line": 98,
+      "line": 100,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "enqueueWidget(widgets, \"spread-opts\", ...rest);"
     },
@@ -382,25 +398,37 @@ expression: snapshot
     },
     {
       "file": "flow.ts",
-      "line": 34,
+      "line": 35,
       "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add({"
     },
     {
       "file": "flow.ts",
-      "line": 46,
+      "line": 47,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "children: mystery,"
     },
     {
       "file": "flow.ts",
-      "line": 49,
+      "line": 50,
       "message": "job options were not judged because the queue name did not resolve",
       "sourceLine": "flow.add(mystery);"
     },
     {
       "file": "flow.ts",
-      "line": 83,
+      "line": 85,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "flow.add({"
+    },
+    {
+      "file": "flow.ts",
+      "line": 123,
+      "message": "job options were not judged because the options object is not statically known",
+      "sourceLine": "flow.add({"
+    },
+    {
+      "file": "flow.ts",
+      "line": 139,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "flow.add({"
     },

@@ -5,20 +5,19 @@ use super::walk::read;
 use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 
 pub(super) fn evidence_at(call: &CallExpression<'_>, index: usize) -> JobOptionEvidence {
-    if let Some(arg) = call.arguments.get(index) {
-        if let Some(expr) = arg.as_expression() {
-            return read(expr);
-        }
-        return JobOptionEvidence::open();
-    }
     if call
         .arguments
         .iter()
+        .take(index + 1)
         .any(|arg| matches!(arg, Argument::SpreadElement(_)))
     {
         return JobOptionEvidence::open();
     }
-    JobOptionEvidence::default()
+    call.arguments
+        .get(index)
+        .and_then(Argument::as_expression)
+        .map(read)
+        .unwrap_or_default()
 }
 
 pub(super) fn push_site(

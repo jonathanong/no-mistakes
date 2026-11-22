@@ -58,6 +58,31 @@ fn required_job_options_are_reported() {
         finding.job.as_deref() == Some("folded-child")
             && finding.message == "job options missing backoff"
     }));
+    assert!(findings.iter().any(|finding| {
+        finding.job.as_deref() == Some("const-child")
+            && finding.message == "job options missing backoff"
+    }));
+    assert!(findings.iter().all(|finding| {
+        source_line(&root, &finding.file, finding.line) != "widgets.add(...head, \"shifted\", {});"
+    }));
+    for job in [
+        "mystery-child",
+        "both-spreads",
+        "aliased",
+        "data-alias",
+        "open-bag",
+        "empty-bag",
+        "computed-node",
+        "computed-child",
+        "shifted",
+    ] {
+        assert!(
+            findings
+                .iter()
+                .all(|finding| finding.job.as_deref() != Some(job)),
+            "{job}"
+        );
+    }
     assert!(report.diagnostics.iter().any(|diagnostic| {
         diagnostic.message.starts_with("job options") && diagnostic.file.ends_with("enqueue.ts")
     }));

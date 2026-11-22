@@ -122,8 +122,12 @@ queue's `defaultJobOptions` count as set. A later explicit
 `defaultJobOptions` wins over an earlier unknown spread; a later unknown
 spread or computed key can overwrite the explicit member. A flow node folds
 a spread of a statically known object the same way `queue.add` folds its
-options object, including a const object. A spread that is not a known
-object abstains and does not walk that node's children. `.add` counts only
+options object, including a const object and a const alias of one. Identifier
+spreads stay in source order: a later known `opts` object replaces earlier
+keys, and a later object without `opts` does not erase them. A spread that
+is not a known object, or a computed property key, abstains and does not
+walk that node's children. A spread before the options argument abstains
+that call. `.add` counts only
 when the receiver is a resolved queue binding or the call is a configured
 enqueue factory. An unresolved receiver abstains.
 

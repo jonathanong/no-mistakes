@@ -23,6 +23,7 @@ declare const mystery: object;
 declare const dynamic: string;
 declare const unresolvedName: string;
 declare const parts: [string, object, object];
+declare const head: [string, object];
 declare const rest: [object];
 declare const bulkRest: object[];
 declare function makeOpts(): object;
@@ -56,6 +57,7 @@ widgets.add("inline", {}, { ...{ backoff: 1 } });
 widgets.add("spread-call", {}, { backoff: 1, ...extra() });
 widgets.add("computed", {}, { [dynamic]: true, backoff: 1 });
 widgets.add(...parts);
+widgets.add(...head, "shifted", {});
 let ignored = { attempts: 1 };
 widgets.add("mutable", {}, ignored);
 
