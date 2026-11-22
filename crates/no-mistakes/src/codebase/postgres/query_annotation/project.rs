@@ -54,19 +54,30 @@ pub(crate) fn prepare_syntax(
     overlay: &mut SyntaxOverlay<'_>,
 ) -> Catalog {
     let mut catalog = prepare::catalog(files);
-    let mut demand = SyntaxDemand::default();
-    for profile in prepare::profiles_with_catalog(files, &resolve, &catalog, true) {
-        for path in demand::reachable(&profile.files, &profile.roots, &resolve) {
-            demand
-                .entry(path.to_path_buf())
-                .or_default()
-                .insert(profile.options.clone());
-        }
-        catalog
-            .syntax_roots
-            .insert(profile.options, profile.roots.into_iter().collect());
-    }
-    if !overlay(files, demand) {
+    let (demand, syntax_roots) =
+        crate::perf_trace::trace("postgres.annotation.prepare.syntax_demand", || {
+            let mut demand = SyntaxDemand::default();
+            let mut syntax_roots = FxHashMap::default();
+            for options in &catalog.options {
+                let modules = prepare::syntax_modules(files, &catalog, options);
+                let roots = demand::potential_roots(&modules, &resolve);
+                for path in demand::reachable(&modules, &roots, &resolve) {
+                    demand
+                        .entry(path.to_path_buf())
+                        .or_default()
+                        .insert(options.clone());
+                }
+                syntax_roots.insert(
+                    options.clone(),
+                    roots.into_iter().map(Path::to_path_buf).collect(),
+                );
+            }
+            (demand, syntax_roots)
+        });
+    catalog.syntax_roots = syntax_roots;
+    if !crate::perf_trace::trace("postgres.annotation.prepare.syntax_collect", || {
+        overlay(files, demand)
+    }) {
         catalog.options.retain(|options| {
             files.values().any(|file| {
                 file.query_annotation
@@ -100,7 +111,7 @@ fn project_impl(
     let profiles = {
         let profiles = crate::perf_trace::trace("postgres.annotation.prepare", || {
             let catalog = catalog.unwrap_or_else(|| prepare::catalog(files));
-            prepare::profiles_with_catalog(files, &resolve, &catalog, false)
+            prepare::profiles_with_catalog(files, &resolve, &catalog)
         });
         crate::perf_trace::trace("postgres.annotation.evaluate", || {
             parallel::evaluate(profiles, &resolve, collect_executed)

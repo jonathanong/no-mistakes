@@ -1,20 +1,14 @@
-use super::{File, FxHashMap, ImportKind, Path, PathBuf};
+use super::{ImportKind, Path, PathBuf, SyntaxModules};
 
 pub(in crate::codebase::postgres::query_annotation::project) fn reachable<'a>(
-    files: &'a FxHashMap<PathBuf, File<'_>>,
-    roots: &[PathBuf],
+    files: &SyntaxModules<'a>,
+    roots: &[&'a Path],
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> crate::fx::FxHashSet<&'a Path> {
-    let mut reached = crate::fx::fx_set();
-    let mut pending = Vec::new();
-    for root in roots {
-        let root = files.get_key_value(root).unwrap().0.as_path();
-        if reached.insert(root) {
-            pending.push(root);
-        }
-    }
+    let mut pending = roots.to_vec();
+    let mut reached = roots.iter().copied().collect::<crate::fx::FxHashSet<_>>();
     while let Some(path) = pending.pop() {
-        let module = &files[path].module;
+        let module = files[path].0;
         for import in &module.ts.imports {
             if import.kind == ImportKind::Type || import.computed {
                 continue;
@@ -23,8 +17,8 @@ pub(in crate::codebase::postgres::query_annotation::project) fn reachable<'a>(
                 continue;
             };
             if let Some((target, _)) = files.get_key_value(target) {
-                if reached.insert(target.as_path()) {
-                    pending.push(target);
+                if reached.insert(*target) {
+                    pending.push(*target);
                 }
             }
         }

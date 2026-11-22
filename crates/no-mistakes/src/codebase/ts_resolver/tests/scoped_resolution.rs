@@ -317,4 +317,24 @@ fn automatic_root_catalog_reuses_one_resolver_without_becoming_forced() {
         Some(normalize_path(&value.canonicalize().unwrap()))
     );
     assert_eq!(resolver.resolve("@root/value", &external), None);
+
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let prepared = ScopedImportResolver::new_in_session(&catalog, &visible, &session);
+    assert_eq!(
+        prepared.resolve("@root/value", &entry),
+        resolver.resolve("@root/value", &entry)
+    );
+    assert_eq!(prepared.resolve("@root/value", &external), None);
+    assert!(!observer
+        .snapshot()
+        .work
+        .contains_key("resolver.fixed_importer_canonicalizations"));
+
+    let missing = root.join("src/unprepared.ts");
+    assert_eq!(prepared.resolve("@root/value", &missing), Some(value));
+    assert_eq!(
+        observer.snapshot().work["resolver.fixed_importer_canonicalizations"],
+        1
+    );
 }

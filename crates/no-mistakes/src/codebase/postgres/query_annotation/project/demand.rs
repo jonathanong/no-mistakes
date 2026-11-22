@@ -1,7 +1,11 @@
-use super::File;
+use super::{File, Module};
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::fx::{fx_map, FxHashMap};
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::Borrow,
+    hash::Hash,
+    path::{Path, PathBuf},
+};
 
 struct Visit {
     index: usize,
@@ -26,26 +30,33 @@ struct Frame<'a> {
 /// evaluator reaches another file only through these runtime import/re-export
 /// edges. An SCC with no path to a scoped executor cannot affect a finding.
 /// New non-import file reach must be mirrored here before pruning stays sound.
-/// Iterative Tarjan traversal needs no competing forward/reverse adjacency and
-/// keeps long import chains off the native stack. Completed SCCs are bottom-up.
-fn roots_for_scope<'a, const SCOPED: bool, const EXECUTOR: bool>(
-    files: &'a FxHashMap<PathBuf, File<'_>>,
+/// Iterative Tarjan visits SCCs bottom-up without a second adjacency index.
+fn roots_for_scope<'a, K: Borrow<Path> + Eq + Hash, F>(
+    files: &'a FxHashMap<K, F>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
+    module: impl Fn(&F) -> &Module,
+    is_seed: impl Fn(&F) -> bool,
 ) -> Vec<&'a Path> {
-    if !files.values().any(is_seed::<SCOPED, EXECUTOR>) {
+    if !files.values().any(&is_seed) {
         return Vec::new();
     }
     let mut visits: FxHashMap<&Path, Visit> = fx_map();
     let mut component = Vec::new();
     let mut frames = Vec::<Frame<'_>>::new();
-    for path in files.keys() {
-        if visits.contains_key(path.as_path()) {
+    for path in files.keys().map(|key| -> &Path { key.borrow() }) {
+        if visits.contains_key(path) {
             continue;
         }
-        enter::<SCOPED, EXECUTOR>(path, files, &mut visits, &mut component, &mut frames);
+        enter(
+            path,
+            is_seed(&files[path]),
+            &mut visits,
+            &mut component,
+            &mut frames,
+        );
         while let Some(frame) = frames.last_mut() {
             let path = frame.path;
-            let module = &files[path].module;
+            let module = module(&files[path]);
             // A positive answer cannot change: classify the remaining targets
             // independently later instead of resolving unused imports here.
             let import = if visits[path].demanded {
@@ -74,7 +85,7 @@ fn roots_for_scope<'a, const SCOPED: bool, const EXECUTOR: bool>(
                 let Some((target, _)) = files.get_key_value(target) else {
                     continue;
                 };
-                let target = target.as_path();
+                let target: &Path = target.borrow();
                 if let Some(child) = visits.get(target) {
                     let low = child.active.then_some(child.index);
                     let demanded = child.demanded;
@@ -84,9 +95,9 @@ fn roots_for_scope<'a, const SCOPED: bool, const EXECUTOR: bool>(
                     }
                     parent.demanded |= demanded;
                 } else {
-                    enter::<SCOPED, EXECUTOR>(
+                    enter(
                         target,
-                        files,
+                        is_seed(&files[target]),
                         &mut visits,
                         &mut component,
                         &mut frames,
@@ -124,9 +135,9 @@ fn roots_for_scope<'a, const SCOPED: bool, const EXECUTOR: bool>(
         .collect()
 }
 
-fn enter<'a, const SCOPED: bool, const EXECUTOR: bool>(
+fn enter<'a>(
     path: &'a Path,
-    files: &FxHashMap<PathBuf, File<'_>>,
+    demanded: bool,
     visits: &mut FxHashMap<&'a Path, Visit>,
     component: &mut Vec<&'a Path>,
     frames: &mut Vec<Frame<'a>>,
@@ -138,7 +149,7 @@ fn enter<'a, const SCOPED: bool, const EXECUTOR: bool>(
             index,
             low: index,
             active: true,
-            demanded: is_seed::<SCOPED, EXECUTOR>(&files[path]),
+            demanded,
         },
     );
     component.push(path);
@@ -148,33 +159,41 @@ fn enter<'a, const SCOPED: bool, const EXECUTOR: bool>(
     });
 }
 
-fn is_seed<const SCOPED: bool, const EXECUTOR: bool>(file: &File<'_>) -> bool {
-    if EXECUTOR {
-        (!SCOPED || file.facts.in_scope != Some(false)) && !file.executors.is_empty()
-    } else {
-        file.facts.syntax_in_scope != Some(false)
-    }
-}
-
 pub(super) fn roots<'a>(
     files: &'a FxHashMap<PathBuf, File<'_>>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<&'a Path> {
-    roots_for_scope::<true, true>(files, resolve)
+    roots_for_scope(
+        files,
+        resolve,
+        |file| &file.module,
+        |file| file.facts.in_scope != Some(false) && !file.executors.is_empty(),
+    )
 }
 
 pub(super) fn roots_before_scoping<'a>(
     files: &'a FxHashMap<PathBuf, File<'_>>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<&'a Path> {
-    roots_for_scope::<false, true>(files, resolve)
+    roots_for_scope(
+        files,
+        resolve,
+        |file| &file.module,
+        |file| !file.executors.is_empty(),
+    )
 }
 
+pub(super) type SyntaxModules<'a> = FxHashMap<&'a Path, (&'a Module, bool)>;
+
 pub(super) fn potential_roots<'a>(
-    files: &'a FxHashMap<PathBuf, File<'_>>,
+    files: &SyntaxModules<'a>,
     resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<&'a Path> {
-    roots_for_scope::<true, false>(files, resolve)
+    // The selection borrows the catalog path, never the temporary hash table.
+    roots_for_scope(files, resolve, |entry| entry.0, |entry| entry.1)
+        .into_iter()
+        .map(|path| *files.get_key_value(path).unwrap().0)
+        .collect()
 }
 
 mod forward;

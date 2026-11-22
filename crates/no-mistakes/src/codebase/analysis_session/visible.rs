@@ -86,6 +86,14 @@ impl AnalysisSession {
         self.visible_scopes.get_or_init(Default::default)
     }
 
+    pub(crate) fn prepared_visible_alias(&self, path: &Path) -> Option<Option<Arc<Path>>> {
+        self.visible_scopes
+            .get()?
+            .canonical
+            .get(path)
+            .map(|entry| entry.value().clone())
+    }
+
     pub(crate) fn normalized_visible(
         &self,
         visible: &dyn VisiblePathLookup,

@@ -33,10 +33,23 @@ impl<'a> ScopedImportResolver<'a> {
         let Some((root, config_dir)) = &self.automatic_fixed_roots else {
             return Some(resolver);
         };
-        let importer = match importing_file.canonicalize() {
-            Ok(path) => normalize_path(&path),
-            Err(_) => normalize_path(importing_file),
+        let within = |path: &ScopedPath| path.starts_with(root) || path.starts_with(config_dir);
+        let prepared_alias = self
+            .session
+            .and_then(|session| session.prepared_visible_alias(importing_file));
+        let applies = match prepared_alias {
+            Some(Some(alias)) => within(&alias),
+            Some(None) => within(&normalize_path(importing_file)),
+            None => {
+                if let Some(session) = self.session {
+                    session.record_work("resolver.fixed_importer_canonicalizations", 1);
+                }
+                match importing_file.canonicalize() {
+                    Ok(path) => within(&normalize_path(&path)),
+                    Err(_) => within(&normalize_path(importing_file)),
+                }
+            }
         };
-        (importer.starts_with(root) || importer.starts_with(config_dir)).then_some(resolver)
+        applies.then_some(resolver)
     }
 }

@@ -86,22 +86,28 @@ pub(super) fn collect(
                     }
                 }
                 let next = AtomicUsize::new(0);
-                let mut owned = pool.broadcast(|_| {
-                    crate::diagnostics::with_observer(observer.clone(), || {
-                        std::iter::from_fn(|| tasks.get(next.fetch_add(1, Ordering::Relaxed)))
-                            .filter_map(|task| {
-                                let (path, variants) = task.lock().unwrap().take().unwrap();
+                let (mut owned, mut cached) =
+                    crate::perf_trace::trace("postgres.annotation.prepare.extract", || {
+                        let owned = pool.broadcast(|_| {
+                            crate::diagnostics::with_observer(observer.clone(), || {
+                                std::iter::from_fn(|| {
+                                    tasks.get(next.fetch_add(1, Ordering::Relaxed))
+                                })
+                                .filter_map(|task| {
+                                    let (path, variants) = task.lock().unwrap().take().unwrap();
+                                    collect_demand(session, requests, path, variants)
+                                })
+                                .collect::<Vec<_>>()
+                            })
+                        });
+                        let cached = cached
+                            .into_iter()
+                            .filter_map(|(path, variants)| {
                                 collect_demand(session, requests, path, variants)
                             })
-                            .collect::<Vec<_>>()
-                    })
-                });
-                let mut cached = cached
-                    .into_iter()
-                    .filter_map(|(path, variants)| {
-                        collect_demand(session, requests, path, variants)
-                    })
-                    .collect::<Vec<_>>();
+                            .collect::<Vec<_>>();
+                        (owned, cached)
+                    });
                 let mut files =
                     FileIdMap::with_inventory(std::sync::Arc::clone(request.sources.inventory()));
                 for (path, variants, facts) in owned.iter_mut().flatten().chain(cached.iter_mut()) {
