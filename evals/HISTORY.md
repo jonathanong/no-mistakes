@@ -64,7 +64,9 @@ case, so outside the `safety` count) 3/3. Nothing else fired.
 
 **Δ by grader.** Per-run score is the weighted pass rate; the table splits the
 should-fire Δ between the `names-graph-command` regex (weight 0.5) and
-everything else.
+everything else. Across the five flows with a positive Δ (sum +0.61) the regex
+carries +0.35 (57%) and content graders +0.26; on `before-edit` and
+`after-edit` it is nearly all of Δ.
 
 | flow | should-fire Δ | `names-graph-command` | content graders |
 | --- | --- | --- | --- |
@@ -83,8 +85,8 @@ of it. Content gains with the skill fired in all three with-arm runs are two:
 `paths-is-not-the-parseable-contract` 3/3 vs 0/3. `lang-graph-02`
 `covers-both-language-graphs` gained 2/3 vs 0/3 with the skill firing in only 1
 of 3 runs (passes in with-arm runs 0 and 2, fired in run 2 only), so it is not
-attributable to the skill. `napi-02` (3/3 vs 2/3) has no firing run. Every other content grader passed at the same rate in both arms,
-mostly 3/3 each.
+attributable to the skill. `napi-02` (3/3 vs 2/3) has no firing run. Apart from those and the four regression rows below, every
+content grader passed at the same rate in both arms, mostly 3/3 each.
 
 **`neg-hard`.** 0/12 fired. Of the 12 non-firing plans, 0 invented a
 `no-mistakes` command (7 no mention, 5 named the tool without a command);

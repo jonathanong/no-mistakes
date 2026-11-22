@@ -57,9 +57,11 @@ the intervening skill-body changes. Gate a candidate against a same-day control
 measured under these models, never against these stored counts
 ([why](METHODOLOGY.md#changing-the-agent-or-judge-model)).
 
-**Per-grader decomposition of Δ.** Almost all of the positive Δ is the
-`names-graph-command` regex, which only passes when the plan names a command
-from `SKILL.md`, so it mostly records that the skill was used:
+**Per-grader decomposition of Δ.** Across the five flows with a positive
+should-fire Δ (sum +0.61), the `names-graph-command` regex carries +0.35 (57%)
+and content graders +0.26. On `before-edit` and `after-edit` it is nearly all
+of Δ. The regex only passes when the plan names a command from `SKILL.md`, so
+it records that the skill was used, not that the plan was better:
 
 | flow | should-fire Δ | from `names-graph-command` | from content graders |
 | --- | --- | --- | --- |
@@ -115,8 +117,9 @@ Earlier descriptions, their scores, and how this one was chosen are in
   nothing about the skill's guidance. Decompose per grader before claiming
   uplift: if Δ is carried by the `names-graph-command` regex, the honest
   reading is "the skill got used", not "the plan got better".
-- **Negative-case Δ of −0.33** (`ci`, `safety`, `signature`) is one run
-  flipping on one case at n=3 — a thing to re-measure, not a finding.
+- **Negative-case Δ of −0.33** (`ci`, `safety`, `signature`, from the prior
+  Opus-agent run; it did not recur on 2026-11-21) is one run flipping on one
+  case at n=3 — a thing to re-measure, not a finding.
 - **Every number is Claude's.** Codex reads the same `description:`, but the
   suite has no Codex arm.
 
