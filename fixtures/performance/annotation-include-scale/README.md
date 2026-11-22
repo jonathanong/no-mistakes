@@ -18,6 +18,6 @@ no-mistakes check --root "$PWD" --config configs/half-b-16-max.yml --format json
 
 `measure.py BASELINE CANDIDATE OUTPUT` runs balanced baseline/candidate/candidate/baseline release comparisons. Each invocation starts with fresh in-memory analysis state. It checks exact report bytes and status, and records wall time, user plus system CPU, and peak RSS. Acceptance runs have no observer flags. Separate `--timings` runs attribute the parse phase; those instrumented runs do not supply the acceptance wall/CPU measurements.
 
-Use `--jobs 1`, `--jobs 4`, and `--jobs 0` for single-worker, four-worker, and default-worker memory controls. The default is eight workers; `RAYON_NUM_THREADS` is removed from each child environment so the worker count is explicit or selected by the CLI.
+Use `--jobs 1`, `--jobs 4`, and `--jobs 0` for single-worker, four-worker, and default-worker memory controls. `measure.py` defaults to 8 workers; `--jobs 0` omits the child CLI flag and uses its logical-CPU default. `RAYON_NUM_THREADS` is removed from each child environment.
 
 This fixture records workload shape only and makes no runtime-performance claim. Regenerate with `python3 materialize.py`.
